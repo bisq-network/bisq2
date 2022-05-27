@@ -1,26 +1,19 @@
 plugins {
     id 'bisq.java-library'
-    /*
-    TODO: Build fails when adding application
-
-    Execution failed for task ':api:distTar'.
-> Entry api/lib/api.jar is a duplicate but no duplicate handling strategy has been set. Please refer to 
-https://docs.gradle.org/7.4.1/dsl/org.gradle.api.tasks.Copy.html#org.gradle.api.tasks.Copy:duplicatesStrategy for details.
-
-     
-   /* id 'application'
-    alias(libs.plugins.shadow)*/
+    id 'application'
+    alias(libs.plugins.shadow)
 }
 
-/*application {
-    project.mainClassName = 'bisq.api.ApiApplication'
+application {
+    project.mainClassName = 'bisq.restApi.RestApiApplication'
 }
+
 run {
     // Pass command-line properties to application
     // Normally they'd only be applied to the gradle process, but we need them in the started application
     // See https://stackoverflow.com/a/23689696
     systemProperties System.getProperties()
-}*/
+}
 
 ext {
     swaggerVersion = '2.2.0'

@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.api.endpoints;
+package bisq.restApi.endpoints;
 
-import bisq.api.ApiApplication;
-import bisq.api.error.StatusException;
-import bisq.api.dto.KeyPairDto;
+import bisq.restApi.RestApiApplication;
+import bisq.restApi.error.StatusException;
+import bisq.restApi.dto.KeyPairDto;
 import bisq.security.KeyPairService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,7 +49,7 @@ public class KeyPairApi {
     private final KeyPairService keyPairService;
 
     public KeyPairApi(@Context Application application) {
-        keyPairService = ((ApiApplication) application).getApplicationService().getSecurityService().getKeyPairService();
+        keyPairService = ((RestApiApplication) application).getApplicationService().getSecurityService().getKeyPairService();
     }
 
     /**

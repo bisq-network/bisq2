@@ -1,9 +1,9 @@
-package bisq.api;
+package bisq.restApi;
 
-import bisq.api.endpoints.KeyPairApi;
-import bisq.api.error.CustomExceptionMapper;
-import bisq.api.error.StatusException;
-import bisq.api.util.StaticFileHandler;
+import bisq.restApi.endpoints.KeyPairApi;
+import bisq.restApi.error.CustomExceptionMapper;
+import bisq.restApi.error.StatusException;
+import bisq.restApi.util.StaticFileHandler;
 import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
@@ -20,13 +20,13 @@ import java.net.URI;
  * Swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST API documentation</a>
  */
 @Slf4j
-public class ApiApplication extends ResourceConfig {
+public class RestApiApplication extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/api/v1";
 
     @Getter
     protected final DefaultApplicationService applicationService;
 
-    public ApiApplication() {
+    public RestApiApplication() {
         applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
         applicationService.initialize().join();
     }
@@ -43,7 +43,7 @@ public class ApiApplication extends ResourceConfig {
 
     public static void startServer() throws Exception {
         // 'config' acts as application in jax-rs
-        ResourceConfig app = new ApiApplication()
+        ResourceConfig app = new RestApiApplication()
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
@@ -55,7 +55,7 @@ public class ApiApplication extends ResourceConfig {
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
         // shut down hook
-        Runtime.getRuntime().addShutdownHook(new Thread(ApiApplication::stopServer));
+        Runtime.getRuntime().addShutdownHook(new Thread(RestApiApplication::stopServer));
 
         log.info("Server started at {}.", BASE_URL);
 
