@@ -36,7 +36,7 @@ public class RestApplication extends ResourceConfig {
     }
 
     public static void stopServer() {
-        httpServer.stop(15);
+        httpServer.stop(2);
     }
 
     public static void startServer() throws Exception {
