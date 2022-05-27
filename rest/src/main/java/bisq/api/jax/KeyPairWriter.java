@@ -26,7 +26,13 @@ public class KeyPairWriter implements MessageBodyWriter<KeyPair> {
     }
 
     @Override
-    public void writeTo(KeyPair keyPair, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+    public void writeTo(KeyPair keyPair,
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders,
+                        OutputStream entityStream) throws IOException, WebApplicationException {
         entityStream.write(JsonFormat.printer().print(KeyPairProtoUtil.toProto(keyPair)).getBytes());
     }
 }

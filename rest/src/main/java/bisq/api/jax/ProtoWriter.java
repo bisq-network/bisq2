@@ -24,7 +24,13 @@ public class ProtoWriter implements MessageBodyWriter<Proto> {
     }
 
     @Override
-    public void writeTo(Proto proto, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+    public void writeTo(Proto proto,
+                        Class<?> type,
+                        Type genericType,
+                        Annotation[] annotations,
+                        MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders,
+                        OutputStream entityStream) throws IOException, WebApplicationException {
         entityStream.write(JsonFormat.printer().print(proto.toProto()).getBytes());
     }
 }

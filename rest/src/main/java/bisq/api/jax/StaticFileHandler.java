@@ -25,6 +25,7 @@ import java.util.Arrays;
 @Slf4j
 @RequiredArgsConstructor
 public class StaticFileHandler implements HttpHandler {
+    private static final String NOT_FOUND = "404 (Not Found)\n";
 
     public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js"};
 
@@ -32,7 +33,7 @@ public class StaticFileHandler implements HttpHandler {
     @Setter
     @NonNull
     protected String rootContext;
-    ClassLoader cl = getClass().getClassLoader();
+    ClassLoader classLoader = getClass().getClassLoader();
 
     public void handle(HttpExchange exchange) throws IOException {
         URI uri = exchange.getRequestURI();
@@ -40,7 +41,7 @@ public class StaticFileHandler implements HttpHandler {
         log.debug("requesting: " + uri.getPath());
         String filename = uri.getPath();
         if (filename == null || !filename.startsWith(rootContext) ||
-                !Arrays.stream(VALID_SUFFIX).anyMatch(filename::endsWith)) {
+                Arrays.stream(VALID_SUFFIX).noneMatch(filename::endsWith)) {
             respond404(exchange);
             return;
         }
@@ -51,7 +52,7 @@ public class StaticFileHandler implements HttpHandler {
         }
 
         // we are using getResourceAsStream to ultimately prevent load from parent directories
-        try (InputStream resource = cl.getResourceAsStream(resourceName)) {
+        try (InputStream resource = classLoader.getResourceAsStream(resourceName)) {
             if (resource == null) {
                 respond404(exchange);
                 return;
@@ -64,26 +65,25 @@ public class StaticFileHandler implements HttpHandler {
             if (resourceName.endsWith(".css")) mime = "text/css";
             if (resourceName.endsWith(".png")) mime = "image/png";
 
-            Headers h = exchange.getResponseHeaders();
-            h.set("Content-Type", mime);
+            Headers headers = exchange.getResponseHeaders();
+            headers.set("Content-Type", mime);
             exchange.sendResponseHeaders(200, 0);
 
-            try (OutputStream os = exchange.getResponseBody()) {
-                final byte[] buffer = new byte[ 0x10000 ];
-                int count = 0;
+            try (OutputStream outputStream = exchange.getResponseBody()) {
+                byte[] buffer = new byte[0x10000];
+                int count;
                 while ((count = resource.read(buffer)) >= 0) {
-                    os.write(buffer, 0, count);
+                    outputStream.write(buffer, 0, count);
                 }
             }
         }
     }
 
-    private void respond404(HttpExchange t) throws IOException {
+    private void respond404(HttpExchange exchange) throws IOException {
         // Object does not exist or is not a file: reject with 404 error.
-        String response = "404 (Not Found)\n";
-        t.sendResponseHeaders(404, response.length());
-        try (OutputStream os = t.getResponseBody()) {
-            os.write(response.getBytes());
+        exchange.sendResponseHeaders(404, NOT_FOUND.length());
+        try (OutputStream outputStream = exchange.getResponseBody()) {
+            outputStream.write(NOT_FOUND.getBytes());
         }
     }
 }

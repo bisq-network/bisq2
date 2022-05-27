@@ -39,11 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 
 @Slf4j
-@Path("/KeyPair")
+@Path("/key-pair")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Key Pair API")
 public class KeyPairApi {
-    public static final String DESC_KEYID = "The ID for identifying the key which we look up or create in case it does not exist.";
+    public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
     private final KeyPairService keyPairService;
 
     public KeyPairApi(@Context Application app) {
@@ -54,8 +54,8 @@ public class KeyPairApi {
      * @param keyId The ID for identifying the key which we look up or create in case it does not exist.
      * @return The key pair.
      */
-    @Operation(description = "find the private and public key for given ID")
-    @ApiResponse(responseCode = "200", description = "the created or existing privat and public key for the given keyId",
+    @Operation(description = "find the key pair for given ID")
+    @ApiResponse(responseCode = "200", description = "the created or existing key pair for the given keyId",
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
@@ -63,11 +63,11 @@ public class KeyPairApi {
                     )}
     )
     @GET
-    @Path("get-or-create/{keyId}")
+    @Path("get-or-create/{key-id}")
     public KeyPairDTO getOrCreateKeyPair(
-            @Parameter(description = DESC_KEYID) @PathParam("keyId") String keyId) {
-        KeyPair k = keyPairService.getOrCreateKeyPair(keyId);
-        return new KeyPairDTO(k);
+            @Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
+        KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
+        return new KeyPairDTO(keyPair);
     }
 
     /**
@@ -75,9 +75,9 @@ public class KeyPairApi {
      * @return The key pair if a key pair with that keyId exist, otherwise null.
      */
 
-    @Operation(summary = "find the private and public key for given ID")
+    @Operation(summary = "find the key pair for given ID")
     @ApiResponse(responseCode = "404", description = "keyId was not found")
-    @ApiResponse(responseCode = "200", description = "privat and public key for the keyId",
+    @ApiResponse(responseCode = "200", description = "key pair for the keyId",
             content = {
                     @Content(
                             mediaType = "application/json",
@@ -85,9 +85,9 @@ public class KeyPairApi {
                     )}
     )
     @GET
-    @Path("get/{keyId}")
-    public KeyPairDTO findKeyPair(@Parameter(description = DESC_KEYID) @PathParam("keyId") String keyId) {
+    @Path("get/{key-id}")
+    public KeyPairDTO findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
         return new KeyPairDTO(keyPairService.findKeyPair(keyId)
-                .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key " + keyId)));
+                .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key pair for ID " + keyId)));
     }
 }

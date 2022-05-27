@@ -41,7 +41,7 @@ public class RestApplication extends ResourceConfig {
 
     public static void startServer() throws Exception {
         // 'config' acts as application in jax-rs
-        final ResourceConfig app = new RestApplication()
+        ResourceConfig app = new RestApplication()
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
