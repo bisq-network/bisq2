@@ -36,7 +36,6 @@ import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.presentation.formatters.TimeFormatter;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
@@ -474,6 +473,8 @@ public class ChatMessagesComponent {
             root.setSpacing(20);
 
             messagesListView = new ListView<>(model.getSortedChatMessages());
+            messagesListView.getStyleClass().add("chat-messages-list-view");
+            VBox.setMargin(messagesListView, new Insets(0, 20, 0, 36));
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
@@ -495,8 +496,10 @@ public class ChatMessagesComponent {
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
             bottomBox = Layout.hBoxWith(inputField);
+            bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
-            VBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
+            bottomBox.setPadding(new Insets(20, 20, 20, 20));
+            HBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
 
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
@@ -555,7 +558,7 @@ public class ChatMessagesComponent {
                                 openEmojiSelectorButton, replyButton,
                                 pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Label userNameLabel = new Label();
-                        private final Label time = new Label();
+                        private final Label dateTime = new Label();
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
@@ -563,18 +566,14 @@ public class ChatMessagesComponent {
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
-                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+//                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
                         {
                             userNameLabel.setId("chat-user-name");
-                            HBox userNameAndScore = Layout.hBoxWith(userNameLabel, reputationScoreDisplay);
-                            userNameAndScore.setAlignment(Pos.CENTER_LEFT);
-                            userNameAndScore.setPadding(new Insets(10, 0, -5, 0));
+                            dateTime.setId("chat-messages-date");
 
-                            time.setId("chat-messages-date");
-                            time.setPadding(new Insets(-6, 0, 0, 0));
-                            time.setVisible(false);
-                            time.setManaged(false);
+                            HBox userNameAndTime = Layout.hBoxWith(userNameLabel, dateTime);
+                            userNameAndTime.setAlignment(Pos.CENTER_LEFT);
 
                             emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
                             emojiButton1.setUserData(":+1:");
@@ -631,12 +630,14 @@ public class ChatMessagesComponent {
                             reactionsBox.setSpacing(30);
                             reactionsBox.setPadding(new Insets(5, 0, 5, 0));
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-18; -fx-background-radius: 8 0 0 0");
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12; -fx-background-radius: 8 0 0 0");
 
                             HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
                             VBox.setMargin(reactionsOuterBox, new Insets(-5, 0, 0, 0));
 
                             message.setAutoHeight(true);
+                            message.setMinHeight(36);
+                            message.getStyleClass().addAll("bisq-text-1", "font-medium");
                             HBox.setHgrow(message, Priority.ALWAYS);
 
                             takeOfferButton = new Button(Res.get("takeOffer"));
@@ -645,7 +646,6 @@ public class ChatMessagesComponent {
 
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
                             HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
-                            VBox.setMargin(messageAndTakeOfferButton, new Insets(-2, 0, 0, 0));
                             messageBox = Layout.vBoxWith(quotedMessageBox,
                                     messageAndTakeOfferButton,
                                     editedMessageField,
@@ -653,17 +653,12 @@ public class ChatMessagesComponent {
                                     reactionsOuterBox);
                             VBox.setVgrow(messageBox, Priority.ALWAYS);
 
-                            vBox = Layout.vBoxWith(userNameAndScore, messageBox);
+                            vBox = new VBox(5, userNameAndTime, messageBox);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
-                            VBox userIconTimeBox = Layout.vBoxWith(chatUserIcon, time);
-                            HBox.setMargin(userIconTimeBox, new Insets(10, 0, 0, -10));
-                            this.hBox = Layout.hBoxWith(userIconTimeBox, vBox);
+                            hBox = Layout.hBoxWith(chatUserIcon, vBox);
                         }
 
                         private void hideHoverOverlay() {
-                            time.setVisible(false);
-                            time.setManaged(false);
-
                             reactionsBox.setVisible(false);
                             messageBox.setStyle("-fx-background-color: transparent");
                             setStyle("-fx-background-color: transparent");
@@ -732,7 +727,7 @@ public class ChatMessagesComponent {
                                 message.setText(item.getMessage());
                                 message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
 
-                                time.setText(item.getTime());
+                                dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
                                     controller.onSaveEditedMessage(chatMessage, editedMessageField.getText());
@@ -741,7 +736,7 @@ public class ChatMessagesComponent {
                                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
 
                                 dateTooltip = new Tooltip(item.getDate());
-                                Tooltip.install(time, dateTooltip);
+                                Tooltip.install(dateTime, dateTooltip);
 
                                 item.getAuthor().ifPresent(author -> {
                                     userNameLabel.setText(author.getUserName());
@@ -752,19 +747,17 @@ public class ChatMessagesComponent {
                                     chatUserIcon.setChatUser(author, model.getChatUserService());
                                     Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
 
-                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
+//                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
                                 });
 
                                 setOnMouseEntered(e -> {
                                     if (model.moreOptionsVisibleMessage.get() != null) {
                                         return;
                                     }
-                                    time.setVisible(true);
-                                    time.setManaged(true);
 
                                     reactionsBox.setVisible(true);
-                                    messageBox.setStyle("-fx-background-color: -bisq-grey-2");
-                                    setStyle("-fx-background-color: -bisq-grey-2;");
+                                    messageBox.setStyle("-fx-background-color: -bisq-grey-12");
+                                    setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
                                     if (model.moreOptionsVisibleMessage.get() == null) {
@@ -873,7 +866,6 @@ public class ChatMessagesComponent {
     public static class ChatMessageListItem<T extends ChatMessage> implements Comparable<ChatMessageListItem<T>>, FilteredListItem {
         private final T chatMessage;
         private final String message;
-        private final String time;
         private final String date;
         private final Optional<Quotation> quotedMessage;
         private final Optional<ChatUser> author;
@@ -893,7 +885,6 @@ public class ChatMessagesComponent {
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotation();
-            time = TimeFormatter.formatTime(new Date(chatMessage.getDate()));
             date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
 
             nym = author.map(ChatUser::getNym).orElse("");

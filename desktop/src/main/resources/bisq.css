@@ -136,9 +136,19 @@
     -fx-border-width: 0 0 1 0;
 }
 
-.border-top {
+.border-top-grey-5 {
     -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
+}
+
+.border-top-grey-7 {
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 1 0 0 0;
+}
+
+.border-bottom-grey-7 {
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 0 0 1 0;
 }
 
 /*******************************************************************************
@@ -412,6 +422,16 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Backgrounds                                                                 *
+ *                                                                             *
+ ******************************************************************************/
+
+.bg-grey-5 {
+    -fx-background-color: -bisq-grey-5;
+}
+
+/*******************************************************************************
+ *                                                                             *
  * Custom TextInputBox based                                                                  *
  *                                                                             *
  ******************************************************************************/
@@ -468,6 +488,13 @@
 
 .button:disabled {
     -fx-background-color: -bisq-grey-12;
+}
+
+.button.icon-button {
+    -fx-padding: 5;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
 }
 
 
@@ -773,12 +800,34 @@
     -fx-background-color: -bisq-logo-green;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Chat messages list                                                           *
+ *                                                                             *
+ ******************************************************************************/
 
-    /*******************************************************************************
-     *                                                                             *
-     * Misc list based                                                             *
-     *                                                                             *
-     ******************************************************************************/
+.list-view.chat-messages-list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 1 0 0 0;
+}
+
+.list-view.chat-messages-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 16 0 16 0;
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 0 0 1 0;
+}
+
+.list-view.chat-messages-list-view .list-cell:empty {
+    -fx-border-width: 0;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * Misc list based                                                             *
+ *                                                                             *
+ ******************************************************************************/
 
 .list-view:focused,
 .tree-view:focused,
@@ -1056,7 +1105,7 @@ tree-table-view:focused {
 /* horizontal the two nodes are placed to the left/right of each other. */
 .split-pane:horizontal > .split-pane-divider {
     -fx-background-color: -bisq-bg-dark;
-
+    -fx-padding: 0;
     -fx-background-insets: 0, 0 1 0 1;
 }
 
@@ -1292,28 +1341,28 @@ tree-table-view:focused {
 
 #chat-messages-text-area-input-field {
     -fx-background-color: -bisq-bg-dark;
-    -fx-background-radius: 4;
+    -fx-background-radius: 8;
     -fx-border-color: -bisq-bg-dark;
     -fx-border-width: 1;
-    -fx-border-radius: 4;
+    -fx-border-radius: 8;
     -fx-faint-focus-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.25em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-prompt-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
     -fx-padding: 4;
 }
 
 #chat-messages-headline {
-    -fx-text-fill: -bisq-green;
-    -fx-font-size: 1.78em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.53em;
+    -fx-font-weight: bold;
 }
 
 #chat-messages-date {
-    -fx-text-fill: -bisq-grey-11;
-    -fx-font-size: 0.7em;
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.92em;
 }
 
 #chat-sidebar-headline {
@@ -1372,18 +1421,15 @@ tree-table-view:focused {
 
 
 #chat-user-name {
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.0em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 0.92em;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
 #chat-message-reactions-separator {
     -fx-text-fill: -bisq-grey-5;
     -fx-font-weight: bold;
-}
-
-#chat-quoted-message-top-pane {
-    -fx-background-color: -bisq-grey-5;
 }
 
 #proof-of-burn-tooltip {

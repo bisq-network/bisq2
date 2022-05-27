@@ -17,6 +17,7 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.utils.ImageUtil;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.scene.Cursor;
@@ -45,12 +46,16 @@ public class BisqIconButton extends Button {
         // todo none of the below works ;-(
         // with setFocusTraversable we dont get the ugly focus, though we might want to leave it to true
         // maybe its from the label inside the button...
-        // button.getStyleClass().add("hide-focus");
+         button.getStyleClass().add("icon-button");
         // button.setStyle("-fx-focus-color: transparent");
         // button.setStyle("-jfx-focus-color: transparent");
-        button.setStyle("-fx-background-color: transparent");
-        button.setFocusTraversable(false);
-        button.setCursor(Cursor.HAND);
+        return button;
+    }
+
+    public static Button createIconButton(String iconId) {
+        Button button = new Button();
+        button.setGraphic(ImageUtil.getImageViewById(iconId));
+        button.getStyleClass().add("icon-button");
         return button;
     }
 }
