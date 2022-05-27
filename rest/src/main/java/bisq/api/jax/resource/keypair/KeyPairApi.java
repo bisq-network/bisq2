@@ -55,7 +55,7 @@ public class KeyPairApi {
      * @return The key pair.
      */
     @Operation(description = "find the key pair for given ID")
-    @ApiResponse(responseCode = "200", description = "the created or existing key pair for the given keyId",
+    @ApiResponse(responseCode = "200", description = "the created or existing key pair for the given key-id",
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
@@ -76,8 +76,8 @@ public class KeyPairApi {
      */
 
     @Operation(summary = "find the key pair for given ID")
-    @ApiResponse(responseCode = "404", description = "keyId was not found")
-    @ApiResponse(responseCode = "200", description = "key pair for the keyId",
+    @ApiResponse(responseCode = "404", description = "key-id was not found")
+    @ApiResponse(responseCode = "200", description = "key pair for the key-id",
             content = {
                     @Content(
                             mediaType = "application/json",
