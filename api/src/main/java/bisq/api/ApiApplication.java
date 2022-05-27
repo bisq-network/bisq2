@@ -20,13 +20,13 @@ import java.net.URI;
  * Swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST API documentation</a>
  */
 @Slf4j
-public class ApiMain extends ResourceConfig {
+public class ApiApplication extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/api/v1";
 
     @Getter
     protected final DefaultApplicationService applicationService;
 
-    public ApiMain() {
+    public ApiApplication() {
         applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
         applicationService.initialize().join();
     }
@@ -43,7 +43,7 @@ public class ApiMain extends ResourceConfig {
 
     public static void startServer() throws Exception {
         // 'config' acts as application in jax-rs
-        ResourceConfig app = new ApiMain()
+        ResourceConfig app = new ApiApplication()
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
@@ -55,7 +55,7 @@ public class ApiMain extends ResourceConfig {
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
         // shut down hook
-        Runtime.getRuntime().addShutdownHook(new Thread(ApiMain::stopServer));
+        Runtime.getRuntime().addShutdownHook(new Thread(ApiApplication::stopServer));
 
         log.info("Server started at {}.", BASE_URL);
 

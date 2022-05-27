@@ -17,7 +17,7 @@
 
 package bisq.api.endpoints;
 
-import bisq.api.ApiMain;
+import bisq.api.ApiApplication;
 import bisq.api.error.StatusException;
 import bisq.api.dto.KeyPairDto;
 import bisq.security.KeyPairService;
@@ -45,10 +45,11 @@ import java.security.KeyPair;
 @Tag(name = "Key Pair API")
 public class KeyPairApi {
     public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
+    
     private final KeyPairService keyPairService;
 
-    public KeyPairApi(@Context Application app) {
-        keyPairService = ((ApiMain) app).getApplicationService().getSecurityService().getKeyPairService();
+    public KeyPairApi(@Context Application application) {
+        keyPairService = ((ApiApplication) application).getApplicationService().getSecurityService().getKeyPairService();
     }
 
     /**
