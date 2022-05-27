@@ -1,6 +1,6 @@
 package bisq.api;
 
-import bisq.api.endpoints.KeyPairEndpoint;
+import bisq.api.endpoints.KeyPairApi;
 import bisq.api.error.CustomExceptionMapper;
 import bisq.api.error.StatusException;
 import bisq.api.util.StaticFileHandler;
@@ -48,7 +48,7 @@ public class ApiMain extends ResourceConfig {
                 .register(StatusException.StatusExceptionMapper.class)
 //                .register(ProtoWriter.class)
 //                .register(KeyPairWriter.class)
-                .register(KeyPairEndpoint.class)
+                .register(KeyPairApi.class)
                 .register(SwaggerResolution.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);

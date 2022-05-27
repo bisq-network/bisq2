@@ -43,11 +43,11 @@ import java.security.KeyPair;
 @Path("/key-pair")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Key Pair API")
-public class KeyPairEndpoint {
+public class KeyPairApi {
     public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
     private final KeyPairService keyPairService;
 
-    public KeyPairEndpoint(@Context Application app) {
+    public KeyPairApi(@Context Application app) {
         keyPairService = ((ApiMain) app).getApplicationService().getSecurityService().getKeyPairService();
     }
 
