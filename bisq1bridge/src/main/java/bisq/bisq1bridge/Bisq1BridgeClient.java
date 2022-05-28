@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class Bisq1BridgeClient {
-    private static final int DEFAULT_PORT = 8080;
+    private static final int DEFAULT_PORT = 8082;
 
     private final NetworkService networkService;
     private final DaoBridgeService daoBridgeService;
@@ -50,7 +50,10 @@ public class Bisq1BridgeClient {
     private AtomicInteger lastRequestedBlockHeight = new AtomicInteger(0);
 
     public Bisq1BridgeClient(String[] args) {
-        applicationService = new DefaultApplicationService(new String[]{"--appName=Bisq1BridgeClient"});
+        if (args == null || args.length == 0) {
+            args = new String[]{"--appName=Bisq1BridgeClient"};
+        }
+        applicationService = new DefaultApplicationService(args);
         applicationService.readAllPersisted().join();
         networkService = applicationService.getNetworkService();
         daoBridgeService = applicationService.getDaoBridgeService();
@@ -69,11 +72,14 @@ public class Bisq1BridgeClient {
     private void requestProofOfBurnTxs() {
         CompletableFuture.supplyAsync(() -> {
                     try {
-                        String path = "get-proof-of-burn-data?" + (lastRequestedBlockHeight.get() + 1);
+                        String path = "/api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedBlockHeight.get() + 1);
+                        log.info("Request Bisq DAO node: {}", path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                        return new ObjectMapper().readValue(response, new TypeReference<List<ProofOfBurnDto>>() {
+                        List<ProofOfBurnDto> proofOfBurnDtos = new ObjectMapper().readValue(response, new TypeReference<List<ProofOfBurnDto>>() {
                         });
+                        log.info("Bisq DAO node response: {}", proofOfBurnDtos);
+                        return proofOfBurnDtos;
                     } catch (IOException e) {
                         e.printStackTrace();
                         return new ArrayList<ProofOfBurnDto>();
@@ -95,7 +101,7 @@ public class Bisq1BridgeClient {
 
     private BaseHttpClient getHttpClient(int port) {
         String userAgent = "Bisq1BridgeNode";
-        String url = "http://localhost:" + port + "/api/";
+        String url = "http://localhost:" + port;
         return networkService.getHttpClient(url, userAgent, Transport.Type.CLEAR);
     }
 }
