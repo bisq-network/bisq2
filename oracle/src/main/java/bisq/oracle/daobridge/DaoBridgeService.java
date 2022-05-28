@@ -25,6 +25,7 @@ import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.security.KeyGeneration;
 import com.typesafe.config.Config;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PrivateKey;
@@ -46,6 +47,7 @@ import java.util.concurrent.CompletableFuture;
 public class DaoBridgeService {
     private final NetworkService networkService;
     private final IdentityService identityService;
+    @Getter
     private final Config daoBridgeConfig;
 
     public DaoBridgeService(NetworkService networkService,
