@@ -23,6 +23,7 @@ import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LocaleRepository;
+import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
@@ -54,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -118,6 +120,9 @@ public class DefaultApplicationService extends ServiceProvider {
         super("Bisq");
 
         applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
+
+        String logPath = Paths.get(applicationConfig.baseDir(), "bisq").toString();
+        LogSetup.setup(logPath);
 
         Locale locale = applicationConfig.getLocale();
         LocaleRepository.initialize(locale);

@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import bisq.common.logging.LogSetup;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
@@ -25,6 +26,7 @@ import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -52,7 +54,10 @@ public class NetworkApplicationService extends ServiceProvider {
         super("Seed");
        
         this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-
+        
+        String logPath = Paths.get( applicationConfig.baseDir(), "bisq").toString();
+        LogSetup.setup(logPath);
+        
         persistenceService = new PersistenceService(applicationConfig.baseDir());
        
         securityService = new SecurityService(persistenceService);
