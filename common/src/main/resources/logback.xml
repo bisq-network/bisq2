@@ -9,50 +9,8 @@
         </encoder>
     </appender>
 
-    <appender name="BISQ-MAIN-LOG" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/bisq2.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-NETWORK" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-network.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-DESKTOP" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-desktop.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-PERSISTENCE" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-persistence.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-PROTOCOL" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-protocol.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-TOR" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-tor.log</file>
-    </appender>
-    <appender name="BISQ-MODULE-I2P" class="bisq.common.logging.BisqRollingFileAppender">
-        <file>${LOG_ROOT}/module-i2p.log</file>
-    </appender>
-
-    <root level="DEBUG">
+    <root>
         <appender-ref ref="CONSOLE_APPENDER"/>
-        <appender-ref ref="BISQ-MAIN-LOG"/>
     </root>
-
-    <logger name="bisq.desktop" level="INFO">
-        <appender-ref ref="BISQ-MODULE-DESKTOP" />
-    </logger>
-    <logger name="bisq.protocol" level="INFO">
-        <appender-ref ref="BISQ-MODULE-PROTOCOL" />
-    </logger>
-    <logger name="bisq.network" level="DEBUG">
-        <appender-ref ref="BISQ-MODULE-NETWORK" />
-    </logger>
-    <logger name="bisq.persistence" level="WARN">
-        <appender-ref ref="BISQ-MODULE-PERSISTENCE" />
-    </logger>
-    <logger name="bisq.tor" level="INFO">
-        <appender-ref ref="BISQ-MODULE-TOR" />
-    </logger>
-    <logger name="bisq.i2p" level="INFO">
-        <appender-ref ref="BISQ-MODULE-I2P" />
-    </logger>
 </configuration>
         
