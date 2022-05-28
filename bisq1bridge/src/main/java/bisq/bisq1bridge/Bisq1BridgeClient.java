@@ -27,6 +27,7 @@ import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -41,8 +42,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class Bisq1BridgeClient {
-    private static final int DEFAULT_PORT = 8082;
-
     private final NetworkService networkService;
     private final DaoBridgeService daoBridgeService;
     private BaseHttpClient httpClient;
@@ -59,7 +58,8 @@ public class Bisq1BridgeClient {
         daoBridgeService = applicationService.getDaoBridgeService();
 
         applicationService.initialize().thenRun(() -> {
-            httpClient = getHttpClient(DEFAULT_PORT);
+            Config daoBridgeConfig = daoBridgeService.getDaoBridgeConfig();
+            httpClient = getHttpClient(daoBridgeConfig.getString("url"));
             startRequests();
         });
     }
@@ -99,9 +99,8 @@ public class Bisq1BridgeClient {
         return daoBridgeService.publishProofOfBurnDtoSet(proofOfBurnDtoList);
     }
 
-    private BaseHttpClient getHttpClient(int port) {
+    private BaseHttpClient getHttpClient(String url) {
         String userAgent = "Bisq1BridgeNode";
-        String url = "http://localhost:" + port;
         return networkService.getHttpClient(url, userAgent, Transport.Type.CLEAR);
     }
 }
