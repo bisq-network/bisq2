@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation libs.google.guava
     implementation libs.apache.commons.compress
+    implementation libs.tukaani
 
     implementation libs.chimp.jsocks
     implementation libs.chimp.jtorctl
