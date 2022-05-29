@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    project.mainClassName = 'bisq.bisq1bridge.Bisq1bridgeMain'
+    project.mainClassName = 'bisq.bisq1Bridge.Bisq1BridgeMain'
 }
 
 run {
