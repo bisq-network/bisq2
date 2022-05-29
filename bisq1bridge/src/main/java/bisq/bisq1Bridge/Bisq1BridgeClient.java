@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq1bridge;
+package bisq.bisq1Bridge;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.Pair;

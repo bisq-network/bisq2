@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq1bridge;
+package bisq.bisq1Bridge;
 
 import lombok.extern.slf4j.Slf4j;
 
