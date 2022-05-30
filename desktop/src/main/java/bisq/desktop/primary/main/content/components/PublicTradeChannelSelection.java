@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
@@ -276,12 +277,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
                         publicTradeChannel.getMarket()
-                                .ifPresent(market -> label.setGraphic(
+                                .ifPresentOrElse(market -> label.setGraphic(
                                         MarketImageComposition.imageViewForMarket(
                                                 market.baseCurrencyCode().toLowerCase(), 
                                                 market.quoteCurrencyCode().toLowerCase()
                                         )
-                                ));
+                                ), () -> label.setGraphic(ImageUtil.getImageViewById("any-market"))); // todo: ask pedro about better icon
+                        
                         label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
