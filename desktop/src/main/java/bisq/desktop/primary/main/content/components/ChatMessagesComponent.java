@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.control.NoSelectionModel;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -480,6 +481,8 @@ public class ChatMessagesComponent {
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
+            // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
+            messagesListView.setSelectionModel(new NoSelectionModel<>());
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
             inputField = new BisqTextArea();
