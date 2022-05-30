@@ -640,9 +640,8 @@ public class ChatMessagesComponent {
                             reactionsBox.setPadding(new Insets(5, 15, 5, 15));
                             reactionsBox.setVisible(false);
 
+                            message.setId("chat-messages-message");
                             message.setAutoHeight(true);
-                            message.setMinHeight(36);
-                            message.getStyleClass().addAll("bisq-text-1", "font-medium");
                             HBox.setHgrow(message, Priority.ALWAYS);
 
                             takeOfferButton = new Button(Res.get("takeOffer"));
