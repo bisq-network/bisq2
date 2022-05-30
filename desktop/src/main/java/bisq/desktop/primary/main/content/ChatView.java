@@ -108,7 +108,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                 infoButton
         );
         centerToolbar.setAlignment(Pos.CENTER);
-        centerToolbar.setMinHeight(50);
+        centerToolbar.setMinHeight(64);
         centerToolbar.setPadding(new Insets(0, 20, 0, 20));
 
 
@@ -131,7 +131,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 
-        center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
+        center = new VBox(centerToolbar, filterBoxRoot, messagesListAndSideBar);
         root.getItems().addAll(left, center);
     }
 
