@@ -817,6 +817,7 @@
     -fx-padding: 13 0 13 0;
     -fx-border-color: -bisq-grey-7;
     -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1em;
 }
 
 .list-view.chat-messages-list-view .list-cell:empty {
@@ -1352,6 +1353,21 @@ tree-table-view:focused {
     -fx-background-insets: 0;
     -fx-border-insets: 0;
     -fx-padding: 4;
+}
+
+#chat-messages-edit-text-area.text-area {
+    -fx-padding: 0;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+#chat-messages-edit-text-area.text-area .content {
+    -fx-padding: 0;
+}
+
+#chat-messages-edit-text-area.text-area:focused .content {
+    -fx-background-color: transparent;
 }
 
 #chat-messages-send-button {

@@ -61,7 +61,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -566,7 +565,7 @@ public class ChatMessagesComponent {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final BisqTextArea editedMessageField;
+                        private final BisqTextArea editInputField;
                         private final Button takeOfferButton, saveEditButton, cancelEditButton;
                         private final Label emojiButton1, emojiButton2,
                                 openEmojiSelectorButton, replyButton,
@@ -576,7 +575,6 @@ public class ChatMessagesComponent {
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
-                        private final VBox messageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
@@ -608,16 +606,18 @@ public class ChatMessagesComponent {
                             HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             verticalLine.setId("chat-message-reactions-separator");
 
-                            editedMessageField = new BisqTextArea();
-                            editedMessageField.setVisible(false);
-                            editedMessageField.setManaged(false);
+                            editInputField = new BisqTextArea();
+                            editInputField.setId("chat-messages-edit-text-area");
+                            editInputField.setVisible(false);
+                            editInputField.setManaged(false);
+                            HBox.setHgrow(editInputField, Priority.ALWAYS);
+                            VBox.setMargin(editInputField, new Insets(-15, 0, 0, 0));
 
                             saveEditButton = new Button(Res.get("shared.save"));
                             cancelEditButton = new Button(Res.get("shared.cancel"));
                             editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editControlsBox.setVisible(false);
                             editControlsBox.setManaged(false);
-                            VBox.setMargin(editControlsBox, new Insets(10, 0, 0, 0));
 
                             quotedMessageBox = new HBox();
                             quotedMessageBox.setSpacing(10);
@@ -649,11 +649,10 @@ public class ChatMessagesComponent {
                             takeOfferButton.setVisible(false);
                             takeOfferButton.setManaged(false);
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                            
-                            messageBox = Layout.vBoxWith(quotedMessageBox,
+
+                            VBox messageBox = Layout.vBoxWith(quotedMessageBox,
                                     Layout.hBoxWith(message, takeOfferButton),
-                                    editedMessageField,
-                                    editControlsBox
+                                    editInputField
                             );
 
                             AnchorPane pane = new AnchorPane();
@@ -664,7 +663,9 @@ public class ChatMessagesComponent {
                             
                             AnchorPane.setRightAnchor(reactionsBox, 0.0);
                             AnchorPane.setBottomAnchor(reactionsBox, -10.0);
-                            pane.getChildren().addAll(messageBox, reactionsBox);
+                            AnchorPane.setRightAnchor(editControlsBox, 10.0);
+                            AnchorPane.setBottomAnchor(editControlsBox, 0.0);
+                            pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
                             
                             VBox vBox = new VBox(
                                     5, 
@@ -677,7 +678,9 @@ public class ChatMessagesComponent {
 
                         private void hideHoverOverlay() {
                             reactionsBox.setVisible(false);
-                            setStyle("-fx-background-color: transparent");
+                            if (!editInputField.isVisible()) {
+                                setStyle("-fx-background-color: transparent");
+                            }
                         }
 
                         @Override
@@ -746,7 +749,7 @@ public class ChatMessagesComponent {
                                 dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
-                                    controller.onSaveEditedMessage(chatMessage, editedMessageField.getText());
+                                    controller.onSaveEditedMessage(chatMessage, editInputField.getText());
                                     onCloseEditMessage();
                                 });
                                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
@@ -771,7 +774,9 @@ public class ChatMessagesComponent {
                                         return;
                                     }
 
-                                    reactionsBox.setVisible(true);
+                                    if (!editInputField.isVisible()) {
+                                        reactionsBox.setVisible(true);
+                                    }
                                     setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
@@ -828,7 +833,7 @@ public class ChatMessagesComponent {
                                 moreOptionsButton.setOnMouseClicked(null);
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
-                                editedMessageField.setOnKeyPressed(null);
+                                editInputField.setOnKeyPressed(null);
                                 takeOfferButton.setOnAction(null);
 
                                 setGraphic(null);
@@ -836,38 +841,43 @@ public class ChatMessagesComponent {
                         }
 
                         private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
-                            editedMessageField.setVisible(true);
-                            editedMessageField.setManaged(true);
-                            editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
-                            editedMessageField.setInitialHeight(message.getHeight());
-                            editedMessageField.setScrollHideThreshold(200);
+                            reactionsBox.setVisible(false);
+                            editInputField.setVisible(true);
+                            editInputField.setManaged(true);
+                            editInputField.setText(message.getText().replace(EDITED_POST_FIX, ""));
+                            editInputField.setScrollHideThreshold(200);
+                            editInputField.requestFocus();
+                            editInputField.positionCaret(message.getText().length());
+                            
 
                             editControlsBox.setVisible(true);
                             editControlsBox.setManaged(true);
                             message.setVisible(false);
                             message.setManaged(false);
-                            editedMessageField.setOnKeyPressed(event -> {
+                            editInputField.setOnKeyPressed(event -> {
                                 if (event.getCode() == KeyCode.ENTER) {
                                     event.consume();
                                     if (event.isShiftDown()) {
-                                        editedMessageField.appendText(System.getProperty("line.separator"));
-                                    } else if (!editedMessageField.getText().isEmpty()) {
+                                        editInputField.appendText(System.getProperty("line.separator"));
+                                    } else if (!editInputField.getText().isEmpty()) {
                                         controller.onSaveEditedMessage(item.getChatMessage(),
-                                                StringUtils.trimTrailingLinebreak(editedMessageField.getText()));
+                                                StringUtils.trimTrailingLinebreak(editInputField.getText()));
                                         onCloseEditMessage();
                                     }
                                 }
                             });
+                            
+                            log.info("Message font size: " + message.getStyleOfChar(1));
                         }
 
                         private void onCloseEditMessage() {
-                            editedMessageField.setVisible(false);
-                            editedMessageField.setManaged(false);
+                            editInputField.setVisible(false);
+                            editInputField.setManaged(false);
                             editControlsBox.setVisible(false);
                             editControlsBox.setManaged(false);
                             message.setVisible(true);
                             message.setManaged(true);
-                            editedMessageField.setOnKeyPressed(null);
+                            editInputField.setOnKeyPressed(null);
                         }
                     };
                 }
