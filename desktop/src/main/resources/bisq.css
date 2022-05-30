@@ -814,7 +814,7 @@
 
 .list-view.chat-messages-list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-padding: 16 0 16 0;
+    -fx-padding: 13 0 13 0;
     -fx-border-color: -bisq-grey-7;
     -fx-border-width: 0 0 1 0;
 }

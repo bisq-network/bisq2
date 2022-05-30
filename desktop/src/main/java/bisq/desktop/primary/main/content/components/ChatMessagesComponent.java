@@ -60,6 +60,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -572,7 +573,7 @@ public class ChatMessagesComponent {
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
-                        private final VBox vBox, messageBox;
+                        private final VBox messageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
@@ -581,9 +582,6 @@ public class ChatMessagesComponent {
                         {
                             userNameLabel.setId("chat-user-name");
                             dateTime.setId("chat-messages-date");
-
-                            HBox userNameAndTime = Layout.hBoxWith(userNameLabel, dateTime);
-                            userNameAndTime.setAlignment(Pos.CENTER_LEFT);
 
                             emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
                             emojiButton1.setUserData(":+1:");
@@ -604,7 +602,7 @@ public class ChatMessagesComponent {
                             moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                             moreOptionsButton.setCursor(Cursor.HAND);
                             Label verticalLine = new Label("|");
-                            HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
+                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             verticalLine.setId("chat-message-reactions-separator");
 
                             editedMessageField = new BisqTextArea();
@@ -624,9 +622,6 @@ public class ChatMessagesComponent {
                             quotedMessageBox.setManaged(false);
                             VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
 
-                            HBox.setMargin(emojiButton1, new Insets(0, 0, 0, 15));
-                            HBox.setMargin(moreOptionsButton, new Insets(0, 15, 0, 0));
-                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             reactionsBox = Layout.hBoxWith(
                                     emojiButton1,
                                     emojiButton2,
@@ -638,12 +633,9 @@ public class ChatMessagesComponent {
                                     deleteButton,
                                     moreOptionsButton);
                             reactionsBox.setSpacing(30);
-                            reactionsBox.setPadding(new Insets(5, 0, 5, 0));
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
+                            reactionsBox.setPadding(new Insets(5, 15, 5, 15));
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12; -fx-background-radius: 8 0 0 0");
-
-                            HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
-                            VBox.setMargin(reactionsOuterBox, new Insets(-5, 0, 0, 0));
 
                             message.setAutoHeight(true);
                             message.setMinHeight(36);
@@ -653,24 +645,35 @@ public class ChatMessagesComponent {
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setVisible(false);
                             takeOfferButton.setManaged(false);
-
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                            HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
+                            
                             messageBox = Layout.vBoxWith(quotedMessageBox,
-                                    messageAndTakeOfferButton,
+                                    Layout.hBoxWith(message, takeOfferButton),
                                     editedMessageField,
-                                    editControlsBox,
-                                    reactionsOuterBox);
-                            VBox.setVgrow(messageBox, Priority.ALWAYS);
+                                    editControlsBox
+                            );
 
-                            vBox = new VBox(5, userNameAndTime, messageBox);
+                            AnchorPane pane = new AnchorPane();
+                            AnchorPane.setTopAnchor(messageBox, 0.0);
+                            AnchorPane.setLeftAnchor(messageBox, 0.0);
+                            AnchorPane.setRightAnchor(messageBox, 0.0);
+                            AnchorPane.setBottomAnchor(messageBox, 0.0);
+                            
+                            AnchorPane.setRightAnchor(reactionsBox, 0.0);
+                            AnchorPane.setBottomAnchor(reactionsBox, -10.0);
+                            pane.getChildren().addAll(messageBox, reactionsBox);
+                            
+                            VBox vBox = new VBox(
+                                    5, 
+                                    Layout.hBoxWith(userNameLabel, dateTime),
+                                    pane
+                            );
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = Layout.hBoxWith(chatUserIcon, vBox);
                         }
 
                         private void hideHoverOverlay() {
                             reactionsBox.setVisible(false);
-                            messageBox.setStyle("-fx-background-color: transparent");
                             setStyle("-fx-background-color: transparent");
                         }
 
@@ -766,7 +769,6 @@ public class ChatMessagesComponent {
                                     }
 
                                     reactionsBox.setVisible(true);
-                                    messageBox.setStyle("-fx-background-color: -bisq-grey-12");
                                     setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
