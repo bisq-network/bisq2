@@ -132,7 +132,6 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 
         center = Layout.vBoxWith(centerToolbar, filterBoxRoot, messagesListAndSideBar);
-        center.getStyleClass().add("border-top-grey-7");
         root.getItems().addAll(left, center);
     }
 
