@@ -461,6 +461,7 @@ public class ChatMessagesComponent {
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
         private final BisqTextArea inputField;
+        private final Button sendButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel> channelMentionPopup;
 
@@ -485,6 +486,10 @@ public class ChatMessagesComponent {
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
             HBox.setHgrow(inputField, Priority.ALWAYS);
+            
+            sendButton = new Button();
+            sendButton.setId("chat-messages-send-button");
+            sendButton.setText(Res.get("send"));
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -495,11 +500,10 @@ public class ChatMessagesComponent {
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
-            bottomBox = Layout.hBoxWith(inputField);
+            bottomBox = new HBox(20, inputField, sendButton);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(20, 20, 20, 20));
-            HBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
+            bottomBox.setPadding(new Insets(14, 40, 14, 30));
 
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
@@ -522,6 +526,11 @@ public class ChatMessagesComponent {
                     }
                 }
             });
+            
+            sendButton.setOnAction(event -> {
+                controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                inputField.clear();
+            });
 
             userMentionPopup.setItems(model.mentionableUsers);
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -542,6 +551,7 @@ public class ChatMessagesComponent {
         protected void onViewDetached() {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
+            sendButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
             model.getSortedChatMessages().removeListener(messagesListener);
