@@ -250,3 +250,8 @@
 #icon-search {
     -fx-image: url("images/actions/icon-search.png");
 }
+
+/* Other */
+#any-market {
+    -fx-image: url("images/markets/any-market.png");
+}

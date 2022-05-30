@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.desktop.common.control.NoSelectionModel;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -461,6 +462,7 @@ public class ChatMessagesComponent {
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
         private final BisqTextArea inputField;
+        private final Button sendButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel> channelMentionPopup;
 
@@ -478,6 +480,8 @@ public class ChatMessagesComponent {
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
+            // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
+            messagesListView.setSelectionModel(new NoSelectionModel<>());
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
             inputField = new BisqTextArea();
@@ -485,6 +489,10 @@ public class ChatMessagesComponent {
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
             HBox.setHgrow(inputField, Priority.ALWAYS);
+            
+            sendButton = new Button();
+            sendButton.setId("chat-messages-send-button");
+            sendButton.setText(Res.get("send"));
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -495,11 +503,10 @@ public class ChatMessagesComponent {
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
-            bottomBox = Layout.hBoxWith(inputField);
+            bottomBox = new HBox(20, inputField, sendButton);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(20, 20, 20, 20));
-            HBox.setMargin(bottomBox, new Insets(0, 0, -10, 0));
+            bottomBox.setPadding(new Insets(14, 40, 14, 30));
 
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
@@ -522,6 +529,11 @@ public class ChatMessagesComponent {
                     }
                 }
             });
+            
+            sendButton.setOnAction(event -> {
+                controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                inputField.clear();
+            });
 
             userMentionPopup.setItems(model.mentionableUsers);
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -542,6 +554,7 @@ public class ChatMessagesComponent {
         protected void onViewDetached() {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
+            sendButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
             model.getSortedChatMessages().removeListener(messagesListener);
@@ -552,7 +565,7 @@ public class ChatMessagesComponent {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final BisqTextArea editedMessageField;
+                        private final BisqTextArea editInputField;
                         private final Button takeOfferButton, saveEditButton, cancelEditButton;
                         private final Label emojiButton1, emojiButton2,
                                 openEmojiSelectorButton, replyButton,
@@ -562,7 +575,6 @@ public class ChatMessagesComponent {
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
-                        private final VBox vBox, messageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Tooltip dateTooltip;
                         Subscription widthSubscription;
@@ -571,9 +583,6 @@ public class ChatMessagesComponent {
                         {
                             userNameLabel.setId("chat-user-name");
                             dateTime.setId("chat-messages-date");
-
-                            HBox userNameAndTime = Layout.hBoxWith(userNameLabel, dateTime);
-                            userNameAndTime.setAlignment(Pos.CENTER_LEFT);
 
                             emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
                             emojiButton1.setUserData(":+1:");
@@ -594,19 +603,21 @@ public class ChatMessagesComponent {
                             moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                             moreOptionsButton.setCursor(Cursor.HAND);
                             Label verticalLine = new Label("|");
-                            HBox.setMargin(verticalLine, new Insets(4, 0, 0, 0));
+                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             verticalLine.setId("chat-message-reactions-separator");
 
-                            editedMessageField = new BisqTextArea();
-                            editedMessageField.setVisible(false);
-                            editedMessageField.setManaged(false);
+                            editInputField = new BisqTextArea();
+                            editInputField.setId("chat-messages-edit-text-area");
+                            editInputField.setVisible(false);
+                            editInputField.setManaged(false);
+                            HBox.setHgrow(editInputField, Priority.ALWAYS);
+                            VBox.setMargin(editInputField, new Insets(-15, 0, 0, 0));
 
                             saveEditButton = new Button(Res.get("shared.save"));
                             cancelEditButton = new Button(Res.get("shared.cancel"));
                             editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editControlsBox.setVisible(false);
                             editControlsBox.setManaged(false);
-                            VBox.setMargin(editControlsBox, new Insets(10, 0, 0, 0));
 
                             quotedMessageBox = new HBox();
                             quotedMessageBox.setSpacing(10);
@@ -614,9 +625,6 @@ public class ChatMessagesComponent {
                             quotedMessageBox.setManaged(false);
                             VBox.setMargin(quotedMessageBox, new Insets(0, 0, 10, 0));
 
-                            HBox.setMargin(emojiButton1, new Insets(0, 0, 0, 15));
-                            HBox.setMargin(moreOptionsButton, new Insets(0, 15, 0, 0));
-                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
                             reactionsBox = Layout.hBoxWith(
                                     emojiButton1,
                                     emojiButton2,
@@ -628,40 +636,50 @@ public class ChatMessagesComponent {
                                     deleteButton,
                                     moreOptionsButton);
                             reactionsBox.setSpacing(30);
-                            reactionsBox.setPadding(new Insets(5, 0, 5, 0));
+                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
+                            reactionsBox.setPadding(new Insets(5, 15, 5, 15));
                             reactionsBox.setVisible(false);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12; -fx-background-radius: 8 0 0 0");
 
-                            HBox reactionsOuterBox = Layout.hBoxWith(Spacer.fillHBox(), reactionsBox);
-                            VBox.setMargin(reactionsOuterBox, new Insets(-5, 0, 0, 0));
-
+                            message.setId("chat-messages-message");
                             message.setAutoHeight(true);
-                            message.setMinHeight(36);
-                            message.getStyleClass().addAll("bisq-text-1", "font-medium");
                             HBox.setHgrow(message, Priority.ALWAYS);
 
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setVisible(false);
                             takeOfferButton.setManaged(false);
-
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                            HBox messageAndTakeOfferButton = Layout.hBoxWith(message, takeOfferButton);
-                            messageBox = Layout.vBoxWith(quotedMessageBox,
-                                    messageAndTakeOfferButton,
-                                    editedMessageField,
-                                    editControlsBox,
-                                    reactionsOuterBox);
-                            VBox.setVgrow(messageBox, Priority.ALWAYS);
 
-                            vBox = new VBox(5, userNameAndTime, messageBox);
+                            VBox messageBox = Layout.vBoxWith(quotedMessageBox,
+                                    Layout.hBoxWith(message, takeOfferButton),
+                                    editInputField
+                            );
+
+                            AnchorPane pane = new AnchorPane();
+                            AnchorPane.setTopAnchor(messageBox, 0.0);
+                            AnchorPane.setLeftAnchor(messageBox, 0.0);
+                            AnchorPane.setRightAnchor(messageBox, 0.0);
+                            AnchorPane.setBottomAnchor(messageBox, 0.0);
+                            
+                            AnchorPane.setRightAnchor(reactionsBox, 0.0);
+                            AnchorPane.setBottomAnchor(reactionsBox, -10.0);
+                            AnchorPane.setRightAnchor(editControlsBox, 10.0);
+                            AnchorPane.setBottomAnchor(editControlsBox, 0.0);
+                            pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
+                            
+                            VBox vBox = new VBox(
+                                    5, 
+                                    Layout.hBoxWith(userNameLabel, dateTime),
+                                    pane
+                            );
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = Layout.hBoxWith(chatUserIcon, vBox);
                         }
 
                         private void hideHoverOverlay() {
                             reactionsBox.setVisible(false);
-                            messageBox.setStyle("-fx-background-color: transparent");
-                            setStyle("-fx-background-color: transparent");
+                            if (!editInputField.isVisible()) {
+                                setStyle("-fx-background-color: transparent");
+                            }
                         }
 
                         @Override
@@ -730,7 +748,7 @@ public class ChatMessagesComponent {
                                 dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
-                                    controller.onSaveEditedMessage(chatMessage, editedMessageField.getText());
+                                    controller.onSaveEditedMessage(chatMessage, editInputField.getText());
                                     onCloseEditMessage();
                                 });
                                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
@@ -755,8 +773,9 @@ public class ChatMessagesComponent {
                                         return;
                                     }
 
-                                    reactionsBox.setVisible(true);
-                                    messageBox.setStyle("-fx-background-color: -bisq-grey-12");
+                                    if (!editInputField.isVisible()) {
+                                        reactionsBox.setVisible(true);
+                                    }
                                     setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
@@ -813,7 +832,7 @@ public class ChatMessagesComponent {
                                 moreOptionsButton.setOnMouseClicked(null);
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
-                                editedMessageField.setOnKeyPressed(null);
+                                editInputField.setOnKeyPressed(null);
                                 takeOfferButton.setOnAction(null);
 
                                 setGraphic(null);
@@ -821,38 +840,43 @@ public class ChatMessagesComponent {
                         }
 
                         private void onEditMessage(ChatMessageListItem<? extends ChatMessage> item) {
-                            editedMessageField.setVisible(true);
-                            editedMessageField.setManaged(true);
-                            editedMessageField.setText(message.getText().replace(EDITED_POST_FIX, ""));
-                            editedMessageField.setInitialHeight(message.getHeight());
-                            editedMessageField.setScrollHideThreshold(200);
+                            reactionsBox.setVisible(false);
+                            editInputField.setVisible(true);
+                            editInputField.setManaged(true);
+                            editInputField.setText(message.getText().replace(EDITED_POST_FIX, ""));
+                            editInputField.setScrollHideThreshold(200);
+                            editInputField.requestFocus();
+                            editInputField.positionCaret(message.getText().length());
+                            
 
                             editControlsBox.setVisible(true);
                             editControlsBox.setManaged(true);
                             message.setVisible(false);
                             message.setManaged(false);
-                            editedMessageField.setOnKeyPressed(event -> {
+                            editInputField.setOnKeyPressed(event -> {
                                 if (event.getCode() == KeyCode.ENTER) {
                                     event.consume();
                                     if (event.isShiftDown()) {
-                                        editedMessageField.appendText(System.getProperty("line.separator"));
-                                    } else if (!editedMessageField.getText().isEmpty()) {
+                                        editInputField.appendText(System.getProperty("line.separator"));
+                                    } else if (!editInputField.getText().isEmpty()) {
                                         controller.onSaveEditedMessage(item.getChatMessage(),
-                                                StringUtils.trimTrailingLinebreak(editedMessageField.getText()));
+                                                StringUtils.trimTrailingLinebreak(editInputField.getText()));
                                         onCloseEditMessage();
                                     }
                                 }
                             });
+                            
+                            log.info("Message font size: " + message.getStyleOfChar(1));
                         }
 
                         private void onCloseEditMessage() {
-                            editedMessageField.setVisible(false);
-                            editedMessageField.setManaged(false);
+                            editInputField.setVisible(false);
+                            editInputField.setManaged(false);
                             editControlsBox.setVisible(false);
                             editControlsBox.setManaged(false);
                             message.setVisible(true);
                             message.setManaged(true);
-                            editedMessageField.setOnKeyPressed(null);
+                            editInputField.setOnKeyPressed(null);
                         }
                     };
                 }
