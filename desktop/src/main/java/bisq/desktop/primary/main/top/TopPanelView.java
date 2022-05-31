@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -35,11 +34,12 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setMinHeight(HEIGHT);
         root.setMaxHeight(HEIGHT);
         root.setSpacing(28);
+        root.setFillHeight(true);
         root.setStyle("-fx-background-color: -bisq-bg-dark;");
-        root.setPadding(new Insets(10, 30, 10, 0));
-        marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
+       // marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
         userProfileSelection.setPrefWidth(320);
-        root.getChildren().addAll(Spacer.fillHBox(),/* marketPriceBox,*/ userProfileSelection);
+        root.setPadding(new Insets(5, 0, 0, 0));
+        root.getChildren().addAll(/*Spacer.fillHBox(),*//* marketPriceBox,*/ userProfileSelection);
     }
 
     @Override

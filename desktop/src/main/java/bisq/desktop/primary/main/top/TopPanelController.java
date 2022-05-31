@@ -28,7 +28,7 @@ public class TopPanelController implements Controller {
 
     public TopPanelController(DefaultApplicationService applicationService) {
         TopPanelModel model = new TopPanelModel();
-        UserProfileSelection   userProfileSelection = new UserProfileSelection(applicationService.getChatUserService());
+        UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getChatUserService());
         MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection.getRoot(), marketPriceComponent.getRootPane());
     }
