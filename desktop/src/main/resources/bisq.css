@@ -9,6 +9,11 @@
 }
 
 @font-face {
+    font-family: "IBM Plex Sans SemiBold";
+    src: url("/fonts/IBMPlexSans-SemiBold.ttf");
+}
+
+@font-face {
     font-family: "IBM Plex Sans Medium";
     src: url("/fonts/IBMPlexSans-Medium.ttf");
 }
@@ -1360,7 +1365,7 @@ tree-table-view:focused {
     -fx-padding: 0;
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.23em;
-    -fx-font-family: "IBM Plex Sans";
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 #chat-messages-edit-text-area.text-area .content {
@@ -1380,7 +1385,7 @@ tree-table-view:focused {
 #chat-messages-headline {
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.53em;
-    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-family: "IBM Plex Sans SemiBold";
 }
 
 #chat-messages-date {
@@ -1392,7 +1397,7 @@ tree-table-view:focused {
     -fx-fill: -bisq-white;
     -fx-font-size: 1.23em;
     -fx-min-height: 36;
-    -fx-font-family: "IBM Plex Sans";
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 #chat-sidebar-headline {
@@ -1453,7 +1458,7 @@ tree-table-view:focused {
 #chat-user-name {
     -fx-text-fill: -bisq-white;
     -fx-font-size: 0.92em;
-    -fx-font-weight: bold;
+    -fx-font-family: "IBM Plex Sans SemiBold";
     -fx-cursor: hand;
 }
 

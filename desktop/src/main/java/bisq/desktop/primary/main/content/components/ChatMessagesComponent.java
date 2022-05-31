@@ -666,8 +666,8 @@ public class ChatMessagesComponent {
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
                             
                             VBox vBox = new VBox(
-                                    5, 
-                                    Layout.hBoxWith(userNameLabel, dateTime),
+                                    0, 
+                                    new HBox(5, userNameLabel, dateTime),
                                     pane
                             );
                             HBox.setHgrow(vBox, Priority.ALWAYS);
