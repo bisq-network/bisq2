@@ -342,7 +342,7 @@ public class ChatMessagesComponent {
             }
             model.moreOptionsVisibleMessage.set(chatMessage);
             List<BisqPopupMenuItem> items = new ArrayList<>();
-            
+
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> {
                 ClipboardUtil.copyToClipboard(chatMessage.getText());
             }));
@@ -432,7 +432,7 @@ public class ChatMessagesComponent {
             ignoredChatUserPredicate = item -> item.getAuthor().isPresent() &&
                     !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
-            
+
             mentionableUsers.setAll(chatUserService.getMentionableChatUsers());
             mentionableChannels.setAll(chatService.getMentionableChannels());
         }
@@ -489,7 +489,7 @@ public class ChatMessagesComponent {
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
             inputField.setPrefWidth(300);
             HBox.setHgrow(inputField, Priority.ALWAYS);
-            
+
             sendButton = new Button();
             sendButton.setId("chat-messages-send-button");
             sendButton.setText(Res.get("send"));
@@ -497,7 +497,7 @@ public class ChatMessagesComponent {
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
-            
+
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
             channelMentionPopup.setItemDisplayConverter(Channel::getDisplayString);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
@@ -529,7 +529,7 @@ public class ChatMessagesComponent {
                     }
                 }
             });
-            
+
             sendButton.setOnAction(event -> {
                 controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
                 inputField.clear();
@@ -540,13 +540,13 @@ public class ChatMessagesComponent {
                     () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
                     inputField.textProperty()
             ));
-            
+
             channelMentionPopup.setItems(model.mentionableChannels);
             channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
                     () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
                     inputField.textProperty()
             ));
-            
+
             model.getSortedChatMessages().addListener(messagesListener);
         }
 
@@ -634,13 +634,14 @@ public class ChatMessagesComponent {
                                     editButton,
                                     deleteButton,
                                     moreOptionsButton);
-                            reactionsBox.setSpacing(30);
+                            reactionsBox.setSpacing(20);
                             reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
-                            reactionsBox.setPadding(new Insets(5, 15, 5, 15));
+                            reactionsBox.setPadding(new Insets(0, 15, 5, 15));
                             reactionsBox.setVisible(false);
 
                             message.setId("chat-messages-message");
                             message.setAutoHeight(true);
+                            message.setPadding(new Insets(0, 0, 20, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
 
                             takeOfferButton = new Button(Res.get("takeOffer"));
@@ -658,18 +659,14 @@ public class ChatMessagesComponent {
                             AnchorPane.setLeftAnchor(messageBox, 0.0);
                             AnchorPane.setRightAnchor(messageBox, 0.0);
                             AnchorPane.setBottomAnchor(messageBox, 0.0);
-                            
+
                             AnchorPane.setRightAnchor(reactionsBox, 0.0);
                             AnchorPane.setBottomAnchor(reactionsBox, -10.0);
                             AnchorPane.setRightAnchor(editControlsBox, 10.0);
                             AnchorPane.setBottomAnchor(editControlsBox, 0.0);
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
-                            
-                            VBox vBox = new VBox(
-                                    0, 
-                                    new HBox(5, userNameLabel, dateTime),
-                                    pane
-                            );
+
+                            VBox vBox = new VBox(0, new HBox(5, userNameLabel, dateTime), pane);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = Layout.hBoxWith(chatUserIcon, vBox);
                         }
@@ -843,7 +840,6 @@ public class ChatMessagesComponent {
                             editInputField.setScrollHideThreshold(200);
                             editInputField.requestFocus();
                             editInputField.positionCaret(message.getText().length());
-                            
 
                             editControlsBox.setVisible(true);
                             editControlsBox.setManaged(true);
@@ -861,7 +857,7 @@ public class ChatMessagesComponent {
                                     }
                                 }
                             });
-                            
+
                             log.info("Message font size: " + message.getStyleOfChar(1));
                         }
 
@@ -894,7 +890,7 @@ public class ChatMessagesComponent {
 
         public ChatMessageListItem(T chatMessage, ChatService chatService) {
             this.chatMessage = chatMessage;
-            
+
             if (chatMessage instanceof PrivateTradeChatMessage privateTradeChatMessage) {
                 author = Optional.of(privateTradeChatMessage.getAuthor());
             } else if (chatMessage instanceof PrivateDiscussionChatMessage privateDiscussionChatMessage) {

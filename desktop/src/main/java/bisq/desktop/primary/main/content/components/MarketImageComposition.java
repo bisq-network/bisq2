@@ -14,18 +14,18 @@ import java.util.stream.Stream;
 
 @Slf4j
 public class MarketImageComposition {
-    private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "ltc", "usd", "xmr");
-    
+    private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
+
     public static StackPane imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
         boolean isRetina = ImageUtil.isRetina();
-        
+
         StackPane pane = new StackPane();
         pane.setPrefHeight(isRetina ? 34 : 17);
-        pane.setPrefWidth(isRetina ? 60 : 30);
+        pane.setPrefWidth(isRetina ? 30 : 15);
 
         Stream<String> stream = baseCurrencyCode.equals("btc")
-                ? Stream.of(quoteCurrencyCode, baseCurrencyCode)
-                : Stream.of(baseCurrencyCode, quoteCurrencyCode);
+                ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
+                : Stream.of(quoteCurrencyCode, baseCurrencyCode);
 
         stream.forEach(code -> {
             Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
@@ -36,14 +36,32 @@ public class MarketImageComposition {
                 imageView.setId("market-" + code);
             } else {
                 boolean isFiat = TradeCurrency.isFiat(code.toUpperCase());
-                imageView.setId(isFiat ? "market-fiat" : "market-crypto");
+                if (code.length() > 4) {
+                    code = code.toUpperCase().substring(0, 4);
+                }
                 Label label = new Label(code.toUpperCase());
-                label.getStyleClass().setAll(isFiat ? "market-fiat-label" : "market-crypto-label");
                 StackPane.setAlignment(label, alignment);
+                if (isFiat) {
+                    imageView.setId("market-fiat");
+                    label.setPadding(new Insets(0, 1, 0, 0));
+                    label.getStyleClass().setAll("market-fiat-label");
+                } else {
+                    imageView.setId("market-crypto");
+                    label.setPadding(new Insets(0, 0, 0, 2));
+                    label.getStyleClass().setAll("market-crypto-label");
+                }
+                if (code.length() > 3) {
+                    label.setStyle("-fx-font-size: 6");
+                    if (isFiat) {
+                        label.setPadding(new Insets(0, 0, 0, 0));
+                    } else {
+                        label.setPadding(new Insets(0, 0, 0, 1));
+                    }
+                }
                 pane.getChildren().add(label);
             }
         });
-        
+
         return pane;
     }
 }
