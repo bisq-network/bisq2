@@ -15,19 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq1Bridge;
+package bisq.common.application;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
+import lombok.Setter;
 
-@Slf4j
-public class Bisq1BridgeMain {
-    public static void main(String[] args) {
-        new Bisq1BridgeClient(args);
-        try {
-            // Keep running
-            Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+public class DevMode {
+    @Setter
+    @Getter
+    private static boolean isDevMode;
 }
