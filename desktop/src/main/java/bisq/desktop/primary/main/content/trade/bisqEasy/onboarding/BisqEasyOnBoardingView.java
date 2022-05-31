@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -26,7 +25,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 
-public class BisqEasyOnBoardingView extends View<ScrollPane, BisqEasyOnBoardingModel, BisqEasyOnBoardingController> implements TabViewChild {
+public class BisqEasyOnBoardingView extends View<ScrollPane, BisqEasyOnBoardingModel, BisqEasyOnBoardingController> {
     private final Button learnMoreButton, nextButton;
     private final VBox vBox;
     private final Label learnMore;

@@ -31,8 +31,6 @@ public class TransportTypeView extends View<BisqGridPane, TransportTypeModel, Tr
     public TransportTypeView(TransportTypeModel model, TransportTypeController controller) {
         super(new BisqGridPane(), model, controller);
 
-        root.setPadding(new Insets(20, 20, 20, 0));
-
         root.startSection(Res.get("nodeInfo.title"));
         root.addTextField(Res.get("nodeInfo.myAddress"), model.getMyDefaultNodeAddress());
         root.endSection();

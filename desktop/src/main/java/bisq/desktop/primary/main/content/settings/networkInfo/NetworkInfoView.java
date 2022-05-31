@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.settings.networkInfo;
 
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.scene.Node;
@@ -31,8 +30,7 @@ import java.util.Optional;
 
 
 @Slf4j
-public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> implements TabViewChild {
-
+public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoController> {
     private final Accordion accordion;
 
     public NetworkInfoView(NetworkInfoModel model, NetworkInfoController controller,
@@ -44,6 +42,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         root.setFillWidth(true);
         root.setSpacing(20);
         accordion = new Accordion();
+       
         clear.ifPresent(childRoot -> {
             TitledPane titledPane = new TitledPane(Res.get("clearNet"), childRoot);
             accordion.getPanes().add(titledPane);
@@ -55,7 +54,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
             UIThread.runOnNextRenderFrame(() -> accordion.getPanes().get(0).setExpanded(true));
         }
 
-        root.getChildren().addAll(accordion);
+        root.getChildren().add(accordion);
     }
 
     @Override
