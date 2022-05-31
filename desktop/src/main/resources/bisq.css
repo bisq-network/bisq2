@@ -1505,3 +1505,9 @@ tree-table-view:focused {
     -fx-alignment: center-left;
     -fx-padding: 8 14 8 14;
 }
+
+#user-name-label {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+}

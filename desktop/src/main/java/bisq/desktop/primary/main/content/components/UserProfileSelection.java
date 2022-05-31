@@ -200,6 +200,8 @@ public class UserProfileSelection {
     }
 
     private static class UserProfileSkin extends AutoCompleteComboBox.Skin<ListItem> {
+        private final Label userNameLabel;
+
         public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
             super(control, description, prompt);
 
@@ -209,9 +211,11 @@ public class UserProfileSelection {
             imageView.setLayoutY(7);
 
             arrow.setLayoutY(23);
-            textInputBox.setLayoutX(50);
-            textInputBox.setMouseTransparent(true);
-            buttonPane.getChildren().add(imageView);
+            userNameLabel = new Label();
+            userNameLabel.setId("user-name-label");
+            userNameLabel.setLayoutY(12);
+            buttonPane.getChildren().clear();
+            buttonPane.getChildren().addAll(userNameLabel, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
 
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
@@ -221,20 +225,20 @@ public class UserProfileSelection {
                             //todo temp use static image
                             // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
                             imageView.setId("temp-robo-profile-icon");
-                            textInputBox.setText(chatUserIdentity.getNickName());
+                            userNameLabel.setText(chatUserIdentity.getNickName());
                             //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
                         }
                     }).get());
 
             buttonPane.setOnMouseEntered(e -> {
-                textInputBox.setVisible(true);
+                userNameLabel.setVisible(true);
                 arrow.setVisible(true);
             });
             buttonPane.setOnMouseExited(e -> {
-                textInputBox.setVisible(false);
+                userNameLabel.setVisible(false);
                 arrow.setVisible(false);
             });
-            textInputBox.setVisible(false);
+            userNameLabel.setVisible(false);
             arrow.setVisible(false);
         }
 
@@ -243,7 +247,8 @@ public class UserProfileSelection {
                                       final double w, final double h) {
             super.layoutChildren(x, y, w, h);
 
-            textInputBox.setPrefWidth(w - 50);
+            userNameLabel.setLayoutX(-userNameLabel.getWidth() - 35);
+            arrow.setLayoutX(-25);
         }
 
         @Override
