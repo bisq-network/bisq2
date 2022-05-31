@@ -21,8 +21,12 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.transport.Transport;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 @Slf4j
 public class SplashController implements Controller {
@@ -30,7 +34,10 @@ public class SplashController implements Controller {
     @Getter
     private final SplashView view;
     private final DefaultApplicationService applicationService;
-    private Pin pin;
+    private Pin pinApplicationStatus;
+    private Pin pinClearnetStatus;
+    private Pin pinTorStatus;
+    private Pin pinI2pStatus;
 
     public SplashController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
@@ -40,11 +47,34 @@ public class SplashController implements Controller {
 
     @Override
     public void onActivate() {
-        pin = FxBindings.bind(model.getState()).to(applicationService.getState());
+        pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationService.getState());
+
+        Map<Transport.Type, ServiceNode> map = applicationService.getNetworkService().getServiceNodesByTransport().getMap();
+        ServiceNode clearnetNode = map.get(Transport.Type.CLEAR);
+        if (clearnetNode != null) {
+            pinClearnetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(clearnetNode.getState());
+        }
+        ServiceNode torNode = map.get(Transport.Type.TOR);
+        if (torNode != null) {
+            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(torNode.getState());
+        }
+        ServiceNode i2pNode = map.get(Transport.Type.I2P);
+        if (i2pNode != null) {
+            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(i2pNode.getState());
+        }
     }
 
     @Override
     public void onDeactivate() {
-        pin.unbind();
+        pinApplicationStatus.unbind();
+        if (pinClearnetStatus != null) {
+            pinClearnetStatus.unbind();
+        }
+        if (pinTorStatus != null) {
+            pinTorStatus.unbind();
+        }
+        if (pinI2pStatus != null) {
+            pinI2pStatus.unbind();
+        }
     }
 }

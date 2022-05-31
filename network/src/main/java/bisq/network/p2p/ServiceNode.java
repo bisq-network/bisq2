@@ -18,6 +18,7 @@
 package bisq.network.p2p;
 
 
+import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
@@ -50,7 +51,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -101,7 +101,7 @@ public class ServiceNode {
     @Getter
     private Optional<MonitorService> monitorService;
     @Getter
-    public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
+    public Observable<State> state = new Observable<>(State.CREATED);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ServiceNode(Config config,
