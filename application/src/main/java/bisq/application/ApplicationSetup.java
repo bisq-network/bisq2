@@ -15,19 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.bisq1Bridge;
+package bisq.application;
 
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.application.DevMode;
+import bisq.common.locale.LocaleRepository;
+import bisq.common.logging.LogSetup;
+import bisq.i18n.Res;
 
-@Slf4j
-public class Bisq1BridgeMain {
-    public static void main(String[] args) {
-        new Bisq1BridgeClient(args);
-        try {
-            // Keep running
-            Thread.currentThread().join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+import java.nio.file.Paths;
+import java.util.Locale;
+
+public class ApplicationSetup {
+    static void initialize(ApplicationConfig applicationConfig) {
+        LogSetup.setup(Paths.get(applicationConfig.baseDir(), "bisq").toString());
+
+        Locale locale = applicationConfig.getLocale();
+        LocaleRepository.initialize(locale);
+        Res.initialize(locale);
+
+        DevMode.setDevMode(applicationConfig.devMode());
     }
 }

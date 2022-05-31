@@ -17,8 +17,6 @@
 
 package bisq.application;
 
-import bisq.common.logging.LogSetup;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.persistence.PersistenceService;
@@ -26,9 +24,6 @@ import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -45,21 +40,19 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
 @Getter
 @Slf4j
 public class NetworkApplicationService extends ServiceProvider {
-    private final NetworkService networkService;
-    private final ApplicationConfig applicationConfig;
-    private final PersistenceService persistenceService;
-    private final SecurityService securityService;
+    protected final NetworkService networkService;
+    protected final ApplicationConfig applicationConfig;
+    protected final PersistenceService persistenceService;
+    protected final SecurityService securityService;
 
     public NetworkApplicationService(String[] args) {
         super("Seed");
-       
-        this.applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-        
-        String logPath = Paths.get( applicationConfig.baseDir(), "bisq").toString();
-        LogSetup.setup(logPath);
-        
+
+        applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
+        ApplicationSetup.initialize(applicationConfig);
+
         persistenceService = new PersistenceService(applicationConfig.baseDir());
-       
+
         securityService = new SecurityService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
@@ -67,8 +60,6 @@ public class NetworkApplicationService extends ServiceProvider {
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
     }
-
-  
 
     public CompletableFuture<Boolean> readAllPersisted() {
         return persistenceService.readAllPersisted();
@@ -79,15 +70,9 @@ public class NetworkApplicationService extends ServiceProvider {
      * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
      */
     public CompletableFuture<Boolean> initialize() {
-        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
-        // Assuming identityRepository depends on keyPairRepository being initialized... 
-        allFutures.add(securityService.initialize());
-        allFutures.add(networkService.bootstrapToNetwork());
-        // Once all have successfully completed our initialize is complete as well
-        return CompletableFutureUtils.allOf(allFutures)
-                .thenApply(success -> success.stream().allMatch(e -> e))
-                .orTimeout(10, TimeUnit.SECONDS)
-                .thenCompose(CompletableFuture::completedFuture);
+        return securityService.initialize()
+                .thenCompose(result -> networkService.bootstrapToNetwork())
+                .orTimeout(10, TimeUnit.SECONDS);
     }
 
     @Override

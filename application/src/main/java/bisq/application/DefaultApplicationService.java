@@ -22,19 +22,15 @@ import bisq.account.accountage.AccountAgeWitnessService;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.common.locale.CountryRepository;
-import bisq.common.locale.LocaleRepository;
-import bisq.common.logging.LogSetup;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfigFactory;
 import bisq.offer.OfferBookService;
 import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
-import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
 import bisq.persistence.PersistenceService;
@@ -55,9 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -112,7 +106,6 @@ public class DefaultApplicationService extends ServiceProvider {
     private final OfferService offerService;
     private final SocialService socialService;
     private final SecurityService securityService;
-    private final DaoBridgeService daoBridgeService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Observable<State> state = new Observable<>(State.CREATED);
 
@@ -120,13 +113,7 @@ public class DefaultApplicationService extends ServiceProvider {
         super("Bisq");
 
         applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-
-        String logPath = Paths.get(applicationConfig.baseDir(), "bisq").toString();
-        LogSetup.setup(logPath);
-
-        Locale locale = applicationConfig.getLocale();
-        LocaleRepository.initialize(locale);
-        Res.initialize(locale);
+        ApplicationSetup.initialize(applicationConfig);
 
         persistenceService = new PersistenceService(applicationConfig.baseDir());
 
@@ -174,8 +161,6 @@ public class DefaultApplicationService extends ServiceProvider {
         // L-BTC Wallet Service
         walletConfig = !applicationConfig.isElementsdRegtest() ? Optional.empty() : createRegtestWalletConfig();
         lBtcWalletService = new LiquidWalletService(persistenceService, walletsDataDir, walletConfig);
-
-        daoBridgeService = new DaoBridgeService(networkService, identityService, getConfig("bisq.oracle.daoBridge"));
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -192,7 +177,6 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfter(securityService.initialize(), State.SECURITY_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(networkService.bootstrapToNetwork(), State.NETWORK_BOOTSTRAPPED))
                 .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(daoBridgeService.initialize(), State.DAO_BRIDGE_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(marketPriceService.initialize(), State.MARKET_PRICE_SERVICE_INITIALIZED))
                 .whenComplete((list, throwable) -> {
                     log.info("add dummy accounts");
@@ -215,8 +199,8 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         chatUserService.initialize()
-                                .thenCompose(res -> reputationService.initialize()).
-                                thenCompose(res -> chatService.initialize()),
+                                .thenCompose(res -> reputationService.initialize())
+                                .thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeChatOfferService.initialize(),

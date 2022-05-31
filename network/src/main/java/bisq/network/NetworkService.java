@@ -45,6 +45,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import bisq.security.SignatureUtil;
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -353,7 +354,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public BaseHttpClient getHttpClient(String url, String userAgent, Transport.Type transportType) {
-        return httpService.getHttpClient(url, userAgent, transportType, serviceNodesByTransport.getSocksProxy(), socks5ProxyAddress);
+        // socksProxy only supported for TOR
+        Optional<Socks5Proxy> socksProxy = transportType == TOR ? serviceNodesByTransport.getSocksProxy() : Optional.empty();
+        return httpService.getHttpClient(url, userAgent, transportType, socksProxy, socks5ProxyAddress);
     }
 
     public Map<Transport.Type, Map<String, Address>> getMyAddresses() {

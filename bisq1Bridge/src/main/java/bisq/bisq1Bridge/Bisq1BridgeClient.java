@@ -17,17 +17,16 @@
 
 package bisq.bisq1Bridge;
 
-import bisq.application.DefaultApplicationService;
+import bisq.application.BridgeApplicationService;
 import bisq.common.data.Pair;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
-import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.typesafe.config.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -36,32 +35,33 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Client node to request on regular interval from a Bisq1 DAO node the proof of work data via the REST api.
+ * When data are received it gets published to the Bisq2 P2P network.
+ * As we use authorized data the operator need to provide the private/public keys which gives the permission to add
+ * those data to the network.
+ * Expected to run on the same server as the Bisq1 DAO node.
+ */
 @Slf4j
 public class Bisq1BridgeClient {
-    private final NetworkService networkService;
     private final DaoBridgeService daoBridgeService;
-    private BaseHttpClient httpClient;
-    private DefaultApplicationService applicationService;
-    private AtomicInteger lastRequestedBlockHeight = new AtomicInteger(0);
+    private final BaseHttpClient httpClient;
+    private final AtomicInteger lastRequestedBlockHeight = new AtomicInteger(0);
 
     public Bisq1BridgeClient(String[] args) {
-        if (args == null || args.length == 0) {
-            args = new String[]{"--appName=Bisq1BridgeClient"};
-        }
-        applicationService = new DefaultApplicationService(args);
-        applicationService.readAllPersisted().join();
-        networkService = applicationService.getNetworkService();
+        BridgeApplicationService applicationService = new BridgeApplicationService(args);
         daoBridgeService = applicationService.getDaoBridgeService();
 
-        applicationService.initialize().thenRun(() -> {
-            Config daoBridgeConfig = daoBridgeService.getDaoBridgeConfig();
-            httpClient = getHttpClient(daoBridgeConfig.getString("url"));
-            startRequests();
-        });
+        String url = daoBridgeService.getDaoBridgeConfig().getString("url");
+        // We expect to request at localhost, so we use clear net 
+        httpClient = applicationService.getNetworkService().getHttpClient(url, "Bisq1BridgeNode", Transport.Type.CLEAR);
+
+        applicationService.readAllPersisted()
+                .thenCompose(result -> applicationService.initialize())
+                .thenRun(this::startRequests);
     }
 
     private void startRequests() {
@@ -76,7 +76,7 @@ public class Bisq1BridgeClient {
                         log.info("Request Bisq DAO node: {}", path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                        List<ProofOfBurnDto> proofOfBurnDtos = new ObjectMapper().readValue(response, new TypeReference<List<ProofOfBurnDto>>() {
+                        List<ProofOfBurnDto> proofOfBurnDtos = new ObjectMapper().readValue(response, new TypeReference<>() {
                         });
                         log.info("Bisq DAO node response: {}", proofOfBurnDtos);
                         return proofOfBurnDtos;
@@ -84,23 +84,17 @@ public class Bisq1BridgeClient {
                         e.printStackTrace();
                         return new ArrayList<ProofOfBurnDto>();
                     }
-                }, Executors.newSingleThreadExecutor())
-                .thenApply(this::publishProofOfBurnDtoSet);
-    }
+                }, ExecutorFactory.newSingleThreadExecutor("Request-proof-of-burn-thread"))
+                .thenApply(list -> {
+                    if (!list.isEmpty()) {
+                        lastRequestedBlockHeight.set(list.stream()
+                                .max(Comparator.comparingInt(ProofOfBurnDto::getBlockHeight))
+                                .map(ProofOfBurnDto::getBlockHeight)
+                                .orElse(0));
 
-    private CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnDtoList) {
-        if (proofOfBurnDtoList.isEmpty()) {
-            return CompletableFuture.completedFuture(true);
-        }
-        lastRequestedBlockHeight.set(proofOfBurnDtoList.stream()
-                .max(Comparator.comparingInt(ProofOfBurnDto::getBlockHeight))
-                .map(ProofOfBurnDto::getBlockHeight)
-                .orElse(0));
-        return daoBridgeService.publishProofOfBurnDtoSet(proofOfBurnDtoList);
-    }
-
-    private BaseHttpClient getHttpClient(String url) {
-        String userAgent = "Bisq1BridgeNode";
-        return networkService.getHttpClient(url, userAgent, Transport.Type.CLEAR);
+                        return daoBridgeService.publishProofOfBurnDtoSet(list);
+                    }
+                    return CompletableFuture.completedFuture(false);
+                });
     }
 }

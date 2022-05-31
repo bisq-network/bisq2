@@ -32,6 +32,9 @@ public class ApplicationConfigFactory {
             appName = typesafeConfig.getString("appName");
         }
 
+        boolean devMode = typesafeConfig.getBoolean("devMode");
+
+        // todo @alvasw can we use the typesafeConfig instead?
         String dataDir = null;
         boolean isBitcoindRegtest = false;
         boolean isElementsdRegtest = false;
@@ -56,6 +59,6 @@ public class ApplicationConfigFactory {
         String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
         log.info("Use application directory {}", appDir);
 
-        return new ApplicationConfig(appDir, appName, isBitcoindRegtest, isElementsdRegtest);
+        return new ApplicationConfig(appDir, appName, devMode, isBitcoindRegtest, isElementsdRegtest);
     }
 }

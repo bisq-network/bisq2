@@ -25,7 +25,7 @@ import java.util.Properties;
 
 public record ApplicationConfig(String baseDir,
                                 String appName,
-
+                                boolean devMode,
                                 boolean isBitcoindRegtest,
                                 boolean isElementsdRegtest) {
     // To ensure the locale is set initially we should write it to property file instead of persisting it in
