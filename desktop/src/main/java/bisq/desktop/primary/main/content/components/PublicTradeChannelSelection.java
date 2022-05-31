@@ -278,7 +278,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
                         publicTradeChannel.getMarket()
                                 .ifPresentOrElse(market -> label.setGraphic(
-                                        MarketImageComposition.imageViewForMarket(
+                                        MarketImageComposition.imageBoxForMarket(
                                                 market.baseCurrencyCode().toLowerCase(), 
                                                 market.quoteCurrencyCode().toLowerCase()
                                         )

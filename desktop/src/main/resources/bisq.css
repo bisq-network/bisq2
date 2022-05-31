@@ -1345,6 +1345,18 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-grey-5;
 }
 
+.market-fiat-label {
+    -fx-font-size: 7;
+    -fx-text-fill: -bisq-black;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.market-crypto-label {
+    -fx-font-size: 7;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans";
+}
+
 #chat-messages-text-area-input-field, 
 #chat-filterbox {
     -fx-background-color: -bisq-grey-19;
