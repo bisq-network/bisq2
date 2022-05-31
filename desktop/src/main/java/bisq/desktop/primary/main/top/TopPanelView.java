@@ -36,10 +36,9 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         root.setMaxHeight(HEIGHT);
         root.setSpacing(28);
         root.setStyle("-fx-background-color: -bisq-bg-dark;");
-        root.setPadding(new Insets(20, 67, 0, 67));
+        root.setPadding(new Insets(10, 30, 10, 0));
         marketPriceBox.setPadding(new Insets(-4.5, 0, 0, 0));
-        HBox.setMargin(userProfileSelection, new Insets(-17, 0, 0, 0));
-        userProfileSelection.setPrefWidth(220);
+        userProfileSelection.setPrefWidth(320);
         root.getChildren().addAll(Spacer.fillHBox(),/* marketPriceBox,*/ userProfileSelection);
     }
 

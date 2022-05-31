@@ -32,6 +32,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.random.RandomGenerator;
+
 @Slf4j
 public class ChatUserIcon extends Pane {
     private final ImageView roboIcon;
@@ -57,7 +59,8 @@ public class ChatUserIcon extends Pane {
     }
 
     public void setChatUser(ChatUser chatUser, ChatUserService chatUserService) {
-        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
+        // roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
+        roboIcon.setId("temp-robo-icon"); // TODO: use robo icon generator
 
         if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");

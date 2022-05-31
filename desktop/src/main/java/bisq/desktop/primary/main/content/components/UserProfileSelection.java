@@ -23,6 +23,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
@@ -117,8 +118,7 @@ public class UserProfileSelection {
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
-            comboBox = new UserProfileComboBox(model.userProfiles,
-                    Res.get("social.userProfile.comboBox.description"));
+            comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             root.getChildren().addAll(comboBox);
             // comboBox.autosize();
             // root.autosize();
@@ -209,33 +209,24 @@ public class UserProfileSelection {
             super(control, description, prompt);
 
             ImageView imageView = new ImageView();
-            imageView.setFitWidth(50);
-            imageView.setFitHeight(50);
-
-            arrow.setLayoutY(23);
-            textInputBox.setLayoutX(50);
-            textInputBox.setMouseTransparent(true);
-            buttonPane.getChildren().add(imageView);
+            imageView.setFitWidth(28);
+            imageView.setFitHeight(28);
+            imageView.setLayoutY(4);
+            imageView.setLayoutX(300);
+            
+            imageView.setOnMouseEntered(evt -> control.show());
+            
+            buttonPane.getChildren().setAll(imageView);
             buttonPane.setCursor(Cursor.HAND);
+            buttonPane.setMinHeight(TopPanelView.HEIGHT + 20);
 
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
                     (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                         if (newValue != null) {
-                            ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
-                            imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
-                            textInputBox.setText(chatUserIdentity.getNickName());
-                            Tooltip.install(buttonPane,
-                                    new Tooltip(chatUserIdentity.getTooltipString()));
+                            // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+                            imageView.setId("temp-robo-profile-icon");
                         }
                     }).get());
-        }
-
-        @Override
-        protected void layoutChildren(final double x, final double y,
-                                      final double w, final double h) {
-            super.layoutChildren(x, y, w, h);
-
-            textInputBox.setPrefWidth(w - 50);
         }
 
         @Override

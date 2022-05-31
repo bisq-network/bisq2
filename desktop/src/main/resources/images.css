@@ -255,3 +255,12 @@
 #any-market {
     -fx-image: url("images/markets/any-market.png");
 }
+
+/* Temp robo icons*/
+#temp-robo-icon {
+    -fx-image: url("images/roboicons/temp-robo-icon.png");
+}
+
+#temp-robo-profile-icon {
+    -fx-image: url("images/roboicons/temp-robo-profile-icon.png");
+}

@@ -576,7 +576,6 @@ public class ChatMessagesComponent {
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
-                        Tooltip dateTooltip;
                         Subscription widthSubscription;
 //                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
@@ -667,8 +666,8 @@ public class ChatMessagesComponent {
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
                             
                             VBox vBox = new VBox(
-                                    5, 
-                                    Layout.hBoxWith(userNameLabel, dateTime),
+                                    0, 
+                                    new HBox(5, userNameLabel, dateTime),
                                     pane
                             );
                             HBox.setHgrow(vBox, Priority.ALWAYS);
@@ -752,9 +751,6 @@ public class ChatMessagesComponent {
                                     onCloseEditMessage();
                                 });
                                 cancelEditButton.setOnAction(e -> onCloseEditMessage());
-
-                                dateTooltip = new Tooltip(item.getDate());
-                                Tooltip.install(dateTime, dateTooltip);
 
                                 item.getAuthor().ifPresent(author -> {
                                     userNameLabel.setText(author.getUserName());
@@ -909,7 +905,7 @@ public class ChatMessagesComponent {
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotation();
-            date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()));
+            date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
 
             nym = author.map(ChatUser::getNym).orElse("");
             nickName = author.map(ChatUser::getNickName).orElse("");

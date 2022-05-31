@@ -29,24 +29,28 @@ public class DateFormatter {
     }
 
     public static String formatDateTime(Date date) {
-        return formatDateTime(date, true);
+        return formatDateTime(date, DateFormat.SHORT, DateFormat.SHORT, true, " ");
     }
-
-    public static String formatDateTime(Date date, boolean useLocaleAndLocalTimezone) {
-        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
-        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.SHORT, LocaleRepository.getDefaultLocale());
-        if (!useLocaleAndLocalTimezone) {
-            dateInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
-        return formatDateTime(date, dateInstance, timeInstance);
+    
+    public static String formatDateTimeV2(Date date) {
+        return formatDateTime(date, DateFormat.MEDIUM, DateFormat.SHORT, true, " at ");
     }
-
-    public static String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
-        if (date != null) {
-            return dateFormatter.format(date) + " " + timeFormatter.format(date);
-        } else {
+    
+    private static String formatDateTime(Date date,
+                                         int dateFormat,
+                                         int timeFormat,
+                                         boolean useLocalTimezone, 
+                                         String delimiter) {
+        if (date == null) {
             return "";
         }
+        
+        DateFormat dateFormatter = DateFormat.getDateInstance(dateFormat, LocaleRepository.getDefaultLocale());
+        DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, LocaleRepository.getDefaultLocale());
+        if (!useLocalTimezone) {
+            dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+        return dateFormatter.format(date) + delimiter + timeFormatter.format(date);
     }
 }
