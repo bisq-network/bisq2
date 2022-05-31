@@ -45,7 +45,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final VBox left, center, sideBar;
     private final HBox messagesListAndSideBar;
-    private final TextField filterBoxRoot;
+    private final HBox filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
     private final Button createOfferButton;
@@ -124,6 +124,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         sideBar.setFillWidth(true);
 
         filterBoxRoot = filterBox.getRoot();
+        VBox.setMargin(filterBoxRoot, new Insets(0, 0, 10, 0));
         
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setMinWidth(650);

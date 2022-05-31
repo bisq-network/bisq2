@@ -1345,7 +1345,8 @@ tree-table-view:focused {
     -fx-text-fill: -bisq-grey-5;
 }
 
-#chat-messages-text-area-input-field {
+#chat-messages-text-area-input-field, 
+#chat-filterbox {
     -fx-background-color: -bisq-grey-19;
     -fx-background-radius: 8;
     -fx-border-color: -bisq-grey-19;
@@ -1359,6 +1360,10 @@ tree-table-view:focused {
     -fx-border-insets: 0;
     -fx-padding: 4;
     -fx-font-family: "IBM Plex Sans";
+}
+
+#chat-filterbox.text-field {
+    -fx-padding: 8 12;
 }
 
 #chat-messages-edit-text-area.text-area {

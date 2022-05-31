@@ -20,7 +20,11 @@ package bisq.desktop.components.table;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.transformation.FilteredList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +39,7 @@ public class FilterBox {
         controller = new Controller(filteredList);
     }
 
-    public TextField getRoot() {
+    public HBox getRoot() {
         return controller.view.getRoot();
     }
 
@@ -75,27 +79,37 @@ public class FilterBox {
 
 
     @Slf4j
-    public static class View extends bisq.desktop.common.view.View<TextField, Model, Controller> {
+    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ChangeListener<String> listener;
+        private TextField textField;
 
         private View(Model model, Controller controller) {
-            super(new TextField(), model, controller);
+            super(new HBox(), model, controller);
+            
+            root.getStyleClass().add("bg-grey-5");
+            root.setAlignment(Pos.CENTER);
+            root.setPadding(new Insets(14, 40, 14, 30));
+            
+            textField = new TextField();
+            textField.setId("chat-filterbox");
+            textField.setPromptText(Res.get("search"));
+            textField.setMinWidth(100);
+            HBox.setHgrow(textField, Priority.ALWAYS);
+            
+            root.getChildren().add(textField);
 
-            root.setPromptText(Res.get("search"));
-            root.setMinWidth(100);
-
-            listener = (observable, oldValue, newValue) -> controller.onSearch(root.getText());
+            listener = (observable, oldValue, newValue) -> controller.onSearch(textField.getText());
         }
 
         @Override
         protected void onViewAttached() {
-            root.textProperty().addListener(listener);
-            root.setOnAction(e -> controller.onSearch(root.getText()));
+            textField.textProperty().addListener(listener);
+            textField.setOnAction(e -> controller.onSearch(textField.getText()));
         }
 
         @Override
         protected void onViewDetached() {
-            root.textProperty().removeListener(listener);
+            textField.textProperty().removeListener(listener);
         }
     }
 }
