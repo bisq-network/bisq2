@@ -23,7 +23,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
@@ -38,7 +37,6 @@ import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -120,9 +118,6 @@ public class UserProfileSelection {
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             root.getChildren().addAll(comboBox);
-            // comboBox.autosize();
-            // root.autosize();
-
         }
 
         @Override
@@ -205,28 +200,55 @@ public class UserProfileSelection {
     }
 
     private static class UserProfileSkin extends AutoCompleteComboBox.Skin<ListItem> {
+        private final Label userNameLabel;
+
         public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
             super(control, description, prompt);
 
             ImageView imageView = new ImageView();
-            imageView.setFitWidth(28);
-            imageView.setFitHeight(28);
-            imageView.setLayoutY(4);
-            imageView.setLayoutX(300);
-            
-            imageView.setOnMouseEntered(evt -> control.show());
-            
-            buttonPane.getChildren().setAll(imageView);
+            imageView.setFitWidth(35);
+            imageView.setFitHeight(35);
+            imageView.setLayoutY(7);
+
+            arrow.setLayoutY(23);
+            userNameLabel = new Label();
+            userNameLabel.setId("user-name-label");
+            userNameLabel.setLayoutY(12);
+            buttonPane.getChildren().clear();
+            buttonPane.getChildren().addAll(userNameLabel, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
-            buttonPane.setMinHeight(TopPanelView.HEIGHT + 20);
 
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
                     (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                         if (newValue != null) {
+                            ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
+                            //todo temp use static image
                             // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
                             imageView.setId("temp-robo-profile-icon");
+                            userNameLabel.setText(chatUserIdentity.getNickName());
+                            //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
                         }
                     }).get());
+
+            buttonPane.setOnMouseEntered(e -> {
+                userNameLabel.setVisible(true);
+                arrow.setVisible(true);
+            });
+            buttonPane.setOnMouseExited(e -> {
+                userNameLabel.setVisible(false);
+                arrow.setVisible(false);
+            });
+            userNameLabel.setVisible(false);
+            arrow.setVisible(false);
+        }
+
+        @Override
+        protected void layoutChildren(final double x, final double y,
+                                      final double w, final double h) {
+            super.layoutChildren(x, y, w, h);
+
+            userNameLabel.setLayoutX(-userNameLabel.getWidth() - 35);
+            arrow.setLayoutX(-25);
         }
 
         @Override

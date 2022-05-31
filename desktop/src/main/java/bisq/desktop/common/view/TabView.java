@@ -44,7 +44,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     public TabView(M model, C controller) {
         super(new StackPane(), model, controller);
-        root.setPadding(new Insets(0, -67, 0, 0));
 
         VBox box = new VBox();
         box.setFillWidth(true);
@@ -57,7 +56,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.getChildren().addAll(headlineLabel, Spacer.fillHBox());
-        tabs.setPadding(new Insets(0, 67, 0, 0));
         tabs.setMinHeight(52);
 
         scrollPane = new ScrollPane();
@@ -116,11 +114,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         viewSubscription = EasyBind.subscribe(model.getView(), view -> {
             if (view != null) {
-                Region childRoot = view.getRoot();
-                if (view instanceof TabViewChild tabViewChild) {
-                    tabViewChild.applyPadding(childRoot);
-                }
-                scrollPane.setContent(childRoot);
+                scrollPane.setContent(view.getRoot());
             }
         });
 

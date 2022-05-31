@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig.openoffers;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.BisqTableColumn;
@@ -28,12 +27,13 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersController> implements TabViewChild {
+public class OpenOffersView extends View<VBox, OpenOffersModel, OpenOffersController> {
     private final BisqTableView<OpenOfferListItem> tableView;
 
     public OpenOffersView(OpenOffersModel model, OpenOffersController controller) {
         super(new VBox(), model, controller);
 
+        root.setPadding(new Insets(33, 0, 0, 0));
         root.setSpacing(30);
 
         tableView = new BisqTableView<>(model.getSortedItems());

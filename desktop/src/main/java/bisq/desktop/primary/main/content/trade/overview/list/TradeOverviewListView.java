@@ -26,7 +26,6 @@ import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseModel;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -54,7 +53,6 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.getStyleClass().add("trade-overview-table-view");
         tableView.setMinHeight(500);
-        VBox.setMargin(tableView, new Insets(-33, 0, 0, 0));
         configDataTableView();
 
         this.root.getChildren().addAll(tableView);

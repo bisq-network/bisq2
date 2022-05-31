@@ -35,6 +35,7 @@
 #close {
     -fx-image: url("images/close.png");
 }
+
 #cross {
     -fx-image: url("images/cross.png");
 }
@@ -251,12 +252,15 @@
     -fx-image: url("images/actions/icon-search.png");
 }
 
-/* Other */
-#any-market {
-    -fx-image: url("images/markets/any-market.png");
+/* Markets */
+#market-any-base {
+    -fx-image: url("images/markets/market-any-base.png");
 }
 
-/* Markets */
+#market-any-quote {
+    -fx-image: url("images/markets/market-any-quote.png");
+}
+
 #market-bsq {
     -fx-image: url("images/markets/market-bsq.png");
 }
@@ -275,10 +279,6 @@
 
 #market-fiat {
     -fx-image: url("images/markets/market-fiat.png");
-}
-
-#market-ltc {
-    -fx-image: url("images/markets/market-ltc.png");
 }
 
 #market-usd {

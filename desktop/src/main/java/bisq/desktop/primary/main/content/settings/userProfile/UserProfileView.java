@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
@@ -27,7 +26,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> implements TabViewChild {
+public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
     private final Button showCreateUserProfileButton;
     private final Pane channelAdmin;
     private final Pane createUserProfile;

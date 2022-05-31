@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.common.data.Pair;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
@@ -226,7 +226,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
-                    
+
                     badge.setTooltip(Res.get("social.marketChannels.numMessages"));
                     badge.setPosition(Pos.CENTER_RIGHT);
 
@@ -264,6 +264,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
 
+                    label.getStyleClass().add("bisq-text-8");
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
                     hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
@@ -276,15 +277,14 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
-                        publicTradeChannel.getMarket()
-                                .ifPresentOrElse(market -> label.setGraphic(
-                                        MarketImageComposition.imageBoxForMarket(
-                                                market.baseCurrencyCode().toLowerCase(), 
-                                                market.quoteCurrencyCode().toLowerCase()
-                                        )
-                                ), () -> label.setGraphic(ImageUtil.getImageViewById("any-market"))); // todo: ask pedro about better icon
-                        
+                        Pair<String, String> pair = publicTradeChannel.getMarket()
+                                .map(market -> new Pair<>(market.baseCurrencyCode(), market.quoteCurrencyCode()))
+                                .orElse(new Pair<>("any-base", "any-quote"));
+                        label.setGraphic(MarketImageComposition.imageBoxForMarket(
+                                pair.first().toLowerCase(),
+                                pair.second().toLowerCase()));
                         label.setText(item.getDisplayString());
+                        label.setGraphicTextGap(8);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 70);

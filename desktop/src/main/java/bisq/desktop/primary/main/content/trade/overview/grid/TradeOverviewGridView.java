@@ -37,19 +37,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, TradeOverviewGridModel, TradeOverviewGridController> {
     private static final int VERTICAL_MARGIN = 30;
-    
+
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
-        getRoot().setHgap(26);
-        getRoot().setVgap(26);
+        root.setHgap(26);
+        root.setVgap(26);
     }
 
     @Override
     protected void onViewAttached() {
-        getRoot().getChildren().clear();
+        root.getChildren().clear();
         int index = 0;
-        for (ProtocolListItem protocol: model.getSortedItems()) {
-            getRoot().add(getProtocolBox(protocol), index % 2, index >> 1);
+        for (ProtocolListItem protocol : model.getSortedItems()) {
+            root.add(getProtocolBox(protocol), index % 2, index >> 1);
             index++;
         }
     }
@@ -63,7 +63,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         pane.getStyleClass().add("bisq-box-2");
         pane.setMinWidth(360);
         GridPane.setHgrow(pane, Priority.ALWAYS);
-               
+
         VBox box = new VBox();
         pane.getChildren().add(box);
 
@@ -85,47 +85,47 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
         paramsPane.setVgap(12);
         paramsPane.add(
-                getParameterPane(Res.get("markets"), protocol.getMarkets()), 
-                0, 
+                getParameterPane(Res.get("markets"), protocol.getMarkets()),
+                0,
                 0
         );
-        
+
         paramsPane.add(
                 getParameterPane(
-                        Res.get("trade.protocols.table.header.release"), 
+                        Res.get("trade.protocols.table.header.release"),
                         protocol.getReleaseDate()
-                ), 
-                1, 
+                ),
+                1,
                 0
         );
-        
+
         paramsPane.add(
                 getParameterPane(
-                        Res.get("trade.protocols.table.header.security"), 
-                        protocol.getSwapProtocolType().getSecurity().ordinal(), 
+                        Res.get("trade.protocols.table.header.security"),
+                        protocol.getSwapProtocolType().getSecurity().ordinal(),
                         protocol.getSecurityInfo()
-                ), 
-                0, 
+                ),
+                0,
                 1
         );
-        
+
         paramsPane.add(
                 getParameterPane(
                         Res.get("trade.protocols.table.header.privacy"),
                         protocol.getSwapProtocolType().getPrivacy().ordinal(),
                         protocol.getPrivacyInfo()
-                ), 
-                1, 
+                ),
+                1,
                 1
         );
-        
+
         paramsPane.add(
                 getParameterPane(
                         Res.get("trade.protocols.table.header.convenience"),
                         protocol.getSwapProtocolType().getConvenience().ordinal(),
                         protocol.getConvenienceInfo()
-                ), 
-                2, 
+                ),
+                2,
                 1
         );
 
@@ -142,25 +142,25 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
         return pane;
     }
-    
+
 
     private VBox getParameterPane(String title, String info) {
         Label infoLabel = new Label(info);
         infoLabel.getStyleClass().add("bisq-text-1");
         return getParameterPane(title, infoLabel);
     }
-    
+
     private VBox getParameterPane(String title, int value, String tooltipText) {
         return getParameterPane(title, getStarsNode(value, tooltipText));
     }
-    
+
     private VBox getParameterPane(String title, Node node) {
         VBox box = new VBox();
         GridPane.setHgrow(box, Priority.ALWAYS);
         Label titleLabel = new Label(title.toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
         box.getChildren().addAll(titleLabel, node);
-        
+
         return box;
     }
 
@@ -181,7 +181,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         tooltip.setWrapText(true);
         tooltip.setText(tooltipText);
         Tooltip.install(hBox, tooltip);
-        
+
         return hBox;
     }
 }

@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.dashboard;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -31,10 +30,10 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DashboardView extends View<VBox, DashboardModel, DashboardController> implements TabViewChild {
+public class DashboardView extends View<VBox, DashboardModel, DashboardController> {
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new VBox(16), model, controller);
-        
+
         VBox tradesBox = getValueBox(Res.get("dashboard.tradesCompleted"), 3249);
         VBox peersBox1 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
         VBox peersBox2 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
@@ -134,10 +133,4 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
     @Override
     protected void onViewDetached() {}
-
-    @Override
-    public void applyPadding(Region root) {
-        root.getStyleClass().add("bisq-content-bg");
-        root.setPadding(new Insets(16, 67, 0, 0));
-    }
 }

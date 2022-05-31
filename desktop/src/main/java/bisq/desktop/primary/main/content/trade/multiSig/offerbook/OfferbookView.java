@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig.offerbook;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -37,7 +36,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> implements TabViewChild {
+public class OfferbookView extends View<VBox, OfferbookModel, OfferbookController> {
     private final BisqTableView<OfferListItem> tableView;
     private final ToggleButton showAllMarkets;
     private final Pane marketSelection;
@@ -52,8 +51,8 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
         this.marketSelection = marketSelection;
         marketSelection.setMinWidth(280);
 
+        root.setPadding(new Insets(33, 0, 0, 0));
         root.setSpacing(30);
-        root.setPadding(new Insets(0, 30, 0, 0));
 
         showAllMarkets = new BisqToggleButton();
         showAllMarkets.setText(Res.get("offerbook.showAllMarkets"));

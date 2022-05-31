@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig.closedTrades;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -27,13 +26,14 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTradesController> implements TabViewChild {
+public class ClosedTradesView extends View<VBox, ClosedTradesModel, ClosedTradesController> {
 
     private final BisqTableView<ClosedTradeListItem> tableView;
 
     public ClosedTradesView(ClosedTradesModel model, ClosedTradesController controller) {
         super(new VBox(), model, controller);
 
+        root.setPadding(new Insets(33, 0, 0, 0));
         root.setSpacing(30);
 
         tableView = new BisqTableView<>(model.getSortedItems());

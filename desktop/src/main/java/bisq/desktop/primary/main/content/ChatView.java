@@ -18,8 +18,6 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -32,15 +30,17 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> implements TabViewChild {
+public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, infoButton, closeButton;
     private final VBox left, center, sideBar;
@@ -100,11 +100,11 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         HBox centerToolbar = new HBox(
                 10,
-                peersRoboIconView, 
-                selectedChannelLabel, 
+                peersRoboIconView,
+                selectedChannelLabel,
                 Spacer.fillHBox(),
                 searchButton,
-                notificationsButton, 
+                notificationsButton,
                 infoButton
         );
         centerToolbar.setAlignment(Pos.CENTER);
@@ -125,10 +125,10 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         filterBoxRoot = filterBox.getRoot();
         VBox.setMargin(filterBoxRoot, new Insets(0, 0, 10, 0));
-        
+
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setMinWidth(650);
-        
+
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
 

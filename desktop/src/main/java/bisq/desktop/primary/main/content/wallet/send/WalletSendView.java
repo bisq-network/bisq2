@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.wallet.send;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -28,7 +27,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class WalletSendView extends View<VBox, WalletSendModel, WalletSendController> implements TabViewChild {
+public class WalletSendView extends View<VBox, WalletSendModel, WalletSendController> {
     public WalletSendView(WalletSendModel model, WalletSendController controller) {
         super(new VBox(), model, controller);
 

@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.settings.preferences;
 
-import bisq.desktop.common.view.TabViewChild;
 import bisq.desktop.common.view.View;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -25,7 +24,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> implements TabViewChild {
+public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(), model, controller);
