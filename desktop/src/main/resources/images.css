@@ -256,6 +256,39 @@
     -fx-image: url("images/markets/any-market.png");
 }
 
+/* Markets */
+#market-bsq {
+    -fx-image: url("images/markets/market-bsq.png");
+}
+
+#market-btc {
+    -fx-image: url("images/markets/market-btc.png");
+}
+
+#market-crypto {
+    -fx-image: url("images/markets/market-crypto.png");
+}
+
+#market-eur {
+    -fx-image: url("images/markets/market-eur.png");
+}
+
+#market-fiat {
+    -fx-image: url("images/markets/market-fiat.png");
+}
+
+#market-ltc {
+    -fx-image: url("images/markets/market-ltc.png");
+}
+
+#market-usd {
+    -fx-image: url("images/markets/market-usd.png");
+}
+
+#market-xmr {
+    -fx-image: url("images/markets/market-xmr.png");
+}
+
 /* Temp robo icons*/
 #temp-robo-icon {
     -fx-image: url("images/roboicons/temp-robo-icon.png");
