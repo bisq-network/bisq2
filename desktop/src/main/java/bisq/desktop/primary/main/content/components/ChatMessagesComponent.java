@@ -574,7 +574,7 @@ public class ChatMessagesComponent {
                         private final Label dateTime = new Label();
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
-                        private final HBox hBox, reactionsBox, editControlsBox, quotedMessageBox;
+                        private final HBox hBox, messageContainer, reactionsBox, editControlsBox, quotedMessageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
                         Subscription widthSubscription;
 //                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
@@ -645,14 +645,15 @@ public class ChatMessagesComponent {
                             HBox.setHgrow(message, Priority.ALWAYS);
 
                             takeOfferButton = new Button(Res.get("takeOffer"));
+                            takeOfferButton.setDefaultButton(true);
                             takeOfferButton.setVisible(false);
                             takeOfferButton.setManaged(false);
                             HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
 
-                            VBox messageBox = Layout.vBoxWith(quotedMessageBox,
-                                    Layout.hBoxWith(message, takeOfferButton),
-                                    editInputField
-                            );
+                            messageContainer = Layout.hBoxWith(message, takeOfferButton);
+                            messageContainer.setAlignment(Pos.CENTER);
+                            
+                            VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
 
                             AnchorPane pane = new AnchorPane();
                             AnchorPane.setTopAnchor(messageBox, 0.0);
@@ -726,17 +727,19 @@ public class ChatMessagesComponent {
                                 }
 
                                 ChatMessage chatMessage = item.getChatMessage();
-                                if (!model.isMyMessage(chatMessage) &&
-                                        chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
-                                        marketChatMessage.getTradeChatOffer().isPresent()) {
+                                boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
+                                        marketChatMessage.getTradeChatOffer().isPresent();
+                                
+                                if (!model.isMyMessage(chatMessage) && isOfferMessage) {
                                     takeOfferButton.setVisible(true);
                                     takeOfferButton.setManaged(true);
-                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer(marketChatMessage));
-
+                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
                                 } else {
                                     takeOfferButton.setVisible(false);
                                     takeOfferButton.setManaged(false);
                                 }
+                                
+                                Layout.toggleStyleClass(messageContainer, "chat-offer-box", isOfferMessage);
 
                                 message.setText(item.getMessage());
                                 message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));

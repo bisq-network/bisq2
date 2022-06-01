@@ -1430,6 +1430,12 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.chat-offer-box {
+    -fx-background-color: -bisq-grey-5;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+}
+
 #buy-button {
     -fx-background-color: -bisq-buy;
     -fx-text-fill: -bisq-white;
