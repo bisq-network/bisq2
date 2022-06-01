@@ -17,9 +17,14 @@
 
 package bisq.desktop.components.controls;
 
+import javafx.application.Platform;
+import lombok.Setter;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class BisqTaggableTextArea extends StyleClassedTextArea {
+    @Setter
+    private double heightCorrection = 0;
+
     public BisqTaggableTextArea() {
         setWrapText(true);
         setBackground(null);
@@ -29,5 +34,20 @@ public class BisqTaggableTextArea extends StyleClassedTextArea {
     public void setText(String text) {
         clear();
         replaceText(0, 0, text);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        if (isAutoHeight()) {
+            if (getWidth() == 0.0) {
+                Platform.runLater(this::requestLayout);
+            } else {
+                // The height calculation is about 8.5 px off in the chat messages
+                // If corrects itself when clicking into the text field but no requestLayout calls or the like fixed it.
+                // So we apply a manual fix
+                return super.computePrefHeight(width) + heightCorrection;
+            }
+        }
+        return super.computePrefHeight(width);
     }
 }

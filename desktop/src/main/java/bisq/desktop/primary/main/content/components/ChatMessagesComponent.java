@@ -401,6 +401,11 @@ public class ChatMessagesComponent {
                                 privateTradeChannel);
                     });
         }
+
+        public void onCreateOffer() {
+            //todo
+            new Popup().message("Not implemented yet").show();
+        }
     }
 
     @Getter
@@ -499,7 +504,7 @@ public class ChatMessagesComponent {
             StackPane stackPane = new StackPane(inputField, sendButton);
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
-            StackPane.setMargin(sendButton, new Insets(0,10,0,0));
+            StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -510,7 +515,7 @@ public class ChatMessagesComponent {
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
-            HBox.setHgrow(stackPane,Priority.ALWAYS);
+            HBox.setHgrow(stackPane, Priority.ALWAYS);
             bottomBox = new HBox(18, stackPane, createOfferButton);
 
             bottomBox.getStyleClass().add("bg-grey-5");
@@ -652,9 +657,13 @@ public class ChatMessagesComponent {
 
                             message.setId("chat-messages-message");
                             message.setAutoHeight(true);
+                            // The height calculation is about 8.5 px off in the chat messages
+                            // If corrects itself when clicking into the text field but no requestLayout calls or the like fixed it.
+                            // So we apply a manual fix with the observed value which fixes it.
+                            message.setHeightCorrection(8.5);
                             message.setPadding(new Insets(0, 0, 20, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
-
+                          
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setDefaultButton(true);
                             takeOfferButton.setVisible(false);
@@ -663,7 +672,7 @@ public class ChatMessagesComponent {
 
                             messageContainer = Layout.hBoxWith(message, takeOfferButton);
                             messageContainer.setAlignment(Pos.CENTER);
-                            
+
                             VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
 
                             AnchorPane pane = new AnchorPane();
@@ -740,7 +749,7 @@ public class ChatMessagesComponent {
                                 ChatMessage chatMessage = item.getChatMessage();
                                 boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
                                         marketChatMessage.getTradeChatOffer().isPresent();
-                                
+
                                 if (!model.isMyMessage(chatMessage) && isOfferMessage) {
                                     takeOfferButton.setVisible(true);
                                     takeOfferButton.setManaged(true);
@@ -749,12 +758,12 @@ public class ChatMessagesComponent {
                                     takeOfferButton.setVisible(false);
                                     takeOfferButton.setManaged(false);
                                 }
-                                
+
                                 Layout.toggleStyleClass(messageContainer, "chat-offer-box", isOfferMessage);
 
                                 message.setText(item.getMessage());
                                 message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
-
+                                
                                 dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
