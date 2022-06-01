@@ -70,7 +70,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button").toUpperCase());
         createOfferButton.setDefaultButton(true);
         createOfferButton.setPrefHeight(40);
-        VBox.setMargin(createOfferButton, new Insets(0, 0, 10, 0));
+        VBox.setMargin(createOfferButton, new Insets(0, 0, 15, 0));
 
         left = Layout.vBoxWith(
                 marketChannelSelection,
@@ -87,9 +87,11 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         // Center toolbar
         // peersRoboIconView only visible for private channels
         peersRoboIconView = new ImageView();
-        peersRoboIconView.setFitWidth(40);
-        peersRoboIconView.setFitHeight(40);
-        HBox.setMargin(peersRoboIconView, new Insets(5, -20, 5, 12));
+        peersRoboIconView.setFitWidth(35);
+        peersRoboIconView.setFitHeight(35);
+        //todo temp use static image
+        peersRoboIconView.setId("temp-robo-profile-icon");
+        HBox.setMargin(peersRoboIconView, new Insets(5, 0, 5, 16));
 
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
@@ -115,9 +117,9 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         // sideBar
         closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
         closeButton.setOpacity(0.4);
-        VBox.setMargin(closeButton, new Insets(-10, -45, 0, 0));
         channelInfo.setMinWidth(200);
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
+        sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setMinWidth(340);
         sideBar.setPadding(new Insets(10, 20, 20, 20));
@@ -127,7 +129,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         VBox.setMargin(filterBoxRoot, new Insets(0, 0, 10, 0));
 
         HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
-        chatMessagesComponent.setMinWidth(650);
+        chatMessagesComponent.setMinWidth(500);
 
         messagesListAndSideBar = Layout.hBoxWith(chatMessagesComponent, sideBar);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
@@ -140,7 +142,8 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
     protected void onViewAttached() {
         peersRoboIconView.managedProperty().bind(model.getPeersRoboIconVisible());
         peersRoboIconView.visibleProperty().bind(model.getPeersRoboIconVisible());
-        peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
+        //todo temp use static image
+        //  peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         filterBoxRoot.managedProperty().bind(model.getFilterBoxVisible());

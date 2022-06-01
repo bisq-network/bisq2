@@ -230,7 +230,7 @@ public class UserProfileSelection {
                         }
                     }).get());
 
-            buttonPane.setOnMouseEntered(e -> {
+        /*    buttonPane.setOnMouseEntered(e -> {
                 userNameLabel.setVisible(true);
                 arrow.setVisible(true);
             });
@@ -239,7 +239,7 @@ public class UserProfileSelection {
                 arrow.setVisible(false);
             });
             userNameLabel.setVisible(false);
-            arrow.setVisible(false);
+            arrow.setVisible(false);*/
         }
 
         @Override
