@@ -143,15 +143,15 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         // controller.onNavigationButtonCreated(NavigationTarget.NETWORK_INFO);
 
-        expandIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN, "16");
+        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
         expandIcon.setCursor(Cursor.HAND);
-        expandIcon.setLayoutY(menuTop + 3);
+        expandIcon.setLayoutY(menuTop);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
 
-        collapseIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "16");
+        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
         collapseIcon.setCursor(Cursor.HAND);
-        collapseIcon.setLayoutY(menuTop + 3);
+        collapseIcon.setLayoutY(menuTop);
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
 
@@ -286,14 +286,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                                  String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-
-        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, this::toggleSubMenu);
+        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu);
         setupButtonHandler(navigationTarget, button);
         return button;
-    }
-
-    private void toggleSubMenu() {
-        // todo toggle expand/collapse state of sub menu
     }
 
     private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget) {
@@ -310,7 +305,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         submenu.setMinHeight(0);
         submenu.setPrefHeight(0);
         submenu.getChildren().setAll(items);
-
         return submenu;
     }
 
@@ -367,9 +361,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
                         || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
                 parentMenuItem.setHighlighted(isSubmenuActive);
-              
-              //  Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
-               
+
+                //  Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
+
                 Transitions.animateHeight(
                         submenu,
                         isSubmenuActive ? (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0
@@ -427,7 +421,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
 
             ImageView icon = ImageUtil.getImageViewById(imageId);
-            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.4));
+            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.5));
             HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
             return new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);

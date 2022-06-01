@@ -32,7 +32,7 @@ class LeftNavSubButton extends LeftNavButton {
     private final String fullTitle;
 
     LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
-        super(title, null, toggleGroup, navigationTarget, false, null);
+        super(title, null, toggleGroup, navigationTarget, false);
         this.fullTitle = title;
         setMinHeight(0);
     }

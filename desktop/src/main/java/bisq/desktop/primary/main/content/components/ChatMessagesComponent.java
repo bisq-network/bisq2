@@ -33,6 +33,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.layout.Layout;
+import bisq.desktop.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
@@ -400,6 +401,11 @@ public class ChatMessagesComponent {
                                 privateTradeChannel);
                     });
         }
+
+        public void onCreateOffer() {
+            //todo
+            new Popup().message("Not implemented yet").show();
+        }
     }
 
     @Getter
@@ -462,7 +468,7 @@ public class ChatMessagesComponent {
 
         private final ListView<ChatMessageListItem<? extends ChatMessage>> messagesListView;
         private final BisqTextArea inputField;
-        private final Button sendButton;
+        private final Button sendButton, createOfferButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel> channelMentionPopup;
 
@@ -472,27 +478,33 @@ public class ChatMessagesComponent {
         private View(Model model, Controller controller, Pane quotedMessageBlock) {
             super(new VBox(), model, controller);
 
-            root.setSpacing(20);
+            VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
 
             messagesListView = new ListView<>(model.getSortedChatMessages());
             messagesListView.getStyleClass().add("chat-messages-list-view");
-            VBox.setMargin(messagesListView, new Insets(0, 20, 0, 36));
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
+            VBox.setMargin(messagesListView, new Insets(0, 24, 0, 24));
+
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
             messagesListView.setSelectionModel(new NoSelectionModel<>());
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
             inputField = new BisqTextArea();
-            inputField.setId("chat-messages-text-area-input-field");
+            inputField.setId("chat-input-field");
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
-            inputField.setPrefWidth(300);
-            HBox.setHgrow(inputField, Priority.ALWAYS);
 
             sendButton = new Button();
             sendButton.setId("chat-messages-send-button");
             sendButton.setText(Res.get("send"));
+
+            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+            createOfferButton.setDefaultButton(true);
+            StackPane stackPane = new StackPane(inputField, sendButton);
+            StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
+            StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
+            StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -503,10 +515,12 @@ public class ChatMessagesComponent {
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
             // there will get added some controls for emojis so leave the box even its only 1 child yet
-            bottomBox = new HBox(20, inputField, sendButton);
+            HBox.setHgrow(stackPane, Priority.ALWAYS);
+            bottomBox = new HBox(18, stackPane, createOfferButton);
+
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(14, 40, 14, 30));
+            bottomBox.setPadding(new Insets(14, 33, 14, 24));
 
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
@@ -534,6 +548,7 @@ public class ChatMessagesComponent {
                 controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
                 inputField.clear();
             });
+            createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
             userMentionPopup.setItems(model.mentionableUsers);
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -555,6 +570,7 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
+            createOfferButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
             model.getSortedChatMessages().removeListener(messagesListener);
@@ -575,7 +591,7 @@ public class ChatMessagesComponent {
                         private final BisqTaggableTextArea message = new BisqTaggableTextArea();
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, messageContainer, reactionsBox, editControlsBox, quotedMessageBox;
-                        private final ChatUserIcon chatUserIcon = new ChatUserIcon(37.5);
+                        private final ChatUserIcon chatUserIcon = new ChatUserIcon(42);
                         Subscription widthSubscription;
 //                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
 
@@ -635,15 +651,19 @@ public class ChatMessagesComponent {
                                     deleteButton,
                                     moreOptionsButton);
                             reactionsBox.setSpacing(20);
-                            reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
+                            //reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
                             reactionsBox.setPadding(new Insets(0, 15, 5, 15));
                             reactionsBox.setVisible(false);
 
                             message.setId("chat-messages-message");
                             message.setAutoHeight(true);
+                            // The height calculation is about 8.5 px off in the chat messages
+                            // If corrects itself when clicking into the text field but no requestLayout calls or the like fixed it.
+                            // So we apply a manual fix with the observed value which fixes it.
+                            message.setHeightCorrection(8.5);
                             message.setPadding(new Insets(0, 0, 20, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
-
+                          
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setDefaultButton(true);
                             takeOfferButton.setVisible(false);
@@ -652,7 +672,7 @@ public class ChatMessagesComponent {
 
                             messageContainer = Layout.hBoxWith(message, takeOfferButton);
                             messageContainer.setAlignment(Pos.CENTER);
-                            
+
                             VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
 
                             AnchorPane pane = new AnchorPane();
@@ -674,9 +694,9 @@ public class ChatMessagesComponent {
 
                         private void hideHoverOverlay() {
                             reactionsBox.setVisible(false);
-                            if (!editInputField.isVisible()) {
+                           /* if (!editInputField.isVisible()) {
                                 setStyle("-fx-background-color: transparent");
-                            }
+                            }*/
                         }
 
                         @Override
@@ -729,7 +749,7 @@ public class ChatMessagesComponent {
                                 ChatMessage chatMessage = item.getChatMessage();
                                 boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
                                         marketChatMessage.getTradeChatOffer().isPresent();
-                                
+
                                 if (!model.isMyMessage(chatMessage) && isOfferMessage) {
                                     takeOfferButton.setVisible(true);
                                     takeOfferButton.setManaged(true);
@@ -738,12 +758,12 @@ public class ChatMessagesComponent {
                                     takeOfferButton.setVisible(false);
                                     takeOfferButton.setManaged(false);
                                 }
-                                
+
                                 Layout.toggleStyleClass(messageContainer, "chat-offer-box", isOfferMessage);
 
                                 message.setText(item.getMessage());
                                 message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
-
+                                
                                 dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
@@ -772,7 +792,7 @@ public class ChatMessagesComponent {
                                     if (!editInputField.isVisible()) {
                                         reactionsBox.setVisible(true);
                                     }
-                                    setStyle("-fx-background-color: -bisq-grey-12;");
+                                    //setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
                                     if (model.moreOptionsVisibleMessage.get() == null) {

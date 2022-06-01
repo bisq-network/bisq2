@@ -65,8 +65,7 @@ class LeftNavButton extends Pane implements Toggle {
                   @Nullable String iconId,
                   ToggleGroup toggleGroup,
                   NavigationTarget navigationTarget,
-                  boolean hasSubmenu,
-                  @Nullable Runnable toggleSubMenuHandler) {
+                  boolean hasSubmenu) {
         this.icon = iconId != null ? ImageUtil.getImageViewById(iconId) : null;
         this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
         this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
@@ -100,12 +99,8 @@ class LeftNavButton extends Pane implements Toggle {
             submenuActionIcon = ImageUtil.getImageViewById("expand");
             submenuActionIcon.setLayoutX(200);
             submenuActionIcon.setLayoutY(16);
-            submenuActionIcon.setOnMouseClicked(e -> {
-                e.consume();
-                if (toggleSubMenuHandler != null) {
-                    toggleSubMenuHandler.run();
-                }
-            });
+            submenuActionIcon.setMouseTransparent(true);
+            submenuActionIcon.setId("expand");
             getChildren().add(submenuActionIcon);
         }
 
@@ -138,7 +133,8 @@ class LeftNavButton extends Pane implements Toggle {
         }
 
         if (submenuActionIcon != null) {
-            submenuActionIcon.setId(isHighlighted ? "collapse" : "expand");
+            submenuActionIcon.setVisible(!isHighlighted);
+            submenuActionIcon.setManaged(!isHighlighted);
         }
     }
 
@@ -151,10 +147,6 @@ class LeftNavButton extends Pane implements Toggle {
             Tooltip.uninstall(this, tooltip);
             label.setVisible(true);
             label.setManaged(true);
-            if (submenuActionIcon != null) {
-                submenuActionIcon.setVisible(true);
-                submenuActionIcon.setManaged(true);
-            }
             Transitions.fadeIn(label, duration);
             Transitions.fadeIn(submenuActionIcon, duration);
         } else {
@@ -163,13 +155,6 @@ class LeftNavButton extends Pane implements Toggle {
                 label.setVisible(false);
                 label.setManaged(false);
             });
-
-            if (submenuActionIcon != null) {
-                Transitions.fadeOut(submenuActionIcon, duration, () -> {
-                    submenuActionIcon.setVisible(false);
-                    submenuActionIcon.setManaged(false);
-                });
-            }
         }
     }
 
