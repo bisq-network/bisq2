@@ -18,11 +18,13 @@
 package bisq.desktop.components.controls;
 
 import javafx.application.Platform;
+import lombok.Getter;
 import lombok.Setter;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class BisqTaggableTextArea extends StyleClassedTextArea {
     @Setter
+    @Getter
     private double heightCorrection = 0;
 
     public BisqTaggableTextArea() {

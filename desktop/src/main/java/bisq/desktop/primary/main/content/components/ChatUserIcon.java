@@ -17,22 +17,18 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.data.ByteArray;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.social.user.ChatUser;
-import bisq.social.user.role.Role;
 import bisq.social.user.ChatUserService;
+import bisq.social.user.role.Role;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.random.RandomGenerator;
 
 @Slf4j
 public class ChatUserIcon extends Pane {
@@ -92,7 +88,8 @@ public class ChatUserIcon extends Pane {
     }
 
     public void releaseResources() {
-        roboIcon.setImage(null);
+        //todo while using the fixed image we need to deactivate that 
+        //roboIcon.setImage(null);
         entitlement.setOnMouseEntered(null);
         Tooltip.uninstall(entitlement, tooltip);
     }
