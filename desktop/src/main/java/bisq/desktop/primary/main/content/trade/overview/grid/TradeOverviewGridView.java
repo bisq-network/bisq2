@@ -23,6 +23,7 @@ import bisq.desktop.layout.Layout;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
+import bisq.protocol.SwapProtocol;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,7 +50,11 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         root.getChildren().clear();
         int index = 0;
         for (ProtocolListItem protocol : model.getSortedItems()) {
-            root.add(getProtocolBox(protocol), index % 2, index >> 1);
+            Pane protocolBox = getProtocolBox(protocol);
+            if (protocol.getSwapProtocolType() != SwapProtocol.Type.SATOSHI_SQUARE) {
+                protocolBox.setOpacity(0.4);
+            }
+            root.add(protocolBox, index % 2, index >> 1);
             index++;
         }
     }
@@ -133,7 +138,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         box.setCursor(Cursor.HAND);
         box.setOnMouseClicked(e -> controller.onSelect(protocol));
 
-        Button button = new Button(Res.get("select"));
+        String title = protocol.getSwapProtocolType() == SwapProtocol.Type.SATOSHI_SQUARE ?
+                Res.get("select") :
+                Res.get("learnMore");
+        Button button = new Button(title);
         button.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3");
         button.setOnAction(e -> controller.onSelect(protocol));
         StackPane.setAlignment(button, Pos.TOP_RIGHT);

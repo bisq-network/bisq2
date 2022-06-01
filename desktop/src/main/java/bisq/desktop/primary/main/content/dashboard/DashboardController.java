@@ -19,6 +19,8 @@ package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopup;
 import lombok.Getter;
 
@@ -38,15 +40,24 @@ public class DashboardController implements Controller {
 
     @Override
     public void onActivate() {
-        
+
     }
 
     @Override
     public void onDeactivate() {
-    
+
     }
 
     public void showNewProfilePopup() {
         newProfilePopup.show();
     }
+
+    public void openTradeOverview() {
+        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+    }
+
+    public void openBisqEasy() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+    }
+   
 }

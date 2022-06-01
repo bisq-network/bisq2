@@ -18,15 +18,15 @@
 package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,29 +34,29 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new VBox(16), model, controller);
 
-        VBox tradesBox = getValueBox(Res.get("dashboard.tradesCompleted"), 3249);
-        VBox peersBox1 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
-        VBox peersBox2 = getValueBox(Res.get("dashboard.peersOnline"), 84213);
+        VBox tradesBox = getValueBox(Res.get("dashboard.marketPrice"), "3249.34 BTC/EUR");
+        VBox peersBox1 = getValueBox(Res.get("dashboard.offersOnline"), "231");
+        VBox peersBox2 = getValueBox(Res.get("dashboard.topReputation"), "8911");
         root.getChildren().add(new HBox(16, tradesBox, peersBox1, peersBox2));
-        
+
         VBox firstBitcoinBox = getBigWidgetBox(
                 Res.get("dashboard.myFirstBitcoin.headline"),
                 Res.get("dashboard.myFirstBitcoin.content"),
                 Res.get("dashboard.myFirstBitcoin.button"),
-                () -> {}
+                controller::openTradeOverview
         );
         VBox.setMargin(firstBitcoinBox, new Insets(20, 0, 0, 0));
 
         root.getChildren().add(firstBitcoinBox);
-        
+
         VBox communityBox = getWidgetBox(
                 "welcome-community",
                 Res.get("dashboard.explore.headline"),
                 Res.get("dashboard.explore.content"),
                 Res.get("dashboard.explore.button"),
-                () -> Navigation.navigateTo(NavigationTarget.BISQ_EASY)
+                controller::openBisqEasy
         );
-        
+
         VBox profileBox = getWidgetBox(
                 "welcome-profile",
                 Res.get("dashboard.newOffer.headline"),
@@ -67,11 +67,11 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         root.getChildren().add(new HBox(16, communityBox, profileBox));
     }
 
-    private VBox getValueBox(String title, int value) {
+    private VBox getValueBox(String title, String value) {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().add("bisq-text-7");
-        
-        Label valueLabel = new Label(String.format("%,d", value));
+
+        Label valueLabel = new Label(value);
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
         VBox box = new VBox(titleLabel, valueLabel);
@@ -83,42 +83,42 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     private VBox getBigWidgetBox(String headline, String content, String buttonLabel, Runnable onAction) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
-        
+
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-6", "wrap-text");
         contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setMinHeight(54);
-        contentLabel.setMaxWidth(400);
-        
+        contentLabel.setMaxWidth(600);
+
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-big-white-button");
+        button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> onAction.run());
         button.setMaxWidth(Double.MAX_VALUE);
 
+        VBox.setMargin(contentLabel, new Insets(0,0,10,0));
         VBox box = new VBox(8, headlineLabel, contentLabel, button);
         box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(30, 48, 44, 48));
-        
+
         return box;
     }
-    
+
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.setMaxWidth(284);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2",  "wrap-text");
-        
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        contentLabel.setMaxWidth(272);
-        contentLabel.setMinHeight(80);
+        contentLabel.setMaxWidth(600);
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> onAction.run());
         button.setMaxWidth(Double.MAX_VALUE);
-        
+
+        VBox.setMargin(contentLabel, new Insets(0,0,10,0));
         VBox box = new VBox(16, headlineLabel, contentLabel, button);
         box.getStyleClass().add("bisq-box-1");
         box.setPadding(new Insets(36, 48, 52, 48));
@@ -129,8 +129,10 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     }
 
     @Override
-    protected void onViewAttached() {}
+    protected void onViewAttached() {
+    }
 
     @Override
-    protected void onViewDetached() {}
+    protected void onViewDetached() {
+    }
 }
