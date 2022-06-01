@@ -663,7 +663,7 @@ public class ChatMessagesComponent {
                             message.setHeightCorrection(8.5);
                             message.setPadding(new Insets(0, 0, 20, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
-                          
+
                             takeOfferButton = new Button(Res.get("takeOffer"));
                             takeOfferButton.setDefaultButton(true);
                             takeOfferButton.setVisible(false);
@@ -747,8 +747,8 @@ public class ChatMessagesComponent {
                                 }
 
                                 ChatMessage chatMessage = item.getChatMessage();
-                                boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage marketChatMessage &&
-                                        marketChatMessage.getTradeChatOffer().isPresent();
+                                boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
+                                        publicTradeChatMessage.getTradeChatOffer().isPresent();
 
                                 if (!model.isMyMessage(chatMessage) && isOfferMessage) {
                                     takeOfferButton.setVisible(true);
@@ -759,11 +759,16 @@ public class ChatMessagesComponent {
                                     takeOfferButton.setManaged(false);
                                 }
 
+                                if (isOfferMessage) {
+                                    VBox.setMargin(messageContainer, new Insets(5, 0, 25, 0));
+                                } else {
+                                    VBox.setMargin(messageContainer, new Insets(0, 0, 0, 0));
+                                }
                                 Layout.toggleStyleClass(messageContainer, "chat-offer-box", isOfferMessage);
 
                                 message.setText(item.getMessage());
                                 message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
-                                
+
                                 dateTime.setText(item.getDate());
 
                                 saveEditButton.setOnAction(e -> {
@@ -880,8 +885,6 @@ public class ChatMessagesComponent {
                                     }
                                 }
                             });
-
-                            log.info("Message font size: " + message.getStyleOfChar(1));
                         }
 
                         private void onCloseEditMessage() {
