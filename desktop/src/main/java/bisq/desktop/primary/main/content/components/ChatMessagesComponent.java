@@ -501,10 +501,12 @@ public class ChatMessagesComponent {
 
             createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
             createOfferButton.setDefaultButton(true);
+            createOfferButton.setMinWidth(140);
             StackPane stackPane = new StackPane(inputField, sendButton);
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
+
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -514,8 +516,8 @@ public class ChatMessagesComponent {
             channelMentionPopup.setItemDisplayConverter(Channel::getDisplayString);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
 
-            // there will get added some controls for emojis so leave the box even its only 1 child yet
             HBox.setHgrow(stackPane, Priority.ALWAYS);
+            HBox.setHgrow(createOfferButton, Priority.ALWAYS);
             bottomBox = new HBox(18, stackPane, createOfferButton);
 
             bottomBox.getStyleClass().add("bg-grey-5");
