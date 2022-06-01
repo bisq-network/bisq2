@@ -226,6 +226,7 @@ public class UserProfileSelection {
                             // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
                             imageView.setId("temp-robo-profile-icon");
                             userNameLabel.setText(chatUserIdentity.getNickName());
+                            buttonPane.layout();
                             //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
                         }
                     }).get());
@@ -240,6 +241,8 @@ public class UserProfileSelection {
             });
             userNameLabel.setVisible(false);
             arrow.setVisible(false);*/
+            
+          //  UIThread.runOnNextRenderFrame(()-> userNameLabel.layout());
         }
 
         @Override
@@ -247,8 +250,10 @@ public class UserProfileSelection {
                                       final double w, final double h) {
             super.layoutChildren(x, y, w, h);
 
-            userNameLabel.setLayoutX(-userNameLabel.getWidth() - 35);
-            arrow.setLayoutX(-25);
+            if (userNameLabel.getWidth() > 0) {
+                userNameLabel.setLayoutX(-userNameLabel.getWidth() - 35);
+                arrow.setLayoutX(-25);
+            }
         }
 
         @Override

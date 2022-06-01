@@ -181,25 +181,23 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class View extends ChannelSelection.View<Model, Controller> {
-        private final Label gearsIcon;
+        protected final Label settingsIcon;
 
         protected View(Model model, Controller controller) {
             super(model, controller);
 
-            gearsIcon = Icons.getIcon(AwesomeIcon.GEARS, "14");
-            gearsIcon.setOpacity(0.6);
-            gearsIcon.setLayoutY(22);
-            gearsIcon.setLayoutX(172);
-            gearsIcon.setCursor(Cursor.HAND);
-
-            getRoot().getChildren().add(gearsIcon);
+            settingsIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "14");
+            settingsIcon.setOpacity(0.5);
+            settingsIcon.setCursor(Cursor.HAND);
+            settingsIcon.setPadding(new Insets(22, 12, 0, 0));
+            headerBox.getChildren().add(settingsIcon);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            gearsIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(gearsIcon,
+            settingsIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(settingsIcon,
                     model.allMarketsSortedList,
                     c -> getMarketListCell(),
                     controller::onShowMarket,
@@ -208,7 +206,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         @Override
         protected void onViewDetached() {
-            gearsIcon.setOnMouseClicked(null);
+            settingsIcon.setOnMouseClicked(null);
         }
 
         @Override
@@ -256,6 +254,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return new ListCell<>() {
                 private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+              
                 final Label label = new Label();
                 final HBox hBox = new HBox();
 
@@ -265,11 +264,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     setPadding(new Insets(0, 0, -20, 0));
 
                     label.getStyleClass().add("bisq-text-8");
-                    hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
                     hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
 
                     removeIcon.setCursor(Cursor.HAND);
+                    removeIcon.setId("icon-label-grey");
                     HBox.setMargin(removeIcon, new Insets(0, 12, 0, 0));
                 }
 
@@ -287,7 +286,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         label.setGraphicTextGap(8);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
-                                label.setMaxWidth(getWidth() - 70);
+                                label.setPrefWidth(getWidth() - 60);
                             }
                         });
 

@@ -421,7 +421,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             numTargetConnectionsLabel.textProperty().bind(numTargetConnections);
 
             ImageView icon = ImageUtil.getImageViewById(imageId);
-            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.4));
+            EasyBind.subscribe(networkEnabled, value -> icon.setOpacity(value ? 1 : 0.5));
             HBox.setMargin(icon, new Insets(0, 0, 0, 2));
 
             return new HBox(5, titleLabel, numConnectionsLabel, separator, numTargetConnectionsLabel, icon);

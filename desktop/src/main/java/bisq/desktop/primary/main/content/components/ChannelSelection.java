@@ -3,6 +3,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
@@ -18,7 +20,8 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -76,25 +79,32 @@ public abstract class ChannelSelection {
     }
 
     @Slf4j
-    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<Pane, M, C> {
+    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<AnchorPane, M, C> {
         protected final ListView<ChannelItem> listView;
         private final InvalidationListener channelsChangedListener;
+        protected final HBox headerBox;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
 
         protected View(M model, C controller) {
-            super(new Pane(), model, controller);
+            super(new AnchorPane(), model, controller);
 
             Label headline = new Label(getHeadlineText());
             headline.getStyleClass().add("bisq-text-8");
-            VBox.setMargin(headline, new Insets(22, 0, 10, 22));
-            
+            HBox.setMargin(headline, new Insets(22, 0, 10, 22));
+
+            // subclasses add settings icon, so we put it into a box
+            headerBox = new HBox(20, headline, Spacer.fillHBox());
+
             listView = new ListView<>(model.sortedList);
             listView.getStyleClass().add("channel-selection-list-view");
             listView.setPrefHeight(100);
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
-            root.getChildren().addAll(new VBox(10, headline, listView));
+            VBox vBox = new VBox(10, headerBox, listView);
+            vBox.setFillWidth(true);
+            Layout.pinToAnchorPane(vBox, 0, 0, 0, 0);
+            root.getChildren().add(vBox);
             channelsChangedListener = observable -> adjustHeight();
         }
 
@@ -117,6 +127,7 @@ public abstract class ChannelSelection {
                         }
                     });
             model.sortedList.addListener(channelsChangedListener);
+
             adjustHeight();
         }
 

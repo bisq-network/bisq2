@@ -89,9 +89,10 @@ public class FilterBox {
             root.getStyleClass().add("bg-grey-5");
             root.setAlignment(Pos.CENTER);
             root.setPadding(new Insets(14, 40, 14, 30));
-            
+            root.setId("chat-filter-box");
+
             textField = new TextField();
-            textField.setId("chat-filterbox");
+            textField.setId("chat-input-field");
             textField.setPromptText(Res.get("search"));
             textField.setMinWidth(100);
             HBox.setHgrow(textField, Priority.ALWAYS);
