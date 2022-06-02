@@ -19,8 +19,7 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.newProfilePopup.initNymProfile.InitNymProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
@@ -64,8 +63,7 @@ public class NewProfilePopupController implements Controller {
 
     public void onSkip() {
         if (model.isLastStep()) {
-            Navigation.navigateTo(NavigationTarget.OVERLAY_CLOSE);
-            // overlayController.hide();
+            OverlayController.hide();
         } else {
             model.increaseStep();
         }

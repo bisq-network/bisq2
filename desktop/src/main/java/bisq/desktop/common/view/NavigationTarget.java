@@ -32,7 +32,6 @@ public enum NavigationTarget {
     SPLASH(PRIMARY_STAGE, false),
 
     OVERLAY(PRIMARY_STAGE, false),
-    OVERLAY_CLOSE(OVERLAY, false),
     ONBOARDING2(OVERLAY, false),
 
     ONBOARDING(PRIMARY_STAGE, false),

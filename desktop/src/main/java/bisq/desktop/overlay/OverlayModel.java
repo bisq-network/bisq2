@@ -17,12 +17,24 @@
 
 package bisq.desktop.overlay;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.DisplaySettings;
 
 public class OverlayModel extends NavigationModel {
+    private final DisplaySettings displaySettings;
+
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.OVERLAY_CLOSE;
+        return NavigationTarget.NONE;
+    }
+
+    OverlayModel(DefaultApplicationService applicationService) {
+        displaySettings = applicationService.getSettingsService().getDisplaySettings();
+    }
+
+    double getDuration(double duration) {
+        return displaySettings.isUseAnimations() ? duration : 1;
     }
 }

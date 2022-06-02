@@ -26,10 +26,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.BasicOverlay;
-import bisq.desktop.overlay.Notification;
-import bisq.desktop.overlay.Overlay;
-import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.overlay.*;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.onboarding.OnboardingController;
 import bisq.desktop.primary.splash.SplashController;
@@ -37,6 +34,7 @@ import bisq.settings.CookieKey;
 import bisq.settings.DisplaySettings;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
+import javafx.scene.layout.AnchorPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +42,8 @@ import java.util.Optional;
 
 @Slf4j
 public class PrimaryStageController extends NavigationController {
+    @Getter
+    private static AnchorPane viewRoot;
     protected final DefaultApplicationService applicationService;
     @Getter
     protected final PrimaryStageModel model;
@@ -69,15 +69,15 @@ public class PrimaryStageController extends NavigationController {
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
         DontShowAgainLookup.setPreferences(settingsService);
-        Notification.init(view.getRoot(), displaySettings);
-        BasicOverlay.init(view.getRoot(), displaySettings);
-        OverlayController.init(view.getRoot(), displaySettings);
+        PrimaryStageController.viewRoot = view.getRoot();
+        Notification.init(viewRoot, displaySettings);
+        BasicOverlay.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
-        Overlay.init(view.getRoot(),
+        Overlay.init(viewRoot,
                 applicationService.getApplicationConfig().baseDir(),
                 displaySettings,
                 this::shutdown);
-       
+
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
 
