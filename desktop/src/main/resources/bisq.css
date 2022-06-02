@@ -313,7 +313,6 @@
 }
 
 .bisq-text-7 {
-    -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.92em;
 }
 
@@ -426,6 +425,10 @@
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
+.font-semibold {
+    -fx-font-family: "IBM Plex Sans SemiBold";
+}
+
 .font-light {
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -493,7 +496,8 @@
     -fx-cursor: hand;
 }
 
-.button:default {
+.button:default, 
+.default-button {
     -fx-background-color: -bisq-dark-green;
 }
 
@@ -1365,6 +1369,11 @@ tree-table-view:focused {
     -fx-font-size: 7;
     -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans";
+}
+
+.close-sidebar-button {
+    -fx-background-color: -bisq-grey-13;
+    -fx-text-fill: -bisq-grey-17;
 }
 
 #chat-filter-box {
