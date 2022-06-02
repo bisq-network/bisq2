@@ -23,6 +23,6 @@ import bisq.desktop.common.view.NavigationTarget;
 public class OverlayModel extends NavigationModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return null;
+        return NavigationTarget.OVERLAY_CLOSE;
     }
 }

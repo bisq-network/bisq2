@@ -49,7 +49,8 @@ public class DashboardController implements Controller {
     }
 
     public void showNewProfilePopup() {
-        newProfilePopupController.show();
+        Navigation.navigateTo(NavigationTarget.ONBOARDING2);
+        //newProfilePopupController.show();
     }
 
     public void openTradeOverview() {
@@ -59,5 +60,5 @@ public class DashboardController implements Controller {
     public void openBisqEasy() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY);
     }
-   
+
 }

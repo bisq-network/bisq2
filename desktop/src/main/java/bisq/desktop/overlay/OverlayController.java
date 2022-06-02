@@ -17,12 +17,14 @@
 
 package bisq.desktop.overlay;
 
+import bisq.application.DefaultApplicationService;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupController;
 import bisq.settings.DisplaySettings;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -30,11 +32,10 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -51,45 +52,75 @@ import java.util.Optional;
  */
 @Slf4j
 public class OverlayController extends NavigationController {
-    @Getter
-    protected final OverlayModel model;
-    @Getter
-    protected final OverlayView view;
-    @Getter
-    protected final Region owner;
-    public final DisplaySettings displaySettings;
-    @Getter
-    protected final VBox root;
 
-    protected Stage stage;
-    protected double width = 668;
+    private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
+
+    private static Region owner;
+    private static DisplaySettings displaySettings;
+    @Getter
+    private final OverlayModel model;
+    @Getter
+    private final OverlayView view;
+    private final DefaultApplicationService applicationService;
+
+    public static void init(Region owner, DisplaySettings displaySettings) {
+        OverlayController.owner = owner;
+        OverlayController.displaySettings = displaySettings;
+    }
+
+    @Getter
+    protected Pane root;
+    protected final Pane base = new Pane();
+    protected final Scene ownerScene;
+    protected final Stage stage;
+    protected final Window window;
+
     protected ChangeListener<Number> positionListener;
     protected UIScheduler centerTime;
 
-    public OverlayController(Region owner, DisplaySettings displaySettings) {
+    public OverlayController(DefaultApplicationService applicationService) {
         super(NavigationTarget.OVERLAY);
+
+        this.applicationService = applicationService;
 
         model = new OverlayModel();
         view = new OverlayView(model, this);
 
-        this.owner = owner;
-        this.displaySettings = displaySettings;
-        root = new VBox();
-        root.setPadding(new Insets(0));
-        root.setPrefWidth(width);
-        root.getStyleClass().add("popup-bg");
-    }
+        // root = new VBox();
+        base.getStyleClass().add("popup-bg");
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
+        ownerScene = owner.getScene();
 
-    public void show() {
-        display();
-    }
+        Scene scene = new Scene(base);
+        scene.getStylesheets().setAll(ownerScene.getStylesheets());
+        scene.setFill(Color.TRANSPARENT);
+        setupKeyHandler(scene);
 
-    public void hide() {
-        animateHide();
+        stage = new Stage();
+        stage.setScene(scene);
+        stage.sizeToScene();
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.initOwner(owner.getScene().getWindow());
+        stage.initModality(Modality.WINDOW_MODAL);
+        stage.setOnCloseRequest(event -> {
+            event.consume();
+            hide();
+        });
+        window = ownerScene.getWindow();
+
+
+        // On Linux the owner stage does not move the child stage as it does on Mac
+        // So we need to apply centerPopup. Further, with fast movements the handler loses
+        // the latest position, with a delay it fixes that.
+        // Also, on Mac sometimes the popups are positioned outside the main app, so keep it for all OS
+        positionListener = (observable, oldValue, newValue) -> {
+            layout();
+
+            if (centerTime != null)
+                centerTime.stop();
+
+            centerTime = UIScheduler.run(this::layout).after(3000);
+        };
     }
 
 
@@ -99,7 +130,7 @@ public class OverlayController extends NavigationController {
 
     @Override
     public void onActivate() {
-
+        log.error("onActivate");
     }
 
     @Override
@@ -109,7 +140,45 @@ public class OverlayController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
+        switch (navigationTarget) {
+            case ONBOARDING2 -> {
+                return Optional.of(new NewProfilePopupController(applicationService));
+            }
+            case OVERLAY_CLOSE -> {
+                return Optional.empty();
+            }
+
+            default -> {
+                return Optional.empty();
+            }
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void show() {
+        root.setPrefWidth(owner.getWidth() - 180);
+        root.setPrefHeight(owner.getHeight() - 100);
+
+        window.xProperty().addListener(positionListener);
+        window.yProperty().addListener(positionListener);
+        window.widthProperty().addListener(positionListener);
+
+        // base.getChildren().add(root);
+        stage.show();
+
+        layout();
+
+        Transitions.darken(owner, Transitions.DEFAULT_DURATION, false);
+
+        animateDisplay();
+    }
+
+    public void hide() {
+        animateHide();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -137,56 +206,11 @@ public class OverlayController extends NavigationController {
                     window.widthProperty().removeListener(positionListener);
                 }
             }
+
+            base.getChildren().clear();
+            resetSelectedChildTarget();
         });
     }
-
-    protected void display() {
-        Scene rootScene = owner.getScene();
-        if (rootScene != null) {
-            Scene scene = new Scene(root);
-            scene.getStylesheets().setAll(rootScene.getStylesheets());
-            scene.setFill(Color.TRANSPARENT);
-
-            setupKeyHandler(scene);
-
-            stage = new Stage();
-            stage.setScene(scene);
-            Window window = rootScene.getWindow();
-            setModality();
-            stage.initStyle(StageStyle.TRANSPARENT);
-            stage.setOnCloseRequest(event -> {
-                event.consume();
-                hide();
-            });
-            stage.sizeToScene();
-            stage.show();
-
-            layout();
-
-            Transitions.darken(owner, Transitions.DEFAULT_DURATION, false);
-
-            // On Linux the owner stage does not move the child stage as it does on Mac
-            // So we need to apply centerPopup. Further, with fast movements the handler loses
-            // the latest position, with a delay it fixes that.
-            // Also, on Mac sometimes the popups are positioned outside the main app, so keep it for all OS
-            positionListener = (observable, oldValue, newValue) -> {
-                if (stage != null) {
-                    layout();
-
-                    if (centerTime != null)
-                        centerTime.stop();
-
-                    centerTime = UIScheduler.run(this::layout).after(3000);
-                }
-            };
-            window.xProperty().addListener(positionListener);
-            window.yProperty().addListener(positionListener);
-            window.widthProperty().addListener(positionListener);
-
-            animateDisplay();
-        }
-    }
-
 
     protected void setupKeyHandler(Scene scene) {
         scene.setOnKeyPressed(e -> {
@@ -199,43 +223,40 @@ public class OverlayController extends NavigationController {
 
     protected void animateDisplay() {
         root.setOpacity(0);
-        Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
         double duration = getDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         double startScale = 0.25;
         keyFrames.add(new KeyFrame(Duration.millis(0),
-                new KeyValue(root.opacityProperty(), 0, interpolator),
-                new KeyValue(root.scaleXProperty(), startScale, interpolator),
-                new KeyValue(root.scaleYProperty(), startScale, interpolator)
+                new KeyValue(root.opacityProperty(), 0, INTERPOLATOR),
+                new KeyValue(root.scaleXProperty(), startScale, INTERPOLATOR),
+                new KeyValue(root.scaleYProperty(), startScale, INTERPOLATOR)
 
         ));
         keyFrames.add(new KeyFrame(Duration.millis(duration),
-                new KeyValue(root.opacityProperty(), 1, interpolator),
-                new KeyValue(root.scaleXProperty(), 1, interpolator),
-                new KeyValue(root.scaleYProperty(), 1, interpolator)
+                new KeyValue(root.opacityProperty(), 1, INTERPOLATOR),
+                new KeyValue(root.scaleXProperty(), 1, INTERPOLATOR),
+                new KeyValue(root.scaleYProperty(), 1, INTERPOLATOR)
         ));
 
         timeline.play();
     }
 
     protected void animateHide(Runnable onFinishedHandler) {
-        Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
         double duration = getDuration(200);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-
         double endScale = 0.25;
         keyFrames.add(new KeyFrame(Duration.millis(0),
-                new KeyValue(root.opacityProperty(), 1, interpolator),
-                new KeyValue(root.scaleXProperty(), 1, interpolator),
-                new KeyValue(root.scaleYProperty(), 1, interpolator)
+                new KeyValue(root.opacityProperty(), 1, INTERPOLATOR),
+                new KeyValue(root.scaleXProperty(), 1, INTERPOLATOR),
+                new KeyValue(root.scaleYProperty(), 1, INTERPOLATOR)
         ));
         keyFrames.add(new KeyFrame(Duration.millis(duration),
-                new KeyValue(root.opacityProperty(), 0, interpolator),
-                new KeyValue(root.scaleXProperty(), endScale, interpolator),
-                new KeyValue(root.scaleYProperty(), endScale, interpolator)
+                new KeyValue(root.opacityProperty(), 0, INTERPOLATOR),
+                new KeyValue(root.scaleXProperty(), endScale, INTERPOLATOR),
+                new KeyValue(root.scaleYProperty(), endScale, INTERPOLATOR)
         ));
 
         timeline.setOnFinished(e -> onFinishedHandler.run());
@@ -243,26 +264,16 @@ public class OverlayController extends NavigationController {
     }
 
     protected void layout() {
-        Scene rootScene = owner.getScene();
-        if (rootScene != null) {
-            Window window = rootScene.getWindow();
-            double titleBarHeight = window.getHeight() - rootScene.getHeight();
+        double titleBarHeight = window.getHeight() - ownerScene.getHeight();
 
-            if (OsUtils.isWindows()) {
-                titleBarHeight -= 9;
-            }
-            stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
-            stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
+        if (OsUtils.isWindows()) {
+            titleBarHeight -= 9;
         }
-    }
-
-    protected void setModality() {
-        stage.initOwner(owner.getScene().getWindow());
-        stage.initModality(Modality.WINDOW_MODAL);
+        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
+        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
     }
 
     protected double getDuration(double duration) {
         return displaySettings.isUseAnimations() ? duration : 1;
     }
-
 }

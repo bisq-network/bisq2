@@ -29,6 +29,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.overlay.BasicOverlay;
 import bisq.desktop.overlay.Notification;
 import bisq.desktop.overlay.Overlay;
+import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.onboarding.OnboardingController;
 import bisq.desktop.primary.splash.SplashController;
@@ -50,6 +51,7 @@ public class PrimaryStageController extends NavigationController {
     protected final PrimaryStageView view;
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
+    private final OverlayController overlayController;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -69,6 +71,7 @@ public class PrimaryStageController extends NavigationController {
         DontShowAgainLookup.setPreferences(settingsService);
         Notification.init(view.getRoot(), displaySettings);
         BasicOverlay.init(view.getRoot(), displaySettings);
+        OverlayController.init(view.getRoot(), displaySettings);
         Navigation.init(settingsService);
         Overlay.init(view.getRoot(),
                 applicationService.getApplicationConfig().baseDir(),
@@ -77,6 +80,9 @@ public class PrimaryStageController extends NavigationController {
        
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
+
+        overlayController = new OverlayController(applicationService);
+        overlayController.onActivateInternal();
     }
 
     @Override

@@ -19,10 +19,19 @@ package bisq.desktop.overlay;
 
 import bisq.desktop.common.view.NavigationView;
 import javafx.scene.layout.Pane;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class OverlayView extends NavigationView<Pane, OverlayModel, OverlayController> {
-    public OverlayView( OverlayModel model, OverlayController controller) {
+    public OverlayView(OverlayModel model, OverlayController controller) {
         super(new Pane(), model, controller);
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            log.error("Add view {}", newValue);
+            controller.root = (Pane) newValue.getRoot();
+            controller.base.getChildren().add(newValue.getRoot());
+            controller.show();
+        });
     }
 
     @Override

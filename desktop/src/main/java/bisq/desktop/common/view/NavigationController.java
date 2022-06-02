@@ -60,6 +60,11 @@ public abstract class NavigationController implements Controller {
         }
     }
 
+    public void resetSelectedChildTarget() {
+        selectedChildTarget = Optional.empty();
+        getModel().setView(null);
+    }
+
     public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
     }
 

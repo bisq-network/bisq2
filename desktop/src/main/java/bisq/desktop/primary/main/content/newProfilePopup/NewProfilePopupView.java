@@ -34,14 +34,13 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
-    private HBox stepsBox;
-    private Button skipButton;
+    private final HBox stepsBox;
+    private final Button skipButton;
     private Subscription stepSubscription;
 
     public NewProfilePopupView(NewProfilePopupModel model,
-                               NewProfilePopupController controller,
-                               Pane popupRoot) {
-        super(popupRoot, model, controller);
+                               NewProfilePopupController controller) {
+        super(new VBox(), model, controller);
 
         skipButton = new Button(Res.get("skip").toUpperCase());
 
