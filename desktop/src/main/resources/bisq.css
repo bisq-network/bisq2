@@ -136,11 +136,6 @@
     -fx-border-width: 0 0 1 0;
 }
 
-.border-bottom-2 {
-    -fx-border-color: -bisq-grey-6;
-    -fx-border-width: 0 0 1 0;
-}
-
 .border-top-grey-5 {
     -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
@@ -328,6 +323,12 @@
     -fx-text-fill: -bisq-grey-9;
 }
 
+.bisq-text-9 {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.54em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .wrap-text {
     -fx-wrap-text: true;    
 }
@@ -417,9 +418,18 @@
     -fx-text-fill: -bisq-grey-9;
 }
 
+.bisq-text-grey-10 {
+    -fx-text-fill: -bisq-grey-10;
+}
+
 .font-medium {
     -fx-font-family: "IBM Plex Sans Medium";
 }
+
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /*
 .bisq-label-white:selected {
     -fx-text-fill: -bisq-green;
