@@ -33,9 +33,9 @@ public class SelectUserTypeController implements Controller {
     private final SelectUserTypeModel model;
     @Getter
     private final SelectUserTypeView view;
-    private Consumer<Integer> navigationHandler;
+    private final Consumer<Boolean> navigationHandler;
 
-    public SelectUserTypeController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
+    public SelectUserTypeController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
         this.navigationHandler = navigationHandler;
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
@@ -70,10 +70,10 @@ public class SelectUserTypeController implements Controller {
     }
 
     public void onNext() {
-        navigationHandler.accept(1);
+        navigationHandler.accept(true);
     }
 
     void onPrevious() {
-        navigationHandler.accept(-1);
+        navigationHandler.accept(false);
     }
 }

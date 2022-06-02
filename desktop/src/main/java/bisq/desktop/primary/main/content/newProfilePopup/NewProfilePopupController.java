@@ -45,22 +45,21 @@ public class NewProfilePopupController implements Controller {
     @Override
     public void onActivate() {
         stepSubscription = EasyBind.subscribe(model.currentStepProperty(),
-                step -> {
-                    int index = (int) step;
-                    Controller controller;
-                    if (index == 0) {
-                        controller = new InitNymProfileController(applicationService, this::onSubViewNavigationChange);
+                stepAsNumber -> {
+                    int step = (int) stepAsNumber;
+                    if (step == 0) {
+                        InitNymProfileController controller = new InitNymProfileController(applicationService, this::navigateSubView);
                         model.setView(controller.getView());
-                    } else if (index == 1) {
-                        controller = new SelectUserTypeController(applicationService, this::onSubViewNavigationChange);
+                    } else if (step == 1) {
+                        SelectUserTypeController controller = new SelectUserTypeController(applicationService, this::navigateSubView);
                         model.setView(controller.getView());
-                    } else if (index == 2) {
-                        controller = new CreateOfferController(applicationService, this::onSubViewNavigationChange);
+                    } else if (step == 2) {
+                        CreateOfferController controller = new CreateOfferController(applicationService, this::navigateSubView);
                         model.setView(controller.getView());
                     }
                 });
 
-       
+
     }
 
     @Override
@@ -72,10 +71,10 @@ public class NewProfilePopupController implements Controller {
         OverlayController.hide();
     }
 
-    private void onSubViewNavigationChange(int direction) {
-        if (direction == 1) {
+    private void navigateSubView(boolean isNext) {
+        if (isNext) {
             model.increaseStep();
-        } else if (direction == -1) {
+        } else {
             model.decreaseStep();
         }
     }

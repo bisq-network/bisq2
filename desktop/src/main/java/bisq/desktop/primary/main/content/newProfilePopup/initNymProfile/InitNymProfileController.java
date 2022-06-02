@@ -42,11 +42,11 @@ public class InitNymProfileController implements Controller {
     @Getter
     private final InitNymProfileView view;
     private final ChatUserService chatUserService;
-    private final Consumer<Integer> navigationHandler;
+    private final Consumer<Boolean> navigationHandler;
     private final KeyPairService keyPairService;
     private Subscription nickNameSubscription;
 
-    public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
+    public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
         keyPairService = applicationService.getKeyPairService();
         chatUserService = applicationService.getChatUserService();
         this.navigationHandler = navigationHandler;
@@ -76,7 +76,7 @@ public class InitNymProfileController implements Controller {
                 .thenAccept(userProfile -> UIThread.run(() -> {
                     checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                     model.createProfileButtonDisable.set(false);
-                    navigationHandler.accept(1);
+                    navigationHandler.accept(true);
                 }));
     }
 

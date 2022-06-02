@@ -29,9 +29,9 @@ public class CreateOfferController implements Controller {
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-    private final Consumer<Integer> navigationHandler;
+    private final Consumer<Boolean> navigationHandler;
 
-    public CreateOfferController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
+    public CreateOfferController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
         this.navigationHandler = navigationHandler;
 
         model = new CreateOfferModel();
