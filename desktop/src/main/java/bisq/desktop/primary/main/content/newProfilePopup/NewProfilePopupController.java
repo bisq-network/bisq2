@@ -61,7 +61,10 @@ public class NewProfilePopupController implements Controller {
     @Override
     public void onActivate() {
         model.currentStepProperty().set(0);
-        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> view.setupSelectedStep());
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> {
+            model.setView(stepsControllers.get((int) step).getView());
+        });
+        //stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> view.setupSelectedStep());
     }
 
     @Override
@@ -73,7 +76,7 @@ public class NewProfilePopupController implements Controller {
         view.addContent();
     }
 
-    public void skipStep() {
+    public void onSkip() {
         if (model.isLastStep()) {
             popup.hide();
         } else {

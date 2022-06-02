@@ -31,33 +31,71 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
     private final BasicOverlay popup;
     private HBox stepsBox;
+    private Button skipButton;
+    private Subscription stepSubscription;
+    private VBox popupRoot;
 
-    public NewProfilePopupView(NewProfilePopupModel model, 
-                               NewProfilePopupController controller, 
+    public NewProfilePopupView(NewProfilePopupModel model,
+                               NewProfilePopupController controller,
                                BasicOverlay popup) {
         super(new Pane(), model, controller);
         this.popup = popup;
+
+        skipButton = new Button(Res.get("skip").toUpperCase());
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            if (popupRoot.getChildren().size() == 1) {
+                popupRoot.getChildren().add(newValue.getRoot());
+            } else {
+                popupRoot.getChildren().set(1, newValue.getRoot());
+            }
+        });
     }
 
     @Override
-    protected void onViewAttached() {}
+    protected void onViewAttached() {
+        log.error("onViewAttached popup.getOwner().getWidth() " + popup.getOwner().getWidth());
+        log.error("onViewAttached popup.getOwner().getHeight() " + popup.getOwner().getHeight());
+        popupRoot.setPrefWidth(popup.getOwner().getWidth() - 180);
+        popupRoot.setPrefHeight(popup.getOwner().getHeight() - 100);
+
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), selectedStep -> {
+            for (int i = 0; i < stepsBox.getChildren().size(); i++) {
+                Label step = (Label) stepsBox.getChildren().get(i);
+                Layout.chooseStyleClass(
+                        step,
+                        "bisq-small-light-label",
+                        "bisq-small-light-label-dimmed-2",
+                        (int) selectedStep == i
+                );
+            }
+        });
+
+        skipButton.setOnAction(e -> controller.onSkip());
+    }
 
     @Override
-    protected void onViewDetached() {}
+    protected void onViewDetached() {
+        stepSubscription.unsubscribe();
+
+        skipButton.setOnAction(null);
+    }
 
     protected void addContent() {
-        VBox content = popup.getRoot();
-        content.setPrefWidth(BasicOverlay.owner.getWidth() - 180);
-        content.setPrefHeight(BasicOverlay.owner.getHeight() - 100);
+        popupRoot = popup.getRoot();
+        popupRoot.setPrefWidth(BasicOverlay.owner.getWidth() - 180);
+        popupRoot.setPrefHeight(BasicOverlay.owner.getHeight() - 100);
 
         StackPane stackPane = new StackPane();
         VBox.setMargin(stackPane, new Insets(0, 0, 12, 0));
-        
+
         stepsBox = new HBox(
                 new Label(Res.get("initNymProfile.step1").toUpperCase()),
                 new Label(Res.get("initNymProfile.step2").toUpperCase()),
@@ -68,14 +106,14 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
         stepsBox.getStyleClass().add("border-bottom-2");
         stepsBox.setPadding(new Insets(32, 0, 32, 0));
 
-        Button skipButton = new Button(Res.get("skip").toUpperCase());
+
         skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-small-light-label");
         StackPane.setAlignment(skipButton, Pos.TOP_RIGHT);
         StackPane.setMargin(skipButton, new Insets(24, 24, 0, 0));
-        skipButton.setOnAction(e -> controller.skipStep());
-        
+        skipButton.setOnAction(e -> controller.onSkip());
+
         stackPane.getChildren().addAll(stepsBox, skipButton);
-        content.getChildren().add(stackPane);
+        popupRoot.getChildren().add(stackPane);
     }
 
 

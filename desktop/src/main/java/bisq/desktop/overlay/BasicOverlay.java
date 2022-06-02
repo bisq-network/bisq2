@@ -42,7 +42,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public  class BasicOverlay {
+public class BasicOverlay {
+    @Getter
     public static Region owner;
     public static DisplaySettings displaySettings;
 
@@ -55,7 +56,7 @@ public  class BasicOverlay {
     @Getter
     protected VBox root;
     protected double width = 668;
-    
+
     protected ChangeListener<Number> positionListener;
     protected UIScheduler centerTime;
 
@@ -78,9 +79,11 @@ public  class BasicOverlay {
         }
     }
 
-    protected void onShow() {}
-    
-    protected void onHidden() {}
+    protected void onShow() {
+    }
+
+    protected void onHidden() {
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -111,7 +114,7 @@ public  class BasicOverlay {
             onHidden();
         });
     }
-    
+
     protected void createMainContent() {
         root = new VBox();
         root.setPadding(new Insets(0));
@@ -247,7 +250,8 @@ public  class BasicOverlay {
         stage.initModality(Modality.WINDOW_MODAL);
     }
 
-    protected void addContent() {}
+    protected void addContent() {
+    }
 
     protected double getDuration(double duration) {
         return displaySettings.isUseAnimations() ? duration : 1;
