@@ -18,9 +18,8 @@
 package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 
 import bisq.desktop.common.view.Model;
-import bisq.i18n.Res;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
@@ -30,31 +29,20 @@ import lombok.Setter;
 @Getter
 public class SelectUserTypeModel implements Model {
     public enum Type {
-        NEWBIE(Res.get("satoshisquareapp.selectTraderType.newbie")),
-        PRO_TRADER(Res.get("satoshisquareapp.selectTraderType.proTrader"));
-
-        private final String displayString;
-
-        Type(String displayString) {
-            this.displayString = displayString;
-        }
-
-        @Override
-        public String toString() {
-            return displayString;
-        }
+        NEWBIE,
+        EXPERIENCED
     }
 
-    private final ObservableList<Type> userTypes = FXCollections.observableArrayList();
-    private final StringProperty info = new SimpleStringProperty();
-    private final StringProperty buttonText = new SimpleStringProperty();
-    @Setter
-    private Type selectedType;
+    private final ObjectProperty<Type> selectedType = new SimpleObjectProperty<>();
     private final String profileId;
     private final Image roboHashNode;
 
     public SelectUserTypeModel(String profileId, Image roboHashNode) {
         this.profileId = profileId;
         this.roboHashNode = roboHashNode;
+    }
+    
+    void setSelectedType(Type type) {
+        selectedType.set(type);
     }
 }
