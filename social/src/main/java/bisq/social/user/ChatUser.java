@@ -147,6 +147,17 @@ public class ChatUser implements DistributedData {
         return false;
     }
 
+    public String getBio() {
+        return "Trusted trader, 4 year contributor to bisq"; //todo implement instead of hardcode
+    }
+    
+    public String getBurnScoreAsString() {
+        return "301"; //todo implement instead of hardcode
+    }
+    public String getAccountAgeAsString() {
+        return "274 days"; //todo implement instead of hardcode
+    }
+
     //todo
     public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
     }

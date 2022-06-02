@@ -34,7 +34,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
-    private final HBox stepsBox;
+    private Label stepLabel;
     private final Button skipButton;
     private Subscription stepSubscription;
 
@@ -42,26 +42,19 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
                                NewProfilePopupController controller) {
         super(new VBox(), model, controller);
 
-        skipButton = new Button(Res.get("skip").toUpperCase());
-
         StackPane stackPane = new StackPane();
         VBox.setMargin(stackPane, new Insets(0, 0, 12, 0));
 
-        stepsBox = new HBox(
-                new Label(Res.get("initNymProfile.step1").toUpperCase()),
-                new Label(Res.get("initNymProfile.step2").toUpperCase()),
-                new Label(Res.get("initNymProfile.step3").toUpperCase())
-        );
-        stepsBox.setSpacing(60);
-        stepsBox.setAlignment(Pos.BASELINE_CENTER);
-        stepsBox.getStyleClass().add("border-bottom-2");
-        stepsBox.setPadding(new Insets(32, 0, 32, 0));
+        stepLabel = new Label();
+        stepLabel.getStyleClass().addAll("bisq-text-9");
+        stepLabel.setAlignment(Pos.CENTER);
+        stepLabel.setPadding(new Insets(32, 0, 32, 0));
 
-        skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-small-light-label");
-        skipButton.setOnAction(e -> controller.onSkip());
+        skipButton = new Button(Res.get("later"));
+        skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-grey-10");
         StackPane.setAlignment(skipButton, Pos.TOP_RIGHT);
         StackPane.setMargin(skipButton, new Insets(24, 24, 0, 0));
-        stackPane.getChildren().addAll(stepsBox, skipButton);
+        stackPane.getChildren().addAll(stepLabel, skipButton);
         root.getChildren().add(stackPane);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
@@ -75,16 +68,8 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
 
     @Override
     protected void onViewAttached() {
-        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), selectedStep -> {
-            for (int i = 0; i < stepsBox.getChildren().size(); i++) {
-                Label step = (Label) stepsBox.getChildren().get(i);
-                Layout.chooseStyleClass(
-                        step,
-                        "bisq-small-light-label",
-                        "bisq-small-light-label-dimmed-2",
-                        (int) selectedStep == i
-                );
-            }
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> {
+            stepLabel.setText(((int) step + 1) + " / 3");
         });
 
         skipButton.setOnAction(e -> controller.onSkip());

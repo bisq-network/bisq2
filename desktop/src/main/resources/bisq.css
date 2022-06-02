@@ -136,11 +136,6 @@
     -fx-border-width: 0 0 1 0;
 }
 
-.border-bottom-2 {
-    -fx-border-color: -bisq-grey-6;
-    -fx-border-width: 0 0 1 0;
-}
-
 .border-top-grey-5 {
     -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
@@ -318,7 +313,6 @@
 }
 
 .bisq-text-7 {
-    -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.92em;
 }
 
@@ -326,6 +320,12 @@
     -fx-font-size: 0.92em;
     -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -bisq-grey-9;
+}
+
+.bisq-text-9 {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 1.54em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .wrap-text {
@@ -417,9 +417,22 @@
     -fx-text-fill: -bisq-grey-9;
 }
 
+.bisq-text-grey-10 {
+    -fx-text-fill: -bisq-grey-10;
+}
+
 .font-medium {
     -fx-font-family: "IBM Plex Sans Medium";
 }
+
+.font-semibold {
+    -fx-font-family: "IBM Plex Sans SemiBold";
+}
+
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 /*
 .bisq-label-white:selected {
     -fx-text-fill: -bisq-green;
@@ -483,7 +496,8 @@
     -fx-cursor: hand;
 }
 
-.button:default {
+.button:default, 
+.default-button {
     -fx-background-color: -bisq-dark-green;
 }
 
@@ -1355,6 +1369,11 @@ tree-table-view:focused {
     -fx-font-size: 7;
     -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans";
+}
+
+.close-sidebar-button {
+    -fx-background-color: -bisq-grey-13;
+    -fx-text-fill: -bisq-grey-17;
 }
 
 #chat-filter-box {

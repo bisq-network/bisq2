@@ -23,7 +23,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.layout.Layout;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -106,14 +105,14 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
 
         // sideBar
-        closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-        closeButton.setOpacity(0.4);
+        closeButton = BisqIconButton.createIconButton("icon-sidebar-close");
+        VBox.setMargin(closeButton, new Insets(0, -15, 0, 0));
         channelInfo.setMinWidth(200);
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setMinWidth(340);
-        sideBar.setPadding(new Insets(10, 20, 20, 20));
+        sideBar.setMinWidth(300);
+        sideBar.setPadding(new Insets(10, 20, 10, 20));
         sideBar.setFillWidth(true);
 
         filterBoxRoot = filterBox.getRoot();
