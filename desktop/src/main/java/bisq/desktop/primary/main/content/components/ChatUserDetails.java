@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUser;
@@ -31,6 +32,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +91,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             }
 
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
+            model.bio.set(chatUser.getBio());
+            model.burnScore.set(chatUser.getBurnScoreAsString());
+            model.accountAge.set(chatUser.getAccountAgeAsString());
+            
             model.userName.set(chatUser.getNym());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
@@ -128,6 +134,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
+        private final StringProperty bio = new SimpleStringProperty();
+        private final StringProperty burnScore = new SimpleStringProperty();
+        private final StringProperty accountAge = new SimpleStringProperty();
         private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         private final StringProperty entitlements = new SimpleStringProperty();
 
@@ -140,7 +149,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label userName, id, entitlements;
+        private final Label userName, id, entitlements, bio, burnScore, accountAge;
         private final Button openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
@@ -148,17 +157,31 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            root.setAlignment(Pos.TOP_LEFT);
+            root.setMaxWidth(200);
+            root.setPadding(new Insets(0, 25, 0, 35));
+            root.setAlignment(Pos.TOP_CENTER);
 
             roboIconImageView = new ImageView();
-            VBox.setMargin(roboIconImageView, new Insets(0, 0, 0, 0));
 
             userName = new Label();
-            userName.setStyle("-fx-background-color: -bisq-grey-2;-fx-text-fill: -fx-light-text-color;");
-            userName.setMaxWidth(300);
-            userName.setMinWidth(300);
-            userName.setPadding(new Insets(7, 7, 7, 7));
-            VBox.setMargin(userName, new Insets(-10, 0, 0, 0));
+            userName.getStyleClass().addAll("bisq-text-7", "font-semibold");
+            userName.setAlignment(Pos.CENTER);
+            userName.setMaxWidth(200);
+            userName.setMinWidth(200);
+            VBox.setMargin(userName, new Insets(6, 0, 20, 0));
+
+            VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);
+            bio = (Label) bioBox.getChildren().get(1);
+            
+            VBox burnScoreBox = getInfoBox(Res.get("social.chatUser.burnScore"), false);
+            burnScore = (Label) burnScoreBox.getChildren().get(1);
+            
+            VBox accountAgeBox = getInfoBox(Res.get("social.chatUser.accountAge"), false);
+            accountAge = (Label) accountAgeBox.getChildren().get(1);
+            
+            VBox chatRulesBox = getInfoBox(Res.get("social.chat.chatRules.headline"), true);
+            Label chatRules = (Label) chatRulesBox.getChildren().get(1);
+            chatRules.setText(Res.get("social.chat.chatRules.content"));
 
             id = new Label();
             id.getStyleClass().add("offer-label-small"); //todo
@@ -171,18 +194,29 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             //todo add reputation data. need more concept work
 
             openPrivateMessageButton = new Button(Res.get("social.sendPrivateMessage"));
+            openPrivateMessageButton.getStyleClass().add("default-button");
             mentionButton = new Button(Res.get("social.mention"));
+            mentionButton.getStyleClass().add("default-button");
             ignoreButton = new Button(Res.get("social.ignore"));
+            ignoreButton.getStyleClass().add("default-button");
             reportButton = new Button(Res.get("social.report"));
+            reportButton.getStyleClass().add("default-button");
 
-            root.getChildren().addAll(roboIconImageView, userName, id, entitlements, Spacer.height(10),
-                    openPrivateMessageButton, mentionButton, ignoreButton, reportButton);
+            Region separator = Layout.separator();
+            VBox.setMargin(separator, new Insets(30, -45, 30, -55));
+            
+            root.getChildren().addAll(roboIconImageView, userName, bioBox, burnScoreBox, accountAgeBox,
+                    /* id, entitlements, */ Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton, 
+                    reportButton, separator, chatRulesBox);
         }
 
         @Override
         protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
             id.textProperty().bind(model.id);
+            bio.textProperty().bind(model.bio);
+            burnScore.textProperty().bind(model.burnScore);
+            accountAge.textProperty().bind(model.accountAge);
             entitlements.textProperty().bind(model.entitlements);
             entitlements.visibleProperty().bind(model.entitlementsVisible);
             entitlements.managedProperty().bind(model.entitlementsVisible);
@@ -192,7 +226,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
-                    roboIconImageView.setImage(roboIcon);
+                    // roboIconImageView.setImage(roboIcon);
+                    roboIconImageView.setId("temp-robo-big-profile-icon");
                 }
             });
 
@@ -206,6 +241,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         protected void onViewDetached() {
             userName.textProperty().unbind();
             id.textProperty().unbind();
+            bio.textProperty().unbind();
+            burnScore.textProperty().unbind();
+            accountAge.textProperty().unbind();
             entitlements.textProperty().unbind();
             entitlements.visibleProperty().unbind();
             entitlements.managedProperty().unbind();
@@ -219,6 +257,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             mentionButton.setOnAction(null);
             ignoreButton.setOnAction(null);
             reportButton.setOnAction(null);
+        }
+        
+        private VBox getInfoBox(String title, boolean smaller) {
+            Label titleLabel = new Label(title.toUpperCase());
+            titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semibold");
+            Label contentLabel = new Label();
+            contentLabel.getStyleClass().addAll(smaller ? "bisq-text-7" : "bisq-text-6", "wrap-text");
+            VBox box = new VBox(5, titleLabel, contentLabel);
+            VBox.setMargin(box, new Insets(8, 0, 8, 0));
+            return box;
         }
     }
 }

@@ -252,6 +252,10 @@
     -fx-image: url("images/actions/icon-search.png");
 }
 
+#icon-sidebar-close {
+    -fx-image: url("images/actions/icon-sidebar-close.png");
+}
+
 /* Markets */
 #market-any-base {
     -fx-image: url("images/markets/market-any-base.png");
@@ -296,4 +300,8 @@
 
 #temp-robo-profile-icon {
     -fx-image: url("images/roboicons/temp-robo-profile-icon.png");
+}
+
+#temp-robo-big-profile-icon {
+    -fx-image: url("images/roboicons/temp-robo-big-profile-icon.png");
 }

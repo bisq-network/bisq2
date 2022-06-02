@@ -69,7 +69,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
     private VBox getValueBox(String title, String value) {
         Label titleLabel = new Label(title);
-        titleLabel.getStyleClass().add("bisq-text-7");
+        titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
 
         Label valueLabel = new Label(value);
         valueLabel.getStyleClass().add("bisq-text-headline-3");
