@@ -23,7 +23,6 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupModel;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.social.user.ChatUserService;
@@ -32,6 +31,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Base64;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -41,14 +41,13 @@ public class InitNymProfileController implements Controller {
     @Getter
     private final InitNymProfileView view;
     private final ChatUserService chatUserService;
+    private final Consumer<Integer> navigationHandler;
     private final KeyPairService keyPairService;
-    private final NewProfilePopupModel popupModel;
 
-    public InitNymProfileController(DefaultApplicationService applicationService, NewProfilePopupModel popupModel) {
+    public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
         keyPairService = applicationService.getKeyPairService();
         chatUserService = applicationService.getChatUserService();
-        
-        this.popupModel = popupModel;
+        this.navigationHandler = navigationHandler;
 
         model = new InitNymProfileModel();
         view = new InitNymProfileView(model, this);
@@ -56,14 +55,14 @@ public class InitNymProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        createTempIdentity();
+        onCreateTempIdentity();
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    void createNymProfile() {
+    void onCreateNymProfile() {
         model.createProfileInProgress.set(true);
         String profileId = model.profileId.get();
         chatUserService.createNewInitializedUserProfile(profileId,
@@ -73,11 +72,11 @@ public class InitNymProfileController implements Controller {
                 .thenAccept(userProfile -> UIThread.run(() -> {
                     checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                     model.createProfileInProgress.set(false);
-                    popupModel.increaseStep();
+                    navigationHandler.accept(1);
                 }));
     }
 
-    void createTempIdentity() {
+    void onCreateTempIdentity() {
         model.tempKeyId = StringUtils.createUid();
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());

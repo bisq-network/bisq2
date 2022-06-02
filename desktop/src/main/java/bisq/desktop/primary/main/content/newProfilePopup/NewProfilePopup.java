@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.overlay.BasicPopup;
+import bisq.desktop.overlay.BasicOverlay;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NewProfilePopup extends BasicPopup {
+public class NewProfilePopup extends BasicOverlay {
     private final NewProfilePopupController controller;
 
     public NewProfilePopup(DefaultApplicationService applicationService) {

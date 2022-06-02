@@ -42,7 +42,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BasicOverlay<T extends BasicOverlay<T>> {
+public  class BasicOverlay {
     public static Region owner;
     public static DisplaySettings displaySettings;
 
@@ -53,7 +53,7 @@ public abstract class BasicOverlay<T extends BasicOverlay<T>> {
 
     protected Stage stage;
     @Getter
-    protected VBox mainContent;
+    protected VBox root;
     protected double width = 668;
     
     protected ChangeListener<Number> positionListener;
@@ -68,11 +68,12 @@ public abstract class BasicOverlay<T extends BasicOverlay<T>> {
         createMainContent();
         addContent();
         getRootContainer().getStyleClass().add("popup-bg");
+        display();
         onShow();
     }
 
     public void hide() {
-        if (mainContent != null) {
+        if (root != null) {
             animateHide();
         }
     }
@@ -112,9 +113,9 @@ public abstract class BasicOverlay<T extends BasicOverlay<T>> {
     }
     
     protected void createMainContent() {
-        mainContent = new VBox();
-        mainContent.setPadding(new Insets(0));
-        mainContent.setPrefWidth(width);
+        root = new VBox();
+        root.setPadding(new Insets(0));
+        root.setPrefWidth(width);
     }
 
     protected void display() {
@@ -167,7 +168,7 @@ public abstract class BasicOverlay<T extends BasicOverlay<T>> {
     }
 
     protected Region getRootContainer() {
-        return mainContent;
+        return root;
     }
 
     protected void setupKeyHandler(Scene scene) {

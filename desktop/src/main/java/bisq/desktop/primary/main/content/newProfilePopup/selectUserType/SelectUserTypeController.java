@@ -20,24 +20,23 @@ package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupModel;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Consumer;
 
 @Slf4j
 public class SelectUserTypeController implements Controller {
     private final SelectUserTypeModel model;
     @Getter
     private final SelectUserTypeView view;
-    private final NewProfilePopupModel popupModel;
+    private Consumer<Integer> navigationHandler;
 
-    public SelectUserTypeController(DefaultApplicationService applicationService, NewProfilePopupModel popupModel) {
-        this.popupModel = popupModel;
+    public SelectUserTypeController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
+        this.navigationHandler = navigationHandler;
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
         model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
@@ -70,11 +69,11 @@ public class SelectUserTypeController implements Controller {
         }
     }
 
-    public void onAction() {
-        popupModel.increaseStep();
+    public void onNext() {
+        navigationHandler.accept(1);
     }
 
-    void onGoBack() {
-        popupModel.decreaseStep();
+    void onPrevious() {
+        navigationHandler.accept(-1);
     }
 }

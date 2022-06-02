@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.overlay.BasicOverlay;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.newProfilePopup.initNymProfile.InitNymProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
@@ -33,24 +34,30 @@ import java.util.List;
 public class NewProfilePopupController implements Controller {
     private final NewProfilePopupModel model;
     @Getter
-    private final NewProfilePopupView view;   
-    private final NewProfilePopup popup;
+    private final NewProfilePopupView view;
+    private final BasicOverlay popup;
 
     List<Controller> stepsControllers;
     Subscription stepSubscription;
 
-    public NewProfilePopupController(NewProfilePopup popup, DefaultApplicationService applicationService) {
+    public NewProfilePopupController(BasicOverlay popup,DefaultApplicationService applicationService) {
         model = new NewProfilePopupModel();
-        view = new NewProfilePopupView(model, this, popup);
         this.popup = popup;
+        view = new NewProfilePopupView(model, this, popup);
 
         stepsControllers = List.of(
-                new InitNymProfileController(applicationService, model),
-                new SelectUserTypeController(applicationService, model),
-                new CreateOfferController(applicationService, model)
+                new InitNymProfileController(applicationService, this::onSubViewNavigationChange),
+                new SelectUserTypeController(applicationService, this::onSubViewNavigationChange),
+                new CreateOfferController(applicationService, this::onSubViewNavigationChange)
         );
     }
 
+    public void show() {
+        popup.show();
+        view.addContent();
+        view.onViewAttached();
+        onActivate();
+    }
     @Override
     public void onActivate() {
         model.currentStepProperty().set(0);
@@ -71,6 +78,14 @@ public class NewProfilePopupController implements Controller {
             popup.hide();
         } else {
             model.increaseStep();
+        }
+    }
+
+    private void onSubViewNavigationChange(int direction) {
+        if (direction == 1) {
+            model.increaseStep();
+        } else if (direction == -1) {
+            model.decreaseStep();
         }
     }
 }

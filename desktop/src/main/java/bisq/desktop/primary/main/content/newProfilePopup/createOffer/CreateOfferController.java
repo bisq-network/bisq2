@@ -19,19 +19,20 @@ package bisq.desktop.primary.main.content.newProfilePopup.createOffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Consumer;
 
 @Slf4j
 public class CreateOfferController implements Controller {
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
-    private final NewProfilePopupModel popupModel;
+    private final Consumer<Integer> navigationHandler;
 
-    public CreateOfferController(DefaultApplicationService applicationService, NewProfilePopupModel popupModel) {
-        this.popupModel = popupModel;
+    public CreateOfferController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
+        this.navigationHandler = navigationHandler;
 
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
@@ -44,6 +45,4 @@ public class CreateOfferController implements Controller {
     @Override
     public void onDeactivate() {
     }
-
-    
 }

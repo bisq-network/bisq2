@@ -34,12 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
-    private final NewProfilePopup popup;
+    private final BasicOverlay popup;
     private HBox stepsBox;
 
     public NewProfilePopupView(NewProfilePopupModel model, 
                                NewProfilePopupController controller, 
-                               NewProfilePopup popup) {
+                               BasicOverlay popup) {
         super(new Pane(), model, controller);
         this.popup = popup;
     }
@@ -51,7 +51,7 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
     protected void onViewDetached() {}
 
     protected void addContent() {
-        VBox content = popup.getMainContent();
+        VBox content = popup.getRoot();
         content.setPrefWidth(BasicOverlay.owner.getWidth() - 180);
         content.setPrefHeight(BasicOverlay.owner.getHeight() - 100);
 
@@ -100,7 +100,7 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
 
     private void loadSelectedStepView() {
         int selectedStep = model.currentStepProperty().get();
-        VBox container = popup.getMainContent();
+        VBox container = popup.getRoot();
 
         Node view = controller.stepsControllers.get(selectedStep).getView().getRoot();
 

@@ -31,8 +31,10 @@ public enum NavigationTarget {
 
     SPLASH(PRIMARY_STAGE, false),
 
+    OVERLAY(PRIMARY_STAGE, false),
+    
     ONBOARDING(PRIMARY_STAGE, false),
-
+    
     INIT_USER_PROFILE(ONBOARDING, false),
     SELECT_USER_TYPE(ONBOARDING),
     ONBOARD_NEWBIE(ONBOARDING),

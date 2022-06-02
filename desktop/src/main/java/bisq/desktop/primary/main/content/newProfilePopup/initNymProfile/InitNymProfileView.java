@@ -111,8 +111,8 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         }, model.createProfileInProgress));
         nextButton.disableProperty().bind(model.createProfileInProgress);
         
-        regenerateButton.setOnAction(e -> controller.createTempIdentity());
-        nextButton.setOnAction(e -> controller.createNymProfile());
+        regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
+        nextButton.setOnAction(e -> controller.onCreateNymProfile());
         roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIconView::setImage);
     }
 
