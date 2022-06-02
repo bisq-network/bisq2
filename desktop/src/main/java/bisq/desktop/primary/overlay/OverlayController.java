@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay;
+package bisq.desktop.primary.overlay;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupController;
+import bisq.desktop.primary.onboarding.OnboardingController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,10 +73,12 @@ public class OverlayController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case ONBOARDING2 -> {
+            case ONBOARDING_OLD -> {
+                return Optional.of(new OnboardingController(applicationService));
+            }
+            case ONBOARDING -> {
                 return Optional.of(new NewProfilePopupController(applicationService));
             }
-
             default -> {
                 return Optional.empty();
             }

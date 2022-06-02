@@ -26,9 +26,10 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.*;
+import bisq.desktop.popups.*;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.onboarding.OnboardingController;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.DisplaySettings;
@@ -71,7 +72,6 @@ public class PrimaryStageController extends NavigationController {
         DontShowAgainLookup.setPreferences(settingsService);
         PrimaryStageController.viewRoot = view.getRoot();
         Notification.init(viewRoot, displaySettings);
-        BasicOverlay.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
                 applicationService.getApplicationConfig().baseDir(),
@@ -102,7 +102,7 @@ public class PrimaryStageController extends NavigationController {
             case SPLASH -> {
                 return Optional.of(new SplashController(applicationService));
             }
-            case ONBOARDING -> {
+            case ONBOARDING_OLD -> {
                 return Optional.of(new OnboardingController(applicationService));
             }
             case MAIN -> {
@@ -117,7 +117,9 @@ public class PrimaryStageController extends NavigationController {
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
         if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING);
+            Navigation.navigateTo(NavigationTarget.MAIN);
+            // Shown as popup 
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_OLD);
         } else {
             String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
             if (value != null && !value.isEmpty()) {

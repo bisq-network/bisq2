@@ -21,7 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.RoboIconWithId;
 import bisq.desktop.components.controls.TextInputBox;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

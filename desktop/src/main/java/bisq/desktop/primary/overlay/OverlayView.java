@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay;
+package bisq.desktop.primary.overlay;
 
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
@@ -87,8 +87,9 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
         positionListener = (observable, oldValue, newValue) -> {
             layout();
 
-            if (centerTime != null)
+            if (centerTime != null) {
                 centerTime.stop();
+            }
 
             centerTime = UIScheduler.run(this::layout).after(3000);
         };
@@ -97,7 +98,7 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
             if (newValue != null) {
                 root.getChildren().add(newValue.getRoot());
                 show();
-            }else{
+            } else {
                 hide();
             }
         });

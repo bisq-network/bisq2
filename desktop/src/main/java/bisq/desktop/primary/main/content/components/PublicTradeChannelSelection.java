@@ -25,7 +25,7 @@ import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.desktop.overlay.ComboBoxOverlay;
+import bisq.desktop.popups.ComboBoxOverlay;
 import bisq.i18n.Res;
 import bisq.social.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;

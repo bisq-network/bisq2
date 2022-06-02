@@ -43,7 +43,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.myFirstBitcoin.headline"),
                 Res.get("dashboard.myFirstBitcoin.content"),
                 Res.get("dashboard.myFirstBitcoin.button"),
-                controller::openTradeOverview
+                controller::onOpenTradeOverview
         );
         VBox.setMargin(firstBitcoinBox, new Insets(20, 0, 0, 0));
 
@@ -54,7 +54,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.explore.headline"),
                 Res.get("dashboard.explore.content"),
                 Res.get("dashboard.explore.button"),
-                controller::openBisqEasy
+                controller::onOpenBisqEasy
         );
 
         VBox profileBox = getWidgetBox(
@@ -62,7 +62,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.newOffer.headline"),
                 Res.get("dashboard.newOffer.content"),
                 Res.get("dashboard.newOffer.button"),
-                controller::showNewProfilePopup
+                controller::onOpenOnboardingPopup
         );
         root.getChildren().add(new HBox(16, communityBox, profileBox));
     }

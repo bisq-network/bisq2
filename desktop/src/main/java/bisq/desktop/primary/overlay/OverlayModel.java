@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.overlay;
+package bisq.desktop.primary.overlay;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationModel;

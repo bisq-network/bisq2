@@ -39,7 +39,7 @@ public class OnboardingController extends NavigationController {
     private final OnboardingView view;
 
     public OnboardingController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.ONBOARDING);
+        super(NavigationTarget.ONBOARDING_OLD);
 
         this.applicationService = applicationService;
         model = new OnboardingModel(applicationService.getChatUserService());

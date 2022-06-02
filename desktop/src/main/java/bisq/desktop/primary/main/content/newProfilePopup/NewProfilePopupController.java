@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.newProfilePopup.initNymProfile.InitNymProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
