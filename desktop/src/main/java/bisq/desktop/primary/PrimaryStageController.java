@@ -43,8 +43,6 @@ import java.util.Optional;
 
 @Slf4j
 public class PrimaryStageController extends NavigationController {
-    @Getter
-    private static AnchorPane viewRoot;
     protected final DefaultApplicationService applicationService;
     @Getter
     protected final PrimaryStageModel model;
@@ -52,7 +50,6 @@ public class PrimaryStageController extends NavigationController {
     protected final PrimaryStageView view;
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
-    private final OverlayController overlayController;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -70,7 +67,7 @@ public class PrimaryStageController extends NavigationController {
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
         DontShowAgainLookup.setPreferences(settingsService);
-        PrimaryStageController.viewRoot = view.getRoot();
+        AnchorPane viewRoot = view.getRoot();
         Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
@@ -81,8 +78,7 @@ public class PrimaryStageController extends NavigationController {
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
 
-        overlayController = new OverlayController(applicationService);
-        overlayController.onActivateInternal();
+        new OverlayController(applicationService, viewRoot);
     }
 
     @Override

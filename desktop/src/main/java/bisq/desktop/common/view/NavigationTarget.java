@@ -26,12 +26,10 @@ import java.util.Optional;
 public enum NavigationTarget {
     NONE(),
     ROOT(),
-
+    
     PRIMARY_STAGE(ROOT, false),
 
-    SPLASH(PRIMARY_STAGE, false),
-
-    OVERLAY(ROOT, false),
+    OVERLAY(PRIMARY_STAGE, false),
     ONBOARDING(OVERLAY, false),
     ONBOARDING_OLD(OVERLAY, false),
     
@@ -39,6 +37,8 @@ public enum NavigationTarget {
     SELECT_USER_TYPE(ONBOARDING_OLD),
     ONBOARD_NEWBIE(ONBOARDING_OLD),
     ONBOARD_PRO_TRADER(ONBOARDING_OLD),
+
+    SPLASH(PRIMARY_STAGE, false),
 
     MAIN(PRIMARY_STAGE, false),
 

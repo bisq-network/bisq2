@@ -23,6 +23,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupController;
 import bisq.desktop.primary.onboarding.OnboardingController;
+import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,14 +48,15 @@ public class OverlayController extends NavigationController {
     private final OverlayView view;
     private final DefaultApplicationService applicationService;
 
-    public OverlayController(DefaultApplicationService applicationService) {
+    public OverlayController(DefaultApplicationService applicationService, Region owner) {
         super(NavigationTarget.OVERLAY);
 
         this.applicationService = applicationService;
 
         model = new OverlayModel(applicationService);
-        view = new OverlayView(model, this);
+        view = new OverlayView(model, this, owner);
         INSTANCE = this;
+        onActivateInternal();
     }
 
 

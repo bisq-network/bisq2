@@ -21,7 +21,6 @@ import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.primary.PrimaryStageController;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -44,19 +43,20 @@ import lombok.extern.slf4j.Slf4j;
 public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayController> {
     private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
-    private final Region owner = PrimaryStageController.getViewRoot();
+    private final Region owner;
     private final Scene ownerScene;
     private final Stage stage;
     private final Window window;
     private final ChangeListener<Number> positionListener;
     private UIScheduler centerTime;
 
-    public OverlayView(OverlayModel model, OverlayController controller) {
+    public OverlayView(OverlayModel model, OverlayController controller, Region owner) {
         super(new VBox(), model, controller);
 
-        root.getStyleClass().add("popup-bg");
-
+        this.owner = owner;
         ownerScene = owner.getScene();
+       
+        root.getStyleClass().add("popup-bg");
 
         Scene scene = new Scene(root);
         scene.getStylesheets().setAll(ownerScene.getStylesheets());
