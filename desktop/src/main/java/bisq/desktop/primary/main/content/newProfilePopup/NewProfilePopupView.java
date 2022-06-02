@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
     private final NewProfilePopup popup;
-    private HBox stepsBox;
+    private Label stepLabel;
 
     public NewProfilePopupView(NewProfilePopupModel model, 
                                NewProfilePopupController controller, 
@@ -58,23 +58,18 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
         StackPane stackPane = new StackPane();
         VBox.setMargin(stackPane, new Insets(0, 0, 12, 0));
         
-        stepsBox = new HBox(
-                new Label(Res.get("initNymProfile.step1").toUpperCase()),
-                new Label(Res.get("initNymProfile.step2").toUpperCase()),
-                new Label(Res.get("initNymProfile.step3").toUpperCase())
-        );
-        stepsBox.setSpacing(60);
-        stepsBox.setAlignment(Pos.BASELINE_CENTER);
-        stepsBox.getStyleClass().add("border-bottom-2");
-        stepsBox.setPadding(new Insets(32, 0, 32, 0));
+        stepLabel = new Label();
+        stepLabel.getStyleClass().addAll("bisq-text-9");
+        stepLabel.setAlignment(Pos.CENTER);
+        stepLabel.setPadding(new Insets(32, 0, 32, 0));
 
-        Button skipButton = new Button(Res.get("skip").toUpperCase());
-        skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-small-light-label");
+        Button skipButton = new Button(Res.get("later"));
+        skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-grey-10");
         StackPane.setAlignment(skipButton, Pos.TOP_RIGHT);
         StackPane.setMargin(skipButton, new Insets(24, 24, 0, 0));
         skipButton.setOnAction(e -> controller.skipStep());
         
-        stackPane.getChildren().addAll(stepsBox, skipButton);
+        stackPane.getChildren().addAll(stepLabel, skipButton);
         content.getChildren().add(stackPane);
     }
 
@@ -86,16 +81,7 @@ public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewPro
 
     private void markSelectedStepLabel() {
         int selectedStep = model.currentStepProperty().get();
-
-        for (int i = 0; i < stepsBox.getChildren().size(); i++) {
-            Label step = (Label) stepsBox.getChildren().get(i);
-            Layout.chooseStyleClass(
-                    step,
-                    "bisq-small-light-label",
-                    "bisq-small-light-label-dimmed-2",
-                    selectedStep == i
-            );
-        }
+        stepLabel.setText((selectedStep + 1) + " / 3");
     }
 
     private void loadSelectedStepView() {
