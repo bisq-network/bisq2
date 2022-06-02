@@ -15,36 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.newProfilePopup;
+package bisq.desktop.primary.overlay;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.overlay.BasicPopup;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.DisplaySettings;
 
-@Slf4j
-public class NewProfilePopup extends BasicPopup {
-    private final NewProfilePopupController controller;
-
-    public NewProfilePopup(DefaultApplicationService applicationService) {
-        super();
-        controller = new NewProfilePopupController(this, applicationService);
-    }
+public class OverlayModel extends NavigationModel {
+    private final DisplaySettings displaySettings;
 
     @Override
-    protected void onShow() {
-        super.onShow();
-        controller.onActivate();
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
     }
 
-    @Override
-    protected void onHidden() {
-        super.onHidden();
-        controller.onDeactivate();
+    OverlayModel(DefaultApplicationService applicationService) {
+        displaySettings = applicationService.getSettingsService().getDisplaySettings();
     }
 
-    @Override
-    public void addContent() {
-        super.addContent();
-        controller.addContent();
+    double getDuration(double duration) {
+        return displaySettings.isUseAnimations() ? duration : 1;
     }
 }

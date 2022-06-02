@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.popups.Popup;
 import bisq.desktop.primary.main.content.components.*;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;

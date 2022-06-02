@@ -33,7 +33,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;

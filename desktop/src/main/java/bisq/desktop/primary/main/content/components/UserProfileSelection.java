@@ -222,12 +222,14 @@ public class UserProfileSelection {
                     (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                         if (newValue != null) {
                             ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
-                            //todo temp use static image
-                            // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
-                            imageView.setId("temp-robo-profile-icon");
-                            userNameLabel.setText(chatUserIdentity.getNickName());
-                            buttonPane.layout();
-                            //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
+                            if (chatUserIdentity != null) {
+                                //todo temp use static image
+                                // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+                                imageView.setId("temp-robo-profile-icon");
+                                userNameLabel.setText(chatUserIdentity.getNickName());
+                                buttonPane.layout();
+                                //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
+                            }
                         }
                     }).get());
 
@@ -241,8 +243,8 @@ public class UserProfileSelection {
             });
             userNameLabel.setVisible(false);
             arrow.setVisible(false);*/
-            
-          //  UIThread.runOnNextRenderFrame(()-> userNameLabel.layout());
+
+            //  UIThread.runOnNextRenderFrame(()-> userNameLabel.layout());
         }
 
         @Override

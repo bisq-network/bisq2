@@ -106,8 +106,8 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         userTypeBox.getSelectionModel().select(model.getUserTypes().get(0));
         userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));
 
-        nextButton.setOnAction(e -> controller.onAction());
-        backButton.setOnAction(e -> controller.onGoBack());
+        nextButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(e -> controller.onPrevious());
     }
 
     @Override

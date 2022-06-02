@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.newProfilePopup.initNymProfile;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.TextInputBox;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
@@ -35,7 +36,8 @@ import org.fxmisc.easybind.Subscription;
 public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, InitNymProfileController> {
     private final Button regenerateButton;
     private final Button nextButton;
-    private final Label hashIdValue, profileIdValue;
+    private final TextInputBox nicknameTextInputBox;
+    private final Label  profileIdValue;
     private final ImageView roboIconView;
     private Subscription roboHashNodeSubscription;
 
@@ -66,18 +68,20 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         roboIconView.setCursor(Cursor.HAND);
         roboIconView.setFitWidth(128);
         roboIconView.setFitHeight(128);
-        
-        VBox hashIdBox = getValueBox(Res.get("initNymProfile.uniqueHashId"), "bisq-text-white");
-        VBox.setMargin(hashIdBox, new Insets(0, 0, 16, 0));
-        hashIdValue = (Label) hashIdBox.getChildren().get(1);
 
-        VBox profileIdBox = getValueBox(Res.get("initNymProfile.customProfileNickname"), "bisq-text-1");
+        VBox profileIdBox = getValueBox(Res.get("initNymProfile.profileId"), "bisq-text-1");
         VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
         profileIdValue = (Label) profileIdBox.getChildren().get(1);
-        
+
         regenerateButton = new Button(Res.get("initNymProfile.regenerate"));
         regenerateButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3", "text-underline");
         VBox.setMargin(regenerateButton, new Insets(0, 0, 16, 0));
+
+        nicknameTextInputBox = new TextInputBox(Res.get("initNymProfile.nickName"),
+                Res.get("initNymProfile.nickName.prompt"));
+        nicknameTextInputBox.setPrefWidth(300);
+        VBox.setMargin(nicknameTextInputBox, new Insets(0, 0, 16, 0));
+
 
         nextButton = new Button(Res.get("initNymProfile.createProfile"));
         nextButton.setGraphicTextGap(8.0);
@@ -88,51 +92,52 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
                 headLineLabel,
                 subtitleLabel,
                 roboIconView,
-                hashIdBox,
                 profileIdBox,
                 regenerateButton,
+                nicknameTextInputBox,
                 nextButton
         );
     }
 
     @Override
     protected void onViewAttached() {
-        hashIdValue.textProperty().bind(model.uniqueHashId);
+        nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
+        nicknameTextInputBox.requestFocus();
         profileIdValue.textProperty().bind(model.profileId);
         nextButton.graphicProperty().bind(Bindings.createObjectBinding(() -> {
-            if (!model.createProfileInProgress.get()) {
+            if (!model.isBusy.get()) {
                 return null;
             }
-            final ProgressIndicator pin = new ProgressIndicator();
-            pin.setProgress(-1f);
-            pin.setMaxWidth(24.0);
-            pin.setMaxHeight(24.0);
-            return pin;
-        }, model.createProfileInProgress));
-        nextButton.disableProperty().bind(model.createProfileInProgress);
-        
-        regenerateButton.setOnAction(e -> controller.createTempIdentity());
-        nextButton.setOnAction(e -> controller.createNymProfile());
-        roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIconView::setImage);
+            ProgressIndicator indicator = new ProgressIndicator();
+            indicator.setProgress(-1f);
+            indicator.setMaxWidth(24.0);
+            indicator.setMaxHeight(24.0);
+            return indicator;
+        }, model.isBusy));
+        nextButton.disableProperty().bind(model.createProfileButtonDisable);
+
+        regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
+        nextButton.setOnAction(e -> controller.onCreateNymProfile());
+        roboHashNodeSubscription = EasyBind.subscribe(model.roboHashImage, roboIconView::setImage);
     }
 
     @Override
     protected void onViewDetached() {
-        hashIdValue.textProperty().unbind();
+        nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
         nextButton.graphicProperty().unbind();
         nextButton.disableProperty().unbind();
         roboIconView.setOnMousePressed(null);
         nextButton.setOnAction(null);
         roboHashNodeSubscription.unsubscribe();
     }
-    
+
     private VBox getValueBox(String title, String valueClass) {
         Label titleLabel = new Label(title.toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add(valueClass);
-        
+
         VBox box = new VBox(titleLabel, valueLabel);
         box.setAlignment(Pos.CENTER);
         return box;

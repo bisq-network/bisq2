@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopup;
 import lombok.Getter;
 
 public class DashboardController implements Controller {
@@ -29,35 +28,29 @@ public class DashboardController implements Controller {
     @Getter
     private final DashboardView view;
 
-    private final NewProfilePopup newProfilePopup;
-
     public DashboardController(DefaultApplicationService applicationService) {
         model = new DashboardModel();
         view = new DashboardView(model, this);
-
-        newProfilePopup = new NewProfilePopup(applicationService);
     }
 
     @Override
     public void onActivate() {
-
     }
 
     @Override
     public void onDeactivate() {
-
     }
 
-    public void showNewProfilePopup() {
-        newProfilePopup.show();
+    public void onOpenOnboardingPopup() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING);
     }
 
-    public void openTradeOverview() {
+    public void onOpenTradeOverview() {
         Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
     }
 
-    public void openBisqEasy() {
+    public void onOpenBisqEasy() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY);
     }
-   
+
 }

@@ -33,7 +33,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UserProfileController implements Controller {
-
     private final UserProfileSelectionAtSettings userProfileSelection;
     private final CreateUserProfile createUserProfile;
     @Getter

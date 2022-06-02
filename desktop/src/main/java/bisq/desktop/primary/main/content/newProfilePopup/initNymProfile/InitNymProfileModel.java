@@ -26,11 +26,11 @@ import java.security.KeyPair;
 
 @Getter
 public class InitNymProfileModel implements Model {
-    final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-    final StringProperty uniqueHashId = new SimpleStringProperty();
+    final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     final StringProperty profileId = new SimpleStringProperty();
-    final BooleanProperty createProfileInProgress = new SimpleBooleanProperty();
-
+    final StringProperty nickName = new SimpleStringProperty();
+    final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+    final BooleanProperty isBusy = new SimpleBooleanProperty();
     KeyPair tempKeyPair = null;
     String tempKeyId;
 }

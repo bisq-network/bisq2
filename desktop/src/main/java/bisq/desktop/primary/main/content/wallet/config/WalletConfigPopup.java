@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.wallet.config;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.BisqGridPane;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.WalletService;

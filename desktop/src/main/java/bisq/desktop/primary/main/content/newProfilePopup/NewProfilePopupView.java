@@ -19,11 +19,9 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.layout.Layout;
-import bisq.desktop.overlay.BasicOverlay;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -31,69 +29,56 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class NewProfilePopupView extends View<Pane, NewProfilePopupModel, NewProfilePopupController> {
-    private final NewProfilePopup popup;
     private Label stepLabel;
+    private final Button skipButton;
+    private Subscription stepSubscription;
 
-    public NewProfilePopupView(NewProfilePopupModel model, 
-                               NewProfilePopupController controller, 
-                               NewProfilePopup popup) {
-        super(new Pane(), model, controller);
-        this.popup = popup;
-    }
-
-    @Override
-    protected void onViewAttached() {}
-
-    @Override
-    protected void onViewDetached() {}
-
-    protected void addContent() {
-        VBox content = popup.getMainContent();
-        content.setPrefWidth(BasicOverlay.owner.getWidth() - 180);
-        content.setPrefHeight(BasicOverlay.owner.getHeight() - 100);
+    public NewProfilePopupView(NewProfilePopupModel model,
+                               NewProfilePopupController controller) {
+        super(new VBox(), model, controller);
 
         StackPane stackPane = new StackPane();
         VBox.setMargin(stackPane, new Insets(0, 0, 12, 0));
-        
+
         stepLabel = new Label();
         stepLabel.getStyleClass().addAll("bisq-text-9");
         stepLabel.setAlignment(Pos.CENTER);
         stepLabel.setPadding(new Insets(32, 0, 32, 0));
 
-        Button skipButton = new Button(Res.get("later"));
+        skipButton = new Button(Res.get("later"));
         skipButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-grey-10");
         StackPane.setAlignment(skipButton, Pos.TOP_RIGHT);
         StackPane.setMargin(skipButton, new Insets(24, 24, 0, 0));
-        skipButton.setOnAction(e -> controller.skipStep());
-        
         stackPane.getChildren().addAll(stepLabel, skipButton);
-        content.getChildren().add(stackPane);
+        root.getChildren().add(stackPane);
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            if (root.getChildren().size() == 1) {
+                root.getChildren().add(newValue.getRoot());
+            } else {
+                root.getChildren().set(1, newValue.getRoot());
+            }
+        });
     }
 
+    @Override
+    protected void onViewAttached() {
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> {
+            stepLabel.setText(((int) step + 1) + " / 3");
+        });
 
-    protected void setupSelectedStep() {
-        markSelectedStepLabel();
-        loadSelectedStepView();
+        skipButton.setOnAction(e -> controller.onSkip());
     }
 
-    private void markSelectedStepLabel() {
-        int selectedStep = model.currentStepProperty().get();
-        stepLabel.setText((selectedStep + 1) + " / 3");
-    }
+    @Override
+    protected void onViewDetached() {
+        stepSubscription.unsubscribe();
 
-    private void loadSelectedStepView() {
-        int selectedStep = model.currentStepProperty().get();
-        VBox container = popup.getMainContent();
-
-        Node view = controller.stepsControllers.get(selectedStep).getView().getRoot();
-
-        if (container.getChildren().size() == 1) {
-            container.getChildren().add(view);
-        } else {
-            container.getChildren().set(1, view);
-        }
+        skipButton.setOnAction(null);
     }
 }

@@ -26,16 +26,16 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.overlay.BasicOverlay;
-import bisq.desktop.overlay.Notification;
-import bisq.desktop.overlay.Overlay;
+import bisq.desktop.popups.Notification;
+import bisq.desktop.popups.Overlay;
 import bisq.desktop.primary.main.MainController;
-import bisq.desktop.primary.onboarding.OnboardingController;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.DisplaySettings;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
+import javafx.scene.layout.AnchorPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,16 +67,18 @@ public class PrimaryStageController extends NavigationController {
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
         DontShowAgainLookup.setPreferences(settingsService);
-        Notification.init(view.getRoot(), displaySettings);
+        AnchorPane viewRoot = view.getRoot();
+        Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
-        Overlay.init(view.getRoot(),
+        Overlay.init(viewRoot,
                 applicationService.getApplicationConfig().baseDir(),
                 displaySettings,
                 this::shutdown);
-        BasicOverlay.init(view.getRoot(), displaySettings);
 
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
+
+        new OverlayController(applicationService, viewRoot);
     }
 
     @Override
@@ -96,9 +98,6 @@ public class PrimaryStageController extends NavigationController {
             case SPLASH -> {
                 return Optional.of(new SplashController(applicationService));
             }
-            case ONBOARDING -> {
-                return Optional.of(new OnboardingController(applicationService));
-            }
             case MAIN -> {
                 return Optional.of(new MainController(applicationService));
             }
@@ -111,6 +110,8 @@ public class PrimaryStageController extends NavigationController {
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
         if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
+            Navigation.navigateTo(NavigationTarget.MAIN);
+            // Shown as popup 
             Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
             String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);

@@ -22,39 +22,44 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.newProfilePopup.initNymProfile.InitNymProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.List;
-
 @Slf4j
 public class NewProfilePopupController implements Controller {
+    private final DefaultApplicationService applicationService;
     private final NewProfilePopupModel model;
     @Getter
-    private final NewProfilePopupView view;   
-    private final NewProfilePopup popup;
+    private final NewProfilePopupView view;
+    private Subscription stepSubscription;
 
-    List<Controller> stepsControllers;
-    Subscription stepSubscription;
-
-    public NewProfilePopupController(NewProfilePopup popup, DefaultApplicationService applicationService) {
+    public NewProfilePopupController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         model = new NewProfilePopupModel();
-        view = new NewProfilePopupView(model, this, popup);
-        this.popup = popup;
-
-        stepsControllers = List.of(
-                new InitNymProfileController(applicationService, model),
-                new SelectUserTypeController(applicationService, model),
-                new CreateOfferController(applicationService, model)
-        );
+        view = new NewProfilePopupView(model, this);
     }
 
     @Override
     public void onActivate() {
-        model.currentStepProperty().set(0);
-        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> view.setupSelectedStep());
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(),
+                stepAsNumber -> {
+                    int step = (int) stepAsNumber;
+                    if (step == 0) {
+                        InitNymProfileController controller = new InitNymProfileController(applicationService, this::navigateSubView);
+                        model.setView(controller.getView());
+                    } else if (step == 1) {
+                        SelectUserTypeController controller = new SelectUserTypeController(applicationService, this::navigateSubView);
+                        model.setView(controller.getView());
+                    } else if (step == 2) {
+                        CreateOfferController controller = new CreateOfferController(applicationService, this::navigateSubView);
+                        model.setView(controller.getView());
+                    }
+                });
+
+
     }
 
     @Override
@@ -62,15 +67,15 @@ public class NewProfilePopupController implements Controller {
         stepSubscription.unsubscribe();
     }
 
-    protected void addContent() {
-        view.addContent();
+    public void onSkip() {
+        OverlayController.hide();
     }
 
-    public void skipStep() {
-        if (model.isLastStep()) {
-            popup.hide();
-        } else {
+    private void navigateSubView(boolean isNext) {
+        if (isNext) {
             model.increaseStep();
+        } else {
+            model.decreaseStep();
         }
     }
 }

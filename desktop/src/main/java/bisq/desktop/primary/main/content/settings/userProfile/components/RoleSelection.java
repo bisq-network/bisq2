@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.overlay.Popup;
+import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
