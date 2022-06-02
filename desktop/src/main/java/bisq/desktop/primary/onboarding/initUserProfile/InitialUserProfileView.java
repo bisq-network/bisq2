@@ -76,8 +76,8 @@ public class InitialUserProfileView extends View<ScrollPane, InitialUserProfileM
         VBox.setMargin(subTitleLabel, new Insets(0, 200, 0, 200));
         VBox.setVgrow(subTitleLabel, Priority.ALWAYS);
 
-        nicknameTextInputBox = new TextInputBox(Res.get("satoshisquareapp.setDefaultUserProfile.nickName"),
-                Res.get("satoshisquareapp.setDefaultUserProfile.nickName.prompt"));
+        nicknameTextInputBox = new TextInputBox(Res.get("initNymProfile.nickName"),
+                Res.get("initNymProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(300);
 
         roboIconWithId = new RoboIconWithId(300);

@@ -26,9 +26,9 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.popups.*;
+import bisq.desktop.popups.Notification;
+import bisq.desktop.popups.Overlay;
 import bisq.desktop.primary.main.MainController;
-import bisq.desktop.primary.onboarding.OnboardingController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
@@ -98,9 +98,6 @@ public class PrimaryStageController extends NavigationController {
             case SPLASH -> {
                 return Optional.of(new SplashController(applicationService));
             }
-            case ONBOARDING_OLD -> {
-                return Optional.of(new OnboardingController(applicationService));
-            }
             case MAIN -> {
                 return Optional.of(new MainController(applicationService));
             }
@@ -115,7 +112,7 @@ public class PrimaryStageController extends NavigationController {
         if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.MAIN);
             // Shown as popup 
-            Navigation.navigateTo(NavigationTarget.ONBOARDING_OLD);
+            Navigation.navigateTo(NavigationTarget.ONBOARDING);
         } else {
             String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
             if (value != null && !value.isEmpty()) {

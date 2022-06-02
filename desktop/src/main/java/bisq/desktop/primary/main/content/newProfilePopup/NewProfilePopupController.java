@@ -19,41 +19,48 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
 import bisq.desktop.primary.main.content.newProfilePopup.initNymProfile.InitNymProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.List;
-
 @Slf4j
 public class NewProfilePopupController implements Controller {
+    private final DefaultApplicationService applicationService;
     private final NewProfilePopupModel model;
     @Getter
     private final NewProfilePopupView view;
-    private final List<Controller> stepsControllers;
     private Subscription stepSubscription;
 
     public NewProfilePopupController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         model = new NewProfilePopupModel();
         view = new NewProfilePopupView(model, this);
-
-        stepsControllers = List.of(
-                new InitNymProfileController(applicationService, this::onSubViewNavigationChange),
-                new SelectUserTypeController(applicationService, this::onSubViewNavigationChange),
-                new CreateOfferController(applicationService, this::onSubViewNavigationChange)
-        );
     }
 
     @Override
     public void onActivate() {
-        model.currentStepProperty().set(0);
         stepSubscription = EasyBind.subscribe(model.currentStepProperty(),
-                step -> model.setView(stepsControllers.get((int) step).getView()));
+                step -> {
+                    int index = (int) step;
+                    Controller controller;
+                    if (index == 0) {
+                        controller = new InitNymProfileController(applicationService, this::onSubViewNavigationChange);
+                        model.setView(controller.getView());
+                    } else if (index == 1) {
+                        controller = new SelectUserTypeController(applicationService, this::onSubViewNavigationChange);
+                        model.setView(controller.getView());
+                    } else if (index == 2) {
+                        controller = new CreateOfferController(applicationService, this::onSubViewNavigationChange);
+                        model.setView(controller.getView());
+                    }
+                });
+
+       
     }
 
     @Override
@@ -62,11 +69,7 @@ public class NewProfilePopupController implements Controller {
     }
 
     public void onSkip() {
-        if (model.isLastStep()) {
-            OverlayController.hide();
-        } else {
-            model.increaseStep();
-        }
+        OverlayController.hide();
     }
 
     private void onSubViewNavigationChange(int direction) {

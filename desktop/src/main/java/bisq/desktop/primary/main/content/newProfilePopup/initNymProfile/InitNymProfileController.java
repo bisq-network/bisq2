@@ -29,8 +29,9 @@ import bisq.social.user.ChatUserService;
 import bisq.social.user.NymGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
-import java.util.Base64;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -43,6 +44,7 @@ public class InitNymProfileController implements Controller {
     private final ChatUserService chatUserService;
     private final Consumer<Integer> navigationHandler;
     private final KeyPairService keyPairService;
+    private Subscription nickNameSubscription;
 
     public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Integer> navigationHandler) {
         keyPairService = applicationService.getKeyPairService();
@@ -56,22 +58,24 @@ public class InitNymProfileController implements Controller {
     @Override
     public void onActivate() {
         onCreateTempIdentity();
+        nickNameSubscription = EasyBind.subscribe(model.nickName, e -> model.createProfileButtonDisable.set(e == null || e.isEmpty()));
     }
 
     @Override
     public void onDeactivate() {
+        nickNameSubscription.unsubscribe();
     }
 
     void onCreateNymProfile() {
-        model.createProfileInProgress.set(true);
+        model.createProfileButtonDisable.set(true);
         String profileId = model.profileId.get();
         chatUserService.createNewInitializedUserProfile(profileId,
-                        model.profileId.get(),
+                        model.nickName.get(),
                         model.tempKeyId,
                         model.tempKeyPair)
                 .thenAccept(userProfile -> UIThread.run(() -> {
                     checkArgument(userProfile.getIdentity().domainId().equals(profileId));
-                    model.createProfileInProgress.set(false);
+                    model.createProfileButtonDisable.set(false);
                     navigationHandler.accept(1);
                 }));
     }
@@ -80,8 +84,7 @@ public class InitNymProfileController implements Controller {
         model.tempKeyId = StringUtils.createUid();
         model.tempKeyPair = keyPairService.generateKeyPair();
         byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
-        model.uniqueHashId.set(Base64.getEncoder().encodeToString(hash));
-        model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
+        model.roboHashImage.set(RoboHash.getImage(new ByteArray(hash)));
         model.profileId.set(NymGenerator.fromHash(hash));
     }
 }
