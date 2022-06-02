@@ -38,18 +38,19 @@ public class NewProfilePopupModel implements Model {
     void setView(View<? extends Parent, ? extends Model, ? extends Controller> view) {
         this.view.set(view);
     }
+
     public IntegerProperty currentStepProperty() {
         return currentStepProperty;
     }
-    
+
     public void increaseStep() {
         currentStepProperty.set(currentStepProperty.get() + 1);
     }
-    
+
     public void decreaseStep() {
         currentStepProperty.set(currentStepProperty.get() - 1);
     }
-    
+
     public boolean isLastStep() {
         return currentStepProperty.get() == 2;
     }

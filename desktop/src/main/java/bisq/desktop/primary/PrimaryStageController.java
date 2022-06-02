@@ -68,13 +68,13 @@ public class PrimaryStageController extends NavigationController {
         Transitions.setDisplaySettings(displaySettings);
         DontShowAgainLookup.setPreferences(settingsService);
         Notification.init(view.getRoot(), displaySettings);
+        BasicOverlay.init(view.getRoot(), displaySettings);
         Navigation.init(settingsService);
         Overlay.init(view.getRoot(),
                 applicationService.getApplicationConfig().baseDir(),
                 displaySettings,
                 this::shutdown);
-        BasicOverlay.init(view.getRoot(), displaySettings);
-
+       
         // Here we start to attach the view hierarchy to the stage.
         view.showStage();
     }

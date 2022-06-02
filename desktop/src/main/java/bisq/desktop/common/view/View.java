@@ -40,37 +40,38 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         this.model = model;
         this.controller = controller;
 
-        // boolean useCaching = controller instanceof Controller;
-        boolean useCaching = controller.useCaching();
-        sceneChangeListener = (ov, oldValue, newScene) -> {
-            if (oldValue == null && newScene != null) {
-                if (newScene.getWindow() != null) {
-                    onViewAttachedPrivate();
-                } else {
-                    // For overlays, we need to wait until window is available
-                    windowChangeListener = (observable, oldWindow, newWindow) -> {
-                        if (newWindow != null) {
-                            onViewAttachedPrivate();
-                        } else {
-                            onViewDetachedPrivate();
-                            UIThread.runOnNextRenderFrame(() -> newScene.windowProperty().removeListener(windowChangeListener));
-                        }
-                    };
-                    newScene.windowProperty().addListener(windowChangeListener);
-                }
-            } else if (oldValue != null && newScene == null) {
-                onViewDetachedPrivate();
-                if (!useCaching) {
-                    // If we do not use caching we do not expect to get added again to stage without creating a 
-                    // new instance of the view, so we remove our sceneChangeListener.
-                    UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
-                    if (oldValue.getWindow() != null && windowChangeListener != null) {
-                        UIThread.runOnNextRenderFrame(() -> oldValue.windowProperty().removeListener(windowChangeListener));
+        sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
+        root.sceneProperty().addListener(sceneChangeListener);
+        handleSceneChange(null, root.getScene());
+    }
+
+    private void handleSceneChange(Scene oldValue, Scene newScene) {
+        if (oldValue == null && newScene != null) {
+            if (newScene.getWindow() != null) {
+                onViewAttachedPrivate();
+            } else {
+                // For overlays, we need to wait until window is available
+                windowChangeListener = (observable, oldWindow, newWindow) -> {
+                    if (newWindow != null) {
+                        onViewAttachedPrivate();
+                    } else {
+                        onViewDetachedPrivate();
+                        UIThread.runOnNextRenderFrame(() -> newScene.windowProperty().removeListener(windowChangeListener));
                     }
+                };
+                newScene.windowProperty().addListener(windowChangeListener);
+            }
+        } else if (oldValue != null && newScene == null) {
+            onViewDetachedPrivate();
+            if (!controller.useCaching()) {
+                // If we do not use caching we do not expect to get added again to stage without creating a 
+                // new instance of the view, so we remove our sceneChangeListener.
+                UIThread.runOnNextRenderFrame(() -> root.sceneProperty().removeListener(View.this.sceneChangeListener));
+                if (oldValue.getWindow() != null && windowChangeListener != null) {
+                    UIThread.runOnNextRenderFrame(() -> oldValue.windowProperty().removeListener(windowChangeListener));
                 }
             }
-        };
-        root.sceneProperty().addListener(sceneChangeListener);
+        }
     }
 
     public R getRoot() {

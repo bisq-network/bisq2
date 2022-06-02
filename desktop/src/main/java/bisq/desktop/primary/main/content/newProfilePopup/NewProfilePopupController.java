@@ -40,10 +40,11 @@ public class NewProfilePopupController implements Controller {
     List<Controller> stepsControllers;
     Subscription stepSubscription;
 
-    public NewProfilePopupController(BasicOverlay popup,DefaultApplicationService applicationService) {
+    public NewProfilePopupController(DefaultApplicationService applicationService) {
+        popup = new BasicOverlay();
+
         model = new NewProfilePopupModel();
-        this.popup = popup;
-        view = new NewProfilePopupView(model, this, popup);
+        view = new NewProfilePopupView(model, this, popup.getRoot());
 
         stepsControllers = List.of(
                 new InitNymProfileController(applicationService, this::onSubViewNavigationChange),
@@ -54,26 +55,18 @@ public class NewProfilePopupController implements Controller {
 
     public void show() {
         popup.show();
-        view.addContent();
-        view.onViewAttached();
-        onActivate();
     }
+
     @Override
     public void onActivate() {
         model.currentStepProperty().set(0);
-        stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> {
-            model.setView(stepsControllers.get((int) step).getView());
-        });
-        //stepSubscription = EasyBind.subscribe(model.currentStepProperty(), step -> view.setupSelectedStep());
+        stepSubscription = EasyBind.subscribe(model.currentStepProperty(),
+                step -> model.setView(stepsControllers.get((int) step).getView()));
     }
 
     @Override
     public void onDeactivate() {
         stepSubscription.unsubscribe();
-    }
-
-    protected void addContent() {
-        view.addContent();
     }
 
     public void onSkip() {
