@@ -28,14 +28,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class SelectUserTypeModel implements Model {
-    public enum Type {
+public class SelectUserTypeModelOld implements Model {
+    public enum TypeOld {
         NEWBIE(Res.get("satoshisquareapp.selectTraderType.newbie")),
         PRO_TRADER(Res.get("satoshisquareapp.selectTraderType.proTrader"));
 
         private final String displayString;
 
-        Type(String displayString) {
+        TypeOld(String displayString) {
             this.displayString = displayString;
         }
 
@@ -45,15 +45,15 @@ public class SelectUserTypeModel implements Model {
         }
     }
 
-    private final ObservableList<Type> userTypes = FXCollections.observableArrayList();
+    private final ObservableList<TypeOld> userTypes = FXCollections.observableArrayList();
     private final StringProperty info = new SimpleStringProperty();
     private final StringProperty buttonText = new SimpleStringProperty();
     @Setter
-    private SelectUserTypeModel.Type selectedType;
+    private TypeOld selectedType;
     private final String profileId;
     private final Image roboHashNode;
 
-    public SelectUserTypeModel(String profileId, Image roboHashNode) {
+    public SelectUserTypeModelOld(String profileId, Image roboHashNode) {
         this.profileId = profileId;
         this.roboHashNode = roboHashNode;
     }

@@ -104,7 +104,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
                 selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
-                log.error("selectionMarker {} {} {} ", w, selectionMarker.getLayoutX(), selectionMarker.getLayoutY());
             }
         });
 

@@ -34,14 +34,14 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
+public class SelectUserTypeViewOld extends View<ScrollPane, SelectUserTypeModelOld, SelectUserTypeControllerOld> {
     private final VBox vBox;
     private final Button nextButton, backButton;
-    private final AutoCompleteComboBox<SelectUserTypeModel.Type> userTypeBox;
+    private final AutoCompleteComboBox<SelectUserTypeModelOld.TypeOld> userTypeBox;
     private final Label info;
     private final RoboIconWithId roboIconWithId;
 
-    public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
+    public SelectUserTypeViewOld(SelectUserTypeModelOld model, SelectUserTypeControllerOld controller) {
         super(new ScrollPane(), model, controller);
 
         vBox = new VBox();

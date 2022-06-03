@@ -20,11 +20,8 @@ package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class SelectUserTypeModel implements Model {
@@ -41,7 +38,7 @@ public class SelectUserTypeModel implements Model {
         this.profileId = profileId;
         this.roboHashNode = roboHashNode;
     }
-    
+
     void setSelectedType(Type type) {
         selectedType.set(type);
     }

@@ -623,7 +623,7 @@
 }
 
 .bisq-button-1:selected {
-    -fx-background-color: -bisq-logo-green;
+    -fx-background-color: -bisq-green;
 }
 
 .bisq-button-1:selected:hover {
