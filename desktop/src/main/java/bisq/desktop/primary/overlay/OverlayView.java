@@ -56,7 +56,7 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
         this.owner = owner;
         ownerScene = owner.getScene();
 
-        root.getStyleClass().add("popup-bg");
+       // root.getStyleClass().add("popup-bg");
 
         Scene scene = new Scene(root);
         scene.getStylesheets().setAll(ownerScene.getStylesheets());
@@ -99,9 +99,6 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
                 Region childRoot = newValue.getRoot();
                 root.getChildren().add(childRoot);
                 show(childRoot.getMaxWidth(), childRoot.getMaxHeight());
-
-               // Layout.pinToAnchorPane(newValue.getRoot(), 0, 0, 0, 0);
-               // root.getChildren().add(newValue.getRoot());
                 Transitions.transitContentViews(oldValue, newValue);
             } else {
                 hide();

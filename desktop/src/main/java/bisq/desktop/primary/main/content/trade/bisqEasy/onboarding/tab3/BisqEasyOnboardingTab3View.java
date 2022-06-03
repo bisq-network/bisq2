@@ -42,7 +42,7 @@ public class BisqEasyOnboardingTab3View extends View<VBox, BisqEasyOnboardingTab
 
         Label headLine = new Label(Res.get("bisqEasy.onBoarding.tab3.headline"));
         headLine.setId("bisq-easy-onboarding-headline-label");
-        VBox.setMargin(headLine, new Insets(25, 0, -4, 0));
+        VBox.setMargin(headLine, new Insets(25, 0, 0, 0));
 
         nextButton = new Button(Res.get("next"));
         nextButton.setId("bisq-easy-next-button");

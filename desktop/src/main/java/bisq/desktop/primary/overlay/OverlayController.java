@@ -83,22 +83,20 @@ public class OverlayController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        model.setTopMargin(OverlayModel.TOP_MARGIN);
+        model.setBottomMargin(OverlayModel.BOTTOM_MARGIN);
+        model.setHorizontalMargin(OverlayModel.HORIZONTAL_MARGIN);
         switch (navigationTarget) {
             case ONBOARDING_OLD -> {
-                model.setBottomMargin(OverlayModel.HORIZONTAL_MARGIN);
-                model.setHorizontalMargin(OverlayModel.TOP_MARGIN);
                 return Optional.of(new OnboardingController(applicationService));
             }
             case ONBOARDING -> {
-                model.setBottomMargin(OverlayModel.HORIZONTAL_MARGIN);
-                model.setHorizontalMargin(OverlayModel.TOP_MARGIN);
                 return Optional.of(new NewProfilePopupController(applicationService));
             }
             case BISQ_EASY_ONBOARDING -> {
                 model.setTopMargin(95);
                 model.setBottomMargin(125);
                 model.setHorizontalMargin(140);
-                //920,500
                 return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
             default -> {

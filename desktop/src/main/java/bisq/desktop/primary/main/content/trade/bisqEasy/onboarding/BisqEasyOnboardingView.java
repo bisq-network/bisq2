@@ -35,7 +35,8 @@ public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, Bis
 
         root.setMaxWidth(920);
         root.setMaxHeight(500);
-
+        vBox.setPrefHeight(500);
+        
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
 
