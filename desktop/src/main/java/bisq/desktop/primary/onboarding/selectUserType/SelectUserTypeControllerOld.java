@@ -29,29 +29,29 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SelectUserTypeController implements Controller {
-    private final SelectUserTypeModel model;
+public class SelectUserTypeControllerOld implements Controller {
+    private final SelectUserTypeModelOld model;
     @Getter
-    private final SelectUserTypeView view;
+    private final SelectUserTypeViewOld view;
 
-    public SelectUserTypeController(DefaultApplicationService applicationService) {
+    public SelectUserTypeControllerOld(DefaultApplicationService applicationService) {
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
-        model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
-        model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);
-        view = new SelectUserTypeView(model, this);
+        model = new SelectUserTypeModelOld(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+        model.getUserTypes().addAll(SelectUserTypeModelOld.TypeOld.NEWBIE, SelectUserTypeModelOld.TypeOld.PRO_TRADER);
+        view = new SelectUserTypeViewOld(model, this);
     }
 
     @Override
     public void onActivate() {
-        onSelect(SelectUserTypeModel.Type.NEWBIE);
+        onSelect(SelectUserTypeModelOld.TypeOld.NEWBIE);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onSelect(SelectUserTypeModel.Type selectedType) {
+    public void onSelect(SelectUserTypeModelOld.TypeOld selectedType) {
         model.setSelectedType(selectedType);
         if (selectedType != null) {
             switch (selectedType) {

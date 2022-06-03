@@ -15,31 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab1;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.image.Image;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class SelectUserTypeModel implements Model {
-    public enum Type {
-        NEWBIE,
-        EXPERIENCED
-    }
+public class BisqEasyOnboardingTab1Model implements Model {
 
-    private final ObjectProperty<Type> selectedType = new SimpleObjectProperty<>();
-    private final String profileId;
-    private final Image roboHashNode;
-
-    public SelectUserTypeModel(String profileId, Image roboHashNode) {
-        this.profileId = profileId;
-        this.roboHashNode = roboHashNode;
-    }
-
-    void setSelectedType(Type type) {
-        selectedType.set(type);
+    public BisqEasyOnboardingTab1Model(DefaultApplicationService applicationService) {
     }
 }

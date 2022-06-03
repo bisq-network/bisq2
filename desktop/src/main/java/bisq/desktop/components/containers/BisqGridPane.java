@@ -23,7 +23,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;

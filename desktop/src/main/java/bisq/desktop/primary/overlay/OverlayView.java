@@ -55,8 +55,8 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
 
         this.owner = owner;
         ownerScene = owner.getScene();
-       
-        root.getStyleClass().add("popup-bg");
+
+       // root.getStyleClass().add("popup-bg");
 
         Scene scene = new Scene(root);
         scene.getStylesheets().setAll(ownerScene.getStylesheets());
@@ -96,8 +96,10 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                root.getChildren().add(newValue.getRoot());
-                show();
+                Region childRoot = newValue.getRoot();
+                root.getChildren().add(childRoot);
+                show(childRoot.getMaxWidth(), childRoot.getMaxHeight());
+                Transitions.transitContentViews(oldValue, newValue);
             } else {
                 hide();
             }
@@ -112,9 +114,15 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
     protected void onViewDetached() {
     }
 
-    private void show() {
-        root.setPrefWidth(owner.getWidth() - 180);
-        root.setPrefHeight(owner.getHeight() - 100);
+    private void show(double childMaxWidth, double childMaxHeight) {
+        double prefWidth = childMaxWidth > -1 && childMaxWidth < owner.getWidth() ?
+                childMaxWidth :
+                owner.getWidth() - model.getTopMargin() - model.getBottomMargin();
+        double prefHeight = childMaxHeight > -1 && childMaxHeight < owner.getHeight() ?
+                childMaxHeight :
+                owner.getHeight() - 2 * model.getHorizontalMargin();
+        root.setPrefWidth(prefWidth);
+        root.setPrefHeight(prefHeight);
 
         window.xProperty().addListener(positionListener);
         window.yProperty().addListener(positionListener);

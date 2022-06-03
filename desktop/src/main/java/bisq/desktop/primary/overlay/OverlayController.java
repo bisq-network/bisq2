@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.newProfilePopup.NewProfilePopupController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.BisqEasyOnboardingController;
 import bisq.desktop.primary.onboarding.OnboardingController;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -57,6 +58,14 @@ public class OverlayController extends NavigationController {
         view = new OverlayView(model, this, owner);
         INSTANCE = this;
         onActivateInternal();
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+            } else {
+                hide();
+            }
+        });
     }
 
 
@@ -74,12 +83,21 @@ public class OverlayController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        model.setTopMargin(OverlayModel.TOP_MARGIN);
+        model.setBottomMargin(OverlayModel.BOTTOM_MARGIN);
+        model.setHorizontalMargin(OverlayModel.HORIZONTAL_MARGIN);
         switch (navigationTarget) {
             case ONBOARDING_OLD -> {
                 return Optional.of(new OnboardingController(applicationService));
             }
             case ONBOARDING -> {
                 return Optional.of(new NewProfilePopupController(applicationService));
+            }
+            case BISQ_EASY_ONBOARDING -> {
+                model.setTopMargin(95);
+                model.setBottomMargin(125);
+                model.setHorizontalMargin(140);
+                return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
             default -> {
                 return Optional.empty();

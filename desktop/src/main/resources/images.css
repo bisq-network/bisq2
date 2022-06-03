@@ -239,6 +239,13 @@
     -fx-image: url("images/protocols/protocol-satoshi-square.png");
 }
 
+#bisq-easy {
+    -fx-image: url("images/bisq-easy.png");
+}
+#bullet-point {
+    -fx-image: url("images/bullet-point.png");
+}
+
 /* Actions */
 #icon-bell {
     -fx-image: url("images/actions/icon-bell.png");

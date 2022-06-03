@@ -22,7 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;

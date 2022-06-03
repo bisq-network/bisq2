@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.left;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;

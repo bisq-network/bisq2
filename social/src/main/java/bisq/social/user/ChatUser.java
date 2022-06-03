@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 public class ChatUser implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
     private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
-    
+
     private final String nickName;
     private final NetworkId networkId;
     private final Set<Reputation> reputation;
@@ -148,12 +148,13 @@ public class ChatUser implements DistributedData {
     }
 
     public String getBio() {
-        return "Trusted trader, 4 year contributor to bisq"; //todo implement instead of hardcode
+        return "Trusted trader, 4 year contributor to Bisq"; //todo implement instead of hardcode
     }
-    
+
     public String getBurnScoreAsString() {
         return "301"; //todo implement instead of hardcode
     }
+
     public String getAccountAgeAsString() {
         return "274 days"; //todo implement instead of hardcode
     }

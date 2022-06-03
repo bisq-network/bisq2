@@ -17,14 +17,14 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabModel;
 import lombok.Getter;
 
 @Getter
-public class BisqEasyOnBoardingModel implements Model {
-    private int lastIndex= 5;
-    private IntegerProperty index = new SimpleIntegerProperty(1);
-    private StringProperty headline = new SimpleStringProperty();
-    private StringProperty text = new SimpleStringProperty();
+public class BisqEasyOnboardingModel extends TabModel {
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.BISQ_EASY_ONBOARDING_TAB1;
+    }
 }

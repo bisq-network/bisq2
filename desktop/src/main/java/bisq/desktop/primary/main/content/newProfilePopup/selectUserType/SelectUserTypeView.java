@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -57,24 +56,18 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         Label headLineLabel = new Label(Res.get("initNymProfile.selectUserType.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("initNymProfile.subTitle"));
+        Label subtitleLabel = new Label(Res.get("initNymProfile.selectUserType.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setMaxWidth(280);
+        subtitleLabel.setMaxWidth(400);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
 
         userTypeToggleGroup = new ToggleGroup();
-        
-        VBox userTypeNewBox = getUserTypeSelectionBox(
-                Res.get("initNymProfile.selectUserType.new.button"),
-                Res.get("initNymProfile.selectUserType.new.info")
-        );
+
+        VBox userTypeNewBox = getUserTypeSelectionBox(Res.get("initNymProfile.selectUserType.new.button"), Res.get("initNymProfile.selectUserType.new.info"));
         userTypeNewButton = (ToggleButton) userTypeNewBox.getChildren().get(0);
-        
-        VBox userTypeExperiencedBox = getUserTypeSelectionBox(
-                Res.get("initNymProfile.selectUserType.experienced.button"),
-                Res.get("initNymProfile.selectUserType.experienced.info")
-        );
+
+        VBox userTypeExperiencedBox = getUserTypeSelectionBox(Res.get("initNymProfile.selectUserType.experienced.button"), Res.get("initNymProfile.selectUserType.experienced.info"));
         userTypeExperiencedButton = (ToggleButton) userTypeExperiencedBox.getChildren().get(0);
 
         HBox userTypeBox = new HBox(28, userTypeNewBox, userTypeExperiencedBox);
@@ -93,11 +86,10 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         userTypeExperiencedButton.disableProperty().bind(userTypeExperiencedButton.selectedProperty());
         userTypeNewButton.setOnAction(evt -> controller.onSelect(SelectUserTypeModel.Type.NEWBIE));
         userTypeExperiencedButton.setOnAction(evt -> controller.onSelect(SelectUserTypeModel.Type.EXPERIENCED));
-        
+
         selectedUserTypeSubscription = EasyBind.subscribe(model.getSelectedType(), selectedType -> {
             if (selectedType != null) {
-                userTypeToggleGroup.selectToggle(selectedType == SelectUserTypeModel.Type.NEWBIE
-                        ? userTypeNewButton : userTypeExperiencedButton);
+                userTypeToggleGroup.selectToggle(selectedType == SelectUserTypeModel.Type.NEWBIE ? userTypeNewButton : userTypeExperiencedButton);
 
             }
         });
@@ -113,7 +105,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         selectedUserTypeSubscription.unsubscribe();
         nextButton.setOnAction(null);
     }
-    
+
     private VBox getUserTypeSelectionBox(String title, String info) {
         ToggleButton button = new ToggleButton(title);
         button.setToggleGroup(userTypeToggleGroup);
@@ -126,7 +118,7 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         infoLabel.getStyleClass().add("bisq-text-3");
         VBox box = new VBox(5, button, infoLabel);
         box.setAlignment(Pos.CENTER);
-        
+
         return box;
     }
 }

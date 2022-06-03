@@ -18,7 +18,8 @@
 package bisq.desktop.common.view;
 
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.utils.Styles;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,16 +38,22 @@ import javax.annotation.Nullable;
 public class TabButton extends Pane implements Toggle {
     private final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     private final BooleanProperty selectedProperty = new SimpleBooleanProperty();
+    @Getter
     private final Label label;
     @Getter
     private final NavigationTarget navigationTarget;
+    private final Styles styles;
     private ImageView icon;
     private ImageView iconSelected;
     private ImageView iconHover;
 
-    public TabButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget, @Nullable String iconId) {
+    public TabButton(String title, ToggleGroup toggleGroup,
+                     NavigationTarget navigationTarget,
+                     Styles styles,
+                     @Nullable String iconId) {
         this.navigationTarget = navigationTarget;
-        
+        this.styles = styles;
+
         if (iconId != null) {
             this.icon = ImageUtil.getImageViewById(iconId);
             this.iconSelected = ImageUtil.getImageViewById(iconId + "-active");
@@ -64,13 +71,13 @@ public class TabButton extends Pane implements Toggle {
         label.setPadding(new Insets(7, 0, 0, 0));
         label.setMouseTransparent(true);
 
-        label.getStyleClass().addAll("bisq-tab-button-label", "bisq-text-grey-9");
+        label.getStyleClass().addAll("bisq-tab-button-label", styles.normal());
         label.setGraphic(icon);
         getChildren().addAll(label);
-        
+
         hoverProperty().addListener((ov, wasHovered, isHovered) -> {
             if (isSelected()) return;
-            Layout.chooseStyleClass(label, "bisq-text-white", "bisq-text-grey-9", isHovered);
+            Layout.chooseStyleClass(label, styles.hoover(), styles.normal(), isHovered);
             label.setGraphic(isHovered ? iconHover : icon);
         });
     }
@@ -112,7 +119,7 @@ public class TabButton extends Pane implements Toggle {
     @Override
     public void setSelected(boolean selected) {
         selectedProperty.set(selected);
-        Layout.chooseStyleClass(label, "bisq-text-logo-green", "bisq-text-grey-9", selected);
+        Layout.chooseStyleClass(label, styles.selected(), styles.normal(), selected);
         label.setGraphic(selected ? iconSelected : icon);
     }
 }

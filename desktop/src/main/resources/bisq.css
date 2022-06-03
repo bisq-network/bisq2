@@ -66,6 +66,7 @@
     -bisq-grey-19: #282828;
     -bisq-grey-20: #454545;
     -bisq-grey-21: #343434;
+    -bisq-grey-22: #707070;
 
 
     /* Background colors */
@@ -329,7 +330,7 @@
 }
 
 .wrap-text {
-    -fx-wrap-text: true;    
+    -fx-wrap-text: true;
 }
 
 .text-underline {
@@ -383,6 +384,12 @@
     -fx-font-size: 1.78em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -fx-light-text-color;
+}
+
+.bisq-popup-headline-label {
+    -fx-font-size: 1.35em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
 }
 
 .bisq-tab-button-label {
@@ -448,6 +455,10 @@
     -fx-background-color: -bisq-grey-5;
 }
 
+.popup-bg {
+    -fx-background-color: -bisq-grey-21;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Custom TextInputBox based                                                                  *
@@ -496,7 +507,7 @@
     -fx-cursor: hand;
 }
 
-.button:default, 
+.button:default,
 .default-button {
     -fx-background-color: -bisq-dark-green;
 }
@@ -612,7 +623,7 @@
 }
 
 .bisq-button-1:selected {
-    -fx-background-color: -bisq-logo-green;
+    -fx-background-color: -bisq-green;
 }
 
 .bisq-button-1:selected:hover {
@@ -1236,8 +1247,16 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-2;
 }
 
+.bisq-mid-grey {
+    -fx-background-color: -bisq-grey-20;
+}
+
 .bisq-green-line {
     -fx-background-color: -bisq-logo-green;
+}
+
+.bisq-white-bg {
+    -fx-background-color: -bisq-white;
 }
 
 .bisq-content-bg {
@@ -1560,4 +1579,30 @@ tree-table-view:focused {
 
 #icon-label-grey {
     -fx-text-fill: grey;
+}
+
+#bisq-easy-onboarding-headline-label {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+#bisq-easy-onboarding-label {
+    -fx-font-size: 1.05em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+#bisq-easy-next-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 3;
+    -fx-border-color: -bisq-grey-22;
+    -fx-border-width: 0.75;
+    -fx-border-radius: 2.5;
+    -fx-text-fill: -bisq-white;
+}
+
+#bisq-easy-skip-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-grey-9;
 }

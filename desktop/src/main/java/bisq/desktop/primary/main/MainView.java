@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main;
 
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.main.top.TopPanelView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;

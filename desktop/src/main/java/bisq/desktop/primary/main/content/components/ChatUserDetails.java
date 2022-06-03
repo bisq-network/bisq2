@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUser;
@@ -94,8 +94,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             model.bio.set(chatUser.getBio());
             model.burnScore.set(chatUser.getBurnScoreAsString());
             model.accountAge.set(chatUser.getAccountAgeAsString());
-            
-            model.userName.set(chatUser.getNym());
+
+            model.nym.set(chatUser.getNym());
+            model.nickName.set(chatUser.getNickName());
             model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
@@ -132,7 +133,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreChatUserHandler = Optional.empty();
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
-        private final StringProperty userName = new SimpleStringProperty();
+        private final StringProperty nym = new SimpleStringProperty();
+        private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
         private final StringProperty bio = new SimpleStringProperty();
         private final StringProperty burnScore = new SimpleStringProperty();
@@ -149,7 +151,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label userName, id, entitlements, bio, burnScore, accountAge;
+        private final Label nym, nickName, id, entitlements, bio, burnScore, accountAge;
         private final Button openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
@@ -161,24 +163,32 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             root.setPadding(new Insets(0, 25, 0, 35));
             root.setAlignment(Pos.TOP_CENTER);
 
+            nickName = new Label();
+            nickName.getStyleClass().addAll("bisq-text-9", "font-semibold");
+            nickName.setAlignment(Pos.CENTER);
+            nickName.setMaxWidth(200);
+            nickName.setMinWidth(200);
+            VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
+
             roboIconImageView = new ImageView();
 
-            userName = new Label();
-            userName.getStyleClass().addAll("bisq-text-7", "font-semibold");
-            userName.setAlignment(Pos.CENTER);
-            userName.setMaxWidth(200);
-            userName.setMinWidth(200);
-            VBox.setMargin(userName, new Insets(6, 0, 20, 0));
+            nym = new Label();
+            nym.getStyleClass().addAll("bisq-text-7");
+            nym.setAlignment(Pos.CENTER);
+            nym.setMaxWidth(200);
+            nym.setMinWidth(200);
+            VBox.setMargin(nym, new Insets(5, 0, 20, 0));
+
 
             VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);
             bio = (Label) bioBox.getChildren().get(1);
-            
+
             VBox burnScoreBox = getInfoBox(Res.get("social.chatUser.burnScore"), false);
             burnScore = (Label) burnScoreBox.getChildren().get(1);
-            
+
             VBox accountAgeBox = getInfoBox(Res.get("social.chatUser.accountAge"), false);
             accountAge = (Label) accountAgeBox.getChildren().get(1);
-            
+
             VBox chatRulesBox = getInfoBox(Res.get("social.chat.chatRules.headline"), true);
             Label chatRules = (Label) chatRulesBox.getChildren().get(1);
             chatRules.setText(Res.get("social.chat.chatRules.content"));
@@ -204,15 +214,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(30, -45, 30, -55));
-            
-            root.getChildren().addAll(roboIconImageView, userName, bioBox, burnScoreBox, accountAgeBox,
-                    /* id, entitlements, */ Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton, 
+
+            root.getChildren().addAll(nickName, roboIconImageView, nym, bioBox, burnScoreBox, accountAgeBox,
+                    /* id, entitlements, */ Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton,
                     reportButton, separator, chatRulesBox);
         }
 
         @Override
         protected void onViewAttached() {
-            userName.textProperty().bind(model.userName);
+            nym.textProperty().bind(model.nym);
+            nickName.textProperty().bind(model.nickName);
             id.textProperty().bind(model.id);
             bio.textProperty().bind(model.bio);
             burnScore.textProperty().bind(model.burnScore);
@@ -239,7 +250,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
         @Override
         protected void onViewDetached() {
-            userName.textProperty().unbind();
+            nym.textProperty().unbind();
+            nickName.textProperty().unbind();
             id.textProperty().unbind();
             bio.textProperty().unbind();
             burnScore.textProperty().unbind();
@@ -258,7 +270,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             ignoreButton.setOnAction(null);
             reportButton.setOnAction(null);
         }
-        
+
         private VBox getInfoBox(String title, boolean smaller) {
             Label titleLabel = new Label(title.toUpperCase());
             titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semibold");

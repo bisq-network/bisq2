@@ -21,7 +21,7 @@ import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.social.chat.ChatService;

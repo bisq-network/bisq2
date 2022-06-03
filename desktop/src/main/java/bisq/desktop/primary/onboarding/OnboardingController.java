@@ -24,7 +24,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.onboarding.initUserProfile.InitUserProfileController;
 import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieController;
 import bisq.desktop.primary.onboarding.onboardProTrader.OnboardProTraderController;
-import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeController;
+import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeControllerOld;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +61,7 @@ public class OnboardingController extends NavigationController {
                 return Optional.of(new InitUserProfileController(applicationService));
             }
             case SELECT_USER_TYPE -> {
-                return Optional.of(new SelectUserTypeController(applicationService));
+                return Optional.of(new SelectUserTypeControllerOld(applicationService));
             }
             case ONBOARD_NEWBIE -> {
                 return Optional.of(new OnboardNewbieController(applicationService));

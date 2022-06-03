@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;

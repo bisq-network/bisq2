@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,5 +58,5 @@ public class SelectUserTypeController implements Controller {
     public void onNext() {
         navigationHandler.accept(true);
     }
-    
+
 }

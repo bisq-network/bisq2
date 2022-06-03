@@ -18,6 +18,7 @@
 package bisq.desktop.common.view;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Insets;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<StackPane, M, C>
         implements TransitionedView {
@@ -38,6 +41,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ScrollPane scrollPane;
+    protected final VBox vBox;
+    protected final Pane lineAndMarker;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
     private Subscription viewSubscription;
@@ -45,8 +50,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public TabView(M model, C controller) {
         super(new StackPane(), model, controller);
 
-        VBox box = new VBox();
-        box.setFillWidth(true);
+        vBox = new VBox();
+        vBox.setFillWidth(true);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
@@ -63,18 +68,18 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        box.getChildren().addAll(tabs, scrollPane);
+        vBox.getChildren().addAll(tabs, scrollPane);
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
-        double lineHeight = 1.5;
+        double lineHeight = 1;
         line.setMinHeight(lineHeight);
 
         selectionMarker = new Region();
         selectionMarker.getStyleClass().add("bisq-green-line");
         selectionMarker.setMinHeight(lineHeight);
 
-        Pane lineAndMarker = new Pane();
+        lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
         lineAndMarker.setMaxHeight(lineHeight);
@@ -83,7 +88,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
         StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
 
-        root.getChildren().addAll(box, lineAndMarker);
+        root.getChildren().addAll(vBox, lineAndMarker);
     }
 
     @Override
@@ -146,13 +151,27 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget) {
-        addTab(text, navigationTarget, null);
+        addTab(text,
+                navigationTarget,
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                null);
     }
-    
+
     protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
-        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, icon);
+        addTab(text,
+                navigationTarget,
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                icon);
+    }
+
+    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles) {
+        addTab(text, navigationTarget, styles, null);
+    }
+
+    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles, @Nullable String icon) {
+        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, styles, icon);
         controller.onTabButtonCreated(tabButton);
-        tabs.getChildren().addAll(tabButton);
+        tabs.getChildren().add(tabButton);
     }
 
     //todo 
@@ -173,19 +192,15 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             layoutDoneSubscription.unsubscribe();
         }
 
-        //todo maybe listen to transition animation from outer container to start animation after view is visible
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
-            // At the time when x is available the width is available as well
-            if (x.doubleValue() > 0) {
-                Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
-                        selectedTabButton.getBoundsInParent().getMinX());
-                UIThread.runOnNextRenderFrame(() -> {
-                    if (layoutDoneSubscription != null) {
-                        layoutDoneSubscription.unsubscribe();
-                        layoutDoneSubscription = null;
-                    }
-                });
-            }
+            Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
+                    selectedTabButton.getBoundsInParent().getMinX());
+            UIThread.runOnNextRenderFrame(() -> {
+                if (layoutDoneSubscription != null) {
+                    layoutDoneSubscription.unsubscribe();
+                    layoutDoneSubscription = null;
+                }
+            });
         });
     }
 }

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.onboarding.onboardNewbie;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

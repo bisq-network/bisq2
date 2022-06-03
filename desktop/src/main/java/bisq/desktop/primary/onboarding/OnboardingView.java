@@ -20,9 +20,9 @@ package bisq.desktop.primary.onboarding;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieView;
-import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeView;
+import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeViewOld;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -68,7 +68,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         model.getView().addListener((observable, oldValue, newValue) -> {
             root.getChildren().add(newValue.getRoot());
             if (oldValue != null) {
-                if (newValue instanceof SelectUserTypeView) {
+                if (newValue instanceof SelectUserTypeViewOld) {
                     step1.getStyleClass().remove("bisq-small-light-label");
                     step1.getStyleClass().add("bisq-small-light-label-dimmed");
                     step2.getStyleClass().remove("bisq-small-light-label-dimmed");

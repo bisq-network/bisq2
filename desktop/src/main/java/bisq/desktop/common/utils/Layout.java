@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.layout;
+package bisq.desktop.common.utils;
 
 import javafx.geometry.Insets;
 import javafx.scene.Node;
