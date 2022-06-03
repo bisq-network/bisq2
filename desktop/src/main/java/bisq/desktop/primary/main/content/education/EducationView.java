@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.education;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.RoboIconWithId;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

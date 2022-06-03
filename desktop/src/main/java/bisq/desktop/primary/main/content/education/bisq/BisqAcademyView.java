@@ -18,22 +18,10 @@
 package bisq.desktop.primary.main.content.education.bisq;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Insets;
-import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Set;
 
 @Slf4j
 public class BisqAcademyView extends View<VBox, BisqAcademyModel, BisqAcademyController> {

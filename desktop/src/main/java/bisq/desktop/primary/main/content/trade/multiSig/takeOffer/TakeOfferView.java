@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.multiSig.takeOffer;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

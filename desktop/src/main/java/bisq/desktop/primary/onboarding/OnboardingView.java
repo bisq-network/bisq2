@@ -20,7 +20,7 @@ package bisq.desktop.primary.onboarding;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.onboarding.onboardNewbie.OnboardNewbieView;
 import bisq.desktop.primary.onboarding.selectUserType.SelectUserTypeView;
 import bisq.i18n.Res;

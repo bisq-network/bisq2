@@ -18,6 +18,7 @@
 package bisq.desktop.common.view;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import javafx.geometry.Insets;
@@ -29,6 +30,8 @@ import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<StackPane, M, C>
@@ -69,7 +72,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
-        double lineHeight = 1.5;
+        double lineHeight = 1;
         line.setMinHeight(lineHeight);
 
         selectionMarker = new Region();
@@ -149,11 +152,25 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget) {
-        addTab(text, navigationTarget, null);
+        addTab(text,
+                navigationTarget,
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                null);
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
-        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, icon);
+        addTab(text,
+                navigationTarget,
+                new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9"),
+                icon);
+    }
+
+    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles) {
+        addTab(text, navigationTarget, styles, null);
+    }
+
+    protected void addTab(String text, NavigationTarget navigationTarget, Styles styles, @Nullable String icon) {
+        TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, styles, icon);
         controller.onTabButtonCreated(tabButton);
         tabs.getChildren().add(tabButton);
     }

@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.control.NoSelectionModel;
+import bisq.desktop.common.utils.NoSelectionModel;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
@@ -32,7 +32,7 @@ import bisq.desktop.components.controls.BisqTaggableTextArea;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;

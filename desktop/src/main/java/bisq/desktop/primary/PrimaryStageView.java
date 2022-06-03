@@ -24,7 +24,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;

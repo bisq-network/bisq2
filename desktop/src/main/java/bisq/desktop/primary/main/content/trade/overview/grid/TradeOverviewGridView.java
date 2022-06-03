@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.overview.grid;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;

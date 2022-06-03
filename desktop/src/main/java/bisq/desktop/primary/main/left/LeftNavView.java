@@ -25,7 +25,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;

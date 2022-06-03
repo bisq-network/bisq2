@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.top;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.currency.Market;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.oracle.marketprice.MarketPrice;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.presentation.formatters.QuoteFormatter;

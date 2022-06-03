@@ -21,7 +21,7 @@ import bisq.common.data.ByteArray;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.layout.Layout;
+import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
