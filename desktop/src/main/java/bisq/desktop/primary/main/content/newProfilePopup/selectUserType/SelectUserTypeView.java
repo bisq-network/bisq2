@@ -18,26 +18,24 @@
 package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.desktop.components.controls.RoboIconWithId;
-import bisq.desktop.layout.Layout;
 import bisq.i18n.Res;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, SelectUserTypeController> {
-    private final Button nextButton, backButton;
-    private final AutoCompleteComboBox<SelectUserTypeModel.Type> userTypeBox;
-    private final Label info;
+    private final Button nextButton;
+    private final ToggleButton userTypeNewButton, userTypeExperiencedButton;
+    private final ToggleGroup userTypeToggleGroup;
+    private Subscription selectedUserTypeSubscription;
 
     public SelectUserTypeView(SelectUserTypeModel model, SelectUserTypeController controller) {
         super(new ScrollPane(), model, controller);
@@ -56,66 +54,79 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         root.setFitToHeight(false);
         root.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("satoshisquareapp.selectTraderType.headline"));
+        Label headLineLabel = new Label(Res.get("initNymProfile.selectUserType.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("satoshisquareapp.setDefaultUserProfile.subTitle"));
+        Label subtitleLabel = new Label(Res.get("initNymProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setMaxWidth(450);
+        subtitleLabel.setMaxWidth(280);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
 
-        info = new Label();
-        info.setWrapText(true);
-        info.setMaxWidth(450);
-        info.setTextAlignment(TextAlignment.CENTER);
-        info.getStyleClass().add("bisq-sub-title-label");
-        VBox.setVgrow(info, Priority.ALWAYS);
-        VBox.setMargin(info, new Insets(0, 0, 28, 0));
-
-        RoboIconWithId roboIconWithId = new RoboIconWithId(300);
-        roboIconWithId.setProfileId(model.getProfileId());
-        roboIconWithId.setRoboHashImage(model.getRoboHashNode());
-        roboIconWithId.setMouseTransparent(false);
-        VBox.setMargin(roboIconWithId, new Insets(0, 0, 28, 0));
-
-        userTypeBox = new AutoCompleteComboBox<>(model.getUserTypes(), Res.get("satoshisquareapp.selectTraderType.description"));
-        userTypeBox.setPrefWidth(300);
-        VBox.setMargin(userTypeBox, new Insets(0, 0, 28, 0));
-
-        backButton = new Button(Res.get("back"));
-        nextButton = new Button(Res.get("shared.nextStep"));
-        nextButton.setDefaultButton(true);
-        HBox buttons = Layout.hBoxWith(backButton, nextButton);
-        buttons.setAlignment(Pos.CENTER);
-
-        vBox.getChildren().addAll(
-                headLineLabel,
-                subtitleLabel,
-                roboIconWithId,
-                userTypeBox,
-                /* info,*/
-                buttons
+        userTypeToggleGroup = new ToggleGroup();
+        
+        VBox userTypeNewBox = getUserTypeSelectionBox(
+                Res.get("initNymProfile.selectUserType.new.button"),
+                Res.get("initNymProfile.selectUserType.new.info")
         );
+        userTypeNewButton = (ToggleButton) userTypeNewBox.getChildren().get(0);
+        
+        VBox userTypeExperiencedBox = getUserTypeSelectionBox(
+                Res.get("initNymProfile.selectUserType.experienced.button"),
+                Res.get("initNymProfile.selectUserType.experienced.info")
+        );
+        userTypeExperiencedButton = (ToggleButton) userTypeExperiencedBox.getChildren().get(0);
+
+        HBox userTypeBox = new HBox(28, userTypeNewBox, userTypeExperiencedBox);
+        VBox.setMargin(userTypeBox, new Insets(40, 0, 40, 0));
+        userTypeBox.setAlignment(Pos.CENTER);
+
+        nextButton = new Button(Res.get("next"));
+        nextButton.setDefaultButton(true);
+
+        vBox.getChildren().addAll(headLineLabel, subtitleLabel, userTypeBox, nextButton);
     }
 
     @Override
     protected void onViewAttached() {
-        info.textProperty().bind(model.getInfo());
+        userTypeNewButton.disableProperty().bind(userTypeNewButton.selectedProperty());
+        userTypeExperiencedButton.disableProperty().bind(userTypeExperiencedButton.selectedProperty());
+        userTypeNewButton.setOnAction(evt -> controller.onSelect(SelectUserTypeModel.Type.NEWBIE));
+        userTypeExperiencedButton.setOnAction(evt -> controller.onSelect(SelectUserTypeModel.Type.EXPERIENCED));
+        
+        selectedUserTypeSubscription = EasyBind.subscribe(model.getSelectedType(), selectedType -> {
+            if (selectedType != null) {
+                userTypeToggleGroup.selectToggle(selectedType == SelectUserTypeModel.Type.NEWBIE
+                        ? userTypeNewButton : userTypeExperiencedButton);
 
-        userTypeBox.getSelectionModel().select(model.getUserTypes().get(0));
-        userTypeBox.setOnAction(e -> controller.onSelect(userTypeBox.getSelectionModel().getSelectedItem()));
-
+            }
+        });
         nextButton.setOnAction(e -> controller.onNext());
-        backButton.setOnAction(e -> controller.onPrevious());
     }
 
     @Override
     protected void onViewDetached() {
-        info.textProperty().unbind();
-        nextButton.textProperty().unbind();
-
-        userTypeBox.setOnAction(null);
+        userTypeNewButton.disableProperty().unbind();
+        userTypeExperiencedButton.disableProperty().unbind();
+        userTypeNewButton.setOnAction(null);
+        userTypeExperiencedButton.setOnAction(null);
+        selectedUserTypeSubscription.unsubscribe();
         nextButton.setOnAction(null);
+    }
+    
+    private VBox getUserTypeSelectionBox(String title, String info) {
+        ToggleButton button = new ToggleButton(title);
+        button.setToggleGroup(userTypeToggleGroup);
+        button.getStyleClass().setAll("bisq-button-1");
+        button.setAlignment(Pos.CENTER);
+        button.setMinWidth(260);
+        button.setMinHeight(125);
+        Label infoLabel = new Label(info);
+        VBox.setMargin(infoLabel, new Insets(13, 0, 0, 0));
+        infoLabel.getStyleClass().add("bisq-text-3");
+        VBox box = new VBox(5, button, infoLabel);
+        box.setAlignment(Pos.CENTER);
+        
+        return box;
     }
 }
