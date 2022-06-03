@@ -38,7 +38,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ScrollPane scrollPane;
-    protected final VBox tabsAndScrollPane;
+    protected final VBox vBox;
+    protected final Pane lineAndMarker;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
     private Subscription viewSubscription;
@@ -46,8 +47,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public TabView(M model, C controller) {
         super(new StackPane(), model, controller);
 
-        tabsAndScrollPane = new VBox();
-        tabsAndScrollPane.setFillWidth(true);
+        vBox = new VBox();
+        vBox.setFillWidth(true);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
@@ -64,7 +65,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        tabsAndScrollPane.getChildren().addAll(tabs, scrollPane);
+        vBox.getChildren().addAll(tabs, scrollPane);
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
@@ -75,7 +76,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         selectionMarker.getStyleClass().add("bisq-green-line");
         selectionMarker.setMinHeight(lineHeight);
 
-        Pane lineAndMarker = new Pane();
+        lineAndMarker = new Pane();
         lineAndMarker.getChildren().addAll(line, selectionMarker);
         lineAndMarker.setMinHeight(lineHeight);
         lineAndMarker.setMaxHeight(lineHeight);
@@ -84,7 +85,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
         StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
 
-        root.getChildren().addAll(tabsAndScrollPane, lineAndMarker);
+        root.getChildren().addAll(vBox, lineAndMarker);
     }
 
     @Override
@@ -100,7 +101,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
                 selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
-                log.error("selectionMarker {} {} {} ",w,selectionMarker.getLayoutX(), selectionMarker.getLayoutY());
+                log.error("selectionMarker {} {} {} ", w, selectionMarker.getLayoutX(), selectionMarker.getLayoutY());
             }
         });
 
@@ -154,7 +155,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
         TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, icon);
         controller.onTabButtonCreated(tabButton);
-        tabs.getChildren().addAll(tabButton);
+        tabs.getChildren().add(tabButton);
     }
 
     //todo 
@@ -175,19 +176,15 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             layoutDoneSubscription.unsubscribe();
         }
 
-        //todo maybe listen to transition animation from outer container to start animation after view is visible
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
-            // At the time when x is available the width is available as well
-            if (x.doubleValue() > 0) {
-                Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
-                        selectedTabButton.getBoundsInParent().getMinX());
-                UIThread.runOnNextRenderFrame(() -> {
-                    if (layoutDoneSubscription != null) {
-                        layoutDoneSubscription.unsubscribe();
-                        layoutDoneSubscription = null;
-                    }
-                });
-            }
+            Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
+                    selectedTabButton.getBoundsInParent().getMinX());
+            UIThread.runOnNextRenderFrame(() -> {
+                if (layoutDoneSubscription != null) {
+                    layoutDoneSubscription.unsubscribe();
+                    layoutDoneSubscription = null;
+                }
+            });
         });
     }
 }

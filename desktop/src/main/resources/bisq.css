@@ -385,6 +385,12 @@
     -fx-text-fill: -fx-light-text-color;
 }
 
+.bisq-popup-headline-label {
+    -fx-font-size: 1.28em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
 .bisq-tab-button-label {
     -fx-font-size: 0.93em;
     -fx-font-family: "IBM Plex Sans Light";

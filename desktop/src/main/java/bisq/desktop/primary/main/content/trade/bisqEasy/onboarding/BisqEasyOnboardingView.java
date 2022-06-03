@@ -24,6 +24,8 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, BisqEasyOnboardingController> {
 
@@ -39,12 +41,22 @@ public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, Bis
         addTab(Res.get("bisqEasy.onBoarding.tab2"), NavigationTarget.BISQ_EASY_ONBOARDING_TAB2);
         addTab(Res.get("bisqEasy.onBoarding.tab3"), NavigationTarget.BISQ_EASY_ONBOARDING_TAB3);
 
+        
         headlineLabel.setText(Res.get("bisqEasy.headline"));
 
+        // Make tabs left aligned and headline on top
+        tabs.getChildren().remove(0, 2); // remove headline and spacer
+        
+        headlineLabel.getStyleClass().remove("bisq-content-headline-label");
+        headlineLabel.getStyleClass().add("bisq-popup-headline-label");
+       
         ImageView icon = ImageUtil.getImageViewById("bisq-easy");
-        HBox.setMargin(icon, new Insets(10, 0, 0, 30));
-        tabs.getChildren().add(0, icon);
-        //tabs.setStyle("-fx-background-color: red");
+        HBox.setMargin(icon, new Insets(0, 0, 0, 2));
+        HBox.setMargin(headlineLabel, new Insets(2, 0, 0, 2));
+        HBox hBox = new HBox(8, icon, headlineLabel);
+        VBox.setMargin(hBox, new Insets(0, 0, 32, 0));
+        vBox.getChildren().add(0, hBox);
+        StackPane.setMargin(lineAndMarker, new Insets(100, 0, 0, 0));
     }
 
     @Override
