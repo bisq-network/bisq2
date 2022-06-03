@@ -40,7 +40,6 @@ public class SelectUserTypeController implements Controller {
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
         model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
-        model.getUserTypes().addAll(SelectUserTypeModel.Type.NEWBIE, SelectUserTypeModel.Type.PRO_TRADER);
         view = new SelectUserTypeView(model, this);
     }
 
@@ -55,25 +54,10 @@ public class SelectUserTypeController implements Controller {
 
     public void onSelect(SelectUserTypeModel.Type selectedType) {
         model.setSelectedType(selectedType);
-        if (selectedType != null) {
-            switch (selectedType) {
-                case NEWBIE -> {
-                    model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.newbie.info"));
-                    model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.newbie.button"));
-                }
-                case PRO_TRADER -> {
-                    model.getInfo().set(Res.get("satoshisquareapp.selectTraderType.proTrader.info"));
-                    model.getButtonText().set(Res.get("satoshisquareapp.selectTraderType.proTrader.button"));
-                }
-            }
-        }
     }
 
     public void onNext() {
         navigationHandler.accept(true);
     }
-
-    void onPrevious() {
-        navigationHandler.accept(false);
-    }
+    
 }

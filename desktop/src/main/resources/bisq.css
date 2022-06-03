@@ -609,6 +609,26 @@
     -fx-background-color: rgba(255, 255, 255, .04);
 }
 
+/* Bisq other buttons */
+.bisq-button-1 {
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-grey-3;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+}
+
+.bisq-button-1:hover {
+    -fx-background-color: -bisq-grey-18;
+}
+
+.bisq-button-1:selected {
+    -fx-background-color: -bisq-logo-green;
+}
+
+.bisq-button-1:selected:hover {
+    -fx-background-color: -bisq-dark-green;
+}
 
 /*******************************************************************************
  *                                                                             *
