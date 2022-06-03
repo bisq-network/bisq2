@@ -15,16 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab1;
 
-import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
-@Getter
-public class BisqEasyOnBoardingModel implements Model {
-    private int lastIndex= 5;
-    private IntegerProperty index = new SimpleIntegerProperty(1);
-    private StringProperty headline = new SimpleStringProperty();
-    private StringProperty text = new SimpleStringProperty();
+public class BisqEasyOnboardingTab1Controller implements Controller {
+
+    private final BisqEasyOnboardingTab1Model model;
+    @Getter
+    private final BisqEasyOnboardingTab1View view;
+
+    public BisqEasyOnboardingTab1Controller(DefaultApplicationService applicationService) {
+        model = new BisqEasyOnboardingTab1Model(applicationService);
+        view = new BisqEasyOnboardingTab1View(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

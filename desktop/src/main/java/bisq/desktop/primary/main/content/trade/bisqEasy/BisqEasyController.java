@@ -23,7 +23,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.BisqEasyOnBoardingController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -51,10 +50,13 @@ public class BisqEasyController extends NavigationController {
 
     @Override
     public void onActivate() {
-        Navigation.navigateTo(settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
                 .filter(value -> value)
-                .map(value -> NavigationTarget.BISQ_EASY_CHAT)
-                .orElse(NavigationTarget.BISQ_EASY_ON_BOARDING));
+                .isEmpty()) {
+            // If cookie not set we show popup 
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
+        }
     }
 
     @Override
@@ -66,9 +68,6 @@ public class BisqEasyController extends NavigationController {
         switch (navigationTarget) {
             case BISQ_EASY_CHAT -> {
                 return Optional.of(new BisqEasyChatController(applicationService));
-            }
-            case BISQ_EASY_ON_BOARDING -> {
-                return Optional.of(new BisqEasyOnBoardingController(applicationService));
             }
             default -> {
                 return Optional.empty();

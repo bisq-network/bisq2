@@ -15,18 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab2;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class SettingsModel extends TabModel {
+public class BisqEasyOnboardingTab2Controller implements Controller {
 
-    public SettingsModel() {
+    private final BisqEasyOnboardingTab2Model model;
+    @Getter
+    private final BisqEasyOnboardingTab2View view;
+
+    public BisqEasyOnboardingTab2Controller(DefaultApplicationService applicationService) {
+        model = new BisqEasyOnboardingTab2Model(applicationService);
+        view = new BisqEasyOnboardingTab2View(model, this);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NETWORK_INFO;
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 }

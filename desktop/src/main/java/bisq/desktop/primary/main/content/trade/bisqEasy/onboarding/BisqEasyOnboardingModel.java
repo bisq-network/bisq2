@@ -15,18 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
+import lombok.Getter;
 
-public class SettingsModel extends TabModel {
-
-    public SettingsModel() {
-    }
-
+@Getter
+public class BisqEasyOnboardingModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NETWORK_INFO;
+        return NavigationTarget.BISQ_EASY_ONBOARDING_TAB1;
     }
 }

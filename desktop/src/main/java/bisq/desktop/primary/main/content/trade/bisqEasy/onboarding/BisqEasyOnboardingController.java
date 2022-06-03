@@ -15,32 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.settings.about.AboutController;
-import bisq.desktop.primary.main.content.settings.networkInfo.NetworkInfoController;
-import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
-import bisq.desktop.primary.main.content.settings.userProfile.UserProfileController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab1.BisqEasyOnboardingTab1Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab2.BisqEasyOnboardingTab2Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab3.BisqEasyOnboardingTab3Controller;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-@Slf4j
-public class SettingsController extends TabController<SettingsModel>  {
-    private final DefaultApplicationService applicationService;
+public class BisqEasyOnboardingController extends TabController<BisqEasyOnboardingModel> {
     @Getter
-    private final SettingsView view;
+    private final BisqEasyOnboardingView view;
+    private final DefaultApplicationService applicationService;
 
-    public SettingsController(DefaultApplicationService applicationService) {
-        super(new SettingsModel(), NavigationTarget.SETTINGS);
-
+    public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
+        super(new BisqEasyOnboardingModel(), NavigationTarget.BISQ_EASY_ONBOARDING);
+       
         this.applicationService = applicationService;
-        view = new SettingsView(model, this);
+        view = new BisqEasyOnboardingView(model, this);
     }
 
     @Override
@@ -51,19 +48,17 @@ public class SettingsController extends TabController<SettingsModel>  {
     public void onDeactivate() {
     }
 
+    @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case USER_PROFILE -> {
-                return Optional.of(new UserProfileController(applicationService));
+            case BISQ_EASY_ONBOARDING_TAB1 -> {
+                return Optional.of(new BisqEasyOnboardingTab1Controller(applicationService));
             }
-            case PREFERENCES -> {
-                return Optional.of(new PreferencesController(applicationService));
+            case BISQ_EASY_ONBOARDING_TAB2 -> {
+                return Optional.of(new BisqEasyOnboardingTab2Controller(applicationService));
             }
-            case NETWORK_INFO -> {
-                return Optional.of(new NetworkInfoController(applicationService));
-            }
-            case ABOUT -> {
-                return Optional.of(new AboutController(applicationService));
+            case BISQ_EASY_ONBOARDING_TAB3 -> {
+                return Optional.of(new BisqEasyOnboardingTab3Controller(applicationService));
             }
             default -> {
                 return Optional.empty();

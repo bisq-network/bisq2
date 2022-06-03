@@ -38,6 +38,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     protected final ScrollPane scrollPane;
+    protected final VBox tabsAndScrollPane;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
     private Subscription viewSubscription;
@@ -45,8 +46,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     public TabView(M model, C controller) {
         super(new StackPane(), model, controller);
 
-        VBox box = new VBox();
-        box.setFillWidth(true);
+        tabsAndScrollPane = new VBox();
+        tabsAndScrollPane.setFillWidth(true);
 
         headlineLabel = new Label();
         headlineLabel.getStyleClass().add("bisq-content-headline-label");
@@ -63,7 +64,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        box.getChildren().addAll(tabs, scrollPane);
+        tabsAndScrollPane.getChildren().addAll(tabs, scrollPane);
 
         line = new Region();
         line.getStyleClass().add("bisq-darkest-bg");
@@ -83,7 +84,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
         StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
 
-        root.getChildren().addAll(box, lineAndMarker);
+        root.getChildren().addAll(tabsAndScrollPane, lineAndMarker);
     }
 
     @Override
@@ -99,6 +100,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
                 selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
+                log.error("selectionMarker {} {} {} ",w,selectionMarker.getLayoutX(), selectionMarker.getLayoutY());
             }
         });
 
@@ -148,7 +150,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
     protected void addTab(String text, NavigationTarget navigationTarget) {
         addTab(text, navigationTarget, null);
     }
-    
+
     protected void addTab(String text, NavigationTarget navigationTarget, String icon) {
         TabButton tabButton = new TabButton(text, toggleGroup, navigationTarget, icon);
         controller.onTabButtonCreated(tabButton);

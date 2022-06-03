@@ -34,8 +34,6 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 import lombok.Setter;
@@ -511,6 +509,7 @@ public class Transitions {
     }
 
     public static void animateTabButtonMarks(Region node, double targetWidth, double targetX) {
+        log.error("animateTabButtonMarks {} {} ",targetWidth, targetX);
         if (displaySettings.isUseAnimations()) {
             double startWidth = node.getWidth();
             double startX = node.getLayoutX();

@@ -21,9 +21,22 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.settings.DisplaySettings;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class OverlayModel extends NavigationModel {
+    public static final double TOP_MARGIN = 50;
+    public static final double BOTTOM_MARGIN = 50;
+    public static final double HORIZONTAL_MARGIN = 90;
+
     private final DisplaySettings displaySettings;
+    @Setter
+    private double topMargin = TOP_MARGIN;
+    @Setter
+    private double bottomMargin = BOTTOM_MARGIN;
+    @Setter
+    private double horizontalMargin = HORIZONTAL_MARGIN;
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
