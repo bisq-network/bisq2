@@ -18,7 +18,11 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab3;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 
 public class BisqEasyOnboardingTab3Controller implements Controller {
@@ -38,5 +42,18 @@ public class BisqEasyOnboardingTab3Controller implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    void onNext() {
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+    }
+
+    void onSkip() {
+        OverlayController.hide();
+    }
+
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki");
     }
 }

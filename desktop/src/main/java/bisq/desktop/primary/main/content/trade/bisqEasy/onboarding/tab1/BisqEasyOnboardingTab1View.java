@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.tab1;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,9 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyOnboardingTab1View extends View<VBox, BisqEasyOnboardingTab1Model, BisqEasyOnboardingTab1Controller> {
-
-
-    private final Button nextButton, skipButton;
+    private final Button nextButton, skipButton, learnMoreButton;
 
     public BisqEasyOnboardingTab1View(BisqEasyOnboardingTab1Model model, BisqEasyOnboardingTab1Controller controller) {
         super(new VBox(), model, controller);
@@ -49,7 +48,9 @@ public class BisqEasyOnboardingTab1View extends View<VBox, BisqEasyOnboardingTab
         nextButton.setId("bisq-easy-next-button");
         skipButton = new Button(Res.get("bisqEasy.onBoarding.skipIntro"));
         skipButton.setId("bisq-easy-skip-button");
-        HBox buttons = new HBox(0, nextButton, skipButton);
+        learnMoreButton = new Button(Res.get("bisqEasy.onBoarding.learnMore"));
+        learnMoreButton.setId("bisq-easy-next-button");
+        HBox buttons = new HBox(0, nextButton, skipButton, Spacer.fillHBox(), learnMoreButton);
         VBox.setMargin(buttons, new Insets(40, 0, 0, 0));
 
         root.getChildren().addAll(headLine,
@@ -59,19 +60,25 @@ public class BisqEasyOnboardingTab1View extends View<VBox, BisqEasyOnboardingTab
                 buttons);
     }
 
-    private HBox getLine(String text) {
-        Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
-        ImageView bulletPoint = ImageUtil.getImageViewById("bullet-point");
-        HBox.setMargin(bulletPoint, new Insets(-2,0,0,8));
-        return new HBox(20,  bulletPoint, label);
-    }
-
     @Override
     protected void onViewAttached() {
+        nextButton.setOnAction(e -> controller.onNext());
+        skipButton.setOnAction(e -> controller.onSkip());
+        learnMoreButton.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
+        nextButton.setOnAction(null);
+        skipButton.setOnAction(null);
+        learnMoreButton.setOnAction(null);
+    }
+
+    private HBox getLine(String text) {
+        Label label = new Label(text);
+        label.setId("bisq-easy-onboarding-label");
+        ImageView bulletPoint = ImageUtil.getImageViewById("bullet-point");
+        HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 8));
+        return new HBox(20, bulletPoint, label);
     }
 }
