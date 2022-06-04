@@ -151,8 +151,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nym, nickName, id, entitlements, bio, burnScore, accountAge;
-        private final Button openPrivateMessageButton, mentionButton, ignoreButton, reportButton;
+        private final Label nym, nickName, bio, burnScore, accountAge;
+        private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -195,30 +195,17 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             Label chatRules = (Label) chatRulesBox.getChildren().get(1);
             chatRules.setText(Res.get("social.chat.chatRules.content"));
 
-            id = new Label();
-            id.getStyleClass().add("offer-label-small"); //todo
-            id.setPadding(new Insets(-5, 0, 0, 5));
 
-            entitlements = new Label();
-            entitlements.getStyleClass().add("offer-label-small"); //todo
-            entitlements.setPadding(new Insets(-5, 0, 0, 0));
-
-            //todo add reputation data. need more concept work
-
-            openPrivateMessageButton = new Button(Res.get("social.sendPrivateMessage"));
-            openPrivateMessageButton.getStyleClass().add("default-button");
+            privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
             mentionButton = new Button(Res.get("social.mention"));
-            mentionButton.getStyleClass().add("default-button");
             ignoreButton = new Button(Res.get("social.ignore"));
-            ignoreButton.getStyleClass().add("default-button");
             reportButton = new Button(Res.get("social.report"));
-            reportButton.getStyleClass().add("default-button");
 
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(30, -45, 30, -55));
 
             root.getChildren().addAll(nickName, roboIconImageView, nym, bioBox, burnScoreBox, accountAgeBox,
-                    Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton,
+                    Spacer.height(10), privateMsgButton, mentionButton, ignoreButton,
                     reportButton, separator, chatRulesBox);
         }
 
@@ -226,16 +213,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         protected void onViewAttached() {
             nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
-            id.textProperty().bind(model.id);
             bio.textProperty().bind(model.bio);
             burnScore.textProperty().bind(model.burnScore);
             accountAge.textProperty().bind(model.accountAge);
-            entitlements.textProperty().bind(model.entitlements);
-            entitlements.visibleProperty().bind(model.entitlementsVisible);
-            entitlements.managedProperty().bind(model.entitlementsVisible);
-            mentionButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
-            ignoreButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
-            reportButton.minWidthProperty().bind(openPrivateMessageButton.widthProperty());
+            mentionButton.minWidthProperty().bind(privateMsgButton.widthProperty());
+            ignoreButton.minWidthProperty().bind(privateMsgButton.widthProperty());
+            reportButton.minWidthProperty().bind(privateMsgButton.widthProperty());
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
@@ -243,7 +226,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
                 }
             });
 
-            openPrivateMessageButton.setOnAction(e -> controller.onSendPrivateMessage());
+            privateMsgButton.setOnAction(e -> controller.onSendPrivateMessage());
             mentionButton.setOnAction(e -> controller.onMentionUser());
             ignoreButton.setOnAction(e -> controller.onIgnoreUser());
             reportButton.setOnAction(e -> controller.onReportUser());
@@ -253,20 +236,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         protected void onViewDetached() {
             nym.textProperty().unbind();
             nickName.textProperty().unbind();
-            id.textProperty().unbind();
             bio.textProperty().unbind();
             burnScore.textProperty().unbind();
             accountAge.textProperty().unbind();
-            entitlements.textProperty().unbind();
-            entitlements.visibleProperty().unbind();
-            entitlements.managedProperty().unbind();
             mentionButton.minWidthProperty().unbind();
             ignoreButton.minWidthProperty().unbind();
             reportButton.minWidthProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 
-            openPrivateMessageButton.setOnAction(null);
+            privateMsgButton.setOnAction(null);
             mentionButton.setOnAction(null);
             ignoreButton.setOnAction(null);
             reportButton.setOnAction(null);
