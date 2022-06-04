@@ -18,7 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.data.ByteArray;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PrivateChannel;
@@ -164,9 +166,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel privateChannel) {
                         ChatUser peer = privateChannel.getPeer();
-                        //todo temp use static image
-                        roboIcon.setId("temp-robo-profile-icon");
-                        //roboIcon.setImage(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
+                        roboIcon.setImage(RoboHash.getImage(new ByteArray(peer.getPubKeyHash())));
                         tooltip.setText(peer.getTooltipString());
                         label.setText(item.getChannel().getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

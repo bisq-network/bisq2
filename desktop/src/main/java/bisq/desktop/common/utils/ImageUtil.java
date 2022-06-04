@@ -17,7 +17,11 @@
 
 package bisq.desktop.common.utils;
 
-import javafx.scene.image.*;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import lombok.extern.slf4j.Slf4j;
@@ -69,20 +73,26 @@ public class ImageUtil {
     }
 
     public static Image composeImage(String[] paths, int width, int height) {
-        WritableImage image = new WritableImage(width, height);
+        Canvas canvas = new Canvas();
+        canvas.setWidth(width);
+        canvas.setHeight(height);
+        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
+        graphicsContext2D.setImageSmoothing(true);
+
+        double radius = Math.min(height, width) / 2d;
+        double x = width / 2d;
+        double y = height / 2d;
+        graphicsContext2D.beginPath();
+        graphicsContext2D.moveTo(x - radius, y);
+        graphicsContext2D.arc(x, y, radius, radius, 180, 360);
+        graphicsContext2D.closePath();
+        graphicsContext2D.clip();
+
         for (String path : paths) {
-            Image part = getImageByPath("images/robohash/" + path, width, height);
-            PixelReader reader = part.getPixelReader();
-            PixelWriter writer = image.getPixelWriter();
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-                    Color color = reader.getColor(i, j);
-                    if (color.isOpaque()) {
-                        writer.setColor(i, j, color);
-                    }
-                }
-            }
+            graphicsContext2D.drawImage(new Image("images/robohash/" + path), 0, 0, width, height);
         }
-        return image;
+        SnapshotParameters snapshotParameters = new SnapshotParameters();
+        snapshotParameters.setFill(Color.TRANSPARENT);
+        return canvas.snapshot(snapshotParameters, null);
     }
 }

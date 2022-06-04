@@ -2,18 +2,10 @@ package bisq.desktop.components.robohash;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.robohash.buckets.VariableSizeHashing;
-import bisq.desktop.components.robohash.handle.Handle;
-import bisq.desktop.components.robohash.handle.HandleFactory;
-import bisq.desktop.components.robohash.paths.Configuration;
-import bisq.desktop.components.robohash.paths.Set1Configuration;
-import bisq.desktop.components.robohash.paths.Set2Configuration;
-import bisq.desktop.components.robohash.paths.Set3Configuration;
 import javafx.scene.image.Image;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 //todo use equihash
@@ -21,9 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class RoboHash {
     private static final int MAX_CACHE_SIZE = 10000;
-    private static final List<Configuration> CONFIGURATION_LIST = List.of(new Set1Configuration(),
-            new Set2Configuration(),
-            new Set3Configuration());
     private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
@@ -36,10 +25,7 @@ public class RoboHash {
             return CACHE.get(pubKeyHash);
         }
         BigInteger bigInteger = new BigInteger(pubKeyHash.getBytes());
-        // Set 2 and set 3 are not that high quality as set 1, so lets stick with set 1 for now
-        // int selector = bigInteger.mod(BigInteger.valueOf(3)).intValue();
-        int selector = 0;
-        Configuration configuration = CONFIGURATION_LIST.get(selector);
+        Configuration configuration = new Configuration();
         VariableSizeHashing hashing = new VariableSizeHashing(configuration.getBucketSizes());
         byte[] data = hashing.createBuckets(bigInteger);
         Handle handle = HANDLE_FACTORY.calculateHandle(data);
@@ -51,10 +37,10 @@ public class RoboHash {
     }
 
     private static Image imageForHandle(Handle handle, Configuration configuration) {
-        long t0 = System.currentTimeMillis();
+        long ts = System.currentTimeMillis();
         byte[] bucketValues = handle.bucketValues();
         String[] paths = configuration.convertToFacetParts(bucketValues);
-        log.debug("Generated paths for RoboHash image in {} ms", System.currentTimeMillis() - t0); // typically <1ms
+        log.debug("Generated paths for RoboHash image in {} ms", System.currentTimeMillis() - ts); // typically <1ms
         return ImageUtil.composeImage(paths, configuration.width(), configuration.height());
     }
 }
