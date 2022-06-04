@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 //todo use equihash
 // Derived from https://github.com/neuhalje/android-robohash
+// Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
 public class RoboHash {
     private static final int MAX_CACHE_SIZE = 10000;
