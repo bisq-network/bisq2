@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.common.data.ByteArray;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUser;
@@ -171,7 +171,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
             roboIconImageView = new ImageView();
-
+            roboIconImageView.setFitWidth(200);
+            roboIconImageView.setFitHeight(200);
+            
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
@@ -216,7 +218,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox.setMargin(separator, new Insets(30, -45, 30, -55));
 
             root.getChildren().addAll(nickName, roboIconImageView, nym, bioBox, burnScoreBox, accountAgeBox,
-                    /* id, entitlements, */ Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton,
+                    Spacer.height(10), openPrivateMessageButton, mentionButton, ignoreButton,
                     reportButton, separator, chatRulesBox);
         }
 
@@ -237,8 +239,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
-                    // roboIconImageView.setImage(roboIcon);
-                    roboIconImageView.setId("temp-robo-big-profile-icon");
+                    roboIconImageView.setImage(roboIcon);
                 }
             });
 

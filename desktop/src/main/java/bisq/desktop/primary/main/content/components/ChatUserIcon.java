@@ -17,8 +17,10 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.common.data.ByteArray;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
@@ -55,8 +57,7 @@ public class ChatUserIcon extends Pane {
     }
 
     public void setChatUser(ChatUser chatUser, ChatUserService chatUserService) {
-        // roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
-        roboIcon.setId("temp-robo-icon"); // TODO: use robo icon generator
+        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
 
         if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");

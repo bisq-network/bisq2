@@ -79,13 +79,11 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         peersRoboIconView = new ImageView();
         peersRoboIconView.setFitWidth(42);
         peersRoboIconView.setFitHeight(42);
-        //todo temp use static image
-        peersRoboIconView.setId("temp-robo-profile-icon");
         HBox.setMargin(peersRoboIconView, new Insets(2, 0, 2, 0));
 
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
-        HBox.setMargin(selectedChannelLabel, new Insets(0,0,0,0));
+        HBox.setMargin(selectedChannelLabel, new Insets(0, 0, 0, 0));
         searchButton = BisqIconButton.createIconButton("icon-search");
         notificationsButton = BisqIconButton.createIconButton("icon-bell");
         infoButton = BisqIconButton.createIconButton("icon-info");
@@ -122,7 +120,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         messagesListAndSideBar = new HBox(0, chatMessagesComponent, sideBar);
         VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
-       
+
         center = new VBox(centerToolbar, filterBoxRoot, messagesListAndSideBar);
         root.getItems().addAll(left, center);
     }
@@ -131,8 +129,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
     protected void onViewAttached() {
         peersRoboIconView.managedProperty().bind(model.getPeersRoboIconVisible());
         peersRoboIconView.visibleProperty().bind(model.getPeersRoboIconVisible());
-        //todo temp use static image
-        //  peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
+        peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
         filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
         filterBoxRoot.managedProperty().bind(model.getFilterBoxVisible());

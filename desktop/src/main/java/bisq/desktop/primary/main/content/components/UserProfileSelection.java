@@ -223,9 +223,7 @@ public class UserProfileSelection {
                         if (newValue != null) {
                             ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
                             if (chatUserIdentity != null) {
-                                //todo temp use static image
-                                // imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
-                                imageView.setId("temp-robo-profile-icon");
+                                imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
                                 userNameLabel.setText(chatUserIdentity.getNickName());
                                 buttonPane.layout();
                                 //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
