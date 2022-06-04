@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.top;
 
-import bisq.common.currency.TradeCurrency;
 import bisq.common.currency.Market;
+import bisq.common.currency.TradeCurrency;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.oracle.marketprice.MarketPrice;
@@ -145,7 +145,7 @@ public class MarketPriceComponent {
 
             //todo adopt to AutoCompleteComboBox
             comboBox = new ComboBox<>(model.items);
-            comboBox.setMinWidth(200);
+            //comboBox.setMinWidth(200);
             comboBox.setVisibleRowCount(12);
             comboBox.setFocusTraversable(false);
             comboBox.setId("price-feed-combo");
@@ -170,11 +170,11 @@ public class MarketPriceComponent {
                         setStyle("-fx-background-color: -bisq-bg-dark");
                     }
                     if (item != null && !empty) {
-                        Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
+                        Label market = new Label(item.marketPrice.getMarket().getCurrencyCodes());
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 
-                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote(), true));
                         quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(8);
@@ -192,11 +192,11 @@ public class MarketPriceComponent {
                         setStyle("-fx-background-color: -bisq-bg-dark");
                     }
                     if (item != null && !empty) {
-                        Label market = new Label(item.marketPrice.getMarket().toString().toUpperCase());
+                        Label market = new Label(item.marketPrice.getMarket().getCurrencyCodes().toUpperCase());
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 
-                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote()));
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote(), true));
                         quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(13);
