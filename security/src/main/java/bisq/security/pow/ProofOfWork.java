@@ -32,22 +32,19 @@ public final class ProofOfWork implements Proto {
     private final double difficulty;
     private final long duration;
     private final byte[] solution;
-    private final int version;
 
     public ProofOfWork(byte[] payload,
                        long counter,
                        byte[] challenge,
                        double difficulty,
                        long duration,
-                       byte[] solution,
-                       int version) {
+                       byte[] solution) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.duration = duration;
         this.solution = solution;
-        this.version = version;
     }
 
 
@@ -64,7 +61,6 @@ public final class ProofOfWork implements Proto {
                 .setDifficulty(difficulty)
                 .setDuration(duration)
                 .setSolution(ByteString.copyFrom(solution))
-                .setVersion(version)
                 .build();
     }
 
@@ -75,8 +71,7 @@ public final class ProofOfWork implements Proto {
                 proto.getChallenge().toByteArray(),
                 proto.getDifficulty(),
                 proto.getDuration(),
-                proto.getSolution().toByteArray(),
-                proto.getVersion()
+                proto.getSolution().toByteArray()
         );
     }
 
@@ -86,7 +81,6 @@ public final class ProofOfWork implements Proto {
                 ",\r\n     counter=" + counter +
                 ",\r\n     difficulty=" + difficulty +
                 ",\r\n     duration=" + duration +
-                ",\r\n     version=" + version +
                 "\r\n}";
     }
 }

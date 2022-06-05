@@ -17,6 +17,7 @@
 
 package bisq.security.pow;
 
+import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
@@ -29,15 +30,13 @@ import java.util.concurrent.CompletableFuture;
 // Taken from: https://github.com/bisq-network/bisq
 @Slf4j
 public class EquihashProofOfWorkService extends ProofOfWorkService {
-    public static final int VERSION = 1;
-    
     /**
      * Rough cost of two Hashcash iterations compared to solving an Equihash-90-5 puzzle of unit difficulty.
      */
     private static final double DIFFICULTY_SCALE_FACTOR = 3.0e-5;
 
-    EquihashProofOfWorkService() {
-        super(VERSION);
+    public EquihashProofOfWorkService(PersistenceService persistenceService) {
+        super(persistenceService);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
             byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
             var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty,
-                    System.currentTimeMillis() - ts, solution, getVersion());
+                    System.currentTimeMillis() - ts, solution);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });

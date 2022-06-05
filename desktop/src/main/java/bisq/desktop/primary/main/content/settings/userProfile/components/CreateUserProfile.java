@@ -17,17 +17,19 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile.components;
 
-import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
+import bisq.security.SecurityService;
+import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.ProofOfWorkService;
 import bisq.social.chat.ChatService;
-import bisq.social.user.NymGenerator;
 import bisq.social.user.ChatUserService;
+import bisq.social.user.NymIdGenerator;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -45,15 +47,16 @@ import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
 import java.util.HashSet;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class CreateUserProfile {
     private final Controller controller;
 
-    public CreateUserProfile(ChatService chatService, ChatUserService chatUserService, KeyPairService keyPairService) {
-        controller = new Controller(chatService, chatUserService, keyPairService);
+    public CreateUserProfile(ChatService chatService, ChatUserService chatUserService, SecurityService securityService) {
+        controller = new Controller(chatService, chatUserService, securityService);
     }
 
     public Pane getRoot() {
@@ -69,11 +72,15 @@ public class CreateUserProfile {
         private final ChatUserService chatUserService;
         private final KeyPairService keyPairService;
         private final RoleSelection roleSelection;
+        private final ProofOfWorkService proofOfWorkService;
+        private final AtomicBoolean isMintNymProofOfWorkFutureCanceled = new AtomicBoolean();
+        private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
 
-        private Controller(ChatService chatService, ChatUserService chatUserService, KeyPairService keyPairService) {
+        private Controller(ChatService chatService, ChatUserService chatUserService, SecurityService securityService) {
             this.chatService = chatService;
             this.chatUserService = chatUserService;
-            this.keyPairService = keyPairService;
+            keyPairService = securityService.getKeyPairService();
+            proofOfWorkService = securityService.getProofOfWorkService();
             model = new Model();
             roleSelection = new RoleSelection(chatUserService);
 
@@ -84,9 +91,10 @@ public class CreateUserProfile {
         public void onActivate() {
             reset();
             model.feedback.set("");
+            isMintNymProofOfWorkFutureCanceled.set(false);
             onCreateIdentity();
 
-            model.createProfileButtonDisable.bind(EasyBind.combine(model.nickName, model.profileId, model.roboHashNode,
+            model.createProfileButtonDisable.bind(EasyBind.combine(model.nickName, model.nymId, model.roboHashImage,
                     (nickName, profileId, roboHashNode) -> nickName == null || nickName.isEmpty() ||
                             profileId == null || profileId.isEmpty() ||
                             roboHashNode == null));
@@ -95,43 +103,66 @@ public class CreateUserProfile {
         @Override
         public void onDeactivate() {
             model.createProfileButtonDisable.unbind();
+
+            // Does only cancel downstream calls not actual running task
+            // We pass the isCanceled flag to stop the running task
+            mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
+            isMintNymProofOfWorkFutureCanceled.set(true);
         }
 
         private void onCreateUserProfile() {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
-            String profileId = model.profileId.get();
+            String profileId = model.nymId.get();
             chatUserService.createNewInitializedUserProfile(profileId,
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
+                            model.proofOfWork,
                             new HashSet<>(),
                             new HashSet<>(roleSelection.getVerifiedEntitlements()))
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
-                            checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                             reset();
-                            //model.feedback.set(Res.get("social.createUserProfile.success", profileId));
                         });
                     });
         }
 
         private void onCreateIdentity() {
-            model.tempKeyId = StringUtils.createUid();
-            model.tempKeyPair = keyPairService.generateKeyPair();
-            byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(hash)));
-            model.profileId.set(NymGenerator.fromHash(hash));
+            KeyPair tempKeyPair = keyPairService.generateKeyPair();
+            byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
+            model.roboHashImage.set(null);
+            model.roboHashIconVisible.set(false);
+            model.createProfileButtonDisable.set(true);
+            model.powProgress.set(-1);
+            model.nymId.set(Res.get("initNymProfile.nymId.generating"));
+            long ts = System.currentTimeMillis();
+            mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash, isMintNymProofOfWorkFutureCanceled)
+                    .thenAccept(proofOfWork -> {
+                        UIThread.run(() -> {
+                            log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);
+                            model.proofOfWork = proofOfWork;
+                            model.tempKeyId = StringUtils.createUid();
+                            model.tempKeyPair = tempKeyPair;
+
+                            model.roboHashImage.set(RoboHash.getImage(proofOfWork));
+                            model.nymId.set(NymIdGenerator.fromProofOfWork(proofOfWork));
+
+                            model.powProgress.set(0);
+                            model.roboHashIconVisible.set(true);
+                            model.createProfileButtonDisable.set(model.nickName.get() == null || model.nickName.get().isEmpty());
+                        });
+                    }));
         }
 
         private void reset() {
             model.nickName.set("");
-            model.profileId.set("");
+            model.nymId.set("");
             model.generateNewIdentityButtonDisable.set(false);
             model.entitlementSelectionVisible.set(false);
             model.tempKeyId = null;
             model.tempKeyPair = null;
-            model.roboHashNode.set(null);
+            model.roboHashImage.set(null);
             roleSelection.reset();
         }
 
@@ -142,14 +173,16 @@ public class CreateUserProfile {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
+        final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
         final StringProperty feedback = new SimpleStringProperty();
         final StringProperty nickName = new SimpleStringProperty();
-        final StringProperty profileId = new SimpleStringProperty();
+        final StringProperty nymId = new SimpleStringProperty();
         final BooleanProperty generateNewIdentityButtonDisable = new SimpleBooleanProperty();
         final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
-        private final BooleanProperty entitlementSelectionVisible = new SimpleBooleanProperty();
-
+        final BooleanProperty entitlementSelectionVisible = new SimpleBooleanProperty();
+        final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
+        final DoubleProperty powProgress = new SimpleDoubleProperty();
+        ProofOfWork proofOfWork;
         KeyPair tempKeyPair = null;
         String tempKeyId;
 
@@ -220,13 +253,13 @@ public class CreateUserProfile {
             entitlementButton.managedProperty().bind(model.entitlementSelectionVisible.not());
             createUserButton.disableProperty().bind(model.createProfileButtonDisable);
             nickNameInputField.textProperty().bindBidirectional(model.nickName);
-            profileIdInputField.textProperty().bindBidirectional(model.profileId);
+            profileIdInputField.textProperty().bindBidirectional(model.nymId);
             feedbackLabel.textProperty().bind(model.feedback);
 
             generateNewIdentityButton.setOnAction(e -> controller.onCreateIdentity());
             createUserButton.setOnAction(e -> controller.onCreateUserProfile());
 
-            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
+            roboHashNodeSubscription = EasyBind.subscribe(model.roboHashImage, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
                 }
@@ -242,7 +275,7 @@ public class CreateUserProfile {
             entitlementButton.managedProperty().unbind();
             createUserButton.disableProperty().unbind();
             nickNameInputField.textProperty().unbindBidirectional(model.nickName);
-            profileIdInputField.textProperty().unbindBidirectional(model.profileId);
+            profileIdInputField.textProperty().unbindBidirectional(model.nymId);
             feedbackLabel.textProperty().unbind();
 
             generateNewIdentityButton.setOnAction(null);

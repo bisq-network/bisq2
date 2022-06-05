@@ -29,17 +29,15 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, InitNymProfileController> {
     private final Button regenerateButton;
     private final Button nextButton;
     private final TextInputBox nicknameTextInputBox;
-    private final Label  profileIdValue;
+    private final Label nymId;
     private final ImageView roboIconView;
-    private Subscription roboHashNodeSubscription;
+    private final ProgressIndicator powProgressIndicator;
 
     public InitNymProfileView(InitNymProfileModel model, InitNymProfileController controller) {
         super(new ScrollPane(), model, controller);
@@ -60,18 +58,23 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
 
         Label subtitleLabel = new Label(Res.get("initNymProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setMaxWidth(280);
+        subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
 
         roboIconView = new ImageView();
         roboIconView.setCursor(Cursor.HAND);
-        roboIconView.setFitWidth(128);
-        roboIconView.setFitHeight(128);
+        int size = 128;
+        roboIconView.setFitWidth(size);
+        roboIconView.setFitHeight(size);
 
-        VBox profileIdBox = getValueBox(Res.get("initNymProfile.profileId"), "bisq-text-1");
+        powProgressIndicator = new ProgressIndicator();
+        powProgressIndicator.setMinSize(size, size);
+        powProgressIndicator.setOpacity(0.5);
+
+        VBox profileIdBox = getValueBox(Res.get("initNymProfile.nymId"));
         VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
-        profileIdValue = (Label) profileIdBox.getChildren().get(1);
+        nymId = (Label) profileIdBox.getChildren().get(1);
 
         regenerateButton = new Button(Res.get("initNymProfile.regenerate"));
         regenerateButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3", "text-underline");
@@ -91,6 +94,7 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         vBox.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
+                powProgressIndicator,
                 roboIconView,
                 profileIdBox,
                 regenerateButton,
@@ -103,7 +107,8 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
     protected void onViewAttached() {
         nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
         nicknameTextInputBox.requestFocus();
-        profileIdValue.textProperty().bind(model.profileId);
+        
+        nymId.textProperty().bind(model.nymId);
         nextButton.graphicProperty().bind(Bindings.createObjectBinding(() -> {
             if (!model.isBusy.get()) {
                 return null;
@@ -116,9 +121,18 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         }, model.isBusy));
         nextButton.disableProperty().bind(model.createProfileButtonDisable);
 
+       
+        roboIconView.imageProperty().bind(model.roboHashImage);
+        roboIconView.managedProperty().bind(model.roboHashIconVisible);
+        roboIconView.visibleProperty().bind(model.roboHashIconVisible);
+        powProgressIndicator.managedProperty().bind(model.roboHashIconVisible.not());
+        powProgressIndicator.visibleProperty().bind(model.roboHashIconVisible.not());
+        powProgressIndicator.progressProperty().bind(model.powProgress);
+        regenerateButton.disableProperty().bind(model.roboHashIconVisible.not());
+        nymId.disableProperty().bind(model.roboHashIconVisible.not());
+        
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
         nextButton.setOnAction(e -> controller.onCreateNymProfile());
-        roboHashNodeSubscription = EasyBind.subscribe(model.roboHashImage, roboIconView::setImage);
     }
 
     @Override
@@ -126,17 +140,25 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
         nextButton.graphicProperty().unbind();
         nextButton.disableProperty().unbind();
-        roboIconView.setOnMousePressed(null);
+        roboIconView.imageProperty().unbind();
+        roboIconView.managedProperty().unbind();
+        roboIconView.visibleProperty().unbind();
+        powProgressIndicator.managedProperty().unbind();
+        powProgressIndicator.visibleProperty().unbind();
+        powProgressIndicator.progressProperty().unbind();
+        regenerateButton.disableProperty().unbind();
+        nymId.disableProperty().unbind();
+        
+        regenerateButton.setOnAction(null);
         nextButton.setOnAction(null);
-        roboHashNodeSubscription.unsubscribe();
     }
 
-    private VBox getValueBox(String title, String valueClass) {
+    private VBox getValueBox(String title) {
         Label titleLabel = new Label(title.toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
         Label valueLabel = new Label();
-        valueLabel.getStyleClass().add(valueClass);
+        valueLabel.getStyleClass().add("bisq-text-1");
 
         VBox box = new VBox(titleLabel, valueLabel);
         box.setAlignment(Pos.CENTER);

@@ -27,6 +27,7 @@ message Identity {
   string domainId = 1;
   network.NetworkId networkId = 2;
   security.KeyPair keyPair = 3;
+  security.ProofOfWork proofOfWork= 4;
 }
 
 message IdentityStore {

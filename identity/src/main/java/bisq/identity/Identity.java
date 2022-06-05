@@ -22,22 +22,27 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
+import bisq.security.pow.ProofOfWork;
 
 import java.security.KeyPair;
 
-public record Identity(String domainId, NetworkId networkId, KeyPair keyPair) implements Proto {
+public record Identity(String domainId, NetworkId networkId, KeyPair keyPair,
+                       ProofOfWork proofOfWork) implements Proto {
+    @Override
     public bisq.identity.protobuf.Identity toProto() {
         return bisq.identity.protobuf.Identity.newBuilder()
                 .setDomainId(domainId)
                 .setNetworkId(networkId.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
+                .setProofOfWork(proofOfWork.toProto())
                 .build();
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()),
+                ProofOfWork.fromProto(proto.getProofOfWork()));
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {

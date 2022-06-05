@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.newProfilePopup.selectUserType;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.social.user.ChatUserIdentity;
@@ -38,7 +37,7 @@ public class SelectUserTypeController implements Controller {
         this.navigationHandler = navigationHandler;
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
-        model = new SelectUserTypeModel(profileId, RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+        model = new SelectUserTypeModel(profileId, RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork()));
         view = new SelectUserTypeView(model, this);
     }
 

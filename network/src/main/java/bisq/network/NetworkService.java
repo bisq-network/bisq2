@@ -95,7 +95,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         }
     }
 
-    public static record Config(String baseDir,
+    public record Config(String baseDir,
                                 Transport.Config transportConfig,
                                 Set<Transport.Type> supportedTransportTypes,
                                 ServiceNode.Config serviceNodeConfig,

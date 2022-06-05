@@ -31,7 +31,7 @@ public class BridgeApplicationService extends NetworkApplicationService {
 
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
         identityService = new IdentityService(getPersistenceService(),
-                getSecurityService().getKeyPairService(),
+                getSecurityService(),
                 networkService,
                 identityServiceConfig);
 

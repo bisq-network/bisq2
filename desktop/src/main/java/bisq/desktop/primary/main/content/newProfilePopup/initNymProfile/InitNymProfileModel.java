@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.newProfilePopup.initNymProfile;
 
 import bisq.desktop.common.view.Model;
+import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -27,10 +28,13 @@ import java.security.KeyPair;
 @Getter
 public class InitNymProfileModel implements Model {
     final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
-    final StringProperty profileId = new SimpleStringProperty();
+    final StringProperty nymId = new SimpleStringProperty();
     final StringProperty nickName = new SimpleStringProperty();
     final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
     final BooleanProperty isBusy = new SimpleBooleanProperty();
+    final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
+    final DoubleProperty powProgress = new SimpleDoubleProperty();
+    ProofOfWork proofOfWork;
     KeyPair tempKeyPair = null;
     String tempKeyId;
 }

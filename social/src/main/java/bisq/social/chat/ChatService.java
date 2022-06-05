@@ -35,6 +35,10 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
+import bisq.security.SecurityService;
+import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.ProofOfWorkService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
@@ -64,13 +68,16 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     private final PersistenceService persistenceService;
     private final IdentityService identityService;
     private final NetworkService networkService;
+    private final ProofOfWorkService proofOfWorkService;
 
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
+                       SecurityService securityService,
                        NetworkService networkService,
                        ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
+        proofOfWorkService = securityService.getProofOfWorkService();
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.chatUserService = chatUserService;
@@ -354,6 +361,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         chatUserIdentity.getChatUser().getId()))
                 .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
                             ChatUser chatUser = new ChatUser(chatUserIdentity.getChatUser().getNickName(),
+                                    chatUserIdentity.getIdentity().proofOfWork(),
                                     chatUserIdentity.getIdentity().networkId(),
                                     chatUserIdentity.getChatUser().getReputation(),
                                     chatUserIdentity.getChatUser().getRoles());
@@ -429,7 +437,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ObservableSet<PublicDiscussionChannel> getPublicDiscussionChannels() {
         return persistableStore.getPublicDiscussionChannels();
     }
-    
+
     public Collection<? extends Channel> getMentionableChannels() {
         // TODO: implement logic
         return getPublicDiscussionChannels();
@@ -599,7 +607,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         // Dummy admin
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
-        String channelAdminId = new ChatUser("Admin", channelAdminIdentity.networkId()).getId();
+
+        byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
+        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MIN_DIFFICULTY).join();
+        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId()).getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",

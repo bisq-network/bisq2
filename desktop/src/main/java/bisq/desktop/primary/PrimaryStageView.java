@@ -122,9 +122,9 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.SPLASH);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
+               // Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE);
+              //  Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {

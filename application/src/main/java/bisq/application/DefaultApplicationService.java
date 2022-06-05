@@ -127,7 +127,7 @@ public class DefaultApplicationService extends ServiceProvider {
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
-        identityService = new IdentityService(persistenceService, keyPairService, networkService, identityServiceConfig);
+        identityService = new IdentityService(persistenceService, securityService, networkService, identityServiceConfig);
 
         accountService = new AccountService(persistenceService);
         accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
@@ -136,7 +136,7 @@ public class DefaultApplicationService extends ServiceProvider {
         ChatUserService.Config userProfileServiceConfig = ChatUserService.Config.from(getConfig("bisq.userProfileServiceConfig"));
         chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
         reputationService = new ReputationService(persistenceService, networkService, chatUserService);
-        chatService = new ChatService(persistenceService, identityService, networkService, chatUserService);
+        chatService = new ChatService(persistenceService, identityService, securityService, networkService, chatUserService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
 
         // add data use case is not available yet at networkService

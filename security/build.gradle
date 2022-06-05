@@ -8,4 +8,5 @@ dependencies {
 
     implementation libs.google.guava
     implementation libs.bouncycastle
+    implementation libs.typesafe.config
 }

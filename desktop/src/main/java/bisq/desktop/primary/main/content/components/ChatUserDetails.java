@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
@@ -96,7 +95,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork()));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());

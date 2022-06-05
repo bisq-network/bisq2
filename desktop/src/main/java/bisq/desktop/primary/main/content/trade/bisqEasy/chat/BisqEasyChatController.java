@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
@@ -79,7 +78,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateTradeChannel.getPeer().getPubKeyHash())));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(privateTradeChannel.getPeer().getProofOfWork()));
             model.getPeersRoboIconVisible().set(true);
             publicTradeChannelSelection.deSelectChannel();
         } else {

@@ -21,6 +21,7 @@ import bisq.common.application.DevMode;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.LogSetup;
 import bisq.i18n.Res;
+import ch.qos.logback.classic.Level;
 
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -28,6 +29,7 @@ import java.util.Locale;
 public class ApplicationSetup {
     static void initialize(ApplicationConfig applicationConfig) {
         LogSetup.setup(Paths.get(applicationConfig.baseDir(), "bisq").toString());
+        LogSetup.setLevel(Level.INFO);
 
         Locale locale = applicationConfig.getLocale();
         LocaleRepository.initialize(locale);

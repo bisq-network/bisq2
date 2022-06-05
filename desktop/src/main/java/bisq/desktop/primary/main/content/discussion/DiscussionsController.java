@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
@@ -79,7 +78,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(new ByteArray(privateDiscussionChannel.getPeer().getPubKeyHash())));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(privateDiscussionChannel.getPeer().getProofOfWork()));
             model.getPeersRoboIconVisible().set(true);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {

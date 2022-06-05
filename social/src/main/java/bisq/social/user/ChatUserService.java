@@ -37,6 +37,7 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
+import bisq.security.pow.ProofOfWork;
 import bisq.social.user.role.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
@@ -111,19 +112,21 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
                                                                                String nickName,
                                                                                String keyId,
-                                                                               KeyPair keyPair) {
-        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, new HashSet<>(), new HashSet<>());
+                                                                               KeyPair keyPair,
+                                                                               ProofOfWork proofOfWork) {
+        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, new HashSet<>(), new HashSet<>());
     }
 
     public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
                                                                                String nickName,
                                                                                String keyId,
                                                                                KeyPair keyPair,
+                                                                               ProofOfWork proofOfWork,
                                                                                Set<Reputation> reputation,
                                                                                Set<Role> roles) {
-        return identityService.createNewInitializedIdentity(profileId, keyId, keyPair)
+        return identityService.createNewInitializedIdentity(profileId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
-                    ChatUser chatUser = new ChatUser(nickName, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
+                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().add(chatUserIdentity);
@@ -323,7 +326,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public ObservableSet<ChatUserIdentity> getUserProfiles() {
         return persistableStore.getChatUserIdentities();
     }
-    
+
     public Collection<ChatUser> getMentionableChatUsers() {
         // TODO: implement logic
         return getUserProfiles().stream().map(ChatUserIdentity::getChatUser).toList();

@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.data.ByteArray;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.robohash.RoboHash;
@@ -57,7 +56,7 @@ public class ChatUserIcon extends Pane {
     }
 
     public void setChatUser(ChatUser chatUser, ChatUserService chatUserService) {
-        roboIcon.setImage(RoboHash.getImage(new ByteArray(chatUser.getPubKeyHash())));
+        roboIcon.setImage(RoboHash.getImage(chatUser.getProofOfWork()));
 
         if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");

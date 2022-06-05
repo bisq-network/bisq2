@@ -20,6 +20,7 @@ package bisq.common.util;
 import com.google.common.primitives.Ints;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class ByteArrayUtils {
 
@@ -58,6 +59,10 @@ public class ByteArrayUtils {
         int destPos = Math.max(newLength - src.length, 0);
         System.arraycopy(src, srcPos, dest, destPos, newLength - destPos);
         return dest;
+    }
+
+    public static byte[] copyOf(byte[] src) {
+        return Arrays.copyOf(src, src.length);
     }
 
     public static byte[] intsToBytesBE(int[] ints) {

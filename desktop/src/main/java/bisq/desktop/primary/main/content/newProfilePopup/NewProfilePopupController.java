@@ -44,6 +44,7 @@ public class NewProfilePopupController implements Controller {
 
     @Override
     public void onActivate() {
+        model.currentStepProperty().set(0);
         stepSubscription = EasyBind.subscribe(model.currentStepProperty(),
                 stepAsNumber -> {
                     int step = (int) stepAsNumber;
