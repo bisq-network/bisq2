@@ -35,10 +35,6 @@
 
     /* Colors */
     -bisq-green: #56ae48;
-    -bisq-darker-green: #249131;
-    -bisq-dark-green: #2ea33c;
-    -bisq-logo-green: #25b135;
-    -bisq-darkest-green: derive(-bisq-logo-green, -50%);
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -417,7 +413,7 @@
 }
 
 .bisq-text-logo-green {
-    -fx-text-fill: -bisq-logo-green;
+    -fx-text-fill: -bisq-green;
 }
 
 .bisq-text-grey-9 {
@@ -432,7 +428,7 @@
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
-.font-semibold {
+.font-semi-bold {
     -fx-font-family: "IBM Plex Sans SemiBold";
 }
 
@@ -509,7 +505,7 @@
 
 .button:default,
 .default-button {
-    -fx-background-color: -bisq-dark-green;
+    -fx-background-color: -bisq-green;
 }
 
 .button:hover {
@@ -571,7 +567,7 @@
 
 /* Big green button */
 .bisq-big-green-button {
-    -fx-background-color: -bisq-darker-green;
+    -fx-background-color: -bisq-green;
     -fx-text-fill: -fx-light-text-color;
     -fx-padding: 17;
     -fx-font-size: 1.54em;
@@ -580,7 +576,7 @@
 }
 
 .bisq-big-green-button:hover {
-    -fx-background-color: -bisq-logo-green;
+    -fx-background-color: -bisq-green;
 }
 
 /* Big white button */
@@ -590,7 +586,7 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-effect: dropshadow(gaussian, -bisq-dark-green, 0, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, -bisq-green, 0, 0, 0, 2);
     -fx-cursor: hand;
 }
 
@@ -607,6 +603,28 @@
 
 .bisq-transparent-button:hover {
     -fx-background-color: rgba(255, 255, 255, .04);
+}
+
+.bisq-transparent-button:disabled {
+    -fx-text-fill: derive(-bisq-grey-9, -50%);
+}
+
+.bisq-text-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-underline: true;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.bisq-text-button:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-text-button:disabled {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-grey-9;
 }
 
 /* Bisq other buttons */
@@ -627,7 +645,7 @@
 }
 
 .bisq-button-1:selected:hover {
-    -fx-background-color: -bisq-dark-green;
+    -fx-background-color: -bisq-green;
 }
 
 /*******************************************************************************
@@ -741,7 +759,7 @@
     -fx-background-radius: 3px;
     -fx-background-insets: 0px;
 
-    -bisq-toggle-color: -bisq-dark-green;
+    -bisq-toggle-color: -bisq-green;
     -bisq-untoggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
     -bisq-untoggle-line-color: -bisq-grey-9;
@@ -1252,7 +1270,7 @@ tree-table-view:focused {
 }
 
 .bisq-green-line {
-    -fx-background-color: -bisq-logo-green;
+    -fx-background-color: -bisq-green;
 }
 
 .bisq-white-bg {

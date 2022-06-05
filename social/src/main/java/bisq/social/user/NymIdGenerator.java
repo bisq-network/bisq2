@@ -18,6 +18,7 @@
 package bisq.social.user;
 
 import bisq.common.util.FileUtils;
+import bisq.security.pow.ProofOfWork;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,11 +34,16 @@ import java.util.Scanner;
  * Algorithm and word lists borrowed from: https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/
  */
 @Slf4j
-public class NymGenerator {
+public class NymIdGenerator {
     private static final BigInteger MAX_INTEGER = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final String DEFAULT_SEPARATOR = "-";
 
-    public static String fromHash(byte[] hash) {
+    public static String fromProofOfWork(ProofOfWork proofOfWork) {
+        return fromHash(proofOfWork.getPayload());
+    }
+
+    @VisibleForTesting
+    static String fromHash(byte[] hash) {
         List<String> adverbs = read("/adverbs.txt");
         List<String> adjectives = read("/adjectives.txt");
         List<String> nouns = read("/nouns.txt");

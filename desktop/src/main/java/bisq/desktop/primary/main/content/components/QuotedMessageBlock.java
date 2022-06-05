@@ -17,11 +17,10 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.data.ByteArray;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
@@ -72,7 +71,7 @@ public class QuotedMessageBlock {
         if (text == null || text.isEmpty() || chatUser == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUser.getId(), chatUser.getNickName(), new ByteArray(chatUser.getPubKeyHash()), text));
+        return Optional.of(new Quotation(chatUser.getId(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -92,7 +91,7 @@ public class QuotedMessageBlock {
             chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getNym());
-                model.roboHashNode.set(RoboHash.getImage(new ByteArray(author.getPubKeyHash())));
+                model.roboHashNode.set(RoboHash.getImage(author.getProofOfWork()));
                 model.quotation.set(chatMessage.getText());
                 model.visible.set(true);
             });

@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -179,7 +178,7 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(new ByteArray(item.chatUserIdentity.getPubKeyHash())));
+                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().proofOfWork()));
                         label.setText(item.chatUserIdentity.getNickName());
                         setGraphic(hBox);
                     } else {
@@ -223,7 +222,7 @@ public class UserProfileSelection {
                         if (newValue != null) {
                             ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
                             if (chatUserIdentity != null) {
-                                imageView.setImage(RoboHash.getImage(new ByteArray(chatUserIdentity.getPubKeyHash())));
+                                imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork()));
                                 userNameLabel.setText(chatUserIdentity.getNickName());
                                 buttonPane.layout();
                                 //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));

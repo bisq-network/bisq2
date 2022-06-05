@@ -18,20 +18,25 @@
 package bisq.desktop.primary.main.content.newProfilePopup.initNymProfile;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
+import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.NymGenerator;
+import bisq.social.user.NymIdGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.security.KeyPair;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -44,11 +49,16 @@ public class InitNymProfileController implements Controller {
     private final ChatUserService chatUserService;
     private final Consumer<Boolean> navigationHandler;
     private final KeyPairService keyPairService;
+    private final ProofOfWorkService proofOfWorkService;
     private Subscription nickNameSubscription;
+    private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
+    private final AtomicBoolean isMintNymProofOfWorkFutureCanceled = new AtomicBoolean();
 
     public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
         keyPairService = applicationService.getKeyPairService();
+        proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         chatUserService = applicationService.getChatUserService();
+
         this.navigationHandler = navigationHandler;
 
         model = new InitNymProfileModel();
@@ -57,34 +67,64 @@ public class InitNymProfileController implements Controller {
 
     @Override
     public void onActivate() {
+        isMintNymProofOfWorkFutureCanceled.set(false);
         onCreateTempIdentity();
-        nickNameSubscription = EasyBind.subscribe(model.nickName, e -> model.createProfileButtonDisable.set(e == null || e.isEmpty()));
+
+        nickNameSubscription = EasyBind.subscribe(model.nickName,
+                nickName -> model.createProfileButtonDisable.set(nickName == null || nickName.isEmpty() || !model.roboHashIconVisible.get()));
     }
 
     @Override
     public void onDeactivate() {
         nickNameSubscription.unsubscribe();
+
+        // Does only cancel downstream calls not actual running task
+        // We pass the isCanceled flag to stop the running task
+        mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
+        isMintNymProofOfWorkFutureCanceled.set(true);
     }
 
     void onCreateNymProfile() {
-        model.createProfileButtonDisable.set(true);
-        String profileId = model.profileId.get();
-        chatUserService.createNewInitializedUserProfile(profileId,
-                        model.nickName.get(),
-                        model.tempKeyId,
-                        model.tempKeyPair)
-                .thenAccept(userProfile -> UIThread.run(() -> {
-                    checkArgument(userProfile.getIdentity().domainId().equals(profileId));
-                    model.createProfileButtonDisable.set(false);
-                    navigationHandler.accept(true);
-                }));
+        if (model.tempKeyPair != null) {
+            String profileId = model.nymId.get();
+            chatUserService.createNewInitializedUserProfile(profileId,
+                            model.nickName.get(),
+                            model.tempKeyId,
+                            model.tempKeyPair,
+                            model.proofOfWork)
+                    .thenAccept(userProfile -> UIThread.run(() -> {
+                        checkArgument(userProfile.getIdentity().domainId().equals(profileId));
+                        model.createProfileButtonDisable.set(false);
+                        navigationHandler.accept(true);
+                    }));
+        }
     }
 
     void onCreateTempIdentity() {
-        model.tempKeyId = StringUtils.createUid();
-        model.tempKeyPair = keyPairService.generateKeyPair();
-        byte[] hash = DigestUtil.hash(model.tempKeyPair.getPublic().getEncoded());
-        model.roboHashImage.set(RoboHash.getImage(new ByteArray(hash)));
-        model.profileId.set(NymGenerator.fromHash(hash));
+        KeyPair tempKeyPair = keyPairService.generateKeyPair();
+        byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
+        model.roboHashImage.set(null);
+        model.roboHashIconVisible.set(false);
+        model.createProfileButtonDisable.set(true);
+        model.powProgress.set(-1);
+        model.nymId.set(Res.get("initNymProfile.nymId.generating"));
+        long ts = System.currentTimeMillis();
+        mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash, isMintNymProofOfWorkFutureCanceled)
+                .thenAccept(proofOfWork -> {
+                    UIThread.run(() -> {
+                        log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);
+                        model.proofOfWork = proofOfWork;
+                        model.tempKeyId = StringUtils.createUid();
+                        model.tempKeyPair = tempKeyPair;
+
+                        model.roboHashImage.set(RoboHash.getImage(proofOfWork));
+                        model.nymId.set(NymIdGenerator.fromProofOfWork(proofOfWork));
+
+                        model.powProgress.set(0);
+                        model.roboHashIconVisible.set(true);
+                        model.createProfileButtonDisable.set(model.nickName.get() == null || model.nickName.get().isEmpty());
+                        //  boolean result = proofOfWorkService.verify(proofOfWork, itemId, ownerId, difficulty);
+                    });
+                }));
     }
 }

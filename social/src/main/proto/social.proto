@@ -57,7 +57,7 @@ message Role {
     CHANNEL_MODERATOR = 1;
     MEDIATOR = 2;
   }
- 
+
   string type = 1;
   Proof proof = 2;
 }
@@ -79,9 +79,10 @@ message Reputation {
 message ChatUser {
   string nickName = 1;
   network.NetworkId networkId = 2;
-  repeated Reputation reputation = 3;
-  repeated Role roles = 4;
-  network.MetaData metaData = 5;
+  security.ProofOfWork proofOfWork = 3;
+  repeated Reputation reputation = 4;
+  repeated Role roles = 5;
+  network.MetaData metaData = 6;
 }
 
 message ChatUserIdentity {
@@ -92,7 +93,7 @@ message ChatUserIdentity {
 message Quotation {
   string nym = 1;
   string nickName = 2;
-  common.ByteArray pubKeyHash = 3;
+  security.ProofOfWork proofOfWork = 3;
   string message = 4;
 }
 

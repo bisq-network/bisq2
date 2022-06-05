@@ -2,13 +2,13 @@ package bisq.desktop.components.robohash;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.security.pow.ProofOfWork;
 import javafx.scene.image.Image;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
-//todo use equihash
 // Derived from https://github.com/neuhalje/android-robohash
 // Number of combinations: 3 * 15 * 15 * 15 * 15 * 15 * 15  = 34171875 (2 ^ 25)
 @Slf4j
@@ -17,11 +17,15 @@ public class RoboHash {
     private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
-    public static Image getImage(ByteArray pubKeyHash) {
-        return getImage(pubKeyHash, true);
+    public static Image getImage(ProofOfWork proofOfWork) {
+        return getImage(proofOfWork, true);
     }
 
-    public static Image getImage(ByteArray pubKeyHash, boolean useCache) {
+    public static Image getImage(ProofOfWork proofOfWork, boolean useCache) {
+        return getImage(new ByteArray(proofOfWork.getPayload()), useCache);
+    }
+
+    private static Image getImage(ByteArray pubKeyHash, boolean useCache) {
         if (useCache && CACHE.containsKey(pubKeyHash)) {
             return CACHE.get(pubKeyHash);
         }

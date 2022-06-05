@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile.components;
 
-import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
@@ -73,7 +72,7 @@ public class UserProfileDisplay {
                         String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
                         model.entitlementsVisible.set(!userProfile.getChatUser().getRoles().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(new ByteArray(userProfile.getChatUser().getPubKeyHash())));
+                        model.roboHashNode.set(RoboHash.getImage(userProfile.getChatUser().getProofOfWork()));
                     });
         }
 

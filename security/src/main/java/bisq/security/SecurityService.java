@@ -18,6 +18,8 @@
 package bisq.security;
 
 import bisq.persistence.PersistenceService;
+import bisq.security.pow.EquihashProofOfWorkService;
+import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,13 +29,17 @@ import java.util.concurrent.CompletableFuture;
 public class SecurityService {
     @Getter
     private final KeyPairService keyPairService;
+    @Getter
+    private final ProofOfWorkService proofOfWorkService;
 
     public SecurityService(PersistenceService persistenceService) {
         keyPairService = new KeyPairService(persistenceService);
+       proofOfWorkService = new EquihashProofOfWorkService(persistenceService);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        proofOfWorkService.initialize();
         return keyPairService.initialize();
     }
 }

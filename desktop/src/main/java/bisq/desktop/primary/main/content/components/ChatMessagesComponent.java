@@ -594,8 +594,8 @@ public class ChatMessagesComponent {
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, messageContainer, reactionsBox, editControlsBox, quotedMessageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(42);
-                        Subscription widthSubscription;
-//                        final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+                        private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
+                        private Subscription widthSubscription;
 
                         {
                             userNameLabel.setId("chat-user-name");
@@ -689,7 +689,7 @@ public class ChatMessagesComponent {
                             AnchorPane.setBottomAnchor(editControlsBox, 0.0);
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
 
-                            VBox vBox = new VBox(0, new HBox(5, userNameLabel, dateTime), pane);
+                            VBox vBox = new VBox(0, new HBox(5, userNameLabel, dateTime, Spacer.width(20), reputationScoreDisplay), pane);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = Layout.hBoxWith(chatUserIcon, vBox);
                         }
@@ -712,7 +712,7 @@ public class ChatMessagesComponent {
                                     Quotation quotation = optionalQuotation.get();
                                     if (quotation.nickName() != null &&
                                             quotation.nym() != null &&
-                                            quotation.pubKeyHash() != null &&
+                                            quotation.proofOfWork() != null &&
                                             quotation.message() != null) {
                                         Region verticalLine = new Region();
                                         verticalLine.setStyle("-fx-background-color: -bisq-grey-9");
@@ -730,7 +730,7 @@ public class ChatMessagesComponent {
                                         ImageView roboIconImageView = new ImageView();
                                         roboIconImageView.setFitWidth(25);
                                         roboIconImageView.setFitHeight(25);
-                                        Image image = RoboHash.getImage(quotation.pubKeyHash());
+                                        Image image = RoboHash.getImage(quotation.proofOfWork());
                                         roboIconImageView.setImage(image);
 
                                         HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
@@ -788,7 +788,7 @@ public class ChatMessagesComponent {
                                     chatUserIcon.setChatUser(author, model.getChatUserService());
                                     Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
 
-//                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
+                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
                                 });
 
                                 setOnMouseEntered(e -> {

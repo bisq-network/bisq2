@@ -30,7 +30,7 @@ import java.security.PublicKey;
  */
 public class KeyPairProtoUtil {
     public static bisq.security.protobuf.KeyPair toProto(java.security.KeyPair keyPair) {
-        return KeyPair.newBuilder()
+        return bisq.security.protobuf.KeyPair.newBuilder()
                 .setPrivateKey(ByteString.copyFrom(keyPair.getPrivate().getEncoded()))
                 .setPublicKey(ByteString.copyFrom(keyPair.getPublic().getEncoded()))
                 .build();

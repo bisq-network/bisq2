@@ -17,7 +17,10 @@
 
 package bisq.common.util;
 
+import com.google.common.primitives.Ints;
+
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class ByteArrayUtils {
 
@@ -48,5 +51,37 @@ public class ByteArrayUtils {
             result = result << 8 | aByte & 0xff;
         }
         return result;
+    }
+
+    public static byte[] copyRightAligned(byte[] src, int newLength) {
+        byte[] dest = new byte[newLength];
+        int srcPos = Math.max(src.length - newLength, 0);
+        int destPos = Math.max(newLength - src.length, 0);
+        System.arraycopy(src, srcPos, dest, destPos, newLength - destPos);
+        return dest;
+    }
+
+    public static byte[] copyOf(byte[] src) {
+        return Arrays.copyOf(src, src.length);
+    }
+
+    public static byte[] intsToBytesBE(int[] ints) {
+        byte[] bytes = new byte[ints.length * 4];
+        int i = 0;
+        for (int v : ints) {
+            bytes[i++] = (byte) (v >> 24);
+            bytes[i++] = (byte) (v >> 16);
+            bytes[i++] = (byte) (v >> 8);
+            bytes[i++] = (byte) v;
+        }
+        return bytes;
+    }
+
+    public static int[] bytesToIntsBE(byte[] bytes) {
+        int[] ints = new int[bytes.length / 4];
+        for (int i = 0, j = 0; i < bytes.length / 4; i++) {
+            ints[i] = Ints.fromBytes(bytes[j++], bytes[j++], bytes[j++], bytes[j++]);
+        }
+        return ints;
     }
 }

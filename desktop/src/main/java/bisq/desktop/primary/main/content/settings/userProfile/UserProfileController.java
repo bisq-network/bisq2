@@ -50,7 +50,7 @@ public class UserProfileController implements Controller {
         chatUserService = applicationService.getChatUserService();
         userProfileSelection = new UserProfileSelectionAtSettings(chatUserService);
         userProfileDisplay = new UserProfileDisplay(chatUserService);
-        createUserProfile = new CreateUserProfile(chatService, chatUserService, applicationService.getKeyPairService());
+        createUserProfile = new CreateUserProfile(chatService, chatUserService, applicationService.getSecurityService());
         channelAdmin = new ChannelAdmin(chatUserService, applicationService.getChatService());
         model = new UserProfileModel(applicationService);
         view = new UserProfileView(model,

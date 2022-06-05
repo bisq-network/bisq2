@@ -509,7 +509,6 @@ public class Transitions {
     }
 
     public static void animateTabButtonMarks(Region node, double targetWidth, double targetX) {
-        log.error("animateTabButtonMarks {} {} ",targetWidth, targetX);
         if (displaySettings.isUseAnimations()) {
             double startWidth = node.getWidth();
             double startX = node.getLayoutX();

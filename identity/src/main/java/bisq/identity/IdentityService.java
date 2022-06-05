@@ -24,8 +24,12 @@ import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
+import bisq.security.SecurityService;
+import bisq.security.pow.ProofOfWork;
+import bisq.security.pow.ProofOfWorkService;
 import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +49,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
-    public static record Config(int minPoolSize) {
+    public record Config(int minPoolSize) {
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             return new Config(typeSafeConfig.getInt("minPoolSize"));
         }
@@ -56,15 +60,17 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     @Getter
     private final Persistence<IdentityStore> persistence;
     private final KeyPairService keyPairService;
+    private final ProofOfWorkService proofOfWorkService;
     private final NetworkService networkService;
     private final Object lock = new Object();
 
     public IdentityService(PersistenceService persistenceService,
-                           KeyPairService keyPairService,
+                           SecurityService securityService,
                            NetworkService networkService,
                            Config config) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.keyPairService = keyPairService;
+        keyPairService = securityService.getKeyPairService();
+        proofOfWorkService = securityService.getProofOfWorkService();
         this.networkService = networkService;
         minPoolSize = config.minPoolSize;
     }
@@ -153,13 +159,16 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         }
     }
 
-    public CompletableFuture<Identity> createNewInitializedIdentity(String profileId, String keyId, KeyPair keyPair) {
+    public CompletableFuture<Identity> createNewInitializedIdentity(String profileId,
+                                                                    String keyId,
+                                                                    KeyPair keyPair,
+                                                                    ProofOfWork proofOfWork) {
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
-                    Identity identity = new Identity(profileId, networkId, keyPair);
+                    Identity identity = new Identity(profileId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {
                         persistableStore.getPool().add(identity);
                         persistableStore.getActiveIdentityByDomainId().put(profileId, identity);
@@ -185,7 +194,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                     .map(pooledIdentity -> {
                         Identity clonedIdentity;
                         synchronized (lock) {
-                            clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair());
+                            clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair(), pooledIdentity.proofOfWork());
                             persistableStore.getPool().remove(pooledIdentity);
                             persistableStore.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
                         }
@@ -283,7 +292,9 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
-                .thenApply(networkId -> new Identity(domainId, networkId, keyPair));
+
+        return proofOfWorkService.mintNymProofOfWork(DigestUtil.hash(keyPair.getPublic().getEncoded()), ProofOfWorkService.MIN_DIFFICULTY)
+                .thenCompose(proofOfWork -> networkService.getInitializedNetworkId(nodeId, pubKey)
+                        .thenApply(networkId -> new Identity(domainId, networkId, keyPair, proofOfWork)));
     }
 }
