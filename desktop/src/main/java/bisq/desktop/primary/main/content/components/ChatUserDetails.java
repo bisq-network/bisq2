@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -92,8 +91,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
-            model.burnScore.set(chatUser.getBurnScoreAsString());
-            model.accountAge.set(chatUser.getAccountAgeAsString());
+            model.reputationScore.set(chatUser.getBurnScoreAsString());
+            model.profileAge.set(chatUser.getAccountAgeAsString());
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
@@ -137,8 +136,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
         private final StringProperty bio = new SimpleStringProperty();
-        private final StringProperty burnScore = new SimpleStringProperty();
-        private final StringProperty accountAge = new SimpleStringProperty();
+        private final StringProperty reputationScore = new SimpleStringProperty();
+        private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         private final StringProperty entitlements = new SimpleStringProperty();
 
@@ -151,7 +150,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nym, nickName, bio, burnScore, accountAge;
+        private final Label nym, nickName, bio, reputationScore, profileAge, optionsLabel;
         private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
         private Subscription roboHashNodeSubscription;
 
@@ -164,49 +163,59 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             root.setAlignment(Pos.TOP_CENTER);
 
             nickName = new Label();
-            nickName.getStyleClass().addAll("bisq-text-9", "font-semibold");
+            nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
             nickName.setAlignment(Pos.CENTER);
             nickName.setMaxWidth(200);
             nickName.setMinWidth(200);
             VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
             roboIconImageView = new ImageView();
-            roboIconImageView.setFitWidth(200);
-            roboIconImageView.setFitHeight(200);
-            
+            roboIconImageView.setFitWidth(100);
+            roboIconImageView.setFitHeight(100);
+
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
             nym.setMaxWidth(200);
             nym.setMinWidth(200);
-            VBox.setMargin(nym, new Insets(5, 0, 20, 0));
+            VBox.setMargin(nym, new Insets(0, 0, 24, 0));
 
+            privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
+            privateMsgButton.setDefaultButton(true);
+            VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
             VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);
             bio = (Label) bioBox.getChildren().get(1);
 
-            VBox burnScoreBox = getInfoBox(Res.get("social.chatUser.burnScore"), false);
-            burnScore = (Label) burnScoreBox.getChildren().get(1);
+            VBox reputationScoreBox = getInfoBox(Res.get("social.chatUser.reputationScore"), false);
+            reputationScore = (Label) reputationScoreBox.getChildren().get(1);
 
-            VBox accountAgeBox = getInfoBox(Res.get("social.chatUser.accountAge"), false);
-            accountAge = (Label) accountAgeBox.getChildren().get(1);
+            VBox profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"), false);
+            profileAge = (Label) profileAgeBox.getChildren().get(1);
+
+            optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
+            optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
+
+            mentionButton = new Button(Res.get("social.mention"));
+            ignoreButton = new Button(Res.get("social.ignore"));
+            reportButton = new Button(Res.get("social.report"));
+            mentionButton.getStyleClass().add("bisq-text-button");
+            ignoreButton.getStyleClass().add("bisq-text-button");
+            reportButton.getStyleClass().add("bisq-text-button");
+            VBox optionsBox = new VBox(5, optionsLabel, mentionButton, ignoreButton, reportButton);
+            optionsBox.setAlignment(Pos.CENTER_LEFT);
+             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
+
+            Region separator = Layout.separator();
+            VBox.setMargin(separator, new Insets(24, -45, 15, -55));
 
             VBox chatRulesBox = getInfoBox(Res.get("social.chat.chatRules.headline"), true);
             Label chatRules = (Label) chatRulesBox.getChildren().get(1);
             chatRules.setText(Res.get("social.chat.chatRules.content"));
 
-
-            privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
-            mentionButton = new Button(Res.get("social.mention"));
-            ignoreButton = new Button(Res.get("social.ignore"));
-            reportButton = new Button(Res.get("social.report"));
-
-            Region separator = Layout.separator();
-            VBox.setMargin(separator, new Insets(30, -45, 30, -55));
-
-            root.getChildren().addAll(nickName, roboIconImageView, nym, bioBox, burnScoreBox, accountAgeBox,
-                    Spacer.height(10), privateMsgButton, mentionButton, ignoreButton,
-                    reportButton, separator, chatRulesBox);
+            root.getChildren().addAll(nickName, roboIconImageView, nym, privateMsgButton,
+                    bioBox, reputationScoreBox, profileAgeBox,
+                    optionsBox, separator, chatRulesBox);
         }
 
         @Override
@@ -214,11 +223,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
             bio.textProperty().bind(model.bio);
-            burnScore.textProperty().bind(model.burnScore);
-            accountAge.textProperty().bind(model.accountAge);
-            mentionButton.minWidthProperty().bind(privateMsgButton.widthProperty());
-            ignoreButton.minWidthProperty().bind(privateMsgButton.widthProperty());
-            reportButton.minWidthProperty().bind(privateMsgButton.widthProperty());
+            reputationScore.textProperty().bind(model.reputationScore);
+            profileAge.textProperty().bind(model.profileAge);
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
@@ -237,11 +243,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().unbind();
             nickName.textProperty().unbind();
             bio.textProperty().unbind();
-            burnScore.textProperty().unbind();
-            accountAge.textProperty().unbind();
-            mentionButton.minWidthProperty().unbind();
-            ignoreButton.minWidthProperty().unbind();
-            reportButton.minWidthProperty().unbind();
+            reputationScore.textProperty().unbind();
+            profileAge.textProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 
@@ -253,11 +256,13 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
         private VBox getInfoBox(String title, boolean smaller) {
             Label titleLabel = new Label(title.toUpperCase());
-            titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semibold");
+            titleLabel.getStyleClass().addAll("bisq-text-4", "bisq-text-grey-9", "font-semi-bold");
             Label contentLabel = new Label();
+
             contentLabel.getStyleClass().addAll(smaller ? "bisq-text-7" : "bisq-text-6", "wrap-text");
-            VBox box = new VBox(5, titleLabel, contentLabel);
-            VBox.setMargin(box, new Insets(8, 0, 8, 0));
+            VBox box = new VBox(2, titleLabel, contentLabel);
+            VBox.setMargin(box, new Insets(2, 0, 0, 0));
+
             return box;
         }
     }
