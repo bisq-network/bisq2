@@ -101,12 +101,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof PrivateTradeChatMessage message) {
-            if (!isMyMessage(message)) {
+            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
                 getOrCreatePrivateTradeChannel(message)
                         .ifPresent(channel -> addPrivateTradeChatMessage(message, channel));
             }
         } else if (networkMessage instanceof PrivateDiscussionChatMessage message) {
-            if (!isMyMessage(message)) {
+            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
                 getOrCreatePrivateDiscussionChannel(message)
                         .ifPresent(channel -> addPrivateDiscussionChatMessage(message, channel));
             }
@@ -121,35 +121,42 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof ChatUser chatUser) {
+        if (distributedData instanceof ChatUser chatUser &&
+                hasAuthorValidProofOfWork(chatUser.getProofOfWork())) {
             // It might be that we received the chat message before the chat user. In that case the 
             // message would not be displayed. To avoid this situation we check if there are messages containing the 
             // new chat user and if so, we remove and later add the messages to trigger an update for the clients.
             Set<PublicDiscussionChatMessage> publicDiscussionChatMessages = getPublicDiscussionChannels().stream()
-                    .flatMap(c -> c.getChatMessages().stream())
-                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .flatMap(channel -> channel.getChatMessages().stream())
+                    .filter(message -> message.getAuthorId().equals(chatUser.getId()))
                     .collect(Collectors.toSet());
             Set<PublicTradeChatMessage> publicTradeChatMessages = getPublicTradeChannels().stream()
-                    .flatMap(c -> c.getChatMessages().stream())
-                    .filter(msg -> msg.getAuthorId().equals(chatUser.getId()))
+                    .flatMap(channel -> channel.getChatMessages().stream())
+                    .filter(message -> message.getAuthorId().equals(chatUser.getId()))
                     .collect(Collectors.toSet());
             // Remove chat messages containing that chatUser
-            publicDiscussionChatMessages.forEach(m ->
-                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> removePublicDiscussionChatMessage(m, c)));
-            publicTradeChatMessages.forEach(m ->
-                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> removePublicTradeChatMessage(m, c)));
+            publicDiscussionChatMessages.forEach(message ->
+                    findPublicDiscussionChannel(message.getChannelId())
+                            .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel)));
+            publicTradeChatMessages.forEach(message ->
+                    findPublicTradeChannel(message.getChannelId())
+                            .ifPresent(channel -> removePublicTradeChatMessage(message, channel)));
 
             addChatUser(chatUser);
 
             // Now we add them again
-            publicDiscussionChatMessages.forEach(m ->
-                    findPublicDiscussionChannel(m.getChannelId()).ifPresent(c -> addPublicDiscussionChatMessage(m, c)));
-            publicTradeChatMessages.forEach(m ->
-                    findPublicTradeChannel(m.getChannelId()).ifPresent(c -> addPublicTradeChatMessage(m, c)));
-        } else if (distributedData instanceof PublicTradeChatMessage message) {
+            publicDiscussionChatMessages.forEach(message ->
+                    findPublicDiscussionChannel(message.getChannelId())
+                            .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel)));
+            publicTradeChatMessages.forEach(message ->
+                    findPublicTradeChannel(message.getChannelId())
+                            .ifPresent(channel -> addPublicTradeChatMessage(message, channel)));
+        } else if (distributedData instanceof PublicTradeChatMessage message &&
+                isValidProofOfWorkOrChatUserNotFound(message)) {
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
-        } else if (distributedData instanceof PublicDiscussionChatMessage message) {
+        } else if (distributedData instanceof PublicDiscussionChatMessage message &&
+                isValidProofOfWorkOrChatUserNotFound(message)) {
             findPublicDiscussionChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
         }
@@ -359,7 +366,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .map(bondedRoleProof -> chatUserService.verifyBondedRole(bondedRoleProof.txId(),
                         bondedRoleProof.signature(),
                         chatUserIdentity.getChatUser().getId()))
-                .map(future -> future.thenApply(optionalProof -> optionalProof.map(e -> {
+                .map(future -> future.thenApply(optionalProof -> optionalProof.map(proof -> {
                             ChatUser chatUser = new ChatUser(chatUserIdentity.getChatUser().getNickName(),
                                     chatUserIdentity.getIdentity().proofOfWork(),
                                     chatUserIdentity.getIdentity().networkId(),
@@ -579,6 +586,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean hasAuthorValidProofOfWork(ProofOfWork proofOfWork) {
+        return proofOfWorkService.verify(proofOfWork);
+    }
+
+    private boolean isValidProofOfWorkOrChatUserNotFound(ChatMessage message) {
+        // In case we don't find the chat user we still return true as it might be that the chat user gets added later.
+        // In that case we check again if the chat user has a valid proof of work.
+        return findChatUser(message.getAuthorId())
+                .map(chatUser -> hasAuthorValidProofOfWork(chatUser.getProofOfWork()))
+                .orElse(true);
+    }
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String authorId = chatMessage.getAuthorId();

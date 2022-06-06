@@ -69,7 +69,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    boolean verify(ProofOfWork proofOfWork) {
+    public boolean verify(ProofOfWork proofOfWork) {
         double scaledDifficulty = scaledDifficulty(proofOfWork.getDifficulty());
         byte[] seed = getSeed(proofOfWork.getPayload(), proofOfWork.getChallenge());
         var puzzle = new Equihash(90, 5, scaledDifficulty).puzzle(seed);
