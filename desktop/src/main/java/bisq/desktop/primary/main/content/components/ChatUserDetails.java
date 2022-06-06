@@ -95,7 +95,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());

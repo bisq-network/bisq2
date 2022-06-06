@@ -37,7 +37,7 @@ public class SelectUserTypeController implements Controller {
         this.navigationHandler = navigationHandler;
         ChatUserIdentity chatUserIdentity = applicationService.getChatUserService().getSelectedUserProfile().get();
         String profileId = chatUserIdentity.getProfileId();
-        model = new SelectUserTypeModel(profileId, RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork()));
+        model = new SelectUserTypeModel(profileId, RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork().getPayload()));
         view = new SelectUserTypeView(model, this);
     }
 

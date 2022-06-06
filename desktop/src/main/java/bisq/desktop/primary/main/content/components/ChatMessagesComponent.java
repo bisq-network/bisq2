@@ -730,7 +730,7 @@ public class ChatMessagesComponent {
                                         ImageView roboIconImageView = new ImageView();
                                         roboIconImageView.setFitWidth(25);
                                         roboIconImageView.setFitHeight(25);
-                                        Image image = RoboHash.getImage(quotation.proofOfWork());
+                                        Image image = RoboHash.getImage(quotation.proofOfWork().getPayload());
                                         roboIconImageView.setImage(image);
 
                                         HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));

@@ -2,7 +2,6 @@ package bisq.desktop.components.robohash;
 
 import bisq.common.data.ByteArray;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.security.pow.ProofOfWork;
 import javafx.scene.image.Image;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,12 +16,12 @@ public class RoboHash {
     private static final HandleFactory HANDLE_FACTORY = new HandleFactory();
     private static final ConcurrentHashMap<ByteArray, Image> CACHE = new ConcurrentHashMap<>();
 
-    public static Image getImage(ProofOfWork proofOfWork) {
-        return getImage(proofOfWork, true);
+    public static Image getImage(byte[] pubKeyHash) {
+        return getImage(new ByteArray(pubKeyHash), true);
     }
 
-    public static Image getImage(ProofOfWork proofOfWork, boolean useCache) {
-        return getImage(new ByteArray(proofOfWork.getPayload()), useCache);
+    public static Image getImage(byte[] pubKeyHash, boolean useCache) {
+        return getImage(new ByteArray(pubKeyHash), useCache);
     }
 
     private static Image getImage(ByteArray pubKeyHash, boolean useCache) {

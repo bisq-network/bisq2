@@ -91,7 +91,7 @@ public class QuotedMessageBlock {
             chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getNym());
-                model.roboHashNode.set(RoboHash.getImage(author.getProofOfWork()));
+                model.roboHashNode.set(RoboHash.getImage(author.getProofOfWork().getPayload()));
                 model.quotation.set(chatMessage.getText());
                 model.visible.set(true);
             });

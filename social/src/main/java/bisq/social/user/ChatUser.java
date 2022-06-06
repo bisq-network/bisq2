@@ -88,7 +88,7 @@ public class ChatUser implements DistributedData {
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
         this.metaData = metaData;
         id = Hex.encode(pubKeyHash);
-        nym = NymIdGenerator.fromProofOfWork(proofOfWork);
+        nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
     }
 
     public bisq.social.protobuf.ChatUser toProto() {

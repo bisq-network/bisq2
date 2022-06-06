@@ -87,7 +87,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             model.id.set(chatUser.getId());
             model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());

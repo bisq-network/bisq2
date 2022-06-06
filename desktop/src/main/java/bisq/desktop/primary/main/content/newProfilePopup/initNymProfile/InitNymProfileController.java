@@ -117,8 +117,8 @@ public class InitNymProfileController implements Controller {
                         model.tempKeyId = StringUtils.createUid();
                         model.tempKeyPair = tempKeyPair;
 
-                        model.roboHashImage.set(RoboHash.getImage(proofOfWork));
-                        model.nymId.set(NymIdGenerator.fromProofOfWork(proofOfWork));
+                        model.roboHashImage.set(RoboHash.getImage(proofOfWork.getPayload()));
+                        model.nymId.set(NymIdGenerator.fromHash(proofOfWork.getPayload()));
 
                         model.powProgress.set(0);
                         model.roboHashIconVisible.set(true);
