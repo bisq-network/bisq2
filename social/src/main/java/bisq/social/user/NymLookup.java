@@ -25,9 +25,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-//todo needs support to update previous nicknames when a new one comes which conflicts
-// add weak references and use bindings
-// persist profileIdsByNickName as well
+// todo: 
+// - needs support to update previous nicknames when a new one comes which conflicts
+// - add weak references and use bindings
+// - persist nymByNickName
 @Slf4j
 public class NymLookup {
     private static final String SEPARATOR_START = " [";
