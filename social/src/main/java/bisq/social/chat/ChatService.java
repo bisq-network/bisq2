@@ -613,10 +613,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
         selectTradeChannel(defaultChannel);
         getPublicTradeChannels().add(defaultChannel);
-        getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getBsqMarket(), true));
+       // getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getBsqMarket(), true));
         getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getXmrMarket(), true));
         // for the ANY entry
-        getPublicTradeChannels().add(new PublicTradeChannel(Optional.empty(), true));
+       // getPublicTradeChannels().add(new PublicTradeChannel(Optional.empty(), true));
         List<Market> allMarketsForTradeChannel = getAllMarketsForTradeChannel();
         allMarketsForTradeChannel.remove(MarketRepository.getDefault());
         allMarketsForTradeChannel.remove(MarketRepository.getBsqMarket());

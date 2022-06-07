@@ -41,8 +41,9 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
     public TradeOverviewGridView(TradeOverviewGridModel model, TradeOverviewGridController controller) {
         super(new GridPane(), model, controller);
-        root.setHgap(26);
-        root.setVgap(26);
+        root.setHgap(25);
+        root.setVgap(25);
+        root.setPadding(new Insets(25,0,0,0));
     }
 
     @Override

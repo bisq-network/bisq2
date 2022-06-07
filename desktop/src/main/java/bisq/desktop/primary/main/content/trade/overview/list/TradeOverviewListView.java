@@ -49,7 +49,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
-
+        
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.getStyleClass().add("trade-overview-table-view");
         tableView.setMinHeight(500);
