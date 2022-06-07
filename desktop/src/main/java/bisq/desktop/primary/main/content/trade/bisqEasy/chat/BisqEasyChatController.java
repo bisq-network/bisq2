@@ -40,6 +40,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public void onActivate() {
         super.onActivate();
 
+        model.getOfferOnly().set(true);
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
@@ -70,6 +71,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
+                helpPane.getRoot(),
                 filterBox);
     }
 
@@ -85,5 +87,10 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getPeersRoboIconVisible().set(false);
             privateChannelSelection.deSelectChannel();
         }
+    }
+
+    public void onToggleOffersOnly(boolean selected) {
+        model.getOfferOnly().set(selected);
+        //todo filter messages
     }
 }

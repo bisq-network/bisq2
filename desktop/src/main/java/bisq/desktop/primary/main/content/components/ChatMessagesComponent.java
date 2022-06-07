@@ -19,20 +19,13 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.utils.NoSelectionModel;
+import bisq.desktop.common.utils.*;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.ClipboardUtil;
-import bisq.desktop.common.utils.Icons;
-import bisq.desktop.common.utils.KeyWordDetection;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqPopupMenu;
-import bisq.desktop.components.controls.BisqPopupMenuItem;
-import bisq.desktop.components.controls.BisqTaggableTextArea;
-import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.controls.*;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.popups.Popup;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -478,8 +471,6 @@ public class ChatMessagesComponent {
         private View(Model model, Controller controller, Pane quotedMessageBlock) {
             super(new VBox(), model, controller);
 
-            VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
-
             messagesListView = new ListView<>(model.getSortedChatMessages());
             messagesListView.getStyleClass().add("chat-messages-list-view");
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
@@ -489,24 +480,38 @@ public class ChatMessagesComponent {
 
             // https://stackoverflow.com/questions/20621752/javafx-make-listview-not-selectable-via-mouse
             messagesListView.setSelectionModel(new NoSelectionModel<>());
-            VBox.setVgrow(messagesListView, Priority.ALWAYS);
 
             inputField = new BisqTextArea();
             inputField.setId("chat-input-field");
             inputField.setPromptText(Res.get("social.chat.input.prompt"));
 
-            sendButton = new Button();
+            sendButton = new Button("", ImageUtil.getImageViewById("chat-send"));
             sendButton.setId("chat-messages-send-button");
-            sendButton.setText(Res.get("send"));
+            sendButton.setPadding(new Insets(5));
+            sendButton.setMinWidth(31);
+            sendButton.setMaxWidth(31);
+            // sendButton.setText(Res.get("send"));
 
-            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-            createOfferButton.setDefaultButton(true);
-            createOfferButton.setMinWidth(140);
             StackPane stackPane = new StackPane(inputField, sendButton);
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
+            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+            createOfferButton.setDefaultButton(true);
+            createOfferButton.setMinWidth(140);
+
+            HBox.setMargin(createOfferButton, new Insets(0, 0, 0, 0));
+            HBox.setHgrow(createOfferButton, Priority.ALWAYS);
+            HBox.setHgrow(stackPane, Priority.ALWAYS);
+            bottomBox = new HBox(10, stackPane, createOfferButton);
+            bottomBox.getStyleClass().add("bg-grey-5");
+            bottomBox.setAlignment(Pos.CENTER);
+            bottomBox.setPadding(new Insets(14, 24, 14, 24));
+
+            VBox.setVgrow(messagesListView, Priority.ALWAYS);
+            VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
+            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -515,16 +520,6 @@ public class ChatMessagesComponent {
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
             channelMentionPopup.setItemDisplayConverter(Channel::getDisplayString);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
-
-            HBox.setHgrow(stackPane, Priority.ALWAYS);
-            HBox.setHgrow(createOfferButton, Priority.ALWAYS);
-            bottomBox = new HBox(18, stackPane, createOfferButton);
-
-            bottomBox.getStyleClass().add("bg-grey-5");
-            bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(14, 33, 14, 24));
-
-            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             messagesListener = c -> UIThread.runOnNextRenderFrame(() ->
                     messagesListView.scrollTo(messagesListView.getItems().size() - 1));
@@ -689,9 +684,15 @@ public class ChatMessagesComponent {
                             AnchorPane.setBottomAnchor(editControlsBox, 0.0);
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
 
-                            VBox vBox = new VBox(0, new HBox(5, userNameLabel, dateTime, Spacer.width(20), reputationScoreDisplay), pane);
+                            Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
+                            reputationLabel.getStyleClass().add("bisq-text-7");
+                            VBox reputationBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+                            reputationBox.setAlignment(Pos.CENTER_LEFT);
+                            HBox.setMargin(reputationBox, new Insets(-10, 10, 0, 0));
+                            HBox userInfoBox = new HBox(5, userNameLabel, dateTime);
+                            VBox vBox = new VBox(0, userInfoBox, pane);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
-                            hBox = Layout.hBoxWith(chatUserIcon, vBox);
+                            hBox = Layout.hBoxWith(chatUserIcon, vBox, reputationBox);
                         }
 
                         private void hideHoverOverlay() {

@@ -68,7 +68,7 @@ public class ReputationScoreDisplay extends HBox {
 
         int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
         for (int i = 0; i < stars.size(); i++) {
-            stars.get(i).setOpacity(i <= target ? 1 : 0.1);
+            stars.get(i).setOpacity(i <= target ? 1 : 0.3);
         }
 
         long percent = Math.round(relativeScore * 10000) / 100;

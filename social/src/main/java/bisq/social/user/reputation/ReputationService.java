@@ -31,10 +31,7 @@ import com.google.common.base.Charsets;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -97,8 +94,14 @@ public class ReputationService implements DataService.Listener {
         byte[] preImage =  chatUser.getId().getBytes(Charsets.UTF_8);
         byte[] hashOfPreImage = DigestUtil.hash(preImage);
         ByteArray hash = new ByteArray(hashOfPreImage);
-        return findAuthorizedProofOfBurnDataSet(hash)
+        Optional<ReputationScore> optionalReputationScore = findAuthorizedProofOfBurnDataSet(hash)
                 .map(set -> ReputationScoreCalculation.getReputationScore(hash));
+        if(optionalReputationScore.isEmpty()){
+            //todo random dummy values
+            double randomValue = new Random().nextInt(100) / 100d;
+            optionalReputationScore = Optional.of(new ReputationScore(1000, randomValue,10, randomValue));
+        }
+        return optionalReputationScore;
     }
 
     private void addAuthorizedProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData) {

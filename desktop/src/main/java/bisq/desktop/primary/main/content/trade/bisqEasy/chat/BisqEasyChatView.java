@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.ChatView;
 import javafx.scene.layout.Pane;
@@ -24,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BisqEasyChatView extends ChatView {
+    private final BisqEasyChatController bisqEasyChatController;
+    private final BisqToggleButton toggleOffersButton;
+    private final BisqEasyChatModel bisqEasyChatModel;
+
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
                             Pane marketChannelSelection,
@@ -31,6 +36,7 @@ public class BisqEasyChatView extends ChatView {
                             Pane chatMessagesComponent,
                             Pane notificationsSettings,
                             Pane channelInfo,
+                            Pane helpPane,
                             FilterBox filterBox) {
         super(model,
                 controller,
@@ -39,7 +45,30 @@ public class BisqEasyChatView extends ChatView {
                 chatMessagesComponent,
                 notificationsSettings,
                 channelInfo,
+                helpPane,
                 filterBox);
+
+        bisqEasyChatController = controller;
+        bisqEasyChatModel = model;
+
+        toggleOffersButton = new BisqToggleButton();
+       // toggleOffersButton.getStyleClass().add("bisq-text-4");
+        toggleOffersButton.setText("Offers only");
+
+        centerToolbar.getChildren().add(3, toggleOffersButton);
     }
 
+    @Override
+    protected void onViewAttached() {
+        super.onViewAttached();
+        toggleOffersButton.setSelected(bisqEasyChatModel.getOfferOnly().get());
+        toggleOffersButton.setOnAction(e -> bisqEasyChatController.onToggleOffersOnly(toggleOffersButton.isSelected()));
+    }
+
+    @Override
+    protected void onViewDetached() {
+        super.onViewDetached();
+        toggleOffersButton.selectedProperty().unbind();
+        toggleOffersButton.setOnAction(null);
+    }
 }

@@ -766,6 +766,15 @@
     -bisq-size: 8;
 }
 
+.bisq-toggle-button {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 0.85em;
+}
+
+.bisq-toggle-button:selected {
+    -fx-text-fill: -bisq-white;
+}
+
 .bisq-toggle-button Line {
     -fx-stroke: -bisq-untoggle-line-color;
 }
@@ -781,6 +790,7 @@
 .bisq-toggle-button:selected Circle {
     -fx-fill: -bisq-toggle-color;
 }
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1173,9 +1183,8 @@ tree-table-view:focused {
 
 /* horizontal the two nodes are placed to the left/right of each other. */
 .split-pane:horizontal > .split-pane-divider {
-    -fx-background-color: -bisq-bg-dark;
     -fx-padding: 0;
-    -fx-background-insets: 0, 0 1 0 1;
+    -fx-background-insets: -5; /* Trick to give larger width for the handle but not showing it visually*/
 }
 
 /* vertical the two nodes are placed on top of each other. */
@@ -1451,7 +1460,7 @@ tree-table-view:focused {
     -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
-    -fx-padding: 4;
+    -fx-padding: 2 4 4 4 ;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -1472,7 +1481,7 @@ tree-table-view:focused {
 
 #chat-messages-send-button {
     -fx-background-color: -bisq-white;
-    -fx-background-radius: 3;
+    -fx-background-radius: 8;
     -fx-text-fill: -bisq-green;
 }
 

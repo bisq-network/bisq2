@@ -248,19 +248,27 @@
 
 /* Actions */
 #icon-bell {
-    -fx-image: url("images/actions/icon-bell.png");
+    -fx-image: url("images/chat/icon-bell.png");
 }
 
 #icon-info {
-    -fx-image: url("images/actions/icon-info.png");
+    -fx-image: url("images/chat/icon-info.png");
+}
+
+#icon-help {
+    -fx-image: url("images/chat/icon-help.png");
 }
 
 #icon-search {
-    -fx-image: url("images/actions/icon-search.png");
+    -fx-image: url("images/chat/icon-search.png");
 }
 
 #icon-sidebar-close {
-    -fx-image: url("images/actions/icon-sidebar-close.png");
+    -fx-image: url("images/chat/icon-sidebar-close.png");
+}
+
+#chat-send {
+    -fx-image: url("images/chat/chat-send.png");
 }
 
 /* Markets */
