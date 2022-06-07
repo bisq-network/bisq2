@@ -47,6 +47,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
     protected final NotificationsSettings notificationsSettings;
+    protected final HelpPane helpPane;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
@@ -61,6 +62,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
+        helpPane = new HelpPane();
         quotedMessageBlock = new QuotedMessageBlock(chatService);
 
         //todo
@@ -79,13 +81,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     @Override
     public void onActivate() {
         chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
+            onCloseSideBar();
             model.getSideBarVisible().set(true);
-            model.getChannelInfoVisible().set(false);
-            model.getNotificationsVisible().set(false);
+            model.getSideBarWidth().set(240);
 
             ChatUserDetails chatUserDetails = new ChatUserDetails(chatService, chatUser);
             chatUserDetails.setOnSendPrivateMessage(chatMessagesComponent::openPrivateChannel);
-            chatUserDetails.setOnIgnoreChatUser(chatMessagesComponent::refreshMessages);
+            chatUserDetails.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
             chatUserDetails.setOnMentionUser(chatMessagesComponent::mentionUser);
             model.setChatUserDetails(Optional.of(chatUserDetails));
             model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
@@ -122,11 +124,10 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public void onToggleNotifications() {
         boolean visible = !model.getNotificationsVisible().get();
+        onCloseSideBar();
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getChannelInfoVisible().set(false);
-        cleanupChatUserDetails();
-        cleanupChannelInfo();
+        model.getSideBarWidth().set(visible ? 240 : 0);
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
@@ -134,29 +135,33 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public void onToggleChannelInfo() {
         boolean visible = !model.getChannelInfoVisible().get();
+        onCloseSideBar();
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getNotificationsVisible().set(false);
-        cleanupChatUserDetails();
+        model.getSideBarWidth().set(visible ? 240 : 0);
         if (visible) {
             showChannelInfo();
-        } else {
-            cleanupChannelInfo();
         }
     }
 
-    protected void showChannelInfo() {
-        channelInfo.setChannel(model.getSelectedChannel().get());
-        channelInfo.setOnUndoIgnoreChatUser(() -> {
-            chatMessagesComponent.refreshMessages();
-            channelInfo.setChannel(model.getSelectedChannel().get());
-        });
+    public void onToggleHelp() {
+        boolean visible = !model.getHelpVisible().get();
+        onCloseSideBar();
+        model.getHelpVisible().set(visible);
+        model.getSideBarVisible().set(visible);
+        model.getSideBarWidth().set(visible ? 540 : 0);
+        if (visible) {
+            //tradeChatHelp.setChannel();
+        }
     }
 
     public void onCloseSideBar() {
         model.getSideBarVisible().set(false);
+        model.getSideBarWidth().set(0);
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
+        model.getHelpVisible().set(false);
+
         cleanupChatUserDetails();
         cleanupChannelInfo();
     }
@@ -165,11 +170,17 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         //todo
         new Popup().message("Not implemented yet").show();
     }
-
+    protected void showChannelInfo() {
+        channelInfo.setChannel(model.getSelectedChannel().get());
+        channelInfo.setOnUndoIgnoreChatUser(() -> {
+            chatMessagesComponent.refreshMessages();
+            channelInfo.setChannel(model.getSelectedChannel().get());
+        });
+    }
     protected void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
-        model.getChatUserDetails().ifPresent(e -> e.setOnIgnoreChatUser(null));
+        model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
         model.setChatUserDetails(Optional.empty());
         model.getChatUserDetailsRoot().set(null);
     }

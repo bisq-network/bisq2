@@ -88,7 +88,7 @@ public class FilterBox {
             
             root.getStyleClass().add("bg-grey-5");
             root.setAlignment(Pos.CENTER);
-            root.setPadding(new Insets(14, 40, 14, 30));
+            root.setPadding(new Insets(14, 24, 14, 24));
             root.setId("chat-filter-box");
 
             textField = new TextField();

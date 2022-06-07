@@ -165,7 +165,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel privateChannel) {
                         ChatUser peer = privateChannel.getPeer();
-                        roboIcon.setImage(RoboHash.getImage(peer.getProofOfWork()));
+                        roboIcon.setImage(RoboHash.getImage(peer.getProofOfWork().getPayload()));
                         tooltip.setText(peer.getTooltipString());
                         label.setText(item.getChannel().getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

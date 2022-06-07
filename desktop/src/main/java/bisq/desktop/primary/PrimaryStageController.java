@@ -109,23 +109,17 @@ public class PrimaryStageController extends NavigationController {
 
     public void onDomainInitialized() {
         // After the domain is initialized we show the application content
-        if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-            Navigation.navigateTo(NavigationTarget.MAIN);
-            // Shown as popup 
-            Navigation.navigateTo(NavigationTarget.ONBOARDING);
-        } else {
-            String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-            if (value != null && !value.isEmpty()) {
-                try {
-                    NavigationTarget persisted = NavigationTarget.valueOf(value);
-                    Navigation.applyPersisted(persisted);
-                    Navigation.navigateTo(persisted);
-                } catch (Throwable t) {
-                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
-                }
-            } else {
+        String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+        if (value != null && !value.isEmpty()) {
+            try {
+                NavigationTarget persisted = NavigationTarget.valueOf(value);
+                Navigation.applyPersisted(persisted);
+                Navigation.navigateTo(persisted);
+            } catch (Throwable t) {
                 Navigation.navigateTo(NavigationTarget.DASHBOARD);
             }
+        } else {
+            Navigation.navigateTo(NavigationTarget.DASHBOARD);
         }
     }
 
@@ -143,7 +137,7 @@ public class PrimaryStageController extends NavigationController {
 
     public void shutdown() {
         applicationService.shutdown()
-                .whenComplete((__, throwable) -> Platform.exit());
+                .thenAccept(__ -> Platform.exit());
     }
 
     public void onStageXChanged(double value) {

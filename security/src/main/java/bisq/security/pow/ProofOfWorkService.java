@@ -107,7 +107,7 @@ public abstract class ProofOfWorkService implements PersistenceClient<ProofOfWor
 
     public abstract CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty);
 
-    abstract boolean verify(ProofOfWork proofOfWork);
+    public abstract boolean verify(ProofOfWork proofOfWork);
 
     public byte[] asUtf8Bytes(String itemId) {
         return itemId.getBytes(StandardCharsets.UTF_8);

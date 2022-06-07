@@ -53,10 +53,10 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
         root.setFitToHeight(false);
         root.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("initNymProfile.selectUserType.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.direction.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("initNymProfile.selectUserType.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.direction.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -64,10 +64,10 @@ public class SelectUserTypeView extends View<ScrollPane, SelectUserTypeModel, Se
 
         userTypeToggleGroup = new ToggleGroup();
 
-        VBox userTypeNewBox = getUserTypeSelectionBox(Res.get("initNymProfile.selectUserType.new.button"), Res.get("initNymProfile.selectUserType.new.info"));
+        VBox userTypeNewBox = getUserTypeSelectionBox(Res.get("onboarding.direction.buy"), Res.get("onboarding.direction.buy.info"));
         userTypeNewButton = (ToggleButton) userTypeNewBox.getChildren().get(0);
 
-        VBox userTypeExperiencedBox = getUserTypeSelectionBox(Res.get("initNymProfile.selectUserType.experienced.button"), Res.get("initNymProfile.selectUserType.experienced.info"));
+        VBox userTypeExperiencedBox = getUserTypeSelectionBox(Res.get("onboarding.direction.sell"), Res.get("onboarding.direction.sell.info"));
         userTypeExperiencedButton = (ToggleButton) userTypeExperiencedBox.getChildren().get(0);
 
         HBox userTypeBox = new HBox(28, userTypeNewBox, userTypeExperiencedBox);

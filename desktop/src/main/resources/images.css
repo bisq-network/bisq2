@@ -205,6 +205,77 @@
     -fx-image: url("images/navigation/nav-list-hover.png");
 }
 
+
+/* Onboarding */
+#onboarding-1-easy {
+    -fx-image: url("images/onboarding/onboarding-1-easy.png");
+}
+
+#onboarding-1-fraction {
+    -fx-image: url("images/onboarding/onboarding-1-fraction.png");
+}
+
+#onboarding-1-reputation {
+    -fx-image: url("images/onboarding/onboarding-1-reputation.png");
+}
+
+#onboarding-2-chat {
+    -fx-image: url("images/onboarding/onboarding-2-chat.png");
+}
+
+#onboarding-2-offer {
+    -fx-image: url("images/onboarding/onboarding-2-offer.png");
+}
+
+#onboarding-2-payment {
+    -fx-image: url("images/onboarding/onboarding-2-payment.png");
+}
+
+#onboarding-3-market {
+    -fx-image: url("images/onboarding/onboarding-3-market.png");
+}
+
+#onboarding-3-method {
+    -fx-image: url("images/onboarding/onboarding-3-method.png");
+}
+
+#onboarding-3-profile {
+    -fx-image: url("images/onboarding/onboarding-3-profile.png");
+}
+
+/* onboarding template*/
+#template_easy {
+    -fx-image: url("images/onboarding/template/onboarding-template_0000_easy.png");
+}
+
+#template_profile {
+    -fx-image: url("images/onboarding/template/onboarding-template_0001_profile.png");
+}
+
+#template_buy_sell {
+    -fx-image: url("images/onboarding/template/onboarding-template_0002_buy_sell.png");
+}
+
+#template_market {
+    -fx-image: url("images/onboarding/template/onboarding-template_0003_market.png");
+}
+
+#template_amount {
+    -fx-image: url("images/onboarding/template/onboarding-template_0004_amount.png");
+}
+
+#template_methods {
+    -fx-image: url("images/onboarding/template/onboarding-template_0005_methods.png");
+}
+
+#template_complete {
+    -fx-image: url("images/onboarding/template/onboarding-template_0006_complete.png");
+}
+
+#template_published {
+    -fx-image: url("images/onboarding/template/onboarding-template_0007_published.png");
+}
+
 /*Dashboard*/
 #welcome-community {
     -fx-image: url("images/welcome-community.png");
@@ -242,26 +313,36 @@
 #bisq-easy {
     -fx-image: url("images/bisq-easy.png");
 }
+
 #bullet-point {
     -fx-image: url("images/bullet-point.png");
 }
 
-/* Actions */
+/* Chat */
 #icon-bell {
-    -fx-image: url("images/actions/icon-bell.png");
+    -fx-image: url("images/chat/icon-bell.png");
 }
 
 #icon-info {
-    -fx-image: url("images/actions/icon-info.png");
+    -fx-image: url("images/chat/icon-info.png");
+}
+
+#icon-help {
+    -fx-image: url("images/chat/icon-help.png");
 }
 
 #icon-search {
-    -fx-image: url("images/actions/icon-search.png");
+    -fx-image: url("images/chat/icon-search.png");
 }
 
 #icon-sidebar-close {
-    -fx-image: url("images/actions/icon-sidebar-close.png");
+    -fx-image: url("images/chat/icon-sidebar-close.png");
 }
+
+#chat-send {
+    -fx-image: url("images/chat/chat-send.png");
+}
+
 
 /* Markets */
 #market-any-base {

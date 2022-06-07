@@ -61,8 +61,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 
-    public void setOnIgnoreChatUser(Runnable handler) {
-        controller.model.ignoreChatUserHandler = Optional.ofNullable(handler);
+    public void setIgnoreUserStateHandler(Runnable handler) {
+        controller.model.ignoreUserStateHandler = Optional.ofNullable(handler);
     }
 
     @Override
@@ -88,6 +88,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
                 return;
             }
 
+            model.ignoreButtonText.set(Res.get("social.ignore"));
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
             model.reputationScore.set(chatUser.getBurnScoreAsString());
@@ -95,7 +96,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
             String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
             model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
             model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());
@@ -113,9 +114,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUser));
         }
 
-        public void onIgnoreUser() {
-            model.chatService.ignoreChatUser(model.chatUser);
-            model.ignoreChatUserHandler.ifPresent(Runnable::run);
+        public void onToggleIgnoreUser() {
+            model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
+            if (model.ignoreUserSelected.get()) {
+                model.chatService.ignoreChatUser(model.chatUser);
+                model.ignoreButtonText.set(Res.get("social.undoIgnore"));
+            } else {
+                model.chatService.undoIgnoreChatUser(model.chatUser);
+                model.ignoreButtonText.set(Res.get("social.ignore"));
+            }
+            model.ignoreUserStateHandler.ifPresent(Runnable::run);
         }
 
         public void onReportUser() {
@@ -129,7 +137,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final ChatUser chatUser;
         private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
         private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
-        private Optional<Runnable> ignoreChatUserHandler = Optional.empty();
+        private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
@@ -139,6 +147,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
         private final StringProperty entitlements = new SimpleStringProperty();
+        private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
+        private final StringProperty ignoreButtonText = new SimpleStringProperty();
 
         private Model(ChatService chatService, ChatUser chatUser) {
             this.chatService = chatService;
@@ -196,14 +206,14 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
 
             mentionButton = new Button(Res.get("social.mention"));
-            ignoreButton = new Button(Res.get("social.ignore"));
+            ignoreButton = new Button();
             reportButton = new Button(Res.get("social.report"));
             mentionButton.getStyleClass().add("bisq-text-button");
             ignoreButton.getStyleClass().add("bisq-text-button");
             reportButton.getStyleClass().add("bisq-text-button");
             VBox optionsBox = new VBox(5, optionsLabel, mentionButton, ignoreButton, reportButton);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
-             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
+            VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(24, -45, 15, -55));
@@ -224,7 +234,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             bio.textProperty().bind(model.bio);
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
-
+            ignoreButton.textProperty().bind(model.ignoreButtonText);
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
@@ -233,7 +243,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             privateMsgButton.setOnAction(e -> controller.onSendPrivateMessage());
             mentionButton.setOnAction(e -> controller.onMentionUser());
-            ignoreButton.setOnAction(e -> controller.onIgnoreUser());
+            ignoreButton.setOnAction(e -> controller.onToggleIgnoreUser());
             reportButton.setOnAction(e -> controller.onReportUser());
         }
 
@@ -244,6 +254,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             bio.textProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
+            ignoreButton.textProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 

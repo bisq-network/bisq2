@@ -169,7 +169,7 @@ public class AmountInput {
             super(new Pane(), model, controller);
 
             textInputBox = new TextInputBox(Res.get("satoshisquareapp.createOffer.maxAmount"),
-                    Res.get("initNymProfile.nickName.prompt"));
+                    Res.get("createProfile.nickName.prompt"));
             textInputBox.setPrefWidth(WIDTH);
             textInputBox.setValidator(validator);
 

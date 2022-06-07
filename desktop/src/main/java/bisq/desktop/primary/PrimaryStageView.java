@@ -17,18 +17,18 @@
 
 package bisq.desktop.primary;
 
+import bisq.common.application.DevMode;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.KeyCodeUtils;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.common.utils.Layout;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import lombok.Getter;
@@ -115,20 +115,23 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
     }
 
     private void configKeyEventHandlers() {
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEvent -> {
+        scene.setOnKeyPressed(keyEvent -> {
             if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
                     KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
                 controller.onQuit();
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.SPLASH);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-               // Navigation.navigateTo(NavigationTarget.INIT_USER_PROFILE);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-              //  Navigation.navigateTo(NavigationTarget.SELECT_USER_TYPE);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
+            }
+            if (DevMode.isDevMode()) {
+                if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.SPLASH);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
+                    // Navigation.navigateTo(NavigationTarget.ONBOARD_NEWBIE);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
+                    //  Navigation.navigateTo(NavigationTarget.ONBOARD_PRO_TRADER);
+                }
             }
         });
     }

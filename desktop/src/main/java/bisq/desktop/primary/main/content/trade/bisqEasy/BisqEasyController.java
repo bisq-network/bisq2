@@ -23,13 +23,13 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+//todo can be removed if we dont have a intro screen anymore... but leave it for now...
 @Slf4j
 public class BisqEasyController extends NavigationController {
     private final DefaultApplicationService applicationService;
@@ -51,12 +51,12 @@ public class BisqEasyController extends NavigationController {
     @Override
     public void onActivate() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
-        if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
+      /*  if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
                 .filter(value -> value)
                 .isEmpty()) {
             // If cookie not set we show popup 
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
-        }
+        }*/
     }
 
     @Override

@@ -70,6 +70,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
+                helpPane.getRoot(),
                 filterBox);
     }
 
@@ -78,7 +79,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(privateDiscussionChannel.getPeer().getProofOfWork()));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(privateDiscussionChannel.getPeer().getProofOfWork().getPayload()));
             model.getPeersRoboIconVisible().set(true);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {

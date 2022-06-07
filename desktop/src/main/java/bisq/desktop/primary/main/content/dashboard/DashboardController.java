@@ -35,6 +35,9 @@ public class DashboardController implements Controller {
 
     @Override
     public void onActivate() {
+        // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        // }
     }
 
     @Override
@@ -42,7 +45,7 @@ public class DashboardController implements Controller {
     }
 
     public void onOpenOnboardingPopup() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING);
+        // Navigation.navigateTo(NavigationTarget.ONBOARDING);
     }
 
     public void onOpenTradeOverview() {

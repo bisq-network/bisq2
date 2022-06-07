@@ -41,8 +41,10 @@ public abstract class ChatModel implements Model {
     private final ObjectProperty<Channel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
+    private final BooleanProperty helpVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
     private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();

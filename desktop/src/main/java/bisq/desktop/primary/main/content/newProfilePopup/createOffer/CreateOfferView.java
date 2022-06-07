@@ -46,7 +46,7 @@ public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOf
         root.setFitToHeight(false);
         root.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("initNymProfile.headline"));
+        Label headLineLabel = new Label(Res.get("createProfile.headline"));
         headLineLabel.setWrapText(true);
         headLineLabel.getStyleClass().add("bisq-big-light-headline-label");
         VBox.setMargin(headLineLabel, new Insets(0, 200, 0, 200));

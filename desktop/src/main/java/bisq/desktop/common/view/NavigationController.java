@@ -46,8 +46,10 @@ public abstract class NavigationController implements Controller {
             Optional<Controller> childController = findController(candidate.get(), data);
             if (childController.isPresent()) {
                 // We as host handle that target and found the controller. 
+                Controller controller = childController.get();
+                onNavigateToChild(navigationTarget);
                 getModel().setNavigationTarget(candidate.get());
-                getModel().setView(childController.get().getView());
+                getModel().setView(controller.getView());
                 selectedChildTarget = candidate;
                 Navigation.persistNavigationTarget(navigationTarget);
                 break;
@@ -111,7 +113,6 @@ public abstract class NavigationController implements Controller {
 
             return Optional.of(controller);
         } else {
-
             return createController(navigationTarget)
                     .map(controller -> {
                         //todo

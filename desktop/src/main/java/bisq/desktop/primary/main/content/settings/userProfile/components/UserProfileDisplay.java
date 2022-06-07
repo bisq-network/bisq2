@@ -72,7 +72,7 @@ public class UserProfileDisplay {
                         String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
                         model.entitlementsVisible.set(!userProfile.getChatUser().getRoles().isEmpty());
-                        model.roboHashNode.set(RoboHash.getImage(userProfile.getChatUser().getProofOfWork()));
+                        model.roboHashNode.set(RoboHash.getImage(userProfile.getChatUser().getProofOfWork().getPayload()));
                     });
         }
 

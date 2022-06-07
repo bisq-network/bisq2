@@ -178,7 +178,7 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().proofOfWork()));
+                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().proofOfWork().getPayload()));
                         label.setText(item.chatUserIdentity.getNickName());
                         setGraphic(hBox);
                     } else {
@@ -222,7 +222,7 @@ public class UserProfileSelection {
                         if (newValue != null) {
                             ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
                             if (chatUserIdentity != null) {
-                                imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork()));
+                                imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork().getPayload()));
                                 userNameLabel.setText(chatUserIdentity.getNickName());
                                 buttonPane.layout();
                                 //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));

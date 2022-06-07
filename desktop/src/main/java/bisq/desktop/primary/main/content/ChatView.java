@@ -17,14 +17,15 @@
 
 package bisq.desktop.primary.main.content;
 
-import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.common.utils.Layout;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -40,15 +41,17 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> {
     private final Label selectedChannelLabel;
-    private final Button searchButton, notificationsButton, infoButton, closeButton;
+    private final Button searchButton, notificationsButton, channelInfoButton, helpButton, closeButton;
     private final VBox left, center, sideBar;
-    private final HBox messagesListAndSideBar;
     private final HBox filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
+    private final Pane helpPane;
     private final ImageView peersRoboIconView;
+
+    protected final HBox centerToolbar;
     private Pane chatUserOverviewRoot;
-    private Subscription widthSubscription, chatUserOverviewRootSubscription;
+    private Subscription sideBarWidthSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
@@ -57,11 +60,13 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                     Pane chatMessagesComponent,
                     Pane notificationsSettings,
                     Pane channelInfo,
+                    Pane helpPane,
                     FilterBox filterBox) {
         super(new SplitPane(), model, controller);
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
+        this.helpPane = helpPane;
 
         // Left
         left = Layout.vBoxWith(
@@ -86,16 +91,18 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         HBox.setMargin(selectedChannelLabel, new Insets(0, 0, 0, 0));
         searchButton = BisqIconButton.createIconButton("icon-search");
         notificationsButton = BisqIconButton.createIconButton("icon-bell");
-        infoButton = BisqIconButton.createIconButton("icon-info");
+        channelInfoButton = BisqIconButton.createIconButton("icon-info");
+        helpButton = BisqIconButton.createIconButton("icon-help");
 
-        HBox centerToolbar = new HBox(
+        centerToolbar = new HBox(
                 10,
                 peersRoboIconView,
                 selectedChannelLabel,
                 Spacer.fillHBox(),
                 searchButton,
                 notificationsButton,
-                infoButton
+                channelInfoButton,
+                helpButton
         );
         centerToolbar.setAlignment(Pos.CENTER);
         centerToolbar.setMinHeight(64);
@@ -106,23 +113,18 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         closeButton = BisqIconButton.createIconButton("icon-sidebar-close");
         VBox.setMargin(closeButton, new Insets(0, -15, 0, 0));
         channelInfo.setMinWidth(200);
-        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
+        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo, helpPane);
         sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setMinWidth(300);
         sideBar.setPadding(new Insets(10, 20, 10, 20));
         sideBar.setFillWidth(true);
 
         filterBoxRoot = filterBox.getRoot();
 
-        HBox.setHgrow(chatMessagesComponent, Priority.ALWAYS);
         chatMessagesComponent.setMinWidth(500);
-
-        messagesListAndSideBar = new HBox(0, chatMessagesComponent, sideBar);
-        VBox.setVgrow(messagesListAndSideBar, Priority.ALWAYS);
-
-        center = new VBox(centerToolbar, filterBoxRoot, messagesListAndSideBar);
-        root.getItems().addAll(left, center);
+        VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
+        center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+        root.getItems().addAll(left, center, sideBar);
     }
 
     @Override
@@ -137,12 +139,15 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
+        helpPane.visibleProperty().bind(model.getHelpVisible());
+        helpPane.managedProperty().bind(model.getHelpVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
-        infoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
+        helpButton.setOnAction(e -> controller.onToggleHelp());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
@@ -157,20 +162,10 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                         chatUserOverviewRoot = pane;
                     }
                 });
-        widthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
-            double width = w.doubleValue();
-            if (width > 0) {
-                root.setDividerPosition(0, left.getPrefWidth() / width);
-                // Lock to that initial position
-                SplitPane.setResizableWithParent(left, false);
-                UIThread.runOnNextRenderFrame(() -> {
-                    if (widthSubscription != null) {
-                        widthSubscription.unsubscribe();
-                        widthSubscription = null;
-                    }
-                });
-            }
-        });
+        var parent = root.getParent();
+
+        sideBarWidthSubscription = EasyBind.subscribe(model.getSideBarWidth(), w -> updateDividerPositions());
+        rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> updateDividerPositions());
     }
 
     @Override
@@ -185,18 +180,43 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
         channelInfo.managedProperty().unbind();
+        helpPane.visibleProperty().unbind();
+        helpPane.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);
-        infoButton.setOnAction(null);
+        channelInfoButton.setOnAction(null);
+        helpButton.setOnAction(null);
         closeButton.setOnAction(null);
 
         chatUserOverviewRootSubscription.unsubscribe();
-        if (widthSubscription != null) {
-            widthSubscription.unsubscribe();
-            widthSubscription = null;
+        rootWidthSubscription.unsubscribe();
+        sideBarWidthSubscription.unsubscribe();
+    }
+
+    private void updateDividerPositions() {
+        double rootWidth = root.getWidth();
+        if (rootWidth > 0) {
+            root.setDividerPosition(0, left.getPrefWidth() / rootWidth);
+            double sideBarWidth = model.getSideBarWidth().get();
+            root.setDividerPosition(1, (rootWidth - sideBarWidth) / rootWidth);
+
+            // Lock to that initial position
+            SplitPane.setResizableWithParent(left, false);
+            SplitPane.setResizableWithParent(sideBar, false);
+
+            // Hide right divider is sidebar is invisible
+            // Hack as dividers are not accessible ;-(
+            for (Node node : root.lookupAll(".split-pane-divider")) {
+                ObservableList<Node> childrenUnmodifiable = node.getParent().getChildrenUnmodifiable();
+                Node last = childrenUnmodifiable.get(childrenUnmodifiable.size() - 1);
+                if (last.equals(node)) {
+                    node.setVisible(sideBarWidth > 0);
+                    node.setManaged(sideBarWidth > 0);
+                }
+            }
         }
     }
 }
