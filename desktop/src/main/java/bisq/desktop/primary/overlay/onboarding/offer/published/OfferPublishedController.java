@@ -15,24 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.amount;
+package bisq.desktop.primary.overlay.onboarding.offer.published;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountController implements Controller {
-    private final AmountModel model;
+public class OfferPublishedController implements Controller {
+    private final OfferPublishedModel model;
     @Getter
-    private final AmountView view;
+    private final OfferPublishedView view;
 
-    public AmountController(DefaultApplicationService applicationService) {
-        model = new AmountModel();
-        view = new AmountView(model, this);
+    public OfferPublishedController(DefaultApplicationService applicationService) {
+        model = new OfferPublishedModel();
+        view = new OfferPublishedView(model, this);
     }
 
     @Override
@@ -43,11 +44,14 @@ public class AmountController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
+
+    public void onOpenChat() {
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+    public void onGoToDashboard() {
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }
 }

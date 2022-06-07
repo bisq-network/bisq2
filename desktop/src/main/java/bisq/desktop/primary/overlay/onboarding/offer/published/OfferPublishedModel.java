@@ -15,19 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.market;
+package bisq.desktop.primary.overlay.onboarding.offer.published;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
-public class MarketsModel implements Model {
-    public enum Direction {
-        BUY,
-        SELL
-    }
-
-    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+public class OfferPublishedModel implements Model {
 }

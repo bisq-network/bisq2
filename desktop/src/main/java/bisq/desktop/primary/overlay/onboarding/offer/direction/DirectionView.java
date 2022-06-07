@@ -18,10 +18,8 @@
 package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.common.data.Pair;
-import bisq.common.data.Triple;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.primary.overlay.onboarding.Utils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -36,14 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.List;
-
 @Slf4j
 public class DirectionView extends View<VBox, DirectionModel, DirectionController> {
     private final Button nextButton;
     private final ToggleButton buyButton, sellButton;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    private final Button skipButton;
+    //private final Button skipButton;
     private Subscription directionSubscription;
 
     public DirectionView(DirectionModel model, DirectionController controller) {
@@ -51,12 +47,6 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
 
         root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("bisq-content-bg");
-
-        Triple<HBox, Button, List<Label>> topPane = Utils.getTopPane();
-        HBox topPaneBox = topPane.first();
-        skipButton = topPane.second();
-        List<Label> labelList = topPane.third();
-        labelList.get(0).getStyleClass().add("bisq-text-white");
 
         Label headLineLabel = new Label(Res.get("onboarding.direction.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -83,7 +73,7 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         VBox.setMargin(headLineLabel, new Insets(55, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
         VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
-        root.getChildren().addAll(topPaneBox, headLineLabel, subtitleLabel, boxes, Spacer.fillVBox(), nextButton);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes, Spacer.fillVBox(), nextButton);
     }
 
     @Override
@@ -94,7 +84,6 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         sellButton.setOnAction(evt -> controller.onSelect(DirectionModel.Direction.SELL));
 
         nextButton.setOnAction(e -> controller.onNext());
-        skipButton.setOnAction(e -> controller.onSkip());
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
                 toggleGroup.selectToggle(direction == DirectionModel.Direction.BUY ? buyButton : sellButton);
@@ -110,7 +99,6 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
         nextButton.setOnAction(null);
-        skipButton.setOnAction(null);
         directionSubscription.unsubscribe();
     }
 
@@ -135,5 +123,4 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
 
         return new Pair<>(vBox, button);
     }
-
 }

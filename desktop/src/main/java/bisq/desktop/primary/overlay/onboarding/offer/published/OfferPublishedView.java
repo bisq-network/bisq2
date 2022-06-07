@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.amount;
+package bisq.desktop.primary.overlay.onboarding.offer.published;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -38,36 +38,36 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountView extends View<StackPane, AmountModel, AmountController> {
+public class OfferPublishedView extends View<StackPane, OfferPublishedModel, OfferPublishedController> {
     private final Button nextButton, backButton;
 
-    public AmountView(AmountModel model, AmountController controller) {
+    public OfferPublishedView(OfferPublishedModel model, OfferPublishedController controller) {
         super(new StackPane(), model, controller);
 
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.TOP_CENTER);
         vBox.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("onboarding.amount.headline"));
+
+        Label headLineLabel = new Label(Res.get("onboarding.published.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.amount.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.published.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
 
-        nextButton = new Button(Res.get("next"));
+        nextButton = new Button(Res.get("onboarding.published.viewOffer"));
         nextButton.setDefaultButton(true);
 
-        backButton = new Button(Res.get("back"));
+        backButton = new Button(Res.get("onboarding.published.dashboard"));
 
         HBox buttons = new HBox(7, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(buttons, new Insets(0, 0, 90, 0));
-
+        VBox.setMargin(buttons, new Insets(0, 0, 240, 0));
         vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), buttons);
 
         // WIP
@@ -83,14 +83,14 @@ public class AmountView extends View<StackPane, AmountModel, AmountController> {
         graphicsContext2D.setImageSmoothing(true);
 
         graphicsContext2D.beginPath();
-        graphicsContext2D.moveTo(80, 100);
-        graphicsContext2D.lineTo(840, 100);
-        graphicsContext2D.lineTo(840, 400);
-        graphicsContext2D.lineTo(80, 400);
+        graphicsContext2D.moveTo(80, 120);
+        graphicsContext2D.lineTo(840, 120);
+        graphicsContext2D.lineTo(840, 240);
+        graphicsContext2D.lineTo(80, 240);
         graphicsContext2D.closePath();
         graphicsContext2D.clip();
 
-        Image image = new Image("images/onboarding/template/onboarding-template_0004_amount.png");
+        Image image = new Image("images/onboarding/template/onboarding-template_0007_published.png");
         graphicsContext2D.drawImage(image, 0, 0, width, height);
         SnapshotParameters snapshotParameters = new SnapshotParameters();
         snapshotParameters.setFill(Color.TRANSPARENT);
@@ -100,8 +100,8 @@ public class AmountView extends View<StackPane, AmountModel, AmountController> {
 
     @Override
     protected void onViewAttached() {
-        nextButton.setOnAction(e -> controller.onNext());
-        backButton.setOnAction(evt -> controller.onBack());
+        nextButton.setOnAction(e -> controller.onOpenChat());
+        backButton.setOnAction(evt -> controller.onGoToDashboard());
     }
 
     @Override

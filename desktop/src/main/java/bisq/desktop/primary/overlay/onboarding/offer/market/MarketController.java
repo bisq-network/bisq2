@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.amount;
+package bisq.desktop.primary.overlay.onboarding.offer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
@@ -25,14 +25,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountController implements Controller {
-    private final AmountModel model;
+public class MarketController implements Controller {
+    private final MarketModel model;
     @Getter
-    private final AmountView view;
+    private final MarketView view;
 
-    public AmountController(DefaultApplicationService applicationService) {
-        model = new AmountModel();
-        view = new AmountView(model, this);
+    public MarketController(DefaultApplicationService applicationService) {
+        model = new MarketModel();
+        view = new MarketView(model, this);
     }
 
     @Override
@@ -44,10 +44,10 @@ public class AmountController implements Controller {
     }
 
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
     }
 }

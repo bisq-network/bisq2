@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.amount;
+package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -38,20 +38,20 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountView extends View<StackPane, AmountModel, AmountController> {
+public class PaymentMethodView extends View<StackPane, PaymentMethodModel, PaymentMethodController> {
     private final Button nextButton, backButton;
 
-    public AmountView(AmountModel model, AmountController controller) {
+    public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
         super(new StackPane(), model, controller);
 
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.TOP_CENTER);
         vBox.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("onboarding.amount.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.method.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.amount.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.method.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
@@ -68,7 +68,7 @@ public class AmountView extends View<StackPane, AmountModel, AmountController> {
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
         VBox.setMargin(buttons, new Insets(0, 0, 90, 0));
 
-        vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), buttons);
+        vBox.getChildren().addAll( headLineLabel, subtitleLabel, Spacer.fillVBox(), buttons);
 
         // WIP
         // vBox.setStyle("-fx-background-color: transparant");
@@ -90,7 +90,7 @@ public class AmountView extends View<StackPane, AmountModel, AmountController> {
         graphicsContext2D.closePath();
         graphicsContext2D.clip();
 
-        Image image = new Image("images/onboarding/template/onboarding-template_0004_amount.png");
+        Image image = new Image("images/onboarding/template/onboarding-template_0005_methods.png");
         graphicsContext2D.drawImage(image, 0, 0, width, height);
         SnapshotParameters snapshotParameters = new SnapshotParameters();
         snapshotParameters.setFill(Color.TRANSPARENT);

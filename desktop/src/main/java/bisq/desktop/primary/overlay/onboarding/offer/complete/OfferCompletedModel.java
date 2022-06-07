@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.amount;
+package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
 import bisq.desktop.common.view.Model;
 import lombok.Getter;
 
 @Getter
-public class AmountModel implements Model {
+public class OfferCompletedModel implements Model {
 }

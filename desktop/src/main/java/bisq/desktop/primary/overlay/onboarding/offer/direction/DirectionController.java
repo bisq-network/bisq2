@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,12 +48,7 @@ public class DirectionController implements Controller {
         model.getDirection().set(selectedDirection);
     }
 
-
     public void onNext() {
         Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
-    }
-
-    public void onSkip() {
-        OverlayController.hide();
     }
 }

@@ -81,20 +81,30 @@ public class OverlayController extends NavigationController {
     }
 
     @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-       /* model.setTopMargin(OverlayModel.TOP_MARGIN);
+    public void onNavigateToChild(NavigationTarget navigationTarget) {
+         /* model.setTopMargin(OverlayModel.TOP_MARGIN);
         model.setBottomMargin(OverlayModel.BOTTOM_MARGIN);
         model.setHorizontalMargin(OverlayModel.HORIZONTAL_MARGIN);
 
         model.setTopMargin(95);
         model.setBottomMargin(125);
         model.setHorizontalMargin(140);*/
-        
         switch (navigationTarget) {
             case ONBOARDING -> {
               /*  model.setTopMargin(95);
                 model.setBottomMargin(125);
                 model.setHorizontalMargin(140);*/
+            }
+
+            default -> {
+            }
+        }
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case ONBOARDING -> {
                 return Optional.of(new OnboardingController(applicationService));
             }
            /* case ONBOARDING -> {

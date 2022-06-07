@@ -15,50 +15,39 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.offer.market;
+package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MarketsController implements Controller {
-    private final MarketsModel model;
+public class OfferCompletedController implements Controller {
+    private final OfferCompletedModel model;
     @Getter
-    private final MarketsView view;
+    private final OfferCompletedView view;
 
-    public MarketsController(DefaultApplicationService applicationService) {
-        model = new MarketsModel();
-        view = new MarketsView(model, this);
+    public OfferCompletedController(DefaultApplicationService applicationService) {
+        model = new OfferCompletedModel();
+        view = new OfferCompletedView(model, this);
     }
 
     @Override
     public void onActivate() {
-        onSelect(MarketsModel.Direction.BUY);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onSelect(MarketsModel.Direction selectedDirection) {
-        model.getDirection().set(selectedDirection);
-    }
-
-
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_PUBLISHED);
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
-    }
-
-    public void onSkip() {
-        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
     }
 }
