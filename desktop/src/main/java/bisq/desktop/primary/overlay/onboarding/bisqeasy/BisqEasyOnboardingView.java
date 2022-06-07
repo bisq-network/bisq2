@@ -23,6 +23,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -30,13 +31,21 @@ import javafx.scene.layout.VBox;
 
 public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, BisqEasyOnboardingController> {
 
+    public static HBox getIconAndText(String text, String imageId) {
+        Label label = new Label(text);
+        label.setId("bisq-easy-onboarding-label");
+        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
+        HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 8));
+        return new HBox(20, bulletPoint, label);
+    }
+    
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(model, controller);
 
         root.setMaxWidth(920);
         root.setMaxHeight(500);
         vBox.setPrefHeight(500);
-        
+
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
 
@@ -70,7 +79,7 @@ public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, Bis
         line.getStyleClass().add("bisq-mid-grey");
         selectionMarker.getStyleClass().remove("bisq-green-line");
         selectionMarker.getStyleClass().add("bisq-white-bg");
-       
+
         StackPane.setMargin(lineAndMarker, new Insets(100, 110, 0, 0));
     }
 

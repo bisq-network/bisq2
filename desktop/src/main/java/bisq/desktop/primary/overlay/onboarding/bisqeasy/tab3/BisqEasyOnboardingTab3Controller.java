@@ -18,7 +18,6 @@
 package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab3;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -50,10 +49,6 @@ public class BisqEasyOnboardingTab3Controller implements Controller {
     }
 
     void onSkip() {
-        OverlayController.hide();
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki");
+      //  OverlayController.hide();
     }
 }

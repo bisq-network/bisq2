@@ -35,7 +35,8 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-      //  root.setStyle("-fx-background-color: transparent");
+        root.setMaxWidth(920); 
+        root.setMaxHeight(550);
         
         model.getView().addListener((observable, oldValue, newValue) -> {
             root.getChildren().add(newValue.getRoot());
