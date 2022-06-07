@@ -243,6 +243,38 @@
     -fx-image: url("images/onboarding/onboarding-3-profile.png");
 }
 
+/* onboarding template*/
+#template_easy {
+    -fx-image: url("images/onboarding/template/onboarding-template_0000_easy.png");
+}
+
+#template_profile {
+    -fx-image: url("images/onboarding/template/onboarding-template_0001_profile.png");
+}
+
+#template_buy_sell {
+    -fx-image: url("images/onboarding/template/onboarding-template_0002_buy_sell.png");
+}
+
+#template_market {
+    -fx-image: url("images/onboarding/template/onboarding-template_0003_market.png");
+}
+
+#template_amount {
+    -fx-image: url("images/onboarding/template/onboarding-template_0004_amount.png");
+}
+
+#template_methods {
+    -fx-image: url("images/onboarding/template/onboarding-template_0005_methods.png");
+}
+
+#template_complete {
+    -fx-image: url("images/onboarding/template/onboarding-template_0006_complete.png");
+}
+
+#template_published {
+    -fx-image: url("images/onboarding/template/onboarding-template_0007_published.png");
+}
 
 /*Dashboard*/
 #welcome-community {

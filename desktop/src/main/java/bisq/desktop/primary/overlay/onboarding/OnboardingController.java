@@ -22,6 +22,9 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyOnboardingController;
+import bisq.desktop.primary.overlay.onboarding.offer.direction.DirectionController;
+import bisq.desktop.primary.overlay.onboarding.offer.market.MarketsController;
+import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,6 +60,28 @@ public class OnboardingController extends NavigationController {
             case BISQ_EASY_ONBOARDING -> {
                 return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
+            case CREATE_PROFILE -> {
+                return Optional.of(new CreateProfileController(applicationService));
+            }
+            case ONBOARDING_DIRECTION -> {
+                return Optional.of(new DirectionController(applicationService));
+            }
+            case ONBOARDING_MARKET -> {
+                return Optional.of(new MarketsController(applicationService));
+            }
+            case ONBOARDING_AMOUNT -> {
+                return Optional.of(new CreateProfileController(applicationService));
+            }
+            case ONBOARDING_METHOD -> {
+                return Optional.of(new CreateProfileController(applicationService));
+            }
+            case ONBOARDING_FINAL -> {
+                return Optional.of(new CreateProfileController(applicationService));
+            }
+            case ONBOARDING_PUBLISHED -> {
+                return Optional.of(new CreateProfileController(applicationService));
+            }
+
             default -> {
                 return Optional.empty();
             }

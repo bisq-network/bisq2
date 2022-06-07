@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.initNymProfile;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.TextInputBox;
@@ -24,14 +24,18 @@ import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, InitNymProfileController> {
+public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProfileController> {
     private final Button regenerateButton;
     private final Button nextButton;
     private final TextInputBox nicknameTextInputBox;
@@ -39,24 +43,18 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
     private final ImageView roboIconView;
     private final ProgressIndicator powProgressIndicator;
 
-    public InitNymProfileView(InitNymProfileModel model, InitNymProfileController controller) {
-        super(new ScrollPane(), model, controller);
+    public CreateProfileView(CreateProfileModel model, CreateProfileController controller) {
+        super(new VBox(), model, controller);
 
-        VBox vBox = new VBox();
-        vBox.setAlignment(Pos.TOP_CENTER);
-        vBox.setSpacing(8);
-        vBox.getStyleClass().add("bisq-content-bg");
-        vBox.setPadding(new Insets(30, 0, 30, 0));
-
-        root.setContent(vBox);
-        root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        root.setFitToWidth(true);
+        root.setAlignment(Pos.TOP_CENTER);
+        root.setSpacing(8);
         root.getStyleClass().add("bisq-content-bg");
+        root.setPadding(new Insets(30, 0, 30, 0));
 
-        Label headLineLabel = new Label(Res.get("initNymProfile.headline"));
+        Label headLineLabel = new Label(Res.get("createProfile.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("initNymProfile.subTitle"));
+        Label subtitleLabel = new Label(Res.get("createProfile.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -72,26 +70,26 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         powProgressIndicator.setMinSize(size, size);
         powProgressIndicator.setOpacity(0.5);
 
-        VBox profileIdBox = getValueBox(Res.get("initNymProfile.nymId"));
+        VBox profileIdBox = getValueBox(Res.get("createProfile.nymId"));
         VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
         nymId = (Label) profileIdBox.getChildren().get(1);
 
-        regenerateButton = new Button(Res.get("initNymProfile.regenerate"));
+        regenerateButton = new Button(Res.get("createProfile.regenerate"));
         regenerateButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3", "text-underline");
         VBox.setMargin(regenerateButton, new Insets(0, 0, 16, 0));
 
-        nicknameTextInputBox = new TextInputBox(Res.get("initNymProfile.nickName"),
-                Res.get("initNymProfile.nickName.prompt"));
+        nicknameTextInputBox = new TextInputBox(Res.get("createProfile.nickName"),
+                Res.get("createProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(300);
         VBox.setMargin(nicknameTextInputBox, new Insets(0, 0, 16, 0));
 
 
-        nextButton = new Button(Res.get("initNymProfile.createProfile"));
+        nextButton = new Button(Res.get("createProfile.createProfile"));
         nextButton.setGraphicTextGap(8.0);
         nextButton.setContentDisplay(ContentDisplay.RIGHT);
         nextButton.setDefaultButton(true);
 
-        vBox.getChildren().addAll(
+        root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
                 powProgressIndicator,
@@ -107,7 +105,7 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
     protected void onViewAttached() {
         nicknameTextInputBox.textProperty().bindBidirectional(model.nickName);
         nicknameTextInputBox.requestFocus();
-        
+
         nymId.textProperty().bind(model.nymId);
         nextButton.graphicProperty().bind(Bindings.createObjectBinding(() -> {
             if (!model.isBusy.get()) {
@@ -121,7 +119,7 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         }, model.isBusy));
         nextButton.disableProperty().bind(model.createProfileButtonDisable);
 
-       
+
         roboIconView.imageProperty().bind(model.roboHashImage);
         roboIconView.managedProperty().bind(model.roboHashIconVisible);
         roboIconView.visibleProperty().bind(model.roboHashIconVisible);
@@ -130,9 +128,16 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         powProgressIndicator.progressProperty().bind(model.powProgress);
         regenerateButton.disableProperty().bind(model.roboHashIconVisible.not());
         nymId.disableProperty().bind(model.roboHashIconVisible.not());
-        
+
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
         nextButton.setOnAction(e -> controller.onCreateNymProfile());
+        
+        // We deactivate the close popup by escape
+        root.getScene().setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
+                e.consume();
+            }
+        });
     }
 
     @Override
@@ -148,7 +153,7 @@ public class InitNymProfileView extends View<ScrollPane, InitNymProfileModel, In
         powProgressIndicator.progressProperty().unbind();
         regenerateButton.disableProperty().unbind();
         nymId.disableProperty().unbind();
-        
+
         regenerateButton.setOnAction(null);
         nextButton.setOnAction(null);
     }

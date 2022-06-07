@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 
 public class BisqEasyOnboardingTab3Controller implements Controller {
@@ -44,11 +43,10 @@ public class BisqEasyOnboardingTab3Controller implements Controller {
     }
 
     void onNext() {
-        OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
 
     void onSkip() {
-      //  OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
 }

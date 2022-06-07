@@ -15,45 +15,46 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
+@Slf4j
+public class DirectionController implements Controller {
+    private final DirectionModel model;
     @Getter
-    private final DashboardView view;
+    private final DirectionView view;
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
+    public DirectionController(DefaultApplicationService applicationService) {
+        model = new DirectionModel();
+        view = new DirectionView(model, this);
     }
 
     @Override
     public void onActivate() {
-        // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
-        // }
+        onSelect(DirectionModel.Direction.BUY);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onOpenOnboardingPopup() {
-        // Navigation.navigateTo(NavigationTarget.ONBOARDING);
+    public void onSelect(DirectionModel.Direction selectedDirection) {
+        model.getDirection().set(selectedDirection);
     }
 
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+
+    public void onNext() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
     }
 
-    public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+    public void onSkip() {
+        OverlayController.hide();
     }
-
 }

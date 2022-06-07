@@ -31,13 +31,6 @@ import javafx.scene.layout.VBox;
 
 public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, BisqEasyOnboardingController> {
 
-    public static HBox getIconAndText(String text, String imageId) {
-        Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 8));
-        return new HBox(20, bulletPoint, label);
-    }
     
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(model, controller);

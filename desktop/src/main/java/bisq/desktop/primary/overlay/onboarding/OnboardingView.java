@@ -17,33 +17,38 @@
 
 package bisq.desktop.primary.overlay.onboarding;
 
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.onboardingOld.onboardNewbie.OnboardNewbieView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OnboardingView extends NavigationView<VBox, OnboardingModel, OnboardingController> {
-    public OnboardingView(OnboardingModel model, OnboardingController controller) {
-        super(new VBox(), model, controller);
+public class OnboardingView extends NavigationView<AnchorPane, OnboardingModel, OnboardingController> {
 
-        root.setMaxWidth(920); 
+
+    public OnboardingView(OnboardingModel model, OnboardingController controller) {
+        super(new AnchorPane(), model, controller);
+
+        root.setMaxWidth(920);
         root.setMaxHeight(550);
-        
+
         model.getView().addListener((observable, oldValue, newValue) -> {
-            root.getChildren().add(newValue.getRoot());
+            Region childRoot = newValue.getRoot();
+            Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
+            root.getChildren().add(childRoot);
             if (oldValue != null) {
-                Transitions.transitHorizontal(newValue.getRoot(), oldValue.getRoot());
+                Transitions.transitHorizontal(childRoot, oldValue.getRoot());
             } else {
-                Transitions.fadeIn(newValue.getRoot());
+                Transitions.fadeIn(childRoot);
             }
         });
     }
@@ -55,6 +60,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     @Override
     protected void onViewDetached() {
     }
+
     private void showNavigationProgress() {
         root.getStyleClass().add("bisq-content-bg");
 

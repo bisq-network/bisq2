@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.initNymProfile;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.Model;
 import bisq.security.pow.ProofOfWork;
@@ -26,7 +26,7 @@ import lombok.Getter;
 import java.security.KeyPair;
 
 @Getter
-public class InitNymProfileModel implements Model {
+public class CreateProfileModel implements Model {
     final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     final StringProperty nymId = new SimpleStringProperty();
     final StringProperty nickName = new SimpleStringProperty();

@@ -47,5 +47,6 @@ public class BisqEasyOnboardingTab2Controller implements Controller {
     }
 
     void onSkip() {
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
 }

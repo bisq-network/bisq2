@@ -15,12 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.initNymProfile;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
@@ -37,32 +39,28 @@ import java.security.KeyPair;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class InitNymProfileController implements Controller {
-    private final InitNymProfileModel model;
+public class CreateProfileController implements Controller {
+    private final CreateProfileModel model;
     @Getter
-    private final InitNymProfileView view;
+    private final CreateProfileView view;
     private final ChatUserService chatUserService;
-    private final Consumer<Boolean> navigationHandler;
     private final KeyPairService keyPairService;
     private final ProofOfWorkService proofOfWorkService;
     private Subscription nickNameSubscription;
     private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
     private final AtomicBoolean isMintNymProofOfWorkFutureCanceled = new AtomicBoolean();
 
-    public InitNymProfileController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
+    public CreateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         chatUserService = applicationService.getChatUserService();
 
-        this.navigationHandler = navigationHandler;
-
-        model = new InitNymProfileModel();
-        view = new InitNymProfileView(model, this);
+        model = new CreateProfileModel();
+        view = new CreateProfileView(model, this);
     }
 
     @Override
@@ -95,7 +93,7 @@ public class InitNymProfileController implements Controller {
                     .thenAccept(userProfile -> UIThread.run(() -> {
                         checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                         model.createProfileButtonDisable.set(false);
-                        navigationHandler.accept(true);
+                        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
                     }));
         }
     }

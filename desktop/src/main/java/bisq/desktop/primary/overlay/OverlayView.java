@@ -17,9 +17,14 @@
 
 package bisq.desktop.primary.overlay;
 
+import bisq.common.application.DevMode;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.utils.KeyCodeUtils;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationView;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -29,8 +34,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -40,7 +45,7 @@ import javafx.util.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayController> {
+public class OverlayView extends NavigationView<AnchorPane, OverlayModel, OverlayController> {
     private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
     private final Region owner;
@@ -51,20 +56,34 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
     private UIScheduler centerTime;
 
     public OverlayView(OverlayModel model, OverlayController controller, Region owner) {
-        super(new VBox(), model, controller);
+        super(new AnchorPane(), model, controller);
 
         this.owner = owner;
         ownerScene = owner.getScene();
 
-       // root.getStyleClass().add("popup-bg");
-
         Scene scene = new Scene(root);
         scene.getStylesheets().setAll(ownerScene.getStylesheets());
         scene.setFill(Color.TRANSPARENT);
-        scene.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
-                e.consume();
+
+        scene.setOnKeyReleased(keyEvent -> {
+            if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
+                    KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
+                controller.onQuit();
+            } else if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER) {
+                keyEvent.consume();
                 hide();
+            }
+
+            if (DevMode.isDevMode()) {
+                if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.SPLASH);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
+                    Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
+                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
+                }
             }
         });
 
@@ -97,6 +116,7 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
+                Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
                 root.getChildren().add(childRoot);
                 show(childRoot.getMaxWidth(), childRoot.getMaxHeight());
                 Transitions.transitContentViews(oldValue, newValue);
@@ -132,7 +152,7 @@ public class OverlayView extends NavigationView<VBox, OverlayModel, OverlayContr
 
         layout();
 
-        Transitions.blurDark(owner);
+        Transitions.darken(owner);
 
         animateDisplay(controller::onShown);
     }

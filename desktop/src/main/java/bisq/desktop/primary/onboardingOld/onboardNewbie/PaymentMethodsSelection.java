@@ -53,7 +53,7 @@ public class PaymentMethodsSelection {
         controller = new Controller(chatService);
     }
 
-    void setSelectedMarket(Market selectedMarket) {
+    public void setSelectedMarket(Market selectedMarket) {
         controller.setSelectedMarket(selectedMarket);
     }
 

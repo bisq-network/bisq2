@@ -15,45 +15,50 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.overlay.onboarding.offer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
+@Slf4j
+public class MarketsController implements Controller {
+    private final MarketsModel model;
     @Getter
-    private final DashboardView view;
+    private final MarketsView view;
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
+    public MarketsController(DefaultApplicationService applicationService) {
+        model = new MarketsModel();
+        view = new MarketsView(model, this);
     }
 
     @Override
     public void onActivate() {
-        // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
-        // }
+        onSelect(MarketsModel.Direction.BUY);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onOpenOnboardingPopup() {
-        // Navigation.navigateTo(NavigationTarget.ONBOARDING);
+    public void onSelect(MarketsModel.Direction selectedDirection) {
+        model.getDirection().set(selectedDirection);
     }
 
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+
+    public void onNext() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
     }
 
-    public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+    public void onBack() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
     }
 
+    public void onSkip() {
+        OverlayController.hide();
+    }
 }

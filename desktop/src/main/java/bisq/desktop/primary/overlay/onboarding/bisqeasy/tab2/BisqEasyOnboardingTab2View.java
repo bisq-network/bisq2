@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab2;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyOnboardingView;
+import bisq.desktop.primary.overlay.onboarding.Utils;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -51,9 +51,9 @@ public class BisqEasyOnboardingTab2View extends View<VBox, BisqEasyOnboardingTab
         VBox.setMargin(buttons, new Insets(40, 0, 0, 0));
 
         root.getChildren().addAll(headLine,
-                BisqEasyOnboardingView.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line1"),"onboarding-2-offer"),
-                BisqEasyOnboardingView.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line2"),"onboarding-2-chat"),
-                BisqEasyOnboardingView.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line3"),"onboarding-2-payment"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line1"),"onboarding-2-offer"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line2"),"onboarding-2-chat"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line3"),"onboarding-2-payment"),
                 buttons);
     }
 

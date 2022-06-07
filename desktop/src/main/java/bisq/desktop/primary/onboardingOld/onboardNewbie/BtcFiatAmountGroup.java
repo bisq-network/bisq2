@@ -44,26 +44,26 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
 @Slf4j
-class BtcFiatAmountGroup {
+public class BtcFiatAmountGroup {
     private final Controller controller;
 
-    BtcFiatAmountGroup(MarketPriceService marketPriceService) {
+    public BtcFiatAmountGroup(MarketPriceService marketPriceService) {
         controller = new Controller(marketPriceService);
     }
 
-    ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
+    public ReadOnlyObjectProperty<Monetary> baseSideAmountProperty() {
         return controller.model.baseSideAmount;
     }
 
-    Pane getRoot() {
+    public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    void setSelectedMarket(Market selectedMarket) {
+    public void setSelectedMarket(Market selectedMarket) {
         controller.setSelectedMarket(selectedMarket);
     }
 
-    void setDirection(Direction direction) {
+    public void setDirection(Direction direction) {
         controller.baseAmount.setDirection(direction);
         controller.quoteAmount.setDirection(direction);
     }

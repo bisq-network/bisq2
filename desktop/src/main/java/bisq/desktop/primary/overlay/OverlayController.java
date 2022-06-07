@@ -22,6 +22,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
+import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -81,20 +82,25 @@ public class OverlayController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        model.setTopMargin(OverlayModel.TOP_MARGIN);
+       /* model.setTopMargin(OverlayModel.TOP_MARGIN);
         model.setBottomMargin(OverlayModel.BOTTOM_MARGIN);
         model.setHorizontalMargin(OverlayModel.HORIZONTAL_MARGIN);
+
+        model.setTopMargin(95);
+        model.setBottomMargin(125);
+        model.setHorizontalMargin(140);*/
+        
         switch (navigationTarget) {
             case ONBOARDING -> {
-                model.setTopMargin(95);
+              /*  model.setTopMargin(95);
                 model.setBottomMargin(125);
-                model.setHorizontalMargin(140);
+                model.setHorizontalMargin(140);*/
                 return Optional.of(new OnboardingController(applicationService));
             }
            /* case ONBOARDING -> {
                 return Optional.of(new NewProfilePopupController(applicationService));
             }*/
-           
+
             default -> {
                 return Optional.empty();
             }
@@ -106,5 +112,10 @@ public class OverlayController extends NavigationController {
 
     void onHidden() {
         resetSelectedChildTarget();
+    }
+
+    public void onQuit() {
+        applicationService.shutdown()
+                .thenAccept(__ -> Platform.exit());
     }
 }
