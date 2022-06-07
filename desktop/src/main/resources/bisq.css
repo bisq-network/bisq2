@@ -247,6 +247,54 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Radio button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.radio-button {
+    -fx-text-fill: -bisq-grey-9;    
+}
+
+.radio-button:selected {
+    -fx-text-fill: -bisq-white;    
+}
+
+.radio-button .radio {
+    -fx-background-color: -bisq-grey-5;
+    -fx-padding: 1px;
+    -fx-border-radius: 15px;
+    -fx-border-width: 2px;
+    -fx-border-color: transparent;
+}
+
+.radio-button:armed .radio {
+    -fx-border-color: -bisq-green;
+}
+
+.radio-button:selected .radio {
+    -fx-border-color: -bisq-green;
+}
+
+.radio-button .radio .dot {
+    -fx-background-color: -bisq-grey-5;
+    -fx-background-insets: 0;
+    -fx-padding: 5px
+}
+.radio-button:armed .radio {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.radio-button:armed .radio .dot,
+.radio-button:hover .radio .dot {
+    -fx-background-color: -bisq-grey-16;
+}
+
+.radio-button:selected .radio .dot {
+    -fx-background-color: white;
+}
+
+/*******************************************************************************
+ *                                                                             *
  * Custom Text based                                                                  *
  *                                                                             *
  ******************************************************************************/
