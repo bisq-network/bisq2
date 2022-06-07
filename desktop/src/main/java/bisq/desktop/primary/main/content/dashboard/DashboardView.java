@@ -62,7 +62,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.newOffer.headline"),
                 Res.get("dashboard.newOffer.content"),
                 Res.get("dashboard.newOffer.button"),
-                controller::onOpenOnboardingPopup
+                controller::onCreateOffer
         );
         root.getChildren().add(new HBox(16, communityBox, profileBox));
     }

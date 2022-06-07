@@ -150,15 +150,15 @@ public class Transitions {
     }
 
     public static void blurDark(Node node) {
-        blur(node, DEFAULT_DURATION, -0.2, false, 5);
+        blur(node, DEFAULT_DURATION, -0.6, false, 5);
     }
 
     public static void darken(Node node) {
-        blur(node, DEFAULT_DURATION, -0.3, false, 0);
+        blur(node, DEFAULT_DURATION, -0.6, false, 0);
     }
 
     public static void darken(Node node, int duration, boolean removeNode) {
-        blur(node, duration, -0.2, removeNode, 0);
+        blur(node, duration, -0.6, removeNode, 0);
     }
 
     public static void removeEffect(Node node) {
