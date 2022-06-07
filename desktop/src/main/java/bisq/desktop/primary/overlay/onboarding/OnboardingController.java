@@ -15,48 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy;
+package bisq.desktop.primary.overlay.onboarding;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
-import bisq.settings.SettingsService;
+import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyOnboardingController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-//todo can be removed if we dont have a intro screen anymore... but leave it for now...
 @Slf4j
-public class BisqEasyController extends NavigationController {
+public class OnboardingController extends NavigationController {
     private final DefaultApplicationService applicationService;
     @Getter
-    private final BisqEasyModel model;
+    private final OnboardingModel model;
     @Getter
-    private final BisqEasyView view;
-    private final SettingsService settingsService;
+    private final OnboardingView view;
 
-    public BisqEasyController(DefaultApplicationService applicationService) {
-        super(NavigationTarget.BISQ_EASY);
+    public OnboardingController(DefaultApplicationService applicationService) {
+        super(NavigationTarget.ONBOARDING);
 
         this.applicationService = applicationService;
-        settingsService = applicationService.getSettingsService();
-        model = new BisqEasyModel();
-        view = new BisqEasyView(model, this);
+        model = new OnboardingModel(applicationService.getChatUserService());
+        view = new OnboardingView(model, this);
     }
 
     @Override
     public void onActivate() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
-      /*  if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
-                .filter(value -> value)
-                .isEmpty()) {
-            // If cookie not set we show popup 
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
-        }*/
     }
 
     @Override
@@ -66,8 +54,8 @@ public class BisqEasyController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_CHAT -> {
-                return Optional.of(new BisqEasyChatController(applicationService));
+            case BISQ_EASY_ONBOARDING -> {
+                return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
             default -> {
                 return Optional.empty();

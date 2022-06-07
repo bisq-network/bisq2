@@ -15,22 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab3;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
-    @Getter
-    private final DashboardView view;
+public class BisqEasyOnboardingTab3Controller implements Controller {
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
+    private final BisqEasyOnboardingTab3Model model;
+    @Getter
+    private final BisqEasyOnboardingTab3View view;
+
+    public BisqEasyOnboardingTab3Controller(DefaultApplicationService applicationService) {
+        model = new BisqEasyOnboardingTab3Model(applicationService);
+        view = new BisqEasyOnboardingTab3View(model, this);
     }
 
     @Override
@@ -41,16 +44,16 @@ public class DashboardController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onOpenOnboardingPopup() {
-       // Navigation.navigateTo(NavigationTarget.ONBOARDING);
+    void onNext() {
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+    void onSkip() {
+        OverlayController.hide();
     }
 
-    public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki");
     }
-
 }

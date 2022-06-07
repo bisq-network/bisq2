@@ -46,6 +46,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
     private final HBox filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
+    private final Pane helpPane;
     private final ImageView peersRoboIconView;
 
     protected final HBox centerToolbar;
@@ -65,6 +66,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
+        this.helpPane = helpPane;
 
         // Left
         left = Layout.vBoxWith(
@@ -137,6 +139,8 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
+        helpPane.visibleProperty().bind(model.getHelpVisible());
+        helpPane.managedProperty().bind(model.getHelpVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
@@ -176,6 +180,8 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
         channelInfo.managedProperty().unbind();
+        helpPane.visibleProperty().unbind();
+        helpPane.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 
