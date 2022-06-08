@@ -41,6 +41,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
 
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
+    private final HBox topPaneBox;
     private Subscription navigationProgressIndexSubscription, navigationProgressVisibleSubscription;
 
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
@@ -50,14 +51,18 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
         root.setMaxHeight(550);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
-        HBox topPaneBox = topPane.first();
+        topPaneBox = topPane.first();
         skipButton = topPane.second();
         navigationProgressLabelList = topPane.third();
         root.getChildren().add(topPaneBox);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             Region childRoot = newValue.getRoot();
-            childRoot.setPrefHeight(root.getHeight() - 55);
+            if (model.getNavigationProgressVisible().get()) {
+                childRoot.setPrefHeight(root.getHeight() - 55);
+            } else {
+                childRoot.setPrefHeight(root.getHeight());
+            }
             root.getChildren().add(childRoot);
             if (oldValue != null) {
                 Transitions.transitHorizontal(childRoot, oldValue.getRoot());
@@ -83,6 +88,11 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
                 label.setVisible(visible);
                 label.setManaged(visible);
             });
+            if (visible) {
+                topPaneBox.setId("onboarding-top-panel");
+            } else {
+                topPaneBox.setId(null);
+            }
         });
     }
 
