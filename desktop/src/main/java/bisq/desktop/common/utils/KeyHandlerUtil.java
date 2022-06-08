@@ -46,24 +46,23 @@ public class KeyHandlerUtil {
                 OverlayController.hide();
                 Navigation.navigateTo(NavigationTarget.SPLASH);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_PROTOCOL);
+                Navigation.navigateTo(NavigationTarget.BISQ_2_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
+                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_COMPLETED);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_PUBLISHED);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_COMPLETED);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
-                OverlayController.hide();
-                Navigation.navigateTo(NavigationTarget.DASHBOARD);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_PUBLISHED);
             }
         }
     }

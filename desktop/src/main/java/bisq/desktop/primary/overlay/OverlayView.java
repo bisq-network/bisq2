@@ -132,7 +132,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
 
         layout();
 
-        Transitions.darken(owner);
+        model.getTransitionsType().apply(owner);
 
         animateDisplay(controller::onShown);
     }

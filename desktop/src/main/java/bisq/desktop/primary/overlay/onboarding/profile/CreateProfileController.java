@@ -93,7 +93,7 @@ public class CreateProfileController implements Controller {
                     .thenAccept(userProfile -> UIThread.run(() -> {
                         checkArgument(userProfile.getIdentity().domainId().equals(profileId));
                         model.createProfileButtonDisable.set(false);
-                        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+                        Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
                     }));
         }
     }

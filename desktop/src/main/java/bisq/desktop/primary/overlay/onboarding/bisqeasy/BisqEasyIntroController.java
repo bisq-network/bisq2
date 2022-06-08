@@ -15,23 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab1;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class BisqEasyOnboardingTab1Controller implements Controller {
-
-    private final BisqEasyOnboardingTab1Model model;
+@Slf4j
+public class BisqEasyIntroController implements Controller {
+    private final BisqEasyIntroModel model;
     @Getter
-    private final BisqEasyOnboardingTab1View view;
+    private final BisqEasyIntroView view;
 
-    public BisqEasyOnboardingTab1Controller(DefaultApplicationService applicationService) {
-        model = new BisqEasyOnboardingTab1Model(applicationService);
-        view = new BisqEasyOnboardingTab1View(model, this);
+    public BisqEasyIntroController(DefaultApplicationService applicationService) {
+        model = new BisqEasyIntroModel();
+        view = new BisqEasyIntroView(model, this);
     }
 
     @Override
@@ -42,11 +44,12 @@ public class BisqEasyOnboardingTab1Controller implements Controller {
     public void onDeactivate() {
     }
 
-     void onNext() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING_TAB2);
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
     }
 
-     void onSkip() {
-         Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
+    public void onSkip() {
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }
 }

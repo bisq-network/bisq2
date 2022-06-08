@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab2;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab1;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyOnboardingTab2Model implements Model {
+public class BisqEasyOnboardingTab1Model implements Model {
 
-    public BisqEasyOnboardingTab2Model(DefaultApplicationService applicationService) {
+    public BisqEasyOnboardingTab1Model(DefaultApplicationService applicationService) {
     }
 }

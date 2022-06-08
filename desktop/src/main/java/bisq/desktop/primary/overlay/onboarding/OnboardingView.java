@@ -71,7 +71,9 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
             }
         });
     }
-
+    public void getBackGroundTransition() {
+        
+    }
 
     @Override
     protected void onViewAttached() {

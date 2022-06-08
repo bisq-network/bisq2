@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.settings.DisplaySettings;
@@ -37,6 +38,8 @@ public class OverlayModel extends NavigationModel {
     private double bottomMargin = BOTTOM_MARGIN;
     @Setter
     private double horizontalMargin = HORIZONTAL_MARGIN;
+    @Setter
+    private Transitions.Type transitionsType = Transitions.DEFAULT_TYPE;
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {

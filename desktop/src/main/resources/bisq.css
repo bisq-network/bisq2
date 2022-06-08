@@ -443,6 +443,12 @@
     -fx-text-fill: -bisq-green;
 }
 
+.bisq-popup-green-headline-label {
+    -fx-font-size: 2em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
 .bisq-tab-button-label {
     -fx-font-size: 0.93em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -1577,9 +1583,8 @@ tree-table-view:focused {
 }
 
 #chat-messages-message {
-    -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.33em;
-    -fx-min-height: 36;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -1599,7 +1604,7 @@ tree-table-view:focused {
 .chat-offer-box {
     -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 8;
-    -fx-padding: 15;
+   /* -fx-padding: 15;*/
 }
 
 #buy-button {
@@ -1695,7 +1700,7 @@ tree-table-view:focused {
 #bisq-easy-onboarding-headline-label {
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -fx-light-text-color;
+    -fx-text-fill: -bisq-green;
 }
 
 #bisq-easy-onboarding-label {

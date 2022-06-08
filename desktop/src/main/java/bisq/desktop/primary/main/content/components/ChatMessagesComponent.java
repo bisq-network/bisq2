@@ -19,11 +19,13 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.utils.*;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.*;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.*;
+import bisq.desktop.components.controls.BisqPopupMenu;
+import bisq.desktop.components.controls.BisqPopupMenuItem;
+import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.desktop.popups.Popup;
@@ -582,6 +584,7 @@ public class ChatMessagesComponent {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
+                        private final VBox reputationBox;
                         private final BisqTextArea editInputField;
                         private final Button actionButton, saveEditButton, cancelEditButton;
                         private final Label emojiButton1, emojiButton2,
@@ -589,12 +592,13 @@ public class ChatMessagesComponent {
                                 pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Label userNameLabel = new Label();
                         private final Label dateTime = new Label();
-                        private final BisqTaggableTextArea message = new BisqTaggableTextArea();
+                        private final Label message = new Label();
+
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, messageContainer, reactionsBox, editControlsBox, quotedMessageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(42);
                         private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-                        private Subscription widthSubscription;
+                        private Subscription widthSubscription, messageWidthSubscription;
 
                         {
                             userNameLabel.setId("chat-user-name");
@@ -652,26 +656,25 @@ public class ChatMessagesComponent {
                                     deleteButton,
                                     moreOptionsButton);
                             reactionsBox.setSpacing(20);
-                            //reactionsBox.setStyle("-fx-background-color: -bisq-grey-12;");
                             reactionsBox.setPadding(new Insets(0, 15, 5, 15));
                             reactionsBox.setVisible(false);
 
                             message.setId("chat-messages-message");
-                            message.setAutoHeight(true);
-                            // The height calculation is about 8.5 px off in the chat messages
-                            // If corrects itself when clicking into the text field but no requestLayout calls or the like fixed it.
-                            // So we apply a manual fix with the observed value which fixes it.
-                            message.setHeightCorrection(8.5);
-                            message.setPadding(new Insets(0, 0, 20, 0));
-                            HBox.setHgrow(message, Priority.ALWAYS);
+                            message.setWrapText(true);
 
                             actionButton = new Button();
                             actionButton.setVisible(false);
                             actionButton.setManaged(false);
                             HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
 
-                            messageContainer = Layout.hBoxWith(message, actionButton);
-                            messageContainer.setAlignment(Pos.CENTER);
+                            Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
+                            reputationLabel.getStyleClass().add("bisq-text-7");
+                            reputationBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+                            reputationBox.setAlignment(Pos.CENTER_LEFT);
+                            HBox.setHgrow(message, Priority.NEVER);
+                            messageContainer = Layout.hBoxWith(message, Spacer.fillHBox(), actionButton, reputationBox);
+                            messageContainer.setPadding(new Insets(15));
+                            messageContainer.setAlignment(Pos.CENTER_LEFT);
 
                             VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
 
@@ -687,22 +690,14 @@ public class ChatMessagesComponent {
                             AnchorPane.setBottomAnchor(editControlsBox, 0.0);
                             pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
 
-                            Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
-                            reputationLabel.getStyleClass().add("bisq-text-7");
-                            VBox reputationBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-                            reputationBox.setAlignment(Pos.CENTER_LEFT);
-                            HBox.setMargin(reputationBox, new Insets(-10, 10, 0, 0));
                             HBox userInfoBox = new HBox(5, userNameLabel, dateTime);
                             VBox vBox = new VBox(0, userInfoBox, pane);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
-                            hBox = Layout.hBoxWith(chatUserIcon, vBox, reputationBox);
+                            hBox = Layout.hBoxWith(chatUserIcon, vBox/*, reputationBox*/);
                         }
 
                         private void hideHoverOverlay() {
                             reactionsBox.setVisible(false);
-                           /* if (!editInputField.isVisible()) {
-                                setStyle("-fx-background-color: transparent");
-                            }*/
                         }
 
                         @Override
@@ -776,14 +771,15 @@ public class ChatMessagesComponent {
                                 }
 
                                 if (isOfferMessage) {
-                                    VBox.setMargin(messageContainer, new Insets(5, 0, 25, 0));
+                                    VBox.setMargin(messageContainer, new Insets(15, 0, 25, 0));
+                                    HBox.setMargin(reputationBox, new Insets(0, 10, 0, 0));
                                 } else {
-                                    VBox.setMargin(messageContainer, new Insets(0, 0, 0, 0));
+                                    VBox.setMargin(messageContainer, new Insets(-10, 0, 0, 0));
+                                    HBox.setMargin(reputationBox, new Insets(-30, 10, 0, 0));
                                 }
                                 Layout.toggleStyleClass(messageContainer, "chat-offer-box", isOfferMessage);
 
                                 message.setText(item.getMessage());
-                                message.setStyleSpans(0, KeyWordDetection.getStyleSpans(item.getMessage(), model.getCustomTags()));
 
                                 dateTime.setText(item.getDate());
 
@@ -848,11 +844,22 @@ public class ChatMessagesComponent {
                                             quotedMessageField.setWrappingWidth(wrappingWidth - 20);
                                         });
 
+                                // Hack to get message wrapped and filled space
+                                messageWidthSubscription = EasyBind.subscribe(reputationBox.widthProperty(),
+                                        width -> {
+                                            if (reputationBox.getWidth() > 0) {
+                                                message.setPrefWidth(root.getWidth() - actionButton.getWidth() - reputationBox.getWidth() - 220);
+                                            }
+                                        });
                                 setGraphic(hBox);
                             } else {
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
                                 }
+                                if (messageWidthSubscription != null) {
+                                    messageWidthSubscription.unsubscribe();
+                                }
+
                                 userNameLabel.setOnMouseClicked(null);
                                 chatUserIcon.setOnMouseClicked(null);
                                 hBox.setOnMouseEntered(null);

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab3;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab2;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -30,16 +30,16 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyOnboardingTab3View extends View<VBox, BisqEasyOnboardingTab3Model, BisqEasyOnboardingTab3Controller> {
+public class BisqEasyOnboardingTab2View extends View<VBox, BisqEasyOnboardingTab2Model, BisqEasyOnboardingTab2Controller> {
     private final Button nextButton, skipButton;
 
-    public BisqEasyOnboardingTab3View(BisqEasyOnboardingTab3Model model, BisqEasyOnboardingTab3Controller controller) {
+    public BisqEasyOnboardingTab2View(BisqEasyOnboardingTab2Model model, BisqEasyOnboardingTab2Controller controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(15);
         root.setAlignment(Pos.CENTER_LEFT);
 
-        Label headLine = new Label(Res.get("bisqEasy.onBoarding.tab3.headline"));
+        Label headLine = new Label(Res.get("bisqEasy.onBoarding.tab2.headline"));
         headLine.setId("bisq-easy-onboarding-headline-label");
         VBox.setMargin(headLine, new Insets(-100, 0, 25, 0));
 
@@ -51,9 +51,9 @@ public class BisqEasyOnboardingTab3View extends View<VBox, BisqEasyOnboardingTab
         VBox.setMargin(buttons, new Insets(40, 0, 0, 0));
 
         root.getChildren().addAll(headLine,
-                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab3.line1"), "onboarding-3-profile"),
-                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab3.line2"), "onboarding-3-method"),
-                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab3.line3"), "onboarding-3-market"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line1"),"onboarding-2-offer"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line2"),"onboarding-2-chat"),
+                Utils.getIconAndText(Res.get("bisqEasy.onBoarding.tab2.line3"),"onboarding-2-payment"),
                 buttons);
     }
 

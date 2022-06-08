@@ -19,6 +19,9 @@
     -fx-image: url("images/logo-splash.png");
 }
 
+#logo-mark-midsize {
+    -fx-image: url("images/logo-mark-midsize.png");
+}
 
 #logo-grey {
     -fx-image: url("images/logo_grey.png");
