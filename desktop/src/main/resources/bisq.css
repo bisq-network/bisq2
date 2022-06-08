@@ -24,6 +24,11 @@
 }
 
 @font-face {
+    font-family: "IBM Plex Sans Thin";
+    src: url("/fonts/IBMPlexSans-Thin.ttf");
+}
+
+@font-face {
     font-family: "IBM Plex Mono";
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
@@ -376,6 +381,12 @@
 .bisq-text-10 {
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.9em;
+}
+
+.bisq-text-11 {
+    -fx-fill: -bisq-white;
+    -fx-font-size: 4.1em;
+    -fx-font-family: "IBM Plex Sans Thin";
 }
 
 .wrap-text {
@@ -762,6 +773,11 @@
     -fx-show-delay: 300ms;
 }
 
+.tooltip.dark-tooltip {
+    -fx-text-fill: -bisq-grey-11;
+    -fx-background-color: -bisq-grey-2;
+}
+
 /*******************************************************************************
  *                                                                             *
  * ProgressBar                                                                  *
@@ -861,6 +877,20 @@
     -fx-fill: -bisq-toggle-color;
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Slider                                                                      *
+ *                                                                             *
+ ******************************************************************************/
+
+.slider .track {
+    -fx-background-color: -bisq-grey-21;
+    -fx-pref-height: 2px;
+}
+
+.slider .thumb {
+    -fx-background-color: -bisq-green;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -1333,6 +1363,11 @@ tree-table-view:focused {
 
 .bisq-box-2 {
     -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 8;
+}
+
+.bisq-box-3 {
+    -fx-background-color: -bisq-grey-17;
     -fx-background-radius: 8;
 }
 

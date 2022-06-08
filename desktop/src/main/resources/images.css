@@ -276,6 +276,11 @@
     -fx-image: url("images/onboarding/template/onboarding-template_0007_published.png");
 }
 
+/* Onboarding icons*/
+#info-circle-solid {
+    -fx-image: url("images/onboarding/info-circle-solid.png");
+}
+
 /*Dashboard*/
 #welcome-community {
     -fx-image: url("images/welcome-community.png");

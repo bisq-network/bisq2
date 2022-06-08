@@ -17,9 +17,74 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
-import lombok.Getter;
+import bisq.i18n.Res;
+import bisq.offer.spec.Direction;
+import bisq.presentation.formatters.AmountFormatter;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.*;
+import javafx.beans.value.ObservableValue;
 
-@Getter
 public class AmountModel implements Model {
+    protected final DoubleProperty exchangeRateProperty = new SimpleDoubleProperty();
+    protected final StringProperty quoteCurrencyProperty = new SimpleStringProperty();
+
+    protected final DoubleProperty amountAsDoubleProperty = new SimpleDoubleProperty();
+    protected final ObservableValue<Monetary> amountProperty = Bindings.createObjectBinding(
+            () -> Coin.asBtc(Math.round(amountAsDoubleProperty.get() * 100000000)),
+            amountAsDoubleProperty
+    );
+    protected final ObservableValue<String> formattedAmountProperty = Bindings.createStringBinding(
+            () -> AmountFormatter.formatAmount(amountProperty.getValue(), true),
+            amountProperty);
+    
+    protected final ObservableValue<String> formattedQuoteAmountProperty = Bindings.createStringBinding(
+            () -> {
+                long quoteAmountAsLong = Math.round(amountAsDoubleProperty.get() * exchangeRateProperty.get() * 10000);
+                Monetary xamount = Monetary.from(quoteAmountAsLong, quoteCurrencyProperty.get());
+                return "~ " + AmountFormatter.formatAmountWithCode(xamount, true);
+            },
+            amountAsDoubleProperty, quoteCurrencyProperty, exchangeRateProperty);
+    protected final ObservableValue<String> currencyCode = Bindings.createStringBinding(
+            () -> amountProperty.getValue().getCode(),
+            amountProperty
+    );
+    
+    protected final ObjectProperty<Monetary> minAmountProperty = new SimpleObjectProperty<>();
+    protected final ObservableValue<String> formattedMinAmountProperty = Bindings.createStringBinding(
+            () -> Res.get("onboarding.amount.minLabel", AmountFormatter.formatAmountWithCode(minAmountProperty.get(), true)),
+            minAmountProperty);
+    protected final ObservableValue<Number> minAmountAsDouble = Bindings.createDoubleBinding(
+            () -> minAmountProperty.get().asDouble(),
+            minAmountProperty
+    );
+        
+    protected final ObjectProperty<Monetary> maxAmountProperty = new SimpleObjectProperty<>();
+    protected final ObservableValue<String> formattedMaxAmountProperty = Bindings.createStringBinding(
+            () -> Res.get("onboarding.amount.maxLabel", AmountFormatter.formatAmountWithCode(maxAmountProperty.get(), true)),
+            maxAmountProperty);
+    protected final ObservableValue<Number> maxAmountAsDoubleProperty = Bindings.createDoubleBinding(
+            () -> maxAmountProperty.get().asDouble(),
+            maxAmountProperty
+    );
+    
+    protected final Direction direction;
+    
+    public String getDirectionAsString() {
+        return this.direction == Direction.BUY
+                ? Res.get("onboarding.amount.direction.buy")
+                : Res.get("onboarding.amount.direction.sell");
+    }
+
+    public AmountModel() {
+        //todo bind those values into the onboarding process 
+        this.direction = Direction.BUY;
+        this.quoteCurrencyProperty.set("USD");
+        this.exchangeRateProperty.set(30242.20);
+        this.amountAsDoubleProperty.set(0.003);
+        this.minAmountProperty.set(Coin.asBtc(10000));
+        this.maxAmountProperty.set(Coin.asBtc(2000000));
+    }
 }
