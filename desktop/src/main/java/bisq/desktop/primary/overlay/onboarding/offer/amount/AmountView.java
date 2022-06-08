@@ -19,47 +19,76 @@ package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.SnapshotParameters;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountView extends View<StackPane, AmountModel, AmountController> {
+public class AmountView extends View<VBox, AmountModel, AmountController> {
+    private final Label minAmountLabel, maxAmountLabel, valueLabel, currencyLabel, marketValueLabel;
+    private final Slider slider;
     private final Button nextButton, backButton;
 
     public AmountView(AmountModel model, AmountController controller) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
 
-        VBox vBox = new VBox();
-        vBox.setAlignment(Pos.TOP_CENTER);
-        vBox.getStyleClass().add("bisq-content-bg");
+        root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("bisq-content-bg");
 
-        Label headLineLabel = new Label(Res.get("onboarding.amount.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.amount.headline", model.getDirectionAsString()));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.amount.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.amount.subtitle", model.getDirectionAsString()));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
 
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
+        valueLabel = new Label();
+        valueLabel.getStyleClass().add("bisq-text-11");
+        currencyLabel = new Label("BTC");
+        currencyLabel.getStyleClass().add("bisq-text-9");
+        HBox valueBox = new HBox(10, valueLabel, currencyLabel);
+        valueBox.setAlignment(Pos.BASELINE_CENTER);
+        
+        marketValueLabel = new Label();
+        marketValueLabel.getStyleClass().add("bisq-text-3");
+        Button marketValueInfo = BisqIconButton.createIconButton("info-circle-solid");
+        Tooltip tooltip = new Tooltip(Res.get("onboarding.amount.marketValueInfo"));
+        tooltip.getStyleClass().add("dark-tooltip");
+        marketValueInfo.setTooltip(tooltip);
+        HBox marketValueBox = new HBox(3, marketValueLabel, marketValueInfo);
+        marketValueBox.setAlignment(Pos.CENTER);
+        
+        VBox vbox = new VBox(15, valueBox, marketValueBox);
+        vbox.getStyleClass().add("bisq-box-3");
+        vbox.setAlignment(Pos.CENTER);
+        vbox.setMaxWidth(400);
+        vbox.setPadding(new Insets(20, 20, 20, 20));
+        VBox.setMargin(vbox, new Insets(0, 0, 28, 0));
+
+        slider = new Slider();
+        minAmountLabel = new Label();
+        minAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+        maxAmountLabel = new Label();
+        maxAmountLabel.getStyleClass().add("bisq-small-light-label-dimmed");
+        
+        VBox sliderBox = new VBox(2, slider, new HBox(minAmountLabel, Spacer.fillHBox(), maxAmountLabel));
+        sliderBox.setMaxWidth(400);
+        VBox.setMargin(sliderBox, new Insets(10, 0, 60, 0));
 
         backButton = new Button(Res.get("back"));
+        
+        nextButton = new Button(Res.get("next"));
+        nextButton.setDefaultButton(true);
 
         HBox buttons = new HBox(7, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
@@ -68,45 +97,40 @@ public class AmountView extends View<StackPane, AmountModel, AmountController> {
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
         VBox.setMargin(buttons, new Insets(0, 0, 90, 0));
 
-        vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), buttons);
-
-        // WIP
-        // vBox.setStyle("-fx-background-color: transparant");
-        // topPaneBox.setStyle("-fx-background-color: transparant");
-
-        double width = 920;
-        double height = 550;
-        Canvas canvas = new Canvas();
-        canvas.setWidth(width);
-        canvas.setHeight(height);
-        GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.setImageSmoothing(true);
-
-        graphicsContext2D.beginPath();
-        graphicsContext2D.moveTo(80, 100);
-        graphicsContext2D.lineTo(840, 100);
-        graphicsContext2D.lineTo(840, 400);
-        graphicsContext2D.lineTo(80, 400);
-        graphicsContext2D.closePath();
-        graphicsContext2D.clip();
-
-        Image image = new Image("images/onboarding/template/onboarding-template_0004_amount.png");
-        graphicsContext2D.drawImage(image, 0, 0, width, height);
-        SnapshotParameters snapshotParameters = new SnapshotParameters();
-        snapshotParameters.setFill(Color.TRANSPARENT);
-        WritableImage clipped = canvas.snapshot(snapshotParameters, null);
-        root.getChildren().addAll(vBox, new ImageView(clipped));
+        root.getChildren().addAll(headLineLabel, subtitleLabel, vbox, sliderBox, Spacer.fillVBox(), buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        nextButton.setOnAction(e -> controller.onNext());
+        slider.minProperty().bind(model.minAmountAsDouble);
+        slider.maxProperty().bind(model.maxAmountAsDoubleProperty);
+        slider.valueProperty().bindBidirectional(model.amountAsDoubleProperty);
+        
+        minAmountLabel.textProperty().bind(model.formattedMinAmountProperty);
+        maxAmountLabel.textProperty().bind(model.formattedMaxAmountProperty);
+        
+        valueLabel.textProperty().bind(model.formattedAmountProperty);
+        currencyLabel.textProperty().bind(model.currencyCode);
+        marketValueLabel.textProperty().bind(model.formattedQuoteAmountProperty);
+
         backButton.setOnAction(evt -> controller.onBack());
+        nextButton.setOnAction(e -> controller.onNext());
     }
 
     @Override
     protected void onViewDetached() {
-        nextButton.setOnAction(null);
+        slider.minProperty().unbind();
+        slider.maxProperty().unbind();
+        slider.valueProperty().unbindBidirectional(model.amountAsDoubleProperty);
+        
+        minAmountLabel.textProperty().unbind();
+        maxAmountLabel.textProperty().unbind();
+
+        valueLabel.textProperty().unbind();
+        currencyLabel.textProperty().unbind();
+        marketValueLabel.textProperty().unbind();
+
         backButton.setOnAction(null);
+        nextButton.setOnAction(null);
     }
 }
