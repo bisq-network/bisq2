@@ -28,8 +28,8 @@ public class Utils {
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 8));
-        return new HBox(20, bulletPoint, label);
+        HBox.setMargin(bulletPoint, new Insets(-6, 0, 0, 4));
+        return new HBox(15, bulletPoint, label);
     }
 
 }

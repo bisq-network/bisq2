@@ -23,7 +23,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -31,7 +30,7 @@ import javafx.scene.layout.VBox;
 
 public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, BisqEasyOnboardingController> {
 
-    
+
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(model, controller);
 
@@ -39,7 +38,7 @@ public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, Bis
         root.setMaxHeight(500);
         vBox.setPrefHeight(500);
 
-        root.setPadding(new Insets(40, 68, 40, 68));
+        root.setPadding(new Insets(-15, 68, 0, 68));
         root.getStyleClass().add("popup-bg");
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-white", "bisq-text-grey-9");
@@ -78,11 +77,11 @@ public class BisqEasyOnboardingView extends TabView<BisqEasyOnboardingModel, Bis
 
     @Override
     protected void onViewAttached() {
-        line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(136));
     }
 
     @Override
     protected void onViewDetached() {
+        line.prefWidthProperty().unbind();
     }
 }

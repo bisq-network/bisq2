@@ -36,12 +36,12 @@ public class BisqEasyOnboardingTab2View extends View<VBox, BisqEasyOnboardingTab
     public BisqEasyOnboardingTab2View(BisqEasyOnboardingTab2Model model, BisqEasyOnboardingTab2Controller controller) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
+        root.setSpacing(15);
         root.setAlignment(Pos.CENTER_LEFT);
 
         Label headLine = new Label(Res.get("bisqEasy.onBoarding.tab2.headline"));
         headLine.setId("bisq-easy-onboarding-headline-label");
-        VBox.setMargin(headLine, new Insets(25, 0, 0, 0));
+        VBox.setMargin(headLine, new Insets(-100, 0, 25, 0));
 
         nextButton = new Button(Res.get("next"));
         nextButton.setId("bisq-easy-next-button");
