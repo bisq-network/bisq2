@@ -56,11 +56,11 @@ public class OnboardingController extends NavigationController {
     public void onNavigateToChild(NavigationTarget navigationTarget) {
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
         switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING -> {
+            case ONBOARDING_PROTOCOL -> {
                 model.getNavigationProgressVisible().set(false);
                 model.getSkipButtonVisible().set(false);
             }
-            case CREATE_PROFILE -> {
+            case ONBOARDING_CREATE_PROFILE -> {
                 model.getNavigationProgressVisible().set(false);
                 model.getSkipButtonVisible().set(false);
             }
@@ -110,10 +110,10 @@ public class OnboardingController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING -> {
+            case ONBOARDING_PROTOCOL -> {
                 return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
-            case CREATE_PROFILE -> {
+            case ONBOARDING_CREATE_PROFILE -> {
                 return Optional.of(new CreateProfileController(applicationService));
             }
             case ONBOARDING_DIRECTION -> {

@@ -34,7 +34,7 @@ public class BisqEasyOnboardingController extends TabController<BisqEasyOnboardi
     private final DefaultApplicationService applicationService;
 
     public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
-        super(new BisqEasyOnboardingModel(), NavigationTarget.BISQ_EASY_ONBOARDING);
+        super(new BisqEasyOnboardingModel(), NavigationTarget.ONBOARDING_PROTOCOL);
        
         this.applicationService = applicationService;
         view = new BisqEasyOnboardingView(model, this);

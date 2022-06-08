@@ -43,8 +43,11 @@ public class OfferCompletedController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onNext() {
+    public void onPublishOffer() {
         Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_PUBLISHED);
+    }
+    public void onTakeOffer() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
     public void onBack() {

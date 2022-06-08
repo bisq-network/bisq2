@@ -30,7 +30,6 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -39,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
-    private final Button nextButton, backButton;
+    private final Button backButton;
+    private final ImageView imageView;
 
     public OfferCompletedView(OfferCompletedModel model, OfferCompletedController controller) {
         super(new StackPane(), model, controller);
@@ -56,18 +56,12 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
 
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
-
         backButton = new Button(Res.get("back"));
-
-        HBox buttons = new HBox(7, backButton, nextButton);
-        buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(buttons, new Insets(0, 0, 90, 0));
-        vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), buttons);
+        VBox.setMargin(backButton, new Insets(0, 0, 90, 0));
+        vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), backButton);
 
         // WIP
         // vBox.setStyle("-fx-background-color: transparant");
@@ -94,18 +88,23 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         SnapshotParameters snapshotParameters = new SnapshotParameters();
         snapshotParameters.setFill(Color.TRANSPARENT);
         WritableImage clipped = canvas.snapshot(snapshotParameters, null);
-        root.getChildren().addAll(vBox, new ImageView(clipped));
+        imageView = new ImageView(clipped);
+        root.getChildren().addAll(vBox, imageView);
     }
 
     @Override
     protected void onViewAttached() {
-        nextButton.setOnAction(e -> controller.onNext());
+        imageView.setOnMouseReleased(e -> {
+            e.consume();
+            controller.onTakeOffer();
+        });
+        root.setOnMouseReleased(e -> controller.onPublishOffer());
         backButton.setOnAction(evt -> controller.onBack());
     }
 
     @Override
     protected void onViewDetached() {
-        nextButton.setOnAction(null);
+        root.setOnMouseReleased(null);
         backButton.setOnAction(null);
     }
 }

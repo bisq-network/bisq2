@@ -17,14 +17,11 @@
 
 package bisq.desktop.primary.overlay;
 
-import bisq.common.application.DevMode;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.utils.KeyCodeUtils;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.NavigationView;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -33,7 +30,6 @@ import javafx.animation.Timeline;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
@@ -66,25 +62,9 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         scene.setFill(Color.TRANSPARENT);
 
         scene.setOnKeyReleased(keyEvent -> {
-            if (KeyCodeUtils.isCtrlPressed(KeyCode.W, keyEvent) ||
-                    KeyCodeUtils.isCtrlPressed(KeyCode.Q, keyEvent)) {
-                controller.onQuit();
-            } else if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER) {
-                keyEvent.consume();
-                hide();
-            }
-
-            if (DevMode.isDevMode()) {
-                if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
-                    Navigation.navigateTo(NavigationTarget.SPLASH);
-                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
-                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                    Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
-                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
-                }
-            }
+            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
+            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
 
         stage = new Stage();
