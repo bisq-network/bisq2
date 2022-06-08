@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -42,6 +43,10 @@ public class OverlayController extends NavigationController {
         INSTANCE.resetSelectedChildTarget();
     }
 
+    public static void setTransitionsType(Transitions.Type transitionsType) {
+        INSTANCE.getModel().setTransitionsType(transitionsType);
+    }
+
     @Getter
     private final OverlayModel model;
     @Getter
@@ -59,9 +64,7 @@ public class OverlayController extends NavigationController {
         onActivateInternal();
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-            } else {
+            if (newValue == null) {
                 hide();
             }
         });

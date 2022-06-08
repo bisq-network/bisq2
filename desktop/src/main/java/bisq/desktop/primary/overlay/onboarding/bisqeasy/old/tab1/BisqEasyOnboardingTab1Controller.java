@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab1;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab1;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
@@ -42,11 +42,11 @@ public class BisqEasyOnboardingTab1Controller implements Controller {
     public void onDeactivate() {
     }
 
-     void onNext() {
+    void onNext() {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING_TAB2);
     }
 
-     void onSkip() {
-         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
+    void onSkip() {
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
 }

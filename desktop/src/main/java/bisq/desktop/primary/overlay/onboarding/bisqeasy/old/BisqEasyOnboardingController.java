@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.tab1.BisqEasyOnboardingTab1Controller;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.tab2.BisqEasyOnboardingTab2Controller;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.tab3.BisqEasyOnboardingTab3Controller;
+import bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab1.BisqEasyOnboardingTab1Controller;
+import bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab2.BisqEasyOnboardingTab2Controller;
+import bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab3.BisqEasyOnboardingTab3Controller;
 import lombok.Getter;
 
 import java.util.Optional;
@@ -34,7 +34,7 @@ public class BisqEasyOnboardingController extends TabController<BisqEasyOnboardi
     private final DefaultApplicationService applicationService;
 
     public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
-        super(new BisqEasyOnboardingModel(), NavigationTarget.BISQ_EASY_ONBOARDING);
+        super(new BisqEasyOnboardingModel(), NavigationTarget.ONBOARDING_BISQ_EASY);
        
         this.applicationService = applicationService;
         view = new BisqEasyOnboardingView(model, this);

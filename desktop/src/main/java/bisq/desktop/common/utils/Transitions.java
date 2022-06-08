@@ -40,9 +40,40 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.function.Consumer;
 
 @Slf4j
 public class Transitions {
+    public enum Type {
+        BLACK(node -> darken(node, -1)),
+        VERY_DARK(node -> darken(node, -0.9)),
+        DARK(node -> darken(node, -0.7)),
+        MEDIUM(node -> darken(node, -0.5)),
+        LIGHT(node -> darken(node, -0.25)),
+
+        VERY_DARK_BLUR_LIGHT(node -> blurLight(node, -0.9)),
+        DARK_BLUR_LIGHT(node -> blurLight(node, -0.7)),
+        MEDIUM_BLUR_LIGHT(node -> blurLight(node, -0.5)),
+        LIGHT_BLUR_LIGHT(node -> blurLight(node, -0.25)),
+
+        VERY_DARK_BLUR_STRONG(node -> blurStrong(node, -0.9)),
+        DARK_BLUR_STRONG(node -> blurStrong(node, -0.7)),
+        MEDIUM_BLUR_STRONG(node -> blurStrong(node, -0.5)),
+        LIGHT_BLUR_STRONG(node -> blurStrong(node, -0.25));
+
+        private final Consumer<Node> handler;
+
+        Type(Consumer<Node> handler) {
+            this.handler = handler;
+        }
+
+        public void apply(Node node) {
+            this.handler.accept(node);
+        }
+    }
+
+    public static final Type DEFAULT_TYPE = Type.DARK;
+
     public static final int DEFAULT_DURATION = 600;
     public static final int CROSS_FADE_IN_DURATION = 1500;
     public static final int CROSS_FADE_OUT_DURATION = 1000;
@@ -127,6 +158,18 @@ public class Transitions {
         blur(node, DEFAULT_DURATION, -0.1, false, 15);
     }
 
+    public static void darken(Node node, double brightness) {
+        blur(node, DEFAULT_DURATION, brightness, false, 0);
+    }
+
+    public static void blurLight(Node node, double brightness) {
+        blur(node, DEFAULT_DURATION, brightness, false, 10);
+    }
+
+    public static void blurStrong(Node node, double brightness) {
+        blur(node, DEFAULT_DURATION, brightness, false, 20);
+    }
+
     public static void blur(Node node, int duration, double brightness, boolean removeNode, double blurRadius) {
         if (removeEffectTimeLine != null)
             removeEffectTimeLine.stop();
@@ -150,15 +193,15 @@ public class Transitions {
     }
 
     public static void blurDark(Node node) {
-        blur(node, DEFAULT_DURATION, -0.6, false, 5);
+        blur(node, DEFAULT_DURATION, -0.75, false, 5);
     }
 
     public static void darken(Node node) {
-        blur(node, DEFAULT_DURATION, -0.6, false, 0);
+        blur(node, DEFAULT_DURATION, -0.75, false, 0);
     }
 
     public static void darken(Node node, int duration, boolean removeNode) {
-        blur(node, duration, -0.6, removeNode, 0);
+        blur(node, duration, -0.75, removeNode, 0);
     }
 
     public static void removeEffect(Node node) {

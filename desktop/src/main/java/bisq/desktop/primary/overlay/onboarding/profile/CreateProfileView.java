@@ -48,7 +48,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(8);
-        root.getStyleClass().add("bisq-content-bg");
+      //  root.getStyleClass().add("bisq-content-bg");
         root.setPadding(new Insets(10, 0, 30, 0));
 
         Label headLineLabel = new Label(Res.get("createProfile.headline"));

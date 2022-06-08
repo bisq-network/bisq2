@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab1;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab1;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;

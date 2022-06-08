@@ -18,11 +18,13 @@
 package bisq.desktop.primary.overlay.onboarding;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyOnboardingController;
+import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
+import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyIntroController;
 import bisq.desktop.primary.overlay.onboarding.offer.amount.AmountController;
 import bisq.desktop.primary.overlay.onboarding.offer.complete.OfferCompletedController;
 import bisq.desktop.primary.overlay.onboarding.offer.direction.DirectionController;
@@ -55,12 +57,17 @@ public class OnboardingController extends NavigationController {
     @Override
     public void onNavigateToChild(NavigationTarget navigationTarget) {
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
+        OverlayController.setTransitionsType(Transitions.Type.BLACK);
         switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING -> {
+            case BISQ_2_INTRO -> {
                 model.getNavigationProgressVisible().set(false);
                 model.getSkipButtonVisible().set(false);
             }
             case CREATE_PROFILE -> {
+                model.getNavigationProgressVisible().set(false);
+                model.getSkipButtonVisible().set(false);
+            }
+            case ONBOARDING_BISQ_EASY -> {
                 model.getNavigationProgressVisible().set(false);
                 model.getSkipButtonVisible().set(false);
             }
@@ -95,6 +102,7 @@ public class OnboardingController extends NavigationController {
                 model.getSkipButtonVisible().set(true);
             }
             default -> {
+                OverlayController.setTransitionsType(Transitions.DEFAULT_TYPE);
             }
         }
     }
@@ -110,11 +118,14 @@ public class OnboardingController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_ONBOARDING -> {
-                return Optional.of(new BisqEasyOnboardingController(applicationService));
+            case BISQ_2_INTRO -> {
+                return Optional.of(new Bisq2IntroController(applicationService));
             }
             case CREATE_PROFILE -> {
                 return Optional.of(new CreateProfileController(applicationService));
+            }
+            case ONBOARDING_BISQ_EASY -> {
+                return Optional.of(new BisqEasyIntroController(applicationService));
             }
             case ONBOARDING_DIRECTION -> {
                 return Optional.of(new DirectionController(applicationService));

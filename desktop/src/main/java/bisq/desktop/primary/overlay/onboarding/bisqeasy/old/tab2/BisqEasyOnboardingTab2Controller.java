@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab2;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
@@ -23,37 +23,30 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
-    @Getter
-    private final DashboardView view;
+public class BisqEasyOnboardingTab2Controller implements Controller {
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
+    private final BisqEasyOnboardingTab2Model model;
+    @Getter
+    private final BisqEasyOnboardingTab2View view;
+
+    public BisqEasyOnboardingTab2Controller(DefaultApplicationService applicationService) {
+        model = new BisqEasyOnboardingTab2Model(applicationService);
+        view = new BisqEasyOnboardingTab2View(model, this);
     }
 
     @Override
     public void onActivate() {
-        // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        Navigation.navigateTo(NavigationTarget.BISQ_2_INTRO);
-        // }
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING_TAB3);
     }
 
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+    void onSkip() {
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
-
-    public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
-    }
-
 }

@@ -15,21 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy;
 
-import bisq.desktop.common.utils.ImageUtil;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
 
-public class Utils {
-    public static HBox getIconAndText(String text, String imageId) {
-        Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
-        label.setWrapText(true);
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-6, 0, 0, 4));
-        return new HBox(15, bulletPoint, label);
-    }
+@Getter
+public class BisqEasyIntroModel implements Model {
 }

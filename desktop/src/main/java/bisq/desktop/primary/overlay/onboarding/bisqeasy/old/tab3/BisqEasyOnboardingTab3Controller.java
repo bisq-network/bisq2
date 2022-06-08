@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.tab2;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab3;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
@@ -23,15 +23,15 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
-public class BisqEasyOnboardingTab2Controller implements Controller {
+public class BisqEasyOnboardingTab3Controller implements Controller {
 
-    private final BisqEasyOnboardingTab2Model model;
+    private final BisqEasyOnboardingTab3Model model;
     @Getter
-    private final BisqEasyOnboardingTab2View view;
+    private final BisqEasyOnboardingTab3View view;
 
-    public BisqEasyOnboardingTab2Controller(DefaultApplicationService applicationService) {
-        model = new BisqEasyOnboardingTab2Model(applicationService);
-        view = new BisqEasyOnboardingTab2View(model, this);
+    public BisqEasyOnboardingTab3Controller(DefaultApplicationService applicationService) {
+        model = new BisqEasyOnboardingTab3Model(applicationService);
+        view = new BisqEasyOnboardingTab3View(model, this);
     }
 
     @Override
@@ -43,7 +43,7 @@ public class BisqEasyOnboardingTab2Controller implements Controller {
     }
 
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING_TAB3);
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
     }
 
     void onSkip() {

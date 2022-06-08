@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy;
+package bisq.desktop.primary.overlay.onboarding.bisqeasy.old;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Styles;
