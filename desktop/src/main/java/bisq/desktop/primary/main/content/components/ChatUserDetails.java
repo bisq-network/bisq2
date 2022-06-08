@@ -190,7 +190,6 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox.setMargin(nym, new Insets(0, 0, 24, 0));
 
             privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
-            privateMsgButton.setDefaultButton(true);
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
             VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);

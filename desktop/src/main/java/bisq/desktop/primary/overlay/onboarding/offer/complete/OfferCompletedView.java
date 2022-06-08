@@ -96,15 +96,18 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
     protected void onViewAttached() {
         imageView.setOnMouseReleased(e -> {
             e.consume();
-            controller.onTakeOffer();
+            if (e.getY() < 280) {
+                controller.onPublishOffer();
+            } else {
+                controller.onTakeOffer();
+            }
         });
-        root.setOnMouseReleased(e -> controller.onPublishOffer());
         backButton.setOnAction(evt -> controller.onBack());
     }
 
     @Override
     protected void onViewDetached() {
-        root.setOnMouseReleased(null);
+        imageView.setOnMouseReleased(null);
         backButton.setOnAction(null);
     }
 }

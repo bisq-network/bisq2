@@ -395,6 +395,10 @@ public class ChatMessagesComponent {
                     });
         }
 
+        public void onDeleteMyOffer(PublicTradeChatMessage chatMessage) {
+            onDeleteMessage(chatMessage);
+        }
+
         public void onCreateOffer() {
             //todo
             new Popup().message("Not implemented yet").show();
@@ -579,7 +583,7 @@ public class ChatMessagesComponent {
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
                         private final BisqTextArea editInputField;
-                        private final Button takeOfferButton, saveEditButton, cancelEditButton;
+                        private final Button actionButton, saveEditButton, cancelEditButton;
                         private final Label emojiButton1, emojiButton2,
                                 openEmojiSelectorButton, replyButton,
                                 pmButton, editButton, deleteButton, moreOptionsButton;
@@ -661,13 +665,12 @@ public class ChatMessagesComponent {
                             message.setPadding(new Insets(0, 0, 20, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
 
-                            takeOfferButton = new Button(Res.get("takeOffer"));
-                            takeOfferButton.setDefaultButton(true);
-                            takeOfferButton.setVisible(false);
-                            takeOfferButton.setManaged(false);
-                            HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
+                            actionButton = new Button();
+                            actionButton.setVisible(false);
+                            actionButton.setManaged(false);
+                            HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
 
-                            messageContainer = Layout.hBoxWith(message, takeOfferButton);
+                            messageContainer = Layout.hBoxWith(message, actionButton);
                             messageContainer.setAlignment(Pos.CENTER);
 
                             VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
@@ -753,13 +756,23 @@ public class ChatMessagesComponent {
                                 boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
                                         publicTradeChatMessage.getTradeChatOffer().isPresent();
 
-                                if (!model.isMyMessage(chatMessage) && isOfferMessage) {
-                                    takeOfferButton.setVisible(true);
-                                    takeOfferButton.setManaged(true);
-                                    takeOfferButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
+                                if (isOfferMessage) {
+                                    actionButton.setVisible(true);
+                                    actionButton.setManaged(true);
+                                    if (model.isMyMessage(chatMessage)) {
+                                        actionButton.setText(Res.get("deleteOffer"));
+                                        actionButton.getStyleClass().remove("default-button");
+                                        actionButton.getStyleClass().add("red-button");
+                                        actionButton.setOnAction(e -> controller.onDeleteMyOffer((PublicTradeChatMessage) chatMessage));
+                                    } else {
+                                        actionButton.setText(Res.get("takeOffer"));
+                                        actionButton.getStyleClass().remove("red-button");
+                                        actionButton.getStyleClass().add("default-button");
+                                        actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
+                                    }
                                 } else {
-                                    takeOfferButton.setVisible(false);
-                                    takeOfferButton.setManaged(false);
+                                    actionButton.setVisible(false);
+                                    actionButton.setManaged(false);
                                 }
 
                                 if (isOfferMessage) {
@@ -800,7 +813,6 @@ public class ChatMessagesComponent {
                                     if (!editInputField.isVisible()) {
                                         reactionsBox.setVisible(true);
                                     }
-                                    //setStyle("-fx-background-color: -bisq-grey-12;");
                                 });
                                 setOnMouseExited(e -> {
                                     if (model.moreOptionsVisibleMessage.get() == null) {
@@ -857,7 +869,7 @@ public class ChatMessagesComponent {
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
                                 editInputField.setOnKeyPressed(null);
-                                takeOfferButton.setOnAction(null);
+                                actionButton.setOnAction(null);
 
                                 setGraphic(null);
                             }

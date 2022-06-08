@@ -40,6 +40,7 @@
     -bisq-turquoise: #2cacaf;
     -bisq-buy: #006600;
     -bisq-sell: #660000;
+    -bisq-red: #d02c1f;
 
     /* Greys */
     -bisq-grey-2: #1D1D1D;
@@ -252,11 +253,11 @@
  ******************************************************************************/
 
 .radio-button {
-    -fx-text-fill: -bisq-grey-9;    
+    -fx-text-fill: -bisq-grey-9;
 }
 
 .radio-button:selected {
-    -fx-text-fill: -bisq-white;    
+    -fx-text-fill: -bisq-white;
 }
 
 .radio-button .radio {
@@ -280,6 +281,7 @@
     -fx-background-insets: 0;
     -fx-padding: 5px
 }
+
 .radio-button:armed .radio {
     -fx-background-color: -bisq-grey-16;
 }
@@ -563,7 +565,7 @@
 }
 
 .button:hover {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: derive(-bisq-green, -50%);
 }
 
 .button:disabled {
@@ -575,6 +577,14 @@
     -fx-background-color: transparent;
     -fx-focus-traversable: false;
     -fx-cursor: hand;
+}
+
+.red-button {
+    -fx-background-color: -bisq-red;
+}
+
+.red-button:hover {
+    -fx-background-color: derive(-bisq-red, -50%);
 }
 
 
@@ -1530,7 +1540,7 @@ tree-table-view:focused {
     -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
-    -fx-padding: 2 4 4 4 ;
+    -fx-padding: 2 4 4 4;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -1677,6 +1687,7 @@ tree-table-view:focused {
 #icon-label-grey {
     -fx-text-fill: grey;
 }
+
 #onboarding-top-panel {
     -fx-background-color: -bisq-grey-23;
 }
