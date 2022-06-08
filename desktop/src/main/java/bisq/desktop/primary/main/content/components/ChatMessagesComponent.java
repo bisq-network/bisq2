@@ -584,6 +584,7 @@ public class ChatMessagesComponent {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
+                        private final AnchorPane anchorPane;
                         private final VBox reputationBox;
                         private final BisqTextArea editInputField;
                         private final Button actionButton, saveEditButton, cancelEditButton;
@@ -593,7 +594,6 @@ public class ChatMessagesComponent {
                         private final Label userNameLabel = new Label();
                         private final Label dateTime = new Label();
                         private final Label message = new Label();
-
                         private final Text quotedMessageField = new Text();
                         private final HBox hBox, messageContainer, reactionsBox, editControlsBox, quotedMessageBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(42);
@@ -630,10 +630,9 @@ public class ChatMessagesComponent {
                             editInputField.setId("chat-messages-edit-text-area");
                             editInputField.setVisible(false);
                             editInputField.setManaged(false);
-                            HBox.setHgrow(editInputField, Priority.ALWAYS);
-                            VBox.setMargin(editInputField, new Insets(-15, 0, 0, 0));
 
                             saveEditButton = new Button(Res.get("shared.save"));
+                            saveEditButton.setDefaultButton(true);
                             cancelEditButton = new Button(Res.get("shared.cancel"));
                             editControlsBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editControlsBox.setVisible(false);
@@ -676,9 +675,10 @@ public class ChatMessagesComponent {
                             messageContainer.setPadding(new Insets(15));
                             messageContainer.setAlignment(Pos.CENTER_LEFT);
 
+                            VBox.setVgrow(editInputField, Priority.ALWAYS);
                             VBox messageBox = Layout.vBoxWith(quotedMessageBox, messageContainer, editInputField);
 
-                            AnchorPane pane = new AnchorPane();
+                            anchorPane = new AnchorPane();
                             AnchorPane.setTopAnchor(messageBox, 0.0);
                             AnchorPane.setLeftAnchor(messageBox, 0.0);
                             AnchorPane.setRightAnchor(messageBox, 0.0);
@@ -688,10 +688,10 @@ public class ChatMessagesComponent {
                             AnchorPane.setBottomAnchor(reactionsBox, -10.0);
                             AnchorPane.setRightAnchor(editControlsBox, 10.0);
                             AnchorPane.setBottomAnchor(editControlsBox, 0.0);
-                            pane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
+                            anchorPane.getChildren().addAll(messageBox, reactionsBox, editControlsBox);
 
                             HBox userInfoBox = new HBox(5, userNameLabel, dateTime);
-                            VBox vBox = new VBox(0, userInfoBox, pane);
+                            VBox vBox = new VBox(0, userInfoBox, anchorPane);
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = Layout.hBoxWith(chatUserIcon, vBox/*, reputationBox*/);
                         }
@@ -890,11 +890,28 @@ public class ChatMessagesComponent {
                             editInputField.setScrollHideThreshold(200);
                             editInputField.requestFocus();
                             editInputField.positionCaret(message.getText().length());
-
                             editControlsBox.setVisible(true);
                             editControlsBox.setManaged(true);
                             message.setVisible(false);
                             message.setManaged(false);
+
+                            ChatMessage chatMessage = item.getChatMessage();
+                            boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
+                                    publicTradeChatMessage.getTradeChatOffer().isPresent();
+
+                            if (isOfferMessage) {
+
+                            }
+                            if (isOfferMessage) {
+                                VBox.setMargin(editInputField, new Insets(-88, 0, 40, 5));
+                                AnchorPane.setBottomAnchor(editControlsBox, -10.0);
+                                VBox.setMargin(anchorPane, new Insets(0, 0, 15, 0));
+                            } else {
+                                VBox.setMargin(editInputField, new Insets(-38, 0, 15, 5));
+                                AnchorPane.setBottomAnchor(editControlsBox, 0.0);
+                                VBox.setMargin(anchorPane, new Insets(0, 0, 0, 0));
+                            }
+
                             editInputField.setOnKeyPressed(event -> {
                                 if (event.getCode() == KeyCode.ENTER) {
                                     event.consume();
@@ -917,6 +934,8 @@ public class ChatMessagesComponent {
                             message.setVisible(true);
                             message.setManaged(true);
                             editInputField.setOnKeyPressed(null);
+                            AnchorPane.setBottomAnchor(editControlsBox, 0.0);
+                            VBox.setMargin(anchorPane, new Insets(0, 0, 0, 0));
                         }
                     };
                 }

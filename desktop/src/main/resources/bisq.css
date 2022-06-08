@@ -1586,14 +1586,13 @@ tree-table-view:focused {
 }
 
 #chat-messages-edit-text-area.text-area {
-    -fx-padding: 0;
+    -fx-background-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.23em;
-    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-size: 1.33em;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 #chat-messages-edit-text-area.text-area .content {
-    -fx-padding: 0;
 }
 
 #chat-messages-edit-text-area.text-area:focused .content {
