@@ -38,6 +38,8 @@ import java.util.List;
 
 @Slf4j
 public class OnboardingView extends NavigationView<VBox, OnboardingModel, OnboardingController> {
+    private static final double WIDTH = 920;
+    private static final double HEIGHT = 550;
 
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
@@ -47,8 +49,8 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     public OnboardingView(OnboardingModel model, OnboardingController controller) {
         super(new VBox(), model, controller);
 
-        root.setMaxWidth(920);
-        root.setMaxHeight(550);
+        root.setPrefWidth(WIDTH);
+        root.setPrefHeight(HEIGHT);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
         topPaneBox = topPane.first();

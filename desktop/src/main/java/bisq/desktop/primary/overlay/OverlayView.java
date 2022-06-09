@@ -98,7 +98,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 Region childRoot = newValue.getRoot();
                 Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
                 root.getChildren().add(childRoot);
-                show(childRoot.getMaxWidth(), childRoot.getMaxHeight());
+                show(childRoot.getPrefWidth(), childRoot.getPrefHeight());
                 Transitions.transitContentViews(oldValue, newValue);
             } else {
                 hide();
@@ -114,15 +114,14 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     protected void onViewDetached() {
     }
 
-    private void show(double childMaxWidth, double childMaxHeight) {
-        double prefWidth = childMaxWidth > -1 && childMaxWidth < owner.getWidth() ?
-                childMaxWidth :
-                owner.getWidth() - model.getTopMargin() - model.getBottomMargin();
-        double prefHeight = childMaxHeight > -1 && childMaxHeight < owner.getHeight() ?
-                childMaxHeight :
-                owner.getHeight() - 2 * model.getHorizontalMargin();
-        root.setPrefWidth(prefWidth);
-        root.setPrefHeight(prefHeight);
+    private void show(double prefWidth, double prefHeight) {
+        prefWidth = Math.min(prefWidth, owner.getWidth());
+        prefHeight = Math.min(prefHeight, owner.getHeight());
+        
+        root.setMinWidth(prefWidth);
+        root.setMinHeight(prefHeight);
+        root.setMaxWidth(prefWidth);
+        root.setMaxHeight(prefHeight);
 
         window.xProperty().addListener(positionListener);
         window.yProperty().addListener(positionListener);

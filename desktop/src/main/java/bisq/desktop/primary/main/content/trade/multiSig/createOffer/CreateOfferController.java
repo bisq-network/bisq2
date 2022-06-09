@@ -43,7 +43,7 @@ import java.util.ArrayList;
 @Slf4j
 public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData>, Controller {
 
-    public static record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
+    public record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
     }
 
     private final CreateOfferModel model;

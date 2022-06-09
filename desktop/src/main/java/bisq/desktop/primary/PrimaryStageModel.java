@@ -28,14 +28,16 @@ import java.util.Optional;
 
 @Getter
 public class PrimaryStageModel extends NavigationModel {
+    // Min supported screens: 1024x768
+    public static final double MIN_WIDTH = 1000;
+    public static final double MIN_HEIGHT = 730;
+    
     private final String title;
     private final DefaultApplicationService applicationService;
     private final Optional<Double> stageX;
     private final Optional<Double> stageY;
     private final Optional<Double> stageWidth;
     private final Optional<Double> stageHeight;
-    private final double minWidth = 800;
-    private final double minHeight = 600;
     private final double prefWidth = 1400;
     private final double prefHeight = 1000;
 
