@@ -17,8 +17,11 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.primary.main.content.components.ChatUserIcon;
+import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,6 +33,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -40,6 +45,13 @@ import lombok.extern.slf4j.Slf4j;
 public class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
     private final Button backButton;
     private final ImageView imageView;
+    private final Label userNameLabel;
+    private final Label dateTime;
+    private final Label messageLabel;
+    private final Button actionButton;
+    private final HBox messageHBox;
+    private final ReputationScoreDisplay reputationScoreDisplay;
+    private final ChatUserIcon chatUserIcon;
 
     public OfferCompletedView(OfferCompletedModel model, OfferCompletedController controller) {
         super(new StackPane(), model, controller);
@@ -61,14 +73,45 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
         VBox.setMargin(backButton, new Insets(0, 0, 90, 0));
-        vBox.getChildren().addAll(headLineLabel, subtitleLabel, Spacer.fillVBox(), backButton);
+
+        chatUserIcon = new ChatUserIcon(42);
+
+
+        messageLabel = new Label();
+        messageLabel.setId("chat-messages-message");
+        messageLabel.setWrapText(true);
+
+        Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
+        reputationLabel.getStyleClass().add("bisq-text-7");
+        reputationScoreDisplay = new ReputationScoreDisplay();
+        VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
+        reputationVBox.setAlignment(Pos.CENTER_LEFT);
+
+        actionButton = new Button();
+
+        HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
+        // HBox.setHgrow(messageLabel, Priority.NEVER);
+        messageHBox = Layout.hBoxWith(messageLabel, Spacer.fillHBox(), reputationVBox, actionButton);
+        messageHBox.setPadding(new Insets(15));
+        messageHBox.setAlignment(Pos.CENTER_LEFT);
+
+        userNameLabel = new Label();
+        dateTime = new Label();
+        HBox userInfoHBox = new HBox(5, userNameLabel, dateTime);
+
+        VBox messageAndUserInfoVoBox = new VBox(0, userInfoHBox, messageHBox);
+        HBox.setHgrow(messageAndUserInfoVoBox, Priority.ALWAYS);
+        HBox tradeMessageHBox = Layout.hBoxWith(chatUserIcon, messageAndUserInfoVoBox);
+
+
+        vBox.getChildren().addAll(headLineLabel, subtitleLabel, tradeMessageHBox, Spacer.fillVBox(), backButton);
 
         // WIP
-        // vBox.setStyle("-fx-background-color: transparant");
+       // vBox.setStyle("-fx-background-color: transparant");
         // topPaneBox.setStyle("-fx-background-color: transparant");
 
         double width = 920;
-        double height = 550;
+        double height = 500;
         Canvas canvas = new Canvas();
         canvas.setWidth(width);
         canvas.setHeight(height);
@@ -81,7 +124,7 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         graphicsContext2D.lineTo(840, 400);
         graphicsContext2D.lineTo(80, 400);
         graphicsContext2D.closePath();
-        graphicsContext2D.clip();
+        //graphicsContext2D.clip();
 
         Image image = new Image("images/onboarding/template/onboarding-template_0006_complete.png");
         graphicsContext2D.drawImage(image, 0, 0, width, height);
@@ -89,7 +132,9 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         snapshotParameters.setFill(Color.TRANSPARENT);
         WritableImage clipped = canvas.snapshot(snapshotParameters, null);
         imageView = new ImageView(clipped);
-        root.getChildren().addAll(vBox, imageView);
+       // imageView.setVisible(false);
+        vBox.setVisible(false);
+        root.getChildren().addAll(imageView, vBox);
     }
 
     @Override
@@ -103,6 +148,12 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
             }
         });
         backButton.setOnAction(evt -> controller.onBack());
+
+
+      /*  actionButton.setText(Res.get("takeOffer"));
+        actionButton.getStyleClass().remove("red-button");
+        actionButton.getStyleClass().add("default-button");
+        actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));*/
     }
 
     @Override
