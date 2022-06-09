@@ -36,7 +36,7 @@ public class OnboardingModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.ONBOARDING_DIRECTION;
+        return NavigationTarget.ONBOARDING_AMOUNT;
        /* return chatUserService.isDefaultUserProfileMissing() ?
                 NavigationTarget.DASHBOARD : 
                 NavigationTarget.BISQ_EASY;*/

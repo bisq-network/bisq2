@@ -15,28 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.components.controls;
+package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
-import bisq.i18n.Res;
-import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountInput {
+public class BigAmountInput {
     private final Controller controller;
 
-    public AmountInput(boolean isBaseCurrency) {
+    public BigAmountInput(boolean isBaseCurrency) {
         controller = new Controller(isBaseCurrency);
     }
 
@@ -48,16 +49,8 @@ public class AmountInput {
         controller.setSelectedMarket(selectedMarket);
     }
 
-    public void setDirection(Direction direction) {
-        controller.setDirection(direction);
-    }
-
     public void setAmount(Monetary value) {
         controller.model.amount.set(value);
-    }
-
-    public void setIsTakeOffer() {
-        controller.model.isCreateOffer = false;
     }
 
     public Pane getRoot() {
@@ -81,16 +74,9 @@ public class AmountInput {
             updateModel();
         }
 
-        private void setDirection(Direction direction) {
-            model.direction = direction;
-            updateModel();
-        }
-
         @Override
         public void onActivate() {
-            if (model.isCreateOffer) {
-                model.amount.set(null);
-            }
+            model.amount.set(null);
             updateModel();
         }
 
@@ -115,81 +101,65 @@ public class AmountInput {
                 return;
             }
             if (model.code.get() == null) return;
-            model.amount.set(AmountParser.parse(value, model.code.get()));
 
+            model.amount.set(AmountParser.parse(value, model.code.get()));
         }
 
         private void updateModel() {
             if (model.selectedMarket == null) {
                 model.code.set("");
-                model.prompt.set("");
-                model.description.set("");
                 return;
             }
 
             model.code.set(model.isBaseCurrency ? model.selectedMarket.baseCurrencyCode() : model.selectedMarket.quoteCurrencyCode());
-            String code = model.code.get();
-            model.prompt.set(Res.get("createOffer.volume.prompt", code));
-            String dir;
-            if (model.isBaseCurrency) {
-                dir = model.direction == Direction.BUY ? Res.get("buy") : Res.get("sell");
-            } else {
-                dir = model.direction == Direction.BUY ? Res.get("spend") : Res.get("receive");
-            }
-            model.description.set(Res.get("createOffer.amount.description", code, dir));
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
         private final boolean isBaseCurrency;
-        private final StringProperty description = new SimpleStringProperty();
-        private final StringProperty prompt = new SimpleStringProperty();
         private final StringProperty code = new SimpleStringProperty();
         private Market selectedMarket;
-        private Direction direction;
         public boolean hasFocus;
-        private boolean isCreateOffer = true;
 
         private Model(boolean isBaseCurrency) {
             this.isBaseCurrency = isBaseCurrency;
         }
     }
 
-    public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
-        private final static int WIDTH = 250;
-        private final static int CODE_LABEL_WIDTH = 60;
+    public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
-        private final Label rightLabel;
-        private final TextInputBox textInputBox;
+        private final TextField textInput;
+        private final Label codeLabel;
 
         private View(Model model, Controller controller, MonetaryValidator validator) {
-            super(new Pane(), model, controller);
+            super(new HBox(), model, controller);
 
-            textInputBox = new TextInputBox(Res.get("satoshisquareapp.createOffer.maxAmount"),
-                    Res.get("createProfile.nickName.prompt"));
-            textInputBox.setPrefWidth(WIDTH);
-            textInputBox.setValidator(validator);
+            root.setAlignment(Pos.BASELINE_CENTER);
+            root.setSpacing(10);
 
-            rightLabel = new Label();
-            rightLabel.setMinHeight(42);
-            rightLabel.setAlignment(Pos.CENTER_RIGHT);
-            rightLabel.setMinWidth(CODE_LABEL_WIDTH);
-            rightLabel.setMaxWidth(CODE_LABEL_WIDTH);
-            rightLabel.setLayoutX(WIDTH - CODE_LABEL_WIDTH - 13);
-            rightLabel.setLayoutY(11);
-            rightLabel.getStyleClass().add("bisq-amount-input-code-label");
+            textInput = new TextField();
+            textInput.setPrefWidth(250);
+            textInput.setId("base-amount-text-field");
+            textInput.setAlignment(Pos.BASELINE_RIGHT);
+            textInput.setPadding(new Insets(0, 0, 5, 0));
 
-            root.getChildren().addAll(textInputBox, rightLabel);
+            codeLabel = new Label();
+            codeLabel.setPadding(new Insets(0, 0, 0, 0));
+            codeLabel.getStyleClass().add("bisq-text-9");
+            codeLabel.setAlignment(Pos.BASELINE_LEFT);
+
+            HBox.setMargin(textInput, new Insets(0, 0, 0, -30));
+            root.getChildren().addAll(textInput, codeLabel);
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onAmount(textInputBox.getText());
+                controller.onAmount(textInput.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onAmount(textInputBox.getText());
+            textInputListener = (o, old, newValue) -> controller.onAmount(textInput.getText());
 
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
@@ -197,35 +167,24 @@ public class AmountInput {
 
         @Override
         protected void onViewAttached() {
-            if (model.isCreateOffer) {
-                textInputBox.textProperty().addListener(textInputListener);
-                textInputBox.inputTextFieldFocusedProperty().addListener(focusListener);
-            } else {
-                // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textInputBox.setMouseTransparent(true);
-            }
-            textInputBox.promptTextProperty().bind(model.prompt);
-            textInputBox.descriptionProperty().bind(model.description);
-            rightLabel.textProperty().bind(model.code);
+            textInput.textProperty().addListener(textInputListener);
+            textInput.focusedProperty().addListener(focusListener);
+            codeLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
         }
 
         @Override
         protected void onViewDetached() {
-            if (model.isCreateOffer) {
-                textInputBox.textProperty().removeListener(textInputListener);
-                textInputBox.inputTextFieldFocusedProperty().removeListener(focusListener);
-            }
-            textInputBox.promptTextProperty().unbind();
-            textInputBox.descriptionProperty().unbind();
+            textInput.textProperty().removeListener(textInputListener);
+            textInput.focusedProperty().removeListener(focusListener);
 
-            rightLabel.textProperty().unbind();
+            codeLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }
 
         private void applyAmount(Monetary newValue) {
-            textInputBox.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
+            textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
         }
     }
 }

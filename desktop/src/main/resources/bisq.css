@@ -400,6 +400,24 @@
 }
 
 
+#base-amount-text-field {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 5.2em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+#quote-amount-text-field {
+    -fx-background-color: transparent;
+    -fx-border-style: none;
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.1em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-line-spacing: -0.12em;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Custom Label based                                                                  *
@@ -1586,14 +1604,13 @@ tree-table-view:focused {
 }
 
 #chat-messages-edit-text-area.text-area {
-    -fx-padding: 0;
+    -fx-background-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.23em;
-    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-font-size: 1.33em;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 #chat-messages-edit-text-area.text-area .content {
-    -fx-padding: 0;
 }
 
 #chat-messages-edit-text-area.text-area:focused .content {

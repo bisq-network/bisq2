@@ -102,7 +102,6 @@ public class OnboardingController extends NavigationController {
                 model.getSkipButtonVisible().set(true);
             }
             default -> {
-                OverlayController.setTransitionsType(Transitions.DEFAULT_TYPE);
             }
         }
     }

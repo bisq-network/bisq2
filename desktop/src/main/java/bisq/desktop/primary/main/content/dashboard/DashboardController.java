@@ -36,7 +36,7 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        Navigation.navigateTo(NavigationTarget.BISQ_2_INTRO);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
         // }
     }
 
