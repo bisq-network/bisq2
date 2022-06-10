@@ -224,6 +224,13 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
     }
 
+    public CompletableFuture<DataService.BroadCastDataResult> publishPublicTradeChatMessage(PublicTradeChatMessage chatMessage,
+                                                                                            ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
+        return chatUserService.maybePublishChatUser(chatUser, chatUserIdentity.getIdentity())
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, chatUserIdentity.getIdentity().getNodeIdAndKeyPair()));
+    }
+
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedTradeChatMessage(PublicTradeChatMessage originalChatMessage,
                                                                                             String editedText,
                                                                                             ChatUserIdentity chatUserIdentity) {
@@ -445,7 +452,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return persistableStore.getPublicDiscussionChannels();
     }
 
-    public Collection<? extends Channel> getMentionableChannels() {
+    public Collection<? extends Channel<?>> getMentionableChannels() {
         // TODO: implement logic
         return getPublicDiscussionChannels();
     }
@@ -613,10 +620,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
         selectTradeChannel(defaultChannel);
         getPublicTradeChannels().add(defaultChannel);
-       // getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getBsqMarket(), true));
+        // getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getBsqMarket(), true));
         getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getXmrMarket(), true));
         // for the ANY entry
-       // getPublicTradeChannels().add(new PublicTradeChannel(Optional.empty(), true));
+        // getPublicTradeChannels().add(new PublicTradeChannel(Optional.empty(), true));
         List<Market> allMarketsForTradeChannel = getAllMarketsForTradeChannel();
         allMarketsForTradeChannel.remove(MarketRepository.getDefault());
         allMarketsForTradeChannel.remove(MarketRepository.getBsqMarket());
@@ -628,7 +635,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
 
         byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
-        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MIN_DIFFICULTY).join();
+        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
         String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId()).getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),

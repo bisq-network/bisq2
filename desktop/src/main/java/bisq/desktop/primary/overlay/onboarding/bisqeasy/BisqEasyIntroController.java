@@ -45,7 +45,7 @@ public class BisqEasyIntroController implements Controller {
     }
 
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
     }
 
     public void onSkip() {

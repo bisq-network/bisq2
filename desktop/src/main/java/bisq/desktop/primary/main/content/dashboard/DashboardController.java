@@ -36,7 +36,7 @@ public class DashboardController implements Controller {
     @Override
     public void onActivate() {
         // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
+        //Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
         // }
     }
 
@@ -45,7 +45,7 @@ public class DashboardController implements Controller {
     }
 
     public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
     public void onOpenTradeOverview() {
@@ -53,7 +53,7 @@ public class DashboardController implements Controller {
     }
 
     public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
 }

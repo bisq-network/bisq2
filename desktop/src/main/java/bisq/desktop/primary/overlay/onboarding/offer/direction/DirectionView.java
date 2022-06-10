@@ -19,11 +19,10 @@ package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
+import bisq.offer.spec.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -36,7 +35,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class DirectionView extends View<VBox, DirectionModel, DirectionController> {
-    private final Button nextButton;
     private final ToggleButton buyButton, sellButton;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     //private final Button skipButton;
@@ -67,26 +65,22 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         HBox boxes = new HBox(25, buyBox, sellBox);
         boxes.setAlignment(Pos.CENTER);
 
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
-
         VBox.setMargin(headLineLabel, new Insets(55, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes, Spacer.fillVBox(), nextButton);
+        VBox.setMargin(boxes, new Insets(0, 0, 60, 0));
+        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
     }
 
     @Override
     protected void onViewAttached() {
         buyButton.disableProperty().bind(buyButton.selectedProperty());
         sellButton.disableProperty().bind(sellButton.selectedProperty());
-        buyButton.setOnAction(evt -> controller.onSelect(DirectionModel.Direction.BUY));
-        sellButton.setOnAction(evt -> controller.onSelect(DirectionModel.Direction.SELL));
+        buyButton.setOnAction(evt -> controller.onSelect(Direction.BUY));
+        sellButton.setOnAction(evt -> controller.onSelect(Direction.SELL));
 
-        nextButton.setOnAction(e -> controller.onNext());
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
-                toggleGroup.selectToggle(direction == DirectionModel.Direction.BUY ? buyButton : sellButton);
+                toggleGroup.selectToggle(direction == Direction.BUY ? buyButton : sellButton);
 
             }
         });
@@ -98,7 +92,6 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         sellButton.disableProperty().unbind();
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
-        nextButton.setOnAction(null);
         directionSubscription.unsubscribe();
     }
 

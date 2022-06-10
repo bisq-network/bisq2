@@ -171,6 +171,17 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         }
     }
 
+    public CompletableFuture<ChatUserIdentity> publishNewChatUser(ChatUserIdentity chatUserIdentity) {
+        ChatUser chatUser = chatUserIdentity.getChatUser();
+        Identity identity = chatUserIdentity.getIdentity();
+        String chatUserId = chatUser.getId();
+        long currentTimeMillis = System.currentTimeMillis();
+        if (!publishTimeByChatuserId.containsKey(chatUserId)) {
+            publishTimeByChatuserId.put(chatUserId, currentTimeMillis);
+        }
+        return publishChatUser(chatUser, identity).thenApply(r -> chatUserIdentity);
+    }
+
     public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(ChatUser chatUser, Identity identity) {
         return networkService.publishAuthenticatedData(chatUser, identity.getNodeIdAndKeyPair());
     }

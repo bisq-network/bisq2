@@ -25,9 +25,9 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.PriceInput;
+import bisq.offer.spec.Direction;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,14 +44,15 @@ public class AmountController implements Controller {
     private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
     private final ChangeListener<Quote> fixPriceQuoteListener;
     private final PriceInput price;
-    private Subscription sliderAmountSubscription, baseSideAmountSubscription;
+    private Subscription sliderAmountSubscription, baseAmountFromModelSubscription, baseAmountFromCompSubscription,
+            quoteAmountFromCompSubscription, priceFromCompSubscription;
 
     public AmountController(DefaultApplicationService applicationService) {
         baseAmount = new BigAmountInput(true);
         quoteAmount = new SmallAmountInput(false);
         price = new PriceInput(applicationService.getMarketPriceService());
 
-        model = new AmountModel(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
+        model = new AmountModel();
         view = new AmountView(model, this,
                 baseAmount.getRoot(),
                 quoteAmount.getRoot(),
@@ -92,16 +93,14 @@ public class AmountController implements Controller {
         long minAmount = model.getMinAmount().get().getValue();
         long minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
 
-
         sliderAmountSubscription = EasyBind.subscribe(model.getSliderValue(), sliderValueAsNumber -> {
             double sliderValue = (double) sliderValueAsNumber;
             long value = Math.round(sliderValue * minMaxDiff) + minAmount;
             Coin amount = Coin.of(value, "BTC");
-            model.getAmount().set(amount);
             baseAmount.setAmount(amount);
         });
 
-        baseSideAmountSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
+        baseAmountFromModelSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
             if (amount != null && !model.getSliderFocus().get()) {
                 double sliderValue = (amount.getValue() - minAmount) / (double) minMaxDiff;
@@ -109,7 +108,15 @@ public class AmountController implements Controller {
             }
         });
 
-        baseAmount.setAmount(Coin.asBtc(330000));
+        baseAmountFromCompSubscription = EasyBind.subscribe(baseAmount.amountProperty(),
+                amount -> model.getBaseSideAmount().set(amount));
+        quoteAmountFromCompSubscription = EasyBind.subscribe(quoteAmount.amountProperty(),
+                amount -> model.getQuoteSideAmount().set(amount));
+        priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
+                price -> model.getFixPrice().set(price));
+        
+        baseAmount.setAmount(Coin.asBtc(700000));
+        setQuoteFromBase();
     }
 
     @Override
@@ -118,7 +125,18 @@ public class AmountController implements Controller {
         model.getQuoteSideAmount().removeListener(quoteCurrencyAmountListener);
         model.getFixPrice().removeListener(fixPriceQuoteListener);
         sliderAmountSubscription.unsubscribe();
-        baseSideAmountSubscription.unsubscribe();
+        baseAmountFromModelSubscription.unsubscribe();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
+        return model.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
+        return model.getQuoteSideAmount();
+    }
+
+    public void setDirection(Direction direction) {
     }
 
     private void setQuoteFromBase() {
@@ -145,13 +163,5 @@ public class AmountController implements Controller {
         } else {
             setQuoteFromBase();
         }
-    }
-
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
-    }
-
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
     }
 }

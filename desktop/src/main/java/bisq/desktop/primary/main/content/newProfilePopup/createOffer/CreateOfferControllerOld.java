@@ -25,17 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 
 @Slf4j
-public class CreateOfferController implements Controller {
-    private final CreateOfferModel model;
+public class CreateOfferControllerOld implements Controller {
+    private final CreateOfferModelOld model;
     @Getter
-    private final CreateOfferView view;
+    private final CreateOfferViewOld view;
     private final Consumer<Boolean> navigationHandler;
 
-    public CreateOfferController(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
+    public CreateOfferControllerOld(DefaultApplicationService applicationService, Consumer<Boolean> navigationHandler) {
         this.navigationHandler = navigationHandler;
 
-        model = new CreateOfferModel();
-        view = new CreateOfferView(model, this);
+        model = new CreateOfferModelOld();
+        view = new CreateOfferViewOld(model, this);
     }
 
     @Override

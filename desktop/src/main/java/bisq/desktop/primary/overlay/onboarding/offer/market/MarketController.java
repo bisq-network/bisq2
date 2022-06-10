@@ -18,9 +18,10 @@
 package bisq.desktop.primary.overlay.onboarding.offer.market;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +33,11 @@ public class MarketController implements Controller {
 
     public MarketController(DefaultApplicationService applicationService) {
         model = new MarketModel();
-        view = new MarketView(model, this);
+        view = new MarketView(model, this); model.getMarket().set(MarketRepository.getDefault());
+    }
+
+    public ReadOnlyObjectProperty<Market> getMarket() {
+        return model.getMarket();
     }
 
     @Override
@@ -41,13 +46,5 @@ public class MarketController implements Controller {
 
     @Override
     public void onDeactivate() {
-    }
-
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
-    }
-
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
     }
 }

@@ -23,6 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
+import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
 import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;
@@ -110,10 +111,9 @@ public class OverlayController extends NavigationController {
             case ONBOARDING -> {
                 return Optional.of(new OnboardingController(applicationService));
             }
-           /* case ONBOARDING -> {
-                return Optional.of(new NewProfilePopupController(applicationService));
-            }*/
-
+            case CREATE_OFFER -> {
+                return Optional.of(new CreateOfferController(applicationService));
+            }
             default -> {
                 return Optional.empty();
             }

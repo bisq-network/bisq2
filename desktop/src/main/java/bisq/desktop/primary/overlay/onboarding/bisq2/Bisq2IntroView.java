@@ -49,12 +49,13 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-4");
-        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
-
+       
         nextButton = new Button(Res.get("start"));
         nextButton.setId("bisq-easy-next-button");
+        
+        VBox.setMargin(logo, new Insets(50, 0, 0, 0 ));
+        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
         VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
-
         root.getChildren().addAll(logo,
                 headlineLabel,
                 subtitleLabel,

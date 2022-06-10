@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.multiSig.closedTrades.ClosedTradesController;
-import bisq.desktop.primary.main.content.trade.multiSig.createOffer.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.createOffer.MultiSigCreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.offerbook.OfferbookController;
 import bisq.desktop.primary.main.content.trade.multiSig.openoffers.OpenOffersController;
 import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
@@ -73,7 +73,7 @@ public class MultiSigController extends TabController<MultiSigModel> implements 
             }
             case MULTI_SIG_CREATE_OFFER -> {
                 model.showCreateOffer.set(true);
-                return Optional.of(new CreateOfferController(applicationService));
+                return Optional.of(new MultiSigCreateOfferController(applicationService));
             }
             case MULTI_SIG_TAKE_OFFER -> {
                 model.showTakeOffer.set(true);

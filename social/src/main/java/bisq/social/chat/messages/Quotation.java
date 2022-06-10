@@ -24,4 +24,11 @@ public record Quotation(String nym, String nickName, ProofOfWork proofOfWork, St
     public String getUserName() {
         return NymLookup.getUserName(nym, nickName);
     }
+
+    public boolean isValid() {
+        return nym != null && !nym.isEmpty() &&
+                nickName != null && !nickName.isEmpty() &&
+                proofOfWork != null && proofOfWork.getSolution().length > 0 &&
+                message != null && !message.isEmpty();
+    }
 }

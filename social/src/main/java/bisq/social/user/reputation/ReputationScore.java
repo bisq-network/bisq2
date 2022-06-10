@@ -19,13 +19,16 @@ package bisq.social.user.reputation;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
 @ToString
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public class ReputationScore {
+public class ReputationScore implements Comparable<ReputationScore> {
+    public static final ReputationScore NONE = new ReputationScore(0, 0, 0, 0);
     private final long totalScore;
     private final double relativeScore;
     private final int ranking;
@@ -36,5 +39,10 @@ public class ReputationScore {
         this.relativeScore = relativeScore;
         this.ranking = ranking;
         this.relativeRanking = relativeRanking;
+    }
+
+    @Override
+    public int compareTo(@NonNull ReputationScore o) {
+        return Double.compare(totalScore, o.getTotalScore());
     }
 }

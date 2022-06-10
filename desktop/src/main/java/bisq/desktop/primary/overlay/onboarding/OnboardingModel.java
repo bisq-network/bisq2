@@ -19,26 +19,18 @@ package bisq.desktop.primary.overlay.onboarding;
 
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class OnboardingModel extends NavigationModel {
-    private IntegerProperty navigationProgressIndex = new SimpleIntegerProperty();
-    private BooleanProperty navigationProgressVisible = new SimpleBooleanProperty();
-    private StringProperty skipButtonText = new SimpleStringProperty();
-    private BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
 
     public OnboardingModel() {
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.ONBOARDING_AMOUNT;
-       /* return chatUserService.isDefaultUserProfileMissing() ?
-                NavigationTarget.DASHBOARD : 
-                NavigationTarget.BISQ_EASY;*/
+        return NavigationTarget.ONBOARDING_BISQ_2_INTRO;
     }
 }

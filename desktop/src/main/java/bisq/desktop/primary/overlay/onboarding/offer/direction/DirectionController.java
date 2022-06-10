@@ -19,8 +19,8 @@ package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.offer.spec.Direction;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,22 +33,22 @@ public class DirectionController implements Controller {
     public DirectionController(DefaultApplicationService applicationService) {
         model = new DirectionModel();
         view = new DirectionView(model, this);
+        onSelect(Direction.BUY);
+    }
+
+    public ReadOnlyObjectProperty<Direction> getDirection() {
+        return model.getDirection();
     }
 
     @Override
     public void onActivate() {
-        onSelect(DirectionModel.Direction.BUY);
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onSelect(DirectionModel.Direction selectedDirection) {
+    public void onSelect(Direction selectedDirection) {
         model.getDirection().set(selectedDirection);
-    }
-
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
     }
 }

@@ -37,7 +37,7 @@ import java.util.HashSet;
 
 @Slf4j
 @Getter
-public class CreateOfferModel implements Model {
+public class MultiSigCreateOfferModel implements Model {
     @Setter
     private Market selectedMarket;
     @Setter
@@ -61,7 +61,7 @@ public class CreateOfferModel implements Model {
     @Setter
     private boolean showCreateOfferTab;
 
-    public CreateOfferModel() {
+    public MultiSigCreateOfferModel() {
     }
 
 

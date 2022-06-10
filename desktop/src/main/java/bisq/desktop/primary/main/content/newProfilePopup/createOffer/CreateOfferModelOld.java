@@ -18,12 +18,8 @@
 package bisq.desktop.primary.main.content.newProfilePopup.createOffer;
 
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.*;
-import javafx.scene.image.Image;
 import lombok.Getter;
 
-import java.security.KeyPair;
-
 @Getter
-public class CreateOfferModel implements Model {
+public class CreateOfferModelOld implements Model {
 }

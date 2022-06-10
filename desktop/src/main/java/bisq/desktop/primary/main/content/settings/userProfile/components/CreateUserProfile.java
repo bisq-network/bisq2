@@ -49,7 +49,6 @@ import java.security.KeyPair;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class CreateUserProfile {
@@ -73,7 +72,6 @@ public class CreateUserProfile {
         private final KeyPairService keyPairService;
         private final RoleSelection roleSelection;
         private final ProofOfWorkService proofOfWorkService;
-        private final AtomicBoolean isMintNymProofOfWorkFutureCanceled = new AtomicBoolean();
         private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
 
         private Controller(ChatService chatService, ChatUserService chatUserService, SecurityService securityService) {
@@ -91,7 +89,6 @@ public class CreateUserProfile {
         public void onActivate() {
             reset();
             model.feedback.set("");
-            isMintNymProofOfWorkFutureCanceled.set(false);
             onCreateIdentity();
 
             model.createProfileButtonDisable.bind(EasyBind.combine(model.nickName, model.nymId, model.roboHashImage,
@@ -107,7 +104,6 @@ public class CreateUserProfile {
             // Does only cancel downstream calls not actual running task
             // We pass the isCanceled flag to stop the running task
             mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
-            isMintNymProofOfWorkFutureCanceled.set(true);
         }
 
         private void onCreateUserProfile() {
@@ -137,7 +133,7 @@ public class CreateUserProfile {
             model.powProgress.set(-1);
             model.nymId.set(Res.get("initNymProfile.nymId.generating"));
             long ts = System.currentTimeMillis();
-            mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash, isMintNymProofOfWorkFutureCanceled)
+            mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                     .thenAccept(proofOfWork -> {
                         UIThread.run(() -> {
                             log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);

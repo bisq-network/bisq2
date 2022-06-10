@@ -65,7 +65,7 @@ import static java.math.BigInteger.ONE;
  *
  * @author: https://github.com/stejbac
  */
-// Taken from: https://github.com/bisq-network/bisq
+// Borrowed from: https://github.com/bisq-network/bisq
 @SuppressWarnings("UnstableApiUsage")
 public class Equihash {
     private static final int HASH_BIT_LENGTH = 256;

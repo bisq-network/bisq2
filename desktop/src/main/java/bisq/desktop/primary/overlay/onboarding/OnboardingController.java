@@ -25,14 +25,9 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
 import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyIntroController;
-import bisq.desktop.primary.overlay.onboarding.offer.amount.AmountController;
-import bisq.desktop.primary.overlay.onboarding.offer.complete.OfferCompletedController;
-import bisq.desktop.primary.overlay.onboarding.offer.direction.DirectionController;
-import bisq.desktop.primary.overlay.onboarding.offer.market.MarketController;
-import bisq.desktop.primary.overlay.onboarding.offer.method.PaymentMethodController;
-import bisq.desktop.primary.overlay.onboarding.offer.published.OfferPublishedController;
+import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
-import bisq.i18n.Res;
+import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,58 +51,12 @@ public class OnboardingController extends NavigationController {
 
     @Override
     public void onNavigateToChild(NavigationTarget navigationTarget) {
-        model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
-        OverlayController.setTransitionsType(Transitions.Type.BLACK);
-        switch (navigationTarget) {
-            case BISQ_2_INTRO -> {
-                model.getNavigationProgressVisible().set(false);
-                model.getSkipButtonVisible().set(false);
-            }
-            case CREATE_PROFILE -> {
-                model.getNavigationProgressVisible().set(false);
-                model.getSkipButtonVisible().set(false);
-            }
-            case ONBOARDING_BISQ_EASY -> {
-                model.getNavigationProgressVisible().set(false);
-                model.getSkipButtonVisible().set(false);
-            }
-            case ONBOARDING_DIRECTION -> {
-                model.getNavigationProgressVisible().set(true);
-                model.getNavigationProgressIndex().set(0);
-                model.getSkipButtonVisible().set(true);
-            }
-            case ONBOARDING_MARKET -> {
-                model.getNavigationProgressVisible().set(true);
-                model.getNavigationProgressIndex().set(1);
-                model.getSkipButtonVisible().set(true);
-            }
-            case ONBOARDING_AMOUNT -> {
-                model.getNavigationProgressVisible().set(true);
-                model.getNavigationProgressIndex().set(2);
-                model.getSkipButtonVisible().set(true);
-            }
-            case ONBOARDING_PAYMENT_METHOD -> {
-                model.getNavigationProgressVisible().set(true);
-                model.getNavigationProgressIndex().set(3);
-                model.getSkipButtonVisible().set(true);
-            }
-            case ONBOARDING_OFFER_COMPLETED -> {
-                model.getNavigationProgressVisible().set(true);
-                model.getNavigationProgressIndex().set(4);
-                model.getSkipButtonVisible().set(true);
-            }
-            case ONBOARDING_OFFER_PUBLISHED -> {
-                model.getNavigationProgressVisible().set(false);
-                model.getSkipButtonText().set(Res.get("close"));
-                model.getSkipButtonVisible().set(true);
-            }
-            default -> {
-            }
-        }
+        //OverlayController.setTransitionsType(Transitions.Type.BLACK);
     }
 
     @Override
     public void onActivate() {
+        OverlayController.setTransitionsType(Transitions.Type.BLACK);
     }
 
     @Override
@@ -117,32 +66,17 @@ public class OnboardingController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_2_INTRO -> {
+            case ONBOARDING_BISQ_2_INTRO -> {
                 return Optional.of(new Bisq2IntroController(applicationService));
             }
-            case CREATE_PROFILE -> {
+            case ONBOARDING_CREATE_PROFILE -> {
                 return Optional.of(new CreateProfileController(applicationService));
             }
             case ONBOARDING_BISQ_EASY -> {
                 return Optional.of(new BisqEasyIntroController(applicationService));
             }
-            case ONBOARDING_DIRECTION -> {
-                return Optional.of(new DirectionController(applicationService));
-            }
-            case ONBOARDING_MARKET -> {
-                return Optional.of(new MarketController(applicationService));
-            }
-            case ONBOARDING_AMOUNT -> {
-                return Optional.of(new AmountController(applicationService));
-            }
-            case ONBOARDING_PAYMENT_METHOD -> {
-                return Optional.of(new PaymentMethodController(applicationService));
-            }
-            case ONBOARDING_OFFER_COMPLETED -> {
-                return Optional.of(new OfferCompletedController(applicationService));
-            }
-            case ONBOARDING_OFFER_PUBLISHED -> {
-                return Optional.of(new OfferPublishedController(applicationService));
+            case CREATE_OFFER -> {
+                return Optional.of(new CreateOfferController(applicationService));
             }
             default -> {
                 return Optional.empty();
@@ -152,5 +86,10 @@ public class OnboardingController extends NavigationController {
 
     public void onSkip() {
         OverlayController.hide();
+    }
+
+    public void onQuit() {
+        applicationService.shutdown()
+                .thenAccept(__ -> Platform.exit());
     }
 }

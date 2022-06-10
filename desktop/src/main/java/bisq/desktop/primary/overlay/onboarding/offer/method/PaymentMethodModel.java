@@ -18,8 +18,12 @@
 package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
 public class PaymentMethodModel implements Model {
+    //todo we should start to use the PaymentMethod domain
+    private final ObservableList<String> paymentMethods = FXCollections.observableArrayList();
 }

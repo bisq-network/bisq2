@@ -44,6 +44,6 @@ public class Bisq2IntroController implements Controller {
     }
 
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
     }
 }

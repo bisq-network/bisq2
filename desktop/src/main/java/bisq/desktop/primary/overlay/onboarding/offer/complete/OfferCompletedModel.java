@@ -17,9 +17,38 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
+import bisq.offer.spec.Direction;
+import bisq.social.chat.channels.PublicTradeChannel;
+import bisq.social.chat.messages.PublicTradeChatMessage;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
 
 @Getter
-public class OfferCompletedModel implements Model {
+class OfferCompletedModel implements Model {
+    @Setter
+    private PublicTradeChannel selectedChannel;
+    @Setter
+    private Direction direction = Direction.BUY;
+    @Setter
+    private Market market = MarketRepository.getDefault();
+    @Setter
+    private Monetary baseSideAmount = Coin.asBtc(10000);
+    @Setter
+    private Monetary quoteSideAmount = Fiat.parse("100", "EUR");
+    @Setter
+    private List<String> paymentMethods = List.of("SEPA");
+    final private ObjectProperty<PublicTradeChatMessage> myOfferMessage = new SimpleObjectProperty<>();
+
+    OfferCompletedModel() {
+    }
 }

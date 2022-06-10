@@ -17,9 +17,13 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.market;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
 public class MarketModel implements Model {
+    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
 }

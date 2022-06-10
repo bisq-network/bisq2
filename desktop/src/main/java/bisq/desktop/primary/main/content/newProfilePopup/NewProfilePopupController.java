@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferController;
+import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferControllerOld;
 import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -55,7 +55,7 @@ public class NewProfilePopupController implements Controller {
                         SelectUserTypeController controller = new SelectUserTypeController(applicationService, this::navigateSubView);
                         model.setView(controller.getView());
                     } else if (step == 2) {
-                        CreateOfferController controller = new CreateOfferController(applicationService, this::navigateSubView);
+                        CreateOfferControllerOld controller = new CreateOfferControllerOld(applicationService, this::navigateSubView);
                         model.setView(controller.getView());
                     }
                 });

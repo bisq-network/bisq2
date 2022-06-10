@@ -18,9 +18,9 @@
 package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,6 +33,15 @@ public class PaymentMethodController implements Controller {
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
+        model.getPaymentMethods().add("SEPA");
+        model.getPaymentMethods().add("REVOLUT");
+    }
+
+    public ObservableList<String> getPaymentMethods() {
+        return model.getPaymentMethods();
+    }
+
+    public void setMarket(Market market) {
     }
 
     @Override
@@ -41,14 +50,5 @@ public class PaymentMethodController implements Controller {
 
     @Override
     public void onDeactivate() {
-    }
-
-
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_COMPLETED);
-    }
-
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
     }
 }

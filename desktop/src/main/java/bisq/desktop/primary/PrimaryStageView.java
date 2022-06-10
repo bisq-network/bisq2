@@ -102,8 +102,8 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
         model.getStageY().ifPresent(stage::setY);
         model.getStageWidth().ifPresent(stage::setWidth);
         model.getStageHeight().ifPresent(stage::setHeight);
-        stage.setMinWidth(model.getMinWidth());
-        stage.setMinHeight(model.getMinHeight());
+        stage.setMinWidth(PrimaryStageModel.MIN_WIDTH);
+        stage.setMinHeight(PrimaryStageModel.MIN_HEIGHT);
         stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));
         stage.yProperty().addListener((observable, oldValue, newValue) -> controller.onStageYChanged((double) newValue));
         stage.widthProperty().addListener((observable, oldValue, newValue) -> controller.onStageWidthChanged((double) newValue));

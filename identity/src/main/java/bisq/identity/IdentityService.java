@@ -298,7 +298,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
 
-        return proofOfWorkService.mintNymProofOfWork(DigestUtil.hash(keyPair.getPublic().getEncoded()), ProofOfWorkService.MIN_DIFFICULTY)
+        return proofOfWorkService.mintNymProofOfWork(DigestUtil.hash(keyPair.getPublic().getEncoded()), ProofOfWorkService.MINT_NYM_DIFFICULTY)
                 .thenCompose(proofOfWork -> networkService.getInitializedNetworkId(nodeId, pubKey)
                         .thenApply(networkId -> new Identity(domainId, networkId, keyPair, proofOfWork)));
     }

@@ -48,7 +48,6 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(8);
-      //  root.getStyleClass().add("bisq-content-bg");
         root.setPadding(new Insets(10, 0, 30, 0));
 
         Label headLineLabel = new Label(Res.get("createProfile.headline"));
@@ -58,7 +57,6 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
 
         roboIconView = new ImageView();
         roboIconView.setCursor(Cursor.HAND);
@@ -71,17 +69,14 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         powProgressIndicator.setOpacity(0.5);
 
         VBox profileIdBox = getValueBox(Res.get("createProfile.nymId"));
-        VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
         nymId = (Label) profileIdBox.getChildren().get(1);
 
         regenerateButton = new Button(Res.get("createProfile.regenerate"));
         regenerateButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3", "text-underline");
-        VBox.setMargin(regenerateButton, new Insets(0, 0, 16, 0));
 
         nicknameTextInputBox = new TextInputBox(Res.get("createProfile.nickName"),
                 Res.get("createProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(300);
-        VBox.setMargin(nicknameTextInputBox, new Insets(0, 0, 16, 0));
 
 
         nextButton = new Button(Res.get("createProfile.createProfile"));
@@ -89,6 +84,11 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nextButton.setContentDisplay(ContentDisplay.RIGHT);
         nextButton.setDefaultButton(true);
 
+        VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
+        VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
+        VBox.setMargin(regenerateButton, new Insets(0, 0, 16, 0));
+        VBox.setMargin(nicknameTextInputBox, new Insets(0, 0, 16, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
@@ -131,7 +131,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
 
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
         nextButton.setOnAction(e -> controller.onCreateNymProfile());
-        
+
         // We deactivate the close popup by escape
         root.getScene().setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {

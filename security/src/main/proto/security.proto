@@ -44,7 +44,6 @@ message KeyPairStore {
   map<string, KeyPair > keyPairsById = 1;
 }
 message ProofOfWorkStore {
-  double nymDifficulty = 1;
 }
     
 message ProofOfWork {
