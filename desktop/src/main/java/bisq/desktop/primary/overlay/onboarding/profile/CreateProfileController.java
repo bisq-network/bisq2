@@ -38,7 +38,6 @@ import org.fxmisc.easybind.Subscription;
 import java.security.KeyPair;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -52,7 +51,6 @@ public class CreateProfileController implements Controller {
     private final ProofOfWorkService proofOfWorkService;
     private Subscription nickNameSubscription;
     private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
-    private final AtomicBoolean isMintNymProofOfWorkFutureCanceled = new AtomicBoolean();
 
     public CreateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
@@ -65,7 +63,6 @@ public class CreateProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        isMintNymProofOfWorkFutureCanceled.set(false);
         onCreateTempIdentity();
 
         nickNameSubscription = EasyBind.subscribe(model.nickName,
@@ -79,7 +76,6 @@ public class CreateProfileController implements Controller {
         // Does only cancel downstream calls not actual running task
         // We pass the isCanceled flag to stop the running task
         mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
-        isMintNymProofOfWorkFutureCanceled.set(true);
     }
 
     void onCreateNymProfile() {
@@ -107,7 +103,7 @@ public class CreateProfileController implements Controller {
         model.powProgress.set(-1);
         model.nymId.set(Res.get("initNymProfile.nymId.generating"));
         long ts = System.currentTimeMillis();
-        mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash, isMintNymProofOfWorkFutureCanceled)
+        mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                 .thenAccept(proofOfWork -> {
                     UIThread.run(() -> {
                         log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);

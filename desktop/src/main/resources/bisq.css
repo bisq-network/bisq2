@@ -1635,7 +1635,7 @@ tree-table-view:focused {
 }
 
 #chat-messages-message {
-    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
     -fx-font-size: 1.33em;
     -fx-font-family: "IBM Plex Sans";
 }

@@ -628,7 +628,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
 
         byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
-        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MIN_DIFFICULTY).join();
+        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
         String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId()).getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),

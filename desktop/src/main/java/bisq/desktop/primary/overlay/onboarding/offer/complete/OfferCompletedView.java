@@ -106,10 +106,7 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
 
         vBox.getChildren().addAll(headLineLabel, subtitleLabel, tradeMessageHBox, Spacer.fillVBox(), backButton);
 
-        // WIP
-       // vBox.setStyle("-fx-background-color: transparant");
-        // topPaneBox.setStyle("-fx-background-color: transparant");
-
+      
         double width = 920;
         double height = 500;
         Canvas canvas = new Canvas();
@@ -124,7 +121,7 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         graphicsContext2D.lineTo(840, 400);
         graphicsContext2D.lineTo(80, 400);
         graphicsContext2D.closePath();
-        //graphicsContext2D.clip();
+        graphicsContext2D.clip();
 
         Image image = new Image("images/onboarding/template/onboarding-template_0006_complete.png");
         graphicsContext2D.drawImage(image, 0, 0, width, height);
@@ -132,9 +129,13 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
         snapshotParameters.setFill(Color.TRANSPARENT);
         WritableImage clipped = canvas.snapshot(snapshotParameters, null);
         imageView = new ImageView(clipped);
-       // imageView.setVisible(false);
-        vBox.setVisible(false);
-        root.getChildren().addAll(imageView, vBox);
+        // WIP
+        // vBox.setStyle("-fx-background-color: transparant");
+        // topPaneBox.setStyle("-fx-background-color: transparant");
+
+        // imageView.setVisible(false);
+        // vBox.setVisible(false);
+        root.getChildren().addAll(vBox, imageView);
     }
 
     @Override

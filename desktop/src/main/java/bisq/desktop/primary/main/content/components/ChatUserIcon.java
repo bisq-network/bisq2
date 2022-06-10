@@ -88,8 +88,7 @@ public class ChatUserIcon extends Pane {
     }
 
     public void releaseResources() {
-        //todo while using the fixed image we need to deactivate that 
-        //roboIcon.setImage(null);
+        roboIcon.setImage(null);
         entitlement.setOnMouseEntered(null);
         Tooltip.uninstall(entitlement, tooltip);
     }
