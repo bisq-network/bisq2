@@ -2,6 +2,7 @@ syntax = "proto3";
 package oracle;
 option java_package = "bisq.oracle.protobuf";
 option java_multiple_files = true;
+import "common.proto";
 
 message AuthorizedProofOfBurnData {
   string txId = 1;
@@ -9,4 +10,8 @@ message AuthorizedProofOfBurnData {
   uint32 blockHeight = 3;
   uint64 time = 4;
   bytes hash = 5;
+}
+
+message OpenTimestampStore {
+  repeated common.ByteArrayMapEntry timestampEntries = 1;
 }

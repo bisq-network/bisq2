@@ -35,6 +35,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -107,14 +108,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findActiveIdentity(String domainId) {
         synchronized (lock) {
-            return Optional.ofNullable(persistableStore.getActiveIdentityByDomainId().get(domainId));
+            return Optional.ofNullable(getActiveIdentityByDomainId().get(domainId));
         }
     }
 
     public void retireIdentity(String domainId) {
         boolean wasRemoved;
         synchronized (lock) {
-            Identity identity = persistableStore.getActiveIdentityByDomainId().remove(domainId);
+            Identity identity = getActiveIdentityByDomainId().remove(domainId);
             wasRemoved = identity != null;
             if (wasRemoved) {
                 persistableStore.getRetired().add(identity);
@@ -127,7 +128,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
         synchronized (lock) {
-            return persistableStore.getActiveIdentityByDomainId().values().stream()
+            return getActiveIdentityByDomainId().values().stream()
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -151,7 +152,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
         synchronized (lock) {
-            return Streams.concat(persistableStore.getActiveIdentityByDomainId().values().stream(),
+            return Streams.concat(getActiveIdentityByDomainId().values().stream(),
                             Streams.concat(persistableStore.getRetired().stream(),
                                     persistableStore.getPool().stream()))
                     .filter(e -> e.networkId().getNodeId().equals(nodeId))
@@ -171,11 +172,15 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                     Identity identity = new Identity(profileId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {
                         persistableStore.getPool().add(identity);
-                        persistableStore.getActiveIdentityByDomainId().put(profileId, identity);
+                        getActiveIdentityByDomainId().put(profileId, identity);
                     }
                     persist();
                     return identity;
                 });
+    }
+
+    public Map<String, Identity> getActiveIdentityByDomainId() {
+        return persistableStore.getActiveIdentityByDomainId();
     }
 
 
@@ -196,7 +201,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                         synchronized (lock) {
                             clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair(), pooledIdentity.proofOfWork());
                             persistableStore.getPool().remove(pooledIdentity);
-                            persistableStore.getActiveIdentityByDomainId().put(domainId, clonedIdentity);
+                            getActiveIdentityByDomainId().put(domainId, clonedIdentity);
                         }
                         persist();
 
@@ -222,7 +227,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     }
 
     private void initializeActiveIdentities() {
-        persistableStore.getActiveIdentityByDomainId().values().forEach(identity ->
+        getActiveIdentityByDomainId().values().forEach(identity ->
                 networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
                         .forEach(value -> value.whenComplete((result, throwable) -> {
                                     if (throwable == null && result) {
@@ -272,7 +277,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         return createAndInitializeNewIdentity(domainId)
                 .thenApply(identity -> {
                     synchronized (lock) {
-                        persistableStore.getActiveIdentityByDomainId().put(domainId, identity);
+                        getActiveIdentityByDomainId().put(domainId, identity);
                     }
                     persist();
                     return identity;

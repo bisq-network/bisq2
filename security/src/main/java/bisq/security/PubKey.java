@@ -39,4 +39,8 @@ public record PubKey(PublicKey publicKey, String keyId) implements Proto {
             throw new RuntimeException(e);
         }
     }
+
+    public byte[] hash() {
+        return DigestUtil.hash(publicKey.getEncoded());
+    }
 }

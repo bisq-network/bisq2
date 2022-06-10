@@ -33,6 +33,7 @@ import bisq.offer.OfferService;
 import bisq.offer.OpenOfferService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
+import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
@@ -79,6 +80,7 @@ public class DefaultApplicationService extends ServiceProvider {
         SECURITY_SERVICE_INITIALIZED,
         NETWORK_BOOTSTRAPPED,
         IDENTITY_SERVICE_INITIALIZED,
+        OTS_SERVICE_INITIALIZED,
         DAO_BRIDGE_SERVICE_INITIALIZED,
         MARKET_PRICE_SERVICE_INITIALIZED,
         ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
@@ -89,6 +91,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
     private final NetworkService networkService;
     private final OpenOfferService openOfferService;
+    private final OpenTimestampService openTimestampService;
     private final IdentityService identityService;
     private final MarketPriceService marketPriceService;
     private final ApplicationConfig applicationConfig;
@@ -126,15 +129,19 @@ public class DefaultApplicationService extends ServiceProvider {
         KeyPairService keyPairService = securityService.getKeyPairService();
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
 
+
         IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
         identityService = new IdentityService(persistenceService, securityService, networkService, identityServiceConfig);
+
+        openTimestampService = new OpenTimestampService(identityService, persistenceService,
+                OpenTimestampService.Config.from(getConfig("bisq.openTimestamp")));
 
         accountService = new AccountService(persistenceService);
         accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
 
         socialService = new SocialService();
         ChatUserService.Config userProfileServiceConfig = ChatUserService.Config.from(getConfig("bisq.userProfileServiceConfig"));
-        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, keyPairService, identityService, networkService);
+        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, keyPairService, identityService, openTimestampService, networkService);
         reputationService = new ReputationService(persistenceService, networkService, chatUserService);
         chatService = new ChatService(persistenceService, identityService, securityService, networkService, chatUserService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
@@ -177,6 +184,7 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfter(securityService.initialize(), State.SECURITY_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(networkService.bootstrapToNetwork(), State.NETWORK_BOOTSTRAPPED))
                 .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(openTimestampService.initialize(), State.OTS_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(marketPriceService.initialize(), State.MARKET_PRICE_SERVICE_INITIALIZED))
                 .whenComplete((list, throwable) -> {
                     log.info("add dummy accounts");
@@ -199,8 +207,8 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
                         chatUserService.initialize()
-                                .thenCompose(res -> reputationService.initialize())
-                                .thenCompose(res -> chatService.initialize()),
+                                .thenCompose(res -> reputationService.initialize()).
+                                thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeChatOfferService.initialize(),

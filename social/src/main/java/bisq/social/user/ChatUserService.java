@@ -17,10 +17,12 @@
 
 package bisq.social.user;
 
+import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
@@ -30,6 +32,7 @@ import bisq.network.http.common.BaseHttpClient;
 import bisq.network.http.common.HttpException;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.DataService;
+import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -41,6 +44,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.social.user.role.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
+import bisq.social.user.role.Role;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
@@ -85,15 +89,18 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
-    private final Map<String, Long> publishTimeByChatuserId = new ConcurrentHashMap<>();
+    private final OpenTimestampService openTimestampService;
+    private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
 
     public ChatUserService(PersistenceService persistenceService,
                            Config config,
                            KeyPairService keyPairService,
                            IdentityService identityService,
+                           OpenTimestampService openTimestampService,
                            NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
+        this.openTimestampService = openTimestampService;
         this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
@@ -134,6 +141,13 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                     }
                     persist();
                     return chatUserIdentity;
+                })
+                .thenApply(chatUserIdentity -> {
+                    // We don't wait for the reply but start an async task
+                    CompletableFuture.runAsync(() -> openTimestampService.maybeCreateOrUpgradeTimestamp(
+                                    new ByteArray(chatUserIdentity.getIdentity().pubKey().hash())),
+                            ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
+                    return chatUserIdentity;
                 });
     }
 
@@ -146,10 +160,10 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, Identity identity) {
         String chatUserId = chatUser.getId();
         long currentTimeMillis = System.currentTimeMillis();
-        if (!publishTimeByChatuserId.containsKey(chatUserId)) {
-            publishTimeByChatuserId.put(chatUserId, currentTimeMillis);
+        if (!publishTimeByChatUserId.containsKey(chatUserId)) {
+            publishTimeByChatUserId.put(chatUserId, currentTimeMillis);
         }
-        long passed = currentTimeMillis - publishTimeByChatuserId.get(chatUserId);
+        long passed = currentTimeMillis - publishTimeByChatUserId.get(chatUserId);
         if (passed == 0 || passed > TimeUnit.HOURS.toMillis(5)) {
             return publishChatUser(chatUser, identity).thenApply(r -> true);
         } else {
@@ -205,14 +219,14 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                            String _txId,
                                                                            byte[] pubKeyHash) {
         String txId;
-        // We use as preImage in the DAO String.getBytes(Charsets.UTF_8) to get bytes from the input string (not hex 
+        // We use as preImage in the DAO String.getBytes(Charsets.UTF_8) to get bytes from the input string (not hex
         // as hex would be more restrictive for arbitrary inputs)
         byte[] preImage;
         String pubKeyHashAsHex;
         if (USE_DEV_TEST_POB_VALUES) {
             // BSQ proof of burn tx (mainnet): ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7
             // pubkeyhash (preimage for POB tx) 6a4e52f31a24300fd2a03766b5ea6e4abf289609
-            // op return hash 9593f12a86fcb6ca72ed621c208b9370ff8f5112 
+            // op return hash 9593f12a86fcb6ca72ed621c208b9370ff8f5112
             txId = "ac57b3d6bdda9976391217e6d0ecbea9b050177fd284c2b199ede383189123c7";
             pubKeyHashAsHex = "6a4e52f31a24300fd2a03766b5ea6e4abf289609";
         } else {

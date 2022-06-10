@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -39,7 +40,7 @@ public class Scheduler implements TaskScheduler {
 
     private Scheduler(Runnable task) {
         this.task = task;
-        executor = ExecutorFactory.newSingleThreadScheduledExecutor("Scheduler");
+        executor = ExecutorFactory.newSingleThreadScheduledExecutor("Scheduler-" + new Random().nextInt(1000));
     }
 
     public static Scheduler run(Runnable task) {
