@@ -41,7 +41,6 @@ import bisq.security.KeyGeneration;
 import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.user.role.Role;
 import bisq.social.user.proof.*;
 import bisq.social.user.reputation.Reputation;
 import bisq.social.user.role.Role;
@@ -176,8 +175,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         Identity identity = chatUserIdentity.getIdentity();
         String chatUserId = chatUser.getId();
         long currentTimeMillis = System.currentTimeMillis();
-        if (!publishTimeByChatuserId.containsKey(chatUserId)) {
-            publishTimeByChatuserId.put(chatUserId, currentTimeMillis);
+        if (!publishTimeByChatUserId.containsKey(chatUserId)) {
+            publishTimeByChatUserId.put(chatUserId, currentTimeMillis);
         }
         return publishChatUser(chatUser, identity).thenApply(r -> chatUserIdentity);
     }
