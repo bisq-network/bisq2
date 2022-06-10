@@ -22,7 +22,7 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-// Taken from: https://github.com/bisq-network/bisq
+// Borrowed from: https://github.com/bisq-network/bisq
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements Proto {

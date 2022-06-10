@@ -21,36 +21,27 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ProofOfWorkStore implements PersistableStore<ProofOfWorkStore> {
-    @Getter
-    @Setter
-    private double nymDifficulty = -1;
 
     public ProofOfWorkStore() {
     }
 
-    private ProofOfWorkStore(double nymDifficulty) {
-        this.nymDifficulty = nymDifficulty;
-    }
-
     @Override
     public ProofOfWorkStore getClone() {
-        return new ProofOfWorkStore(nymDifficulty);
+        return new ProofOfWorkStore();
     }
 
     @Override
     public bisq.security.protobuf.ProofOfWorkStore toProto() {
-        return bisq.security.protobuf.ProofOfWorkStore.newBuilder().setNymDifficulty(nymDifficulty)
+        return bisq.security.protobuf.ProofOfWorkStore.newBuilder()
                 .build();
     }
 
     public static ProofOfWorkStore fromProto(bisq.security.protobuf.ProofOfWorkStore proto) {
-        return new ProofOfWorkStore(proto.getNymDifficulty());
+        return new ProofOfWorkStore();
     }
 
     @Override
@@ -66,6 +57,5 @@ public class ProofOfWorkStore implements PersistableStore<ProofOfWorkStore> {
 
     @Override
     public void applyPersisted(ProofOfWorkStore persisted) {
-        nymDifficulty = persisted.getNymDifficulty();
     }
 }
