@@ -1656,7 +1656,6 @@ tree-table-view:focused {
 .chat-offer-box {
     -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 8;
-   /* -fx-padding: 15;*/
 }
 
 #buy-button {

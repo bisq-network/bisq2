@@ -412,7 +412,7 @@ public class ChatMessagesListView {
                         private final HBox hBox, messageHBox, reactionsHBox, editButtonsHBox, quotedMessageHBox;
                         private final ChatUserIcon chatUserIcon = new ChatUserIcon(42);
                         private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
-                        private Subscription widthSubscription, messageWidthSubscription;
+                        private Subscription widthSubscription;
 
                         {
                             // HBox for user name + date
@@ -445,16 +445,6 @@ public class ChatMessagesListView {
                             actionButton.setVisible(false);
                             actionButton.setManaged(false);
 
-                            // HBox of message, reputation VBox and button
-                            HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
-                            HBox.setHgrow(message, Priority.ALWAYS);
-                            messageHBox = new HBox(15, message, Spacer.fillHBox(), reputationVBox, actionButton);
-                            messageHBox.setFillHeight(true);
-                            messageHBox.setPadding(new Insets(15));
-                            messageHBox.setAlignment(Pos.CENTER_LEFT);
-
-                            message.setStyle("-fx-background-color: blue");
-
                             // edit
                             editInputField = new BisqTextArea();
                             editInputField.setId("chat-messages-edit-text-area");
@@ -469,6 +459,18 @@ public class ChatMessagesListView {
                             editButtonsHBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editButtonsHBox.setVisible(false);
                             editButtonsHBox.setManaged(false);
+
+
+                            // HBox of message, editInputField, reputation VBox and button
+                            HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
+                            HBox.setHgrow(message, Priority.ALWAYS);
+                            messageHBox = new HBox(15, message, editInputField, Spacer.fillHBox(), reputationVBox, actionButton);
+                            messageHBox.setFillHeight(true);
+                            messageHBox.setPadding(new Insets(15));
+                            messageHBox.setAlignment(Pos.CENTER_LEFT);
+
+                            message.setStyle("-fx-background-color: blue");
+
 
                             // Reactions box
                             emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
@@ -512,12 +514,8 @@ public class ChatMessagesListView {
                                     userInfoHBox,
                                     quotedMessageHBox,
                                     messageHBox,
-                                    editInputField,
                                     editButtonsHBox,
                                     reactionsHBox);
-
-                            //quotedMessageHBox.setStyle("-fx-background-color: red");
-
 
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = new HBox(15, chatUserIcon, vBox);
@@ -557,10 +555,6 @@ public class ChatMessagesListView {
                                 actionButton.setManaged(isOfferMessage);
 
                                 if (isOfferMessage) {
-                                    VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
-                                    VBox.setMargin(editInputField, new Insets(-40, 0, 40, 5));
-                                    HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
-                                    VBox.setMargin(reactionsHBox, new Insets(5, 0, -10, 0));
                                     if (model.isMyMessage(chatMessage)) {
                                         actionButton.setText(Res.get("deleteOffer"));
                                         actionButton.getStyleClass().remove("default-button");
@@ -572,12 +566,18 @@ public class ChatMessagesListView {
                                         actionButton.getStyleClass().add("default-button");
                                         actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
                                     }
+
+                                    VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
+                                    HBox.setMargin(reputationVBox, new Insets(-5, 10, 0, 0));
+                                    VBox.setMargin(reactionsHBox, new Insets(3, 0, -10, 0));
+                                    VBox.setMargin(editButtonsHBox, new Insets(12, 0, -14, 0));
                                 } else {
                                     VBox.setMargin(messageHBox, new Insets(-5, 0, 0, 0));
-                                    VBox.setMargin(editInputField, new Insets(-35, 0, 15, 5));
-                                    HBox.setMargin(reputationVBox, new Insets(-30, 10, 0, 0));
-                                    VBox.setMargin(reactionsHBox, new Insets(-10, 0, -10, 0));
+                                    HBox.setMargin(reputationVBox, new Insets(-36, 10, 0, 0));
+                                    VBox.setMargin(reactionsHBox, new Insets(-8, 0, -10, 0));
+                                    VBox.setMargin(editButtonsHBox, new Insets(-10, 0, -3, 0));
                                 }
+                                HBox.setMargin(editInputField, new Insets(-5, 0, -20, -10));
 
                                 Layout.toggleStyleClass(messageHBox, "chat-offer-box", isOfferMessage);
                                 editInputField.maxWidthProperty().bind(message.wrappingWidthProperty());
@@ -605,12 +605,9 @@ public class ChatMessagesListView {
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
                                 }
-                                if (messageWidthSubscription != null) {
-                                    messageWidthSubscription.unsubscribe();
-                                }
 
                                 editInputField.maxWidthProperty().unbind();
-                                        
+
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
                                 actionButton.setOnAction(null);
@@ -644,9 +641,10 @@ public class ChatMessagesListView {
                             double width = messagesListView.getWidth() - 95;
                             quotedMessageField.setWrappingWidth(width - 20);
 
-                            double actionButtonWidth = actionButton.getWidth() + 40;
+                            double actionButtonPadding = actionButton.getWidth() > 0 ? 40 : 0;
+                            double actionButtonWidth = actionButton.getWidth() + actionButtonPadding;
                             double reputationVBoxWidth = reputationVBox.getWidth();
-                            message.setWrappingWidth(width - 40 - actionButtonWidth - reputationVBoxWidth);
+                            message.setWrappingWidth(width - 50 - actionButtonWidth - reputationVBoxWidth);
                         }
 
                         private void handleEditBox(ChatMessage chatMessage) {
@@ -743,8 +741,9 @@ public class ChatMessagesListView {
                             reactionsHBox.setVisible(false);
                             editInputField.setVisible(true);
                             editInputField.setManaged(true);
+                            editInputField.setInitialHeight(message.getBoundsInLocal().getHeight());
                             editInputField.setText(message.getText().replace(EDITED_POST_FIX, ""));
-                            editInputField.setScrollHideThreshold(200);
+                            // editInputField.setScrollHideThreshold(200);
                             editInputField.requestFocus();
                             editInputField.positionCaret(message.getText().length());
                             editButtonsHBox.setVisible(true);
