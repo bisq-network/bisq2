@@ -33,19 +33,19 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateOfferView extends View<VBox, CreateOfferModel, CreateOfferController> {
+public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel, MultiSigCreateOfferController> {
     private final static double POPUP_PADDING = 66;
     private final ChangeListener<Offer> offerListener;
     private final Button createOfferButton;
     private final BisqTextArea offerSummary;
 
-    public CreateOfferView(CreateOfferModel model,
-                           CreateOfferController controller,
-                           Pane marketSelection,
-                           Pane direction,
-                           Pane amountPrice,
-                           Pane protocol,
-                           Pane settlement) {
+    public MultiSigCreateOfferView(MultiSigCreateOfferModel model,
+                                   MultiSigCreateOfferController controller,
+                                   Pane marketSelection,
+                                   Pane direction,
+                                   Pane amountPrice,
+                                   Pane protocol,
+                                   Pane settlement) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);

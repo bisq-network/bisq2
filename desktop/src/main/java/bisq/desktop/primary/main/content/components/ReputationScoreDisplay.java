@@ -28,7 +28,6 @@ import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
@@ -55,16 +54,10 @@ public class ReputationScoreDisplay extends HBox {
         getChildren().addAll(stars);
     }
 
-    public void applyReputationScore(Optional<ReputationScore> optionalReputationScore) {
-        double relativeScore = 0;
-        int ranking = 0;
-        long score = 0;
-        if (optionalReputationScore.isPresent()) {
-            ReputationScore reputationScore = optionalReputationScore.get();
-            relativeScore = reputationScore.getRelativeScore();
-            ranking = reputationScore.getRanking();
-            score = reputationScore.getTotalScore();
-        }
+    public void applyReputationScore(ReputationScore reputationScore) {
+        double relativeScore = reputationScore.getRelativeScore();
+        int ranking = reputationScore.getRanking();
+        long score = reputationScore.getTotalScore();
 
         int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
         for (int i = 0; i < stars.size(); i++) {

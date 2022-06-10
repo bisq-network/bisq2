@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -80,16 +81,12 @@ import static bisq.desktop.primary.main.content.components.ChatMessagesComponent
 public class ChatMessagesListView {
     private final Controller controller;
 
-    public ChatMessagesListView(ChatService chatService,
-                                ChatUserService chatUserService,
-                                ReputationService reputationService,
+    public ChatMessagesListView(DefaultApplicationService applicationService,
                                 Consumer<ChatUser> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
                                 boolean isDiscussionsChat) {
-        controller = new Controller(chatService,
-                chatUserService,
-                reputationService,
+        controller = new Controller(applicationService,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
@@ -117,22 +114,22 @@ public class ChatMessagesListView {
         private final Consumer<ChatUser> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
+        private final ReputationService reputationService;
         private Pin selectedChannelPin, chatMessagesPin;
 
-        private Controller(ChatService chatService,
-                           ChatUserService chatUserService,
-                           ReputationService reputationService,
+        private Controller(DefaultApplicationService applicationService,
                            Consumer<ChatUser> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
                            boolean isDiscussionsChat) {
-            this.chatService = chatService;
-            this.chatUserService = chatUserService;
+            this.chatService = applicationService.getChatService();
+            this.chatUserService = applicationService.getChatUserService();
+            this.reputationService = applicationService.getReputationService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
 
-            model = new Model(chatService, chatUserService, reputationService, isDiscussionsChat);
+            model = new Model(chatService, chatUserService, isDiscussionsChat);
             view = new View(model, this);
         }
 
@@ -146,12 +143,12 @@ public class ChatMessagesListView {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
                         chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
                                 .to(publicDiscussionChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
                         chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
                                 .to(privateDiscussionChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
@@ -161,12 +158,12 @@ public class ChatMessagesListView {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicTradeChannel publicTradeChannel) {
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
                                 .to(publicTradeChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService))
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
                                 .to(privateTradeChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
@@ -315,7 +312,6 @@ public class ChatMessagesListView {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
         private final ChatUserService chatUserService;
-        private final ReputationService reputationService;
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
@@ -325,32 +321,22 @@ public class ChatMessagesListView {
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
-        private final ObservableList<ChatUser> mentionableUsers = FXCollections.observableArrayList();
-        private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
 
         private Model(ChatService chatService,
                       ChatUserService chatUserService,
-                      ReputationService reputationService,
                       boolean isDiscussionsChat) {
             this.chatService = chatService;
             this.chatUserService = chatUserService;
-            this.reputationService = reputationService;
             this.isDiscussionsChat = isDiscussionsChat;
             ignoredChatUserPredicate = item -> item.getAuthor().isPresent() &&
                     !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
             filteredChatMessages.setPredicate(ignoredChatUserPredicate);
-
-            mentionableUsers.setAll(chatUserService.getMentionableChatUsers());
-            mentionableChannels.setAll(chatService.getMentionableChannels());
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {
             return chatService.isMyMessage(chatMessage);
         }
 
-        private Optional<ReputationScore> getReputationScore(ChatUser author) {
-            return reputationService.findReputationScore(author);
-        }
 
         public boolean isOfferMessage(ChatMessage chatMessage) {
             return chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
@@ -460,10 +446,10 @@ public class ChatMessagesListView {
                             editButtonsHBox.setVisible(false);
                             editButtonsHBox.setManaged(false);
 
-
                             // HBox of message, editInputField, reputation VBox and button
                             HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
                             HBox.setHgrow(message, Priority.ALWAYS);
+                            HBox.setMargin(editInputField, new Insets(-5, 0, -20, -10));
                             messageHBox = new HBox(15, message, editInputField, Spacer.fillHBox(), reputationVBox, actionButton);
                             messageHBox.setFillHeight(true);
                             messageHBox.setPadding(new Insets(15));
@@ -547,7 +533,7 @@ public class ChatMessagesListView {
                                     Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
                                     chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
 
-                                    reputationScoreDisplay.applyReputationScore(model.getReputationScore(author));
+                                    reputationScoreDisplay.applyReputationScore(item.getReputationScore());
                                 });
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
@@ -577,7 +563,6 @@ public class ChatMessagesListView {
                                     VBox.setMargin(reactionsHBox, new Insets(-8, 0, -10, 0));
                                     VBox.setMargin(editButtonsHBox, new Insets(-10, 0, -3, 0));
                                 }
-                                HBox.setMargin(editInputField, new Insets(-5, 0, -20, -10));
 
                                 Layout.toggleStyleClass(messageHBox, "chat-offer-box", isOfferMessage);
                                 editInputField.maxWidthProperty().bind(message.wrappingWidthProperty());
@@ -795,8 +780,9 @@ public class ChatMessagesListView {
         private final Optional<ChatUser> author;
         private final String nym;
         private final String nickName;
+        private final ReputationScore reputationScore;
 
-        private ChatMessageListItem(T chatMessage, ChatService chatService) {
+        public ChatMessageListItem(T chatMessage, ChatService chatService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
 
             if (chatMessage instanceof PrivateTradeChatMessage privateTradeChatMessage) {
@@ -813,6 +799,9 @@ public class ChatMessagesListView {
 
             nym = author.map(ChatUser::getNym).orElse("");
             nickName = author.map(ChatUser::getNickName).orElse("");
+
+            reputationScore = author.flatMap(reputationService::findReputationScore)
+                    .orElse(ReputationScore.NONE);
         }
 
         @Override

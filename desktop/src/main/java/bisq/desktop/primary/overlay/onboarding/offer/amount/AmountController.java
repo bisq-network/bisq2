@@ -108,8 +108,8 @@ public class AmountController implements Controller {
                 model.getSliderValue().set(sliderValue);
             }
         });
-
-        baseAmount.setAmount(Coin.asBtc(330000));
+        baseAmount.setAmount(Coin.asBtc(700000));
+        setQuoteFromBase();
     }
 
     @Override
@@ -148,10 +148,10 @@ public class AmountController implements Controller {
     }
 
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_MARKET);
     }
 }

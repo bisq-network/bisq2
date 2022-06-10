@@ -51,15 +51,16 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-4");
-        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
 
         nextButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.createOffer"));
         nextButton.setDefaultButton(true);
         skipButton = new Button(Res.get("close"));
         HBox buttons = new HBox(7, skipButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
-        VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
 
+        VBox.setMargin(logo, new Insets(50, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
+        VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
                 subtitleLabel,

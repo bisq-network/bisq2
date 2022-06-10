@@ -28,9 +28,9 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CreateOfferView extends View<ScrollPane, CreateOfferModel, CreateOfferController> {
+public class CreateOfferViewOld extends View<ScrollPane, CreateOfferModelOld, CreateOfferControllerOld> {
 
-    public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
+    public CreateOfferViewOld(CreateOfferModelOld model, CreateOfferControllerOld controller) {
         super(new ScrollPane(), model, controller);
 
         VBox vBox = new VBox();

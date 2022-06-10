@@ -42,7 +42,7 @@ import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
+class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
     private final Button backButton;
     private final ImageView imageView;
     private final Label userNameLabel;
@@ -53,7 +53,7 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
     private final ReputationScoreDisplay reputationScoreDisplay;
     private final ChatUserIcon chatUserIcon;
 
-    public OfferCompletedView(OfferCompletedModel model, OfferCompletedController controller) {
+    OfferCompletedView(OfferCompletedModel model, OfferCompletedController controller) {
         super(new StackPane(), model, controller);
 
         VBox vBox = new VBox();
@@ -106,7 +106,7 @@ public class OfferCompletedView extends View<StackPane, OfferCompletedModel, Off
 
         vBox.getChildren().addAll(headLineLabel, subtitleLabel, tradeMessageHBox, Spacer.fillVBox(), backButton);
 
-      
+
         double width = 920;
         double height = 500;
         Canvas canvas = new Canvas();

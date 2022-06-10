@@ -18,8 +18,25 @@
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.components.ChatMessagesListView;
+import bisq.social.chat.channels.Channel;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.messages.PublicTradeChatMessage;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
-public class OfferCompletedModel implements Model {
+class OfferCompletedModel implements Model {
+    private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
+    private  PublicTradeChatMessage offerMessage ;
+
+    private final ObservableList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> takerMessages = FXCollections.observableArrayList();
+    private final SortedList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> sortedTakerMessages = new SortedList<>(takerMessages);
+
+    OfferCompletedModel() {
+    }
 }

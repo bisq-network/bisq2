@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -72,8 +71,8 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
 
         VBox.setMargin(headLineLabel, new Insets(55, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes, Spacer.fillVBox(), nextButton);
+        VBox.setMargin(boxes, new Insets(0, 0, 60, 0));
+        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes, nextButton);
     }
 
     @Override

@@ -45,10 +45,10 @@ public class PaymentMethodController implements Controller {
 
 
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_COMPLETED);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_AMOUNT);
     }
 }

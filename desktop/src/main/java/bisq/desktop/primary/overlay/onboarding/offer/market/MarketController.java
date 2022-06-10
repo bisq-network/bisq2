@@ -44,10 +44,10 @@ public class MarketController implements Controller {
     }
 
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_AMOUNT);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_AMOUNT);
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_DIRECTION);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
     }
 }

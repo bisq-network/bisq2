@@ -15,22 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding;
+package bisq.desktop.primary.main.content.newProfilePopup.createOffer;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class OnboardingModel extends NavigationModel {
-
-    public OnboardingModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_2_INTRO;
-    }
+public class CreateOfferModelOld implements Model {
 }

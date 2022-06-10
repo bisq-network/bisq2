@@ -41,14 +41,14 @@ import org.fxmisc.easybind.Subscription;
 import java.util.ArrayList;
 
 @Slf4j
-public class CreateOfferController implements InitWithDataController<CreateOfferController.InitData>, Controller {
+public class MultiSigCreateOfferController implements InitWithDataController<MultiSigCreateOfferController.InitData>, Controller {
 
     public record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
     }
 
-    private final CreateOfferModel model;
+    private final MultiSigCreateOfferModel model;
     @Getter
-    private final CreateOfferView view;
+    private final MultiSigCreateOfferView view;
     private final OpenOfferService openOfferService;
     private final MarketSelection marketSelection;
     private final DirectionSelection directionSelection;
@@ -62,9 +62,9 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
     private Subscription selectedMarketSubscription, directionSubscription, protocolSelectionSubscription,
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
 
-    public CreateOfferController(DefaultApplicationService applicationService) {
+    public MultiSigCreateOfferController(DefaultApplicationService applicationService) {
         openOfferService = applicationService.getOpenOfferService();
-        model = new CreateOfferModel();
+        model = new MultiSigCreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection();
@@ -72,7 +72,7 @@ public class CreateOfferController implements InitWithDataController<CreateOffer
         protocolSelection = new ProtocolSelection();
         settlementSelection = new SettlementSelection(applicationService.getAccountService());
 
-        view = new CreateOfferView(model, this,
+        view = new MultiSigCreateOfferView(model, this,
                 marketSelection.getRoot(),
                 directionSelection.getRoot(),
                 amountPriceGroup.getRoot(),

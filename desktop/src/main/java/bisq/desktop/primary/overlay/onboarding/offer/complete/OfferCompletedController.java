@@ -20,18 +20,25 @@ package bisq.desktop.primary.overlay.onboarding.offer.complete;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.popups.Popup;
+import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
+import bisq.social.chat.messages.ChatMessage;
+import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOfferService;
+import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -43,20 +50,39 @@ public class OfferCompletedController implements Controller {
     private final OfferCompletedView view;
     private final TradeChatOfferService tradeChatOfferService;
     private final ChatService chatService;
+    private final ReputationService reputationService;
+    private Pin selectedChannelPin;
+    private Pin chatMessagesPin;
 
     public OfferCompletedController(DefaultApplicationService applicationService) {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
+        reputationService = applicationService.getReputationService();
         model = new OfferCompletedModel();
         view = new OfferCompletedView(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.getSortedTakerMessages().setComparator(Comparator.comparing(ChatMessagesListView.ChatMessageListItem::getReputationScore));
+        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
+            log.error("channel " + channel);
+            model.getSelectedChannel().set(channel);
+
+            if (channel instanceof PublicTradeChannel publicTradeChannel) {
+                chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>>bind(model.getTakerMessages())
+                        .map(chatMessage -> new ChatMessagesListView.ChatMessageListItem<>(chatMessage, chatService, reputationService))
+                        .to(publicTradeChannel.getChatMessages());
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        selectedChannelPin.unbind();
+        if (chatMessagesPin != null) {
+            chatMessagesPin.unbind();
+        }
     }
 
     public void onPublishOffer() {
@@ -74,7 +100,7 @@ public class OfferCompletedController implements Controller {
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> {
-                            Navigation.navigateTo(NavigationTarget.ONBOARDING_OFFER_PUBLISHED);
+                            Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
                         });
                     } else {
                         //todo
@@ -100,6 +126,6 @@ public class OfferCompletedController implements Controller {
     }
 
     public void onBack() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_PAYMENT_METHOD);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
     }
 }

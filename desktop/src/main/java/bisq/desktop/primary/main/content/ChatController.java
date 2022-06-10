@@ -59,7 +59,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatUserService = applicationService.getChatUserService();
         reputationService = applicationService.getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
-        chatMessagesComponent = new ChatMessagesComponent(chatService, chatUserService, reputationService, isDiscussionsChat);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);
         notificationsSettings = new NotificationsSettings();
         helpPane = new HelpPane();

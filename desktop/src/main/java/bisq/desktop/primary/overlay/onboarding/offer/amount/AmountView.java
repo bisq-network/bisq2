@@ -106,6 +106,8 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
                 AmountFormatter.formatAmountWithCode(model.getMinAmount().get(), true)));
         maxAmountLabel.setText(Res.get("onboarding.amount.maxLabel",
                 AmountFormatter.formatAmountWithCode(model.getMaxAmount().get(), true)));
+
+        root.requestFocus();
     }
 
     @Override

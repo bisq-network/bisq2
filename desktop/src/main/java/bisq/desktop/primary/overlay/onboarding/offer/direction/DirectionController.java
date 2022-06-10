@@ -49,6 +49,6 @@ public class DirectionController implements Controller {
     }
 
     public void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_MARKET);
     }
 }

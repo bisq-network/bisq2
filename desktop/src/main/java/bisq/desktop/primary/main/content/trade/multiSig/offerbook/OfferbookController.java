@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.primary.main.content.trade.multiSig.createOffer.CreateOfferController;
+import bisq.desktop.primary.main.content.trade.multiSig.createOffer.MultiSigCreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.TakeOfferController;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.i18n.Res;
@@ -152,7 +152,7 @@ public class OfferbookController implements Controller {
     void onCreateOffer() {
         model.showCreateOfferTab = true;
         Navigation.navigateTo(NavigationTarget.MULTI_SIG_CREATE_OFFER,
-                new CreateOfferController.InitData(model.selectedMarket,
+                new MultiSigCreateOfferController.InitData(model.selectedMarket,
                         model.direction,
                         model.showCreateOfferTab));
     }

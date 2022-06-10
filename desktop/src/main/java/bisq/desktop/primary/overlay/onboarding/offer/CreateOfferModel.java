@@ -15,15 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.newProfilePopup.createOffer;
+package bisq.desktop.primary.overlay.onboarding.offer;
 
-import bisq.desktop.common.view.Model;
+import bisq.desktop.common.view.NavigationModel;
+import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.*;
-import javafx.scene.image.Image;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.security.KeyPair;
-
+@Slf4j
 @Getter
-public class CreateOfferModel implements Model {
+public class CreateOfferModel extends NavigationModel {
+    private final IntegerProperty navigationProgressIndex = new SimpleIntegerProperty();
+    private final StringProperty skipButtonText = new SimpleStringProperty();
+    private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
+
+    public CreateOfferModel() {
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.CREATE_OFFER_DIRECTION;
+    }
 }
