@@ -82,3 +82,8 @@ message Quote {
   Monetary baseMonetary = 2;
   Monetary quoteMonetary = 3;
 }
+
+message ByteArrayMapEntry {
+  common.ByteArray key = 1;
+  common.ByteArray value = 2;
+}
