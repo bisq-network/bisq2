@@ -25,9 +25,9 @@ import lombok.Getter;
 
 @Getter
 public class AmountModel implements Model {
-    private final ReadOnlyObjectProperty<Monetary> baseSideAmount;
-    private final ReadOnlyObjectProperty<Monetary> quoteSideAmount;
-    private final ReadOnlyObjectProperty<Quote> fixPrice;
+    private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
     private final StringProperty direction = new SimpleStringProperty();
     private final ObjectProperty<Monetary> minAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxAmount = new SimpleObjectProperty<>();
@@ -36,11 +36,6 @@ public class AmountModel implements Model {
     private final DoubleProperty sliderValue = new SimpleDoubleProperty();
     private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
 
-    AmountModel(ReadOnlyObjectProperty<Monetary> baseSideAmount,
-                ReadOnlyObjectProperty<Monetary> quoteSideAmount,
-                ReadOnlyObjectProperty<Quote> fixPrice) {
-        this.baseSideAmount = baseSideAmount;
-        this.quoteSideAmount = quoteSideAmount;
-        this.fixPrice = fixPrice;
+    AmountModel() {
     }
 }

@@ -31,6 +31,7 @@ import bisq.desktop.primary.overlay.onboarding.offer.market.MarketController;
 import bisq.desktop.primary.overlay.onboarding.offer.method.PaymentMethodController;
 import bisq.desktop.primary.overlay.onboarding.offer.published.OfferPublishedController;
 import bisq.i18n.Res;
+import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,6 +39,8 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
 import java.util.Optional;
+
+import static bisq.desktop.common.view.NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED;
 
 @Slf4j
 public class CreateOfferController extends NavigationController {
@@ -52,9 +55,9 @@ public class CreateOfferController extends NavigationController {
     private final AmountController amountController;
     private final PaymentMethodController paymentMethodController;
     private final OfferCompletedController offerCompletedController;
+    private final ListChangeListener<String> paymentMethodsListener;
     private Subscription directionSubscription, marketSubscription, baseSideAmountSubscription,
-            quoteSideAmountSubscription, paymentMethodSubscription;
-
+            quoteSideAmountSubscription, myOfferMessageSubscription;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -79,13 +82,16 @@ public class CreateOfferController extends NavigationController {
         paymentMethodController = new PaymentMethodController(applicationService);
         offerCompletedController = new OfferCompletedController(applicationService);
 
-        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
-        model.getCurrentIndex().set(0);
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
+        paymentMethodsListener = c -> {
+            c.next();
+            offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        };
     }
 
     @Override
     public void onActivate() {
+        reset();
         OverlayController.setTransitionsType(Transitions.Type.BLACK);
 
         directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
@@ -98,7 +104,11 @@ public class CreateOfferController extends NavigationController {
         });
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
-        paymentMethodSubscription = EasyBind.subscribe(paymentMethodController.getPaymentMethod(), offerCompletedController::setPaymentMethod);
+
+        myOfferMessageSubscription = EasyBind.subscribe(offerCompletedController.myOfferMessage(), offerPublishedController::setMyOfferMessage);
+
+        paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
+        offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
     }
 
     @Override
@@ -107,7 +117,43 @@ public class CreateOfferController extends NavigationController {
         marketSubscription.unsubscribe();
         baseSideAmountSubscription.unsubscribe();
         quoteSideAmountSubscription.unsubscribe();
-        paymentMethodSubscription.unsubscribe();
+        myOfferMessageSubscription.unsubscribe();
+
+        paymentMethodController.getPaymentMethods().removeListener(paymentMethodsListener);
+    }
+
+    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
+        model.getNextButtonVisible().set(true);
+        model.getBackButtonVisible().set(true);
+        model.getSkipButtonVisible().set(true);
+        model.getTopPaneBoxVisible().set(true);
+        model.getNextButtonText().set(Res.get("next"));
+        model.getBackButtonText().set(Res.get("back"));
+
+        switch (navigationTarget) {
+            case CREATE_OFFER_DIRECTION -> {
+                model.getBackButtonVisible().set(false);
+            }
+            case CREATE_OFFER_MARKET -> {
+            }
+            case CREATE_OFFER_AMOUNT -> {
+            }
+            case CREATE_OFFER_PAYMENT_METHOD -> {
+            }
+            case CREATE_OFFER_OFFER_COMPLETED -> {
+                model.getNextButtonVisible().set(false);
+                model.getBackButtonVisible().set(false);
+            }
+            case CREATE_OFFER_OFFER_PUBLISHED -> {
+                model.getSelectedChildTarget().set(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
+                model.getSkipButtonVisible().set(false);
+                model.getTopPaneBoxVisible().set(false);
+                model.getNextButtonText().set(Res.get("onboarding.published.viewOffer"));
+                model.getBackButtonText().set(Res.get("onboarding.published.dashboard"));
+            }
+            default -> {
+            }
+        }
     }
 
     @Override
@@ -138,26 +184,44 @@ public class CreateOfferController extends NavigationController {
     }
 
     public void onNext() {
-        int nextIndex = model.getCurrentIndex().get() + 1;
-        if (nextIndex < model.getChildTargets().size()) {
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
+        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
+            OverlayController.hide();
+            Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+            reset();
+        } else {
+            int nextIndex = model.getCurrentIndex().get() + 1;
+            if (nextIndex < model.getChildTargets().size()) {
+                model.getCurrentIndex().set(nextIndex);
+                NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+                model.getSelectedChildTarget().set(nextTarget);
+                Navigation.navigateTo(nextTarget);
+            }
         }
     }
 
     public void onBack() {
-        int prevIndex = model.getCurrentIndex().get() - 1;
-        if (prevIndex >= 0) {
-            model.getCurrentIndex().set(prevIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            Navigation.navigateTo(nextTarget);
+        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
+            OverlayController.hide();
+            Navigation.navigateTo(NavigationTarget.DASHBOARD);
+            reset();
+        } else {
+            int prevIndex = model.getCurrentIndex().get() - 1;
+            if (prevIndex >= 0) {
+                model.getCurrentIndex().set(prevIndex);
+                NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+                model.getSelectedChildTarget().set(nextTarget);
+                Navigation.navigateTo(nextTarget);
+            }
         }
     }
 
     public void onSkip() {
         OverlayController.hide();
+    }
+
+    private void reset() {
+        model.getCurrentIndex().set(0);
+        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
+        resetSelectedChildTarget();
     }
 }

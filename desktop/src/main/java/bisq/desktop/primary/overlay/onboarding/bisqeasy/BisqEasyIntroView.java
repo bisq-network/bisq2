@@ -36,7 +36,7 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
 
     public BisqEasyIntroView(BisqEasyIntroModel model, BisqEasyIntroController controller) {
         super(new VBox(), model, controller);
-
+      
         root.setSpacing(15);
         root.setAlignment(Pos.CENTER);
 
@@ -54,7 +54,7 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
 
         nextButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.createOffer"));
         nextButton.setDefaultButton(true);
-        skipButton = new Button(Res.get("close"));
+        skipButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.skip"));
         HBox buttons = new HBox(7, skipButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 

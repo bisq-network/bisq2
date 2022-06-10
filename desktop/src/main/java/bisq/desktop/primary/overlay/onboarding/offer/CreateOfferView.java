@@ -21,6 +21,7 @@ import bisq.common.data.Triple;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,20 +39,19 @@ import java.util.List;
 
 @Slf4j
 public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
-    private static final double WIDTH = 920;
-    private static final double HEIGHT = 550;
-
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
     private final HBox topPaneBox;
     private final Button nextButton, backButton;
-    private Subscription navigationProgressIndexSubscription;
+    private final HBox buttons;
+    private final VBox content;
+    private Subscription navigationProgressIndexSubscription, topPaneBoxVisibleSubscription;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
 
-        root.setPrefWidth(WIDTH);
-        root.setPrefHeight(HEIGHT);
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
         topPaneBox = topPane.first();
@@ -62,44 +62,77 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("back"));
-        HBox buttons = new HBox(7, backButton, nextButton);
+        buttons = new HBox(7, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
-        root.getChildren().addAll(topPaneBox, Spacer.fillVBox(), buttons);
+        content = new VBox();
+        root.getChildren().addAll(topPaneBox, content, Spacer.fillVBox(), buttons);
 
         VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
-            Region childRoot = newValue.getRoot();
-            //childRoot.setPrefHeight(root.getHeight() - topPaneBox.getHeight() - buttons.getHeight() - buttons.getPadding().getBottom());
-            root.getChildren().add(1, childRoot);
-            if (oldValue != null) {
-                Transitions.transitHorizontal(childRoot, oldValue.getRoot());
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+                content.getChildren().setAll(childRoot);
+                if (oldValue != null) {
+                    Transitions.transitHorizontal(childRoot, oldValue.getRoot());
+                } else {
+                    Transitions.fadeIn(childRoot);
+                }
             } else {
-                Transitions.fadeIn(childRoot);
+                content.getChildren().clear();
             }
         });
     }
 
     @Override
     protected void onViewAttached() {
+        nextButton.textProperty().bind(model.getNextButtonText());
+        backButton.textProperty().bind(model.getBackButtonText());
+        skipButton.textProperty().bind(model.getSkipButtonText());
+
+        nextButton.visibleProperty().bind(model.getNextButtonVisible());
+        nextButton.managedProperty().bind(model.getNextButtonVisible());
+        backButton.visibleProperty().bind(model.getBackButtonVisible());
+        backButton.managedProperty().bind(model.getBackButtonVisible());
+        skipButton.visibleProperty().bind(model.getSkipButtonVisible());
+        topPaneBox.visibleProperty().bind(model.getTopPaneBoxVisible());
+
+        topPaneBoxVisibleSubscription = EasyBind.subscribe(model.getTopPaneBoxVisible(), visible -> {
+            if (visible) {
+                VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
+            } else {
+                VBox.setMargin(buttons, new Insets(0, 0, 240, 0));
+            }
+        });
+
+        navigationProgressIndexSubscription = EasyBind.subscribe(model.getCurrentIndex(), progressIndex -> {
+            if ((int) progressIndex < navigationProgressLabelList.size()) {
+                navigationProgressLabelList.forEach(label -> label.getStyleClass().remove("bisq-text-white"));
+                Label label = navigationProgressLabelList.get((int) progressIndex);
+                label.getStyleClass().add("bisq-text-white");
+            }
+        });
+
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
-        skipButton.textProperty().bind(model.getSkipButtonText());
-        skipButton.visibleProperty().bind(model.getSkipButtonVisible());
         skipButton.setOnAction(e -> controller.onSkip());
-        navigationProgressIndexSubscription = EasyBind.subscribe(model.getCurrentIndex(), progressIndex -> {
-            navigationProgressLabelList.forEach(label -> label.getStyleClass().remove("bisq-text-white"));
-            Label label = navigationProgressLabelList.get((int) progressIndex);
-            label.getStyleClass().add("bisq-text-white");
-        });
     }
 
     @Override
     protected void onViewDetached() {
+        nextButton.textProperty().unbind();
+        backButton.textProperty().unbind();
+        skipButton.textProperty().unbind();
+
+        nextButton.visibleProperty().unbind();
+        nextButton.managedProperty().unbind();
+        backButton.visibleProperty().unbind();
+        backButton.managedProperty().unbind();
+        skipButton.visibleProperty().unbind();
+        topPaneBox.visibleProperty().unbind();
+
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
-        skipButton.textProperty().unbind();
-        skipButton.visibleProperty().unbind();
         skipButton.setOnAction(null);
         navigationProgressIndexSubscription.unsubscribe();
     }

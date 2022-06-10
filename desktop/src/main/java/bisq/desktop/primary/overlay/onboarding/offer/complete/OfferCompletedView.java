@@ -17,33 +17,23 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.primary.main.content.components.ChatUserIcon;
-import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedController> {
-    private final Label userNameLabel;
-    private final Label dateTime;
-    private final Label messageLabel;
-    private final Button actionButton;
-    private final HBox messageHBox;
-    private final ReputationScoreDisplay reputationScoreDisplay;
-    private final ChatUserIcon chatUserIcon;
 
-    OfferCompletedView(OfferCompletedModel model, OfferCompletedController controller) {
+    OfferCompletedView(OfferCompletedModel model,
+                       OfferCompletedController controller,
+                       Pane myOfferListView,
+                       Pane takersListView) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -56,50 +46,24 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
-
-        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-
-        chatUserIcon = new ChatUserIcon(42);
-
-        messageLabel = new Label();
-        messageLabel.setId("chat-messages-message");
-        messageLabel.setWrapText(true);
-
-        Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
-        reputationLabel.getStyleClass().add("bisq-text-7");
-        reputationScoreDisplay = new ReputationScoreDisplay();
-        VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
-        reputationVBox.setAlignment(Pos.CENTER_LEFT);
-
-        actionButton = new Button();
        
-        HBox.setMargin(actionButton, new Insets(0, 10, 0, 0));
-        messageHBox = Layout.hBoxWith(messageLabel, Spacer.fillHBox(), reputationVBox, actionButton);
-        messageHBox.setPadding(new Insets(15));
-        messageHBox.setAlignment(Pos.CENTER_LEFT);
+        Label takeOfferLabel = new Label(Res.get("onboarding.completed.takeOffer"));
+        takeOfferLabel.getStyleClass().add("bisq-text-headline-2");
 
-        userNameLabel = new Label();
-        dateTime = new Label();
-        HBox userInfoHBox = new HBox(5, userNameLabel, dateTime);
+        myOfferListView.setMaxWidth(700);
+        myOfferListView.setMinHeight(150);
+        myOfferListView.setMaxHeight(150);
+        takersListView.setMaxWidth(700);
 
-        VBox messageAndUserInfoVoBox = new VBox(0, userInfoHBox, messageHBox);
-        HBox.setHgrow(messageAndUserInfoVoBox, Priority.ALWAYS);
-        HBox tradeMessageHBox = Layout.hBoxWith(chatUserIcon, messageAndUserInfoVoBox);
-
-        root.getChildren().addAll(headLineLabel, subtitleLabel, tradeMessageHBox);
+        VBox.setMargin(headLineLabel, new Insets(20, 0, 4, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 0, 0));
+        VBox.setMargin(takeOfferLabel, new Insets(10, 0, 10, 0));
+        //VBox.setMargin(takersListView, new Insets(-90, 0, 20, 0));
+        root.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
     }
 
     @Override
     protected void onViewAttached() {
-        root.setOnMouseReleased(e -> {
-            e.consume();
-            if (e.getY() < 280) {
-                controller.onPublishOffer();
-            } else {
-                controller.onTakeOffer();
-            }
-        });
     }
 
     @Override

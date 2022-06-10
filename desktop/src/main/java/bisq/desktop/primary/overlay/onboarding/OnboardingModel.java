@@ -31,6 +31,6 @@ public class OnboardingModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.BISQ_2_INTRO;
+        return NavigationTarget.ONBOARDING_BISQ_2_INTRO;
     }
 }

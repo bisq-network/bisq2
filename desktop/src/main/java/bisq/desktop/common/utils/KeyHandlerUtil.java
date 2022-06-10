@@ -46,9 +46,9 @@ public class KeyHandlerUtil {
                 OverlayController.hide();
                 Navigation.navigateTo(NavigationTarget.SPLASH);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.BISQ_2_INTRO);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {

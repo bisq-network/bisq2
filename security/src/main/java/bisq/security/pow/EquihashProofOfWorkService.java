@@ -42,7 +42,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     @Override
     public CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty) {
         double scaledDifficulty = scaledDifficulty(difficulty);
-        log.info("Got scaled & adjusted difficulty: {}", scaledDifficulty);
+        log.debug("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();

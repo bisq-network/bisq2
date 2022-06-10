@@ -27,6 +27,8 @@ import lombok.Setter;
 
 @Getter
 public class OverlayModel extends NavigationModel {
+    public static final double WIDTH = 920;
+    public static final double HEIGHT = 550;
     public static final double TOP_MARGIN = 50;
     public static final double BOTTOM_MARGIN = 50;
     public static final double HORIZONTAL_MARGIN = 90;

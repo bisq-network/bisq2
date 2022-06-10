@@ -102,7 +102,10 @@ public class ChatMessagesComponent {
                     this::mentionUser,
                     this::showChatUserDetails,
                     this::onReply,
-                    isDiscussionsChat);
+                    isDiscussionsChat,
+                    false,
+                    false,
+                    false);
 
             model = new Model(isDiscussionsChat);
             view = new View(model, this, chatMessagesListView.getRoot(), quotedMessageBlock.getRoot());
@@ -160,7 +163,7 @@ public class ChatMessagesComponent {
         }
 
         private void onCreateOffer() {
-            Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
+            Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
         }
 
         private void createAndSelectPrivateChannel(ChatUser peer) {

@@ -33,6 +33,7 @@ public class DirectionController implements Controller {
     public DirectionController(DefaultApplicationService applicationService) {
         model = new DirectionModel();
         view = new DirectionView(model, this);
+        onSelect(Direction.BUY);
     }
 
     public ReadOnlyObjectProperty<Direction> getDirection() {
@@ -41,7 +42,6 @@ public class DirectionController implements Controller {
 
     @Override
     public void onActivate() {
-        onSelect(Direction.BUY);
     }
 
     @Override

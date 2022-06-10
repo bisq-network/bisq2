@@ -34,10 +34,11 @@ public enum NavigationTarget {
     OVERLAY(PRIMARY_STAGE, false),
     ONBOARDING(OVERLAY, false),
 
-    BISQ_2_INTRO(ONBOARDING, false),
-    CREATE_PROFILE(ONBOARDING, false),
+    ONBOARDING_BISQ_2_INTRO(ONBOARDING, false),
+    ONBOARDING_CREATE_PROFILE(ONBOARDING, false),
     ONBOARDING_BISQ_EASY(ONBOARDING, false),
-    CREATE_OFFER(ONBOARDING, false),
+
+    CREATE_OFFER(OVERLAY, false),
 
     //todo not used anymore, but leave it for now
     BISQ_EASY_ONBOARDING_TAB1(ONBOARDING_BISQ_EASY, false),

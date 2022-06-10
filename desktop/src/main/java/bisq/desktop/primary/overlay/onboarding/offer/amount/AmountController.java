@@ -44,14 +44,15 @@ public class AmountController implements Controller {
     private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
     private final ChangeListener<Quote> fixPriceQuoteListener;
     private final PriceInput price;
-    private Subscription sliderAmountSubscription, baseSideAmountSubscription;
+    private Subscription sliderAmountSubscription, baseAmountFromModelSubscription, baseAmountFromCompSubscription,
+            quoteAmountFromCompSubscription, priceFromCompSubscription;
 
     public AmountController(DefaultApplicationService applicationService) {
         baseAmount = new BigAmountInput(true);
         quoteAmount = new SmallAmountInput(false);
         price = new PriceInput(applicationService.getMarketPriceService());
 
-        model = new AmountModel(baseAmount.amountProperty(), quoteAmount.amountProperty(), price.fixPriceProperty());
+        model = new AmountModel();
         view = new AmountView(model, this,
                 baseAmount.getRoot(),
                 quoteAmount.getRoot(),
@@ -70,18 +71,6 @@ public class AmountController implements Controller {
             UIThread.runOnNextRenderFrame(this::applyFixPrice);
         };
     }
-
-    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
-        return model.getBaseSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
-        return model.getQuoteSideAmount();
-    }
-
-    public void setDirection(Direction direction) {
-    }
-
 
     @Override
     public void onActivate() {
@@ -104,7 +93,6 @@ public class AmountController implements Controller {
         long minAmount = model.getMinAmount().get().getValue();
         long minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
 
-
         sliderAmountSubscription = EasyBind.subscribe(model.getSliderValue(), sliderValueAsNumber -> {
             double sliderValue = (double) sliderValueAsNumber;
             long value = Math.round(sliderValue * minMaxDiff) + minAmount;
@@ -112,13 +100,21 @@ public class AmountController implements Controller {
             baseAmount.setAmount(amount);
         });
 
-        baseSideAmountSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
+        baseAmountFromModelSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
             if (amount != null && !model.getSliderFocus().get()) {
                 double sliderValue = (amount.getValue() - minAmount) / (double) minMaxDiff;
                 model.getSliderValue().set(sliderValue);
             }
         });
+
+        baseAmountFromCompSubscription = EasyBind.subscribe(baseAmount.amountProperty(),
+                amount -> model.getBaseSideAmount().set(amount));
+        quoteAmountFromCompSubscription = EasyBind.subscribe(quoteAmount.amountProperty(),
+                amount -> model.getQuoteSideAmount().set(amount));
+        priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
+                price -> model.getFixPrice().set(price));
+        
         baseAmount.setAmount(Coin.asBtc(700000));
         setQuoteFromBase();
     }
@@ -129,7 +125,18 @@ public class AmountController implements Controller {
         model.getQuoteSideAmount().removeListener(quoteCurrencyAmountListener);
         model.getFixPrice().removeListener(fixPriceQuoteListener);
         sliderAmountSubscription.unsubscribe();
-        baseSideAmountSubscription.unsubscribe();
+        baseAmountFromModelSubscription.unsubscribe();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
+        return model.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
+        return model.getQuoteSideAmount();
+    }
+
+    public void setDirection(Direction direction) {
     }
 
     private void setQuoteFromBase() {

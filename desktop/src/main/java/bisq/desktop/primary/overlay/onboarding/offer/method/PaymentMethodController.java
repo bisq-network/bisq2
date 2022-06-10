@@ -20,7 +20,7 @@ package bisq.desktop.primary.overlay.onboarding.offer.method;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.Controller;
-import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,19 +30,20 @@ public class PaymentMethodController implements Controller {
     @Getter
     private final PaymentMethodView view;
 
-
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
+        model.getPaymentMethods().add("SEPA");
+        model.getPaymentMethods().add("REVOLUT");
     }
 
-    public ReadOnlyObjectProperty<String> getPaymentMethod() {
-        return model.getPaymentMethod();
+    public ObservableList<String> getPaymentMethods() {
+        return model.getPaymentMethods();
     }
 
     public void setMarket(Market market) {
-
     }
+
     @Override
     public void onActivate() {
     }

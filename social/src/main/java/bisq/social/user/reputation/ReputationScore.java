@@ -43,6 +43,6 @@ public class ReputationScore implements Comparable<ReputationScore> {
 
     @Override
     public int compareTo(@NonNull ReputationScore o) {
-        return Double.compare(relativeRanking, o.getRelativeRanking());
+        return Double.compare(totalScore, o.getTotalScore());
     }
 }

@@ -31,7 +31,12 @@ import java.util.List;
 public class CreateOfferModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty skipButtonText = new SimpleStringProperty();
+    private final StringProperty nextButtonText = new SimpleStringProperty();
+    private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
 

@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.offer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class MarketController implements Controller {
 
     public MarketController(DefaultApplicationService applicationService) {
         model = new MarketModel();
-        view = new MarketView(model, this);
+        view = new MarketView(model, this); model.getMarket().set(MarketRepository.getDefault());
     }
 
     public ReadOnlyObjectProperty<Market> getMarket() {

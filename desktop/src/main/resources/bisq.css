@@ -64,7 +64,7 @@
     -bisq-grey-15: #292929;
     -bisq-grey-16: #393939;
     -bisq-grey-17: #2f2f2f;
-    -bisq-grey-18: #141414;
+    -bisq-grey-18: #151515;
     -bisq-grey-19: #282828;
     -bisq-grey-20: #454545;
     -bisq-grey-21: #343434;
@@ -1036,6 +1036,23 @@
     -fx-border-width: 0;
 }
 
+/* When used for create offer we dont show the border lines */
+.list-view.create-offer-list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 0;
+}
+.list-view.create-offer-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 13 0 13 0;
+    -fx-border-width: 0;
+    -fx-font-size: 1em;
+}
+.list-view.create-offer-list-view .list-cell:empty {
+    -fx-border-width: 0;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Misc list based                                                             *
@@ -1655,6 +1672,11 @@ tree-table-view:focused {
 
 .chat-offer-box {
     -fx-background-color: -bisq-grey-5;
+    -fx-background-radius: 8;
+}
+
+.chat-offer-box-my-offer {
+    -fx-background-color: -bisq-grey-18;
     -fx-background-radius: 8;
 }
 

@@ -27,6 +27,7 @@ import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
 import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyIntroController;
 import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
+import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,10 +66,10 @@ public class OnboardingController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_2_INTRO -> {
+            case ONBOARDING_BISQ_2_INTRO -> {
                 return Optional.of(new Bisq2IntroController(applicationService));
             }
-            case CREATE_PROFILE -> {
+            case ONBOARDING_CREATE_PROFILE -> {
                 return Optional.of(new CreateProfileController(applicationService));
             }
             case ONBOARDING_BISQ_EASY -> {
@@ -85,5 +86,10 @@ public class OnboardingController extends NavigationController {
 
     public void onSkip() {
         OverlayController.hide();
+    }
+
+    public void onQuit() {
+        applicationService.shutdown()
+                .thenAccept(__ -> Platform.exit());
     }
 }

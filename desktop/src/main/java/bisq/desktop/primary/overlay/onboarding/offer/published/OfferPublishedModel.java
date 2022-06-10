@@ -18,8 +18,12 @@
 package bisq.desktop.primary.overlay.onboarding.offer.published;
 
 import bisq.desktop.common.view.Model;
+import bisq.social.chat.messages.PublicTradeChatMessage;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class OfferPublishedModel implements Model {
+   @Setter
+   private PublicTradeChatMessage myOfferMessage;
 }

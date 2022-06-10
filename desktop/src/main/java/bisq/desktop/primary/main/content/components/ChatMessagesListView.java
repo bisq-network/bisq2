@@ -68,10 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -85,24 +82,50 @@ public class ChatMessagesListView {
                                 Consumer<ChatUser> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
-                                boolean isDiscussionsChat) {
+                                boolean isDiscussionsChat,
+                                boolean isCreateOfferMode,
+                                boolean isCreateOfferTakerListMode,
+                                boolean isCreateOfferPublishedMode) {
         controller = new Controller(applicationService,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
-                isDiscussionsChat);
+                isDiscussionsChat,
+                isCreateOfferMode,
+                isCreateOfferTakerListMode,
+                isCreateOfferPublishedMode);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
+    public ObservableList<ChatMessageListItem<? extends ChatMessage>> getChatMessages() {
+        return controller.model.getChatMessages();
+    }
+
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
     }
 
+    public SortedList<ChatMessageListItem<? extends ChatMessage>> getSortedChatMessages() {
+        return controller.model.getSortedChatMessages();
+    }
+
     public void refreshMessages() {
         controller.refreshMessages();
+    }
+
+    public void setCreateOfferCompleteHandler(Runnable createOfferCompleteHandler) {
+        controller.setCreateOfferCompleteHandler(createOfferCompleteHandler);
+    }
+
+    public void setTakeOfferCompleteHandler(Runnable takeOfferCompleteHandler) {
+        controller.setTakeOfferCompleteHandler(takeOfferCompleteHandler);
+    }
+
+    public void setComparator(Comparator<ReputationScore> comparing) {
+
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -121,7 +144,10 @@ public class ChatMessagesListView {
                            Consumer<ChatUser> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
-                           boolean isDiscussionsChat) {
+                           boolean isDiscussionsChat,
+                           boolean isCreateOfferMode,
+                           boolean isCreateOfferTakerListMode,
+                           boolean isCreateOfferPublishedMode) {
             this.chatService = applicationService.getChatService();
             this.chatUserService = applicationService.getChatUserService();
             this.reputationService = applicationService.getReputationService();
@@ -129,8 +155,24 @@ public class ChatMessagesListView {
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
 
-            model = new Model(chatService, chatUserService, isDiscussionsChat);
+            model = new Model(chatService,
+                    chatUserService,
+                    isDiscussionsChat,
+                    isCreateOfferMode,
+                    isCreateOfferTakerListMode,
+                    isCreateOfferPublishedMode);
             view = new View(model, this);
+
+            Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate = item -> item.getAuthor().isPresent() && !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
+            model.filteredChatMessages.setPredicate(ignoredChatUserPredicate);
+        }
+
+        public void setCreateOfferCompleteHandler(Runnable createOfferCompleteHandler) {
+            model.createOfferCompleteHandler = Optional.of(createOfferCompleteHandler);
+        }
+
+        public void setTakeOfferCompleteHandler(Runnable takeOfferCompleteHandler) {
+            model.takeOfferCompleteHandler = Optional.of(takeOfferCompleteHandler);
         }
 
         @Override
@@ -142,14 +184,10 @@ public class ChatMessagesListView {
                 selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
-                        chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(publicDiscussionChannel.getChatMessages());
+                        chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(publicDiscussionChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-                        chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(privateDiscussionChannel.getChatMessages());
+                        chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(privateDiscussionChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -157,14 +195,10 @@ public class ChatMessagesListView {
                 selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(publicTradeChannel.getChatMessages());
+                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(publicTradeChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
-                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(privateTradeChannel.getChatMessages());
+                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(privateTradeChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -276,15 +310,20 @@ public class ChatMessagesListView {
                 return;
             }
             chatService.findChatUser(chatMessage.getAuthorId())
-                    .flatMap(this::createAndSelectPrivateTradeChannel).ifPresent(privateTradeChannel -> {
+                    .flatMap(this::createAndSelectPrivateTradeChannel)
+                    .ifPresent(privateTradeChannel -> {
                         String chatMessageText = chatMessage.getTradeChatOffer().get().getChatMessageText();
-                        chatService.sendPrivateTradeChatMessage(
-                                Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText),
-                                Optional.empty(),
-                                privateTradeChannel);
+                        chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText), Optional.empty(), privateTradeChannel)
+                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
+                        ;
                     });
         }
 
+        private void onCreateOffer(PublicTradeChatMessage chatMessage) {
+            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
+            chatService.publishPublicTradeChatMessage(chatMessage, chatUserIdentity)
+                    .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
+        }
 
         private void onAddEmoji(String emojiId) {
         }
@@ -294,8 +333,7 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(ChatUser peer) {
             if (model.isDiscussionsChat) {
-                chatService.createPrivateDiscussionChannel(peer)
-                        .ifPresent(chatService::selectTradeChannel);
+                chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
@@ -316,21 +354,28 @@ public class ChatMessagesListView {
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
-        private final Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate;
         private final boolean isDiscussionsChat;
         private final ObservableList<String> customTags = FXCollections.observableArrayList();
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
+        private final boolean isCreateOfferMode;
+        private final boolean isCreateOfferTakerListMode;
+        private final boolean isCreateOfferPublishedMode;
+        private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
+        private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
 
         private Model(ChatService chatService,
                       ChatUserService chatUserService,
-                      boolean isDiscussionsChat) {
+                      boolean isDiscussionsChat,
+                      boolean isCreateOfferMode,
+                      boolean isCreateOfferTakerListMode,
+                      boolean isCreateOfferPublishedMode) {
             this.chatService = chatService;
             this.chatUserService = chatUserService;
             this.isDiscussionsChat = isDiscussionsChat;
-            ignoredChatUserPredicate = item -> item.getAuthor().isPresent() &&
-                    !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
-            filteredChatMessages.setPredicate(ignoredChatUserPredicate);
+            this.isCreateOfferMode = isCreateOfferMode;
+            this.isCreateOfferTakerListMode = isCreateOfferTakerListMode;
+            this.isCreateOfferPublishedMode = isCreateOfferPublishedMode;
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {
@@ -357,7 +402,12 @@ public class ChatMessagesListView {
             super(new VBox(), model, controller);
 
             messagesListView = new ListView<>(model.getSortedChatMessages());
-            messagesListView.getStyleClass().add("chat-messages-list-view");
+            if (model.isCreateOfferMode) {
+                messagesListView.getStyleClass().add("create-offer-list-view");
+            } else {
+                messagesListView.getStyleClass().add("chat-messages-list-view");
+            }
+
             Label placeholder = new Label(Res.get("table.placeholder.noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
@@ -369,8 +419,11 @@ public class ChatMessagesListView {
             VBox.setMargin(messagesListView, new Insets(0, 24, 0, 24));
             root.getChildren().addAll(messagesListView);
 
-            messagesListener = c -> UIThread.runOnNextRenderFrame(() ->
-                    messagesListView.scrollTo(messagesListView.getItems().size() - 1));
+            messagesListener = c -> UIThread.runOnNextRenderFrame(() -> {
+                if (!model.isCreateOfferTakerListMode) {
+                    messagesListView.scrollTo(messagesListView.getItems().size() - 1);
+                }
+            });
         }
 
         @Override
@@ -388,9 +441,8 @@ public class ChatMessagesListView {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final Label userName, dateTime, emojiButton1, emojiButton2,
-                                openEmojiSelectorButton, replyButton,
-                                pmButton, editButton, deleteButton, moreOptionsButton;
+                        private final Label userName, dateTime, emojiButton1, emojiButton2, openEmojiSelectorButton,
+                                replyButton, pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Text message, quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button actionButton, saveEditButton, cancelEditButton;
@@ -455,9 +507,6 @@ public class ChatMessagesListView {
                             messageHBox.setPadding(new Insets(15));
                             messageHBox.setAlignment(Pos.CENTER_LEFT);
 
-                            message.setStyle("-fx-background-color: blue");
-
-
                             // Reactions box
                             emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
                             emojiButton1.setUserData(":+1:");
@@ -481,27 +530,15 @@ public class ChatMessagesListView {
                             verticalLine.setId("chat-message-reactions-separator");
 
                             HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
-                            reactionsHBox = new HBox(20,
-                                    emojiButton1,
-                                    emojiButton2,
-                                    verticalLine,
-                                    openEmojiSelectorButton,
-                                    replyButton,
-                                    pmButton,
-                                    editButton,
-                                    deleteButton,
+                            reactionsHBox = new HBox(20, emojiButton1, emojiButton2, verticalLine,
+                                    openEmojiSelectorButton, replyButton, pmButton, editButton, deleteButton,
                                     moreOptionsButton);
                             reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
                             reactionsHBox.setVisible(false);
                             reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 
                             VBox.setMargin(quotedMessageHBox, new Insets(15, 0, 10, 5));
-                            VBox vBox = new VBox(0,
-                                    userInfoHBox,
-                                    quotedMessageHBox,
-                                    messageHBox,
-                                    editButtonsHBox,
-                                    reactionsHBox);
+                            VBox vBox = new VBox(0, userInfoHBox, quotedMessageHBox, messageHBox, editButtonsHBox, reactionsHBox);
 
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = new HBox(15, chatUserIcon, vBox);
@@ -537,20 +574,52 @@ public class ChatMessagesListView {
                                 });
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
-                                actionButton.setVisible(isOfferMessage);
-                                actionButton.setManaged(isOfferMessage);
+                                boolean isCreateOfferMode = model.isCreateOfferMode;
+
+                                boolean isCreateOfferTakerListMode = model.isCreateOfferTakerListMode;
+                                boolean isCreateOfferMakerListMode = isCreateOfferMode && !isCreateOfferTakerListMode;
+                                reputationVBox.setVisible(!isCreateOfferMakerListMode);
+                                reputationVBox.setManaged(!isCreateOfferMakerListMode);
+
+                                dateTime.setVisible(!isCreateOfferMakerListMode || model.isCreateOfferPublishedMode);
+                                dateTime.setManaged(!isCreateOfferMakerListMode || model.isCreateOfferPublishedMode);
+
+                                actionButton.setVisible(isOfferMessage && !model.isCreateOfferPublishedMode);
+                                actionButton.setManaged(isOfferMessage && !model.isCreateOfferPublishedMode);
+
+                                messageHBox.getStyleClass().remove("chat-offer-box");
+                                messageHBox.getStyleClass().remove("chat-offer-box-my-offer");
 
                                 if (isOfferMessage) {
-                                    if (model.isMyMessage(chatMessage)) {
-                                        actionButton.setText(Res.get("deleteOffer"));
-                                        actionButton.getStyleClass().remove("default-button");
-                                        actionButton.getStyleClass().add("red-button");
-                                        actionButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
+                                    messageHBox.getStyleClass().add("chat-offer-box");
+                                    boolean myMessage = model.isMyMessage(chatMessage);
+                                    if (myMessage) {
+                                        messageHBox.getStyleClass().remove("chat-offer-box");
+                                        messageHBox.getStyleClass().add("chat-offer-box-my-offer");
+
+                                        if (isCreateOfferMakerListMode) {
+                                            // used by create offer view / maker list
+                                            actionButton.setText(Res.get("createOffer"));
+                                            actionButton.getStyleClass().remove("red-button");
+                                            actionButton.getStyleClass().add("default-button");
+                                            actionButton.setOnAction(e -> controller.onCreateOffer((PublicTradeChatMessage) chatMessage));
+                                        } else {
+                                            actionButton.setText(Res.get("deleteOffer"));
+                                            actionButton.getStyleClass().remove("default-button");
+                                            actionButton.getStyleClass().add("red-button");
+                                            actionButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
+                                        }
                                     } else {
                                         actionButton.setText(Res.get("takeOffer"));
                                         actionButton.getStyleClass().remove("red-button");
                                         actionButton.getStyleClass().add("default-button");
                                         actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
+
+                                        if (isCreateOfferMakerListMode) {
+                                            // used by create offer view / taker list
+                                            // messageHBox.getStyleClass().remove("chat-offer-box");
+                                            //  messageHBox.getStyleClass().add("chat-offer-box-my-offer");
+                                        }
                                     }
 
                                     VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
@@ -558,32 +627,31 @@ public class ChatMessagesListView {
                                     VBox.setMargin(reactionsHBox, new Insets(3, 0, -10, 0));
                                     VBox.setMargin(editButtonsHBox, new Insets(12, 0, -14, 0));
                                 } else {
+                                    messageHBox.getStyleClass().remove("chat-offer-box-my-offer");
+                                    messageHBox.getStyleClass().remove("chat-offer-box");
                                     VBox.setMargin(messageHBox, new Insets(-5, 0, 0, 0));
                                     HBox.setMargin(reputationVBox, new Insets(-36, 10, 0, 0));
                                     VBox.setMargin(reactionsHBox, new Insets(-8, 0, -10, 0));
                                     VBox.setMargin(editButtonsHBox, new Insets(-10, 0, -3, 0));
                                 }
 
-                                Layout.toggleStyleClass(messageHBox, "chat-offer-box", isOfferMessage);
                                 editInputField.maxWidthProperty().bind(message.wrappingWidthProperty());
-                                widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
-                                        w -> {
-                                            adjustMessageWidth(item);
+                                widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(), w -> {
+                                    adjustMessageWidth(item);
 
-                                            double actionButtonWidth = actionButton.getWidth();
-                                            double reputationVBoxWidth = reputationVBox.getWidth();
-                                            if (model.isOfferMessage(item.getChatMessage())) {
-                                                if ((actionButton.isVisible() && actionButtonWidth == 0) ||
-                                                        (reputationVBox.isVisible() && reputationVBoxWidth == 0)) {
-                                                    reputationVBox.layout();
-                                                    actionButton.layout();
-                                                    UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
-                                                }
-                                            } else if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
-                                                reputationVBox.layout();
-                                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
-                                            }
-                                        });
+                                    double actionButtonWidth = actionButton.getWidth();
+                                    double reputationVBoxWidth = reputationVBox.getWidth();
+                                    if (model.isOfferMessage(item.getChatMessage())) {
+                                        if ((actionButton.isVisible() && actionButtonWidth == 0) || (reputationVBox.isVisible() && reputationVBoxWidth == 0)) {
+                                            reputationVBox.layout();
+                                            actionButton.layout();
+                                            UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
+                                        }
+                                    } else if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
+                                        reputationVBox.layout();
+                                        UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
+                                    }
+                                });
 
                                 setGraphic(hBox);
                             } else {
@@ -669,8 +737,9 @@ public class ChatMessagesListView {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() != null || editInputField.isVisible()) {
                                     return;
                                 }
-
-                                reactionsHBox.setVisible(true);
+                                if (!model.isCreateOfferMode) {
+                                    reactionsHBox.setVisible(true);
+                                }
                             });
                             setOnMouseExited(e -> {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() == null) {
@@ -737,8 +806,7 @@ public class ChatMessagesListView {
                             message.setManaged(false);
 
                             ChatMessage chatMessage = item.getChatMessage();
-                            boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
-                                    publicTradeChatMessage.getTradeChatOffer().isPresent();
+                            boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage && publicTradeChatMessage.getTradeChatOffer().isPresent();
 
                             editInputField.setOnKeyPressed(event -> {
                                 if (event.getCode() == KeyCode.ENTER) {
@@ -746,8 +814,7 @@ public class ChatMessagesListView {
                                     if (event.isShiftDown()) {
                                         editInputField.appendText(System.getProperty("line.separator"));
                                     } else if (!editInputField.getText().isEmpty()) {
-                                        controller.onSaveEditedMessage(item.getChatMessage(),
-                                                StringUtils.trimTrailingLinebreak(editInputField.getText()));
+                                        controller.onSaveEditedMessage(item.getChatMessage(), StringUtils.trimTrailingLinebreak(editInputField.getText()));
                                         onCloseEditMessage();
                                     }
                                 }
@@ -800,8 +867,7 @@ public class ChatMessagesListView {
             nym = author.map(ChatUser::getNym).orElse("");
             nickName = author.map(ChatUser::getNickName).orElse("");
 
-            reputationScore = author.flatMap(reputationService::findReputationScore)
-                    .orElse(ReputationScore.NONE);
+            reputationScore = author.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         }
 
         @Override
@@ -811,12 +877,7 @@ public class ChatMessagesListView {
 
         @Override
         public boolean match(String filterString) {
-            return filterString == null ||
-                    filterString.isEmpty() ||
-                    StringUtils.containsIgnoreCase(message, filterString) ||
-                    StringUtils.containsIgnoreCase(nym, filterString) ||
-                    StringUtils.containsIgnoreCase(nickName, filterString) ||
-                    StringUtils.containsIgnoreCase(date, filterString);
+            return filterString == null || filterString.isEmpty() || StringUtils.containsIgnoreCase(message, filterString) || StringUtils.containsIgnoreCase(nym, filterString) || StringUtils.containsIgnoreCase(nickName, filterString) || StringUtils.containsIgnoreCase(date, filterString);
         }
     }
 }
