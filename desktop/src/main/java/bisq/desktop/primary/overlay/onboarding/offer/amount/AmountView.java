@@ -23,7 +23,6 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
@@ -37,7 +36,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
     private final Label minAmountLabel, maxAmountLabel;
     //   private final Label minAmountLabel, maxAmountLabel, valueLabel, currencyLabel, marketValueLabel;
     private final Slider slider;
-    private final Button nextButton, backButton;
     private final Label headLineLabel;
     private final Label subtitleLabel;
 
@@ -73,18 +71,10 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         sliderBox.setMaxWidth(330);
         VBox.setMargin(sliderBox, new Insets(28, 0, 70, 0));
 
-        backButton = new Button(Res.get("back"));
-        nextButton = new Button(Res.get("next"));
-        nextButton.setDefaultButton(true);
-
-        HBox buttons = new HBox(7, backButton, nextButton);
-        buttons.setAlignment(Pos.CENTER);
-
         VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(buttons, new Insets(0, 0, 90, 0));
 
-        root.getChildren().addAll(headLineLabel, subtitleLabel, vbox, sliderBox, Spacer.fillVBox(), buttons);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, vbox, sliderBox);
     }
 
     @Override
@@ -93,9 +83,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         slider.maxProperty().bind(model.getSliderMax());
         slider.valueProperty().bindBidirectional(model.getSliderValue());
         model.getSliderFocus().bind(slider.focusedProperty());
-
-        backButton.setOnAction(evt -> controller.onBack());
-        nextButton.setOnAction(e -> controller.onNext());
 
         // Needed to trigger focusOut event on amount components
         root.setOnMousePressed(e -> root.requestFocus());
@@ -116,9 +103,6 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         slider.maxProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getSliderValue());
         model.getSliderFocus().unbind();
-
-        backButton.setOnAction(null);
-        nextButton.setOnAction(null);
         root.setOnMousePressed(null);
     }
 }

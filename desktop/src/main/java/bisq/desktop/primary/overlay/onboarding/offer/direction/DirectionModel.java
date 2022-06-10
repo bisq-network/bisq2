@@ -18,16 +18,13 @@
 package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.desktop.common.view.Model;
+import bisq.offer.spec.Direction;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
 public class DirectionModel implements Model {
-    public enum Direction {
-        BUY,
-        SELL
-    }
 
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
 }

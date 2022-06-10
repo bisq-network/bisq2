@@ -17,8 +17,11 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
+import bisq.common.currency.Market;
+import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.components.ChatMessagesListView;
+import bisq.offer.spec.Direction;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
@@ -37,6 +40,13 @@ class OfferCompletedModel implements Model {
     private final ObservableList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> takerMessages = FXCollections.observableArrayList();
     private final SortedList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> sortedTakerMessages = new SortedList<>(takerMessages);
 
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<String> paymentMethod = new SimpleObjectProperty<>();
+
+    
     OfferCompletedModel() {
     }
 }

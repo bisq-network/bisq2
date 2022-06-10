@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.onboarding.offer.complete;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -29,6 +30,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.popups.Popup;
 import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.offer.spec.Direction;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
@@ -60,6 +62,31 @@ public class OfferCompletedController implements Controller {
         reputationService = applicationService.getReputationService();
         model = new OfferCompletedModel();
         view = new OfferCompletedView(model, this);
+    }
+
+    public void setDirection(Direction direction) {
+        log.error("direction {}", direction);
+        model.getDirection().set(direction);
+    }
+
+    public void setMarket(Market market) {
+        log.error("market {}", market);
+        model.getMarket().set(market);
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        log.error("paymentMethod {}", paymentMethod);
+        model.getPaymentMethod().set(paymentMethod);
+    }
+
+    public void setBaseSideAmount(Monetary monetary) {
+        log.error("setBaseSideAmount {}", monetary);
+        model.getBaseSideAmount().set(monetary);
+    }
+
+    public void setQuoteSideAmount(Monetary monetary) {
+        log.error("setQuoteSideAmount {}", monetary);
+        model.getQuoteSideAmount().set(monetary);
     }
 
     @Override
@@ -123,9 +150,5 @@ public class OfferCompletedController implements Controller {
                                 });
                     });
                 });
-    }
-
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
     }
 }

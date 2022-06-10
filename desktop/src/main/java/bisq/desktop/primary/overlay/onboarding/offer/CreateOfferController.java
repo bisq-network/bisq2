@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.onboarding.offer;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
@@ -32,7 +33,10 @@ import bisq.desktop.primary.overlay.onboarding.offer.published.OfferPublishedCon
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -42,6 +46,15 @@ public class CreateOfferController extends NavigationController {
     private final CreateOfferModel model;
     @Getter
     private final CreateOfferView view;
+    private final DirectionController directionController;
+    private final OfferPublishedController offerPublishedController;
+    private final MarketController marketController;
+    private final AmountController amountController;
+    private final PaymentMethodController paymentMethodController;
+    private final OfferCompletedController offerCompletedController;
+    private Subscription directionSubscription, marketSubscription, baseSideAmountSubscription,
+            quoteSideAmountSubscription, paymentMethodSubscription;
+
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -49,42 +62,98 @@ public class CreateOfferController extends NavigationController {
         this.applicationService = applicationService;
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
+
+        model.getChildTargets().addAll(List.of(
+                NavigationTarget.CREATE_OFFER_DIRECTION,
+                NavigationTarget.CREATE_OFFER_MARKET,
+                NavigationTarget.CREATE_OFFER_AMOUNT,
+                NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
+                NavigationTarget.CREATE_OFFER_OFFER_COMPLETED,
+                NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED
+        ));
+
+        directionController = new DirectionController(applicationService);
+        offerPublishedController = new OfferPublishedController(applicationService);
+        marketController = new MarketController(applicationService);
+        amountController = new AmountController(applicationService);
+        paymentMethodController = new PaymentMethodController(applicationService);
+        offerCompletedController = new OfferCompletedController(applicationService);
+
+        model.getSelectedChildTarget().set(model.getChildTargets().get(0));
+        model.getCurrentIndex().set(0);
+        model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
     }
 
     @Override
     public void onActivate() {
         OverlayController.setTransitionsType(Transitions.Type.BLACK);
-        model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
+
+        directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
+            offerCompletedController.setDirection(direction);
+            amountController.setDirection(direction);
+        });
+        marketSubscription = EasyBind.subscribe(marketController.getMarket(), market -> {
+            offerCompletedController.setMarket(market);
+            paymentMethodController.setMarket(market);
+        });
+        baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
+        quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
+        paymentMethodSubscription = EasyBind.subscribe(paymentMethodController.getPaymentMethod(), offerCompletedController::setPaymentMethod);
     }
 
     @Override
     public void onDeactivate() {
+        directionSubscription.unsubscribe();
+        marketSubscription.unsubscribe();
+        baseSideAmountSubscription.unsubscribe();
+        quoteSideAmountSubscription.unsubscribe();
+        paymentMethodSubscription.unsubscribe();
     }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case CREATE_OFFER_DIRECTION -> {
-                return Optional.of(new DirectionController(applicationService));
+                return Optional.of(directionController);
             }
             case CREATE_OFFER_MARKET -> {
-                return Optional.of(new MarketController(applicationService));
+                return Optional.of(marketController);
             }
             case CREATE_OFFER_AMOUNT -> {
-                return Optional.of(new AmountController(applicationService));
+                return Optional.of(amountController);
             }
             case CREATE_OFFER_PAYMENT_METHOD -> {
-                return Optional.of(new PaymentMethodController(applicationService));
+                return Optional.of(paymentMethodController);
             }
             case CREATE_OFFER_OFFER_COMPLETED -> {
-                return Optional.of(new OfferCompletedController(applicationService));
+                return Optional.of(offerCompletedController);
             }
             case CREATE_OFFER_OFFER_PUBLISHED -> {
-                return Optional.of(new OfferPublishedController(applicationService));
+                return Optional.of(offerPublishedController);
             }
             default -> {
                 return Optional.empty();
             }
+        }
+    }
+
+    public void onNext() {
+        int nextIndex = model.getCurrentIndex().get() + 1;
+        if (nextIndex < model.getChildTargets().size()) {
+            model.getCurrentIndex().set(nextIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
+        }
+    }
+
+    public void onBack() {
+        int prevIndex = model.getCurrentIndex().get() - 1;
+        if (prevIndex >= 0) {
+            model.getCurrentIndex().set(prevIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
         }
     }
 

@@ -23,12 +23,17 @@ import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Getter
 public class CreateOfferModel extends NavigationModel {
-    private final IntegerProperty navigationProgressIndex = new SimpleIntegerProperty();
+    private final IntegerProperty currentIndex = new SimpleIntegerProperty();
     private final StringProperty skipButtonText = new SimpleStringProperty();
     private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
+    private final List<NavigationTarget> childTargets = new ArrayList<>();
+    private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
 
     public CreateOfferModel() {
     }

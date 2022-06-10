@@ -18,8 +18,12 @@
 package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
 public class PaymentMethodModel implements Model {
+    //todo we should start to use the PaymentMethod domain
+    private final ObjectProperty<String> paymentMethod = new SimpleObjectProperty<>();
 }

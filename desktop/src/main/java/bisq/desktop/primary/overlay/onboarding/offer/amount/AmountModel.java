@@ -31,7 +31,6 @@ public class AmountModel implements Model {
     private final StringProperty direction = new SimpleStringProperty();
     private final ObjectProperty<Monetary> minAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxAmount = new SimpleObjectProperty<>();
-    private final ObjectProperty<Monetary> amount = new SimpleObjectProperty<>();
     private final DoubleProperty sliderMin = new SimpleDoubleProperty();
     private final DoubleProperty sliderMax = new SimpleDoubleProperty();
     private final DoubleProperty sliderValue = new SimpleDoubleProperty();

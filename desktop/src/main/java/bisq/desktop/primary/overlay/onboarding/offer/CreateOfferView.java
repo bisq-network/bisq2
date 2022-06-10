@@ -44,6 +44,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
     private final HBox topPaneBox;
+    private final Button nextButton, backButton;
     private Subscription navigationProgressIndexSubscription;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
@@ -56,12 +57,21 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         topPaneBox = topPane.first();
         skipButton = topPane.second();
         navigationProgressLabelList = topPane.third();
-        root.getChildren().add(topPaneBox);
 
+        nextButton = new Button(Res.get("next"));
+        nextButton.setDefaultButton(true);
+
+        backButton = new Button(Res.get("back"));
+        HBox buttons = new HBox(7, backButton, nextButton);
+        buttons.setAlignment(Pos.CENTER);
+
+        root.getChildren().addAll(topPaneBox, Spacer.fillVBox(), buttons);
+
+        VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
             Region childRoot = newValue.getRoot();
-            childRoot.setPrefHeight(root.getHeight());
-            root.getChildren().add(childRoot);
+            //childRoot.setPrefHeight(root.getHeight() - topPaneBox.getHeight() - buttons.getHeight() - buttons.getPadding().getBottom());
+            root.getChildren().add(1, childRoot);
             if (oldValue != null) {
                 Transitions.transitHorizontal(childRoot, oldValue.getRoot());
             } else {
@@ -70,16 +80,14 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         });
     }
 
-    public void getBackGroundTransition() {
-
-    }
-
     @Override
     protected void onViewAttached() {
+        nextButton.setOnAction(e -> controller.onNext());
+        backButton.setOnAction(evt -> controller.onBack());
         skipButton.textProperty().bind(model.getSkipButtonText());
         skipButton.visibleProperty().bind(model.getSkipButtonVisible());
         skipButton.setOnAction(e -> controller.onSkip());
-        navigationProgressIndexSubscription = EasyBind.subscribe(model.getNavigationProgressIndex(), progressIndex -> {
+        navigationProgressIndexSubscription = EasyBind.subscribe(model.getCurrentIndex(), progressIndex -> {
             navigationProgressLabelList.forEach(label -> label.getStyleClass().remove("bisq-text-white"));
             Label label = navigationProgressLabelList.get((int) progressIndex);
             label.getStyleClass().add("bisq-text-white");
@@ -88,6 +96,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
     @Override
     protected void onViewDetached() {
+        nextButton.setOnAction(null);
+        backButton.setOnAction(null);
         skipButton.textProperty().unbind();
         skipButton.visibleProperty().unbind();
         skipButton.setOnAction(null);

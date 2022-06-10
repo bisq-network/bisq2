@@ -25,9 +25,9 @@ import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.PriceInput;
+import bisq.offer.spec.Direction;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +71,18 @@ public class AmountController implements Controller {
         };
     }
 
+    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
+        return model.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
+        return model.getQuoteSideAmount();
+    }
+
+    public void setDirection(Direction direction) {
+    }
+
+
     @Override
     public void onActivate() {
         model.getMinAmount().set(Coin.asBtc(10000));
@@ -97,7 +109,6 @@ public class AmountController implements Controller {
             double sliderValue = (double) sliderValueAsNumber;
             long value = Math.round(sliderValue * minMaxDiff) + minAmount;
             Coin amount = Coin.of(value, "BTC");
-            model.getAmount().set(amount);
             baseAmount.setAmount(amount);
         });
 
@@ -145,13 +156,5 @@ public class AmountController implements Controller {
         } else {
             setQuoteFromBase();
         }
-    }
-
-    public void onNext() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
-    }
-
-    public void onBack() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_MARKET);
     }
 }
