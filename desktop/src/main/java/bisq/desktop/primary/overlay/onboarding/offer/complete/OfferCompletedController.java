@@ -102,7 +102,6 @@ public class OfferCompletedController implements Controller {
     @Override
     public void onActivate() {
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
-        takersListView.getFilteredChatMessages().setPredicate(getTakeOfferPredicate());
 
         selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
             if (channel instanceof PublicTradeChannel publicTradeChannel) {
@@ -134,6 +133,7 @@ public class OfferCompletedController implements Controller {
         takersListView.refreshMessages();
 
         model.getMatchingOffersFound().set(!takersListView.getFilteredChatMessages().isEmpty());
+        takersListView.getFilteredChatMessages().setPredicate(getTakeOfferPredicate());
     }
 
     @Override
@@ -185,6 +185,7 @@ public class OfferCompletedController implements Controller {
             if (((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().isEmpty()) {
                 return false;
             }
+            //todo
             if (model.getMyOfferMessage().get() == null) {
                 return false;
             }

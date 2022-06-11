@@ -65,9 +65,8 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         HBox boxes = new HBox(25, buyBox, sellBox);
         boxes.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(55, 0, 4, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
-        VBox.setMargin(boxes, new Insets(0, 0, 60, 0));
+        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 53, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
     }
 
@@ -100,9 +99,9 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         button.setToggleGroup(toggleGroup);
         button.getStyleClass().setAll("bisq-button-1");
         button.setAlignment(Pos.CENTER);
-        int width = 250;
+        int width = 235;
         button.setMinWidth(width);
-        button.setMinHeight(125);
+        button.setMinHeight(112);
 
         Label infoLabel = new Label(info);
         infoLabel.getStyleClass().add("bisq-text-3");

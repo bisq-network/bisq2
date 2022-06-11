@@ -21,6 +21,7 @@ import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
 import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -34,11 +35,13 @@ public class CreateOfferModel extends NavigationModel {
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty();
-    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
+    @Setter
+    private boolean animateToRight = true;
 
     public CreateOfferModel() {
     }

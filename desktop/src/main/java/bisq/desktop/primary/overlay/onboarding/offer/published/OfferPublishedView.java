@@ -43,10 +43,10 @@ public class OfferPublishedView extends View<VBox, OfferPublishedModel, OfferPub
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
-        
-        myOfferListView.setMaxWidth(500);
-        myOfferListView.setMinHeight(150);
-        myOfferListView.setMaxHeight(150);
+
+        myOfferListView.setMaxWidth(700);
+        myOfferListView.setMinHeight(170);
+        myOfferListView.setMaxHeight(170);
         
         VBox.setMargin(headLineLabel, new Insets(60, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(12, 0, 30, 0));

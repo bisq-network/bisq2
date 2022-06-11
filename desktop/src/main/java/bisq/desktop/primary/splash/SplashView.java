@@ -105,6 +105,8 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
                         perNetworkStatusLabel.setText(composite);
                     }
                 });
+
+        progressBar.progressProperty().bind(model.getProgress());
     }
 
     private String getCompositeNetworkStatus(ServiceNode.State clearnetState, ServiceNode.State torState, ServiceNode.State i2pState) {
@@ -140,6 +142,7 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
         if (i2pStateSubscription != null) {
             i2pStateSubscription.unsubscribe();
         }
+        progressBar.progressProperty().unbind();
         progressBar.setProgress(0);
     }
 }

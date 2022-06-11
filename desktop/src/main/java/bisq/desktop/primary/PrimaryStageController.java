@@ -50,6 +50,7 @@ public class PrimaryStageController extends NavigationController {
     protected final PrimaryStageView view;
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
+    private final SplashController splashController;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -62,6 +63,8 @@ public class PrimaryStageController extends NavigationController {
 
         model = new PrimaryStageModel(applicationService);
         view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.stage());
+
+        splashController = new SplashController(applicationService);
 
         Browser.setHostServices(applicationJavaFxApplicationData.hostServices());
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
@@ -96,7 +99,7 @@ public class PrimaryStageController extends NavigationController {
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
             case SPLASH -> {
-                return Optional.of(new SplashController(applicationService));
+                return Optional.of(splashController);
             }
             case MAIN -> {
                 return Optional.of(new MainController(applicationService));
@@ -108,6 +111,7 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onDomainInitialized() {
+        splashController.stopAnimation();
         if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_2_ONBOARDED).orElse(false)) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
         } else if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {

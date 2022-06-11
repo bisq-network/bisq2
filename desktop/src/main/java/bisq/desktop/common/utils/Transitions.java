@@ -91,9 +91,12 @@ public class Transitions {
         fadeIn(node, duration, null);
     }
 
-
     public static void fadeIn(Node node, int duration, @Nullable Runnable finishedHandler) {
+        if (node == null) {
+            return;
+        }
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
+        node.setOpacity(0);
         fade.setFromValue(0);
         fade.setToValue(1.0);
         fade.play();
@@ -103,7 +106,11 @@ public class Transitions {
     }
 
     public static void fadeIn(Node node, int duration, double targetOpacity, @Nullable Runnable finishedHandler) {
+        if (node == null) {
+            return;
+        }
         FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
+        node.setOpacity(0);
         fade.setFromValue(0);
         fade.setToValue(targetOpacity);
         fade.play();
@@ -274,11 +281,24 @@ public class Transitions {
         }
     }
 
-    public static void transitHorizontal(Region nodeIn, Region nodeOut) {
+    public static void transitRightOut(Region nodeIn, Region nodeOut) {
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInLeft(nodeIn, () -> {
         })).after(DEFAULT_DURATION / 4);
         slideOutRight(nodeOut, () -> {
+            if (nodeOut.getParent() != null) {
+                if (nodeOut.getParent() instanceof Pane pane) {
+                    pane.getChildren().remove(nodeOut);
+                }
+            }
+        });
+    }
+
+    public static void transitLeftOut(Region nodeIn, Region nodeOut) {
+        nodeIn.setOpacity(0);
+        UIScheduler.run(() -> slideInRight(nodeIn, () -> {
+        })).after(DEFAULT_DURATION / 4);
+        slideOutLeft(nodeOut, () -> {
             if (nodeOut.getParent() != null) {
                 if (nodeOut.getParent() instanceof Pane pane) {
                     pane.getChildren().remove(nodeOut);
@@ -363,11 +383,21 @@ public class Transitions {
     }
 
     public static void slideInLeft(Region node, Runnable onFinishedHandler) {
+        slideInHorizontal(node, onFinishedHandler, true);
+    }
+
+    public static void slideInRight(Region node, Runnable onFinishedHandler) {
+        slideInHorizontal(node, onFinishedHandler, false);
+    }
+
+    public static void slideInHorizontal(Region node, Runnable onFinishedHandler, boolean slideLeft) {
         if (displaySettings.isUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            double start = node.getLayoutX() - node.getWidth();
+            double start = slideLeft ?
+                    node.getLayoutX() - node.getWidth() :
+                    node.getLayoutX() + node.getWidth();
             double end = node.getLayoutX();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR),
@@ -410,12 +440,22 @@ public class Transitions {
     }
 
     public static void slideOutRight(Region node, Runnable onFinishedHandler) {
+        slideOutHorizontal(node, onFinishedHandler, true);
+    }
+
+    public static void slideOutLeft(Region node, Runnable onFinishedHandler) {
+        slideOutHorizontal(node, onFinishedHandler, false);
+    }
+
+    public static void slideOutHorizontal(Region node, Runnable onFinishedHandler, boolean slideOutRight) {
         if (displaySettings.isUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = node.getTranslateX();
-            double end = node.getWidth();
+            double end = slideOutRight ?
+                    node.getWidth() :
+                    -node.getWidth();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
                     new KeyValue(node.translateXProperty(), start, Interpolator.LINEAR)

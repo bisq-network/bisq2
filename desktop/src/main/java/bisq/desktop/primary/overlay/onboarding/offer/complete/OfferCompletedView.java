@@ -59,8 +59,8 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
         takeOfferLabel.getStyleClass().add("bisq-text-headline-2");
 
         myOfferListView.setMaxWidth(700);
-        myOfferListView.setMinHeight(160);
-        myOfferListView.setMaxHeight(160);
+        myOfferListView.setMinHeight(170);
+        myOfferListView.setMaxHeight(170);
         takersListView.setMaxWidth(700);
 
         root.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
@@ -82,7 +82,6 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
                 VBox.setMargin(subtitleLabel, new Insets(0, 0, 0, 0));
             }
         });
-
     }
 
     @Override

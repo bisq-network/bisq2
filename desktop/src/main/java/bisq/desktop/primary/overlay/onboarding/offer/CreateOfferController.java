@@ -92,7 +92,7 @@ public class CreateOfferController extends NavigationController {
     @Override
     public void onActivate() {
         OverlayController.setTransitionsType(Transitions.Type.BLACK);
-        
+
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             reset();
         }
@@ -145,7 +145,7 @@ public class CreateOfferController extends NavigationController {
             }
             case CREATE_OFFER_OFFER_COMPLETED -> {
                 model.getNextButtonVisible().set(false);
-                model.getBackButtonVisible().set(false);
+                //model.getBackButtonVisible().set(false);
             }
             case CREATE_OFFER_OFFER_PUBLISHED -> {
                 model.getSelectedChildTarget().set(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
@@ -194,6 +194,7 @@ public class CreateOfferController extends NavigationController {
         } else {
             int nextIndex = model.getCurrentIndex().get() + 1;
             if (nextIndex < model.getChildTargets().size()) {
+                model.setAnimateToRight(true);
                 model.getCurrentIndex().set(nextIndex);
                 NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
                 model.getSelectedChildTarget().set(nextTarget);
@@ -210,6 +211,7 @@ public class CreateOfferController extends NavigationController {
         } else {
             int prevIndex = model.getCurrentIndex().get() - 1;
             if (prevIndex >= 0) {
+                model.setAnimateToRight(false);
                 model.getCurrentIndex().set(prevIndex);
                 NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
                 model.getSelectedChildTarget().set(nextTarget);

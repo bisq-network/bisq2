@@ -46,8 +46,8 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
 
-        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 60, 0));
+        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
+       // VBox.setMargin(subtitleLabel, new Insets(0, 0, 53, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel);
     }
 
