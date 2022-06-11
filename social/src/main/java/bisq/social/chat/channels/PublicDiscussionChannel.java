@@ -49,6 +49,8 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     private final String description;
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
+    
+    // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicDiscussionChannel(String id,

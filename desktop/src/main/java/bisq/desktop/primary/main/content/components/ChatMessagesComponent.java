@@ -51,11 +51,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService , boolean isDiscussionsChat) {
+    public ChatMessagesComponent(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         controller = new Controller(applicationService, isDiscussionsChat);
     }
 
@@ -137,6 +139,7 @@ public class ChatMessagesComponent {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
                     chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
@@ -282,14 +285,14 @@ public class ChatMessagesComponent {
                     if (event.isShiftDown()) {
                         inputField.appendText(System.getProperty("line.separator"));
                     } else if (!inputField.getText().isEmpty()) {
-                        controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                        controller.onSendMessage(inputField.getText().trim());
                         inputField.clear();
                     }
                 }
             });
 
             sendButton.setOnAction(event -> {
-                controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
             createOfferButton.setOnAction(e -> controller.onCreateOffer());

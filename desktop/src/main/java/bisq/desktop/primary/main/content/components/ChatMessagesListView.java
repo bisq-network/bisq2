@@ -184,10 +184,20 @@ public class ChatMessagesListView {
                 selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
-                        chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(publicDiscussionChannel.getChatMessages());
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
+                                .to(publicDiscussionChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-                        chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(privateDiscussionChannel.getChatMessages());
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
+                                .to(privateDiscussionChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -195,10 +205,20 @@ public class ChatMessagesListView {
                 selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(publicTradeChannel.getChatMessages());
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
+                                .to(publicTradeChannel.getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages).map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService)).to(privateTradeChannel.getChatMessages());
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
+                                .to(privateTradeChannel.getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -244,6 +264,42 @@ public class ChatMessagesListView {
         // UI - handle internally
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+        private void onTakeOffer(PublicTradeChatMessage chatMessage) {
+            if (model.isMyMessage(chatMessage) || chatMessage.getTradeChatOffer().isEmpty()) {
+                return;
+            }
+            chatService.findChatUser(chatMessage.getAuthorId())
+                    .flatMap(this::createAndSelectPrivateTradeChannel)
+                    .ifPresent(privateTradeChannel -> {
+                        String chatMessageText = chatMessage.getTradeChatOffer().get().getChatMessageText();
+                        chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText), Optional.empty(), privateTradeChannel)
+                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
+                        ;
+                    });
+        }
+
+        private void onDeleteMessage(ChatMessage chatMessage) {
+            if (chatService.isMyMessage(chatMessage)) {
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
+                    chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity)
+                            .whenComplete((result, throwable) -> {
+                                log.error("onDeleteMessage result {}", result);
+                                log.error("onDeleteMessage throwable {}", throwable.toString());
+                            });
+                } else if (chatMessage instanceof PublicDiscussionChatMessage privateDiscussionChatMessage) {
+                    chatService.deletePublicDiscussionChatMessage(privateDiscussionChatMessage, chatUserIdentity);
+                }
+                //todo delete private message
+            }
+        }
+
+        private void onCreateOffer(PublicTradeChatMessage chatMessage) {
+            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
+            chatService.publishPublicTradeChatMessage(chatMessage, chatUserIdentity)
+                    .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
+        }
+
         private void onOpenPrivateChannel(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
                 return;
@@ -263,18 +319,6 @@ public class ChatMessagesListView {
                 chatService.publishEditedDiscussionChatMessage(privateDiscussionChatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet
-        }
-
-        private void onDeleteMessage(ChatMessage chatMessage) {
-            if (chatService.isMyMessage(chatMessage)) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
-                if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                    chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity);
-                } else if (chatMessage instanceof PublicDiscussionChatMessage privateDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage(privateDiscussionChatMessage, chatUserIdentity);
-                }
-                //todo delete private message
-            }
         }
 
         private void onOpenMoreOptions(HBox reactionsBox, ChatMessage chatMessage, Runnable onClose) {
@@ -302,27 +346,6 @@ public class ChatMessagesListView {
 
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
             menu.show(reactionsBox);
-        }
-
-
-        private void onTakeOffer(PublicTradeChatMessage chatMessage) {
-            if (model.isMyMessage(chatMessage) || chatMessage.getTradeChatOffer().isEmpty()) {
-                return;
-            }
-            chatService.findChatUser(chatMessage.getAuthorId())
-                    .flatMap(this::createAndSelectPrivateTradeChannel)
-                    .ifPresent(privateTradeChannel -> {
-                        String chatMessageText = chatMessage.getTradeChatOffer().get().getChatMessageText();
-                        chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText), Optional.empty(), privateTradeChannel)
-                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                        ;
-                    });
-        }
-
-        private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
-            chatService.publishPublicTradeChatMessage(chatMessage, chatUserIdentity)
-                    .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
 
         private void onAddEmoji(String emojiId) {
@@ -692,12 +715,23 @@ public class ChatMessagesListView {
                                 return;
                             }
                             double width = messagesListView.getWidth() - 95;
-                            quotedMessageField.setWrappingWidth(width - 20);
-
                             double actionButtonPadding = actionButton.getWidth() > 0 ? 40 : 0;
                             double actionButtonWidth = actionButton.getWidth() + actionButtonPadding;
                             double reputationVBoxWidth = reputationVBox.getWidth();
-                            message.setWrappingWidth(width - 50 - actionButtonWidth - reputationVBoxWidth);
+                            if (actionButton.isVisible() && actionButtonWidth == 0) {
+                                actionButton.layout();
+                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
+                                return;
+                            }
+                            if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
+                                reputationVBox.layout();
+                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
+                                return;
+                            }
+                            double wrappingWidth = width - 50 - actionButtonWidth - reputationVBoxWidth;
+
+                            message.setWrappingWidth(wrappingWidth);
+                            quotedMessageField.setWrappingWidth(wrappingWidth);
                         }
 
                         private void handleEditBox(ChatMessage chatMessage) {
@@ -814,7 +848,7 @@ public class ChatMessagesListView {
                                     if (event.isShiftDown()) {
                                         editInputField.appendText(System.getProperty("line.separator"));
                                     } else if (!editInputField.getText().isEmpty()) {
-                                        controller.onSaveEditedMessage(item.getChatMessage(), StringUtils.trimTrailingLinebreak(editInputField.getText()));
+                                        controller.onSaveEditedMessage(item.getChatMessage(), editInputField.getText().trim());
                                         onCloseEditMessage();
                                     }
                                 }
@@ -847,6 +881,7 @@ public class ChatMessagesListView {
         private final Optional<ChatUser> author;
         private final String nym;
         private final String nickName;
+        @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
 
         public ChatMessageListItem(T chatMessage, ChatService chatService, ReputationService reputationService) {

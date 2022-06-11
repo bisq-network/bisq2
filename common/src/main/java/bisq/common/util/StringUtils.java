@@ -17,9 +17,12 @@
 
 package bisq.common.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.text.DecimalFormat;
 import java.util.UUID;
 
+@Slf4j
 public class StringUtils {
     public static String truncate(String value) {
         return truncate(value, 32);
@@ -52,12 +55,8 @@ public class StringUtils {
         return new DecimalFormat("#,##0.###").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
     }
 
-    public static String trimWhitespace(String value) {
+    public static String removeAllWhitespaces(String value) {
         return value.replaceAll("\\s+", "");
-    }
-
-    public static String trimTrailingLinebreak(String value) {
-        return value.substring(0, value.length() - 1);
     }
 
     public static String abbreviate(String message, int maxChar) {
@@ -76,8 +75,8 @@ public class StringUtils {
     }
 
     /*
-    * Method use in chat message to check if we should show mention user/channel popup
-    * */
+     * Method used in chat message to check if we should show mention user/channel popup
+     */
     public static String deriveWordStartingWith(String text, char indicatorSign) {
         int index = text.lastIndexOf(indicatorSign);
         if (index < 0 || (index > 1 && text.charAt(index - 1) != ' ')) return null;
