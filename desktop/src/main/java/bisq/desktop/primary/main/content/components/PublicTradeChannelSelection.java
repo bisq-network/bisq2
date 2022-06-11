@@ -260,7 +260,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                 {
                     setCursor(Cursor.HAND);
-                    setPrefHeight(40);
+                    setPrefHeight(50);
                     setPadding(new Insets(0, 0, -20, 0));
 
                     label.getStyleClass().add("bisq-text-8");

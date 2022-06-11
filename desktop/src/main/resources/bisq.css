@@ -788,12 +788,18 @@
     -fx-background-color: -bisq-green;
     -fx-background-radius: 8;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1.3em;
     -fx-border-style: none;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans";
 }
 
+.bisq-create-offer-button:hover {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
 
 /* Bisq other buttons */
 .bisq-button-1 {
@@ -1062,7 +1068,9 @@
 }
 
 .list-view.channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: #262626;
+    -fx-fill: black;
+    -fx-text-fill: black;
 }
 
 /*******************************************************************************
@@ -1095,12 +1103,14 @@
     -fx-border-color: -bisq-grey-7;
     -fx-border-width: 0;
 }
+
 .list-view.create-offer-list-view .list-cell {
     -fx-background-color: transparent;
     -fx-padding: 13 0 13 0;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
+
 .list-view.create-offer-list-view .list-cell:empty {
     -fx-border-width: 0;
 }
