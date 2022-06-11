@@ -43,8 +43,8 @@ public class DashboardController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+    public void onOpenDiscussionChat() {
+        Navigation.navigateTo(NavigationTarget.DISCUSS);
     }
 
     public void onOpenTradeOverview() {
