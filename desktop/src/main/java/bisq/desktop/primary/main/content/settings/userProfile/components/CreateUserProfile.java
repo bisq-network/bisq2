@@ -46,7 +46,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -115,8 +114,8 @@ public class CreateUserProfile {
                             model.tempKeyId,
                             model.tempKeyPair,
                             model.proofOfWork,
-                            new HashSet<>(),
-                            new HashSet<>(roleSelection.getVerifiedEntitlements()))
+                            "",
+                            "")
                     .thenAccept(userProfile -> {
                         UIThread.run(() -> {
                             reset();

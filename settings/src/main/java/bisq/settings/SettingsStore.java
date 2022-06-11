@@ -41,6 +41,8 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
     private final ObservableSet<Market> markets;
     @Setter
     private Market selectedMarket;
+    @Setter
+    private long requiredTotalReputationScore = 1000;
 
     public SettingsStore() {
         cookie = new Cookie();
@@ -52,12 +54,14 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                          DisplaySettings displaySettings,
                          Map<String, Boolean> dontShowAgainMap,
                          ObservableSet<Market> markets,
-                         Market selectedMarket) {
+                         Market selectedMarket,
+                         long requiredTotalReputationScore) {
         this.cookie = cookie;
         this.displaySettings = displaySettings;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.markets = markets;
         this.selectedMarket = selectedMarket;
+        this.requiredTotalReputationScore = requiredTotalReputationScore;
     }
 
     @Override
@@ -68,6 +72,7 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .addAllMarkets(markets.stream().map(Market::toProto).collect(Collectors.toList()))
                 .setSelectedMarket(selectedMarket.toProto())
+                .setRequiredTotalReputationScore(requiredTotalReputationScore)
                 .build();
     }
 
@@ -77,7 +82,8 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getDontShowAgainMapMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 new ObservableSet<>(proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList())),
-                Market.fromProto(proto.getSelectedMarket()));
+                Market.fromProto(proto.getSelectedMarket()),
+                proto.getRequiredTotalReputationScore());
     }
 
     @Override
@@ -97,7 +103,8 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
                 displaySettings,
                 dontShowAgainMap,
                 markets,
-                selectedMarket);
+                selectedMarket,
+                requiredTotalReputationScore);
     }
 
     @Override
@@ -108,5 +115,6 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
         markets.clear();
         markets.addAll(persisted.getMarkets());
         selectedMarket = persisted.getSelectedMarket();
+        requiredTotalReputationScore = persisted.getRequiredTotalReputationScore();
     }
 }

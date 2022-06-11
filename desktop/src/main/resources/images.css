@@ -23,6 +23,10 @@
     -fx-image: url("images/logo-mark-midsize.png");
 }
 
+#logo-mark-line {
+    -fx-image: url("images/logo-mark-line.png");
+}
+
 #logo-grey {
     -fx-image: url("images/logo_grey.png");
 }

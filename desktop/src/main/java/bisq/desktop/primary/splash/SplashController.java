@@ -77,4 +77,8 @@ public class SplashController implements Controller {
             pinI2pStatus.unbind();
         }
     }
+
+    public void stopAnimation() {
+        model.getProgress().set(0);
+    }
 }

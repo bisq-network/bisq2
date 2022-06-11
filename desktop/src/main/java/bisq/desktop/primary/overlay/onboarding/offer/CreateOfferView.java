@@ -66,15 +66,21 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         buttons.setAlignment(Pos.CENTER);
 
         content = new VBox();
+        content.setMinHeight(420);
+        content.setMaxHeight(420);
         root.getChildren().addAll(topPaneBox, content, Spacer.fillVBox(), buttons);
 
         VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
-                content.getChildren().setAll(childRoot);
+                content.getChildren().add(childRoot);
                 if (oldValue != null) {
-                    Transitions.transitHorizontal(childRoot, oldValue.getRoot());
+                    if (model.isAnimateToRight()) {
+                        Transitions.transitRightOut(childRoot, oldValue.getRoot());
+                    } else {
+                        Transitions.transitLeftOut(childRoot, oldValue.getRoot());
+                    }
                 } else {
                     Transitions.fadeIn(childRoot);
                 }
@@ -135,6 +141,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.setOnAction(null);
         skipButton.setOnAction(null);
         navigationProgressIndexSubscription.unsubscribe();
+        topPaneBoxVisibleSubscription.unsubscribe();
+
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {

@@ -21,11 +21,11 @@ import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -374,10 +374,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private static class NetworkInfoBox extends HBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            getStyleClass().add("border-top-grey-5");
-            setMinHeight(LeftNavButton.HEIGHT);
-            setMaxHeight(LeftNavButton.HEIGHT);
-            setPadding(new Insets(20, 24, 0, 24));
+           // getStyleClass().add("border-top-grey-5");
+            setMinHeight(53);
+            setMaxHeight(53);
+            setPadding(new Insets(26, 24, 0, 24));
 
             setOnMouseClicked(e -> handler.run());
 

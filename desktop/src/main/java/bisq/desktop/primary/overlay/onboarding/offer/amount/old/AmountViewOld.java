@@ -32,14 +32,14 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AmountView extends View<VBox, AmountModel, AmountController> {
+public class AmountViewOld extends View<VBox, AmountModelOld, AmountControllerOld> {
     private final Button publishButton, skipButton;
 
-    public AmountView(AmountModel model,
-                      AmountController controller,
-                      Pane marketSelection,
-                      Pane amountPrice,
-                      PaymentMethodsSelection paymentMethods) {
+    public AmountViewOld(AmountModelOld model,
+                         AmountControllerOld controller,
+                         Pane marketSelection,
+                         Pane amountPrice,
+                         PaymentMethodsSelection paymentMethods) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);

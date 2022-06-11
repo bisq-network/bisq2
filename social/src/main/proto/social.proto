@@ -80,8 +80,8 @@ message ChatUser {
   string nickName = 1;
   network.NetworkId networkId = 2;
   security.ProofOfWork proofOfWork = 3;
-  repeated Reputation reputation = 4;
-  repeated Role roles = 5;
+  string terms  = 4;
+  string bio   = 5;
   network.MetaData metaData = 6;
 }
 
@@ -108,10 +108,11 @@ message PrivateDiscussionChatMessage {
 message PublicDiscussionChatMessage {
 }
 message TradeChatOffer {
-  uint64 btcAmount = 1;
-  string quoteCurrencyCode = 2;
+  uint64 baseSideAmount = 1;
+  common.Market market = 2;
   repeated string paymentMethods = 3;
   string makersTradeTerms = 5;
+  uint64 requiredTotalReputationScore = 6;
 }
 message PublicTradeChatMessage {
   optional TradeChatOffer tradeChatOffer = 1;

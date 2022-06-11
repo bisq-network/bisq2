@@ -21,8 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -51,11 +49,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService , boolean isDiscussionsChat) {
+    public ChatMessagesComponent(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         controller = new Controller(applicationService, isDiscussionsChat);
     }
 
@@ -137,6 +137,7 @@ public class ChatMessagesComponent {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
                     chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
@@ -160,10 +161,6 @@ public class ChatMessagesComponent {
             if (!chatService.isMyMessage(chatMessage)) {
                 quotedMessageBlock.reply(chatMessage);
             }
-        }
-
-        private void onCreateOffer() {
-            Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
         }
 
         private void createAndSelectPrivateChannel(ChatUser peer) {
@@ -224,7 +221,7 @@ public class ChatMessagesComponent {
         public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
 
         private final BisqTextArea inputField;
-        private final Button sendButton, createOfferButton;
+        private final Button sendButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
 
@@ -246,15 +243,10 @@ public class ChatMessagesComponent {
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
-            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-            createOfferButton.setDefaultButton(true);
-            createOfferButton.setMinWidth(140);
-
-            HBox.setMargin(createOfferButton, new Insets(0, 0, 0, 0));
-            HBox.setHgrow(createOfferButton, Priority.ALWAYS);
+          
+            //todo bottomBox
             HBox.setHgrow(stackPane, Priority.ALWAYS);
-            //  private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
-            HBox bottomBox = new HBox(10, stackPane, createOfferButton);
+            HBox bottomBox = new HBox(10, stackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
@@ -282,17 +274,16 @@ public class ChatMessagesComponent {
                     if (event.isShiftDown()) {
                         inputField.appendText(System.getProperty("line.separator"));
                     } else if (!inputField.getText().isEmpty()) {
-                        controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                        controller.onSendMessage(inputField.getText().trim());
                         inputField.clear();
                     }
                 }
             });
 
             sendButton.setOnAction(event -> {
-                controller.onSendMessage(StringUtils.trimTrailingLinebreak(inputField.getText()));
+                controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
-            createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
             userMentionPopup.setItems(model.mentionableUsers);
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -312,7 +303,6 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
-            createOfferButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
         }

@@ -38,7 +38,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
             childRoot.setPrefHeight(root.getHeight());
             root.getChildren().add(childRoot);
             if (oldValue != null) {
-                Transitions.transitHorizontal(childRoot, oldValue.getRoot());
+                Transitions.transitRightOut(childRoot, oldValue.getRoot());
             } else {
                 Transitions.fadeIn(childRoot);
             }

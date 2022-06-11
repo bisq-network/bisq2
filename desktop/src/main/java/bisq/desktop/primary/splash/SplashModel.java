@@ -20,7 +20,9 @@ package bisq.desktop.primary.splash;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
 import bisq.network.p2p.ServiceNode;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
@@ -30,4 +32,5 @@ public class SplashModel implements Model {
     private final ObjectProperty<ServiceNode.State> clearServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<ServiceNode.State> torServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<ServiceNode.State> i2pServiceNodeState = new SimpleObjectProperty<>();
+    private  final DoubleProperty progress = new SimpleDoubleProperty(-1);
 }

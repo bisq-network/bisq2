@@ -27,12 +27,14 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
+import bisq.settings.SettingsService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
 import bisq.social.offer.TradeChatOfferService;
+import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -53,12 +55,14 @@ public class OfferCompletedController implements Controller {
     private final ReputationService reputationService;
     private final ChatMessagesListView myOfferListView;
     private final ChatMessagesListView takersListView;
+    private final SettingsService settingsService;
     private Pin selectedChannelPin;
 
     public OfferCompletedController(DefaultApplicationService applicationService) {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
+        settingsService=applicationService.getSettingsService();
 
         myOfferListView = new ChatMessagesListView(applicationService,
                 mentionUser -> {
@@ -99,26 +103,20 @@ public class OfferCompletedController implements Controller {
     public void onActivate() {
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
-        Predicate<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate = item ->
-                item.getAuthor().isPresent() &&
-                        item.getChatMessage() instanceof PublicTradeChatMessage &&
-                        ((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().isPresent() &&
-                        !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId()) &&
-                        !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
-        
-        takersListView.getFilteredChatMessages().setPredicate(predicate);
-
         selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
             if (channel instanceof PublicTradeChannel publicTradeChannel) {
                 model.setSelectedChannel(publicTradeChannel);
             }
         });
 
-        TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getBaseSideAmount().getValue(),
-                model.getMarket().quoteCurrencyCode(),
-                new HashSet<>(model.getPaymentMethods()),
-                "");
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
+        
+        TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getBaseSideAmount().getValue(),
+                model.getMarket(),
+                new HashSet<>(model.getPaymentMethods()),
+                chatUserIdentity.getChatUser().getTerms(),
+                settingsService.getRequiredTotalReputationScore());
+      
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(model.getSelectedChannel().getId(),
                 chatUserIdentity.getChatUser().getId(),
                 Optional.of(tradeChatOffer),
@@ -133,6 +131,9 @@ public class OfferCompletedController implements Controller {
                 .limit(3)
                 .collect(Collectors.toList()));
         takersListView.refreshMessages();
+
+        model.getMatchingOffersFound().set(!takersListView.getFilteredChatMessages().isEmpty());
+        takersListView.getFilteredChatMessages().setPredicate(getTakeOfferPredicate());
     }
 
     @Override
@@ -164,19 +165,57 @@ public class OfferCompletedController implements Controller {
         return model.getMyOfferMessage();
     }
 
-    public void onTakeOffer() {
-        //todo mock
-   /*     chatService.getPersistableStore().getChatUserById().values().stream().findAny()
-                .ifPresent(chatUser -> {
-                    chatService.createPrivateTradeChannel(chatUser).ifPresent(privateTradeChannel -> {
-                        chatService.selectTradeChannel(privateTradeChannel);
-                        chatService.sendPrivateTradeChatMessage("Hallo, I would like to take your offer.",
-                                        Optional.empty(), privateTradeChannel)
-                                .whenComplete((result, t) -> {
-                                    OverlayController.hide();
-                                    Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
-                                });
-                    });
-                });*/
+
+    private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
+        return item ->
+        {
+            if (item.getAuthor().isEmpty()) {
+                return false;
+            }
+            ChatUser peer = item.getAuthor().get();
+            if (chatService.isChatUserIgnored(peer)) {
+                return false;
+            }
+            if (chatService.isMyMessage(item.getChatMessage())) {
+                return false;
+            }
+            if (!(item.getChatMessage() instanceof PublicTradeChatMessage)) {
+                return false;
+            }
+            if (((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().isEmpty()) {
+                return false;
+            }
+            //todo
+            if (model.getMyOfferMessage().get() == null) {
+                return false;
+            }
+            if (model.getMyOfferMessage().get().getTradeChatOffer().isEmpty()) {
+                return false;
+            }
+
+            TradeChatOffer myChatOffer = model.getMyOfferMessage().get().getTradeChatOffer().get();
+            TradeChatOffer peersOffer = ((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().get();
+
+            if (!peersOffer.getMarket().equals(myChatOffer.getMarket())) {
+                return false;
+            }
+
+            if (peersOffer.getBaseSideAmount() < myChatOffer.getBaseSideAmount()) {
+                return false;
+            }
+
+            Set<String> paymentMethods = peersOffer.getPaymentMethods();
+            if (myChatOffer.getPaymentMethods().stream().noneMatch(paymentMethods::contains)) {
+                return false;
+            }
+
+            if (reputationService.findReputationScore(peer)
+                    .map(reputationScore -> reputationScore.getTotalScore() < myChatOffer.getRequiredTotalReputationScore())
+                    .orElse(true)) {
+                return false;
+            }
+
+            return true;
+        };
     }
 }

@@ -28,8 +28,10 @@ enum CookieKey {
   STAGE_W = 2;
   STAGE_H = 3;
   NAVIGATION_TARGET = 4;
-  BISQ_EASY_ONBOARDED = 5;
+  BISQ_2_ONBOARDED = 5;
+  BISQ_EASY_ONBOARDED = 6;
 }
+
 message CookieMapEntry {
   CookieKey cookieKey = 1;
   string value = 2;
@@ -47,4 +49,5 @@ message SettingsStore {
   map<string, bool> dontShowAgainMap = 3;
   repeated common.Market markets = 4;
   common.Market selectedMarket = 5;
+  uint64 requiredTotalReputationScore = 6;
 }

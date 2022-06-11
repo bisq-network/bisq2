@@ -124,7 +124,8 @@ public class OnboardNewbieController implements Controller {
         tradeChatOfferService.publishTradeChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
-                        model.getTerms().get())
+                        model.getTerms().get(),
+                        1000)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> {
@@ -159,7 +160,7 @@ public class OnboardNewbieController implements Controller {
         String quoteCurrency = model.getSelectedMarket().quoteCurrencyCode();
         String paymentMethods = Joiner.on(", ").join(model.getSelectedPaymentMethods());
 
-        String previewText = Res.get("satoshisquareapp.createOffer.offerPreview", amount, quoteCurrency, paymentMethods);
+        String previewText = Res.get("createOffer.tradeChatOffer.chatMessage", amount, quoteCurrency, paymentMethods);
         model.getStyleSpans().set(KeyWordDetection.getStyleSpans(previewText, model.getCustomTags()));
         model.getOfferPreview().set(previewText);
     }

@@ -93,12 +93,10 @@ public class AmountController implements Controller {
         long minAmount = model.getMinAmount().get().getValue();
         long minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
 
-        sliderAmountSubscription = EasyBind.subscribe(model.getSliderValue(), sliderValueAsNumber -> {
-            double sliderValue = (double) sliderValueAsNumber;
-            long value = Math.round(sliderValue * minMaxDiff) + minAmount;
-            Coin amount = Coin.of(value, "BTC");
-            baseAmount.setAmount(amount);
-        });
+        if (model.getBaseSideAmount().get() == null) {
+            baseAmount.setAmount(Coin.asBtc(700000));
+        }
+        setQuoteFromBase();
 
         baseAmountFromModelSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
@@ -114,9 +112,13 @@ public class AmountController implements Controller {
                 amount -> model.getQuoteSideAmount().set(amount));
         priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
                 price -> model.getFixPrice().set(price));
-        
-        baseAmount.setAmount(Coin.asBtc(700000));
-        setQuoteFromBase();
+
+        sliderAmountSubscription = EasyBind.subscribe(model.getSliderValue(), sliderValueAsNumber -> {
+            double sliderValue = (double) sliderValueAsNumber;
+            long value = Math.round(sliderValue * minMaxDiff) + minAmount;
+            Coin amount = Coin.of(value, "BTC");
+            baseAmount.setAmount(amount);
+        });
     }
 
     @Override
@@ -126,6 +128,9 @@ public class AmountController implements Controller {
         model.getFixPrice().removeListener(fixPriceQuoteListener);
         sliderAmountSubscription.unsubscribe();
         baseAmountFromModelSubscription.unsubscribe();
+        baseAmountFromCompSubscription.unsubscribe();
+        quoteAmountFromCompSubscription.unsubscribe();
+        priceFromCompSubscription.unsubscribe();
     }
 
     public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {

@@ -21,6 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,8 +31,10 @@ public class Bisq2IntroController implements Controller {
     private final Bisq2IntroModel model;
     @Getter
     private final Bisq2IntroView view;
+    private final SettingsService settingsService;
 
     public Bisq2IntroController(DefaultApplicationService applicationService) {
+        settingsService=  applicationService.getSettingsService();
         model = new Bisq2IntroModel();
         view = new Bisq2IntroView(model, this);
     }
@@ -44,6 +48,7 @@ public class Bisq2IntroController implements Controller {
     }
 
     void onNext() {
+        settingsService.setCookie(CookieKey.BISQ_2_ONBOARDED, true);
         Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
     }
 }

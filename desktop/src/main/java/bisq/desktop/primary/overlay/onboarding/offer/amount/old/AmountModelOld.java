@@ -33,7 +33,7 @@ import java.util.Collection;
 
 @Slf4j
 @Getter
-public class AmountModel implements Model {
+public class AmountModelOld implements Model {
     static final int MAX_INPUT_TERMS = 500;
     private final ObservableList<String> customTags = FXCollections.observableArrayList();
     @Setter
@@ -55,7 +55,7 @@ public class AmountModel implements Model {
     private final String userName;
     ObjectProperty<StyleSpans<Collection<String>>> styleSpans = new SimpleObjectProperty<>();
 
-    public AmountModel(String userName) {
+    public AmountModelOld(String userName) {
         this.userName = userName;
     }
 }

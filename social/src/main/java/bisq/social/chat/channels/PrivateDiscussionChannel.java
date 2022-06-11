@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
 public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
     private final ChatUser peer;
     private final ChatUserIdentity myProfile;
+
+    // We persist the messages as they are NOT persisted in the P2P data store.
     private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateDiscussionChannel(ChatUser peer, ChatUserIdentity myProfile) {

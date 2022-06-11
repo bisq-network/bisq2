@@ -321,8 +321,8 @@
 
 .bisq-text-headline-3 {
     -fx-fill: -bisq-white;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-font-size: 3.92em;
+    -fx-font-family: "IBM Plex Sans Thin";
+    -fx-font-size: 3.4em;
 }
 
 .bisq-text-headline-4 {
@@ -366,6 +366,7 @@
 
 .bisq-text-7 {
     -fx-font-size: 0.92em;
+    -fx-font-family: "IBM Plex Sans Thin";
 }
 
 .bisq-text-8 {
@@ -376,6 +377,7 @@
 
 .bisq-text-9 {
     -fx-fill: -bisq-white;
+    -fx-text-fill: -bisq-white;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -386,8 +388,15 @@
 }
 
 .bisq-text-11 {
+    -fx-text-fill: -bisq-white;
     -fx-fill: -bisq-white;
     -fx-font-size: 4.1em;
+    -fx-font-family: "IBM Plex Sans Thin";
+}
+
+.bisq-text-12 {
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 2.0em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
 
@@ -667,15 +676,25 @@
 /* Big green button */
 .bisq-big-green-button {
     -fx-background-color: -bisq-green;
+    -fx-background-radius: 8;
+    -fx-border-color: -bisq-green;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
     -fx-text-fill: -fx-light-text-color;
     -fx-padding: 17;
-    -fx-font-size: 1.54em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans";
     -fx-cursor: hand;
 }
 
 .bisq-big-green-button:hover {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq-white;
+    -fx-background-radius: 8;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-border-color: -bisq-white;
+    -fx-text-fill: black;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 /* Big white button */
@@ -685,12 +704,35 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-effect: dropshadow(gaussian, -bisq-green, 0, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);
     -fx-cursor: hand;
 }
 
 .bisq-big-white-button:hover {
     -fx-background-color: -bisq-grey-11;
+}
+
+/* Big transparent button */
+.bisq-big-transparent-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-grey-8;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-text-fill: -bisq-white;
+    -fx-padding: 17;
+    -fx-font-size: 1.7em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-cursor: hand;
+}
+
+.bisq-big-transparent-button:hover {
+    -fx-background-color: -bisq-white;
+    -fx-background-radius: 8;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-border-color: -bisq-white;
+    -fx-text-fill: black;
+    -fx-font-family: "IBM Plex Sans";
 }
 
 /* Transparent button */
@@ -740,6 +782,23 @@
 .bisq-text-button:disabled {
     -fx-background-color: transparent;
     -fx-text-fill: -bisq-grey-9;
+}
+
+.bisq-create-offer-button {
+    -fx-background-color: -bisq-green;
+    -fx-background-radius: 8;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.3em;
+    -fx-border-style: none;
+    -fx-padding: 5 33 5 33;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-create-offer-button:hover {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 /* Bisq other buttons */
@@ -1009,7 +1068,9 @@
 }
 
 .list-view.channel-selection-list-view .list-cell:selected {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: #262626;
+    -fx-fill: black;
+    -fx-text-fill: black;
 }
 
 /*******************************************************************************
@@ -1042,12 +1103,14 @@
     -fx-border-color: -bisq-grey-7;
     -fx-border-width: 0;
 }
+
 .list-view.create-offer-list-view .list-cell {
     -fx-background-color: transparent;
     -fx-padding: 13 0 13 0;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
+
 .list-view.create-offer-list-view .list-cell:empty {
     -fx-border-width: 0;
 }

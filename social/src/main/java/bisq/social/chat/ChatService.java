@@ -21,7 +21,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import bisq.common.util.StringUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
@@ -45,13 +44,12 @@ import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.role.Role;
-import bisq.social.user.proof.BondedRoleProof;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +67,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final ProofOfWorkService proofOfWorkService;
+    private final Map<String, ChatUser> ChatUserById = new ConcurrentHashMap<>();
 
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
@@ -121,36 +120,57 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
+        
+        // We do not have control about the order of the data we receive. 
+        // The chat user is required for showing a chat message. In case we get the messages first, we keep it in our
+        // list but the UI will not show it as the chat user is missing. After we get the associated chat user we 
+        // re-apply the messages to the list, triggering a refresh in the UI list.
+        // We do not persist the chat user as it is kept in the p2p store, and we use the TTL for its validity.
+        
         if (distributedData instanceof ChatUser chatUser &&
                 hasAuthorValidProofOfWork(chatUser.getProofOfWork())) {
-            // It might be that we received the chat message before the chat user. In that case the 
-            // message would not be displayed. To avoid this situation we check if there are messages containing the 
-            // new chat user and if so, we remove and later add the messages to trigger an update for the clients.
-            Set<PublicDiscussionChatMessage> publicDiscussionChatMessages = getPublicDiscussionChannels().stream()
-                    .flatMap(channel -> channel.getChatMessages().stream())
-                    .filter(message -> message.getAuthorId().equals(chatUser.getId()))
-                    .collect(Collectors.toSet());
-            Set<PublicTradeChatMessage> publicTradeChatMessages = getPublicTradeChannels().stream()
-                    .flatMap(channel -> channel.getChatMessages().stream())
-                    .filter(message -> message.getAuthorId().equals(chatUser.getId()))
-                    .collect(Collectors.toSet());
-            // Remove chat messages containing that chatUser
-            publicDiscussionChatMessages.forEach(message ->
-                    findPublicDiscussionChannel(message.getChannelId())
-                            .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel)));
-            publicTradeChatMessages.forEach(message ->
-                    findPublicTradeChannel(message.getChannelId())
-                            .ifPresent(channel -> removePublicTradeChatMessage(message, channel)));
+            // Only if we have not already that chatUser we apply it
+            if (findChatUser(chatUser.getId()).isEmpty()) {
+                log.info("We got a new chatUser {}", chatUser);
+                // It might be that we received the chat message before the chat user. In that case the 
+                // message would not be displayed. To avoid this situation we check if there are messages containing the 
+                // new chat user and if so, we remove and later add the messages to trigger an update for the clients.
+                Set<PublicDiscussionChatMessage> publicDiscussionChatMessages = getPublicDiscussionChannels().stream()
+                        .flatMap(channel -> channel.getChatMessages().stream())
+                        .filter(message -> message.getAuthorId().equals(chatUser.getId()))
+                        .collect(Collectors.toSet());
+                Set<PublicTradeChatMessage> publicTradeChatMessages = getPublicTradeChannels().stream()
+                        .flatMap(channel -> channel.getChatMessages().stream())
+                        .filter(message -> message.getAuthorId().equals(chatUser.getId()))
+                        .collect(Collectors.toSet());
 
-            addChatUser(chatUser);
+                if (!publicDiscussionChatMessages.isEmpty()) {
+                    log.info("We have {} publicDiscussionChatMessages with that chat users ID which have not been displayed yet. " +
+                            "We remove them and add them to trigger a list update.", publicDiscussionChatMessages.size());
+                }
+                if (!publicTradeChatMessages.isEmpty()) {
+                    log.info("We have {} publicTradeChatMessages with that chat users ID which have not been displayed yet. " +
+                            "We remove them and add them to trigger a list update.", publicTradeChatMessages.size());
+                }
+                
+                // Remove chat messages containing that chatUser
+                publicDiscussionChatMessages.forEach(message ->
+                        findPublicDiscussionChannel(message.getChannelId())
+                                .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel)));
+                publicTradeChatMessages.forEach(message ->
+                        findPublicTradeChannel(message.getChannelId())
+                                .ifPresent(channel -> removePublicTradeChatMessage(message, channel)));
 
-            // Now we add them again
-            publicDiscussionChatMessages.forEach(message ->
-                    findPublicDiscussionChannel(message.getChannelId())
-                            .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel)));
-            publicTradeChatMessages.forEach(message ->
-                    findPublicTradeChannel(message.getChannelId())
-                            .ifPresent(channel -> addPublicTradeChatMessage(message, channel)));
+                addChatUser(chatUser);
+
+                // Now we add them again
+                publicDiscussionChatMessages.forEach(message ->
+                        findPublicDiscussionChannel(message.getChannelId())
+                                .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel)));
+                publicTradeChatMessages.forEach(message ->
+                        findPublicTradeChannel(message.getChannelId())
+                                .ifPresent(channel -> addPublicTradeChatMessage(message, channel)));
+            }
         } else if (distributedData instanceof PublicTradeChatMessage message &&
                 isValidProofOfWorkOrChatUserNotFound(message)) {
             findPublicTradeChannel(message.getChannelId())
@@ -363,7 +383,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Discussion domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(ChatUserIdentity chatUserIdentity,
+   /* public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(ChatUserIdentity chatUserIdentity,
                                                                                            String channelName,
                                                                                            String description) {
         return chatUserIdentity.getChatUser().getRoles().stream()
@@ -391,7 +411,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         .orElse(Optional.empty())))
                 .findAny()
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
-    }
+    }*/
 
     public CompletableFuture<DataService.BroadCastDataResult> publishDiscussionChatMessage(String text,
                                                                                            Optional<Quotation> quotedMessage,
@@ -559,7 +579,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ObservableSet<String> getIgnoredChatUserIds() {
         return persistableStore.getIgnoredChatUserIds();
     }
-
+    public boolean isChatUserIgnored(ChatUser chatUser) {
+        return getIgnoredChatUserIds().contains(chatUser.getId());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc
@@ -582,11 +604,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<ChatUser> findChatUser(String chatUserId) {
-        return Optional.ofNullable(persistableStore.getChatUserById().get(chatUserId));
+        return Optional.ofNullable(ChatUserById.get(chatUserId));
     }
 
     private void addChatUser(ChatUser chatUser) {
-        persistableStore.getChatUserById().put(chatUser.getId(), chatUser);
+        ChatUserById.put(chatUser.getId(), chatUser);
     }
 
 
@@ -636,7 +658,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
         ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
-        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId()).getId();
+        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId(),"","").getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",

@@ -39,7 +39,6 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ChatUserDetails implements Comparable<ChatUserDetails> {
@@ -97,9 +96,6 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
             model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
-            String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
-            model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-            model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());
         }
 
         @Override
@@ -145,8 +141,6 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty bio = new SimpleStringProperty();
         private final StringProperty reputationScore = new SimpleStringProperty();
         private final StringProperty profileAge = new SimpleStringProperty();
-        private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        private final StringProperty entitlements = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
 
