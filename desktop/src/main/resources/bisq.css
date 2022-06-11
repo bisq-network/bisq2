@@ -784,6 +784,17 @@
     -fx-text-fill: -bisq-grey-9;
 }
 
+.bisq-create-offer-button {
+    -fx-background-color: -bisq-green;
+    -fx-background-radius: 8;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.2em;
+    -fx-border-style: none;
+    -fx-padding: 5 33 5 33;
+    -fx-cursor: hand;
+}
+
+
 /* Bisq other buttons */
 .bisq-button-1 {
     -fx-font-family: "IBM Plex Sans";

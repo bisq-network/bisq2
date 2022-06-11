@@ -22,6 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.FilterBox;
+import bisq.i18n.Res;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,6 +51,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
     private final ImageView peersRoboIconView;
 
     protected final HBox centerToolbar;
+    private final Button createOfferButton;
     private Pane chatUserOverviewRoot;
     private Subscription sideBarWidthSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
 
@@ -68,12 +70,22 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         this.channelInfo = channelInfo;
         this.helpPane = helpPane;
 
+        createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
+        createOfferButton.setDefaultButton(true);
+        createOfferButton.setMaxWidth(Double.MAX_VALUE);
+        createOfferButton.setMinHeight(44);
+        createOfferButton.getStyleClass().add("bisq-create-offer-button");
+
+        VBox.setMargin(createOfferButton, new Insets(-2, 24, 13, 24));
+
         // Left
         left = Layout.vBoxWith(
                 marketChannelSelection,
                 Layout.separator(),
                 privateChannelSelection,
-                Spacer.fillVBox()
+                Spacer.fillVBox(),
+              /*  Layout.separator(),*/
+                createOfferButton
         );
         left.getStyleClass().add("bisq-dark-bg");
         left.setPrefWidth(210);
@@ -149,6 +161,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         helpButton.setOnAction(e -> controller.onToggleHelp());
         closeButton.setOnAction(e -> controller.onCloseSideBar());
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -190,6 +203,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         channelInfoButton.setOnAction(null);
         helpButton.setOnAction(null);
         closeButton.setOnAction(null);
+        createOfferButton.setOnAction(null);
 
         chatUserOverviewRootSubscription.unsubscribe();
         rootWidthSubscription.unsubscribe();

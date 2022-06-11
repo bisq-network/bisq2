@@ -21,8 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -165,10 +163,6 @@ public class ChatMessagesComponent {
             }
         }
 
-        private void onCreateOffer() {
-            Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
-        }
-
         private void createAndSelectPrivateChannel(ChatUser peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer)
@@ -227,7 +221,7 @@ public class ChatMessagesComponent {
         public final static String EDITED_POST_FIX = " " + Res.get("social.message.wasEdited");
 
         private final BisqTextArea inputField;
-        private final Button sendButton, createOfferButton;
+        private final Button sendButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
 
@@ -249,15 +243,10 @@ public class ChatMessagesComponent {
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
-            createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-            createOfferButton.setDefaultButton(true);
-            createOfferButton.setMinWidth(140);
-
-            HBox.setMargin(createOfferButton, new Insets(0, 0, 0, 0));
-            HBox.setHgrow(createOfferButton, Priority.ALWAYS);
+          
+            //todo bottomBox
             HBox.setHgrow(stackPane, Priority.ALWAYS);
-            //  private final ListChangeListener<ChatMessageListItem<? extends ChatMessage>> messagesListener;
-            HBox bottomBox = new HBox(10, stackPane, createOfferButton);
+            HBox bottomBox = new HBox(10, stackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
@@ -295,7 +284,6 @@ public class ChatMessagesComponent {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
-            createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
             userMentionPopup.setItems(model.mentionableUsers);
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -315,7 +303,6 @@ public class ChatMessagesComponent {
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
-            createOfferButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
         }

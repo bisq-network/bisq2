@@ -20,8 +20,9 @@ package bisq.desktop.primary.main.content;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.popups.Popup;
 import bisq.desktop.primary.main.content.components.*;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
@@ -167,9 +168,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     }
 
     public void onCreateOffer() {
-        //todo
-        new Popup().message("Not implemented yet").show();
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
+
     protected void showChannelInfo() {
         channelInfo.setChannel(model.getSelectedChannel().get());
         channelInfo.setOnUndoIgnoreChatUser(() -> {
@@ -177,6 +178,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
             channelInfo.setChannel(model.getSelectedChannel().get());
         });
     }
+
     protected void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
         model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
