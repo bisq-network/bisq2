@@ -22,6 +22,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,8 +32,10 @@ public class BisqEasyIntroController implements Controller {
     private final BisqEasyIntroModel model;
     @Getter
     private final BisqEasyIntroView view;
+    private final SettingsService settingsService;
 
     public BisqEasyIntroController(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
         model = new BisqEasyIntroModel();
         view = new BisqEasyIntroView(model, this);
     }
@@ -45,10 +49,12 @@ public class BisqEasyIntroController implements Controller {
     }
 
     void onNext() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
+        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
     public void onSkip() {
+        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
         OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }

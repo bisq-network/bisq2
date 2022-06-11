@@ -27,17 +27,16 @@ public class DashboardController implements Controller {
     private final DashboardModel model;
     @Getter
     private final DashboardView view;
+    private final DefaultApplicationService applicationService;
 
     public DashboardController(DefaultApplicationService applicationService) {
+        this.applicationService = applicationService;
         model = new DashboardModel();
         view = new DashboardView(model, this);
     }
 
     @Override
     public void onActivate() {
-        // if (true || applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-        //Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
-        // }
     }
 
     @Override

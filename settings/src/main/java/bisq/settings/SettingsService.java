@@ -60,6 +60,10 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
         return persistableStore.getCookie();
     }
 
+    public long getRequiredTotalReputationScore() {
+        return persistableStore.getRequiredTotalReputationScore();
+    }
+
     public void setCookie(CookieKey key, boolean value) {
         getCookie().putAsBoolean(key, value);
         persist();
@@ -72,6 +76,11 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
 
     public void setCookie(CookieKey key, String value) {
         getCookie().put(key, value);
+        persist();
+    }
+
+    public void setRequiredTotalReputationScore(long value) {
+        persistableStore.setRequiredTotalReputationScore(value);
         persist();
     }
 }

@@ -91,8 +91,11 @@ public class CreateOfferController extends NavigationController {
 
     @Override
     public void onActivate() {
-        reset();
         OverlayController.setTransitionsType(Transitions.Type.BLACK);
+        
+        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
+            reset();
+        }
 
         directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
             offerCompletedController.setDirection(direction);

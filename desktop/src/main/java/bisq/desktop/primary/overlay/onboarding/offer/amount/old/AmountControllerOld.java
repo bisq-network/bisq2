@@ -42,10 +42,10 @@ import org.fxmisc.easybind.Subscription;
 import java.util.HashSet;
 
 @Slf4j
-public class AmountController implements Controller {
-    private final AmountModel model;
+public class AmountControllerOld implements Controller {
+    private final AmountModelOld model;
     @Getter
-    private final AmountView view;
+    private final AmountViewOld view;
     private final MarketSelection marketSelection;
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
@@ -56,17 +56,17 @@ public class AmountController implements Controller {
     private final InvalidationListener paymentMethodsSelectionListener;
     private Subscription termsDisabledSubscription;
 
-    public AmountController(DefaultApplicationService applicationService) {
+    public AmountControllerOld(DefaultApplicationService applicationService) {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
-        model = new AmountModel(applicationService.getChatUserService().getSelectedUserProfile().get().getProfileId());
+        model = new AmountModelOld(applicationService.getChatUserService().getSelectedUserProfile().get().getProfileId());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());
 
         paymentMethodsSelection = new PaymentMethodsSelection(chatService);
 
-        view = new AmountView(model, this,
+        view = new AmountViewOld(model, this,
                 marketSelection.getRoot(),
                 btcFiatAmountGroup.getRoot(),
                 paymentMethodsSelection);
@@ -100,9 +100,9 @@ public class AmountController implements Controller {
 
         termsDisabledSubscription = EasyBind.subscribe(model.getTerms(),
                 text -> {
-                    model.getTermsEditable().set(text == null || text.length() <= AmountModel.MAX_INPUT_TERMS);
-                    if (text != null && text.length() > AmountModel.MAX_INPUT_TERMS) {
-                        String truncated = model.getTerms().get().substring(0, AmountModel.MAX_INPUT_TERMS);
+                    model.getTermsEditable().set(text == null || text.length() <= AmountModelOld.MAX_INPUT_TERMS);
+                    if (text != null && text.length() > AmountModelOld.MAX_INPUT_TERMS) {
+                        String truncated = model.getTerms().get().substring(0, AmountModelOld.MAX_INPUT_TERMS);
                         UIThread.runOnNextRenderFrame(() -> model.getTerms().set(truncated));
                     }
                 });
@@ -126,7 +126,8 @@ public class AmountController implements Controller {
         tradeChatOfferService.publishTradeChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
-                        model.getTerms().get())
+                        model.getTerms().get(),
+                        1000)
                 .whenComplete((result, throwable) -> {
                     if (throwable == null) {
                         UIThread.run(() -> {
@@ -165,7 +166,7 @@ public class AmountController implements Controller {
         String quoteCurrency = model.getSelectedMarket().quoteCurrencyCode();
         String paymentMethods = Joiner.on(", ").join(model.getSelectedPaymentMethods());
 
-        String previewText = Res.get("satoshisquareapp.createOffer.offerPreview", amount, quoteCurrency, paymentMethods);
+        String previewText = Res.get("createOffer.tradeChatOffer.chatMessage", amount, quoteCurrency, paymentMethods);
         model.getStyleSpans().set(KeyWordDetection.getStyleSpans(previewText, model.getCustomTags()));
         model.getOfferPreview().set(previewText);
     }

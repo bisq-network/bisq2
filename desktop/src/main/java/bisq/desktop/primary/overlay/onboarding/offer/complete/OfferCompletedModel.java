@@ -26,7 +26,9 @@ import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;
 import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.PublicTradeChatMessage;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +50,7 @@ class OfferCompletedModel implements Model {
     @Setter
     private List<String> paymentMethods = List.of("SEPA");
     final private ObjectProperty<PublicTradeChatMessage> myOfferMessage = new SimpleObjectProperty<>();
+    final private BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
 
     OfferCompletedModel() {
     }

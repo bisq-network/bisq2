@@ -24,7 +24,6 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -42,7 +41,6 @@ import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.user.proof.*;
-import bisq.social.user.reputation.Reputation;
 import bisq.social.user.role.Role;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -58,7 +56,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -120,7 +117,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                String keyId,
                                                                                KeyPair keyPair,
                                                                                ProofOfWork proofOfWork) {
-        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, new HashSet<>(), new HashSet<>());
+        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, "","");
     }
 
     public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
@@ -128,11 +125,11 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                String keyId,
                                                                                KeyPair keyPair,
                                                                                ProofOfWork proofOfWork,
-                                                                               Set<Reputation> reputation,
-                                                                               Set<Role> roles) {
+                                                                               String terms,
+                                                                               String bio) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
-                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().networkId(), reputation, roles);
+                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().networkId(), terms, bio);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().add(chatUserIdentity);
@@ -189,7 +186,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         return persistableStore.getChatUserIdentities().isEmpty();
     }
 
-    public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
+ /*   public CompletableFuture<Optional<ChatUser.BurnInfo>> findBurnInfoAsync(byte[] pubKeyHash, Set<Role> roles) {
         if (roles.stream().noneMatch(e -> e.type() == Role.Type.LIQUIDITY_PROVIDER)) {
             return CompletableFuture.completedFuture(Optional.empty());
         }
@@ -214,7 +211,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                         return Optional.of(new ChatUser.BurnInfo(totalBsqBurned, firstBurnDate));
                     }
                 });
-    }
+    }*/
 
     public CompletableFuture<Optional<ProofOfBurnProof>> verifyProofOfBurn(String proofOfBurnTxId, String pubKeyHash) {
         return verifyProofOfBurn(0, proofOfBurnTxId, Hex.decode(pubKeyHash));

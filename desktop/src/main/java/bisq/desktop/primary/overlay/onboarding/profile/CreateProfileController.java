@@ -85,7 +85,9 @@ public class CreateProfileController implements Controller {
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
-                            model.proofOfWork)
+                            model.proofOfWork,
+                            "",
+                            "")
                     .thenCompose(chatUserService::publishNewChatUser)
                     .thenAccept(chatUserIdentity -> UIThread.run(() -> {
                         checkArgument(chatUserIdentity.getIdentity().domainId().equals(profileId));

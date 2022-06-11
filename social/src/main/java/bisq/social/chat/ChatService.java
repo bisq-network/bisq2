@@ -21,7 +21,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import bisq.common.util.StringUtils;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
@@ -45,8 +44,6 @@ import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.role.Role;
-import bisq.social.user.proof.BondedRoleProof;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -386,7 +383,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Discussion domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(ChatUserIdentity chatUserIdentity,
+   /* public CompletableFuture<Optional<PublicDiscussionChannel>> addPublicDiscussionChannel(ChatUserIdentity chatUserIdentity,
                                                                                            String channelName,
                                                                                            String description) {
         return chatUserIdentity.getChatUser().getRoles().stream()
@@ -414,7 +411,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         .orElse(Optional.empty())))
                 .findAny()
                 .orElse(CompletableFuture.completedFuture(Optional.empty()));
-    }
+    }*/
 
     public CompletableFuture<DataService.BroadCastDataResult> publishDiscussionChatMessage(String text,
                                                                                            Optional<Quotation> quotedMessage,
@@ -582,7 +579,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ObservableSet<String> getIgnoredChatUserIds() {
         return persistableStore.getIgnoredChatUserIds();
     }
-
+    public boolean isChatUserIgnored(ChatUser chatUser) {
+        return getIgnoredChatUserIds().contains(chatUser.getId());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Misc
@@ -659,7 +658,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
         ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
-        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId()).getId();
+        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId(),"","").getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",

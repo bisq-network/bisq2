@@ -60,12 +60,14 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(Market selectedMarket,
                                                                                     long baseSideAmount,
                                                                                     Set<String> selectedPaymentMethods,
-                                                                                    String makersTradeTerms) {
+                                                                                    String makersTradeTerms,
+                                                                                    long requiredTotalReputationScore) {
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(baseSideAmount,
-                selectedMarket.quoteCurrencyCode(),
+                selectedMarket,
                 selectedPaymentMethods,
-                makersTradeTerms);
+                makersTradeTerms,
+                requiredTotalReputationScore);
         PublicTradeChannel publicTradeChannel = chatService.findPublicTradeChannel(selectedMarket.toString()).orElseThrow();
         return chatService.publishTradeChatOffer(tradeChatOffer, publicTradeChannel, chatUserIdentity);
     }

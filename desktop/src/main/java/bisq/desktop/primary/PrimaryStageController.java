@@ -108,18 +108,26 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onDomainInitialized() {
-        // After the domain is initialized we show the application content
-        String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-        if (value != null && !value.isEmpty()) {
-            try {
-                NavigationTarget persisted = NavigationTarget.valueOf(value);
-                Navigation.applyPersisted(persisted);
-                Navigation.navigateTo(persisted);
-            } catch (Throwable t) {
+        if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_2_ONBOARDED).orElse(false)) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
+        } else if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
+        } else if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED).orElse(false)) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
+        } else {
+            // After the domain is initialized we show the application content
+            String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
+            if (value != null && !value.isEmpty()) {
+                try {
+                    NavigationTarget persisted = NavigationTarget.valueOf(value);
+                    Navigation.applyPersisted(persisted);
+                    Navigation.navigateTo(persisted);
+                } catch (Throwable t) {
+                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
+                }
+            } else {
                 Navigation.navigateTo(NavigationTarget.DASHBOARD);
             }
-        } else {
-            Navigation.navigateTo(NavigationTarget.DASHBOARD);
         }
     }
 

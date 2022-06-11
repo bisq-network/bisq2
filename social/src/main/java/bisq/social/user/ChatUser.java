@@ -28,17 +28,11 @@ import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
-import bisq.social.user.reputation.Reputation;
-import bisq.social.user.role.Role;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Publicly shared chat user profile.
@@ -54,39 +48,42 @@ public class ChatUser implements DistributedData {
     private final String nickName;
     private final ProofOfWork proofOfWork;
     private final NetworkId networkId;
-    private final Set<Reputation> reputation;
-    private final Set<Role> roles;
-    private transient final byte[] pubKeyHash;
+    private final String terms;
+    private final String bio;
     private final MetaData metaData;
+
+    private transient final byte[] pubKeyHash;
     private transient final String id;
     private transient final String nym;
 
-    public ChatUser(String nickName, ProofOfWork proofOfWork, NetworkId networkId) {
+    public ChatUser(String nickName, 
+                    ProofOfWork proofOfWork, 
+                    NetworkId networkId,
+                    String terms,
+                    String bio
+                    ) {
         this(nickName,
                 proofOfWork,
                 networkId,
-                new HashSet<>(),
-                new HashSet<>());
-    }
-
-    public ChatUser(String nickName, ProofOfWork proofOfWork, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles) {
-        this(nickName,
-                proofOfWork,
-                networkId,
-                reputation,
-                roles,
+                terms,
+                bio, 
                 new MetaData(TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
-    public ChatUser(String nickName, ProofOfWork proofOfWork, NetworkId networkId, Set<Reputation> reputation, Set<Role> roles, MetaData metaData) {
+    public ChatUser(String nickName,
+                    ProofOfWork proofOfWork, 
+                    NetworkId networkId,
+                    String terms,
+                    String bio,
+                    MetaData metaData) {
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
-        this.reputation = reputation;
-        this.roles = roles;
-
-        pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+        this.terms = terms;
+        this.bio = bio;
         this.metaData = metaData;
+        
+        pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
         nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
     }
@@ -96,30 +93,16 @@ public class ChatUser implements DistributedData {
                 .setNickName(nickName)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
-                .addAllReputation(reputation.stream()
-                        .sorted()
-                        .map(Reputation::toProto)
-                        .collect(Collectors.toList()))
-                .addAllRoles(roles.stream()
-                        .sorted()
-                        .map(Role::toProto)
-                        .collect(Collectors.toList()))
                 .setMetaData(metaData.toProto())
                 .build();
     }
 
     public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
-        Set<Reputation> reputation = proto.getReputationList().stream()
-                .map(Reputation::fromProto)
-                .collect(Collectors.toSet());
-        Set<Role> roles = proto.getRolesList().stream()
-                .map(Role::fromProto)
-                .collect(Collectors.toSet());
         return new ChatUser(proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
-                reputation,
-                roles,
+                proto.getTerms(),
+                proto.getBio(),
                 MetaData.fromProto(proto.getMetaData()));
     }
 
@@ -134,9 +117,6 @@ public class ChatUser implements DistributedData {
         };
     }
 
-    public boolean hasEntitlementType(Role.Type type) {
-        return roles.stream().anyMatch(e -> e.type() == type);
-    }
 
     public String getTooltipString() {
         return Res.get("social.chatUser.tooltip", nickName, nym);
@@ -153,22 +133,19 @@ public class ChatUser implements DistributedData {
 
     @Override
     public boolean isDataInvalid() {
+        //todo
         return false;
     }
 
-    public String getBio() {
-        return "Trusted trader, 4 year contributor to Bisq"; //todo implement instead of hardcode
-    }
-
+    //todo
     public String getBurnScoreAsString() {
         return "301"; //todo implement instead of hardcode
     }
-
+    //todo
     public String getAccountAgeAsString() {
         return "274 days"; //todo implement instead of hardcode
     }
 
-    //todo
-    public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
-    }
+   /* public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
+    }*/
 }

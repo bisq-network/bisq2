@@ -82,7 +82,7 @@ public class ChannelAdmin {
         }
 
         public void addChannel() {
-            chatService.addPublicDiscussionChannel(model.selectedUserProfile.get(), model.channelName.get(), model.description.get())
+           /* chatService.addPublicDiscussionChannel(model.selectedUserProfile.get(), model.channelName.get(), model.description.get())
                     .whenComplete((publicChannel, throwable) -> {
                         if (throwable == null) {
                             if (publicChannel.isPresent()) {
@@ -93,7 +93,7 @@ public class ChannelAdmin {
                         } else {
                             log.error("Error at addChannel", throwable);
                         }
-                    });
+                    });*/
         }
     }
 

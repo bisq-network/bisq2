@@ -19,9 +19,11 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.social.user.ChatUser;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -35,8 +37,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ChatUserOverview implements Comparable<ChatUserOverview> {
@@ -88,9 +88,6 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             model.id.set(chatUser.getId());
             model.userName.set(chatUser.getUserName());
             model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
-            String entitledRoles = chatUser.getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
-            model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));
-            model.entitlementsVisible.set(!chatUser.getRoles().isEmpty());
         }
 
         @Override
@@ -104,8 +101,6 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
-        private final BooleanProperty entitlementsVisible = new SimpleBooleanProperty();
-        private final StringProperty entitlements = new SimpleStringProperty();
 
         private Model(ChatUser chatUser) {
             this.chatUser = chatUser;
@@ -115,7 +110,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ImageView roboIcon;
-        private final Label userName, id, entitlements;
+        private final Label userName, id;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -150,19 +145,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
             id = new Label();
             id.getStyleClass().add("offer-label-small");
             id.setPadding(new Insets(-5, 0, 0, 0));
-
-            entitlements = new Label();
-            entitlements.getStyleClass().add("offer-label-small");
-            entitlements.setPadding(new Insets(-5, 0, 0, 0));
         }
 
         @Override
         protected void onViewAttached() {
             userName.textProperty().bind(model.userName);
             id.textProperty().bind(model.id);
-            entitlements.textProperty().bind(model.entitlements);
-            entitlements.visibleProperty().bind(model.entitlementsVisible);
-            entitlements.managedProperty().bind(model.entitlementsVisible);
 
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
@@ -175,9 +163,6 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         protected void onViewDetached() {
             userName.textProperty().unbind();
             id.textProperty().unbind();
-            entitlements.textProperty().unbind();
-            entitlements.visibleProperty().unbind();
-            entitlements.managedProperty().unbind();
             roboHashNodeSubscription.unsubscribe();
         }
     }

@@ -17,15 +17,9 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.monetary.Monetary;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.DateFormatter;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.role.Role;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -58,7 +52,7 @@ public class ChatUserIcon extends Pane {
     public void setChatUser(ChatUser chatUser, ChatUserService chatUserService) {
         roboIcon.setImage(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
 
-        if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
+       /* if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");
 
             // We get asynchronous the verified burnInfo results. It is cached in the userProfileService
@@ -84,7 +78,7 @@ public class ChatUserIcon extends Pane {
             //entitlement.setId("chat-trust"); //todo define icon
             entitlement.setVisible(true);
             entitlement.setManaged(true);
-        }
+        }*/
     }
 
     public void releaseResources() {
