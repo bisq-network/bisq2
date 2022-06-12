@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
 public abstract class ProofOfWorkService implements PersistenceClient<ProofOfWorkStore> {
-    public final static int MINT_NYM_DIFFICULTY = 16384;  // Math.pow(2, 14) = 16384;
+    public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
 
     @Getter
     private final ProofOfWorkStore persistableStore = new ProofOfWorkStore();

@@ -34,7 +34,14 @@ public class KeyHandlerUtil {
     }
 
     public static void handleEscapeKeyEvent(KeyEvent keyEvent, Runnable handler) {
-        if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.ENTER) {
+        if (keyEvent.getCode() == KeyCode.ESCAPE) {
+            keyEvent.consume();
+            handler.run();
+        }
+    }
+
+    public static void handleEnterKeyEvent(KeyEvent keyEvent, Runnable handler) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
             handler.run();
         }

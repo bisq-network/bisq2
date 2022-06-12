@@ -55,5 +55,9 @@ public class Res {
             return key;
         }
     }
+
+    public static boolean has(String key) {
+        return defaultBundle.containsKey(key) || bisq1ResourceBundle.containsKey(key);
+    }
 }
 

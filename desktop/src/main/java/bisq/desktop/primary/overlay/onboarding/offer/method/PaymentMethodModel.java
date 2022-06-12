@@ -18,12 +18,20 @@
 package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
 public class PaymentMethodModel implements Model {
-    //todo we should start to use the PaymentMethod domain
-    private final ObservableList<String> paymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<String> allPaymentMethods = FXCollections.observableArrayList();
+    private final ObservableList<String> addedCustomMethods = FXCollections.observableArrayList();
+    private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
+    private final StringProperty customMethod = new SimpleStringProperty();
+    private final BooleanProperty paymentMethodsEmpty = new SimpleBooleanProperty();
+    private final BooleanProperty addCustomMethodIconVisible = new SimpleBooleanProperty();
 }

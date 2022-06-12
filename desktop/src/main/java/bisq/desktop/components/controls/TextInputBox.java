@@ -36,6 +36,7 @@ import org.fxmisc.easybind.EasyBind;
 public class TextInputBox extends Pane {
     @Getter
     private final TextField inputTextField;
+    @Getter
     private final Label descriptionLabel;
     @Setter
     private String prompt;

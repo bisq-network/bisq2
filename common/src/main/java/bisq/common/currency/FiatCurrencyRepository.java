@@ -95,4 +95,8 @@ public class FiatCurrencyRepository {
     public static Optional<String> getName(String code) {
         return Optional.ofNullable(currencyByCode.get(code)).map(TradeCurrency::getName);
     }
+
+    public static List<String> getAllFiatCurrencyCodes() {
+        return getAllCurrencies().stream().map(e -> e.getCurrency().getCurrencyCode()).collect(Collectors.toList());
+    }
 }
