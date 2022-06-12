@@ -47,4 +47,8 @@ public class MarketController implements Controller {
     @Override
     public void onDeactivate() {
     }
+
+    public void onSelect(MarketListItem item) {
+        
+    }
 }
