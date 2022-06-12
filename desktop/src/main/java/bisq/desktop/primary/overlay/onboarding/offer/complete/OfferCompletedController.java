@@ -62,7 +62,7 @@ public class OfferCompletedController implements Controller {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
-        settingsService=applicationService.getSettingsService();
+        settingsService = applicationService.getSettingsService();
 
         myOfferListView = new ChatMessagesListView(applicationService,
                 mentionUser -> {
@@ -110,13 +110,14 @@ public class OfferCompletedController implements Controller {
         });
 
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
-        
+
+        log.error("TradeChatOffer model.getPaymentMethods() {}", model.getPaymentMethods());
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getBaseSideAmount().getValue(),
                 model.getMarket(),
                 new HashSet<>(model.getPaymentMethods()),
                 chatUserIdentity.getChatUser().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
-      
+
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(model.getSelectedChannel().getId(),
                 chatUserIdentity.getChatUser().getId(),
                 Optional.of(tradeChatOffer),
@@ -131,15 +132,16 @@ public class OfferCompletedController implements Controller {
         takersListView.getChatMessages().setAll(takersListView.getFilteredChatMessages().stream()
                 .limit(3)
                 .collect(Collectors.toList()));
-        takersListView.refreshMessages();
 
-        model.getMatchingOffersFound().set(!takersListView.getFilteredChatMessages().isEmpty());
         takersListView.getFilteredChatMessages().setPredicate(getTakeOfferPredicate());
+        model.getMatchingOffersFound().set(!takersListView.getFilteredChatMessages().isEmpty());
     }
 
     @Override
     public void onDeactivate() {
         selectedChannelPin.unbind();
+        takersListView.getFilteredChatMessages().setPredicate(null);
+        takersListView.getChatMessages().clear();
     }
 
     public void setDirection(Direction direction) {
@@ -206,6 +208,9 @@ public class OfferCompletedController implements Controller {
             }
 
             Set<String> paymentMethods = peersOffer.getPaymentMethods();
+            log.error("pred model.getPaymentMethods() {}", model.getPaymentMethods());
+            log.error("pred peersOffer.getPaymentMethods() {}", paymentMethods);
+            log.error("pred myChatOffer.getPaymentMethods() {}", myChatOffer.getPaymentMethods());
             if (myChatOffer.getPaymentMethods().stream().noneMatch(paymentMethods::contains)) {
                 return false;
             }
