@@ -17,26 +17,33 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.market;
 
-import bisq.common.data.Pair;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Comparator;
 
 @Slf4j
 public class MarketView extends View<VBox, MarketModel, MarketController> {
-    private final ToggleGroup toggleGroup = new ToggleGroup();
+    private final BisqTableView<MarketListItem> tableView;
 
     public MarketView(MarketModel model, MarketController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
+        root.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("onboarding.market.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -46,39 +53,79 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
 
-        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-       // VBox.setMargin(subtitleLabel, new Insets(0, 0, 53, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel);
+        tableView = new BisqTableView<>(model.sortedList);
+        tableView.getStyleClass().add("onboarding-market-selection-table-view");
+        tableView.setMinHeight(240);
+        tableView.setMaxWidth(720);
+        configTableView();
+        
+
+        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 20, 0));
+        VBox.setMargin(tableView, new Insets(0, 0, 30, 0));
+
+        root.getChildren().addAll(headLineLabel, subtitleLabel, tableView, Spacer.fillVBox());
+    }
+
+    private void configTableView() {
+        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+                .title(Res.get("onboarding.market.columns.name"))
+                .isFirst()
+                .minWidth(100)
+                .comparator(Comparator.comparing(MarketListItem::getName))
+                .setCellFactory(getNameCellFactory())
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+                .title(Res.get("onboarding.market.columns.offers"))
+                .minWidth(60)
+                .valueSupplier(MarketListItem::getOffersCount)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+                .title(Res.get("onboarding.market.columns.peers"))
+                .minWidth(60)
+                .valueSupplier(MarketListItem::getOnlinePeersCount)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
+                .fixWidth(140)
+                .value(Res.get("shared.select"))
+                .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
+                .actionHandler(controller::onSelect)
+                .build());
+    }
+
+    private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory() {
+        return column -> new TableCell<>() {
+            final Label label = new Label();
+            {
+                label.setGraphicTextGap(16);
+            }
+
+            @Override
+            public void updateItem(final MarketListItem item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+                    label.setGraphic(
+                            MarketImageComposition.imageBoxForMarket(
+                                    item.getBaseCurrencyCode().toLowerCase(),
+                                    item.getQuoteCurrencyCode().toLowerCase()
+                            )
+                    );
+                    label.setText(item.getName());
+                    setGraphic(label);
+                } else {
+                    setGraphic(null);
+                }
+            }
+        };
     }
 
     @Override
     protected void onViewAttached() {
+        model.fillObservableList();        
     }
 
     @Override
     protected void onViewDetached() {
     }
-
-    private Pair<VBox, ToggleButton> getBoxPair(String title, String info) {
-        ToggleButton button = new ToggleButton(title);
-        button.setToggleGroup(toggleGroup);
-        button.getStyleClass().setAll("bisq-button-1");
-        button.setAlignment(Pos.CENTER);
-        int width = 250;
-        button.setMinWidth(width);
-        button.setMinHeight(125);
-
-        Label infoLabel = new Label(info);
-        infoLabel.getStyleClass().add("bisq-text-3");
-        infoLabel.setMaxWidth(width);
-        infoLabel.setWrapText(true);
-        infoLabel.setTextAlignment(TextAlignment.CENTER);
-        infoLabel.setAlignment(Pos.CENTER);
-
-        VBox vBox = new VBox(8, button, infoLabel);
-        vBox.setAlignment(Pos.CENTER);
-
-        return new Pair<>(vBox, button);
-    }
-
 }

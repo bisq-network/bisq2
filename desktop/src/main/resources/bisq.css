@@ -1569,6 +1569,46 @@ tree-table-view:focused {
  * Bisq domain specific                                                   *
  ******************************************************************************/
 
+/*******************************************************************************
+ *                                                                             *
+ * Onboarding domain                                                           *
+ *                                                                             *
+ ******************************************************************************/
+
+.table-view.onboarding-market-selection-table-view .column-header {
+    -fx-pref-height: 40px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-weight: normal;
+}
+
+.table-view.onboarding-market-selection-table-view .filler {
+    -fx-opacity: 0;
+}
+
+.table-view.onboarding-market-selection-table-view .virtual-flow {
+    -fx-background-color: -bisq-grey-17;
+}
+
+.table-view.onboarding-market-selection-table-view .table-row-cell {
+    -fx-pref-height: 68px;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1.08em;
+    -fx-border-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-17;
+}
+
+.table-view.onboarding-market-selection-table-view .table-row-cell .table-cell {
+    -fx-background-color: -bisq-grey-17;
+}
+
+.table-view.onboarding-market-selection-table-view .button {
+    -fx-padding: 6 20 6 20;
+    -fx-background-color: -bisq-grey-19;
+}
+
+.table-view.onboarding-market-selection-table-view .button:hover {
+    -fx-background-color: derive(-bisq-green, -50%);
+}
 
 /*******************************************************************************
  *                                                                             *

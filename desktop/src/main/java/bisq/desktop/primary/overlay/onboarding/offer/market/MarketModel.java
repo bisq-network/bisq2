@@ -21,9 +21,29 @@ import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
 public class MarketModel implements Model {
     private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
+    protected final ObservableList<MarketListItem> observableList = FXCollections.observableArrayList();
+    protected final SortedList<MarketListItem> sortedList = new SortedList<>(observableList);
+    
+
+    protected void fillObservableList() {
+        //todo mocked data - setup real
+        observableList.setAll(
+                new MarketListItem("BTC", "USD", "256", "32"),
+                new MarketListItem("BTC", "EUR","123", "34"),
+                new MarketListItem("BTC", "CAD","108", "26"),
+                new MarketListItem("BTC", "XMR","105", "22"),
+                new MarketListItem("BTC", "LTC","105", "22"),
+                new MarketListItem("BTC", "ETH","105", "22"),
+                new MarketListItem("BTC", "GBP","105", "22")
+        );
+    }
+    
 }
