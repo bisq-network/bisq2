@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.onboarding.offer;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -190,7 +191,8 @@ public class CreateOfferController extends NavigationController {
     public void onNext() {
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             OverlayController.hide();
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+            Navigation.navigateTo(NavigationTarget.MAIN);
+            UIThread.runOnNextRenderFrame(()->Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
             reset();
         } else {
             int nextIndex = model.getCurrentIndex().get() + 1;

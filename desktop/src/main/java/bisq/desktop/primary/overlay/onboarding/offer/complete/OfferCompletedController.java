@@ -125,6 +125,7 @@ public class OfferCompletedController implements Controller {
                 new Date().getTime(),
                 false);
         model.getMyOfferMessage().set(myOfferMessage);
+        myOfferListView.getChatMessages().clear();
         myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(myOfferMessage, chatService, reputationService));
 
         takersListView.getChatMessages().setAll(takersListView.getFilteredChatMessages().stream()
