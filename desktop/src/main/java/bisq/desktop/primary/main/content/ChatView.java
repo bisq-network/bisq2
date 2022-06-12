@@ -154,7 +154,9 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         helpPane.managedProperty().bind(model.getHelpVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
-
+        createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
+        createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
+        
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
@@ -196,6 +198,8 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         helpPane.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
+        createOfferButton.visibleProperty().unbind();
+        createOfferButton.managedProperty().unbind();
 
         searchButton.setOnAction(null);
         notificationsButton.setOnAction(null);

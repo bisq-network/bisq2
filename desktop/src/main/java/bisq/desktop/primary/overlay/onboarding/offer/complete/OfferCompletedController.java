@@ -110,8 +110,6 @@ public class OfferCompletedController implements Controller {
         });
 
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
-
-        log.error("TradeChatOffer model.getPaymentMethods() {}", model.getPaymentMethods());
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getBaseSideAmount().getValue(),
                 model.getMarket(),
                 new HashSet<>(model.getPaymentMethods()),
@@ -164,7 +162,7 @@ public class OfferCompletedController implements Controller {
         model.setQuoteSideAmount(monetary);
     }
 
-    public ReadOnlyObjectProperty<PublicTradeChatMessage> myOfferMessage() {
+    public ReadOnlyObjectProperty<PublicTradeChatMessage> getMyOfferMessage() {
         return model.getMyOfferMessage();
     }
 
@@ -188,7 +186,6 @@ public class OfferCompletedController implements Controller {
             if (((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().isEmpty()) {
                 return false;
             }
-            //todo
             if (model.getMyOfferMessage().get() == null) {
                 return false;
             }
@@ -208,9 +205,6 @@ public class OfferCompletedController implements Controller {
             }
 
             Set<String> paymentMethods = peersOffer.getPaymentMethods();
-            log.error("pred model.getPaymentMethods() {}", model.getPaymentMethods());
-            log.error("pred peersOffer.getPaymentMethods() {}", paymentMethods);
-            log.error("pred myChatOffer.getPaymentMethods() {}", myChatOffer.getPaymentMethods());
             if (myChatOffer.getPaymentMethods().stream().noneMatch(paymentMethods::contains)) {
                 return false;
             }
