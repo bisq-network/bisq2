@@ -33,7 +33,10 @@ public class MarketController implements Controller {
 
     public MarketController(DefaultApplicationService applicationService) {
         model = new MarketModel();
-        view = new MarketView(model, this); model.getMarket().set(MarketRepository.getDefault());
+        view = new MarketView(model, this);
+        model.getMarket().set(MarketRepository.getDefault());
+       
+       // model.getMarket().set( MarketRepository.getBsqMarket());
     }
 
     public ReadOnlyObjectProperty<Market> getMarket() {
@@ -49,6 +52,6 @@ public class MarketController implements Controller {
     }
 
     public void onSelect(MarketListItem item) {
-        
+
     }
 }

@@ -92,7 +92,7 @@ public class CreateOfferController extends NavigationController {
 
     @Override
     public void onActivate() {
-        OverlayController.setTransitionsType(Transitions.Type.BLACK);
+        OverlayController.setTransitionsType(Transitions.Type.DARK);
 
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             reset();

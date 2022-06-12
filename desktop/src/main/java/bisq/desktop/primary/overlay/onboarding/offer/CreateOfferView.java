@@ -128,6 +128,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onSkip);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
     }

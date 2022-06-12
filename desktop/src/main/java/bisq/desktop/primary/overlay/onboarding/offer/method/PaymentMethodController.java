@@ -19,36 +19,79 @@ package bisq.desktop.primary.overlay.onboarding.offer.method;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.common.currency.PaymentMethodRepository;
 import bisq.desktop.common.view.Controller;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PaymentMethodController implements Controller {
     private final PaymentMethodModel model;
     @Getter
     private final PaymentMethodView view;
+    private Subscription customMethodPin;
 
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
-        model.getPaymentMethods().add("SEPA");
-        model.getPaymentMethods().add("REVOLUT");
     }
 
     public ObservableList<String> getPaymentMethods() {
-        return model.getPaymentMethods();
+        return model.getSelectedPaymentMethods();
     }
 
     public void setMarket(Market market) {
+        model.getAllPaymentMethods().setAll(PaymentMethodRepository.getPaymentMethodsForMarket(market));
+        model.getAllPaymentMethods().addAll(model.getAddedCustomMethods());
+        model.getPaymentMethodsEmpty().set(model.getAllPaymentMethods().isEmpty());
     }
 
     @Override
     public void onActivate() {
+        customMethodPin = EasyBind.subscribe(model.getCustomMethod(), customMethod -> {
+            model.getAddCustomMethodIconVisible().set(customMethod != null && !customMethod.isEmpty());
+        });
     }
 
     @Override
     public void onDeactivate() {
+        customMethodPin.unsubscribe();
+    }
+
+    public void onTogglePaymentMethod(String paymentMethod, boolean isSelected) {
+        if (isSelected) {
+            if (!model.getSelectedPaymentMethods().contains(paymentMethod)) {
+                model.getSelectedPaymentMethods().add(paymentMethod);
+            }
+        } else {
+            model.getSelectedPaymentMethods().remove(paymentMethod);
+        }
+    }
+
+    public void onAddCustomMethod() {
+        String customMethod = model.getCustomMethod().get();
+        boolean isEmpty = customMethod == null || customMethod.isEmpty();
+        if (!isEmpty) {
+            if (!model.getAddedCustomMethods().contains(customMethod)) {
+                model.getAddedCustomMethods().add(customMethod);
+            }
+            if (!model.getSelectedPaymentMethods().contains(customMethod)) {
+                model.getSelectedPaymentMethods().add(customMethod);
+            }
+            if (!model.getAllPaymentMethods().contains(customMethod)) {
+                model.getAllPaymentMethods().add(customMethod);
+            }
+
+            model.getCustomMethod().set("");
+        }
+    }
+
+    public void onRemoveCustomMethod(String customMethod) {
+        model.getAddedCustomMethods().remove(customMethod);
+        model.getSelectedPaymentMethods().remove(customMethod);
+        model.getAllPaymentMethods().remove(customMethod);
     }
 }
