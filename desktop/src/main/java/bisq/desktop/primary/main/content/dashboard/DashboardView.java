@@ -115,9 +115,9 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         VBox.setMargin(button, new Insets(20, 0, 0, 0));
         VBox box = new VBox(15,
                 headlineLabel,
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content1"), "onboarding-2-offer"),
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content2"), "onboarding-2-chat"),
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content3"), "onboarding-1-reputation"),
+                getIconAndText(Res.get("dashboard.myFirstBitcoin.content1"), "onboarding-2-offer-white"),
+                getIconAndText(Res.get("dashboard.myFirstBitcoin.content2"), "onboarding-2-chat-white"),
+                getIconAndText(Res.get("dashboard.myFirstBitcoin.content3"), "onboarding-1-reputation-white"),
                 button);
         box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(30, 48, 44, 48));

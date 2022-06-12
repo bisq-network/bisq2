@@ -226,13 +226,27 @@
     -fx-image: url("images/onboarding/onboarding-1-reputation.png");
 }
 
+#onboarding-1-reputation-white {
+    -fx-image: url("images/onboarding/onboarding-1-reputation-white.png");
+}
+
 #onboarding-2-chat {
     -fx-image: url("images/onboarding/onboarding-2-chat.png");
+}
+
+#onboarding-2-chat-white {
+    -fx-image: url("images/onboarding/onboarding-2-chat-white.png");
 }
 
 #onboarding-2-offer {
     -fx-image: url("images/onboarding/onboarding-2-offer.png");
 }
+
+
+#onboarding-2-offer-white {
+    -fx-image: url("images/onboarding/onboarding-2-offer-white.png");
+}
+
 
 #onboarding-2-payment {
     -fx-image: url("images/onboarding/onboarding-2-payment.png");

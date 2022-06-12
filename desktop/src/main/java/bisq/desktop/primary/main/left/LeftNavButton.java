@@ -97,7 +97,7 @@ class LeftNavButton extends Pane implements Toggle {
 
         if (hasSubmenu) {
             submenuActionIcon = ImageUtil.getImageViewById("expand");
-            submenuActionIcon.setLayoutX(200);
+            submenuActionIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
             submenuActionIcon.setLayoutY(16);
             submenuActionIcon.setMouseTransparent(true);
             submenuActionIcon.setId("expand");
@@ -148,9 +148,14 @@ class LeftNavButton extends Pane implements Toggle {
             label.setVisible(true);
             label.setManaged(true);
             Transitions.fadeIn(label, duration);
-            Transitions.fadeIn(submenuActionIcon, duration);
+            if (submenuActionIcon != null) {
+                Transitions.fadeIn(submenuActionIcon, 2 * duration);
+            }
         } else {
             Tooltip.install(this, tooltip);
+            if (submenuActionIcon != null) {
+                Transitions.fadeOut(submenuActionIcon, duration/2);
+            }
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);
                 label.setManaged(false);
