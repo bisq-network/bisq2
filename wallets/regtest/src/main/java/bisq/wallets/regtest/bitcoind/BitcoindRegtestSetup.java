@@ -37,6 +37,7 @@ import java.util.*;
 public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> {
 
+    private final boolean doMineInitialRegtestBlocks;
     @Getter
     private final RpcConfig rpcConfig;
     private final BitcoindRegtestProcess bitcoindProcess;
@@ -49,7 +50,13 @@ public class BitcoindRegtestSetup
     private BitcoindWallet minerWallet;
 
     public BitcoindRegtestSetup() throws IOException {
+        this(false);
+    }
+
+    public BitcoindRegtestSetup(boolean doMineInitialRegtestBlocks) throws IOException {
         super();
+        this.doMineInitialRegtestBlocks = doMineInitialRegtestBlocks;
+
         rpcConfig = createRpcConfig();
         bitcoindProcess = createBitcoindProcess();
 
@@ -63,9 +70,13 @@ public class BitcoindRegtestSetup
     }
 
     @Override
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         super.start();
         minerWallet = createNewWallet("miner_wallet");
+
+        if (doMineInitialRegtestBlocks) {
+            mineInitialRegtestBlocks();
+        }
     }
 
     @Override

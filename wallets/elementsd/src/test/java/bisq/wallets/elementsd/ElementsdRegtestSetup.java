@@ -69,7 +69,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     @Override
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         super.start();
         minerWallet = createNewWallet("miner_wallet");
     }
@@ -134,7 +134,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
                 .findFirst();
     }
 
-    private ElementsdRegtestProcess createElementsdProcess() throws IOException {
+    private ElementsdRegtestProcess createElementsdProcess() {
         Path elementsdDataDir = tmpDirPath.resolve("elementsd");
         elementsdConfig = createElementsRpcConfig();
         return new ElementsdRegtestProcess(elementsdConfig, elementsdDataDir);
@@ -151,7 +151,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return new ElementsdWallet(rpcClient);
     }
 
-    private ElementsdConfig createElementsRpcConfig() throws IOException {
+    private ElementsdConfig createElementsRpcConfig() {
         int elementsPort = NetworkUtils.findFreeSystemPort();
         RpcConfig elementsdConfig = createRpcConfigForPort(elementsPort);
 

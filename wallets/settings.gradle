@@ -18,6 +18,7 @@ include 'api'
 include 'core'
 
 include 'bitcoind'
+include 'electrum'
 include 'elementsd'
 
 include 'regtest'

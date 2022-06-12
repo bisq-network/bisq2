@@ -35,7 +35,7 @@ public class MultiProcessCoordinator implements BisqProcess {
         daemonProcesses.forEach(bisqProcess -> {
             try {
                 bisqProcess.start();
-            } catch (IOException e) {
+            } catch (InterruptedException | IOException e) {
                 throw new WalletStartupFailedException("Cannot start process.", e);
             }
         });

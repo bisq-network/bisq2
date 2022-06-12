@@ -20,7 +20,7 @@ package bisq.wallets.regtest.process;
 import java.io.IOException;
 
 public interface BisqProcess {
-    void start() throws IOException;
+    void start() throws IOException, InterruptedException;
 
     void shutdown();
 }

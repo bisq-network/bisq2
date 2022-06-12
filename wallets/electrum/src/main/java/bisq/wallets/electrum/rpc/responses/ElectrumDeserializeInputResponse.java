@@ -15,21 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
+package bisq.wallets.electrum.rpc.responses;
 
-import bisq.wallets.regtest.process.BisqProcess;
-import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.io.IOException;
+@Getter
+@Setter
+public class ElectrumDeserializeInputResponse {
+    private boolean coinbase;
+    @JsonProperty("nsequence")
+    private long nSequence;
 
-public abstract class WalletStartupTests<T extends BisqProcess, W> {
+    @JsonProperty("prevout_hash")
+    private String prevOutHash;
+    @JsonProperty("prevout_n")
+    private int prevOutN;
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
-
-    @Test
-    public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-        regtestSetup.shutdown();
-    }
+    private String scriptSig;
+    private String witness;
 }

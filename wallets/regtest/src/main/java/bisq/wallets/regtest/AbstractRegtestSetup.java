@@ -38,7 +38,7 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements 
 
     protected abstract T createProcess() throws IOException;
 
-    public void start() throws IOException {
+    public void start() throws IOException, InterruptedException {
         daemonProcess = createProcess();
         daemonProcess.start();
     }

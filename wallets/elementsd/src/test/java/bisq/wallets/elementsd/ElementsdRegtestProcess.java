@@ -28,7 +28,9 @@ import bisq.wallets.regtest.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -44,9 +46,9 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
     public ProcessConfig createProcessConfig() {
         RpcConfig bitcoindRpcConfig = elementsdConfig.bitcoindRpcConfig();
         int zmqPort = NetworkUtils.findFreeSystemPort();
-        return new ProcessConfig(
-                "elementsd",
-                List.of(
+        return ProcessConfig.builder()
+                .name("elementsd")
+                .args(List.of(
                         "-chain=elementsregtest",
                         "-datadir=" + dataDir.toAbsolutePath(),
                         "-debug=1",
@@ -68,17 +70,18 @@ public class ElementsdRegtestProcess extends BitcoindRegtestProcess {
                         "-zmqpubrawtx=tcp://127.0.0.1:" + zmqPort,
 
                         "-fallbackfee=0.00000001",
-                        "-txindex=1")
-        );
+                        "-txindex=1"))
+                .environmentVars(Collections.emptyMap())
+                .build();
     }
 
     @Override
-    public void invokeStopRpcCall() throws IOException {
+    public void invokeStopRpcCall() {
         try {
             DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             var chainBackend = new ElementsdDaemon(rpcClient);
             chainBackend.stop();
-        } catch (RpcCallFailureException e) {
+        } catch (RpcCallFailureException | MalformedURLException e) {
             log.error("Failed to send stop command to elementsd.", e);
         }
     }

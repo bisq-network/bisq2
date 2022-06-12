@@ -15,21 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
+package bisq.wallets.electrum.regtest;
 
-import bisq.wallets.regtest.process.BisqProcess;
-import org.junit.jupiter.api.Test;
+import lombok.Builder;
 
-import java.io.IOException;
+import java.util.List;
 
-public abstract class WalletStartupTests<T extends BisqProcess, W> {
-
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
-
-    @Test
-    public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-        regtestSetup.shutdown();
-    }
+@Builder
+public record CliProcessConfig(String binaryName, List<String> defaultArgs) {
 }
