@@ -637,12 +637,6 @@ public class ChatMessagesListView {
                                         actionButton.getStyleClass().remove("red-button");
                                         actionButton.getStyleClass().add("default-button");
                                         actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
-
-                                        if (isCreateOfferMakerListMode) {
-                                            // used by create offer view / taker list
-                                            // messageHBox.getStyleClass().remove("chat-offer-box");
-                                            //  messageHBox.getStyleClass().add("chat-offer-box-my-offer");
-                                        }
                                     }
 
                                     VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
@@ -659,23 +653,9 @@ public class ChatMessagesListView {
                                 }
 
                                 editInputField.maxWidthProperty().bind(message.wrappingWidthProperty());
-                                widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(), w -> {
-                                    adjustMessageWidth(item);
-
-                                    double actionButtonWidth = actionButton.getWidth();
-                                    double reputationVBoxWidth = reputationVBox.getWidth();
-                                    if (model.isOfferMessage(item.getChatMessage())) {
-                                        if ((actionButton.isVisible() && actionButtonWidth == 0) || (reputationVBox.isVisible() && reputationVBoxWidth == 0)) {
-                                            reputationVBox.layout();
-                                            actionButton.layout();
-                                            UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
-                                        }
-                                    } else if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
-                                        reputationVBox.layout();
-                                        UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
-                                    }
-                                });
-
+                                widthSubscription = EasyBind.subscribe(messagesListView.widthProperty(),
+                                        w -> adjustMessageWidth(item));
+                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
                                 setGraphic(hBox);
                             } else {
                                 if (widthSubscription != null) {
@@ -719,13 +699,9 @@ public class ChatMessagesListView {
                             double actionButtonWidth = actionButton.getWidth() + actionButtonPadding;
                             double reputationVBoxWidth = reputationVBox.getWidth();
                             if (actionButton.isVisible() && actionButtonWidth == 0) {
-                                actionButton.layout();
-                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
                                 return;
                             }
                             if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
-                                reputationVBox.layout();
-                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));
                                 return;
                             }
                             double wrappingWidth = width - 50 - actionButtonWidth - reputationVBoxWidth;

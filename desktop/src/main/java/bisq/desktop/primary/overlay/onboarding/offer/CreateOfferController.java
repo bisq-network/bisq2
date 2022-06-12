@@ -87,12 +87,14 @@ public class CreateOfferController extends NavigationController {
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
         paymentMethodsListener = c -> {
             c.next();
-            offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+            handlePaymentMethodsUpdate();
         };
     }
 
+
     @Override
     public void onActivate() {
+        model.getNextButtonDisabled().set(false);
         OverlayController.setTransitionsType(Transitions.Type.DARK);
 
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
@@ -114,6 +116,7 @@ public class CreateOfferController extends NavigationController {
 
         paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
         offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        handlePaymentMethodsUpdate();
     }
 
     @Override
@@ -192,7 +195,7 @@ public class CreateOfferController extends NavigationController {
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             OverlayController.hide();
             Navigation.navigateTo(NavigationTarget.MAIN);
-            UIThread.runOnNextRenderFrame(()->Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
             reset();
         } else {
             int nextIndex = model.getCurrentIndex().get() + 1;
@@ -202,6 +205,7 @@ public class CreateOfferController extends NavigationController {
                 NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
                 model.getSelectedChildTarget().set(nextTarget);
                 Navigation.navigateTo(nextTarget);
+                updateNextButtonState();
             }
         }
     }
@@ -219,6 +223,7 @@ public class CreateOfferController extends NavigationController {
                 NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
                 model.getSelectedChildTarget().set(nextTarget);
                 Navigation.navigateTo(nextTarget);
+                updateNextButtonState();
             }
         }
     }
@@ -227,14 +232,27 @@ public class CreateOfferController extends NavigationController {
         OverlayController.hide();
     }
 
+    public void onQuit() {
+        applicationService.shutdown()
+                .thenAccept(__ -> Platform.exit());
+    }
+
     private void reset() {
         model.getCurrentIndex().set(0);
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         resetSelectedChildTarget();
     }
 
-    public void onQuit() {
-        applicationService.shutdown()
-                .thenAccept(__ -> Platform.exit());
+    private void handlePaymentMethodsUpdate() {
+        offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        updateNextButtonState();
+    }
+
+    private void updateNextButtonState() {
+        if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethods().isEmpty());
+        }else{
+            model.getNextButtonDisabled().set(false);
+        }
     }
 }

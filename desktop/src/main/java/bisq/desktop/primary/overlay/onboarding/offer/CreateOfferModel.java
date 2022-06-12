@@ -36,6 +36,7 @@ public class CreateOfferModel extends NavigationModel {
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
+    private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty topPaneBoxVisible = new SimpleBooleanProperty();
     private final List<NavigationTarget> childTargets = new ArrayList<>();

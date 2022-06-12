@@ -105,7 +105,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.managedProperty().bind(model.getBackButtonVisible());
         skipButton.visibleProperty().bind(model.getSkipButtonVisible());
         topPaneBox.visibleProperty().bind(model.getTopPaneBoxVisible());
-
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
+        
         topPaneBoxVisibleSubscription = EasyBind.subscribe(model.getTopPaneBoxVisible(), visible -> {
             if (visible) {
                 VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
@@ -145,7 +146,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.managedProperty().unbind();
         skipButton.visibleProperty().unbind();
         topPaneBox.visibleProperty().unbind();
-
+        nextButton.disableProperty().unbind();
+        
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         skipButton.setOnAction(null);
