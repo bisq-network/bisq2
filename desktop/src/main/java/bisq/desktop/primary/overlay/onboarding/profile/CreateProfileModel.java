@@ -30,7 +30,9 @@ public class CreateProfileModel implements Model {
     final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     final StringProperty nymId = new SimpleStringProperty();
     final StringProperty nickName = new SimpleStringProperty();
-    final BooleanProperty createProfileButtonDisable = new SimpleBooleanProperty();
+    final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
+    final BooleanProperty createProfileButtonMouseTransparent = new SimpleBooleanProperty();
+    final BooleanProperty regenerateButtonMouseTransparent = new SimpleBooleanProperty();
     final BooleanProperty isBusy = new SimpleBooleanProperty();
     final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
     final DoubleProperty powProgress = new SimpleDoubleProperty();

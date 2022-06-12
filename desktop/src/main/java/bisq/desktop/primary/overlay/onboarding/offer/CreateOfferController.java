@@ -31,6 +31,7 @@ import bisq.desktop.primary.overlay.onboarding.offer.market.MarketController;
 import bisq.desktop.primary.overlay.onboarding.offer.method.PaymentMethodController;
 import bisq.desktop.primary.overlay.onboarding.offer.published.OfferPublishedController;
 import bisq.i18n.Res;
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -228,5 +229,10 @@ public class CreateOfferController extends NavigationController {
         model.getCurrentIndex().set(0);
         model.getSelectedChildTarget().set(model.getChildTargets().get(0));
         resetSelectedChildTarget();
+    }
+
+    public void onQuit() {
+        applicationService.shutdown()
+                .thenAccept(__ -> Platform.exit());
     }
 }

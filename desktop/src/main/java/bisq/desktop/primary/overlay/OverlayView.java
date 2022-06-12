@@ -64,6 +64,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         scene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
+            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
 

@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.onboarding.offer;
 
 import bisq.common.data.Triple;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
@@ -25,6 +26,7 @@ import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -46,6 +48,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private final HBox buttons;
     private final VBox content;
     private Subscription navigationProgressIndexSubscription, topPaneBoxVisibleSubscription;
+    private Scene rootScene;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -122,6 +125,11 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
         skipButton.setOnAction(e -> controller.onSkip());
+        rootScene = root.getScene();
+        rootScene.setOnKeyReleased(keyEvent -> {
+            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
+        });
     }
 
     @Override
@@ -140,9 +148,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         skipButton.setOnAction(null);
+        rootScene.setOnKeyReleased(null);
         navigationProgressIndexSubscription.unsubscribe();
         topPaneBoxVisibleSubscription.unsubscribe();
-
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {

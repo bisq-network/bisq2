@@ -37,6 +37,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -66,7 +67,7 @@ public class CreateProfileController implements Controller {
         onCreateTempIdentity();
 
         nickNameSubscription = EasyBind.subscribe(model.nickName,
-                nickName -> model.createProfileButtonDisable.set(nickName == null || nickName.isEmpty() || !model.roboHashIconVisible.get()));
+                nickName -> model.createProfileButtonDisabled.set(nickName == null || nickName.isEmpty()));
     }
 
     @Override
@@ -81,6 +82,9 @@ public class CreateProfileController implements Controller {
     void onCreateNymProfile() {
         if (model.tempKeyPair != null) {
             String profileId = model.nymId.get();
+            model.regenerateButtonMouseTransparent.set(true);
+            nickNameSubscription.unsubscribe();
+            model.createProfileButtonDisabled.set(true);
             chatUserService.createNewInitializedUserProfile(profileId,
                             model.nickName.get(),
                             model.tempKeyId,
@@ -91,7 +95,6 @@ public class CreateProfileController implements Controller {
                     .thenCompose(chatUserService::publishNewChatUser)
                     .thenAccept(chatUserIdentity -> UIThread.run(() -> {
                         checkArgument(chatUserIdentity.getIdentity().domainId().equals(profileId));
-                        model.createProfileButtonDisable.set(false);
                         Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
                     }));
         }
@@ -102,14 +105,32 @@ public class CreateProfileController implements Controller {
         byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
         model.roboHashImage.set(null);
         model.roboHashIconVisible.set(false);
-        model.createProfileButtonDisable.set(true);
+        model.regenerateButtonMouseTransparent.set(true);
+        model.createProfileButtonMouseTransparent.set(true);
         model.powProgress.set(-1);
         model.nymId.set(Res.get("initNymProfile.nymId.generating"));
         long ts = System.currentTimeMillis();
         mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
+                .thenApply(proofOfWork -> {
+                    log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);
+                    try {
+                        // Proof of work creation for difficulty 65536 takes about 50 ms to 100 ms on a 4 GHz Intel Core i7.
+                        // Target duration would be 500-2000 ms, but it is hard to find the right difficulty that works 
+                        // well also for low-end CPUs. So we take a rather safe lower difficulty value and add here some 
+                        // delay to not have a too fast flicker-effect in the UI when recreating the nym.
+                        // We add a min delay of 200 ms with some randomness to make the usage of the proof of work more
+                        // visible. 
+                        long passed = System.currentTimeMillis() - ts;
+                        int random = new Random().nextInt(1000);
+                        // Limit to 200-2000 ms
+                        Thread.sleep(Math.min(2000, Math.max(200, (200+ random - passed))));
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return proofOfWork;
+                })
                 .thenAccept(proofOfWork -> {
                     UIThread.run(() -> {
-                        log.info("Proof of work creation completed after {} ms", System.currentTimeMillis() - ts);
                         model.proofOfWork = proofOfWork;
                         model.tempKeyId = StringUtils.createUid();
                         model.tempKeyPair = tempKeyPair;
@@ -119,8 +140,8 @@ public class CreateProfileController implements Controller {
 
                         model.powProgress.set(0);
                         model.roboHashIconVisible.set(true);
-                        model.createProfileButtonDisable.set(model.nickName.get() == null || model.nickName.get().isEmpty());
-                        //  boolean result = proofOfWorkService.verify(proofOfWork, itemId, ownerId, difficulty);
+                        model.regenerateButtonMouseTransparent.set(false);
+                        model.createProfileButtonMouseTransparent.set(false);
                     });
                 }));
     }

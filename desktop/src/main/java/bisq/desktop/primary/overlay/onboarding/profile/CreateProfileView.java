@@ -29,7 +29,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProfileController> {
     private final Button regenerateButton;
-    private final Button nextButton;
+    private final Button createProfileButton;
     private final TextInputBox nicknameTextInputBox;
     private final Label nymId;
     private final ImageView roboIconView;
@@ -78,11 +77,10 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
                 Res.get("createProfile.nickName.prompt"));
         nicknameTextInputBox.setPrefWidth(300);
 
-
-        nextButton = new Button(Res.get("createProfile.createProfile"));
-        nextButton.setGraphicTextGap(8.0);
-        nextButton.setContentDisplay(ContentDisplay.RIGHT);
-        nextButton.setDefaultButton(true);
+        createProfileButton = new Button(Res.get("createProfile.createProfile"));
+        createProfileButton.setGraphicTextGap(8.0);
+        createProfileButton.setContentDisplay(ContentDisplay.RIGHT);
+        createProfileButton.setDefaultButton(true);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
@@ -97,7 +95,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
                 profileIdBox,
                 regenerateButton,
                 nicknameTextInputBox,
-                nextButton
+                createProfileButton
         );
     }
 
@@ -107,7 +105,7 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         nicknameTextInputBox.requestFocus();
 
         nymId.textProperty().bind(model.nymId);
-        nextButton.graphicProperty().bind(Bindings.createObjectBinding(() -> {
+        createProfileButton.graphicProperty().bind(Bindings.createObjectBinding(() -> {
             if (!model.isBusy.get()) {
                 return null;
             }
@@ -117,8 +115,9 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
             indicator.setMaxHeight(24.0);
             return indicator;
         }, model.isBusy));
-        nextButton.disableProperty().bind(model.createProfileButtonDisable);
-
+        createProfileButton.disableProperty().bind(model.createProfileButtonDisabled);
+        createProfileButton.mouseTransparentProperty().bind(model.createProfileButtonDisabled);
+        regenerateButton.mouseTransparentProperty().bind(model.regenerateButtonMouseTransparent);
 
         roboIconView.imageProperty().bind(model.roboHashImage);
         roboIconView.managedProperty().bind(model.roboHashIconVisible);
@@ -126,36 +125,28 @@ public class CreateProfileView extends View<VBox, CreateProfileModel, CreateProf
         powProgressIndicator.managedProperty().bind(model.roboHashIconVisible.not());
         powProgressIndicator.visibleProperty().bind(model.roboHashIconVisible.not());
         powProgressIndicator.progressProperty().bind(model.powProgress);
-        regenerateButton.disableProperty().bind(model.roboHashIconVisible.not());
         nymId.disableProperty().bind(model.roboHashIconVisible.not());
 
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
-        nextButton.setOnAction(e -> controller.onCreateNymProfile());
-
-        // We deactivate the close popup by escape
-        root.getScene().setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ESCAPE || e.getCode() == KeyCode.ENTER) {
-                e.consume();
-            }
-        });
+        createProfileButton.setOnAction(e -> controller.onCreateNymProfile());
     }
 
     @Override
     protected void onViewDetached() {
         nicknameTextInputBox.textProperty().unbindBidirectional(model.nickName);
-        nextButton.graphicProperty().unbind();
-        nextButton.disableProperty().unbind();
+        createProfileButton.graphicProperty().unbind();
+        createProfileButton.disableProperty().unbind();
         roboIconView.imageProperty().unbind();
         roboIconView.managedProperty().unbind();
         roboIconView.visibleProperty().unbind();
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
-        regenerateButton.disableProperty().unbind();
+        regenerateButton.mouseTransparentProperty().unbind();
         nymId.disableProperty().unbind();
 
         regenerateButton.setOnAction(null);
-        nextButton.setOnAction(null);
+        createProfileButton.setOnAction(null);
     }
 
     private VBox getValueBox(String title) {
