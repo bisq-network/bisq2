@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
-    private final static int EXPANDED_WIDTH = 220;
+    public final static int EXPANDED_WIDTH = 220;//220;
     private final static int COLLAPSED_WIDTH = 70;
     private final static int MARKER_WIDTH = 3;
     private final static int EXPAND_ICON_SIZE = 18;
@@ -145,13 +145,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
         expandIcon.setCursor(Cursor.HAND);
-        expandIcon.setLayoutY(menuTop);
+        expandIcon.setLayoutY(menuTop - 3);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
 
         collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
         collapseIcon.setCursor(Cursor.HAND);
-        collapseIcon.setLayoutY(menuTop);
+        collapseIcon.setLayoutY(menuTop - 3);
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
 
@@ -191,16 +191,16 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         expandIcon.setVisible(false);
         expandIcon.setManaged(false);
 
-        menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanding -> {
-            int width = menuExpanding ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
+        menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
+            int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
             //   vBox.setPrefWidth(width);
             // root.setPrefWidth(width + MARKER_WIDTH);
 
 
             AtomicInteger duration = new AtomicInteger(400);
-            if (menuExpanding) {
+            if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
-                                .forEach(e -> e.setMenuExpanded(menuExpanding, duration.get() / 2)))
+                                .forEach(e -> e.setMenuExpanded(menuExpanded, duration.get() / 2)))
                         .after(duration.get() / 2);
                 Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
                 networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
@@ -226,17 +226,20 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     collapseIcon.setOpacity(0);
                     collapseIcon.setVisible(true);
                     collapseIcon.setManaged(true);
+                    Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
                 }).after(duration.get() + 100);
             } else {
                 expandIcon.setOpacity(0);
                 expandIcon.setVisible(true);
                 expandIcon.setManaged(true);
-                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(menuExpanding, duration.get() / 2));
+
+                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(menuExpanded, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
                             collapseIcon.setVisible(false);
                             collapseIcon.setManaged(false);
                             collapseIcon.setOpacity(0);
+                            Transitions.fadeIn(expandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
                         })
                         .after(duration.get() / 4);
                 Transitions.fadeOut(networkInfoBox, duration.get() / 2, () -> {
@@ -254,19 +257,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         root.setOnMouseEntered(e -> {
             if (collapseIcon.isVisible()) {
-                Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.1, null);
+                Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
             }
-            if (expandIcon.isVisible()) {
-                Transitions.fadeIn(expandIcon, Transitions.DEFAULT_DURATION, 0.1, null);
-            }
+           /* if (expandIcon.isVisible()) {
+                Transitions.fadeIn(expandIcon, Transitions.DEFAULT_DURATION, 0.3, null);
+            }*/
         });
         root.setOnMouseExited(e -> {
             if (collapseIcon.isVisible()) {
                 Transitions.fadeOut(collapseIcon);
             }
-            if (expandIcon.isVisible()) {
+          /*  if (expandIcon.isVisible()) {
                 Transitions.fadeOut(expandIcon);
-            }
+            }*/
         });
 
         maybeAnimateMark();
@@ -374,7 +377,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private static class NetworkInfoBox extends HBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-           // getStyleClass().add("border-top-grey-5");
+            // getStyleClass().add("border-top-grey-5");
             setMinHeight(53);
             setMaxHeight(53);
             setPadding(new Insets(26, 24, 0, 24));
