@@ -269,12 +269,16 @@ public class ChatMessagesListView {
                 return;
             }
             chatService.findChatUser(chatMessage.getAuthorId())
-                    .flatMap(this::createAndSelectPrivateTradeChannel)
-                    .ifPresent(privateTradeChannel -> {
-                        String chatMessageText = chatMessage.getTradeChatOffer().get().getChatMessageText();
-                        chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", chatMessageText), Optional.empty(), privateTradeChannel)
-                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                        ;
+                    .ifPresent(chatUser -> {
+                        createAndSelectPrivateTradeChannel(chatUser)
+                                .ifPresent(privateTradeChannel -> {
+                                    String text = chatMessage.getText();
+                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
+                                    chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest"),
+                                                    quotation, 
+                                                    privateTradeChannel)
+                                            .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
+                        });
                     });
         }
 

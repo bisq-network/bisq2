@@ -112,7 +112,7 @@ public class CreateOfferController extends NavigationController {
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
 
-        myOfferMessageSubscription = EasyBind.subscribe(offerCompletedController.myOfferMessage(), offerPublishedController::setMyOfferMessage);
+        myOfferMessageSubscription = EasyBind.subscribe(offerCompletedController.getMyOfferMessage(), offerPublishedController::setMyOfferMessage);
 
         paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
         offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
