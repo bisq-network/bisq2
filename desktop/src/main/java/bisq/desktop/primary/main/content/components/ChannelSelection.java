@@ -159,7 +159,7 @@ public abstract class ChannelSelection {
 
             public String getDisplayString() {
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    return publicTradeChannel.getMarket().map(Market::getCurrencyCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                    return publicTradeChannel.getMarket().map(Market::getMarketCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
                 } else {
                     return channel.getDisplayString();
                 }

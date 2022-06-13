@@ -57,7 +57,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         Label subtitleLabel = new Label(Res.get("onboarding.method.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         nonFoundLabel = new Label(Res.get("onboarding.method.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");

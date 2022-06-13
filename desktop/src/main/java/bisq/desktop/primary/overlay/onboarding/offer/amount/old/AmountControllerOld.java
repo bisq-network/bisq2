@@ -24,7 +24,6 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.popups.Popup;
 import bisq.desktop.primary.onboardingOld.onboardNewbie.BtcFiatAmountGroup;
 import bisq.desktop.primary.onboardingOld.onboardNewbie.PaymentMethodsSelection;
 import bisq.i18n.Res;
@@ -38,8 +37,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.HashSet;
 
 @Slf4j
 public class AmountControllerOld implements Controller {
@@ -123,7 +120,7 @@ public class AmountControllerOld implements Controller {
     }
 
     void onCreateOffer() {
-        tradeChatOfferService.publishTradeChatOffer(model.getSelectedMarket(),
+     /*   tradeChatOfferService.publishTradeChatOffer(model.getSelectedMarket(),
                         model.getBaseSideAmount().getValue(),
                         new HashSet<>(model.getSelectedPaymentMethods()),
                         model.getTerms().get(),
@@ -134,17 +131,17 @@ public class AmountControllerOld implements Controller {
                             Navigation.navigateTo(NavigationTarget.BISQ_EASY);
                         });
                         
-                       /* String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getMarket();
+                       *//* String channelName = chatService.findPublicChannelForMarket(model.getSelectedMarket()).orElseThrow().getMarket();
                         new Popup().confirmation(Res.get("satoshisquareapp.createOffer.publish.success", channelName))
                                 .actionButtonText(Res.get("satoshisquareapp.createOffer.publish.goToChat", channelName))
                                 .onAction(() -> Navigation.navigateTo(NavigationTarget.CHAT))
                                 .hideCloseButton()
-                                .show();*/
+                                .show();*//*
                     } else {
                         //todo
                         new Popup().error(throwable.toString()).show();
                     }
-                });
+                });*/
     }
 
     public void onBack() {

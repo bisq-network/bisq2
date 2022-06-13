@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.skins.BisqPopupSkin;
+import bisq.desktop.components.controls.skins.BisqPopupSkin;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.PopupControl;

@@ -51,6 +51,9 @@
     -fx-image: url("images/equals.png");
 }
 
+#search {
+    -fx-image: url("images/search.png");
+}
 
 #chat-trust {
     -fx-image: url("images/trust.png");

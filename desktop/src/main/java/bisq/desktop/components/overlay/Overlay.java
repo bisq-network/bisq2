@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.popups;
+package bisq.desktop.components.overlay;
 
 import bisq.common.locale.LanguageRepository;
 import bisq.common.util.OsUtils;

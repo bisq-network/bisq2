@@ -24,6 +24,7 @@ import "common.proto";
 import "network.proto";
 import "security.proto";
 import "identity.proto";
+import "offer.proto";
 
 
 message ProofOfBurnProof {
@@ -108,11 +109,13 @@ message PrivateDiscussionChatMessage {
 message PublicDiscussionChatMessage {
 }
 message TradeChatOffer {
-  uint64 baseSideAmount = 1;
+  offer.Direction direction = 1;
   common.Market market = 2;
-  repeated string paymentMethods = 3;
-  string makersTradeTerms = 5;
-  uint64 requiredTotalReputationScore = 6;
+  uint64 baseSideAmount = 3;
+  uint64 quoteSideAmount = 4;
+  repeated string paymentMethods = 5;
+  string makersTradeTerms = 6;
+  uint64 requiredTotalReputationScore = 7;
 }
 message PublicTradeChatMessage {
   optional TradeChatOffer tradeChatOffer = 1;

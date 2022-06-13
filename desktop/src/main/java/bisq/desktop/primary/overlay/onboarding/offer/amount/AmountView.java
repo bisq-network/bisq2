@@ -51,7 +51,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         subtitleLabel = new Label();
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         VBox.setMargin(baseAmount, new Insets(-15, 0, 0, 0));
         VBox.setMargin(quoteAmount, new Insets(-17, 0, 0, 0));
@@ -86,14 +86,12 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         // Needed to trigger focusOut event on amount components
         root.setOnMousePressed(e -> root.requestFocus());
 
-        headLineLabel.setText(Res.get("onboarding.amount.headline", model.getDirection().get()));
-        subtitleLabel.setText(Res.get("onboarding.amount.subtitle", model.getDirection().get()));
+        headLineLabel.setText(Res.get("onboarding.amount.headline", model.getDirectionString().get()));
+        subtitleLabel.setText(Res.get("onboarding.amount.subtitle", model.getDirectionString().get()));
         minAmountLabel.setText(Res.get("onboarding.amount.minLabel",
                 AmountFormatter.formatAmountWithCode(model.getMinAmount().get(), true)));
         maxAmountLabel.setText(Res.get("onboarding.amount.maxLabel",
                 AmountFormatter.formatAmountWithCode(model.getMaxAmount().get(), true)));
-
-        root.requestFocus();
     }
 
     @Override

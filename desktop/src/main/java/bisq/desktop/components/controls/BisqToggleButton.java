@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.skins.BisqToggleButtonSkin;
+import bisq.desktop.components.controls.skins.BisqToggleButtonSkin;
 import javafx.css.*;
 import javafx.css.converter.PaintConverter;
 import javafx.scene.control.Skin;

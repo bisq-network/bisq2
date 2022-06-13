@@ -110,8 +110,10 @@ public class OfferCompletedController implements Controller {
         });
 
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
-        TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getBaseSideAmount().getValue(),
+        TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
+                model.getBaseSideAmount().getValue(),
+                model.getQuoteSideAmount().getValue(),
                 new HashSet<>(model.getPaymentMethods()),
                 chatUserIdentity.getChatUser().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
@@ -147,6 +149,9 @@ public class OfferCompletedController implements Controller {
     }
 
     public void setMarket(Market market) {
+        if (market == null) {
+            return;
+        }
         model.setMarket(market);
     }
 
@@ -195,6 +200,10 @@ public class OfferCompletedController implements Controller {
 
             TradeChatOffer myChatOffer = model.getMyOfferMessage().get().getTradeChatOffer().get();
             TradeChatOffer peersOffer = ((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().get();
+
+            if (peersOffer.getDirection().equals(myChatOffer.getDirection())) {
+                return false;
+            }
 
             if (!peersOffer.getMarket().equals(myChatOffer.getMarket())) {
                 return false;

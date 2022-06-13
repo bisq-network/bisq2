@@ -105,7 +105,7 @@ public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implemen
     }
 
     public String getDisplayString() {
-        return market.map(Market::getCurrencyCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
+        return market.map(Market::getMarketCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
     }
 
     public static String getId(Optional<Market> market) {
