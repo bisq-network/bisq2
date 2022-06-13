@@ -86,8 +86,8 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         // Needed to trigger focusOut event on amount components
         root.setOnMousePressed(e -> root.requestFocus());
 
-        headLineLabel.setText(Res.get("onboarding.amount.headline", model.getDirection().get()));
-        subtitleLabel.setText(Res.get("onboarding.amount.subtitle", model.getDirection().get()));
+        headLineLabel.setText(Res.get("onboarding.amount.headline", model.getDirectionString().get()));
+        subtitleLabel.setText(Res.get("onboarding.amount.subtitle", model.getDirectionString().get()));
         minAmountLabel.setText(Res.get("onboarding.amount.minLabel",
                 AmountFormatter.formatAmountWithCode(model.getMinAmount().get(), true)));
         maxAmountLabel.setText(Res.get("onboarding.amount.maxLabel",

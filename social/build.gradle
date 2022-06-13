@@ -14,6 +14,7 @@ dependencies {
     implementation project(':security')
     implementation project(':network')
     implementation project(':identity')
+    implementation project(':offer')
     implementation project(':settings')
     implementation project(':oracle')
     implementation project(':presentation')

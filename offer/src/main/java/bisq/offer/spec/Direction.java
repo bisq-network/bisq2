@@ -19,6 +19,7 @@ package bisq.offer.spec;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.i18n.Res;
 
 // It is always related to the base currency. E.g. BTC-USD market -> BUY means Buy BTC
 public enum Direction implements ProtoEnum {
@@ -44,5 +45,9 @@ public enum Direction implements ProtoEnum {
 
     public Direction mirror() {
         return isBuy() ? SELL : BUY;
+    }
+
+    public String displayString() {
+        return Res.get(name().toLowerCase());
     }
 }

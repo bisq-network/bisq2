@@ -21,6 +21,7 @@ import bisq.common.currency.Market;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
+import bisq.offer.spec.Direction;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -57,18 +58,22 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
         return CompletableFuture.completedFuture(true);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(Market selectedMarket,
+    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(Direction direction,
+                                                                                    Market market,
                                                                                     long baseSideAmount,
+                                                                                    long quoteSideAmount,
                                                                                     Set<String> selectedPaymentMethods,
                                                                                     String makersTradeTerms,
                                                                                     long requiredTotalReputationScore) {
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
-        TradeChatOffer tradeChatOffer = new TradeChatOffer(baseSideAmount,
-                selectedMarket,
+        TradeChatOffer tradeChatOffer = new TradeChatOffer(direction,
+                market,
+                baseSideAmount,
+                quoteSideAmount,
                 selectedPaymentMethods,
                 makersTradeTerms,
                 requiredTotalReputationScore);
-        PublicTradeChannel publicTradeChannel = chatService.findPublicTradeChannel(selectedMarket.toString()).orElseThrow();
+        PublicTradeChannel publicTradeChannel = chatService.findPublicTradeChannel(market.toString()).orElseThrow();
         return chatService.publishTradeChatOffer(tradeChatOffer, publicTradeChannel, chatUserIdentity);
     }
 }

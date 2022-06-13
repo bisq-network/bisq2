@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation project(':persistence')
     implementation project(':security')
+    implementation project(':i18n')
     implementation project(':identity')
     implementation project(':account')
     implementation project(':oracle')

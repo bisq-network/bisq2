@@ -17,24 +17,32 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.view.Model;
+import bisq.offer.spec.Direction;
 import javafx.beans.property.*;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class AmountModel implements Model {
     private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-    private final StringProperty direction = new SimpleStringProperty();
+    private final StringProperty directionString = new SimpleStringProperty();
     private final ObjectProperty<Monetary> minAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxAmount = new SimpleObjectProperty<>();
     private final DoubleProperty sliderMin = new SimpleDoubleProperty();
     private final DoubleProperty sliderMax = new SimpleDoubleProperty();
     private final DoubleProperty sliderValue = new SimpleDoubleProperty();
     private final BooleanProperty sliderFocus = new SimpleBooleanProperty();
+    @Setter
+    private Market market = MarketRepository.getDefault();
+    @Setter
+    private Direction direction = Direction.BUY;
 
     AmountModel() {
     }

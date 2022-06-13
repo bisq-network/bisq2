@@ -37,6 +37,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
+import bisq.social.offer.TradeChatOffer;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
@@ -272,13 +273,16 @@ public class ChatMessagesListView {
                     .ifPresent(chatUser -> {
                         createAndSelectPrivateTradeChannel(chatUser)
                                 .ifPresent(privateTradeChannel -> {
+                                    TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
+                                    String dirString = tradeChatOffer.getDirection().mirror().displayString();
+                                    String baseCurrencyCode = tradeChatOffer.getMarket().baseCurrencyCode();
                                     String text = chatMessage.getText();
                                     Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
-                                    chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest"),
-                                                    quotation, 
+                                    chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
+                                                    quotation,
                                                     privateTradeChannel)
                                             .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                        });
+                                });
                     });
         }
 

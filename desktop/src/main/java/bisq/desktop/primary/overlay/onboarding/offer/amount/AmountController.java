@@ -19,13 +19,13 @@ package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.controls.PriceInput;
+import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -72,6 +72,32 @@ public class AmountController implements Controller {
         };
     }
 
+    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
+        return model.getBaseSideAmount();
+    }
+
+    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
+        return model.getQuoteSideAmount();
+    }
+
+    public void setDirection(Direction direction) {
+        if (direction == null) {
+            return;
+        }
+        model.setDirection(direction);
+        model.getDirectionString().set(Res.get(direction.name().toLowerCase()));
+    }
+
+    public void setMarket(Market market) {
+        if (market == null) {
+            return;
+        }
+        model.setMarket(market);
+        baseAmount.setSelectedMarket(market);
+        quoteAmount.setSelectedMarket(market);
+        price.setSelectedMarket(market);
+    }
+
     @Override
     public void onActivate() {
         model.getMinAmount().set(Coin.asBtc(10000));
@@ -82,13 +108,6 @@ public class AmountController implements Controller {
         model.getBaseSideAmount().addListener(baseCurrencyAmountListener);
         model.getQuoteSideAmount().addListener(quoteCurrencyAmountListener);
         model.getFixPrice().addListener(fixPriceQuoteListener);
-
-        Market selectedMarket = MarketRepository.getMajorMarkets().get(0);
-        baseAmount.setSelectedMarket(selectedMarket);
-        quoteAmount.setSelectedMarket(selectedMarket);
-        price.setSelectedMarket(selectedMarket);
-
-        model.getDirection().set("buy");
 
         long minAmount = model.getMinAmount().get().getValue();
         long minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
@@ -131,17 +150,6 @@ public class AmountController implements Controller {
         baseAmountFromCompSubscription.unsubscribe();
         quoteAmountFromCompSubscription.unsubscribe();
         priceFromCompSubscription.unsubscribe();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getBaseSideAmount() {
-        return model.getBaseSideAmount();
-    }
-
-    public ReadOnlyObjectProperty<Monetary> getQuoteSideAmount() {
-        return model.getQuoteSideAmount();
-    }
-
-    public void setDirection(Direction direction) {
     }
 
     private void setQuoteFromBase() {

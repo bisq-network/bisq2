@@ -20,7 +20,6 @@ package bisq.desktop.primary.overlay.onboarding.offer.market;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
-import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
@@ -42,7 +41,6 @@ public class MarketController implements Controller {
     @Getter
     private final MarketView view;
     private final ChatService chatService;
-    private Pin selectedChannelPin;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
@@ -114,7 +112,6 @@ public class MarketController implements Controller {
         item.getSelected().set(true);
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
-        //  findMarketListItem(item.getMarket()).ifPresent(listItem -> model.getSelectedMarketListItem().set(listItem));
     }
 
     private Optional<MarketView.MarketListItem> findMarketListItem(Market market) {

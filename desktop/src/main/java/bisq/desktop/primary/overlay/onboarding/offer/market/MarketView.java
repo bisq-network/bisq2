@@ -98,7 +98,6 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     @Override
     protected void onViewAttached() {
         searchField.textProperty().bindBidirectional(model.getSearchText());
-        // searchIcon.managedProperty().bind(searchField.textProperty().isEmpty());
     }
 
     @Override
@@ -152,12 +151,10 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                         if (selectedItem != null) {
                             boolean isSelected = selectedItem.equals(item);
                             toggleButton.setSelected(isSelected);
-                            // updateSelected(isSelected);
                         }
                     });
                     setGraphic(toggleButton);
                 } else {
-                    // updateSelected(false);
                     toggleButton.setSelected(false);
                     toggleButton.setOnAction(null);
                     selectionPin.unsubscribe();
