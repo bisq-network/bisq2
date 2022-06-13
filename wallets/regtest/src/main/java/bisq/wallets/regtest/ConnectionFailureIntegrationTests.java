@@ -39,7 +39,7 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
     protected abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
 
     @BeforeAll
-    void setup() throws IOException {
+    void setup() throws IOException, InterruptedException {
         regtestSetup = createRegtestSetup();
         regtestSetup.start();
     }

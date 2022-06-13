@@ -15,20 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest.process;
+package bisq.wallets.electrum.rpc.calls;
 
+import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import lombok.Builder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+public class ElectrumSignMessageRpcCall extends DaemonRpcCall<ElectrumSignMessageRpcCall.Request, String> {
+    @Builder
+    public static record Request(String password, String address, String message) {
+    }
 
-@Builder
-public record ProcessConfig(String name, List<String> args, Map<String, String> environmentVars) {
-    public List<String> toCommandList() {
-        List<String> commands = new ArrayList<>();
-        commands.add(name);
-        commands.addAll(args);
-        return commands;
+    public ElectrumSignMessageRpcCall(Request request) {
+        super(request);
+    }
+
+    @Override
+    public String getRpcMethodName() {
+        return "signmessage";
+    }
+
+    @Override
+    public boolean isResponseValid(String response) {
+        return true;
+    }
+
+    @Override
+    public Class<String> getRpcResponseClass() {
+        return String.class;
     }
 }

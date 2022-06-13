@@ -15,21 +15,34 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
+package bisq.wallets.electrum.notifications;
 
-import bisq.wallets.regtest.process.BisqProcess;
-import org.junit.jupiter.api.Test;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Setter;
 
-import java.io.IOException;
+@Setter
+@XmlRootElement
+public class ElectrumNotifyRequest {
 
-public abstract class WalletStartupTests<T extends BisqProcess, W> {
+    private String address;
+    private String status;
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    @XmlElement(name = "address")
+    public String getAddress() {
+        return address;
+    }
 
-    @Test
-    public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-        regtestSetup.shutdown();
+    @XmlElement(name = "status")
+    public String getStatus() {
+        return status;
+    }
+
+    @Override
+    public String toString() {
+        return "ElectrumNotifyRequest{" +
+                "address='" + address + '\'' +
+                ", status='" + status + '\'' +
+                '}';
     }
 }

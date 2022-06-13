@@ -15,21 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
+package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.regtest.process.BisqProcess;
-import org.junit.jupiter.api.Test;
+import bisq.wallets.core.rpc.call.DaemonRpcCall;
 
-import java.io.IOException;
+public class ElectrumLoadWalletRpcCall extends DaemonRpcCall<ElectrumLoadWalletRpcCall.Request, String> {
 
-public abstract class WalletStartupTests<T extends BisqProcess, W> {
+    public record Request(String password) {
+    }
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    public ElectrumLoadWalletRpcCall(Request request) {
+        super(request);
+    }
 
-    @Test
-    public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-        regtestSetup.shutdown();
+    @Override
+    public String getRpcMethodName() {
+        return "load_wallet";
+    }
+
+    @Override
+    public boolean isResponseValid(String response) {
+        return response.equals("true");
+    }
+
+    @Override
+    public Class<String> getRpcResponseClass() {
+        return String.class;
     }
 }
