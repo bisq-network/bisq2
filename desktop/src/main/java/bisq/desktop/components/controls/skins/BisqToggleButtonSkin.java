@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.skins;
+package bisq.desktop.components.controls.skins;
 
 import bisq.desktop.components.controls.BisqToggleButton;
 import javafx.geometry.Insets;

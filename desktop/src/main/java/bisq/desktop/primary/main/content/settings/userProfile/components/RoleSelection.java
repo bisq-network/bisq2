@@ -24,7 +24,7 @@ import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.popups.Popup;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
@@ -236,13 +236,13 @@ public class RoleSelection {
             tableView.getColumns().add(new BisqTableColumn.Builder<RoleItem>()
                     .title(Res.get("social.createUserProfile.entitlement.table.header.proof"))
                     .fixWidth(160)
-                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
+                    .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                     .actionHandler(controller::onOpenProofWindow)
                     .value(Res.get("social.createUserProfile.entitlement.table.proof.button"))
                     .build());
             tableView.getColumns().add(new BisqTableColumn.Builder<RoleItem>()
                     .fixWidth(120)
-                    .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
+                    .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                     .actionHandler(controller::onShowInfo)
                     .value(Res.get("social.createUserProfile.entitlement.table.header.info"))
                     .build());

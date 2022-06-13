@@ -15,12 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.popups;
+package bisq.desktop.components.overlay;
 
 import bisq.desktop.common.threading.UIScheduler;
-import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.controls.AutoCompleteComboBox;
-import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
@@ -46,27 +43,26 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 
 @Slf4j
-public class ComboBoxOverlay<T> {
-    private final static double PADDING = 10;
+public class ListViewOverlay<T> {
     private final Region owner;
     private final double prefWidth;
     private final double offsetX;
     private final double offsetY;
-
     private final Parent ownerRoot;
     private final Window rootWindow;
     private final Scene scene;
     private final Stage stage;
     private final ChangeListener<Number> positionListener;
-    private final AutoCompleteComboBox<T> comboBox;
-    private final ChangeListener<Number> heightListener;
+    private final ChangeListener<Number> rootHeightListener;
+    private final ChangeListener<T> selectedItemListener;
     private double width;
     private double height;
     private UIScheduler fixPositionsScheduler;
+    private final ListView<T> listView;
     private final Pane root;
     protected final Polygon listBackground = new Polygon();
 
-    public ComboBoxOverlay(Region owner,
+    public ListViewOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
@@ -74,7 +70,7 @@ public class ComboBoxOverlay<T> {
         this(owner, items, cellFactory, selectionHandler, prefWidth, 0, 0);
     }
 
-    public ComboBoxOverlay(Region owner,
+    public ListViewOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
@@ -95,19 +91,18 @@ public class ComboBoxOverlay<T> {
         listBackground.setFill(Paint.valueOf("#212121"));
         listBackground.setEffect(dropShadow);
 
-        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("tradeChat.addMarketChannel.prompt"));
-        comboBox.setCellFactory(cellFactory);
-        comboBox.setPrefWidth(prefWidth - 2 * PADDING);
-        comboBox.setLayoutX(PADDING);
-        comboBox.setLayoutY(PADDING);
-        comboBox.getAutoCompleteComboBoxSkin().setDropShadowColor(Color.rgb(0, 0, 0, 0.2));
-        comboBox.setOnChangeConfirmed(e -> {
-            selectionHandler.accept(comboBox.getSelectionModel().getSelectedItem());
+        listView = new ListView<>(items);
+        listView.setPrefWidth(400);
+        listView.setPrefHeight(100);
+        listView.setCellFactory(cellFactory);
+        listView.setId("bisq-combo-box-list-view");
+        selectedItemListener = (observable, oldValue, newValue) -> {
+            selectionHandler.accept(newValue);
             close();
-        });
-        UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
+        };
+        listView.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
 
-        root = new Pane(listBackground, comboBox);
+        root = new Pane(listBackground, listView);
         root.setPrefWidth(prefWidth + 20);
         root.setStyle("-fx-background-color: transparent;");
 
@@ -129,7 +124,7 @@ public class ComboBoxOverlay<T> {
 
 
         // Listeners, handlers
-        heightListener = (observable, oldValue, newValue) -> doLayout();
+        rootHeightListener = (observable, oldValue, newValue) -> doLayout();
 
         // On Linux the owner stage does not move the child stage as it does on Mac
         // So we need to apply centerPopup. Further, with fast movements the handler loses
@@ -159,7 +154,7 @@ public class ComboBoxOverlay<T> {
         rootWindow.xProperty().addListener(positionListener);
         rootWindow.yProperty().addListener(positionListener);
         rootWindow.widthProperty().addListener(positionListener);
-        comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().addListener(heightListener);
+        root.heightProperty().addListener(rootHeightListener);
     }
 
     public void show() {
@@ -198,25 +193,27 @@ public class ComboBoxOverlay<T> {
         rootWindow.xProperty().removeListener(positionListener);
         rootWindow.yProperty().removeListener(positionListener);
         rootWindow.widthProperty().removeListener(positionListener);
-        comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().removeListener(heightListener);
+        root.heightProperty().removeListener(rootHeightListener);
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
-        comboBox.setOnChangeConfirmed(null);
+        listView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
+
     }
 
     protected void layoutListView() {
-        ObservableList<T> items = comboBox.getItems();
+        ObservableList<T> items = listView.getItems();
         if (items.isEmpty()) {
             listBackground.getPoints().clear();
         } else {
-            double x = 0;
+            double x = 5;
             double listOffset = 8;
             // relative to visible top-left point 
             double arrowX_l = 22;
             double arrowX_m = 31.5;
             double arrowX_r = 41;
-            double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
-            double width = prefWidth;
+            double height = Math.min(getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
+            double width = prefWidth - 10;
+            // double y = root.getHeight() - 25;
             double y = 0;
             double arrowY_m = y - 7.5;
             listBackground.getPoints().setAll(
@@ -228,8 +225,18 @@ public class ComboBoxOverlay<T> {
                     x + width, y + height,
                     x, y + height);
 
-            root.setPrefHeight(height + 25);
+            listBackground.setLayoutX(0);
+            listView.setLayoutX(x);
+            listView.setLayoutY(y + listOffset);
+            listView.setPrefWidth(width);
+            listView.setPrefHeight(height - listOffset + 2);
+            listView.autosize();
+            root.setPrefHeight(listView.getHeight() + 32.5);
         }
+    }
+
+    private int getVisibleRowCount() {
+        return 10;
     }
 
     protected int getRowHeight() {

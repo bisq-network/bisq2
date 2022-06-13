@@ -91,7 +91,7 @@
     -fx-faint-focus-color: -fx-accent;
     -fx-default-button: -bisq-green;
 
-    -fx-dark-text-color: black;
+    -fx-dark-text-color: -bisq-black;
     -fx-mid-text-color: -bisq-grey-9;
     -fx-light-text-color: -bisq-white;
 }
@@ -297,7 +297,7 @@
 }
 
 .radio-button:selected .radio .dot {
-    -fx-background-color: white;
+    -fx-background-color: -bisq-white;
 }
 
 /*******************************************************************************
@@ -598,7 +598,7 @@
     -fx-background-radius: 3;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
-    -fx-border-style: none;
+    -fx-border-width: 0px;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
 }
@@ -609,7 +609,9 @@
 }
 
 .button:hover {
-    -fx-background-color: derive(-bisq-green, -50%);
+    -fx-background-color: -bisq-white;
+    -fx-text-fill: -bisq-black;
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .button:disabled {
@@ -731,7 +733,7 @@
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-border-color: -bisq-white;
-    -fx-text-fill: black;
+    -fx-text-fill: -bisq-black;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -769,7 +771,7 @@
     -fx-border-width: 1;
     -fx-border-radius: 8;
     -fx-border-color: -bisq-white;
-    -fx-text-fill: black;
+    -fx-text-fill: -bisq-black;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -827,15 +829,15 @@
     -fx-background-radius: 8;
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.3em;
-    -fx-border-style: none;
+    -fx-border-width: 0px;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
     -fx-font-family: "IBM Plex Sans";
 }
 
 .bisq-create-offer-button:hover {
-    -fx-background-color: white;
-    -fx-text-fill: black;
+    -fx-background-color: -bisq-white;
+    -fx-text-fill: -bisq-black;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
@@ -859,6 +861,44 @@
 .bisq-button-1:selected:hover {
     -fx-background-color: -bisq-green;
 }
+
+/*******************************************************************************
+ *                                                                             *
+ * ToggleButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.toggle-button {
+    -fx-background-color: -bisq-grey-19;
+    -fx-background-radius: 3;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-width: 0;
+    -fx-padding: 5 33 5 33;
+    -fx-cursor: hand;
+}
+
+.toggle-button:hover {
+    -fx-background-color: -bisq-white;
+    -fx-text-fill: -bisq-black;
+}
+
+.toggle-button:selected {
+    -fx-background-color: -bisq-green;
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: derive(-bisq-green, -25%);
+    -fx-font-family: "IBM Plex Sans Medium";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.toggle-button:disabled {
+    -fx-background-color: -bisq-grey-12;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -894,7 +934,7 @@
 
 .tooltip {
     -fx-background: -bisq-grey-11;
-    -fx-text-fill: black;
+    -fx-text-fill: -bisq-black;
     -fx-background-color: -bisq-grey-11;
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
@@ -962,7 +1002,7 @@
 
 /*******************************************************************************
  *                                                                             *
- * BisqToggleButton                                                                *
+ * BisqToggleButton                                                            *
  *                                                                             *
  ******************************************************************************/
 
@@ -1066,9 +1106,9 @@
     -fx-background: transparent;
     -fx-background-color: -bisq-bg-dark;
     -fx-border-width: 0;
-    -fx-border-insets: 0 0 0 0;
-    -fx-padding: 0 0 0 0;
-    -fx-background-insets: 0 0 0 0;
+    -fx-border-insets: 0;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
 }
 
 .list-view .list-cell {
@@ -1107,8 +1147,8 @@
 
 .list-view.channel-selection-list-view .list-cell:selected {
     -fx-background-color: #262626;
-    -fx-fill: black;
-    -fx-text-fill: black;
+    -fx-fill: -bisq-black;
+    -fx-text-fill: -bisq-black;
 }
 
 /*******************************************************************************
@@ -1593,7 +1633,7 @@ tree-table-view:focused {
 }
 
 .popover > .content > .title > .icon > .graphics > .line {
-    -fx-stroke: white;
+    -fx-stroke: -bisq-white;
     -fx-stroke-width: 2;
 }
 
@@ -1613,21 +1653,21 @@ tree-table-view:focused {
  *                                                                             *
  ******************************************************************************/
 
-.table-view.onboarding-market-selection-table-view .column-header {
+.table-view.onboarding-market-table-view .column-header {
     -fx-pref-height: 40px;
     -fx-font-family: "IBM Plex Sans";
     -fx-font-weight: normal;
 }
 
-.table-view.onboarding-market-selection-table-view .filler {
+.table-view.onboarding-market-table-view .filler {
     -fx-opacity: 0;
 }
 
-.table-view.onboarding-market-selection-table-view .virtual-flow {
+.table-view.onboarding-market-table-view .virtual-flow {
     -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-selection-table-view .table-row-cell {
+.table-view.onboarding-market-table-view .table-row-cell {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.08em;
@@ -1635,17 +1675,36 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-selection-table-view .table-row-cell .table-cell {
+.table-view.onboarding-market-table-view .table-row-cell .table-cell {
     -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-selection-table-view .button {
-    -fx-padding: 6 20 6 20;
-    -fx-background-color: -bisq-grey-19;
+/* the text property from list view need to set to apply the color to the button label */
+.onboarding-market-table-toggle-button .text {
+    -fx-fill: -fx-light-text-color !important;
 }
 
-.table-view.onboarding-market-selection-table-view .button:hover {
-    -fx-background-color: derive(-bisq-green, -50%);
+.onboarding-market-table-toggle-button:hover .text {
+    -fx-fill: -bisq-black !important;
+}
+
+.onboarding-market-table-toggle-button:selected:hover .text {
+    -fx-fill: -fx-light-text-color !important;
+}
+
+.small-search-text {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
+    -fx-font-size: 0.92em;
+    -fx-text-fill: -bisq-grey-22;
+    -fx-font-family: "IBM Plex Sans";
+}
+
+.small-search-box {
+    -fx-background-color: -bisq-grey-3;
+    -fx-background-radius: 6;
+    -fx-border-width: 0;
 }
 
 /*******************************************************************************
@@ -1843,9 +1902,9 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-16;
     -fx-border-color: -bisq-bg-dark;;
     -fx-border-width: 1;
-    -fx-border-insets: 0 0 0 0;
-    -fx-padding: 0 0 0 0;
-    -fx-background-insets: 0 0 0 0;
+    -fx-border-insets: 0;
+    -fx-padding: 0;
+    -fx-background-insets: 0;
 }
 
 #bisq-combo-box-list-view .list-cell:odd, #bisq-combo-box-list-view .list-cell:even {

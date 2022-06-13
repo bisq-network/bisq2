@@ -122,7 +122,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                 .title(Res.get("trade.protocols.table.header.access"))
                 .fixWidth(150)
                 .value(Res.get("shared.select"))
-                .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
+                .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .actionHandler(controller::onSelect)
                 .build());
     }

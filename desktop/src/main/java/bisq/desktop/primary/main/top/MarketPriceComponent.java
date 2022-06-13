@@ -170,7 +170,7 @@ public class MarketPriceComponent {
                         setStyle("-fx-background-color: -bisq-bg-dark");
                     }
                     if (item != null && !empty) {
-                        Label market = new Label(item.marketPrice.getMarket().getCurrencyCodes());
+                        Label market = new Label(item.marketPrice.getMarket().getMarketCodes());
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 
@@ -192,7 +192,7 @@ public class MarketPriceComponent {
                         setStyle("-fx-background-color: -bisq-bg-dark");
                     }
                     if (item != null && !empty) {
-                        Label market = new Label(item.marketPrice.getMarket().getCurrencyCodes().toUpperCase());
+                        Label market = new Label(item.marketPrice.getMarket().getMarketCodes().toUpperCase());
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 

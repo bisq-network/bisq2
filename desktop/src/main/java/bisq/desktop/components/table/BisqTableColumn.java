@@ -39,7 +39,7 @@ import java.util.function.Function;
 @Slf4j
 public class BisqTableColumn<S> extends TableColumn<S, S> {
 
-    public enum DefaultCellFactories {
+    public enum DefaultCellFactory {
         TEXT,
         TEXT_INPUT,
         BUTTON,
@@ -59,8 +59,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
     };
-    private Optional<Class<? extends Button>> buttonClass = Optional.empty();
-    private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
+    private Optional<Class<? extends ButtonBase>> buttonClass = Optional.empty();
+    private BiConsumer<S, ButtonBase> updateItemWithButtonHandler = (item, button) -> {
     };
     private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
@@ -78,13 +78,13 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
         private Optional<Comparator<S>> comparator = Optional.empty();
         private boolean isSortable = true;
-        private DefaultCellFactories defaultCellFactories = DefaultCellFactories.TEXT;
+        private DefaultCellFactory defaultCellFactory = DefaultCellFactory.TEXT;
         private Consumer<S> onActionHandler = item -> {
         };
         private BiConsumer<S, Boolean> onToggleHandler = (item, selected) -> {
         };
-        private Optional<Class<? extends Button>> buttonClass = Optional.empty();
-        private BiConsumer<S, Button> updateItemWithButtonHandler = (item, button) -> {
+        private Optional<Class<? extends ButtonBase>> buttonClass = Optional.empty();
+        private BiConsumer<S, ButtonBase> updateItemWithButtonHandler = (item, button) -> {
         };
         private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
         };
@@ -92,7 +92,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         private boolean isFirst, isLast;
 
         public BisqTableColumn<S> build() {
-            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(defaultCellFactories, cellFactory);
+            BisqTableColumn<S> tableColumn = new BisqTableColumn<>(defaultCellFactory, cellFactory);
             if (title.isPresent()) {
                 tableColumn.applyTitle(title.get());
             } else {
@@ -193,8 +193,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> cellFactory(DefaultCellFactories defaultCellFactories) {
-            this.defaultCellFactories = defaultCellFactories;
+        public Builder<S> defaultCellFactory(DefaultCellFactory defaultCellFactory) {
+            this.defaultCellFactory = defaultCellFactory;
             return this;
         }
 
@@ -203,7 +203,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> updateItemWithButtonHandler(BiConsumer<S, Button> handler) {
+        public Builder<S> updateItemWithButtonHandler(BiConsumer<S, ButtonBase> handler) {
             this.updateItemWithButtonHandler = handler;
             return this;
         }
@@ -213,7 +213,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             return this;
         }
 
-        public Builder<S> buttonClass(Class<? extends Button> buttonClass) {
+        public Builder<S> buttonClass(Class<? extends ButtonBase> buttonClass) {
             this.buttonClass = Optional.of(buttonClass);
             return this;
         }
@@ -239,14 +239,14 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
         }
     }
 
-    public BisqTableColumn(DefaultCellFactories defaultCellFactories, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
+    public BisqTableColumn(DefaultCellFactory defaultCellFactory, Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory) {
         super();
 
         setCellValueFactory((data) -> new ReadOnlyObjectWrapper<>(data.getValue()));
         if (cellFactory.isPresent()) {
             setCellFactory(cellFactory.get());
         } else {
-            switch (defaultCellFactories) {
+            switch (defaultCellFactory) {
                 case TEXT -> applyTextCellFactory();
                 case TEXT_INPUT -> applyTextInputCellFactory();
                 case BUTTON -> applyButtonCellFactory();
@@ -414,7 +414,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                         return new TableCell<>() {
                             S previousItem;
 
-                            private Button button;
+                            private ButtonBase button;
 
                             {
                                 try {

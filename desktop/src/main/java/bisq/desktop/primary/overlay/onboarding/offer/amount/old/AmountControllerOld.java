@@ -24,7 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MarketSelection;
-import bisq.desktop.popups.Popup;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.onboardingOld.onboardNewbie.BtcFiatAmountGroup;
 import bisq.desktop.primary.onboardingOld.onboardNewbie.PaymentMethodsSelection;
 import bisq.i18n.Res;

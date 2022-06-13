@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.multiSig;
 
 import bisq.desktop.common.view.*;
-import bisq.desktop.popups.OverlayWindow;
+import bisq.desktop.components.overlay.OverlayWindow;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Parent;

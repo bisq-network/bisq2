@@ -53,7 +53,7 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
         subtitleLabel = new Label(Res.get("onboarding.completed.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-10", "wrap-text");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         takeOfferLabel = new Label(Res.get("onboarding.completed.takeOffer"));
         takeOfferLabel.getStyleClass().add("bisq-text-headline-2");

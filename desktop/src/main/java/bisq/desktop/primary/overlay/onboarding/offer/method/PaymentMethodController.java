@@ -44,6 +44,9 @@ public class PaymentMethodController implements Controller {
     }
 
     public void setMarket(Market market) {
+        if (market == null) {
+            return;
+        }
         model.getAllPaymentMethods().setAll(PaymentMethodRepository.getPaymentMethodsForMarket(market));
         model.getAllPaymentMethods().addAll(model.getAddedCustomMethods());
         model.getPaymentMethodsEmpty().set(model.getAllPaymentMethods().isEmpty());

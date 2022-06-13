@@ -21,29 +21,20 @@ import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 
 @Getter
 public class MarketModel implements Model {
-    private final ObjectProperty<Market> market = new SimpleObjectProperty<>();
-    protected final ObservableList<MarketListItem> observableList = FXCollections.observableArrayList();
-    protected final SortedList<MarketListItem> sortedList = new SortedList<>(observableList);
-    
-
-    protected void fillObservableList() {
-        //todo mocked data - setup real
-        observableList.setAll(
-                new MarketListItem("BTC", "USD", "256", "32"),
-                new MarketListItem("BTC", "EUR","123", "34"),
-                new MarketListItem("BTC", "CAD","108", "26"),
-                new MarketListItem("BTC", "XMR","105", "22"),
-                new MarketListItem("BTC", "LTC","105", "22"),
-                new MarketListItem("BTC", "ETH","105", "22"),
-                new MarketListItem("BTC", "GBP","105", "22")
-        );
-    }
-    
+    private final ObjectProperty<MarketView.MarketListItem> selectedMarketListItem = new SimpleObjectProperty<>();
+    private final StringProperty searchText = new SimpleStringProperty();
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
+    private final ObservableList<MarketView.MarketListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<MarketView.MarketListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<MarketView.MarketListItem> sortedList = new SortedList<>(filteredList);
 }

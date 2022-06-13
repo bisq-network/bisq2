@@ -130,7 +130,7 @@ public class OfferbookView extends View<VBox, OfferbookModel, OfferbookControlle
                 .fixWidth(200)
                 .title(Res.get("offerbook.table.header.settlement"))
                 .valueSupplier(model::getActionButtonTitle)
-                .cellFactory(BisqTableColumn.DefaultCellFactories.BUTTON)
+                .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .buttonClass(BisqIconButton.class)
                 .updateItemWithButtonHandler(controller::onUpdateItemWithButton)
                 .actionHandler(controller::onActionButtonClicked)

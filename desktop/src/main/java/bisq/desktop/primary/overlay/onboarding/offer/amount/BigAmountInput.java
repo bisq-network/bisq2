@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.offer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
@@ -173,7 +172,6 @@ public class BigAmountInput {
             codeLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
-            UIThread.runOnNextRenderFrame(textInput::requestFocus);
         }
 
         @Override
@@ -187,6 +185,8 @@ public class BigAmountInput {
 
         private void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
+            textInput.requestFocus();
+            textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
     }
 }

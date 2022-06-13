@@ -27,16 +27,16 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MarketSelection;
+import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.desktop.primary.main.content.trade.multiSig.createOffer.MultiSigCreateOfferController;
 import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.TakeOfferController;
-import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import bisq.offer.OfferBookService;
 import bisq.offer.OpenOfferService;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -165,7 +165,7 @@ public class OfferbookController implements Controller {
         }
     }
 
-    void onUpdateItemWithButton(OfferListItem item, Button button) {
+    void onUpdateItemWithButton(OfferListItem item, ButtonBase button) {
         if (item != null && button instanceof BisqIconButton bisqIconButton) {
             boolean isMyOffer = model.isMyOffer(item);
             bisqIconButton.setMinWidth(200);

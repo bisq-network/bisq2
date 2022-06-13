@@ -15,9 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.popups;
+package bisq.desktop.components.overlay;
 
 import bisq.desktop.common.threading.UIScheduler;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
+import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
@@ -43,26 +46,27 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 
 @Slf4j
-public class ListViewOverlay<T> {
+public class ComboBoxOverlay<T> {
+    private final static double PADDING = 10;
     private final Region owner;
     private final double prefWidth;
     private final double offsetX;
     private final double offsetY;
+
     private final Parent ownerRoot;
     private final Window rootWindow;
     private final Scene scene;
     private final Stage stage;
     private final ChangeListener<Number> positionListener;
-    private final ChangeListener<Number> rootHeightListener;
-    private final ChangeListener<T> selectedItemListener;
+    private final AutoCompleteComboBox<T> comboBox;
+    private final ChangeListener<Number> heightListener;
     private double width;
     private double height;
     private UIScheduler fixPositionsScheduler;
-    private final ListView<T> listView;
     private final Pane root;
     protected final Polygon listBackground = new Polygon();
 
-    public ListViewOverlay(Region owner,
+    public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
@@ -70,7 +74,7 @@ public class ListViewOverlay<T> {
         this(owner, items, cellFactory, selectionHandler, prefWidth, 0, 0);
     }
 
-    public ListViewOverlay(Region owner,
+    public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
@@ -91,18 +95,19 @@ public class ListViewOverlay<T> {
         listBackground.setFill(Paint.valueOf("#212121"));
         listBackground.setEffect(dropShadow);
 
-        listView = new ListView<>(items);
-        listView.setPrefWidth(400);
-        listView.setPrefHeight(100);
-        listView.setCellFactory(cellFactory);
-        listView.setId("bisq-combo-box-list-view");
-        selectedItemListener = (observable, oldValue, newValue) -> {
-            selectionHandler.accept(newValue);
+        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("tradeChat.addMarketChannel.prompt"));
+        comboBox.setCellFactory(cellFactory);
+        comboBox.setPrefWidth(prefWidth - 2 * PADDING);
+        comboBox.setLayoutX(PADDING);
+        comboBox.setLayoutY(PADDING);
+        comboBox.getAutoCompleteComboBoxSkin().setDropShadowColor(Color.rgb(0, 0, 0, 0.2));
+        comboBox.setOnChangeConfirmed(e -> {
+            selectionHandler.accept(comboBox.getSelectionModel().getSelectedItem());
             close();
-        };
-        listView.getSelectionModel().selectedItemProperty().addListener(selectedItemListener);
+        });
+        UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
 
-        root = new Pane(listBackground, listView);
+        root = new Pane(listBackground, comboBox);
         root.setPrefWidth(prefWidth + 20);
         root.setStyle("-fx-background-color: transparent;");
 
@@ -124,7 +129,7 @@ public class ListViewOverlay<T> {
 
 
         // Listeners, handlers
-        rootHeightListener = (observable, oldValue, newValue) -> doLayout();
+        heightListener = (observable, oldValue, newValue) -> doLayout();
 
         // On Linux the owner stage does not move the child stage as it does on Mac
         // So we need to apply centerPopup. Further, with fast movements the handler loses
@@ -154,7 +159,7 @@ public class ListViewOverlay<T> {
         rootWindow.xProperty().addListener(positionListener);
         rootWindow.yProperty().addListener(positionListener);
         rootWindow.widthProperty().addListener(positionListener);
-        root.heightProperty().addListener(rootHeightListener);
+        comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().addListener(heightListener);
     }
 
     public void show() {
@@ -193,27 +198,25 @@ public class ListViewOverlay<T> {
         rootWindow.xProperty().removeListener(positionListener);
         rootWindow.yProperty().removeListener(positionListener);
         rootWindow.widthProperty().removeListener(positionListener);
-        root.heightProperty().removeListener(rootHeightListener);
+        comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().removeListener(heightListener);
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
-        listView.getSelectionModel().selectedItemProperty().removeListener(selectedItemListener);
-
+        comboBox.setOnChangeConfirmed(null);
     }
 
     protected void layoutListView() {
-        ObservableList<T> items = listView.getItems();
+        ObservableList<T> items = comboBox.getItems();
         if (items.isEmpty()) {
             listBackground.getPoints().clear();
         } else {
-            double x = 5;
+            double x = 0;
             double listOffset = 8;
             // relative to visible top-left point 
             double arrowX_l = 22;
             double arrowX_m = 31.5;
             double arrowX_r = 41;
-            double height = Math.min(getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
-            double width = prefWidth - 10;
-            // double y = root.getHeight() - 25;
+            double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
+            double width = prefWidth;
             double y = 0;
             double arrowY_m = y - 7.5;
             listBackground.getPoints().setAll(
@@ -225,18 +228,8 @@ public class ListViewOverlay<T> {
                     x + width, y + height,
                     x, y + height);
 
-            listBackground.setLayoutX(0);
-            listView.setLayoutX(x);
-            listView.setLayoutY(y + listOffset);
-            listView.setPrefWidth(width);
-            listView.setPrefHeight(height - listOffset + 2);
-            listView.autosize();
-            root.setPrefHeight(listView.getHeight() + 32.5);
+            root.setPrefHeight(height + 25);
         }
-    }
-
-    private int getVisibleRowCount() {
-        return 10;
     }
 
     protected int getRowHeight() {
