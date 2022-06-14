@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -33,13 +34,13 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
         String firstTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        String firstTxId = elementsdMinerWallet.sendLBtcToAddress(firstTxReceiverAddress, 1);
+        String firstTxId = elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), firstTxReceiverAddress, 1);
 
         String secondTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        String secondTxId = elementsdMinerWallet.sendLBtcToAddress(secondTxReceiverAddress, 1);
+        String secondTxId = elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), secondTxReceiverAddress, 1);
 
         String thirdTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        String thirdTxId = elementsdMinerWallet.sendLBtcToAddress(thirdTxReceiverAddress, 1);
+        String thirdTxId = elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), thirdTxReceiverAddress, 1);
 
         elementsdRegtestSetup.mineOneBlock();
 

@@ -18,10 +18,12 @@
 package bisq.wallets.elementsd.zmq;
 
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.elementsd.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +45,7 @@ public class ElementsdZeroMqRawTxIntegrationTests extends AbstractElementsdZeroM
             }
         });
 
-        minerWallet.sendLBtcToAddress(blindedReceiverAddress, 0.001);
+        minerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), blindedReceiverAddress, 0.001);
 
         boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);
         if (!await) {
@@ -57,7 +59,7 @@ public class ElementsdZeroMqRawTxIntegrationTests extends AbstractElementsdZeroM
 
         ElementsdWallet minerWallet = elementsdRegtestSetup.getMinerWallet();
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
-        String myTxId = minerWallet.sendLBtcToAddress(receiverAddress, 2);
+        String myTxId = minerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 2);
 
         minerWalletZmqConnection.getListeners().registerTransactionIdInInputListener(txId -> {
             if (txId.equals(myTxId)) {
@@ -69,7 +71,7 @@ public class ElementsdZeroMqRawTxIntegrationTests extends AbstractElementsdZeroM
 
         String someAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
         for (int i = 0; i < 10; i++) {
-            receiverWallet.sendLBtcToAddress(someAddress, 0.001);
+            receiverWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), someAddress, 0.001);
         }
 
         boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);

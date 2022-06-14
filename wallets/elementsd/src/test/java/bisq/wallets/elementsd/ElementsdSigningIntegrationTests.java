@@ -20,6 +20,8 @@ package bisq.wallets.elementsd;
 import bisq.wallets.core.model.AddressType;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ElementsdSigningIntegrationTests extends SharedElementsdInstanceTests {
@@ -28,7 +30,9 @@ public class ElementsdSigningIntegrationTests extends SharedElementsdInstanceTes
     @Test
     public void signAndVerifyMessage() {
         String address = elementsdMinerWallet.getNewAddress(AddressType.LEGACY, "");
-        String signature = elementsdMinerWallet.signMessage(address, MESSAGE);
+        String signature = elementsdMinerWallet.signMessage(
+                Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), address, MESSAGE
+        );
         boolean isValid = elementsdMinerWallet.verifyMessage(address, signature, MESSAGE);
         assertTrue(isValid);
     }
