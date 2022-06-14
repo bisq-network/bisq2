@@ -129,13 +129,13 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             }
             button.setGraphicTextGap(10);
             button.setAlignment(Pos.CENTER_LEFT);
-            button.setPadding(new Insets(0, 0, 0, 10));
-            button.getStyleClass().add("bisq-border-icon-button");
+            button.getStyleClass().setAll("bisq-border-icon-button");
             button.setSelected(model.getSelectedPaymentMethods().contains(paymentMethod));
             button.setOnAction(e -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
             button.setMinHeight(35);
             button.setMaxHeight(35);
             button.setMinWidth(142);
+            button.setPrefWidth(142);
             button.setMaxWidth(142);
             StackPane stackPane = new StackPane(button);
 
@@ -143,7 +143,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .forEach(customMethod -> {
                         button.setPadding(new Insets(0, 0, 0, 0));
-                        // ImageView closeCustomIcon = ImageUtil.getImageViewById("close-custom");
                         Label closeCustomIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "15");
                         closeCustomIcon.setCursor(Cursor.HAND);
                         closeCustomIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));

@@ -34,7 +34,6 @@ import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
 import bisq.social.offer.TradeChatOfferService;
-import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.reputation.ReputationService;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -175,6 +174,8 @@ public class OfferCompletedController implements Controller {
     private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
         return item ->
         {
+            return true;
+            /*
             if (item.getAuthor().isEmpty()) {
                 return false;
             }
@@ -224,7 +225,7 @@ public class OfferCompletedController implements Controller {
                 return false;
             }
 
-            return true;
+            return true;*/
         };
     }
 }

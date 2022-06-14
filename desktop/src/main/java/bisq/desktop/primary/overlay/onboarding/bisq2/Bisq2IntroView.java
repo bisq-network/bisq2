@@ -48,13 +48,13 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         Label subtitleLabel = new Label(Res.get("bisqEasy.onBoarding.bisq2.intro.subTitle").toUpperCase());
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(300);
-        subtitleLabel.getStyleClass().addAll("bisq-text-4");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3");
        
         nextButton = new Button(Res.get("start"));
         nextButton.setId("bisq-easy-next-button");
         
         VBox.setMargin(logo, new Insets(50, 0, 0, 0 ));
-        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
+        VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
         VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
@@ -81,10 +81,12 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-6, 0, 0, 4));
+        bulletPoint.setFitWidth(37.5);
+        bulletPoint.setFitHeight(37.5);
+        HBox.setMargin(bulletPoint, new Insets(0, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        int width = 600;
+        int width = 450;
         hBox.setMinWidth(width);
         hBox.setMaxWidth(width);
         return hBox;
