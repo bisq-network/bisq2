@@ -3,21 +3,13 @@ plugins {
     id 'bisq.protobuf'
 }
 
-ext {
-    swaggerVersion = '2.2.0'
-    jerseyVersion = '3.0.4'
-}
-
 dependencies {
     implementation("bisq:persistence")
     implementation project(':core')
-    implementation libs.jackson.databind
 
-    implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
-    implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
-    implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
-    implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
+    implementation libs.jackson.databind
+    implementation libs.bundles.glassfish.jersey
+    implementation libs.swagger.jaxrs2.jakarta
 
     testImplementation project(':bitcoind')
     testImplementation project(':regtest')
