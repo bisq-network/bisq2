@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.components;
+package bisq.desktop.primary.main.content.settings.userProfile.old.components;
 
 import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
