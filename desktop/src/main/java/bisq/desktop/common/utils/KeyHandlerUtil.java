@@ -68,8 +68,6 @@ public class KeyHandlerUtil {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
             }
         }
     }

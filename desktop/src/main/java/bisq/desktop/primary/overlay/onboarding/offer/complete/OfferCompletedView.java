@@ -36,19 +36,17 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
     private final Label headLineLabel, subtitleLabel, takeOfferLabel;
-    private final Pane myOfferListView, takersListView;
+    private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
     private final VBox content, feedback;
     private Button dashBoardButton, viewOfferButton;
-    private Subscription showfeedbackSubscription;
-    private Subscription heightSubscription;
+    private Subscription showFeedbackPin;
 
     OfferCompletedView(OfferCompletedModel model,
                        OfferCompletedController controller,
                        Pane myOfferListView,
                        Pane takersListView) {
         super(new StackPane(), model, controller);
-        this.myOfferListView = myOfferListView;
         this.takersListView = takersListView;
 
         content = new VBox();
@@ -83,6 +81,7 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
 
     @Override
     protected void onViewAttached() {
+        Transitions.removeEffect(content);
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
         dashBoardButton.setOnAction(e -> controller.onOpenDashBoard());
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
@@ -100,27 +99,13 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
             }
         });
 
-        showfeedbackSubscription = EasyBind.subscribe(model.getShowFeedback(),
+        showFeedbackPin = EasyBind.subscribe(model.getShowFeedback(),
                 showFeedback -> {
                     feedback.setManaged(showFeedback);
                     feedback.setVisible(showFeedback);
-                 /*   myOfferListView.setVisible(!showFeedback);
-                    takeOfferLabel.setVisible(!showFeedback);
-                    takersListView.setVisible(!showFeedback);*/
                     if (showFeedback) {
-                        Transitions.blurLight(content,-0.5);
-                       // Transitions.blurStrong(content,0);
-                        if (heightSubscription != null) {
-                            heightSubscription.unsubscribe();
-                        }
-                        heightSubscription = EasyBind.subscribe(feedback.heightProperty(), h -> {
-                            if (h.doubleValue() > 0) {
-                                Transitions.slideInTop(feedback, 450, () -> {
-                                    heightSubscription.unsubscribe();
-                                    heightSubscription = null;
-                                });
-                            }
-                        });
+                        Transitions.blurLight(content, -0.5);
+                        Transitions.slideInTop(feedback, 450);
                     } else {
                         Transitions.removeEffect(content);
                     }
@@ -132,6 +117,7 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         viewOfferButton.setOnAction(null);
         dashBoardButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();
+        showFeedbackPin.unsubscribe();
     }
 
     private void setupFeedback() {

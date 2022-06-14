@@ -102,7 +102,7 @@ public class OfferCompletedController implements Controller {
             buttonsVisibleHandler.accept(false);
         });
         takersListView.setTakeOfferCompleteHandler(() -> {
-            OverlayController.hide();
+            close();
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
         });
         takersListView.getSortedChatMessages().setComparator(Comparator.comparing(ChatMessagesListView.ChatMessageListItem::getReputationScore));
