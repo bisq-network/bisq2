@@ -99,6 +99,39 @@ public class OfferCompletedController implements Controller {
         takersListView.getSortedChatMessages().setComparator(Comparator.comparing(ChatMessagesListView.ChatMessageListItem::getReputationScore));
     }
 
+    public void setDirection(Direction direction) {
+        model.setDirection(direction);
+    }
+
+    public void setMarket(Market market) {
+        if (market != null) {
+            model.setMarket(market);
+        }
+    }
+
+    public void setPaymentMethods(List<String> paymentMethods) {
+        if (paymentMethods != null) {
+            model.setPaymentMethods(paymentMethods);
+        }
+    }
+
+    public void setBaseSideAmount(Monetary monetary) {
+        if (monetary != null) {
+            model.setBaseSideAmount(monetary);
+        }
+    }
+
+    public void setQuoteSideAmount(Monetary monetary) {
+        if (monetary != null) {
+            model.setQuoteSideAmount(monetary);
+        }
+    }
+
+    public ReadOnlyObjectProperty<PublicTradeChatMessage> getMyOfferMessage() {
+        return model.getMyOfferMessage();
+    }
+
+
     @Override
     public void onActivate() {
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
@@ -143,34 +176,6 @@ public class OfferCompletedController implements Controller {
         takersListView.getFilteredChatMessages().setPredicate(null);
         takersListView.getChatMessages().clear();
     }
-
-    public void setDirection(Direction direction) {
-        model.setDirection(direction);
-    }
-
-    public void setMarket(Market market) {
-        if (market == null) {
-            return;
-        }
-        model.setMarket(market);
-    }
-
-    public void setPaymentMethods(List<String> paymentMethods) {
-        model.setPaymentMethods(paymentMethods);
-    }
-
-    public void setBaseSideAmount(Monetary monetary) {
-        model.setBaseSideAmount(monetary);
-    }
-
-    public void setQuoteSideAmount(Monetary monetary) {
-        model.setQuoteSideAmount(monetary);
-    }
-
-    public ReadOnlyObjectProperty<PublicTradeChatMessage> getMyOfferMessage() {
-        return model.getMyOfferMessage();
-    }
-
 
     private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
         return item ->

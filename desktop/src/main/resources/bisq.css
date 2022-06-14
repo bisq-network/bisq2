@@ -482,7 +482,7 @@
 }
 
 .bisq-popup-green-headline-label {
-    -fx-font-size: 2em;
+    -fx-font-size: 2.2em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-green;
 }
@@ -595,7 +595,7 @@
 
 .button {
     -fx-background-color: -bisq-grey-17;
-    -fx-background-radius: 3;
+    -fx-background-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-border-width: 0px;
@@ -630,7 +630,9 @@
 }
 
 .red-button:hover {
-    -fx-background-color: derive(-bisq-red, -50%);
+    -fx-background-color: -bisq-white;
+    -fx-text-fill: -bisq-black;
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 
@@ -683,6 +685,7 @@
     -fx-border-color: -bisq-border-color-grey;
     -fx-border-width: 1;
     -fx-border-radius: 4;
+    -fx-padding: 0 0 0 10;
     -fx-cursor: hand;
 }
 
@@ -870,7 +873,7 @@
 
 .toggle-button {
     -fx-background-color: -bisq-grey-19;
-    -fx-background-radius: 3;
+    -fx-background-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-border-width: 0;
@@ -1013,7 +1016,7 @@
 .bisq-toggle-button:selected,
 .bisq-toggle-button:focused:selected {
     -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
-    -fx-background-radius: 3px;
+    -fx-background-radius: 4px;
     -fx-background-insets: 0px;
 
     -bisq-toggle-color: -bisq-green;
@@ -1977,14 +1980,14 @@ tree-table-view:focused {
 }
 
 #bisq-easy-onboarding-label {
-    -fx-font-size: 1.05em;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 1.2em;
+    -fx-font-family: "IBM Plex Sans";
     -fx-text-fill: -fx-light-text-color;
 }
 
 #bisq-easy-next-button {
     -fx-background-color: transparent;
-    -fx-background-radius: 3;
+    -fx-background-radius: 4;
     -fx-border-color: -bisq-grey-22;
     -fx-border-width: 0.75;
     -fx-border-radius: 2.5;

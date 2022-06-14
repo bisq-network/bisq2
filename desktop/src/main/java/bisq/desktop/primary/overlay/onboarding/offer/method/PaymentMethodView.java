@@ -78,8 +78,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         stackPane.setAlignment(Pos.TOP_CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(45, 65, 33, 65));
-        VBox.setMargin(nonFoundLabel, new Insets(45, 0, 20, 0));
+        VBox.setMargin(flowPane, new Insets(80, 65, 33, 65));
+        VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, stackPane);
 
         allPaymentMethodsListener = c -> {
@@ -129,13 +129,13 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             }
             button.setGraphicTextGap(10);
             button.setAlignment(Pos.CENTER_LEFT);
-            button.setPadding(new Insets(0, 0, 0, 10));
-            button.getStyleClass().add("bisq-border-icon-button");
+            button.getStyleClass().setAll("bisq-border-icon-button");
             button.setSelected(model.getSelectedPaymentMethods().contains(paymentMethod));
             button.setOnAction(e -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
             button.setMinHeight(35);
             button.setMaxHeight(35);
             button.setMinWidth(142);
+            button.setPrefWidth(142);
             button.setMaxWidth(142);
             StackPane stackPane = new StackPane(button);
 
@@ -143,7 +143,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .forEach(customMethod -> {
                         button.setPadding(new Insets(0, 0, 0, 0));
-                        // ImageView closeCustomIcon = ImageUtil.getImageViewById("close-custom");
                         Label closeCustomIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "15");
                         closeCustomIcon.setCursor(Cursor.HAND);
                         closeCustomIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
@@ -151,7 +150,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                         stackPane.getChildren().add(closeCustomIcon);
                     });
             flowPane.getChildren().add(stackPane);
-
         }
     }
 }

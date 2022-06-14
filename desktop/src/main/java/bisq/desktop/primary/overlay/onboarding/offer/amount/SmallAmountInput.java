@@ -160,7 +160,7 @@ public class SmallAmountInput {
             tooltip.getStyleClass().add("dark-tooltip");
             marketValueInfo.setTooltip(tooltip);
 
-            HBox.setMargin(textInput, new Insets(0, 0, 0, -70));
+            HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
             HBox.setMargin(marketValueInfo, new Insets(2, 0, 0, 0));
             root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
 

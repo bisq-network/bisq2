@@ -45,12 +45,13 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
         logo.setScaleY(1.5);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.onBoarding.bisqEasy.intro.headline"));
+       // headlineLabel.getStyleClass().add("bisq-content-headline-label");
         headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.onBoarding.bisqEasy.intro.subTitle").toUpperCase());
+        Label subtitleLabel = new Label(Res.get("bisqEasy.onBoarding.bisqEasy.intro.subTitle"));
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(300);
-        subtitleLabel.getStyleClass().addAll("bisq-text-4");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3");
 
         nextButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.createOffer"));
         nextButton.setDefaultButton(true);
@@ -59,7 +60,8 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(logo, new Insets(50, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(16, 0, 5, 0));
+        //VBox.setMargin(headlineLabel, new Insets(50, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
         VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
@@ -92,7 +94,7 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
         HBox.setMargin(bulletPoint, new Insets(-4, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        int width = 600;
+        int width = 450;
         hBox.setMinWidth(width);
         hBox.setMaxWidth(width);
         return hBox;

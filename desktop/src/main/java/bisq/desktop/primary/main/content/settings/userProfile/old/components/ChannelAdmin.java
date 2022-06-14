@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.components;
+package bisq.desktop.primary.main.content.settings.userProfile.old.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;

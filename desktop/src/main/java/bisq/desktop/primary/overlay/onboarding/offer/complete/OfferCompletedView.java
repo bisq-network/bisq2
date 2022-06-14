@@ -62,6 +62,7 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
         myOfferListView.setMinHeight(170);
         myOfferListView.setMaxHeight(170);
         takersListView.setMaxWidth(700);
+        takersListView.setMinHeight(170);
 
         root.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
     }

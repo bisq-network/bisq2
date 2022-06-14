@@ -37,7 +37,6 @@ import org.fxmisc.easybind.Subscription;
 public class DirectionView extends View<VBox, DirectionModel, DirectionController> {
     private final ToggleButton buyButton, sellButton;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    //private final Button skipButton;
     private Subscription directionSubscription;
 
     public DirectionView(DirectionModel model, DirectionController controller) {

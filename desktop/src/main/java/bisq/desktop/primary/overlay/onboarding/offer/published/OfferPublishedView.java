@@ -22,7 +22,6 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OfferPublishedView extends View<VBox, OfferPublishedModel, OfferPublishedController> {
 
-    public OfferPublishedView(OfferPublishedModel model, OfferPublishedController controller, Pane myOfferListView) {
+    public OfferPublishedView(OfferPublishedModel model, OfferPublishedController controller/*, Pane myOfferListView*/) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -44,14 +43,14 @@ public class OfferPublishedView extends View<VBox, OfferPublishedModel, OfferPub
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        myOfferListView.setMaxWidth(700);
+     /*   myOfferListView.setMaxWidth(700);
         myOfferListView.setMinHeight(170);
-        myOfferListView.setMaxHeight(170);
-        
+        myOfferListView.setMaxHeight(170);*/
+
         VBox.setMargin(headLineLabel, new Insets(60, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(12, 0, 30, 0));
-       VBox.setMargin(myOfferListView, new Insets(0, 0, 30, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView);
+       // VBox.setMargin(myOfferListView, new Insets(0, 0, 30, 0));
+        root.getChildren().addAll(headLineLabel, subtitleLabel/*, myOfferListView*/);
     }
 
     @Override
