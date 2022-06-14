@@ -82,7 +82,7 @@ public class CreateOfferController extends NavigationController {
         marketController = new MarketController(applicationService);
         amountController = new AmountController(applicationService);
         paymentMethodController = new PaymentMethodController(applicationService);
-        offerCompletedController = new OfferCompletedController(applicationService);
+        offerCompletedController = new OfferCompletedController(applicationService, this::setButtonsVisible, this::reset);
 
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
         paymentMethodsListener = c -> {
@@ -261,7 +261,8 @@ public class CreateOfferController extends NavigationController {
     }
 
     private void setButtonsVisible(boolean value) {
-        model.getNextButtonVisible().set(value);
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
         model.getSkipButtonVisible().set(value);
     }
 }

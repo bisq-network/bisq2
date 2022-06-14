@@ -100,13 +100,13 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
                 toggleGroup.selectToggle(direction == Direction.BUY ? buyButton : sellButton);
-
             }
         });
 
         showReputationInfoSubscription = EasyBind.subscribe(model.getShowReputationInfo(),
                 showReputationInfo -> {
                     if (showReputationInfo) {
+                        Transitions.blurStrong(content,0);
                         reputationInfo.setManaged(true);
                         reputationInfo.setVisible(true);
                         reputationInfo.setOpacity(1);
@@ -122,6 +122,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
                             }
                         });
                     } else {
+                        Transitions.removeEffect(content);
                         if (reputationInfo.isManaged()) {
                             Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2, () -> {
                                 reputationInfo.setManaged(false);
@@ -173,20 +174,20 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         reputationInfo.setMaxWidth(width);
         reputationInfo.setId("sellBtcWarning");
 
-        Label headLineLabel = new Label(Res.get("onboarding.direction.reputationInfo.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.direction.feedback.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.direction.reputationInfo.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.direction.feedback.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(width - 200);
         subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        gainReputationButton = new Button(Res.get("onboarding.direction.reputationInfo.gainReputation"));
+        gainReputationButton = new Button(Res.get("onboarding.direction.feedback.gainReputation"));
         gainReputationButton.setDefaultButton(true);
 
-        withoutReputationButton = new Button(Res.get("onboarding.direction.reputationInfo.tradeWithoutReputation"));
-       
+        withoutReputationButton = new Button(Res.get("onboarding.direction.feedback.tradeWithoutReputation"));
+
         closeButton = BisqIconButton.createIconButton("close-round");
 
         buttons = new HBox(7, withoutReputationButton, gainReputationButton);

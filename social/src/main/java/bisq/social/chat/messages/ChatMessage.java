@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-//todo replace ChatUserProfile by ChatUserProfileId 
 @Slf4j
 @ToString
 @EqualsAndHashCode
@@ -41,8 +40,6 @@ public abstract class ChatMessage {
     @Getter
     protected final String channelId;
     protected final Optional<String> optionalText;
-  /*  @Getter
-    protected ChatUser author;*/
     @Getter
     protected String authorId;
     @Getter

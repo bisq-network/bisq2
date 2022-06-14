@@ -51,6 +51,7 @@ class OfferCompletedModel implements Model {
     private List<String> paymentMethods = List.of("SEPA");
     final private ObjectProperty<PublicTradeChatMessage> myOfferMessage = new SimpleObjectProperty<>();
     final private BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
+    private final BooleanProperty showFeedback = new SimpleBooleanProperty();
 
     OfferCompletedModel() {
     }

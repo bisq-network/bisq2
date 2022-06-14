@@ -17,12 +17,16 @@
 
 package bisq.desktop.primary.overlay.onboarding.offer.complete;
 
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +34,26 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedController> {
-
+class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
     private final Label headLineLabel, subtitleLabel, takeOfferLabel;
     private final Pane myOfferListView, takersListView;
     private Subscription matchingOffersFoundPin;
+    private final VBox content, feedback;
+    private Button dashBoardButton, viewOfferButton;
+    private Subscription showfeedbackSubscription;
+    private Subscription heightSubscription;
 
     OfferCompletedView(OfferCompletedModel model,
                        OfferCompletedController controller,
                        Pane myOfferListView,
                        Pane takersListView) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
         this.myOfferListView = myOfferListView;
         this.takersListView = takersListView;
 
-        root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("bisq-content-bg");
+        content = new VBox();
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().add("bisq-content-bg");
 
         headLineLabel = new Label(Res.get("onboarding.completed.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -64,11 +72,19 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
         takersListView.setMaxWidth(700);
         takersListView.setMinHeight(170);
 
-        root.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
+        content.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
+
+        feedback = new VBox();
+        setupFeedback();
+
+        StackPane.setMargin(feedback, new Insets(-55, 0, 380, 0));
+        root.getChildren().addAll(content, feedback);
     }
 
     @Override
     protected void onViewAttached() {
+        viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
+        dashBoardButton.setOnAction(e -> controller.onOpenDashBoard());
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
             takeOfferLabel.setVisible(matchingOffersFound);
             takeOfferLabel.setManaged(matchingOffersFound);
@@ -83,10 +99,67 @@ class OfferCompletedView extends View<VBox, OfferCompletedModel, OfferCompletedC
                 VBox.setMargin(subtitleLabel, new Insets(0, 0, 0, 0));
             }
         });
+
+        showfeedbackSubscription = EasyBind.subscribe(model.getShowFeedback(),
+                showFeedback -> {
+                    feedback.setManaged(showFeedback);
+                    feedback.setVisible(showFeedback);
+                 /*   myOfferListView.setVisible(!showFeedback);
+                    takeOfferLabel.setVisible(!showFeedback);
+                    takersListView.setVisible(!showFeedback);*/
+                    if (showFeedback) {
+                        Transitions.blurLight(content,-0.5);
+                       // Transitions.blurStrong(content,0);
+                        if (heightSubscription != null) {
+                            heightSubscription.unsubscribe();
+                        }
+                        heightSubscription = EasyBind.subscribe(feedback.heightProperty(), h -> {
+                            if (h.doubleValue() > 0) {
+                                Transitions.slideInTop(feedback, 450, () -> {
+                                    heightSubscription.unsubscribe();
+                                    heightSubscription = null;
+                                });
+                            }
+                        });
+                    } else {
+                        Transitions.removeEffect(content);
+                    }
+                });
     }
 
     @Override
     protected void onViewDetached() {
+        viewOfferButton.setOnAction(null);
+        dashBoardButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();
+    }
+
+    private void setupFeedback() {
+        double width = 700;
+        feedback.setAlignment(Pos.TOP_CENTER);
+        feedback.setMaxWidth(width);
+        feedback.setId("sellBtcWarning");
+        //feedback.setMaxHeight(200);
+
+        Label headLineLabel = new Label(Res.get("onboarding.completed.feedback.headline"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("onboarding.completed.feedback.subTitle"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMaxWidth(width - 200);
+        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+
+        dashBoardButton = new Button(Res.get("onboarding.completed.feedback.dashboard"));
+        dashBoardButton.setDefaultButton(true);
+
+        viewOfferButton = new Button(Res.get("onboarding.completed.feedback.viewOffer"));
+
+        HBox buttons = new HBox(7, viewOfferButton, dashBoardButton);
+        buttons.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headLineLabel, new Insets(40, 0, 30, 0));
+        VBox.setMargin(buttons, new Insets(50, 0, 30, 0));
+        feedback.getChildren().addAll(headLineLabel, subtitleLabel, buttons);
     }
 }

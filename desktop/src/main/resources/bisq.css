@@ -617,7 +617,6 @@
 .button:hover {
     -fx-background-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .button:disabled {
@@ -638,7 +637,6 @@
 .red-button:hover {
     -fx-background-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 
@@ -732,7 +730,6 @@
     -fx-text-fill: -fx-light-text-color;
     -fx-padding: 17;
     -fx-font-size: 1.7em;
-    -fx-font-family: "IBM Plex Sans";
     -fx-cursor: hand;
 }
 
@@ -743,7 +740,6 @@
     -fx-border-radius: 8;
     -fx-border-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-font-family: "IBM Plex Sans";
 }
 
 /* Big white button */
@@ -781,7 +777,6 @@
     -fx-border-radius: 8;
     -fx-border-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-font-family: "IBM Plex Sans";
 }
 
 /* Transparent button */
@@ -841,18 +836,15 @@
     -fx-border-width: 0px;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
-    -fx-font-family: "IBM Plex Sans";
 }
 
 .bisq-create-offer-button:hover {
     -fx-background-color: -bisq-white;
     -fx-text-fill: -bisq-black;
-    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 /* Bisq other buttons */
 .bisq-button-1 {
-    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-grey-3;
     -fx-text-fill: -bisq-white;
@@ -894,13 +886,11 @@
 
 .toggle-button:selected {
     -fx-background-color: -bisq-green;
-    -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -fx-light-text-color;
 }
 
 .toggle-button:selected:hover {
     -fx-background-color: derive(-bisq-green, -25%);
-    -fx-font-family: "IBM Plex Sans Medium";
     -fx-text-fill: -fx-light-text-color;
 }
 

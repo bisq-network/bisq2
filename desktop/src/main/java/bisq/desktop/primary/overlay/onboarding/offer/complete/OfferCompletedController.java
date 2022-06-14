@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -42,6 +43,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -55,10 +57,13 @@ public class OfferCompletedController implements Controller {
     private final ReputationService reputationService;
     private final ChatMessagesListView myOfferListView;
     private final ChatMessagesListView takersListView;
+    private final Runnable closeHandler;
     private final SettingsService settingsService;
     private Pin selectedChannelPin;
 
-    public OfferCompletedController(DefaultApplicationService applicationService) {
+    public OfferCompletedController(DefaultApplicationService applicationService,
+                                    Consumer<Boolean> buttonsVisibleHandler,
+                                    Runnable closeHandler) {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
@@ -87,11 +92,15 @@ public class OfferCompletedController implements Controller {
                 true,
                 true,
                 false);
+        this.closeHandler = closeHandler;
 
         model = new OfferCompletedModel();
         view = new OfferCompletedView(model, this, myOfferListView.getRoot(), takersListView.getRoot());
 
-        myOfferListView.setCreateOfferCompleteHandler(() -> Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED));
+        myOfferListView.setCreateOfferCompleteHandler(() -> {
+            model.getShowFeedback().set(true);
+            buttonsVisibleHandler.accept(false);
+        });
         takersListView.setTakeOfferCompleteHandler(() -> {
             OverlayController.hide();
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
@@ -134,6 +143,7 @@ public class OfferCompletedController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getShowFeedback().set(false);
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
         selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
@@ -175,6 +185,23 @@ public class OfferCompletedController implements Controller {
         selectedChannelPin.unbind();
         takersListView.getFilteredChatMessages().setPredicate(null);
         takersListView.getChatMessages().clear();
+    }
+
+    void onOpenDashBoard() {
+        close();
+        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+    }
+
+    void onOpenBisqEasy() {
+        close();
+        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
+    }
+
+    private void close() {
+        closeHandler.run();
+        OverlayController.hide();
+        // If we got started from initial onboarding we are still at Splash screen, so we need to move to main
+        Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
     private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
