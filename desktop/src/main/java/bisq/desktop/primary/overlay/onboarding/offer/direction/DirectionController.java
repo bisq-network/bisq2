@@ -19,21 +19,33 @@ package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Consumer;
 
 @Slf4j
 public class DirectionController implements Controller {
     private final DirectionModel model;
     @Getter
     private final DirectionView view;
+    private final Runnable onNextHandler;
+    private final Consumer<Boolean> buttonsVisibleHandler;
 
-    public DirectionController(DefaultApplicationService applicationService) {
+    public DirectionController(DefaultApplicationService applicationService, 
+                               Runnable onNextHandler, 
+                               Consumer<Boolean> buttonsVisibleHandler) {
+        this.onNextHandler = onNextHandler;
+        this.buttonsVisibleHandler = buttonsVisibleHandler;
+        
         model = new DirectionModel();
         view = new DirectionView(model, this);
-        onSelect(Direction.BUY);
+        setDirection(Direction.BUY);
     }
 
     public ReadOnlyObjectProperty<Direction> getDirection() {
@@ -42,13 +54,38 @@ public class DirectionController implements Controller {
 
     @Override
     public void onActivate() {
+        setDirection(model.getDirection().get());
     }
 
     @Override
     public void onDeactivate() {
     }
 
-    public void onSelect(Direction selectedDirection) {
-        model.getDirection().set(selectedDirection);
+
+    void onSelectDirection(Direction direction) {
+        setDirection(direction);
+    }
+
+    void onCloseReputationInfo() {
+        setDirection(Direction.BUY);
+    }
+
+    void onGainReputation() {
+        model.getIgnoreShowReputationInfo().set(true);
+        setDirection(Direction.BUY);
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.USER_PROFILE);
+    }
+
+    void onIgnoreReputation() {
+        model.getIgnoreShowReputationInfo().set(true);
+        onNextHandler.run();
+    }
+
+    private void setDirection(Direction direction) {
+        model.getDirection().set(direction);
+        boolean showReputationInfo = !model.getIgnoreShowReputationInfo().get() && direction == Direction.SELL;
+        buttonsVisibleHandler.accept(!showReputationInfo);
+        model.getShowReputationInfo().set(showReputationInfo);
     }
 }

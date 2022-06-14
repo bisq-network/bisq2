@@ -18,15 +18,19 @@
 package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.common.data.Pair;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -34,16 +38,21 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class DirectionView extends View<VBox, DirectionModel, DirectionController> {
+public class DirectionView extends View<StackPane, DirectionModel, DirectionController> {
     private final ToggleButton buyButton, sellButton;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    private Subscription directionSubscription;
+    private final VBox reputationInfo;
+    private final VBox content;
+    private Subscription directionSubscription, showReputationInfoSubscription, heightSubscription;
+    private Button gainReputationButton, withoutReputationButton, closeButton;
+    private HBox buttons;
 
     public DirectionView(DirectionModel model, DirectionController controller) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
-        root.getStyleClass().add("bisq-content-bg");
+        content = new VBox();
+        content.setAlignment(Pos.TOP_CENTER);
+        content.getStyleClass().add("bisq-content-bg");
 
         Label headLineLabel = new Label(Res.get("onboarding.direction.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -66,22 +75,61 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 53, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
+        content.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
+
+        reputationInfo = new VBox();
+        setupReputationInfo();
+
+        StackPane.setMargin(reputationInfo, new Insets(-55, 0, 0, 0));
+        root.getChildren().addAll(content, reputationInfo);
     }
+
 
     @Override
     protected void onViewAttached() {
         buyButton.disableProperty().bind(buyButton.selectedProperty());
         sellButton.disableProperty().bind(sellButton.selectedProperty());
-        buyButton.setOnAction(evt -> controller.onSelect(Direction.BUY));
-        sellButton.setOnAction(evt -> controller.onSelect(Direction.SELL));
+        buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
+        sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
+        gainReputationButton.setOnAction(evt -> controller.onGainReputation());
+        withoutReputationButton.setOnAction(evt -> controller.onIgnoreReputation());
+        closeButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
+        reputationInfo.setManaged(false);
+        reputationInfo.setVisible(false);
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
                 toggleGroup.selectToggle(direction == Direction.BUY ? buyButton : sellButton);
 
             }
         });
+
+        showReputationInfoSubscription = EasyBind.subscribe(model.getShowReputationInfo(),
+                showReputationInfo -> {
+                    if (showReputationInfo) {
+                        reputationInfo.setManaged(true);
+                        reputationInfo.setVisible(true);
+                        reputationInfo.setOpacity(1);
+                        if (heightSubscription != null) {
+                            heightSubscription.unsubscribe();
+                        }
+                        heightSubscription = EasyBind.subscribe(reputationInfo.heightProperty(), h -> {
+                            if (h.doubleValue() > 0) {
+                                Transitions.slideInTop(reputationInfo, 450, () -> {
+                                    heightSubscription.unsubscribe();
+                                    heightSubscription = null;
+                                });
+                            }
+                        });
+                    } else {
+                        if (reputationInfo.isManaged()) {
+                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2, () -> {
+                                reputationInfo.setManaged(false);
+                                reputationInfo.setVisible(false);
+                            });
+                        }
+                    }
+                });
     }
 
     @Override
@@ -91,6 +139,10 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
         directionSubscription.unsubscribe();
+        showReputationInfoSubscription.unsubscribe();
+        if (heightSubscription != null) {
+            heightSubscription.unsubscribe();
+        }
     }
 
     private Pair<VBox, ToggleButton> getBoxPair(String title, String info) {
@@ -113,5 +165,36 @@ public class DirectionView extends View<VBox, DirectionModel, DirectionControlle
         vBox.setAlignment(Pos.CENTER);
 
         return new Pair<>(vBox, button);
+    }
+
+    private void setupReputationInfo() {
+        double width = 700;
+        reputationInfo.setAlignment(Pos.TOP_CENTER);
+        reputationInfo.setMaxWidth(width);
+        reputationInfo.setId("sellBtcWarning");
+
+        Label headLineLabel = new Label(Res.get("onboarding.direction.reputationInfo.headline"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("onboarding.direction.reputationInfo.subTitle"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMaxWidth(width - 200);
+        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+
+        gainReputationButton = new Button(Res.get("onboarding.direction.reputationInfo.gainReputation"));
+        gainReputationButton.setDefaultButton(true);
+
+        withoutReputationButton = new Button(Res.get("onboarding.direction.reputationInfo.tradeWithoutReputation"));
+       
+        closeButton = BisqIconButton.createIconButton("close-round");
+
+        buttons = new HBox(7, withoutReputationButton, gainReputationButton);
+        buttons.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(closeButton, new Insets(3, 0, 0, width - 35));
+        VBox.setMargin(headLineLabel, new Insets(-10, 0, 30, 0));
+        VBox.setMargin(buttons, new Insets(50, 0, 30, 0));
+        reputationInfo.getChildren().addAll(closeButton, headLineLabel, subtitleLabel, buttons);
     }
 }

@@ -19,12 +19,15 @@ package bisq.desktop.primary.overlay.onboarding.offer.direction;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 @Getter
 public class DirectionModel implements Model {
-
     private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
+    private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();
 }

@@ -77,7 +77,7 @@ public class CreateOfferController extends NavigationController {
                 NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED
         ));
 
-        directionController = new DirectionController(applicationService);
+        directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
         offerPublishedController = new OfferPublishedController(applicationService);
         marketController = new MarketController(applicationService);
         amountController = new AmountController(applicationService);
@@ -95,7 +95,7 @@ public class CreateOfferController extends NavigationController {
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
-        OverlayController.setTransitionsType(Transitions.Type.DARK);
+        OverlayController.setTransitionsType(Transitions.Type.VERY_DARK);
 
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             reset();
@@ -194,6 +194,7 @@ public class CreateOfferController extends NavigationController {
         }
     }
 
+
     public void onNext() {
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             OverlayController.hide();
@@ -257,5 +258,10 @@ public class CreateOfferController extends NavigationController {
         } else {
             model.getNextButtonDisabled().set(false);
         }
+    }
+
+    private void setButtonsVisible(boolean value) {
+        model.getNextButtonVisible().set(value);
+        model.getSkipButtonVisible().set(value);
     }
 }

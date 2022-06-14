@@ -41,6 +41,7 @@ import java.util.List;
 
 @Slf4j
 public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
+    public static final double TOP_PANE_HEIGHT = 55;
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
     private final HBox topPaneBox;
@@ -106,7 +107,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         skipButton.visibleProperty().bind(model.getSkipButtonVisible());
         topPaneBox.visibleProperty().bind(model.getTopPaneBoxVisible());
         nextButton.disableProperty().bind(model.getNextButtonDisabled());
-        
+
         topPaneBoxVisibleSubscription = EasyBind.subscribe(model.getTopPaneBoxVisible(), visible -> {
             if (visible) {
                 VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
@@ -147,7 +148,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         skipButton.visibleProperty().unbind();
         topPaneBox.visibleProperty().unbind();
         nextButton.disableProperty().unbind();
-        
+
         nextButton.setOnAction(null);
         backButton.setOnAction(null);
         skipButton.setOnAction(null);
@@ -169,7 +170,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         HBox hBox = new HBox(50);
         hBox.setAlignment(Pos.CENTER);
         hBox.setId("onboarding-top-panel");
-        hBox.setMinHeight(55);
+        hBox.setMinHeight(TOP_PANE_HEIGHT);
         HBox.setMargin(skipButton, new Insets(0, 20, 0, -135));
         hBox.getChildren().addAll(Spacer.fillHBox(), direction, market, amount, method, complete, Spacer.fillHBox(), skipButton);
 

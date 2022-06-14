@@ -364,15 +364,13 @@ public class Transitions {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             node.setTranslateY(0);
-            double start = node.getLayoutY() - node.getHeight();
-            double end = node.getLayoutY();
+            double start = node.getTranslateY() - node.getHeight();
+            double end = node.getTranslateY();
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR),
                     new KeyValue(node.translateYProperty(), start, Interpolator.LINEAR)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(node.opacityProperty(), 1, Interpolator.EASE_OUT),
-                    new KeyValue(node.translateYProperty(), end, Interpolator.EASE_OUT)
+                    new KeyValue(node.translateYProperty(), end, Interpolator.EASE_BOTH)
             ));
 
             timeline.setOnFinished(e -> onFinishedHandler.run());

@@ -55,7 +55,7 @@ public class OnboardingController extends NavigationController {
 
     @Override
     public void onActivate() {
-        OverlayController.setTransitionsType(Transitions.Type.DARK);
+        OverlayController.setTransitionsType(Transitions.Type.LIGHT);
     }
 
     @Override
