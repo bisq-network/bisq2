@@ -37,7 +37,7 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
     public Bisq2IntroView(Bisq2IntroModel model, Bisq2IntroController controller) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(15);
+        root.setSpacing(23);
         root.setAlignment(Pos.CENTER);
 
         ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");

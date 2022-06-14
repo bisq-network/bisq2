@@ -106,9 +106,9 @@ public class CreateOfferController extends NavigationController {
             amountController.setDirection(direction);
         });
         marketSubscription = EasyBind.subscribe(marketController.getMarket(), market -> {
-                offerCompletedController.setMarket(market);
-                paymentMethodController.setMarket(market);
-                amountController.setMarket(market);
+            offerCompletedController.setMarket(market);
+            paymentMethodController.setMarket(market);
+            amountController.setMarket(market);
         });
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
@@ -156,9 +156,11 @@ public class CreateOfferController extends NavigationController {
             case CREATE_OFFER_OFFER_PUBLISHED -> {
                 model.getSelectedChildTarget().set(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
                 model.getSkipButtonVisible().set(false);
+                model.getBackButtonVisible().set(false);
                 model.getTopPaneBoxVisible().set(false);
-                model.getNextButtonText().set(Res.get("onboarding.published.viewOffer"));
-                model.getBackButtonText().set(Res.get("onboarding.published.dashboard"));
+                model.getNextButtonText().set(Res.get("onboarding.published.dashboard"));
+                // model.getNextButtonText().set(Res.get("onboarding.published.viewOffer"));
+                //  model.getBackButtonText().set(Res.get("onboarding.published.dashboard"));
             }
             default -> {
             }
@@ -196,7 +198,7 @@ public class CreateOfferController extends NavigationController {
         if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             OverlayController.hide();
             Navigation.navigateTo(NavigationTarget.MAIN);
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
+            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
             reset();
         } else {
             int nextIndex = model.getCurrentIndex().get() + 1;
@@ -212,21 +214,21 @@ public class CreateOfferController extends NavigationController {
     }
 
     public void onBack() {
-        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
+       /* if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
             OverlayController.hide();
             Navigation.navigateTo(NavigationTarget.DASHBOARD);
             reset();
-        } else {
-            int prevIndex = model.getCurrentIndex().get() - 1;
-            if (prevIndex >= 0) {
-                model.setAnimateToRight(false);
-                model.getCurrentIndex().set(prevIndex);
-                NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
-                model.getSelectedChildTarget().set(nextTarget);
-                Navigation.navigateTo(nextTarget);
-                updateNextButtonState();
-            }
+        } else {*/
+        int prevIndex = model.getCurrentIndex().get() - 1;
+        if (prevIndex >= 0) {
+            model.setAnimateToRight(false);
+            model.getCurrentIndex().set(prevIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
+            updateNextButtonState();
         }
+        // }
     }
 
     public void onSkip() {

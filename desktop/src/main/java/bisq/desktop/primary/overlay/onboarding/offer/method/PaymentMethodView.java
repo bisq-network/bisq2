@@ -78,8 +78,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         stackPane.setAlignment(Pos.TOP_CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(45, 65, 33, 65));
-        VBox.setMargin(nonFoundLabel, new Insets(45, 0, 20, 0));
+        VBox.setMargin(flowPane, new Insets(80, 65, 33, 65));
+        VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, stackPane);
 
         allPaymentMethodsListener = c -> {
@@ -150,7 +150,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                         stackPane.getChildren().add(closeCustomIcon);
                     });
             flowPane.getChildren().add(stackPane);
-
         }
     }
 }

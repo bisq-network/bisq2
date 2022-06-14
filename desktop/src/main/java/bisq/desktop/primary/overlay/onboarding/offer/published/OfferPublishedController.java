@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.offer.published;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.user.reputation.ReputationService;
@@ -31,14 +30,14 @@ public class OfferPublishedController implements Controller {
     private final OfferPublishedModel model;
     @Getter
     private final OfferPublishedView view;
-    private final ChatMessagesListView myOfferListView;
+   // private final ChatMessagesListView myOfferListView;
     private final ChatService chatService;
     private final ReputationService reputationService;
 
     public OfferPublishedController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
-        myOfferListView = new ChatMessagesListView(applicationService,
+    /*    myOfferListView = new ChatMessagesListView(applicationService,
                 mentionUser -> {
                 },
                 showChatUserDetails -> {
@@ -48,17 +47,17 @@ public class OfferPublishedController implements Controller {
                 false,
                 true,
                 false,
-                true);
+                true);*/
 
         model = new OfferPublishedModel();
-        view = new OfferPublishedView(model, this, myOfferListView.getRoot());
+        view = new OfferPublishedView(model, this/*, myOfferListView.getRoot()*/);
     }
 
     @Override
     public void onActivate() {
-        myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage()));
+      /*  myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage()));
         myOfferListView.getChatMessages().clear();
-        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(model.getMyOfferMessage(), chatService, reputationService));
+        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(model.getMyOfferMessage(), chatService, reputationService));*/
     }
 
     @Override
@@ -70,7 +69,7 @@ public class OfferPublishedController implements Controller {
             return;
         }
         model.setMyOfferMessage(myOfferMessage);
-        myOfferListView.getChatMessages().clear();
-        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(model.getMyOfferMessage(), chatService, reputationService));
+      /*  myOfferListView.getChatMessages().clear();
+        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(model.getMyOfferMessage(), chatService, reputationService));*/
     }
 }
