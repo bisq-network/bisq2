@@ -27,6 +27,6 @@ public class SettingsModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NETWORK_INFO;
+        return NavigationTarget.USER_PROFILE;
     }
 }

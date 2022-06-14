@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.components;
+package bisq.desktop.primary.main.content.settings.userProfile.old.components;
 
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;

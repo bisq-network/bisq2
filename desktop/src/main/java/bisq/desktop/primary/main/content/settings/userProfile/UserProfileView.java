@@ -18,62 +18,22 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.common.utils.Layout;
-import bisq.i18n.Res;
-import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
-    private final Button showCreateUserProfileButton;
-    private final Pane channelAdmin;
-    private final Pane createUserProfile;
 
     public UserProfileView(UserProfileModel model,
-                           UserProfileController controller,
-                           Pane userProfileSelection,
-                           Pane userProfile,
-                           Pane channelAdmin,
-                           Pane createUserProfile) {
+                           UserProfileController controller) {
         super(new VBox(), model, controller);
-        this.channelAdmin = channelAdmin;
-        this.createUserProfile = createUserProfile;
-
-        root.setPadding(Layout.PADDING);
-        root.setSpacing(40);
-
-        showCreateUserProfileButton = new Button(Res.get("social.createUserProfile.headline"));
-        showCreateUserProfileButton.setMinWidth(300);
-        userProfileSelection.setMinWidth(600);
-        root.getChildren().addAll(userProfileSelection,
-                userProfile,
-                showCreateUserProfileButton,
-                channelAdmin,
-                createUserProfile);
     }
 
     @Override
     protected void onViewAttached() {
-        showCreateUserProfileButton.setOnAction(e -> controller.showCreateUserProfile());
-
-        showCreateUserProfileButton.visibleProperty().bind(model.createUserProfileVisible.not());
-        showCreateUserProfileButton.managedProperty().bind(model.createUserProfileVisible.not());
-        channelAdmin.visibleProperty().bind(model.channelAdminVisible);
-        channelAdmin.managedProperty().bind(model.channelAdminVisible);
-        createUserProfile.visibleProperty().bind(model.createUserProfileVisible);
-        createUserProfile.managedProperty().bind(model.createUserProfileVisible);
     }
 
     @Override
     protected void onViewDetached() {
-        showCreateUserProfileButton.setOnAction(null);
-        showCreateUserProfileButton.visibleProperty().unbind();
-        showCreateUserProfileButton.managedProperty().unbind();
-        channelAdmin.visibleProperty().unbind();
-        channelAdmin.managedProperty().unbind();
-        createUserProfile.visibleProperty().unbind();
-        createUserProfile.managedProperty().unbind();
     }
 }
