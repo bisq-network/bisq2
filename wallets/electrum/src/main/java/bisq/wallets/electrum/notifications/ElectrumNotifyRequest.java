@@ -17,32 +17,17 @@
 
 package bisq.wallets.electrum.notifications;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
+@Getter
 @Setter
-@XmlRootElement
+@ToString
 public class ElectrumNotifyRequest {
-
+    @JsonProperty
     private String address;
+    @JsonProperty
     private String status;
-
-    @XmlElement(name = "address")
-    public String getAddress() {
-        return address;
-    }
-
-    @XmlElement(name = "status")
-    public String getStatus() {
-        return status;
-    }
-
-    @Override
-    public String toString() {
-        return "ElectrumNotifyRequest{" +
-                "address='" + address + '\'' +
-                ", status='" + status + '\'' +
-                '}';
-    }
 }

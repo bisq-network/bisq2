@@ -17,7 +17,6 @@
 
 package bisq.wallets.electrum.notifications;
 
-import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import com.sun.net.httpserver.HttpServer;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
