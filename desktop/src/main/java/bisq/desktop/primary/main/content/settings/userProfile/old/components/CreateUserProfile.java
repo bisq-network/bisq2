@@ -130,7 +130,7 @@ public class CreateUserProfile {
             model.roboHashIconVisible.set(false);
             model.createProfileButtonDisable.set(true);
             model.powProgress.set(-1);
-            model.nymId.set(Res.get("initNymProfile.nymId.generating"));
+            model.nymId.set(Res.get("createProfile.nymId.generating"));
             long ts = System.currentTimeMillis();
             mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                     .thenAccept(proofOfWork -> {

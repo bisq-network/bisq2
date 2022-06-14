@@ -587,6 +587,9 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.bisq-input-box-text-input:focused .content {
+    -fx-background-color: transparent;
+}
 
 /*******************************************************************************
  * Controls                                          *
