@@ -16,13 +16,14 @@
  */
 package bisq.restApi;
 
+import bisq.application.DefaultApplicationService;
+import bisq.restApi.endpoints.ChatApi;
 import bisq.restApi.endpoints.KeyPairApi;
+import bisq.restApi.endpoints.OfferApi;
 import bisq.restApi.error.CustomExceptionMapper;
 import bisq.restApi.error.StatusException;
 import bisq.restApi.util.StaticFileHandler;
-import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -39,12 +40,20 @@ import java.net.URI;
 public class RestApiApplication extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/api/v1";
 
-    @Getter
-    protected final DefaultApplicationService applicationService;
+    public DefaultApplicationService getApplicationService() {
+        if (applicationService == null) {
+            // TODO needs to be read from System
+            String[] args = "--appName=bisq2_API --add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.application.appName=REST -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 -Duser.language=en -Duser.country=US".split(" ");
+
+            applicationService = new DefaultApplicationService(args);
+            applicationService.initialize().join();
+        }
+        return applicationService;
+    }
+
+    protected DefaultApplicationService applicationService;
 
     public RestApiApplication() {
-        applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
-        applicationService.initialize().join();
     }
 
     protected static HttpServer httpServer;
@@ -62,9 +71,9 @@ public class RestApiApplication extends ResourceConfig {
         ResourceConfig app = new RestApiApplication()
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
-//                .register(ProtoWriter.class)
-//                .register(KeyPairWriter.class)
                 .register(KeyPairApi.class)
+                .register(ChatApi.class)
+                .register(OfferApi.class)
                 .register(SwaggerResolution.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);

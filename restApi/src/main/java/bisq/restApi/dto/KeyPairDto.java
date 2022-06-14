@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(title = "KeyPair")
+@Schema(name = "KeyPair")
 public class KeyPairDto {
     byte[] publicKey;
     byte[] privateKey;
