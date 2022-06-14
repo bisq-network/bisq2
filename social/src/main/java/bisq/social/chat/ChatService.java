@@ -596,13 +596,6 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return persistableStore.getCustomTags();
     }
 
-    public List<Market> getAllMarketsForTradeChannel() {
-        List<Market> markets = new ArrayList<>();
-        markets.add(MarketRepository.getDefault());
-        markets.addAll(MarketRepository.getMajorMarkets());
-        return markets;
-    }
-
     public Optional<ChatUser> findChatUser(String chatUserId) {
         return Optional.ofNullable(ChatUserById.get(chatUserId));
     }
@@ -642,15 +635,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
         selectTradeChannel(defaultChannel);
         getPublicTradeChannels().add(defaultChannel);
-        // getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getBsqMarket(), true));
-        getPublicTradeChannels().add(new PublicTradeChannel(MarketRepository.getXmrMarket(), true));
-        // for the ANY entry
-        // getPublicTradeChannels().add(new PublicTradeChannel(Optional.empty(), true));
-        List<Market> allMarketsForTradeChannel = getAllMarketsForTradeChannel();
-        allMarketsForTradeChannel.remove(MarketRepository.getDefault());
-        allMarketsForTradeChannel.remove(MarketRepository.getBsqMarket());
-        allMarketsForTradeChannel.remove(MarketRepository.getXmrMarket());
-        allMarketsForTradeChannel.forEach(market ->
+        List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
+        allMarkets.remove(MarketRepository.getDefault());
+        allMarkets.forEach(market ->
                 getPublicTradeChannels().add(new PublicTradeChannel(market, false)));
 
         // Dummy admin

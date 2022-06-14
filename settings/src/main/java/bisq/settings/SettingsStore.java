@@ -46,7 +46,7 @@ public class SettingsStore implements PersistableStore<SettingsStore> {
 
     public SettingsStore() {
         cookie = new Cookie();
-        markets = new ObservableSet<>(MarketRepository.getMajorMarkets());
+        markets = new ObservableSet<>(MarketRepository.getAllFiatMarkets());
         selectedMarket = MarketRepository.getDefault();
     }
 

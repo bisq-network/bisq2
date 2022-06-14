@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
@@ -98,7 +99,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         }
                     });
 
-            List<Market> markets = chatService.getAllMarketsForTradeChannel();
+            List<Market> markets = MarketRepository.getAllFiatMarkets();
 
             Set<Market> visibleMarkets = model.filteredList.stream()
                     .map(e -> ((PublicTradeChannel) e.getChannel()))
@@ -110,13 +111,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .map(e -> new View.MarketListItem(Optional.of(e)))
                     .collect(Collectors.toList());
 
-            Optional<PublicTradeChannel> anyMarketInVisible = model.filteredList.stream()
+           /* Optional<PublicTradeChannel> anyMarketInVisible = model.filteredList.stream()
                     .map(e -> ((PublicTradeChannel) e.getChannel()))
                     .filter(c -> c.getMarket().isEmpty())
                     .findAny();
             if (anyMarketInVisible.isEmpty()) {
                 marketListItems.add(View.MarketListItem.ANY);
-            }
+            }*/
 
             model.allMarkets.setAll(marketListItems);
             model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
