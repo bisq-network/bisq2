@@ -24,6 +24,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
@@ -36,22 +37,22 @@ public class ElectrumNotifyApi {
         void onAddressStatusChanged(String address, String status);
     }
 
-    private static final CopyOnWriteArrayList<Listener> sListeners = new CopyOnWriteArrayList<>();
+    private static final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     @POST
     @Consumes("application/json")
     public Response notifyEndpoint(@Parameter(required = true) ElectrumNotifyRequest request) {
         log.info(request.toString());
-        sListeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
+        listeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
         return Response.ok().entity("SUCCESS").build();
     }
 
     public static void registerListener(Listener listener) {
-        sListeners.add(listener);
+        listeners.add(listener);
     }
 
     public static void removeListener(Listener listener) {
-        sListeners.remove(listener);
+        listeners.remove(listener);
     }
 
 }
