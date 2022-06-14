@@ -18,25 +18,17 @@
 package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.Model;
-import bisq.security.pow.ProofOfWork;
-import javafx.beans.property.*;
-import javafx.scene.image.Image;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
-
-import java.security.KeyPair;
 
 @Getter
 public class CreateProfileModel implements Model {
-    final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
-    final StringProperty nymId = new SimpleStringProperty();
     final StringProperty nickName = new SimpleStringProperty();
+    final StringProperty bio = new SimpleStringProperty();
+    final StringProperty terms = new SimpleStringProperty();
     final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     final BooleanProperty createProfileButtonMouseTransparent = new SimpleBooleanProperty();
-    final BooleanProperty regenerateButtonMouseTransparent = new SimpleBooleanProperty();
-    final BooleanProperty isBusy = new SimpleBooleanProperty();
-    final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
-    final DoubleProperty powProgress = new SimpleDoubleProperty();
-    ProofOfWork proofOfWork;
-    KeyPair tempKeyPair = null;
-    String tempKeyId;
 }

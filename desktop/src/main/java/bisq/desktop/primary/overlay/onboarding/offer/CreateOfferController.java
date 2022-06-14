@@ -18,7 +18,6 @@
 package bisq.desktop.primary.overlay.onboarding.offer;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -30,7 +29,6 @@ import bisq.desktop.primary.overlay.onboarding.offer.complete.OfferCompletedCont
 import bisq.desktop.primary.overlay.onboarding.offer.direction.DirectionController;
 import bisq.desktop.primary.overlay.onboarding.offer.market.MarketController;
 import bisq.desktop.primary.overlay.onboarding.offer.method.PaymentMethodController;
-import bisq.desktop.primary.overlay.onboarding.offer.published.OfferPublishedController;
 import bisq.i18n.Res;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -42,8 +40,6 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 import java.util.Optional;
 
-import static bisq.desktop.common.view.NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED;
-
 @Slf4j
 public class CreateOfferController extends NavigationController {
     private final DefaultApplicationService applicationService;
@@ -52,14 +48,13 @@ public class CreateOfferController extends NavigationController {
     @Getter
     private final CreateOfferView view;
     private final DirectionController directionController;
-    private final OfferPublishedController offerPublishedController;
     private final MarketController marketController;
     private final AmountController amountController;
     private final PaymentMethodController paymentMethodController;
     private final OfferCompletedController offerCompletedController;
     private final ListChangeListener<String> paymentMethodsListener;
     private Subscription directionSubscription, marketSubscription, baseSideAmountSubscription,
-            quoteSideAmountSubscription, myOfferMessageSubscription;
+            quoteSideAmountSubscription;
 
     public CreateOfferController(DefaultApplicationService applicationService) {
         super(NavigationTarget.CREATE_OFFER);
@@ -73,16 +68,14 @@ public class CreateOfferController extends NavigationController {
                 NavigationTarget.CREATE_OFFER_MARKET,
                 NavigationTarget.CREATE_OFFER_AMOUNT,
                 NavigationTarget.CREATE_OFFER_PAYMENT_METHOD,
-                NavigationTarget.CREATE_OFFER_OFFER_COMPLETED,
-                NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED
+                NavigationTarget.CREATE_OFFER_OFFER_COMPLETED
         ));
 
-        directionController = new DirectionController(applicationService);
-        offerPublishedController = new OfferPublishedController(applicationService);
+        directionController = new DirectionController(applicationService, this::onNext, this::setButtonsVisible);
         marketController = new MarketController(applicationService);
         amountController = new AmountController(applicationService);
         paymentMethodController = new PaymentMethodController(applicationService);
-        offerCompletedController = new OfferCompletedController(applicationService);
+        offerCompletedController = new OfferCompletedController(applicationService, this::setButtonsVisible, this::reset);
 
         model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
         paymentMethodsListener = c -> {
@@ -95,11 +88,7 @@ public class CreateOfferController extends NavigationController {
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
-        OverlayController.setTransitionsType(Transitions.Type.DARK);
-
-        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
-            reset();
-        }
+        OverlayController.setTransitionsType(Transitions.Type.VERY_DARK);
 
         directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
             offerCompletedController.setDirection(direction);
@@ -113,8 +102,6 @@ public class CreateOfferController extends NavigationController {
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
 
-        myOfferMessageSubscription = EasyBind.subscribe(offerCompletedController.getMyOfferMessage(), offerPublishedController::setMyOfferMessage);
-
         paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
         offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
         handlePaymentMethodsUpdate();
@@ -126,7 +113,6 @@ public class CreateOfferController extends NavigationController {
         marketSubscription.unsubscribe();
         baseSideAmountSubscription.unsubscribe();
         quoteSideAmountSubscription.unsubscribe();
-        myOfferMessageSubscription.unsubscribe();
 
         paymentMethodController.getPaymentMethods().removeListener(paymentMethodsListener);
     }
@@ -151,16 +137,6 @@ public class CreateOfferController extends NavigationController {
             }
             case CREATE_OFFER_OFFER_COMPLETED -> {
                 model.getNextButtonVisible().set(false);
-                //model.getBackButtonVisible().set(false);
-            }
-            case CREATE_OFFER_OFFER_PUBLISHED -> {
-                model.getSelectedChildTarget().set(NavigationTarget.CREATE_OFFER_OFFER_PUBLISHED);
-                model.getSkipButtonVisible().set(false);
-                model.getBackButtonVisible().set(false);
-                model.getTopPaneBoxVisible().set(false);
-                model.getNextButtonText().set(Res.get("onboarding.published.dashboard"));
-                // model.getNextButtonText().set(Res.get("onboarding.published.viewOffer"));
-                //  model.getBackButtonText().set(Res.get("onboarding.published.dashboard"));
             }
             default -> {
             }
@@ -185,31 +161,22 @@ public class CreateOfferController extends NavigationController {
             case CREATE_OFFER_OFFER_COMPLETED -> {
                 return Optional.of(offerCompletedController);
             }
-            case CREATE_OFFER_OFFER_PUBLISHED -> {
-                return Optional.of(offerPublishedController);
-            }
             default -> {
                 return Optional.empty();
             }
         }
     }
 
+
     public void onNext() {
-        if (model.getSelectedChildTarget().get() == CREATE_OFFER_OFFER_PUBLISHED) {
-            OverlayController.hide();
-            Navigation.navigateTo(NavigationTarget.MAIN);
-            UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
-            reset();
-        } else {
-            int nextIndex = model.getCurrentIndex().get() + 1;
-            if (nextIndex < model.getChildTargets().size()) {
-                model.setAnimateToRight(true);
-                model.getCurrentIndex().set(nextIndex);
-                NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-                model.getSelectedChildTarget().set(nextTarget);
-                Navigation.navigateTo(nextTarget);
-                updateNextButtonState();
-            }
+        int nextIndex = model.getCurrentIndex().get() + 1;
+        if (nextIndex < model.getChildTargets().size()) {
+            model.setAnimateToRight(true);
+            model.getCurrentIndex().set(nextIndex);
+            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+            model.getSelectedChildTarget().set(nextTarget);
+            Navigation.navigateTo(nextTarget);
+            updateNextButtonState();
         }
     }
 
@@ -257,5 +224,11 @@ public class CreateOfferController extends NavigationController {
         } else {
             model.getNextButtonDisabled().set(false);
         }
+    }
+
+    private void setButtonsVisible(boolean value) {
+        model.getBackButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_DIRECTION);
+        model.getNextButtonVisible().set(value && model.getSelectedChildTarget().get() != NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
+        model.getSkipButtonVisible().set(value);
     }
 }

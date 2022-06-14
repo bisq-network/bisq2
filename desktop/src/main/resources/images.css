@@ -285,8 +285,8 @@
     -fx-image: url("images/payment/Zelle.png");
 }
 
-#close-custom {
-    -fx-image: url("images/close-custom.png");
+#close-round {
+    -fx-image: url("images/close-round.png");
 }
 
 #template_market {

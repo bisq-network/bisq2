@@ -90,6 +90,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             model.ignoreButtonText.set(Res.get("social.ignore"));
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
+            model.terms.set(chatUser.getTerms());
             model.reputationScore.set(chatUser.getBurnScoreAsString());
             model.profileAge.set(chatUser.getAccountAgeAsString());
 
@@ -139,6 +140,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
         private final StringProperty bio = new SimpleStringProperty();
+        private final StringProperty terms = new SimpleStringProperty();
         private final StringProperty reputationScore = new SimpleStringProperty();
         private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
@@ -155,6 +157,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final ImageView roboIconImageView;
         private final Label nym, nickName, bio, reputationScore, profileAge, optionsLabel;
         private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
+        private final Label terms;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -212,8 +215,8 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox.setMargin(separator, new Insets(24, -45, 15, -55));
 
             VBox chatRulesBox = getInfoBox(Res.get("social.chat.chatRules.headline"), true);
-            Label chatRules = (Label) chatRulesBox.getChildren().get(1);
-            chatRules.setText(Res.get("social.chat.chatRules.content"));
+            terms = (Label) chatRulesBox.getChildren().get(1);
+            terms.setText(Res.get("social.chat.chatRules.content"));
 
             root.getChildren().addAll(nickName, roboIconImageView, nym, privateMsgButton,
                     bioBox, reputationScoreBox, profileAgeBox,
@@ -225,6 +228,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
             bio.textProperty().bind(model.bio);
+            terms.textProperty().bind(model.terms);
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
             ignoreButton.textProperty().bind(model.ignoreButtonText);
@@ -245,6 +249,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().unbind();
             nickName.textProperty().unbind();
             bio.textProperty().unbind();
+            terms.textProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
             ignoreButton.textProperty().unbind();

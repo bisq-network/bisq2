@@ -25,11 +25,14 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
 import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyIntroController;
+import bisq.desktop.primary.overlay.onboarding.nym.GenerateNymController;
 import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -40,6 +43,9 @@ public class OnboardingController extends NavigationController {
     private final OnboardingModel model;
     @Getter
     private final OnboardingView view;
+    private final CreateProfileController createProfileController;
+    private final GenerateNymController generateNymController;
+    private Subscription nickNamePin, bioPin, termsPin;
 
     public OnboardingController(DefaultApplicationService applicationService) {
         super(NavigationTarget.ONBOARDING);
@@ -47,6 +53,9 @@ public class OnboardingController extends NavigationController {
         this.applicationService = applicationService;
         model = new OnboardingModel();
         view = new OnboardingView(model, this);
+
+        createProfileController = new CreateProfileController(applicationService);
+        generateNymController = new GenerateNymController(applicationService);
     }
 
     @Override
@@ -55,11 +64,18 @@ public class OnboardingController extends NavigationController {
 
     @Override
     public void onActivate() {
-        OverlayController.setTransitionsType(Transitions.Type.DARK);
+        OverlayController.setTransitionsType(Transitions.Type.LIGHT);
+
+        nickNamePin = EasyBind.subscribe(createProfileController.getNickName(), generateNymController::setNickName);
+        bioPin = EasyBind.subscribe(createProfileController.getBio(), generateNymController::setBio);
+        termsPin = EasyBind.subscribe(createProfileController.getTerms(), generateNymController::setTerms);
     }
 
     @Override
     public void onDeactivate() {
+        nickNamePin.unsubscribe();
+        bioPin.unsubscribe();
+        termsPin.unsubscribe();
     }
 
     @Override
@@ -69,7 +85,10 @@ public class OnboardingController extends NavigationController {
                 return Optional.of(new Bisq2IntroController(applicationService));
             }
             case ONBOARDING_CREATE_PROFILE -> {
-                return Optional.of(new CreateProfileController(applicationService));
+                return Optional.of(createProfileController);
+            }
+            case ONBOARDING_GENERATE_NYM -> {
+                return Optional.of(generateNymController);
             }
             case ONBOARDING_BISQ_EASY -> {
                 return Optional.of(new BisqEasyIntroController(applicationService));

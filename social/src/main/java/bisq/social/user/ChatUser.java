@@ -91,6 +91,8 @@ public class ChatUser implements DistributedData {
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
+                .setBio(bio)
+                .setTerms(terms)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
                 .setMetaData(metaData.toProto())
