@@ -25,9 +25,7 @@ import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.regtest.ElectrumExtension;
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
-import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeOutputResponse;
-import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeResponse;
-import bisq.wallets.electrum.rpc.responses.ElectrumListUnspentResponseEntry;
+import bisq.wallets.electrum.rpc.responses.*;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,9 +75,10 @@ public class ElectrumTxAndPasswordIntegrationTests {
     }
 
     @Test
-    void listUnspentAndGetTxTest() throws InterruptedException {
+    void listUnspentGetTxAndHistoryTest() throws InterruptedException {
         fundElectrumWallet();
 
+        // UTXO
         List<ElectrumListUnspentResponseEntry> unspentResponseEntries = electrumDaemon.listUnspent();
         assertThat(unspentResponseEntries).hasSize(1);
 
@@ -87,6 +86,7 @@ public class ElectrumTxAndPasswordIntegrationTests {
         assertThat(firstEntry.getAddress()).isEqualTo(fundingAddress);
         assertThat(firstEntry.getValue()).isEqualTo("10");
 
+        // Transaction
         String tx = electrumDaemon.getTransaction(fundingTxId);
         ElectrumDeserializeResponse deserializedTx = electrumDaemon.deserialize(tx);
         ElectrumDeserializeOutputResponse[] outputs = deserializedTx.getOutputs();
@@ -101,6 +101,20 @@ public class ElectrumTxAndPasswordIntegrationTests {
             }
         }
         assertThat(hasFundingAddress).isTrue();
+
+        // OnChainHistory
+        ElectrumOnChainHistoryResponse electrumOnChainHistoryResponse = electrumDaemon.onChainHistory();
+        List<ElectrumOnChainTransactionResponse> transactions = electrumOnChainHistoryResponse.getTransactions();
+        boolean foundFundingTxInHistory = false;
+        for (ElectrumOnChainTransactionResponse t : transactions) {
+            if (t.getTxId().equals(fundingTxId)) {
+                foundFundingTxInHistory = true;
+                assertThat(t.getBcBalance()).isEqualTo("10.");
+                assertThat(t.getBcValue()).isEqualTo("10.");
+                assertThat(t.getConfirmations()).isEqualTo(1);
+            }
+        }
+        assertThat(foundFundingTxInHistory).isTrue();
     }
 
     private void fundElectrumWallet() throws InterruptedException {

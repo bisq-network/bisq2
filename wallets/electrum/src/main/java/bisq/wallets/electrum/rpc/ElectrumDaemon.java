@@ -99,6 +99,11 @@ public class ElectrumDaemon {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
+    public ElectrumOnChainHistoryResponse onChainHistory() {
+        var rpcCall = new ElectrumOnChainHistoryRpcCall();
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public void password(String password, String newPassword) {
         var request = ElectrumPasswordRpcCall.Request.builder()
                 .password(password)
