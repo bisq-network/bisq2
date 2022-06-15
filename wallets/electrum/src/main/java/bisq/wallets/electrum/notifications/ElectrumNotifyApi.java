@@ -17,41 +17,44 @@
 
 package bisq.wallets.electrum.notifications;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static bisq.wallets.electrum.notifications.ElectrumNotifyApi.ENDPOINT_NAME;
+
 @Slf4j
-@Path("/electrum-notify")
+@Path("/" + ENDPOINT_NAME)
 public class ElectrumNotifyApi {
 
     public static final String ENDPOINT_NAME = "electrum-notify";
+    private static final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     public interface Listener {
+
         void onAddressStatusChanged(String address, String status);
+
     }
 
-    private static final CopyOnWriteArrayList<Listener> sListeners = new CopyOnWriteArrayList<>();
-
     @POST
-    @Consumes("application/json")
-    public Response notifyEndpoint(@Parameter(required = true) ElectrumNotifyRequest request) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String notifyEndpoint(ElectrumNotifyRequest request) {
         log.info(request.toString());
-        sListeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
-        return Response.ok().entity("SUCCESS").build();
+        listeners.forEach(listener -> listener.onAddressStatusChanged(request.getAddress(), request.getStatus()));
+        return "SUCCESS";
     }
 
     public static void registerListener(Listener listener) {
-        sListeners.add(listener);
+        listeners.add(listener);
     }
 
     public static void removeListener(Listener listener) {
-        sListeners.remove(listener);
+        listeners.remove(listener);
     }
 
 }

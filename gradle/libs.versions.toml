@@ -26,6 +26,9 @@ fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
 fxmisc-easybind-lib = { strictly = '1.0.3' }
 fxmisc-richtextfx-lib = { strictly = '0.10.9' }
 
+glassfish-jersey-lib = { strictly = '3.0.4' }
+glassfish-jaxb-runtime-lib = { strictly = '3.0.2' }
+
 google-gson-lib = { strictly = '2.9.0' }
 google-guava-lib = { strictly = '31.1-jre' }
 
@@ -47,6 +50,7 @@ shadow-plugin = { strictly = '7.1.2' }
 slf4j-lib = { strictly = '1.7.36' }
 spring-boot-starter-web-lib = { strictly = '2.5.6' }
 springfox-lib = { strictly = '3.0.0' }
+swagger-jaxrs2-jakarta-lib = { strictly = '2.2.0' }
 tukaani-lib = { strictly = '1.9' }
 typesafe-config-lib = { strictly = '1.4.2' }
 
@@ -81,6 +85,11 @@ fontawesomefx-materialdesignfont = { module = 'de.jensd:fontawesomefx-materialde
 fxmisc-easybind = { module = 'org.fxmisc.easybind:easybind', version.ref = 'fxmisc-easybind-lib' }
 fxmisc-richtextfx = { module = 'org.fxmisc.richtext:richtextfx', version.ref = 'fxmisc-richtextfx-lib' }
 
+glassfish-jersey-jdk-http = { module = 'org.glassfish.jersey.containers:jersey-container-jdk-http', version.ref = 'glassfish-jersey-lib' }
+glassfish-jersey-json-jackson = { module = 'org.glassfish.jersey.media:jersey-media-json-jackson', version.ref = 'glassfish-jersey-lib' }
+glassfish-jersey-inject-hk2 = { module = 'org.glassfish.jersey.inject:jersey-hk2', version.ref = 'glassfish-jersey-lib' }
+glassfish-jaxb-runtime = { module = 'org.glassfish.jaxb:jaxb-runtime', version.ref = 'glassfish-jaxb-runtime-lib' }
+
 google-gson = { module = 'com.google.code.gson:gson', version.ref = 'google-gson-lib' }
 google-guava = { module = 'com.google.guava:guava', version.ref = 'google-guava-lib' }
 
@@ -111,8 +120,8 @@ springfox-boot-starter = { module = 'io.springfox:springfox-boot-starter', versi
 springfox-swagger2 = { module = 'io.springfox:springfox-swagger2', version.ref = 'springfox-lib' }
 springfox-swagger-ui = { module = 'io.springfox:springfox-swagger-ui', version.ref = 'springfox-lib' }
 
+swagger-jaxrs2-jakarta = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-jaxrs2-jakarta-lib' }
 tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
-
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
 
 # Defines groups of libs that are commonly used together
@@ -121,6 +130,7 @@ typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-conf
 bisq-tor-binaries = ['bisq-tor-binary-geoip', 'bisq-tor-binary-macos', 'bisq-tor-binary-linux32', 'bisq-tor-binary-linux64', 'bisq-tor-binary-windows']
 fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materialdesignfont']
 fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
+glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime']
 i2p = ['i2p-core', 'i2p-router', 'i2p-streaming']
 jackson = ['jackson-core', 'jackson-annotations', 'jackson-databind']
 springfox-libs = ['springfox-boot-starter', 'springfox-swagger2', 'springfox-swagger-ui']
