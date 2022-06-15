@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.newProfilePopup;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.newProfilePopup.createOffer.CreateOfferControllerOld;
-import bisq.desktop.primary.overlay.onboarding.profile.CreateProfileController;
+import bisq.desktop.primary.overlay.onboarding.profile.nickName.AddNickNameController;
 import bisq.desktop.primary.main.content.newProfilePopup.selectUserType.SelectUserTypeController;
 import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
@@ -49,7 +49,7 @@ public class NewProfilePopupController implements Controller {
                 stepAsNumber -> {
                     int step = (int) stepAsNumber;
                     if (step == 0) {
-                        CreateProfileController controller = new CreateProfileController(applicationService);
+                        AddNickNameController controller = new AddNickNameController(applicationService);
                         model.setView(controller.getView());
                     } else if (step == 1) {
                         SelectUserTypeController controller = new SelectUserTypeController(applicationService, this::navigateSubView);

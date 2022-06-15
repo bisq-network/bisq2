@@ -15,17 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.bisqeasy.old.tab2;
+package bisq.desktop.primary.overlay.onboarding.profile.nickName;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import javafx.beans.property.*;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Setter;
 
-@Slf4j
 @Getter
-public class BisqEasyOnboardingTab2Model implements Model {
-
-    public BisqEasyOnboardingTab2Model(DefaultApplicationService applicationService) {
-    }
+public class AddNickNameModel implements Model {
+    private final StringProperty nickName = new SimpleStringProperty();
+    private final StringProperty nymId = new SimpleStringProperty();
+    private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty createProfileButtonMouseTransparent = new SimpleBooleanProperty();
+    private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
+    @Setter
+    private TempIdentity tempIdentity;
 }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.nym;
+package bisq.desktop.primary.overlay.onboarding.profile.nym;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -27,7 +27,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -40,7 +39,6 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
     private final Label nymId;
     private final ImageView roboIconView;
     private final ProgressIndicator powProgressIndicator;
-    private final ProgressIndicator createProfileIndicator;
 
     public GenerateNymView(GenerateNymModel model, GenerateNymController controller) {
         super(new VBox(), model, controller);
@@ -85,15 +83,6 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         createProfileButton.setContentDisplay(ContentDisplay.RIGHT);
         createProfileButton.setDefaultButton(true);
 
-        createProfileIndicator = new ProgressIndicator();
-        createProfileIndicator.setProgress(0);
-        createProfileIndicator.setMaxWidth(24);
-        createProfileIndicator.setMaxHeight(24);
-        createProfileIndicator.setManaged(false);
-        createProfileIndicator.setVisible(false);
-        HBox hBox = new HBox(10, createProfileButton, createProfileIndicator);
-        hBox.setAlignment(Pos.CENTER);
-
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 8, 0));
         VBox.setMargin(profileIdBox, new Insets(0, 0, 16, 0));
@@ -104,51 +93,39 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
                 stackPane,
                 profileIdBox,
                 regenerateButton,
-                hBox
+                createProfileButton
         );
     }
 
     @Override
     protected void onViewAttached() {
-        regenerateButton.mouseTransparentProperty().bind(model.regenerateButtonMouseTransparent);
-        roboIconView.imageProperty().bind(model.roboHashImage);
+        roboIconView.imageProperty().bind(model.getRoboHashImage());
+        roboIconView.managedProperty().bind(model.getRoboHashIconVisible());
+        roboIconView.visibleProperty().bind(model.getRoboHashIconVisible());
+        powProgressIndicator.managedProperty().bind(model.getRoboHashIconVisible().not());
+        powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
+        powProgressIndicator.progressProperty().bind(model.getPowProgress());
 
-        roboIconView.managedProperty().bind(model.roboHashIconVisible);
-        roboIconView.visibleProperty().bind(model.roboHashIconVisible);
-        powProgressIndicator.managedProperty().bind(model.roboHashIconVisible.not());
-        powProgressIndicator.visibleProperty().bind(model.roboHashIconVisible.not());
-        createProfileIndicator.managedProperty().bind(model.createProfileProgress.lessThan(0));
-        createProfileIndicator.visibleProperty().bind(model.createProfileProgress.lessThan(0));
-
-        powProgressIndicator.progressProperty().bind(model.powProgress);
-        createProfileIndicator.progressProperty().bind(model.createProfileProgress);
-
-        nymId.textProperty().bind(model.nymId);
-        nymId.disableProperty().bind(model.roboHashIconVisible.not());
-        createProfileButton.disableProperty().bind(model.createProfileProgress.lessThan(0));
+        nymId.textProperty().bind(model.getNymId());
+        nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
+        regenerateButton.mouseTransparentProperty().bind(model.getReGenerateButtonMouseTransparent());
 
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
-        createProfileButton.setOnAction(e -> controller.onCreateNymProfile());
+        createProfileButton.setOnAction(e -> controller.onNext());
     }
 
     @Override
     protected void onViewDetached() {
-        regenerateButton.mouseTransparentProperty().unbind();
         roboIconView.imageProperty().unbind();
-
         roboIconView.managedProperty().unbind();
         roboIconView.visibleProperty().unbind();
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
-        createProfileIndicator.managedProperty().unbind();
-        createProfileIndicator.visibleProperty().unbind();
-
         powProgressIndicator.progressProperty().unbind();
-        createProfileIndicator.progressProperty().unbind();
 
         nymId.textProperty().unbind();
         nymId.disableProperty().unbind();
-        createProfileButton.disableProperty().unbind();
+        regenerateButton.mouseTransparentProperty().unbind();
 
         regenerateButton.setOnAction(null);
         createProfileButton.setOnAction(null);
