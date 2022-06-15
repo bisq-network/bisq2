@@ -24,23 +24,17 @@ import javafx.beans.property.StringProperty;
 
 public class WalletTransactionListItem implements TableItem {
     private final StringProperty txId = new SimpleStringProperty(this, "wallet.column.txId");
-    private final StringProperty address = new SimpleStringProperty(this, "address");
     private final StringProperty amount = new SimpleStringProperty(this, "amount");
     private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
 
     public WalletTransactionListItem(Transaction transaction) {
         txId.set(transaction.getTxId());
-        address.set(transaction.getAddress());
         amount.set(String.valueOf(transaction.getAmount()));
         confirmations.set(String.valueOf(transaction.getConfirmations()));
     }
 
     public StringProperty txIdProperty() {
         return txId;
-    }
-
-    public StringProperty addressProperty() {
-        return address;
     }
 
     public StringProperty amountProperty() {

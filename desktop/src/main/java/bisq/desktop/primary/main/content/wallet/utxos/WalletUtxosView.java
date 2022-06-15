@@ -59,13 +59,5 @@ public class WalletUtxosView extends View<VBox, WalletUtxosModel, WalletUtxosCon
         TableColumn<WalletUtxoListItem, String> amountColumn = new TableColumn<>(Res.get("amount"));
         amountColumn.setCellValueFactory(param -> param.getValue().amountProperty());
         tableView.getColumns().add(amountColumn);
-
-        TableColumn<WalletUtxoListItem, String> confirmationsColumn = new TableColumn<>(Res.get("wallet.column.confirmations"));
-        confirmationsColumn.setCellValueFactory(param -> param.getValue().confirmationsProperty());
-        tableView.getColumns().add(confirmationsColumn);
-
-        TableColumn<WalletUtxoListItem, Boolean> reusedColumn = new TableColumn<>(Res.get("wallet.column.reused"));
-        reusedColumn.setCellValueFactory(param -> param.getValue().getReusedProperty());
-        tableView.getColumns().add(reusedColumn);
     }
 }
