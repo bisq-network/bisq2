@@ -46,7 +46,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         root.getChildren().add(firstBitcoinBox);
 
         VBox communityBox = getWidgetBox(
-                "welcome-community",
+                "dashboard-community",
                 Res.get("dashboard.community.headline"),
                 Res.get("dashboard.community.content"),
                 Res.get("dashboard.community.button"),
@@ -54,7 +54,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         );
 
         VBox profileBox = getWidgetBox(
-                "logo-mark-line",
+                "dashboard-bisq",
                 Res.get("dashboard.protocols.headline"),
                 Res.get("dashboard.protocols.content"),
                 Res.get("dashboard.protocols.button"),

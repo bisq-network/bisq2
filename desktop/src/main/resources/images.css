@@ -27,6 +27,14 @@
     -fx-image: url("images/logo-mark-line.png");
 }
 
+#dashboard-bisq {
+    -fx-image: url("images/dashboard-bisq.png");
+}
+
+#dashboard-community {
+    -fx-image: url("images/dashboard-community.png");
+}
+
 #logo-grey {
     -fx-image: url("images/logo_grey.png");
 }
@@ -214,6 +222,18 @@
 
 
 /* Onboarding */
+#intro-1 {
+    -fx-image: url("images/onboarding/intro-1.png");
+}
+
+#intro-2 {
+    -fx-image: url("images/onboarding/intro-2.png");
+}
+
+#intro-3 {
+    -fx-image: url("images/onboarding/intro-3.png");
+}
+
 #onboarding-1-easy {
     -fx-image: url("images/onboarding/onboarding-1-easy.png");
 }
