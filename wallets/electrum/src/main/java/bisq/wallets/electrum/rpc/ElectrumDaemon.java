@@ -113,7 +113,7 @@ public class ElectrumDaemon {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public String payTo(String destination, double amount, String password) {
+    public String payTo(String password, String destination, double amount) {
         var request = ElectrumPayToRpcCall.Request.builder()
                 .destination(destination)
                 .amount(amount)
@@ -133,7 +133,7 @@ public class ElectrumDaemon {
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public String signTransaction(String tx, String password) {
+    public String signTransaction(String password, String tx) {
         var request = new ElectrumSignTransactionRpcCall.Request(tx, password);
         var rpcCall = new ElectrumSignTransactionRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);

@@ -141,8 +141,8 @@ public class ElectrumTxAndPasswordIntegrationTests {
         BitcoindWallet minerWallet = bitcoindRegtestSetup.getMinerWallet();
         String receiverAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
 
-        String unsignedTx = electrumDaemon.payTo(receiverAddress, 5, ElectrumRegtestSetup.WALLET_PASSPHRASE);
-        String signedTx = electrumDaemon.signTransaction(unsignedTx, ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        String unsignedTx = electrumDaemon.payTo(ElectrumRegtestSetup.WALLET_PASSPHRASE, receiverAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(ElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
 
         electrumDaemon.broadcast(signedTx);
         electrumNotifyWebServer.stopServer();
