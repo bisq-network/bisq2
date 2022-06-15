@@ -9,7 +9,6 @@ dependencies {
 
     implementation libs.jackson.databind
     implementation libs.bundles.glassfish.jersey
-    implementation libs.swagger.jaxrs2.jakarta
 
     testImplementation project(':bitcoind')
     testImplementation project(':regtest')
