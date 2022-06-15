@@ -34,7 +34,7 @@ public interface WalletService {
 
     boolean isWalletReady();
 
-    CompletableFuture<String> getNewAddress(String label);
+    CompletableFuture<String> getNewAddress();
 
     ObservableSet<String> getReceiveAddresses();
 

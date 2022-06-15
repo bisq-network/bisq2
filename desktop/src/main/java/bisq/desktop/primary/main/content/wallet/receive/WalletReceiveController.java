@@ -49,6 +49,6 @@ public class WalletReceiveController implements Controller {
     }
 
     public void onGenerateNewAddress() {
-        walletService.getNewAddress("");
+        walletService.getNewAddress();
     }
 }
