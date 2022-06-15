@@ -139,6 +139,11 @@ public class ElectrumDaemon {
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
+    public void stop() {
+        var rpcCall = new ElectrumStopRpcCall();
+        rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public boolean verifyMessage(String address, String signature, String message) {
         var request = ElectrumVerifyMessageRpcCall.Request.builder()
                 .address(address)
