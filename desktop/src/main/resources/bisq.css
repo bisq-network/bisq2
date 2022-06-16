@@ -757,7 +757,7 @@
 }
 
 .bisq-big-white-button:hover {
-    -fx-background-color: -bisq-grey-11;
+    -fx-background-color: -bisq-green;
 }
 
 /* Big grey button */
@@ -772,7 +772,7 @@
 }
 
 .bisq-big-grey-button:hover {
-    -fx-background-color: -bisq-grey-11;
+    -fx-background-color: -bisq-white;
 }
 
 /* Big transparent button */
