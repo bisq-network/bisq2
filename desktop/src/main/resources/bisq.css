@@ -752,7 +752,7 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-   /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
+    /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
     -fx-cursor: hand;
 }
 
@@ -767,7 +767,7 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-   /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
+    /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
     -fx-cursor: hand;
 }
 
@@ -1032,7 +1032,6 @@
     -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
     -fx-background-radius: 4px;
     -fx-background-insets: 0px;
-
     -bisq-toggle-color: -bisq-green;
     -bisq-untoggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
@@ -1042,11 +1041,15 @@
 
 .bisq-toggle-button {
     -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 0.85em;
+    -fx-font-size: 0.9em;
 }
 
 .bisq-toggle-button:selected {
     -fx-text-fill: -bisq-white;
+}
+
+.bisq-toggle-button:hover {
+    -fx-text-fill: -bisq-grey-9;
 }
 
 .bisq-toggle-button Line {

@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,12 +48,14 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     void onOpenChat() {
-       // settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
     public void onCreateOffer() {
-       // settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+    }
+
+    public void onDontShowAgain(boolean isSelected) {
+        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, isSelected);
     }
 }

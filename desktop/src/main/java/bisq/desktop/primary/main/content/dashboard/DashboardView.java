@@ -123,7 +123,6 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 button);
         box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(30, 48, 44, 48));
-
         return box;
     }
 
@@ -153,8 +152,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         return box;
     }
 
-
-    public HBox getIconAndText(String text, String imageId) {
+    private HBox getIconAndText(String text, String imageId) {
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);

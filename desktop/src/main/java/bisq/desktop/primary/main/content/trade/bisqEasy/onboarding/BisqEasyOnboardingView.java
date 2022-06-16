@@ -17,8 +17,10 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
+import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,91 +28,118 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyOnboardingView extends View<StackPane, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
-    private final Button openChatButton, createOfferButton;
+public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
+
+    private final Button createOfferButton, openChatButton;
+    private final BisqToggleButton dontShowAgain;
 
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
 
-        //  root.setSpacing(15);
+        root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
-        ImageView template = ImageUtil.getImageViewById("bisq-easy-onboarding-dummy");
+        Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.headline"));
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-4");
 
-        ImageView logo = ImageUtil.getImageViewById("bisq-easy");
-        logo.setScaleX(1.5);
-        logo.setScaleY(1.5);
 
-        Label headlineLabel = new Label(Res.get("bisqEasy.onBoarding.bisqEasy.intro.headline"));
-        // headlineLabel.getStyleClass().add("bisq-content-headline-label");
-        headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
-
-        Label subtitleLabel = new Label(Res.get("bisqEasy.onBoarding.bisqEasy.intro.subTitle"));
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMaxWidth(300);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
-
-        openChatButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.createOffer"));
-        createOfferButton = new Button(Res.get("bisqEasy.onBoarding.bisqEasy.intro.skip"));
+        Pair<VBox, Button> leftBoxPair = getWidgetBox(
+                Res.get("bisqEasy.onboarding.left.headline"),
+                Res.get("bisqEasy.onboarding.left.content1"),
+                Res.get("bisqEasy.onboarding.left.content2"),
+                Res.get("bisqEasy.onboarding.left.content3"),
+                "onboarding-2-offer",
+                "onboarding-2-chat",
+                "onboarding-3-method",
+                Res.get("bisqEasy.onboarding.left.button")
+        );
+        createOfferButton = leftBoxPair.second();
         createOfferButton.setDefaultButton(true);
-        HBox buttons = new HBox(7, createOfferButton, openChatButton);
-        buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(logo, new Insets(50, 0, 0, 0));
-        //VBox.setMargin(headlineLabel, new Insets(50, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
-        VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
-      /*  root.getChildren().addAll(logo,
-                headlineLabel,
-                subtitleLabel,
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line1"), "onboarding-2-offer"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line2"), "onboarding-2-chat"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line3"), "onboarding-2-payment"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line4"), "onboarding-1-reputation"),
-                Spacer.fillVBox(),
-                buttons);*/
+        Pair<VBox, Button> rightBoxPair = getWidgetBox(
+                Res.get("bisqEasy.onboarding.right.headline"),
+                Res.get("bisqEasy.onboarding.right.content1"),
+                Res.get("bisqEasy.onboarding.right.content2"),
+                Res.get("bisqEasy.onboarding.right.content3"),
+                "onboarding-2-payment",
+                "onboarding-2-chat",
+                "onboarding-3-method",
+                Res.get("bisqEasy.onboarding.right.button")
+        );
+        openChatButton = rightBoxPair.second();
 
-       /* template.setFitWidth(859); 
-        template.setFitHeight(352);*/
-        buttons.setSpacing(114);
-        openChatButton.setMinWidth(330);
-        createOfferButton.setMinWidth(openChatButton.getMinWidth());
-        openChatButton.setMinHeight(50);
-        createOfferButton.setMinHeight(openChatButton.getMinHeight());
-        buttons.setOpacity(0);
-        StackPane.setMargin(buttons, new Insets(-70,0,0,-240));
-        StackPane.setMargin(template, new Insets(0,0,0,20));
-        root.getChildren().addAll(template, buttons);
+        VBox leftBox = leftBoxPair.first();
+        VBox rightBox = rightBoxPair.first();
+        HBox.setHgrow(leftBox, Priority.ALWAYS);
+        HBox.setHgrow(rightBox, Priority.ALWAYS);
+        HBox hBox = new HBox(16, leftBox, rightBox);
+
+        dontShowAgain= new BisqToggleButton(Res.get("bisqEasy.onboarding.dontShowAgain"));
+        VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 76));
+        VBox.setMargin(hBox, new Insets(20, 30, 15, 30));
+        VBox.setMargin(dontShowAgain, new Insets(0, 30, 30, 45));
+        root.getChildren().addAll(headlineLabel, hBox,dontShowAgain);
     }
 
     @Override
     protected void onViewAttached() {
+        createOfferButton.setOnAction(e -> controller.onCreateOffer());
         openChatButton.setOnAction(e -> controller.onOpenChat());
-        createOfferButton.setOnAction(evt -> controller.onCreateOffer());
+        dontShowAgain.setOnAction(e->controller.onDontShowAgain(dontShowAgain.isSelected()));
     }
 
     @Override
     protected void onViewDetached() {
-        openChatButton.setOnAction(null);
         createOfferButton.setOnAction(null);
+        openChatButton.setOnAction(null);
     }
 
-    public HBox getIconAndText(String text, String imageId) {
+    private Pair<VBox, Button> getWidgetBox(String headline,
+                                            String content1,
+                                            String content2,
+                                            String content3,
+                                            String imageId1,
+                                            String imageId2,
+                                            String imageId3,
+                                            String buttonLabel) {
+        Label headlineLabel = new Label(headline);
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+
+        Button button = new Button(buttonLabel);
+        button.getStyleClass().add("bisq-big-grey-button");
+        button.setMaxWidth(Double.MAX_VALUE);
+
+        VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
+        VBox.setMargin(button, new Insets(20, 0, 0, 0));
+        VBox vBox = new VBox(16,
+                headlineLabel,
+                getIconAndText(content1, imageId1),
+                getIconAndText(content2, imageId2),
+                getIconAndText(content3, imageId3),
+                button);
+        vBox.getStyleClass().add("bisq-box-1");
+        vBox.setFillWidth(true);
+        vBox.setPadding(new Insets(36, 48, 52, 48));
+        return new Pair<>(vBox, button);
+    }
+
+    private HBox getIconAndText(String text, String imageId) {
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
+       // label.setMaxWidth(300);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-4, 0, 0, 4));
+        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        int width = 450;
+       /* int width = 600;
         hBox.setMinWidth(width);
-        hBox.setMaxWidth(width);
+        hBox.setMaxWidth(width);*/
         return hBox;
     }
 }

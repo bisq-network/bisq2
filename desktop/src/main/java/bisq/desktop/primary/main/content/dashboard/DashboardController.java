@@ -52,7 +52,7 @@ public class DashboardController implements Controller {
     }
 
     public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
     }
 
 }

@@ -65,6 +65,7 @@ public class GenerateNymController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getCreateProfileButtonMouseTransparent().set(true);
         onCreateTempIdentity();
     }
 
