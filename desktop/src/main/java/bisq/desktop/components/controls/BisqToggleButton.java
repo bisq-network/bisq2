@@ -31,6 +31,11 @@ import java.util.List;
 
 public class BisqToggleButton extends ToggleButton {
 
+    public BisqToggleButton(String text) {
+        super(text);
+        this.getStyleClass().add("bisq-toggle-button");
+    }
+
     public BisqToggleButton() {
         this.getStyleClass().add("bisq-toggle-button");
     }
@@ -40,7 +45,7 @@ public class BisqToggleButton extends ToggleButton {
         return new BisqToggleButtonSkin(this);
     }
 
-    
+
     private final StyleableObjectProperty<Paint> toggleColor = new SimpleStyleableObjectProperty<>(StyleableProperties.TOGGLE_COLOR,
             BisqToggleButton.this,
             "toggleColor");
@@ -52,7 +57,7 @@ public class BisqToggleButton extends ToggleButton {
     public StyleableObjectProperty<Paint> toggleColorProperty() {
         return toggleColor;
     }
-    
+
     private final StyleableObjectProperty<Paint> untoggleColor = new SimpleStyleableObjectProperty<>(StyleableProperties.UNTOGGLE_COLOR,
             BisqToggleButton.this,
             "unToggleColor");
@@ -64,7 +69,7 @@ public class BisqToggleButton extends ToggleButton {
     public StyleableObjectProperty<Paint> unToggleColorProperty() {
         return untoggleColor;
     }
-    
+
     private final StyleableObjectProperty<Paint> toggleLineColor = new SimpleStyleableObjectProperty<>(
             StyleableProperties.TOGGLE_LINE_COLOR,
             BisqToggleButton.this,
@@ -77,7 +82,7 @@ public class BisqToggleButton extends ToggleButton {
     public StyleableObjectProperty<Paint> toggleLineColorProperty() {
         return toggleLineColor;
     }
-    
+
     private final StyleableObjectProperty<Paint> untoggleLineColor = new SimpleStyleableObjectProperty<>(
             StyleableProperties.UNTOGGLE_LINE_COLOR,
             BisqToggleButton.this,

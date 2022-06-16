@@ -450,21 +450,24 @@ public class ChatMessagesListView {
             VBox.setMargin(messagesListView, new Insets(0, 24, 0, 24));
             root.getChildren().addAll(messagesListView);
 
-            messagesListener = c -> UIThread.runOnNextRenderFrame(() -> {
-                if (!model.isCreateOfferTakerListMode) {
-                    messagesListView.scrollTo(messagesListView.getItems().size() - 1);
-                }
-            });
+            messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
         }
 
         @Override
         protected void onViewAttached() {
             model.getSortedChatMessages().addListener(messagesListener);
+            UIThread.runOnNextRenderFrame(this::scrollDown);
         }
 
         @Override
         protected void onViewDetached() {
             model.getSortedChatMessages().removeListener(messagesListener);
+        }
+
+        private void scrollDown() {
+            if (!model.isCreateOfferTakerListMode) {
+                messagesListView.scrollTo(messagesListView.getItems().size() - 1);
+            }
         }
 
         public Callback<ListView<ChatMessageListItem<? extends ChatMessage>>, ListCell<ChatMessageListItem<? extends ChatMessage>>> getCellFactory() {
@@ -622,7 +625,7 @@ public class ChatMessagesListView {
                                 messageHBox.getStyleClass().remove("chat-offer-box-my-offer");
                                 actionButton.getStyleClass().remove("red-button");
                                 actionButton.getStyleClass().remove("default-button");
-                                
+
                                 if (isOfferMessage) {
                                     messageHBox.getStyleClass().add("chat-offer-box");
                                     boolean myMessage = model.isMyMessage(chatMessage);
@@ -668,9 +671,9 @@ public class ChatMessagesListView {
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
                                 }
-                                
-                               // actionButton.getStyleClass().remove("red-button");
-                                
+
+                                // actionButton.getStyleClass().remove("red-button");
+
                                 editInputField.maxWidthProperty().unbind();
 
                                 saveEditButton.setOnAction(null);

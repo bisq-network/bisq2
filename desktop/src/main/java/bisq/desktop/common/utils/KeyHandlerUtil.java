@@ -49,17 +49,17 @@ public class KeyHandlerUtil {
 
     public static void handleDevModeKeyEvent(KeyEvent keyEvent) {
         if (DevMode.isDevMode()) {
+
             if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT0, keyEvent)) {
-                OverlayController.hide();
                 Navigation.navigateTo(NavigationTarget.SPLASH);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
+                // Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
+                Navigation.navigateTo(NavigationTarget.BISQ_EASY_ONBOARDING);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
@@ -70,6 +70,8 @@ public class KeyHandlerUtil {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_PAYMENT_METHOD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT9, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_OFFER_COMPLETED);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.A, keyEvent)) {
+                OverlayController.hide();
             }
         }
     }

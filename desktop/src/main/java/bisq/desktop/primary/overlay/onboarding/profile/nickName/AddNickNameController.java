@@ -22,14 +22,13 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class AddNickNameController implements Controller {
@@ -82,8 +81,9 @@ public class AddNickNameController implements Controller {
                         "")
                 .thenCompose(chatUserService::publishNewChatUser)
                 .thenAccept(chatUserIdentity -> UIThread.run(() -> {
-                    checkArgument(chatUserIdentity.getIdentity().domainId().equals(tempIdentity.profileId()));
-                    Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
+                    OverlayController.hide();
+                    Navigation.navigateTo(NavigationTarget.MAIN);
+                    UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
                     model.getCreateProfileProgress().set(0);
                 }));
     }

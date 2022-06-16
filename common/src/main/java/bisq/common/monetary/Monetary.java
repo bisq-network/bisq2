@@ -113,4 +113,6 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
     }
 
     public abstract String getName();
+
+    public abstract Monetary round(int roundPrecision);
 }

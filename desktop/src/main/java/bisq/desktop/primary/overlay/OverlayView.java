@@ -98,7 +98,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
-                root.getChildren().add(childRoot);
+                root.getChildren().setAll(childRoot);
                 show(childRoot.getPrefWidth(), childRoot.getPrefHeight());
                 Transitions.transitContentViews(oldValue, newValue);
             } else {

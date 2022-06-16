@@ -29,6 +29,6 @@ public class BisqEasyModel extends NavigationModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.ONBOARDING_BISQ_EASY;
+        return NavigationTarget.ONBOARDING_BISQ_EASY_OLD;
     }
 }

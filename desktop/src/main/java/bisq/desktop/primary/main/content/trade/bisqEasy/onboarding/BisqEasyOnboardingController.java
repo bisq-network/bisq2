@@ -15,24 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.dashboard;
+package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class DashboardController implements Controller {
-    private final DashboardModel model;
+@Slf4j
+public class BisqEasyOnboardingController implements Controller {
+    private final BisqEasyOnboardingModel model;
     @Getter
-    private final DashboardView view;
-    private final DefaultApplicationService applicationService;
+    private final BisqEasyOnboardingView view;
+    private final SettingsService settingsService;
 
-    public DashboardController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new DashboardModel();
-        view = new DashboardView(model, this);
+    public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
+        model = new BisqEasyOnboardingModel();
+        view = new BisqEasyOnboardingView(model, this);
     }
 
     @Override
@@ -43,16 +47,15 @@ public class DashboardController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onOpenDiscussionChat() {
-        Navigation.navigateTo(NavigationTarget.DISCUSS);
+    void onOpenChat() {
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
-    public void onOpenTradeOverview() {
-        Navigation.navigateTo(NavigationTarget.TRADE_OVERVIEW);
+    public void onCreateOffer() {
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
-    public void onOpenBisqEasy() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY);
+    public void onDontShowAgain(boolean isSelected) {
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, isSelected);
     }
-
 }

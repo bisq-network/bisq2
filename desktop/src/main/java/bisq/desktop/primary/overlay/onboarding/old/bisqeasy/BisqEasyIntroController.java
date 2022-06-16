@@ -15,25 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.preferences;
+package bisq.desktop.primary.overlay.onboarding.old.bisqeasy;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class PreferencesController implements Controller {
-
-    private final PreferencesModel model;
+@Slf4j
+public class BisqEasyIntroController implements Controller {
+    private final BisqEasyIntroModel model;
     @Getter
-    private final PreferencesView view;
+    private final BisqEasyIntroView view;
     private final SettingsService settingsService;
 
-    public PreferencesController(DefaultApplicationService applicationService) {
+    public BisqEasyIntroController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
-        model = new PreferencesModel(applicationService);
-        view = new PreferencesView(model, this);
+        model = new BisqEasyIntroModel();
+        view = new BisqEasyIntroView(model, this);
     }
 
     @Override
@@ -44,9 +49,15 @@ public class PreferencesController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onResetDontShowAgain(boolean isSelected) {
-        if (isSelected) {
-            settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, false);
-        }
+    void onNext() {
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, true);
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.MAIN);
+        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+    }
+
+    public void onSkip() {
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, true);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 }

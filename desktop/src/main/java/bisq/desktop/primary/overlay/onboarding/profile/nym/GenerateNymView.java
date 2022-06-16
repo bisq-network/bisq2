@@ -105,11 +105,12 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         powProgressIndicator.managedProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
-
+      
         nymId.textProperty().bind(model.getNymId());
         nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
         regenerateButton.mouseTransparentProperty().bind(model.getReGenerateButtonMouseTransparent());
-
+        createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonMouseTransparent());
+        
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
         createProfileButton.setOnAction(e -> controller.onNext());
     }
@@ -126,7 +127,8 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         nymId.textProperty().unbind();
         nymId.disableProperty().unbind();
         regenerateButton.mouseTransparentProperty().unbind();
-
+        createProfileButton.mouseTransparentProperty().unbind();
+        
         regenerateButton.setOnAction(null);
         createProfileButton.setOnAction(null);
     }

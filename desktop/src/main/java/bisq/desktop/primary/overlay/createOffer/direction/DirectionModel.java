@@ -15,26 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.settings;
+package bisq.desktop.primary.overlay.createOffer.direction;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
+import bisq.desktop.common.view.Model;
+import bisq.offer.spec.Direction;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
 
-// Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
-public enum CookieKey implements ProtoEnum {
-    STAGE_X,
-    STAGE_Y,
-    STAGE_W,
-    STAGE_H,
-    NAVIGATION_TARGET,
-    BISQ_2_ONBOARDED,
-    SHOW_AGAIN_BISQ_EASY_ONBOARDING;
-
-    public bisq.settings.protobuf.CookieKey toProto() {
-        return bisq.settings.protobuf.CookieKey.valueOf(name());
-    }
-
-    public static CookieKey fromProto(bisq.settings.protobuf.CookieKey proto) {
-        return ProtobufUtils.enumFromProto(CookieKey.class, proto.name());
-    }
+@Getter
+public class DirectionModel implements Model {
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
+    private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();
 }

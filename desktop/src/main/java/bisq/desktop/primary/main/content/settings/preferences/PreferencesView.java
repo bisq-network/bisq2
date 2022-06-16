@@ -18,6 +18,9 @@
 package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqToggleButton;
+import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -26,19 +29,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
 
-    public PreferencesView(PreferencesModel model, PreferencesController controller) {
-        super(new VBox(), model, controller);
+    private final BisqToggleButton resetDontShowAgain;
 
-        root.setAlignment(Pos.CENTER);
-        Label label = new Label("WIP");
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
-        Label small = new Label(getClass().getSimpleName());
-        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
-        root.getChildren().addAll(label, small);
+    public PreferencesView(PreferencesModel model, PreferencesController controller) {
+        super(new VBox(20), model, controller);
+
+        root.setAlignment(Pos.TOP_LEFT);
+        //root.setPadding(new Insets(30, 30, 30, 30));
+
+        Label headlineLabel = new Label(Res.get("settings.preferences.displaySettings"));
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+
+        resetDontShowAgain = new BisqToggleButton(Res.get("settings.preferences.resetDontShowAgain"));
+        VBox.setMargin(headlineLabel, new Insets(30,0,0,0));
+        root.getChildren().addAll(headlineLabel, resetDontShowAgain);
     }
 
     @Override
     protected void onViewAttached() {
+        resetDontShowAgain.setSelected(false);
+        resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain(resetDontShowAgain.isSelected()));
     }
 
     @Override
