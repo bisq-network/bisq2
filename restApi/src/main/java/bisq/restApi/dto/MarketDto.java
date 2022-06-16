@@ -15,7 +15,7 @@ public class MarketDto extends BaseDto<MarketDto> {
     protected String baseCurrencyName;
     protected String quoteCurrencyName;
 
-    public MarketDto read(Market market) {
+    public MarketDto loadFieldsFrom(Market market) {
         setBaseCurrencyCode(market.baseCurrencyCode());
         setQuoteCurrencyCode(market.quoteCurrencyCode());
         setBaseCurrencyName(market.baseCurrencyName());

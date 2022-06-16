@@ -20,9 +20,9 @@ public class PublicTradeChannelDto extends BaseDto<PublicTradeChannelDto> {
     @JsonProperty("market")
     protected MarketDto marketDto;
 
-    public PublicTradeChannelDto read(PublicTradeChannel publicTradeChannel) {
-        super.read(publicTradeChannel);
-        setMarketDto(publicTradeChannel.getMarket().map(market -> new MarketDto().read(market)).orElse(null));
+    public PublicTradeChannelDto loadFieldsFrom(PublicTradeChannel publicTradeChannel) {
+        super.loadFieldsFrom(publicTradeChannel);
+        setMarketDto(publicTradeChannel.getMarket().map(market -> new MarketDto().loadFieldsFrom(market)).orElse(null));
         return this;
     }
 }

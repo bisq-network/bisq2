@@ -52,7 +52,7 @@ public class ChatApi {
     )
     public List<PublicDiscussionChannelDto> getPublicDiscussionChannels() {
         return chatService.getPublicDiscussionChannels().stream() //
-                .map(publicDiscussionChannel -> new PublicDiscussionChannelDto().read(publicDiscussionChannel)) //
+                .map(publicDiscussionChannel -> new PublicDiscussionChannelDto().loadFieldsFrom(publicDiscussionChannel)) //
                 .collect(Collectors.toList());
     }
 
@@ -68,7 +68,7 @@ public class ChatApi {
     )
     public List<PublicTradeChannelDto> getPublicTradeChannels() {
         return chatService.getPublicTradeChannels().stream() //
-                .map(publicTradeChannel -> new PublicTradeChannelDto().read(publicTradeChannel)) //
+                .map(publicTradeChannel -> new PublicTradeChannelDto().loadFieldsFrom(publicTradeChannel)) //
                 .collect(Collectors.toList());
     }
 }

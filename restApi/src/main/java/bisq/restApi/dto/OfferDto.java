@@ -20,20 +20,20 @@ public class OfferDto extends BaseDto<OfferDto> {
 
     @EqualsAndHashCode.Include
     protected String id;
-    protected long date; //long ???
-    protected String makeNodeId; // instead of network ID
+    protected long date;
+    protected String makerNodeId;
 
-    protected MarketDto market; // why has Market no ID?
+    protected MarketDto market;
     protected Direction direction;
     protected long baseAmount;
 
-    protected long fixPrice; //price is a long and is fixed?? what's the date when price was valid?
+    protected long fixPrice;
     protected List<SwapProtocolType> swapProtocolTypes; // SwapProtocolType can be used directly
 
-    public OfferDto read(Offer offer) {
+    public OfferDto loadFieldsFrom(Offer offer) {
         // map the easy stuff
-        super.read(offer);
-        market = new MarketDto().read(offer.getMarket());
+        super.loadFieldsFrom(offer);
+        market = new MarketDto().loadFieldsFrom(offer.getMarket());
         return this;
     }
 

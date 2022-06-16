@@ -16,6 +16,6 @@ public class PublicDiscussionChannelDto extends BaseDto<PublicDiscussionChannelD
     protected String id;
     private String channelName;
     private String description;
-    private String channelAdminId; // TODO do we need the admin and moderater in the web api?
+    private String channelAdminId;
     private Set<String> channelModeratorIds;
 }

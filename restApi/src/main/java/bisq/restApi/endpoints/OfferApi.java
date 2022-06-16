@@ -45,7 +45,7 @@ public class OfferApi {
     )
     public List<OfferDto> getOpenOfferBook() {
         List<OfferDto> openOffers = openOfferService.getOpenOffers().stream() //
-                .map(openOffer -> new OfferDto().read(openOffer.getOffer())) //
+                .map(openOffer -> new OfferDto().loadFieldsFrom(openOffer.getOffer())) //
                 .collect(Collectors.toList());
 
         return openOffers;
