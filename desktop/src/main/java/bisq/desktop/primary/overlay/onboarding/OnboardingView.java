@@ -51,7 +51,7 @@ public class OnboardingView extends NavigationView<VBox, OnboardingModel, Onboar
     @Override
     protected void onViewAttached() {
         // Replace the key handler of OverlayView as we do not support escape/enter at onboarding
-         rootScene = root.getScene();
+        rootScene = root.getScene();
         rootScene.setOnKeyReleased(keyEvent -> {
             KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
             KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);

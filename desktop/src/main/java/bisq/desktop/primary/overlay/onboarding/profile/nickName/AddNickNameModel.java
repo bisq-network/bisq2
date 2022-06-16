@@ -28,7 +28,6 @@ public class AddNickNameModel implements Model {
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty nymId = new SimpleStringProperty();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty createProfileButtonMouseTransparent = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
     @Setter
     private TempIdentity tempIdentity;

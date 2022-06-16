@@ -24,7 +24,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -40,27 +39,27 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
         root.getChildren().add(new HBox(16, marketPrice, offersOnline, activeUsers));
 
-        VBox firstBitcoinBox = getBigWidgetBox();
-        VBox.setMargin(firstBitcoinBox, new Insets(0, 0, 0, 0));
+        VBox firstBox = getBigWidgetBox();
+        VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
 
-        root.getChildren().add(firstBitcoinBox);
+        root.getChildren().add(firstBox);
 
-        VBox communityBox = getWidgetBox(
-                "dashboard-community",
-                Res.get("dashboard.community.headline"),
-                Res.get("dashboard.community.content"),
-                Res.get("dashboard.community.button"),
-                controller::onOpenDiscussionChat
-        );
-
-        VBox profileBox = getWidgetBox(
-                "dashboard-bisq",
-                Res.get("dashboard.protocols.headline"),
-                Res.get("dashboard.protocols.content"),
-                Res.get("dashboard.protocols.button"),
+        VBox secondBox = getWidgetBox(
+                "dashboard-trade-apps",
+                Res.get("dashboard.second.headline"),
+                Res.get("dashboard.second.content"),
+                Res.get("dashboard.second.button"),
                 controller::onOpenTradeOverview
         );
-        root.getChildren().add(new HBox(16, communityBox, profileBox));
+
+        VBox thirdBox = getWidgetBox(
+                "dashboard-chat",
+                Res.get("dashboard.third.headline"),
+                Res.get("dashboard.third.content"),
+                Res.get("dashboard.third.button"),
+                controller::onOpenDiscussionChat
+        );
+        root.getChildren().add(new HBox(16, secondBox, thirdBox));
     }
 
     @Override
@@ -103,10 +102,11 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     }
 
     private VBox getBigWidgetBox() {
-        Label headlineLabel = new Label(Res.get("dashboard.myFirstBitcoin.headline"));
+        Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
+        headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
-        Button button = new Button(Res.get("dashboard.myFirstBitcoin.button"));
+        Button button = new Button(Res.get("dashboard.main.button"));
         button.getStyleClass().add("bisq-big-green-button");
         button.setOnAction(e -> controller.onOpenBisqEasy());
         button.setMaxWidth(Double.MAX_VALUE);
@@ -115,9 +115,9 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         VBox.setMargin(button, new Insets(20, 0, 0, 0));
         VBox box = new VBox(15,
                 headlineLabel,
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content1"), "onboarding-2-offer-white"),
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content2"), "onboarding-2-chat-white"),
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content3"), "onboarding-1-reputation-white"),
+                getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
+              /*  getIconAndText(Res.get("dashboard.myFirstBitcoin.content2"), "onboarding-2-chat-white"),
+                getIconAndText(Res.get("dashboard.myFirstBitcoin.content3"), "onboarding-1-reputation-white"),*/
                 button);
         box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(30, 48, 44, 48));
@@ -126,7 +126,6 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     }
 
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
-        // ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
@@ -135,10 +134,11 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         contentLabel.setMaxWidth(600);
         contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setMinHeight(40);
+        contentLabel.setMinHeight(60);
+        contentLabel.setMaxHeight(60);
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-big-transparent-button");
+        button.getStyleClass().add("bisq-big-grey-button");
         button.setOnAction(e -> onAction.run());
         button.setMaxWidth(Double.MAX_VALUE);
 
@@ -158,9 +158,9 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
-        HBox hBox = new HBox(15, bulletPoint, label);
+      /*  ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
+        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));*/
+        HBox hBox = new HBox(15,/* bulletPoint,*/ label);
         hBox.setAlignment(Pos.CENTER_LEFT);
         int width = 600;
         hBox.setMinWidth(width);

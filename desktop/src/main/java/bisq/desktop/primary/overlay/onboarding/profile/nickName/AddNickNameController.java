@@ -58,8 +58,8 @@ public class AddNickNameController implements Controller {
                     } else {
                         model.getNymId().set(model.getTempIdentity().profileId());
                     }
-                    model.getCreateProfileButtonDisabled().set(model.getCreateProfileProgress().get() == -1 &&
-                            (nickName == null || nickName.isEmpty()));
+                    model.getCreateProfileButtonDisabled().set(model.getCreateProfileProgress().get() == -1 ||
+                            nickName == null || nickName.isEmpty());
                 });
     }
 

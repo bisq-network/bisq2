@@ -35,6 +35,19 @@
     -fx-image: url("images/dashboard-community.png");
 }
 
+#dashboard-bisq-easy {
+    -fx-image: url("images/dashboard-bisq-easy.png");
+}
+
+#dashboard-chat {
+    -fx-image: url("images/dashboard-chat.png");
+}
+
+#dashboard-trade-apps {
+    -fx-image: url("images/dashboard-trade-apps.png");
+}
+
+
 #logo-grey {
     -fx-image: url("images/logo_grey.png");
 }
@@ -309,14 +322,9 @@
     -fx-image: url("images/close-round.png");
 }
 
-#template_market {
-    -fx-image: url("images/onboarding/template/onboarding-template_0003_market.png");
+#bisq-easy-onboarding-dummy {
+    -fx-image: url("images/onboarding/bisq-easy-onboarding-dummy.png");
 }
-
-#template_methods {
-    -fx-image: url("images/onboarding/template/onboarding-template_0005_methods.png");
-}
-
 
 /* Onboarding icons*/
 #info-circle-solid {

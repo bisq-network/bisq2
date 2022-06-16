@@ -620,7 +620,9 @@ public class ChatMessagesListView {
 
                                 messageHBox.getStyleClass().remove("chat-offer-box");
                                 messageHBox.getStyleClass().remove("chat-offer-box-my-offer");
-
+                                actionButton.getStyleClass().remove("red-button");
+                                actionButton.getStyleClass().remove("default-button");
+                                
                                 if (isOfferMessage) {
                                     messageHBox.getStyleClass().add("chat-offer-box");
                                     boolean myMessage = model.isMyMessage(chatMessage);
@@ -631,18 +633,15 @@ public class ChatMessagesListView {
                                         if (isCreateOfferMakerListMode) {
                                             // used by create offer view / maker list
                                             actionButton.setText(Res.get("createOffer"));
-                                            actionButton.getStyleClass().remove("red-button");
                                             actionButton.getStyleClass().add("default-button");
                                             actionButton.setOnAction(e -> controller.onCreateOffer((PublicTradeChatMessage) chatMessage));
                                         } else {
                                             actionButton.setText(Res.get("deleteOffer"));
-                                            actionButton.getStyleClass().remove("default-button");
                                             actionButton.getStyleClass().add("red-button");
                                             actionButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
                                         }
                                     } else {
                                         actionButton.setText(Res.get("takeOffer"));
-                                        actionButton.getStyleClass().remove("red-button");
                                         actionButton.getStyleClass().add("default-button");
                                         actionButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
                                     }
@@ -669,7 +668,9 @@ public class ChatMessagesListView {
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
                                 }
-
+                                
+                               // actionButton.getStyleClass().remove("red-button");
+                                
                                 editInputField.maxWidthProperty().unbind();
 
                                 saveEditButton.setOnAction(null);

@@ -363,9 +363,9 @@ public class Transitions {
         if (displaySettings.isUseAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            node.setTranslateY(0);
-            double start = node.getTranslateY() - node.getHeight();
-            double end = node.getTranslateY();
+            double start = -node.getHeight();
+            node.setTranslateY(start);
+            double end = 0;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.translateYProperty(), start, Interpolator.LINEAR)
             ));

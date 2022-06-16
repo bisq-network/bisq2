@@ -24,7 +24,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -39,7 +38,7 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
     private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
     private final VBox content, feedback;
-    private Button dashBoardButton, viewOfferButton;
+    private Button viewOfferButton;
     private Subscription showFeedbackPin;
 
     OfferCompletedView(OfferCompletedModel model,
@@ -83,7 +82,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
     protected void onViewAttached() {
         Transitions.removeEffect(content);
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
-        dashBoardButton.setOnAction(e -> controller.onOpenDashBoard());
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
             takeOfferLabel.setVisible(matchingOffersFound);
             takeOfferLabel.setManaged(matchingOffersFound);
@@ -101,7 +99,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
 
         showFeedbackPin = EasyBind.subscribe(model.getShowFeedback(),
                 showFeedback -> {
-                    feedback.setManaged(showFeedback);
                     feedback.setVisible(showFeedback);
                     if (showFeedback) {
                         Transitions.blurLight(content, -0.5);
@@ -115,7 +112,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
     @Override
     protected void onViewDetached() {
         viewOfferButton.setOnAction(null);
-        dashBoardButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();
         showFeedbackPin.unsubscribe();
     }
@@ -125,7 +121,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         feedback.setAlignment(Pos.TOP_CENTER);
         feedback.setMaxWidth(width);
         feedback.setId("sellBtcWarning");
-        //feedback.setMaxHeight(200);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.feedback.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -133,19 +128,16 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         Label subtitleLabel = new Label(Res.get("onboarding.completed.feedback.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMaxWidth(width - 200);
+        subtitleLabel.setMinWidth(width - 200);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setMinHeight(100);
         subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        dashBoardButton = new Button(Res.get("onboarding.completed.feedback.dashboard"));
-        dashBoardButton.setDefaultButton(true);
-
         viewOfferButton = new Button(Res.get("onboarding.completed.feedback.viewOffer"));
-
-        HBox buttons = new HBox(7, viewOfferButton, dashBoardButton);
-        buttons.setAlignment(Pos.CENTER);
-
+        viewOfferButton.setDefaultButton(true);
+        
         VBox.setMargin(headLineLabel, new Insets(40, 0, 30, 0));
-        VBox.setMargin(buttons, new Insets(50, 0, 30, 0));
-        feedback.getChildren().addAll(headLineLabel, subtitleLabel, buttons);
+        VBox.setMargin(viewOfferButton, new Insets(50, 0, 30, 0));
+        feedback.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
     }
 }

@@ -752,11 +752,26 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);
+   /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
     -fx-cursor: hand;
 }
 
 .bisq-big-white-button:hover {
+    -fx-background-color: -bisq-grey-11;
+}
+
+/* Big grey button */
+.bisq-big-grey-button {
+    -fx-background-color: -bisq-grey-17;
+    -fx-text-fill: -bisq-white;
+    -fx-padding: 17;
+    -fx-font-size: 1.54em;
+    -fx-font-family: "IBM Plex Sans Light";
+   /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
+    -fx-cursor: hand;
+}
+
+.bisq-big-grey-button:hover {
     -fx-background-color: -bisq-grey-11;
 }
 

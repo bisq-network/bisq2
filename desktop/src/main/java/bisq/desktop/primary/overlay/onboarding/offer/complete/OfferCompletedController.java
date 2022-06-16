@@ -187,11 +187,6 @@ public class OfferCompletedController implements Controller {
         takersListView.getChatMessages().clear();
     }
 
-    void onOpenDashBoard() {
-        close();
-        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
-    }
-
     void onOpenBisqEasy() {
         close();
         UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
