@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.amount;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
@@ -39,24 +40,25 @@ public class AmountController implements Controller {
     private final AmountModel model;
     @Getter
     private final AmountView view;
-    private final BigAmountInput baseAmount;
-    private final SmallAmountInput quoteAmount;
+    private final BigAmountInput quoteAmount;
+    private final SmallAmountInput baseAmount;
     private final ChangeListener<Monetary> baseCurrencyAmountListener, quoteCurrencyAmountListener;
     private final ChangeListener<Quote> fixPriceQuoteListener;
     private final PriceInput price;
-    private Subscription sliderAmountSubscription, baseAmountFromModelSubscription, baseAmountFromCompSubscription,
+    private final ChangeListener<Number> sliderListener;
+    private long minAmount, minMaxDiff;
+    private Subscription baseAmountFromModelSubscription, baseAmountFromCompSubscription,
             quoteAmountFromCompSubscription, priceFromCompSubscription;
 
     public AmountController(DefaultApplicationService applicationService) {
-        baseAmount = new BigAmountInput(true);
-        quoteAmount = new SmallAmountInput(false);
+        quoteAmount = new BigAmountInput(false);
+        baseAmount = new SmallAmountInput(true);
         price = new PriceInput(applicationService.getMarketPriceService());
 
         model = new AmountModel();
         view = new AmountView(model, this,
                 baseAmount.getRoot(),
-                quoteAmount.getRoot(),
-                price.getRoot());
+                quoteAmount.getRoot());
 
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
@@ -69,6 +71,13 @@ public class AmountController implements Controller {
         };
         fixPriceQuoteListener = (observable, oldValue, newValue) -> {
             UIThread.runOnNextRenderFrame(this::applyFixPrice);
+        };
+
+        sliderListener = (observable, oldValue, newValue) -> {
+            double sliderValue = newValue.doubleValue();
+            long value = Math.round(sliderValue * minMaxDiff) + minAmount;
+            Coin amount = Coin.of(value, "BTC");
+            baseAmount.setAmount(amount);
         };
     }
 
@@ -109,13 +118,17 @@ public class AmountController implements Controller {
         model.getQuoteSideAmount().addListener(quoteCurrencyAmountListener);
         model.getFixPrice().addListener(fixPriceQuoteListener);
 
-        long minAmount = model.getMinAmount().get().getValue();
-        long minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
+        minAmount = model.getMinAmount().get().getValue();
+        minMaxDiff = model.getMaxAmount().get().getValue() - minAmount;
 
-        if (model.getBaseSideAmount().get() == null) {
-            baseAmount.setAmount(Coin.asBtc(700000));
+        baseAmount.setAmount(null);
+        if (model.getQuoteSideAmount().get() == null) {
+            //todo we need to adjust to diff fiat exchange rates
+            quoteAmount.setAmount(Fiat.parse("100", model.getMarket().quoteCurrencyCode()));
+        } else {
+            quoteAmount.setAmount(model.getQuoteSideAmount().get());
         }
-        setQuoteFromBase();
+        setBaseFromQuote();
 
         baseAmountFromModelSubscription = EasyBind.subscribe(model.getBaseSideAmount(), amount -> {
             // Only apply value from component to slider if we have no focus on slider (not used)
@@ -132,12 +145,7 @@ public class AmountController implements Controller {
         priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
                 price -> model.getFixPrice().set(price));
 
-        sliderAmountSubscription = EasyBind.subscribe(model.getSliderValue(), sliderValueAsNumber -> {
-            double sliderValue = (double) sliderValueAsNumber;
-            long value = Math.round(sliderValue * minMaxDiff) + minAmount;
-            Coin amount = Coin.of(value, "BTC");
-            baseAmount.setAmount(amount);
-        });
+        model.getSliderValue().addListener(sliderListener);
     }
 
     @Override
@@ -145,7 +153,7 @@ public class AmountController implements Controller {
         model.getBaseSideAmount().removeListener(baseCurrencyAmountListener);
         model.getQuoteSideAmount().removeListener(quoteCurrencyAmountListener);
         model.getFixPrice().removeListener(fixPriceQuoteListener);
-        sliderAmountSubscription.unsubscribe();
+        model.getSliderValue().removeListener(sliderListener);
         baseAmountFromModelSubscription.unsubscribe();
         baseAmountFromCompSubscription.unsubscribe();
         quoteAmountFromCompSubscription.unsubscribe();

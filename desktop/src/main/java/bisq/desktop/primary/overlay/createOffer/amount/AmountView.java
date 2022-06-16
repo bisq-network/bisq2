@@ -39,7 +39,7 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
     private final Label headLineLabel;
     private final Label subtitleLabel;
 
-    public AmountView(AmountModel model, AmountController controller, Pane baseAmount, Pane quoteAmount, Pane price) {
+    public AmountView(AmountModel model, AmountController controller, Pane baseAmount, Pane quoteAmount) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
@@ -53,9 +53,9 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        VBox.setMargin(baseAmount, new Insets(-15, 0, 0, 0));
-        VBox.setMargin(quoteAmount, new Insets(-17, 0, 0, 0));
-        VBox vbox = new VBox(0, baseAmount, quoteAmount);
+        VBox.setMargin(quoteAmount, new Insets(-15, 0, 0, 0));
+        VBox.setMargin(baseAmount, new Insets(-17, 0, 0, 0));
+        VBox vbox = new VBox(0, quoteAmount, baseAmount);
         vbox.getStyleClass().add("bisq-box-3");
         vbox.setAlignment(Pos.CENTER);
         vbox.setMaxWidth(330);

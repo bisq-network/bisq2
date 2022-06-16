@@ -155,12 +155,17 @@ public class BigAmountInput {
             root.getChildren().addAll(textInput, codeLabel);
 
             //  Listeners on view component events
-            focusListener = (o, old, newValue) -> {
+            focusListener = (o, oldValue, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onAmount(textInput.getText());
+                if (oldValue) {
+                    controller.onAmount(textInput.getText());
+                }
             };
-            textInputListener = (o, old, newValue) -> controller.onAmount(textInput.getText());
-
+            textInputListener = (o, old, newValue) -> {
+                if (textInput.isFocused()) {
+                    controller.onAmount(textInput.getText());
+                }
+            };
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
         }

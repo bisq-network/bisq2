@@ -165,11 +165,17 @@ public class SmallAmountInput {
             root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
 
             //  Listeners on view component events
-            focusListener = (o, old, newValue) -> {
+            focusListener = (o, oldValue, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onAmount(textInput.getText());
+                if (oldValue) {
+                    controller.onAmount(textInput.getText());
+                }
             };
-            textInputListener = (o, old, newValue) -> controller.onAmount(textInput.getText().replace(PREFIX, ""));
+            textInputListener = (o, old, newValue) -> {
+                if (textInput.isFocused()) {
+                    controller.onAmount(textInput.getText().replace(PREFIX, ""));
+                }
+            };
 
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
@@ -194,7 +200,7 @@ public class SmallAmountInput {
         }
 
         private void applyAmount(Monetary newValue) {
-            textInput.setText(newValue == null ? "" : 
+            textInput.setText(newValue == null ? "" :
                     PREFIX + AmountFormatter.formatAmount(newValue, true));
         }
     }
