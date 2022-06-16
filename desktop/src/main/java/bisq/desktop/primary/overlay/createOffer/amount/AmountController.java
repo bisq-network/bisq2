@@ -166,7 +166,9 @@ public class AmountController implements Controller {
         Monetary baseCurrencyAmount = model.getBaseSideAmount().get();
         if (baseCurrencyAmount == null) return;
         if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
-        quoteAmount.setAmount(fixPrice.toQuoteMonetary(baseCurrencyAmount));
+
+        Monetary exactAmount = fixPrice.toQuoteMonetary(baseCurrencyAmount);
+        quoteAmount.setAmount( exactAmount.round(0));
     }
 
     private void setBaseFromQuote() {

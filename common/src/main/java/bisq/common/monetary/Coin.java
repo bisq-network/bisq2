@@ -158,6 +158,13 @@ public class Coin extends Monetary {
         return 8;
     }
 
+    public Coin round(int roundPrecision) {
+        //todo not tested
+        double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
+        long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
+        return Coin.of(shifted, code, precision);
+    }
+
     @Override
     public String getName() {
         return CryptoCurrencyRepository.getName(code).orElse(code);

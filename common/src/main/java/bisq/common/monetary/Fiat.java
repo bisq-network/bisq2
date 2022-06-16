@@ -114,6 +114,12 @@ public class Fiat extends Monetary {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
 
+    public Fiat round(int roundPrecision) {
+        double rounded = MathUtils.roundDouble(toDouble(value), roundPrecision);
+        long shifted = BigDecimal.valueOf(rounded).movePointRight(precision).longValue();
+        return Fiat.of(shifted, code, precision);
+    }
+
     @Override
     public String getName() {
         return FiatCurrencyRepository.getName(code).orElse(code);
