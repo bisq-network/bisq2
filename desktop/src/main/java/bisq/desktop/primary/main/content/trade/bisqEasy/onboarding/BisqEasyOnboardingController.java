@@ -56,6 +56,6 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     public void onDontShowAgain(boolean isSelected) {
-        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, isSelected);
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, isSelected);
     }
 }

@@ -50,14 +50,14 @@ public class BisqEasyIntroController implements Controller {
     }
 
     void onNext() {
-        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, true);
         OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.MAIN);
         UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
     }
 
     public void onSkip() {
-        settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
+        settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, true);
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 }

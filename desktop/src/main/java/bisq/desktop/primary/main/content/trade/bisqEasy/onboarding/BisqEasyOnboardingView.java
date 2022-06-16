@@ -79,18 +79,19 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         HBox.setHgrow(rightBox, Priority.ALWAYS);
         HBox hBox = new HBox(16, leftBox, rightBox);
 
-        dontShowAgain= new BisqToggleButton(Res.get("bisqEasy.onboarding.dontShowAgain"));
+        dontShowAgain = new BisqToggleButton(Res.get("bisqEasy.onboarding.dontShowAgain"));
         VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 76));
         VBox.setMargin(hBox, new Insets(20, 30, 15, 30));
-        VBox.setMargin(dontShowAgain, new Insets(0, 30, 30, 45));
-        root.getChildren().addAll(headlineLabel, hBox,dontShowAgain);
+        VBox.setMargin(dontShowAgain, new Insets(0, 30, 30, 30));
+        root.getChildren().addAll(headlineLabel, hBox, dontShowAgain);
     }
 
     @Override
     protected void onViewAttached() {
+        dontShowAgain.setSelected(false);
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         openChatButton.setOnAction(e -> controller.onOpenChat());
-        dontShowAgain.setOnAction(e->controller.onDontShowAgain(dontShowAgain.isSelected()));
+        dontShowAgain.setOnAction(e -> controller.onDontShowAgain(dontShowAgain.isSelected()));
     }
 
     @Override
@@ -132,7 +133,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
-       // label.setMaxWidth(300);
+        // label.setMaxWidth(300);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
         HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);

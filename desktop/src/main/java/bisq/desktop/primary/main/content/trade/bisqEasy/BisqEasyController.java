@@ -52,7 +52,7 @@ public class BisqEasyController extends NavigationController {
 
     @Override
     public void onActivate() {
-        if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED)
+        if (settingsService.getCookie().getAsOptionalBoolean(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING)
                 .filter(value -> value)
                 .isEmpty()) {
             // If cookie not set we show popup 

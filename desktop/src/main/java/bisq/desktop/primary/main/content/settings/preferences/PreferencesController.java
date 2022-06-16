@@ -19,6 +19,8 @@ package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 
 public class PreferencesController implements Controller {
@@ -26,8 +28,10 @@ public class PreferencesController implements Controller {
     private final PreferencesModel model;
     @Getter
     private final PreferencesView view;
+    private final SettingsService settingsService;
 
     public PreferencesController(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
         model = new PreferencesModel(applicationService);
         view = new PreferencesView(model, this);
     }
@@ -38,5 +42,11 @@ public class PreferencesController implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    public void onResetDontShowAgain(boolean isSelected) {
+        if (isSelected) {
+            settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, false);
+        }
     }
 }

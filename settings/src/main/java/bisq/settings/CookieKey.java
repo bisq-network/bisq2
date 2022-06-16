@@ -28,7 +28,7 @@ public enum CookieKey implements ProtoEnum {
     STAGE_H,
     NAVIGATION_TARGET,
     BISQ_2_ONBOARDED,
-    BISQ_EASY_ONBOARDED;
+    SHOW_AGAIN_BISQ_EASY_ONBOARDING;
 
     public bisq.settings.protobuf.CookieKey toProto() {
         return bisq.settings.protobuf.CookieKey.valueOf(name());

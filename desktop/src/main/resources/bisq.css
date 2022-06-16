@@ -805,10 +805,12 @@
 }
 
 .bisq-transparent-button:hover {
+    -fx-background-color: transparent;
     -fx-background-color: rgba(255, 255, 255, .04);
 }
 
 .bisq-transparent-button:disabled {
+    -fx-background-color: transparent;
     -fx-text-fill: derive(-bisq-grey-9, -50%);
 }
 
@@ -821,10 +823,12 @@
 }
 
 .bisq-transparent-grey-button:hover {
-    -fx-background-color: rgba(255, 255, 255, .04);
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
 }
 
 .bisq-transparent-grey-button:disabled {
+    -fx-background-color: transparent;
     -fx-text-fill: derive(-bisq-grey-9, -50%);
 }
 
