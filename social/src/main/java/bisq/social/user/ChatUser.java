@@ -107,8 +107,7 @@ public class ChatUser implements DistributedData {
                 proto.getBio(),
                 MetaData.fromProto(proto.getMetaData()));
     }
-
-
+    
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {

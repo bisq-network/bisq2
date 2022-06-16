@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.onboarding.bisqeasy;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -50,12 +51,13 @@ public class BisqEasyIntroController implements Controller {
 
     void onNext() {
         settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+        OverlayController.hide();
+        Navigation.navigateTo(NavigationTarget.MAIN);
+        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
     }
 
     public void onSkip() {
         settingsService.setCookie(CookieKey.BISQ_EASY_ONBOARDED, true);
-        OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.DASHBOARD);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 }

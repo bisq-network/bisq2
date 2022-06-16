@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.nym;
+package bisq.desktop.primary.overlay.onboarding.profile.nym;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
@@ -24,12 +24,14 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.NymIdGenerator;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,8 +39,6 @@ import java.security.KeyPair;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class GenerateNymController implements Controller {
@@ -59,22 +59,8 @@ public class GenerateNymController implements Controller {
         view = new GenerateNymView(model, this);
     }
 
-    public void setNickName(String nickName) {
-        if (nickName != null) {
-            model.nickName.set(nickName);
-        }
-    }
-
-    public void setBio(String bio) {
-        if (bio != null) {
-            model.bio.set(bio);
-        }
-    }
-
-    public void setTerms(String terms) {
-        if (terms != null) {
-            model.terms.set(terms);
-        }
+    public ReadOnlyObjectProperty<TempIdentity> getTempIdentity() {
+        return model.getTempIdentity();
     }
 
     @Override
@@ -89,36 +75,19 @@ public class GenerateNymController implements Controller {
         mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
     }
 
-    void onCreateNymProfile() {
-        if (model.tempKeyPair != null) {
-            String profileId = model.nymId.get();
-            model.regenerateButtonMouseTransparent.set(true);
-            model.getCreateProfileProgress().set(-1);
-            chatUserService.createNewInitializedUserProfile(profileId,
-                            model.nickName.get(),
-                            model.tempKeyId,
-                            model.tempKeyPair,
-                            model.proofOfWork,
-                            model.terms.get(),
-                            model.bio.get())
-                    .thenCompose(chatUserService::publishNewChatUser)
-                    .thenAccept(chatUserIdentity -> UIThread.run(() -> {
-                        checkArgument(chatUserIdentity.getIdentity().domainId().equals(profileId));
-                        Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
-                        model.getCreateProfileProgress().set(0);
-                    }));
-        }
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
     }
 
     void onCreateTempIdentity() {
         KeyPair tempKeyPair = keyPairService.generateKeyPair();
         byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
-        model.roboHashImage.set(null);
-        model.roboHashIconVisible.set(false);
-        model.regenerateButtonMouseTransparent.set(true);
-        model.createProfileButtonMouseTransparent.set(true);
-        model.powProgress.set(-1);
-        model.nymId.set(Res.get("generateNym.nymId.generating"));
+        model.getRoboHashImage().set(null);
+        model.getRoboHashIconVisible().set(false);
+        model.getReGenerateButtonMouseTransparent().set(true);
+        model.getCreateProfileButtonMouseTransparent().set(true);
+        model.getPowProgress().set(-1);
+        model.getNymId().set(Res.get("generateNym.nymId.generating"));
         long ts = System.currentTimeMillis();
         mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                 .thenApply(proofOfWork -> {
@@ -141,17 +110,18 @@ public class GenerateNymController implements Controller {
                 })
                 .thenAccept(proofOfWork -> {
                     UIThread.run(() -> {
-                        model.proofOfWork = proofOfWork;
-                        model.tempKeyId = StringUtils.createUid();
-                        model.tempKeyPair = tempKeyPair;
+                        model.getRoboHashImage().set(RoboHash.getImage(proofOfWork.getPayload()));
+                        model.getNymId().set(NymIdGenerator.fromHash(proofOfWork.getPayload()));
 
-                        model.roboHashImage.set(RoboHash.getImage(proofOfWork.getPayload()));
-                        model.nymId.set(NymIdGenerator.fromHash(proofOfWork.getPayload()));
+                        model.getTempIdentity().set(new TempIdentity(model.getNymId().get(),
+                                StringUtils.createUid(),
+                                tempKeyPair,
+                                proofOfWork));
 
-                        model.powProgress.set(0);
-                        model.roboHashIconVisible.set(true);
-                        model.regenerateButtonMouseTransparent.set(false);
-                        model.createProfileButtonMouseTransparent.set(false);
+                        model.getPowProgress().set(0);
+                        model.getRoboHashIconVisible().set(true);
+                        model.getReGenerateButtonMouseTransparent().set(false);
+                        model.getCreateProfileButtonMouseTransparent().set(false);
                     });
                 }));
     }

@@ -49,6 +49,6 @@ public class Bisq2IntroController implements Controller {
 
     void onNext() {
         settingsService.setCookie(CookieKey.BISQ_2_ONBOARDED, true);
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
+        Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
     }
 }

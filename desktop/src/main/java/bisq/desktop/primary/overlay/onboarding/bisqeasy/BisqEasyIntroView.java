@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.bisqeasy;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,19 +26,23 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIntroController> {
+public class BisqEasyIntroView extends View<StackPane, BisqEasyIntroModel, BisqEasyIntroController> {
     private final Button nextButton, skipButton;
 
     public BisqEasyIntroView(BisqEasyIntroModel model, BisqEasyIntroController controller) {
-        super(new VBox(), model, controller);
+        super(new StackPane(), model, controller);
       
-        root.setSpacing(15);
+      //  root.setSpacing(15);
         root.setAlignment(Pos.CENTER);
 
+      
+        ImageView template = ImageUtil.getImageViewById("bisq-easy-onboarding-dummy");
+        
         ImageView logo = ImageUtil.getImageViewById("bisq-easy");
         logo.setScaleX(1.5);
         logo.setScaleY(1.5);
@@ -63,7 +66,7 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
         //VBox.setMargin(headlineLabel, new Insets(50, 0, 0, 0));
         VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
         VBox.setMargin(buttons, new Insets(0, 0, 50, 0));
-        root.getChildren().addAll(logo,
+      /*  root.getChildren().addAll(logo,
                 headlineLabel,
                 subtitleLabel,
                 getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line1"), "onboarding-2-offer"),
@@ -71,7 +74,18 @@ public class BisqEasyIntroView extends View<VBox, BisqEasyIntroModel, BisqEasyIn
                 getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line3"), "onboarding-2-payment"),
                 getIconAndText(Res.get("bisqEasy.onBoarding.bisqEasy.intro.line4"), "onboarding-1-reputation"),
                 Spacer.fillVBox(),
-                buttons);
+                buttons);*/
+
+        template.setFitWidth(859); 
+        template.setFitHeight(352);
+        buttons.setSpacing(114);
+        nextButton.setMinWidth(330);
+        skipButton.setMinWidth(nextButton.getMinWidth());
+        nextButton.setMinHeight(50);
+        skipButton.setMinHeight(nextButton.getMinHeight());
+        buttons.setOpacity(0);
+        StackPane.setMargin(buttons, new Insets(230,0,0,0));
+        root.getChildren().addAll(template, buttons);
     }
 
     @Override

@@ -115,7 +115,7 @@ public class PrimaryStageController extends NavigationController {
         if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_2_ONBOARDED).orElse(false)) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
         } else if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
-            Navigation.navigateTo(NavigationTarget.ONBOARDING_CREATE_PROFILE);
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
         } else if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_EASY_ONBOARDED).orElse(false)) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
         } else {

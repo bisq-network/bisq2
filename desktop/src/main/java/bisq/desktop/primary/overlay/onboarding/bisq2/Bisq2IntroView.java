@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -55,14 +54,13 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         
         VBox.setMargin(logo, new Insets(50, 0, 0, 0 ));
         VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
-        VBox.setMargin(nextButton, new Insets(0, 0, 50, 0));
+        VBox.setMargin(nextButton, new Insets(-10, 0, 50, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
                 subtitleLabel,
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line1"), "onboarding-1-easy"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line2"), "onboarding-1-fraction"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line3"), "onboarding-2-payment"),
-                Spacer.fillVBox(),
+                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line1"), "intro-1"),
+                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line2"), "intro-2"),
+                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line3"), "intro-3"),
                 nextButton);
     }
 
@@ -81,8 +79,6 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        bulletPoint.setFitWidth(37.5);
-        bulletPoint.setFitHeight(37.5);
         HBox.setMargin(bulletPoint, new Insets(0, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);

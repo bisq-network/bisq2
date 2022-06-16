@@ -167,7 +167,6 @@ public class CreateOfferController extends NavigationController {
         }
     }
 
-
     public void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
@@ -199,12 +198,12 @@ public class CreateOfferController extends NavigationController {
     }
 
     public void onSkip() {
+        Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
     }
 
     public void onQuit() {
-        applicationService.shutdown()
-                .thenAccept(__ -> Platform.exit());
+        applicationService.shutdown().thenAccept(__ -> Platform.exit());
     }
 
     private void reset() {

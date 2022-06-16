@@ -27,6 +27,27 @@
     -fx-image: url("images/logo-mark-line.png");
 }
 
+#dashboard-bisq {
+    -fx-image: url("images/dashboard-bisq.png");
+}
+
+#dashboard-community {
+    -fx-image: url("images/dashboard-community.png");
+}
+
+#dashboard-bisq-easy {
+    -fx-image: url("images/dashboard-bisq-easy.png");
+}
+
+#dashboard-chat {
+    -fx-image: url("images/dashboard-chat.png");
+}
+
+#dashboard-trade-apps {
+    -fx-image: url("images/dashboard-trade-apps.png");
+}
+
+
 #logo-grey {
     -fx-image: url("images/logo_grey.png");
 }
@@ -214,6 +235,18 @@
 
 
 /* Onboarding */
+#intro-1 {
+    -fx-image: url("images/onboarding/intro-1.png");
+}
+
+#intro-2 {
+    -fx-image: url("images/onboarding/intro-2.png");
+}
+
+#intro-3 {
+    -fx-image: url("images/onboarding/intro-3.png");
+}
+
 #onboarding-1-easy {
     -fx-image: url("images/onboarding/onboarding-1-easy.png");
 }
@@ -289,14 +322,9 @@
     -fx-image: url("images/close-round.png");
 }
 
-#template_market {
-    -fx-image: url("images/onboarding/template/onboarding-template_0003_market.png");
+#bisq-easy-onboarding-dummy {
+    -fx-image: url("images/onboarding/bisq-easy-onboarding-dummy.png");
 }
-
-#template_methods {
-    -fx-image: url("images/onboarding/template/onboarding-template_0005_methods.png");
-}
-
 
 /* Onboarding icons*/
 #info-circle-solid {
