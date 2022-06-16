@@ -59,7 +59,7 @@ public class KeyHandlerUtil {
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY);
+                Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY_OLD);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.CREATE_OFFER_DIRECTION);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT6, keyEvent)) {

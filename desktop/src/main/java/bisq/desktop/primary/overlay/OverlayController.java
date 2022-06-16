@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
-import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
+import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import javafx.application.Platform;
 import javafx.scene.layout.Region;
 import lombok.Getter;

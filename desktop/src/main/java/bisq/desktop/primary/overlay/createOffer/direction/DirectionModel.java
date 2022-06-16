@@ -15,20 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy;
+package bisq.desktop.primary.overlay.createOffer.direction;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.Model;
+import bisq.offer.spec.Direction;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import lombok.Getter;
 
-@Slf4j
-
-public class BisqEasyModel extends NavigationModel {
-    public BisqEasyModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.ONBOARDING_BISQ_EASY_OLD;
-    }
+@Getter
+public class DirectionModel implements Model {
+    private final ObjectProperty<Direction> direction = new SimpleObjectProperty<>();
+    private final BooleanProperty showReputationInfo = new SimpleBooleanProperty();
+    private final BooleanProperty ignoreShowReputationInfo = new SimpleBooleanProperty();
 }

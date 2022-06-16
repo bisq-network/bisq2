@@ -24,8 +24,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
-import bisq.desktop.primary.overlay.onboarding.bisqeasy.BisqEasyIntroController;
-import bisq.desktop.primary.overlay.onboarding.offer.CreateOfferController;
+import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.profile.nickName.AddNickNameController;
 import bisq.desktop.primary.overlay.onboarding.profile.nym.GenerateNymController;
 import javafx.application.Platform;
@@ -86,9 +85,9 @@ public class OnboardingController extends NavigationController {
             case ONBOARDING_ADD_NICKNAME -> {
                 return Optional.of(addNickNameController);
             }
-            case ONBOARDING_BISQ_EASY -> {
+           /* case ONBOARDING_BISQ_EASY_OLD -> {
                 return Optional.of(new BisqEasyIntroController(applicationService));
-            }
+            }*/
             case CREATE_OFFER -> {
                 return Optional.of(new CreateOfferController(applicationService));
             }

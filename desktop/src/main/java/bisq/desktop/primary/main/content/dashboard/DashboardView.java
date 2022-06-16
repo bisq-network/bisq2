@@ -24,6 +24,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -102,8 +103,9 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     }
 
     private VBox getBigWidgetBox() {
-        Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
-        headlineLabel.setGraphicTextGap(16.0);
+        Label headlineLabel = new Label(Res.get("dashboard.main.headline"));
+      //  Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
+      //  headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
         Button button = new Button(Res.get("dashboard.main.button"));
@@ -116,8 +118,8 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         VBox box = new VBox(15,
                 headlineLabel,
                 getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
-              /*  getIconAndText(Res.get("dashboard.myFirstBitcoin.content2"), "onboarding-2-chat-white"),
-                getIconAndText(Res.get("dashboard.myFirstBitcoin.content3"), "onboarding-1-reputation-white"),*/
+                getIconAndText(Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
+                getIconAndText(Res.get("dashboard.main.content3"), "onboarding-1-reputation-white"),
                 button);
         box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(30, 48, 44, 48));
@@ -134,8 +136,6 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
         contentLabel.setMaxWidth(600);
         contentLabel.setAlignment(Pos.TOP_LEFT);
-        contentLabel.setMinHeight(60);
-        contentLabel.setMaxHeight(60);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-big-grey-button");
@@ -158,9 +158,9 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         Label label = new Label(text);
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
-      /*  ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));*/
-        HBox hBox = new HBox(15,/* bulletPoint,*/ label);
+        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
+        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
+        HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
         int width = 600;
         hBox.setMinWidth(width);
