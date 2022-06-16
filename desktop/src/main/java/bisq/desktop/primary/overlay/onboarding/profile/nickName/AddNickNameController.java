@@ -65,7 +65,9 @@ public class AddNickNameController implements Controller {
 
     @Override
     public void onDeactivate() {
-        nickNameSubscription.unsubscribe();
+        if (nickNameSubscription != null) {
+            nickNameSubscription.unsubscribe();
+        }
     }
 
     void onCreateUserProfile() {

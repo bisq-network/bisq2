@@ -76,15 +76,16 @@ public class BisqEasyIntroView extends View<StackPane, BisqEasyIntroModel, BisqE
                 Spacer.fillVBox(),
                 buttons);*/
 
-        template.setFitWidth(859); 
-        template.setFitHeight(352);
+       /* template.setFitWidth(859); 
+        template.setFitHeight(352);*/
         buttons.setSpacing(114);
         nextButton.setMinWidth(330);
         skipButton.setMinWidth(nextButton.getMinWidth());
         nextButton.setMinHeight(50);
         skipButton.setMinHeight(nextButton.getMinHeight());
         buttons.setOpacity(0);
-        StackPane.setMargin(buttons, new Insets(230,0,0,0));
+        StackPane.setMargin(buttons, new Insets(260,0,0,0));
+        StackPane.setMargin(template, new Insets(-70,0,0,0));
         root.getChildren().addAll(template, buttons);
     }
 
