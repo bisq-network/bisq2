@@ -120,13 +120,13 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        
+
         // We do not have control about the order of the data we receive. 
         // The chat user is required for showing a chat message. In case we get the messages first, we keep it in our
         // list but the UI will not show it as the chat user is missing. After we get the associated chat user we 
         // re-apply the messages to the list, triggering a refresh in the UI list.
         // We do not persist the chat user as it is kept in the p2p store, and we use the TTL for its validity.
-        
+
         if (distributedData instanceof ChatUser chatUser &&
                 hasAuthorValidProofOfWork(chatUser.getProofOfWork())) {
             // Only if we have not already that chatUser we apply it
@@ -152,7 +152,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                     log.info("We have {} publicTradeChatMessages with that chat users ID which have not been displayed yet. " +
                             "We remove them and add them to trigger a list update.", publicTradeChatMessages.size());
                 }
-                
+
                 // Remove chat messages containing that chatUser
                 publicDiscussionChatMessages.forEach(message ->
                         findPublicDiscussionChannel(message.getChannelId())
@@ -296,6 +296,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public ObservableSet<PublicTradeChannel> getPublicTradeChannels() {
         return persistableStore.getPublicTradeChannels();
+    }
+
+    public void maybeAddPublicTradeChannel(PublicTradeChannel channel) {
+        if (!getPublicTradeChannels().contains(channel)) {
+            getPublicTradeChannels().add(channel);
+        }
     }
 
 
@@ -579,6 +585,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     public ObservableSet<String> getIgnoredChatUserIds() {
         return persistableStore.getIgnoredChatUserIds();
     }
+
     public boolean isChatUserIgnored(ChatUser chatUser) {
         return getIgnoredChatUserIds().contains(chatUser.getId());
     }
@@ -634,18 +641,18 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
         PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
         selectTradeChannel(defaultChannel);
-        getPublicTradeChannels().add(defaultChannel);
+        maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
         allMarkets.forEach(market ->
-                getPublicTradeChannels().add(new PublicTradeChannel(market, false)));
+                maybeAddPublicTradeChannel(new PublicTradeChannel(market, false)));
 
         // Dummy admin
         Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
 
         byte[] hash = DigestUtil.hash(channelAdminIdentity.keyPair().getPublic().getEncoded());
         ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
-        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId(),"","").getId();
+        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.networkId(), "", "").getId();
 
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",

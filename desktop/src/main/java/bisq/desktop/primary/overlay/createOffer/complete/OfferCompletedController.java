@@ -20,8 +20,6 @@ package bisq.desktop.primary.overlay.createOffer.complete;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
-import bisq.common.observable.Pin;
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -34,11 +32,9 @@ import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
-import bisq.social.offer.TradeChatOfferService;
 import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.reputation.ReputationService;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,19 +48,16 @@ public class OfferCompletedController implements Controller {
     private final OfferCompletedModel model;
     @Getter
     private final OfferCompletedView view;
-    private final TradeChatOfferService tradeChatOfferService;
     private final ChatService chatService;
     private final ReputationService reputationService;
     private final ChatMessagesListView myOfferListView;
     private final ChatMessagesListView takersListView;
     private final Runnable closeHandler;
     private final SettingsService settingsService;
-    private Pin selectedChannelPin;
 
     public OfferCompletedController(DefaultApplicationService applicationService,
                                     Consumer<Boolean> buttonsVisibleHandler,
                                     Runnable closeHandler) {
-        tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
         settingsService = applicationService.getSettingsService();
@@ -98,12 +91,12 @@ public class OfferCompletedController implements Controller {
         view = new OfferCompletedView(model, this, myOfferListView.getRoot(), takersListView.getRoot());
 
         myOfferListView.setCreateOfferCompleteHandler(() -> {
-            model.getShowFeedback().set(true);
+            model.getShowCreateOfferSuccess().set(true);
             buttonsVisibleHandler.accept(false);
         });
         takersListView.setTakeOfferCompleteHandler(() -> {
-            close();
-            Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+            model.getShowTakeOfferSuccess().set(true);
+            buttonsVisibleHandler.accept(false);
         });
         takersListView.getSortedChatMessages().setComparator(Comparator.comparing(ChatMessagesListView.ChatMessageListItem::getReputationScore));
     }
@@ -136,21 +129,11 @@ public class OfferCompletedController implements Controller {
         }
     }
 
-    public ReadOnlyObjectProperty<PublicTradeChatMessage> getMyOfferMessage() {
-        return model.getMyOfferMessage();
-    }
-
-
     @Override
     public void onActivate() {
-        model.getShowFeedback().set(false);
+        model.getShowCreateOfferSuccess().set(false);
+        model.getShowTakeOfferSuccess().set(false);
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
-
-        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
-            if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                model.setSelectedChannel(publicTradeChannel);
-            }
-        });
 
         ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
@@ -161,7 +144,14 @@ public class OfferCompletedController implements Controller {
                 chatUserIdentity.getChatUser().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(model.getSelectedChannel().getId(),
+        PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
+                .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket().orElse(null)))
+                .findAny()
+                .orElseThrow();
+        channelForMarket.setVisible(true);
+        chatService.selectTradeChannel(channelForMarket);
+
+        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
                 chatUserIdentity.getChatUser().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
@@ -182,14 +172,18 @@ public class OfferCompletedController implements Controller {
 
     @Override
     public void onDeactivate() {
-        selectedChannelPin.unbind();
         takersListView.getFilteredChatMessages().setPredicate(null);
         takersListView.getChatMessages().clear();
     }
 
     void onOpenBisqEasy() {
         close();
-        UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
+    }
+
+    void onOpenPrivateChat() {
+        close();
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
     }
 
     private void close() {

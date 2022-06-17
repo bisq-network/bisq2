@@ -76,6 +76,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
         VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
+            content.getChildren().clear();
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 content.getChildren().add(childRoot);
@@ -88,8 +89,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 } else {
                     Transitions.fadeIn(childRoot);
                 }
-            } else {
-                content.getChildren().clear();
             }
         });
     }

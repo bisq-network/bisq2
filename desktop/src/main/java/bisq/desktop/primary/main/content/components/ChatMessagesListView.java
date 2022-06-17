@@ -230,7 +230,7 @@ public class ChatMessagesListView {
         public void onDeactivate() {
             selectedChannelPin.unbind();
             if (chatMessagesPin != null) {
-                chatMessagesPin.unbind();
+                chatMessagesPin.unbind();chatMessagesPin=null;
             }
         }
 
