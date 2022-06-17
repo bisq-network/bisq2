@@ -86,7 +86,7 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String signMessage(String address, String message) {
+    public String signMessage(Optional<String> passphrase, String address, String message) {
         return wallet.signMessage(address, message);
     }
 
@@ -101,7 +101,7 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String sendToAddress(String address, double amount) {
+    public String sendToAddress(Optional<String> passphrase, String address, double amount) {
         return wallet.sendLBtcToAddress(address, amount);
     }
 }

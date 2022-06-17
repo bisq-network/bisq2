@@ -23,19 +23,25 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class WalletSendView extends View<VBox, WalletSendModel, WalletSendController> {
+
+    private final TextField addressTextField;
+    private final TextField amountTextField;
+    private final PasswordField passphraseTextField;
+
     public WalletSendView(WalletSendModel model, WalletSendController controller) {
         super(new VBox(), model, controller);
 
-        TextField addressTextField = createTextField(Res.get("address") + ":");
-        addressTextField.textProperty().bindBidirectional(model.addressProperty());
+        addressTextField = createTextField(Res.get("address") + ":");
+        amountTextField = createTextField(Res.get("amount") + ":");
 
-        TextField amountTextField = createTextField(Res.get("amount") + ":");
-        amountTextField.textProperty().bindBidirectional(model.amountProperty());
+        passphraseTextField = new PasswordField();
+        passphraseTextField.setPromptText(Res.get("passphrase") + ":");
 
         Button sendButton = new Button(Res.get("send"));
         sendButton.setOnMouseClicked(event -> controller.onSendButtonClicked());
@@ -49,10 +55,16 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
 
     @Override
     protected void onViewAttached() {
+        addressTextField.textProperty().bindBidirectional(model.addressProperty());
+        amountTextField.textProperty().bindBidirectional(model.amountProperty());
+        passphraseTextField.textProperty().bindBidirectional(model.passphraseProperty());
     }
 
     @Override
     protected void onViewDetached() {
+        addressTextField.textProperty().unbindBidirectional(model.addressProperty());
+        amountTextField.textProperty().unbindBidirectional(model.amountProperty());
+        passphraseTextField.textProperty().unbindBidirectional(model.passphraseProperty());
     }
 
     private TextField createTextField(String promptText) {

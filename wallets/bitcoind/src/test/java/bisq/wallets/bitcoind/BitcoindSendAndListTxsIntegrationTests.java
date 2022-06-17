@@ -20,10 +20,12 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponseEntry;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -36,13 +38,13 @@ public class BitcoindSendAndListTxsIntegrationTests extends SharedBitcoindInstan
         var receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
 
         String firstTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWallet.sendToAddress(firstTxReceiverAddress, 1);
+        minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), firstTxReceiverAddress, 1);
 
         String secondTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWallet.sendToAddress(secondTxReceiverAddress, 1);
+        minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), secondTxReceiverAddress, 1);
 
         String thirdTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWallet.sendToAddress(thirdTxReceiverAddress, 1);
+        minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), thirdTxReceiverAddress, 1);
 
         regtestSetup.mineOneBlock();
 

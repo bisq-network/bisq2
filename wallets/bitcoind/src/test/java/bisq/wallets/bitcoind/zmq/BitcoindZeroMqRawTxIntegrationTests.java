@@ -19,10 +19,12 @@ package bisq.wallets.bitcoind.zmq;
 
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -49,7 +51,7 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
             }
         });
 
-        minerWallet.sendToAddress(receiverAddress, 1);
+        minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
 
         boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);
         if (!await) {
@@ -63,7 +65,7 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
 
         BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
-        String myTxId = minerWallet.sendToAddress(receiverAddress, 2);
+        String myTxId = minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 2);
 
         bitcoindZeroMq.getListeners().registerTransactionIdInInputListener(txId -> {
             if (txId.equals(myTxId)) {
@@ -75,7 +77,7 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
 
         String someAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
         for (int i = 0; i < 10; i++) {
-            receiverWallet.sendToAddress(someAddress, 0.001);
+            receiverWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), someAddress, 0.001);
         }
 
         boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);

@@ -21,6 +21,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.wallets.core.WalletService;
 import lombok.Getter;
 
+import java.util.Optional;
+
 public class WalletSendController implements Controller {
     private final WalletService walletService;
     private final WalletSendModel model;
@@ -42,6 +44,8 @@ public class WalletSendController implements Controller {
     }
 
     public void onSendButtonClicked() {
-        walletService.sendToAddress(model.getAddress(), Double.parseDouble(model.getAmount()));
+        String passphraseString = model.getPassphrase();
+        Optional<String> passphrase = Optional.ofNullable(passphraseString);
+        walletService.sendToAddress(passphrase, model.getAddress(), Double.parseDouble(model.getAmount()));
     }
 }

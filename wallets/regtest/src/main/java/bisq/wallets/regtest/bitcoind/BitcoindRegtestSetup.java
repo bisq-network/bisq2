@@ -100,9 +100,7 @@ public class BitcoindRegtestSetup
         daemon.createOrLoadWallet(walletPath, Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE));
         loadedWalletPaths.add(walletPath);
 
-        BitcoindWallet walletBackend = newWallet(walletPath);
-        walletBackend.walletPassphrase(Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE), BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
-        return walletBackend;
+        return newWallet(walletPath);
     }
 
     private BitcoindWallet newWallet(Path walletPath) throws MalformedURLException {
@@ -131,7 +129,7 @@ public class BitcoindRegtestSetup
     }
 
     public String fundAddress(String address, double amount) {
-        String txId = minerWallet.sendToAddress(address, amount);
+        String txId = minerWallet.sendToAddress(Optional.of(WALLET_PASSPHRASE), address, amount);
         mineOneBlock();
         return txId;
     }
@@ -140,7 +138,7 @@ public class BitcoindRegtestSetup
                                          BitcoindWallet receiverWallet,
                                          double amount) {
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
-        senderWallet.sendToAddress(receiverAddress, amount);
+        senderWallet.sendToAddress(Optional.of(WALLET_PASSPHRASE), receiverAddress, amount);
         mineOneBlock();
         return receiverAddress;
     }
