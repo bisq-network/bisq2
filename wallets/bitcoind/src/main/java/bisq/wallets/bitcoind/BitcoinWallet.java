@@ -70,7 +70,6 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     @Override
     public void initialize(Optional<String> walletPassphrase) {
         daemon.createOrLoadWallet(walletPath, walletPassphrase);
-        wallet.walletPassphrase(walletPassphrase, BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
     }
 
     @Override
@@ -91,8 +90,8 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String signMessage(String address, String message) {
-        return wallet.signMessage(address, message);
+    public String signMessage(Optional<String> passphrase, String address, String message) {
+        return wallet.signMessage(passphrase, address, message);
     }
 
     @Override
@@ -106,7 +105,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String sendToAddress(String address, double amount) {
-        return wallet.sendToAddress(address, amount);
+    public String sendToAddress(Optional<String> passphrase, String address, double amount) {
+        return wallet.sendToAddress(passphrase, address, amount);
     }
 }

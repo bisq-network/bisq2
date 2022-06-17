@@ -21,11 +21,13 @@ import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,7 +63,11 @@ public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstance
         bobBackend.importAddress(bobMultiSigAddrResponse.getAddress(), "");
         charlieBackend.importAddress(charlieMultiSigAddrResponse.getAddress(), "");
 
-        minerWallet.sendToAddress(aliceMultiSigAddrResponse.getAddress(), 5);
+        minerWallet.sendToAddress(
+                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE),
+                aliceMultiSigAddrResponse.getAddress(),
+                5
+        );
         regtestSetup.mineOneBlock();
 
         // Create PSBT (send to Alice without Alice)
@@ -82,8 +88,12 @@ public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstance
         );
 
         // Bob and Charlie sign the PSBT
-        BitcoindWalletProcessPsbtResponse bobPsbtResponse = bobBackend.walletProcessPsbt(createFundedPsbtResponse.getPsbt());
-        BitcoindWalletProcessPsbtResponse charliePsbtResponse = charlieBackend.walletProcessPsbt(bobPsbtResponse.getPsbt());
+        BitcoindWalletProcessPsbtResponse bobPsbtResponse = bobBackend.walletProcessPsbt(
+                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), createFundedPsbtResponse.getPsbt()
+        );
+        BitcoindWalletProcessPsbtResponse charliePsbtResponse = charlieBackend.walletProcessPsbt(
+                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), bobPsbtResponse.getPsbt()
+        );
 
         // Finalize PSBT
         BitcoindFinalizePsbtResponse finalizePsbtResponse = daemon.finalizePsbt(charliePsbtResponse.getPsbt());

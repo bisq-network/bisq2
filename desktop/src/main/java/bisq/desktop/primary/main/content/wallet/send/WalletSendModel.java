@@ -24,6 +24,7 @@ import javafx.beans.property.StringProperty;
 public class WalletSendModel implements Model {
     private final StringProperty addressProperty = new SimpleStringProperty(this, "address");
     private final StringProperty amountProperty = new SimpleStringProperty(this, "amount");
+    private final StringProperty passphraseProperty = new SimpleStringProperty(this, "passphrase");
 
     public StringProperty addressProperty() {
         return addressProperty;
@@ -33,11 +34,19 @@ public class WalletSendModel implements Model {
         return amountProperty;
     }
 
+    public StringProperty passphraseProperty() {
+        return passphraseProperty;
+    }
+
     public String getAddress() {
         return addressProperty.get();
     }
 
     public String getAmount() {
         return amountProperty.get();
+    }
+
+    public String getPassphrase() {
+        return passphraseProperty.get();
     }
 }

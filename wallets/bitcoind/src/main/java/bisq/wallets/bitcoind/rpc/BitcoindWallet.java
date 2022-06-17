@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BitcoindWallet {
 
-    public static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.HOURS.toSeconds(24);
+    public static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.MINUTES.toSeconds(1);
     private final WalletRpcClient rpcClient;
 
     public BitcoindWallet(WalletRpcClient rpcClient) {
@@ -95,22 +95,32 @@ public class BitcoindWallet {
         return Arrays.asList(response);
     }
 
-    public String sendToAddress(String address, double amount) {
+    public String sendToAddress(Optional<String> passphrase, String address, double amount) {
+        walletPassphrase(passphrase);
+
         var request = BitcoindSendToAddressRpcCall.Request.builder()
                 .address(address)
                 .amount(amount)
                 .build();
         var rpcCall = new BitcoindSendToAddressRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        String txId = rpcClient.invokeAndValidate(rpcCall);
+
+        walletLock();
+        return txId;
     }
 
-    public String signMessage(String address, String message) {
+    public String signMessage(Optional<String> walletPasshrase, String address, String message) {
+        walletPassphrase(walletPasshrase);
+
         var request = BitcoindSignMessageRpcCall.Request.builder()
                 .address(address)
                 .message(message)
                 .build();
         var rpcCall = new BitcoindSignMessageRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        String signature = rpcClient.invokeAndValidate(rpcCall);
+
+        walletLock();
+        return signature;
     }
 
     public boolean verifyMessage(String address, String signature, String message) {
@@ -137,22 +147,33 @@ public class BitcoindWallet {
         return rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void walletPassphrase(Optional<String> passphrase, long timeout) {
-        if (passphrase.isEmpty()) {
+    public void walletLock() {
+        var rpcCall = new BitcoindWalletLockRpcCall();
+        rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public void walletPassphrase(Optional<String> passphrase) {
+        String passphraseString = passphrase.orElse("");
+        if (passphraseString.isEmpty()) {
             return;
         }
 
         var request = BitcoindWalletPassphraseRpcCall.Request.builder()
                 .passphrase(passphrase.get())
-                .timeout(timeout)
+                .timeout(DEFAULT_WALLET_TIMEOUT)
                 .build();
         var rpcCall = new BitcoindWalletPassphraseRpcCall(request);
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public BitcoindWalletProcessPsbtResponse walletProcessPsbt(String psbt) {
+    public BitcoindWalletProcessPsbtResponse walletProcessPsbt(Optional<String> passphrase, String psbt) {
+        walletPassphrase(passphrase);
+
         var request = new BitcoindWalletProcessPsbtRpcCall.Request(psbt);
         var rpcCall = new BitcoindWalletProcessPsbtRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        BitcoindWalletProcessPsbtResponse psbtResponse = rpcClient.invokeAndValidate(rpcCall);
+
+        walletLock();
+        return psbtResponse;
     }
 }

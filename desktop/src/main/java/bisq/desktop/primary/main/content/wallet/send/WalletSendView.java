@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -36,6 +37,10 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
 
         TextField amountTextField = createTextField(Res.get("amount") + ":");
         amountTextField.textProperty().bindBidirectional(model.amountProperty());
+
+        PasswordField passphraseTextField = new PasswordField();
+        passphraseTextField.setPromptText(Res.get("passphrase") + ":");
+        passphraseTextField.textProperty().bindBidirectional(model.passphraseProperty());
 
         Button sendButton = new Button(Res.get("send"));
         sendButton.setOnMouseClicked(event -> controller.onSendButtonClicked());

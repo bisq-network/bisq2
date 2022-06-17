@@ -18,7 +18,10 @@
 package bisq.wallets.bitcoind;
 
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,7 +31,7 @@ public class BitcoindSigningIntegrationTests extends SharedBitcoindInstanceTests
     @Test
     public void signAndVerifyMessage() {
         String address = minerWallet.getNewAddress(AddressType.LEGACY, "");
-        String signature = minerWallet.signMessage(address, MESSAGE);
+        String signature = minerWallet.signMessage(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), address, MESSAGE);
         boolean isValid = minerWallet.verifyMessage(address, signature, MESSAGE);
         assertTrue(isValid);
     }

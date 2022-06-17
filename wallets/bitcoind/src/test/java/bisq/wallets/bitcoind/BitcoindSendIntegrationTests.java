@@ -19,10 +19,12 @@ package bisq.wallets.bitcoind;
 
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,7 +43,7 @@ public class BitcoindSendIntegrationTests extends SharedBitcoindInstanceTests {
     @Test
     public void sendOneBtcToAddress() {
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        minerWallet.sendToAddress(receiverAddress, 1);
+        minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
         regtestSetup.mineOneBlock();
 
         assertThat(receiverBackend.getBalance())

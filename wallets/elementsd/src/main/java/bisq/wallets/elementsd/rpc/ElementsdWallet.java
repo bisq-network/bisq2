@@ -144,7 +144,8 @@ public class ElementsdWallet {
     }
 
     public void walletPassphrase(Optional<String> passphrase, long timeout) {
-        if (passphrase.isEmpty()) {
+        String passphraseString = passphrase.orElse("");
+        if (passphraseString.isEmpty()) {
             return;
         }
 

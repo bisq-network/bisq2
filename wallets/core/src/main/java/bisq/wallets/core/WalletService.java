@@ -38,11 +38,11 @@ public interface WalletService {
 
     ObservableSet<String> getReceiveAddresses();
 
-    CompletableFuture<String> signMessage(String address, String message);
+    CompletableFuture<String> signMessage(Optional<String> passphrase, String address, String message);
 
     CompletableFuture<List<? extends Transaction>> listTransactions();
 
     CompletableFuture<List<? extends Utxo>> listUnspent();
 
-    CompletableFuture<String> sendToAddress(String address, double amount);
+    CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount);
 }

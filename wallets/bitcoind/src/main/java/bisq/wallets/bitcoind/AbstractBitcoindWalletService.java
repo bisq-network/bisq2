@@ -165,18 +165,18 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public CompletableFuture<String> sendToAddress(String address, double amount) {
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            return wallet.sendToAddress(address, amount);
+            return wallet.sendToAddress(passphrase, address, amount);
         });
     }
 
     @Override
-    public CompletableFuture<String> signMessage(String address, String message) {
+    public CompletableFuture<String> signMessage(Optional<String> passphrase, String address, String message) {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            return wallet.signMessage(address, message);
+            return wallet.signMessage(passphrase, address, message);
         });
     }
 

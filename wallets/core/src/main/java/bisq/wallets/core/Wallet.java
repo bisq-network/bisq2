@@ -40,7 +40,7 @@ public interface Wallet {
 
     List<? extends Utxo> listUnspent();
 
-    String sendToAddress(String address, double amount);
+    String sendToAddress(Optional<String> passphrase, String address, double amount);
 
-    String signMessage(String address, String message);
+    String signMessage(Optional<String> passphrase, String address, String message);
 }
