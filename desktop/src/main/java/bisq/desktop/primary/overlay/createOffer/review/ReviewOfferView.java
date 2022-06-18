@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.complete;
+package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
@@ -33,7 +33,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
+class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
     private final Label headLineLabel, subtitleLabel, takeOfferLabel;
     private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
@@ -41,10 +41,10 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
     private Button viewOfferButton, openPrivateChannelButton;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    OfferCompletedView(OfferCompletedModel model,
-                       OfferCompletedController controller,
-                       Pane myOfferListView,
-                       Pane takersListView) {
+    ReviewOfferView(ReviewOfferModel model,
+                    ReviewOfferController controller,
+                    Pane myOfferListView,
+                    Pane takersListView) {
         super(new StackPane(), model, controller);
         this.takersListView = takersListView;
 
@@ -144,6 +144,8 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         createOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
         createOfferSuccessFeedback.setMaxWidth(width);
         createOfferSuccessFeedback.setId("sellBtcWarning");
+        createOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        createOfferSuccessFeedback.setSpacing(30);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -158,8 +160,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
 
         viewOfferButton.setDefaultButton(true);
 
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 30, 0));
-        VBox.setMargin(viewOfferButton, new Insets(50, 0, 30, 0));
         createOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
     }
 
@@ -168,6 +168,8 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         takeOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
         takeOfferSuccessFeedback.setMaxWidth(width);
         takeOfferSuccessFeedback.setId("sellBtcWarning");
+        takeOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        takeOfferSuccessFeedback.setSpacing(30);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -182,8 +184,6 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
 
         openPrivateChannelButton.setDefaultButton(true);
 
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 10, 0));
-        VBox.setMargin(viewOfferButton, new Insets(0, 0, 30, 0));
         takeOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
     }
 }

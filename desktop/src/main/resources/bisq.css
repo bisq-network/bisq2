@@ -250,6 +250,21 @@
       -fx-fill: -bs-rd-error-red;*/
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Separator                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.separator:horizontal .line {
+    -fx-border-color: -bisq-grey-9;
+    -fx-border-width: 0.5;
+}
+
+.separator:vertical .line {
+    -fx-border-color: -bisq-grey-9;
+    -fx-border-width: 0.5;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -353,6 +368,7 @@
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.1em;
     -fx-line-spacing: -0.12em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-4 {
@@ -879,6 +895,7 @@
     -fx-background-radius: 4;
     -fx-text-fill: -bisq-white;
     -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-button-1:hover {

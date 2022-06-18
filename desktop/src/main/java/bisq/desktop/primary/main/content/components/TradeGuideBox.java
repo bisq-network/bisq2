@@ -56,7 +56,7 @@ public class TradeGuideBox extends VBox {
         Label headlineLabel = new Label(Res.get("bisqEasy.privateTradeChannel.tradeInfo.headline")/*, ImageUtil.getImageViewById("onboarding-2-payment")*/);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
-       closeButton = BisqIconButton.createIconButton("close");
+        closeButton = BisqIconButton.createIconButton("close");
 
         HBox.setMargin(closeButton, new Insets(-1, -15, 0, 0));
         HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), closeButton);

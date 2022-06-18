@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.complete;
+package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
@@ -44,10 +44,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OfferCompletedController implements Controller {
-    private final OfferCompletedModel model;
+public class ReviewOfferController implements Controller {
+    private final ReviewOfferModel model;
     @Getter
-    private final OfferCompletedView view;
+    private final ReviewOfferView view;
     private final ChatService chatService;
     private final ReputationService reputationService;
     private final ChatMessagesListView myOfferListView;
@@ -55,9 +55,9 @@ public class OfferCompletedController implements Controller {
     private final Runnable closeHandler;
     private final SettingsService settingsService;
 
-    public OfferCompletedController(DefaultApplicationService applicationService,
-                                    Consumer<Boolean> buttonsVisibleHandler,
-                                    Runnable closeHandler) {
+    public ReviewOfferController(DefaultApplicationService applicationService,
+                                 Consumer<Boolean> buttonsVisibleHandler,
+                                 Runnable closeHandler) {
         chatService = applicationService.getChatService();
         reputationService = applicationService.getReputationService();
         settingsService = applicationService.getSettingsService();
@@ -87,8 +87,8 @@ public class OfferCompletedController implements Controller {
                 false);
         this.closeHandler = closeHandler;
 
-        model = new OfferCompletedModel();
-        view = new OfferCompletedView(model, this, myOfferListView.getRoot(), takersListView.getRoot());
+        model = new ReviewOfferModel();
+        view = new ReviewOfferView(model, this, myOfferListView.getRoot(), takersListView.getRoot());
 
         myOfferListView.setCreateOfferCompleteHandler(() -> {
             model.getShowCreateOfferSuccess().set(true);

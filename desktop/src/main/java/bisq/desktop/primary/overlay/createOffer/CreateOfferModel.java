@@ -31,7 +31,6 @@ import java.util.List;
 @Getter
 public class CreateOfferModel extends NavigationModel {
     private final IntegerProperty currentIndex = new SimpleIntegerProperty();
-    private final StringProperty skipButtonText = new SimpleStringProperty();
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty skipButtonVisible = new SimpleBooleanProperty();

@@ -26,7 +26,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.createOffer.market.MarketController;
 import bisq.desktop.primary.overlay.createOffer.amount.AmountController;
-import bisq.desktop.primary.overlay.createOffer.complete.OfferCompletedController;
+import bisq.desktop.primary.overlay.createOffer.review.ReviewOfferController;
 import bisq.desktop.primary.overlay.createOffer.direction.DirectionController;
 import bisq.desktop.primary.overlay.createOffer.method.PaymentMethodController;
 import bisq.i18n.Res;
@@ -51,7 +51,7 @@ public class CreateOfferController extends NavigationController {
     private final MarketController marketController;
     private final AmountController amountController;
     private final PaymentMethodController paymentMethodController;
-    private final OfferCompletedController offerCompletedController;
+    private final ReviewOfferController reviewOfferController;
     private final ListChangeListener<String> paymentMethodsListener;
     private Subscription directionSubscription, marketSubscription, baseSideAmountSubscription,
             quoteSideAmountSubscription;
@@ -75,9 +75,8 @@ public class CreateOfferController extends NavigationController {
         marketController = new MarketController(applicationService);
         amountController = new AmountController(applicationService);
         paymentMethodController = new PaymentMethodController(applicationService);
-        offerCompletedController = new OfferCompletedController(applicationService, this::setButtonsVisible, this::reset);
+        reviewOfferController = new ReviewOfferController(applicationService, this::setButtonsVisible, this::reset);
 
-        model.getSkipButtonText().set(Res.get("onboarding.navProgress.skip"));
         paymentMethodsListener = c -> {
             c.next();
             handlePaymentMethodsUpdate();
@@ -91,19 +90,19 @@ public class CreateOfferController extends NavigationController {
         OverlayController.setTransitionsType(Transitions.Type.VERY_DARK);
 
         directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
-            offerCompletedController.setDirection(direction);
+            reviewOfferController.setDirection(direction);
             amountController.setDirection(direction);
         });
         marketSubscription = EasyBind.subscribe(marketController.getMarket(), market -> {
-            offerCompletedController.setMarket(market);
+            reviewOfferController.setMarket(market);
             paymentMethodController.setMarket(market);
             amountController.setMarket(market);
         });
-        baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), offerCompletedController::setBaseSideAmount);
-        quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), offerCompletedController::setQuoteSideAmount);
+        baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), reviewOfferController::setBaseSideAmount);
+        quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), reviewOfferController::setQuoteSideAmount);
 
         paymentMethodController.getPaymentMethods().addListener(paymentMethodsListener);
-        offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
         handlePaymentMethodsUpdate();
     }
 
@@ -159,7 +158,7 @@ public class CreateOfferController extends NavigationController {
                 return Optional.of(paymentMethodController);
             }
             case CREATE_OFFER_OFFER_COMPLETED -> {
-                return Optional.of(offerCompletedController);
+                return Optional.of(reviewOfferController);
             }
             default -> {
                 return Optional.empty();
@@ -213,7 +212,7 @@ public class CreateOfferController extends NavigationController {
     }
 
     private void handlePaymentMethodsUpdate() {
-        offerCompletedController.setPaymentMethods(paymentMethodController.getPaymentMethods());
+        reviewOfferController.setPaymentMethods(paymentMethodController.getPaymentMethods());
         updateNextButtonState();
     }
 
