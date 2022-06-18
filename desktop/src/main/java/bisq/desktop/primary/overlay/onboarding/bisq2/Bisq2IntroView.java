@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,6 +39,7 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
 
         root.setSpacing(23);
         root.setAlignment(Pos.CENTER);
+        root.setFillWidth(true);
 
         ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");
 
@@ -48,20 +50,20 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(300);
         subtitleLabel.getStyleClass().addAll("bisq-text-3");
-       
+
         nextButton = new Button(Res.get("start"));
-        //nextButton.setId("bisq-easy-next-button");
         nextButton.setDefaultButton(true);
-        
-        VBox.setMargin(logo, new Insets(50, 0, 0, 0 ));
-        VBox.setMargin(subtitleLabel, new Insets(10, 0, 5, 0));
-        VBox.setMargin(nextButton, new Insets(-10, 0, 50, 0));
+
+        VBox.setMargin(logo, new Insets(50, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(-20, 0, 5, 0));
+        VBox.setMargin(nextButton, new Insets(20, 0, 50, 0));
+        VBox vBox = new VBox(23, getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line1"), "intro-1"),
+                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line2"), "intro-2"),
+                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line3"), "intro-3"));
         root.getChildren().addAll(logo,
                 headlineLabel,
                 subtitleLabel,
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line1"), "intro-1"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line2"), "intro-2"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line3"), "intro-3"),
+                new HBox(Spacer.fillHBox(), vBox, Spacer.fillHBox()),
                 nextButton);
     }
 
@@ -83,9 +85,6 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         HBox.setMargin(bulletPoint, new Insets(0, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        int width = 450;
-        hBox.setMinWidth(width);
-        hBox.setMaxWidth(width);
         return hBox;
     }
 }

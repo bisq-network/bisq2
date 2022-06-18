@@ -76,7 +76,7 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         nymId = (Label) profileIdBox.getChildren().get(1);
 
         regenerateButton = new Button(Res.get("generateNym.regenerate"));
-        regenerateButton.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3", "text-underline");
+        regenerateButton.getStyleClass().setAll("bisq-transparent-button", "text-underline");
 
         createProfileButton = new Button(Res.get("generateNym.createProfile"));
         createProfileButton.setGraphicTextGap(8.0);
@@ -105,12 +105,12 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         powProgressIndicator.managedProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
-      
+
         nymId.textProperty().bind(model.getNymId());
         nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
         regenerateButton.mouseTransparentProperty().bind(model.getReGenerateButtonMouseTransparent());
         createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonMouseTransparent());
-        
+
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
         createProfileButton.setOnAction(e -> controller.onNext());
     }
@@ -128,7 +128,7 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         nymId.disableProperty().unbind();
         regenerateButton.mouseTransparentProperty().unbind();
         createProfileButton.mouseTransparentProperty().unbind();
-        
+
         regenerateButton.setOnAction(null);
         createProfileButton.setOnAction(null);
     }

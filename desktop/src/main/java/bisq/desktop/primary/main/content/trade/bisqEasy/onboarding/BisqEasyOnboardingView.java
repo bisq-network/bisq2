@@ -79,7 +79,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         HBox.setHgrow(rightBox, Priority.ALWAYS);
         HBox hBox = new HBox(16, leftBox, rightBox);
 
-        dontShowAgain = new BisqToggleButton(Res.get("bisqEasy.onboarding.dontShowAgain"));
+        dontShowAgain = new BisqToggleButton(Res.get("dontShowAgain"));
         VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 76));
         VBox.setMargin(hBox, new Insets(20, 30, 15, 30));
         VBox.setMargin(dontShowAgain, new Insets(0, 30, 30, 30));

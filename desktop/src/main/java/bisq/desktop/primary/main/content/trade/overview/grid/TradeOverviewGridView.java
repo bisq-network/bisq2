@@ -43,7 +43,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         super(new GridPane(), model, controller);
         root.setHgap(25);
         root.setVgap(25);
-        root.setPadding(new Insets(25,0,0,0));
+        root.setPadding(new Insets(25, 0, 0, 0));
     }
 
     @Override
@@ -143,7 +143,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
                 Res.get("select") :
                 Res.get("learnMore");
         Button button = new Button(title);
-        button.getStyleClass().setAll("bisq-transparent-button", "bisq-text-3");
+        button.getStyleClass().setAll("bisq-transparent-button");
         button.setOnAction(e -> controller.onSelect(protocol));
         StackPane.setAlignment(button, Pos.TOP_RIGHT);
         StackPane.setMargin(button, new Insets(20, 14, 0, 0));
@@ -151,7 +151,6 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
         return pane;
     }
-
 
     private VBox getParameterPane(String title, String info) {
         Label infoLabel = new Label(info);
@@ -169,12 +168,11 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         Label titleLabel = new Label(title.toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
         box.getChildren().addAll(titleLabel, node);
-
         return box;
     }
 
     private Node getStarsNode(int value, String tooltipText) {
-        final HBox hBox = new HBox();
+        HBox hBox = new HBox();
         hBox.setPadding(new Insets(5, 0, 5, 0));
         hBox.setSpacing(5);
 
@@ -185,7 +183,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
             hBox.getChildren().add(label);
         }
 
-        final Tooltip tooltip = new Tooltip();
+        Tooltip tooltip = new Tooltip();
         tooltip.setMaxWidth(240);
         tooltip.setWrapText(true);
         tooltip.setText(tooltipText);

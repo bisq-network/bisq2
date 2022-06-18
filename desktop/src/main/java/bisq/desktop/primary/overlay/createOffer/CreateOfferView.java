@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.createOffer;
 
 import bisq.common.data.Triple;
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
@@ -25,6 +26,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -44,14 +46,18 @@ import java.util.List;
 @Slf4j
 public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, CreateOfferController> {
     public static final double TOP_PANE_HEIGHT = 55;
+    private static final double OPACITY = 0.35;
+
     private final Button skipButton;
     private final List<Label> navigationProgressLabelList;
     private final HBox topPaneBox;
     private final Button nextButton, backButton;
     private final HBox buttons;
     private final VBox content;
-    private Subscription navigationProgressIndexSubscription, topPaneBoxVisibleSubscription;
+    private final ChangeListener<Number> currentIndexListener;
+    private Subscription topPaneBoxVisibleSubscription;
     private Scene rootScene;
+    private boolean firstOpened;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -93,6 +99,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 }
             }
         });
+
+        currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
     }
 
     @Override
@@ -116,13 +124,8 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
             }
         });
 
-        navigationProgressIndexSubscription = EasyBind.subscribe(model.getCurrentIndex(), progressIndex -> {
-            if ((int) progressIndex < navigationProgressLabelList.size()) {
-                navigationProgressLabelList.forEach(label -> label.getStyleClass().remove("bisq-text-white"));
-                Label label = navigationProgressLabelList.get((int) progressIndex);
-                label.getStyleClass().add("bisq-text-white");
-            }
-        });
+        model.getCurrentIndex().addListener(currentIndexListener);
+        applyProgress(model.getCurrentIndex().get(), false);
 
         nextButton.setOnAction(e -> controller.onNext());
         backButton.setOnAction(evt -> controller.onBack());
@@ -153,8 +156,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         backButton.setOnAction(null);
         skipButton.setOnAction(null);
         rootScene.setOnKeyReleased(null);
-        navigationProgressIndexSubscription.unsubscribe();
+        model.getCurrentIndex().removeListener(currentIndexListener);
         topPaneBoxVisibleSubscription.unsubscribe();
+        firstOpened = false;
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {
@@ -196,7 +200,22 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         Label label = new Label(text.toUpperCase());
         label.setTextAlignment(TextAlignment.CENTER);
         label.setAlignment(Pos.CENTER);
-        label.getStyleClass().addAll("bisq-text-4");
+        label.getStyleClass().addAll("bisq-text-14");
+
+        label.setOpacity(OPACITY);
         return label;
+    }
+
+    private void applyProgress(int progressIndex, boolean delay) {
+        if (progressIndex < navigationProgressLabelList.size()) {
+            navigationProgressLabelList.forEach(label -> label.setOpacity(OPACITY));
+            Label label = navigationProgressLabelList.get(progressIndex);
+            if (delay) {
+                UIScheduler.run(() -> Transitions.fade(label, OPACITY, 1, Transitions.DEFAULT_DURATION / 2))
+                        .after(Transitions.DEFAULT_DURATION / 2);
+            } else {
+                label.setOpacity(1);
+            }
+        }
     }
 }
