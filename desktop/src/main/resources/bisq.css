@@ -411,6 +411,7 @@
 .bisq-text-10 {
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-11 {
@@ -430,6 +431,12 @@
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans";
+}
+
+.bisq-text-14 {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 0.9em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .wrap-text {
@@ -642,9 +649,11 @@
 .default-button {
     -fx-background-color: -bisq-green;
 }
+
 .button:default:hover {
     -fx-background-color: -bisq-green-lighter;
 }
+
 .button:hover {
     -fx-background-color: derive(-bisq-grey-17, 10%);
 }
@@ -832,15 +841,17 @@
     -fx-background-color: transparent;
     -fx-cursor: hand;
     -fx-padding: 6 14;
+    -fx-text-fill: -bisq-grey-9;
+    -fx-font-size: 1.1em;
+    -fx-line-spacing: -0.12em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-transparent-button:hover {
-    -fx-background-color: transparent;
-    /* -fx-background-color: rgba(255, 255, 255, .04);*/
+    -fx-text-fill: -bisq-white;
 }
 
 .bisq-transparent-button:disabled {
-    -fx-background-color: transparent;
     -fx-text-fill: derive(-bisq-grey-9, -50%);
 }
 
@@ -914,7 +925,7 @@
 }
 
 .bisq-button-1:selected:hover {
-    -fx-background-color: -bisq-green;
+    -fx-background-color: -bisq-green-lighter;
 }
 
 /*******************************************************************************

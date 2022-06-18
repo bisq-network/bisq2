@@ -119,6 +119,17 @@ public class Transitions {
         }
     }
 
+    public static void fade(Node node, double fromValue, double toValue, int duration) {
+        if (node == null) {
+            return;
+        }
+        FadeTransition fade = new FadeTransition(Duration.millis(getDuration(duration)), node);
+        node.setOpacity(fromValue);
+        fade.setFromValue(fromValue);
+        fade.setToValue(toValue);
+        fade.play();
+    }
+
     public static FadeTransition fadeOut(Node node) {
         return fadeOut(node, DEFAULT_DURATION, null);
     }
