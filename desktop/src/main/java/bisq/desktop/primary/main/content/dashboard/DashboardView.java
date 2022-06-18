@@ -35,6 +35,8 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new VBox(16), model, controller);
 
+        root.setFillWidth(true);
+        
         VBox marketPrice = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
         VBox offersOnline = getValueBox(Res.get("dashboard.offersOnline"), "231");
         VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
@@ -42,7 +44,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
-
+        VBox.setVgrow(firstBox, Priority.ALWAYS);
         root.getChildren().add(firstBox);
 
         VBox secondBox = getWidgetBox(
@@ -60,7 +62,14 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.third.button"),
                 controller::onOpenDiscussionChat
         );
-        root.getChildren().add(new HBox(16, secondBox, thirdBox));
+        
+        HBox.setHgrow(secondBox, Priority.ALWAYS);
+        HBox.setHgrow(thirdBox, Priority.ALWAYS);
+        HBox hBox = new HBox(16, secondBox, thirdBox);
+        hBox.setFillHeight(true);
+        
+        VBox.setVgrow(hBox, Priority.ALWAYS);
+        root.getChildren().add(hBox);
     }
 
     @Override
@@ -115,15 +124,15 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));
         VBox.setMargin(button, new Insets(20, 0, 0, 0));
-        VBox box = new VBox(15,
+        VBox vBox = new VBox(15,
                 headlineLabel,
                 getIconAndText(Res.get("dashboard.main.content1"), "onboarding-2-offer-white"),
                 getIconAndText(Res.get("dashboard.main.content2"), "onboarding-2-chat-white"),
                 getIconAndText(Res.get("dashboard.main.content3"), "onboarding-1-reputation-white"),
                 button);
-        box.getStyleClass().add("bisq-box-2");
-        box.setPadding(new Insets(30, 48, 44, 48));
-        return box;
+        vBox.getStyleClass().add("bisq-box-2");
+        vBox.setPadding(new Insets(30, 48, 44, 48));
+        return vBox;
     }
 
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
@@ -133,7 +142,6 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         Label contentLabel = new Label(content);
         contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        contentLabel.setMaxWidth(600);
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
@@ -143,13 +151,12 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox.setMargin(contentLabel, new Insets(0, 0, 10, 0));
-        VBox box = new VBox(16, headlineLabel, contentLabel, button);
-        box.getStyleClass().add("bisq-box-1");
-        box.setPadding(new Insets(36, 48, 52, 48));
-        box.setMinWidth(420);
-        box.setPrefWidth(420);
-        HBox.setHgrow(box, Priority.ALWAYS);
-        return box;
+        VBox vBox = new VBox(16, headlineLabel, contentLabel, button);
+        vBox.getStyleClass().add("bisq-box-1");
+        vBox.setPadding(new Insets(36, 48, 52, 48));
+        vBox.setMinWidth(420);
+        vBox.setFillWidth(true);
+        return vBox;
     }
 
     private HBox getIconAndText(String text, String imageId) {

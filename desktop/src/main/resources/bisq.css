@@ -40,6 +40,9 @@
 
     /* Colors */
     -bisq-green: #56ae48;
+    -bisq-green-lighter: #53a746;
+    -bisq-green-darker: #488e3e;
+    -bisq-green: #56ae48;
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -639,10 +642,11 @@
 .default-button {
     -fx-background-color: -bisq-green;
 }
-
+.button:default:hover {
+    -fx-background-color: -bisq-green-lighter;
+}
 .button:hover {
-    -fx-background-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
+    -fx-background-color: derive(-bisq-grey-17, 10%);
 }
 
 .button:disabled {
@@ -661,8 +665,7 @@
 }
 
 .red-button:hover {
-    -fx-background-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
+    -fx-background-color: derive(-bisq-red, 10%);
 }
 
 
@@ -750,22 +753,17 @@
 .bisq-big-green-button {
     -fx-background-color: -bisq-green;
     -fx-background-radius: 8;
-    -fx-border-color: -bisq-green;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
+    -fx-border-width: 0;
     -fx-text-fill: -fx-light-text-color;
     -fx-padding: 17;
     -fx-font-size: 1.7em;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
 }
 
 .bisq-big-green-button:hover {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: -bisq-green-lighter;
     -fx-background-radius: 8;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-border-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
 }
 
 /* Big white button */
@@ -775,7 +773,7 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-    /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
+    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
     -fx-cursor: hand;
 }
 
@@ -790,12 +788,21 @@
     -fx-padding: 17;
     -fx-font-size: 1.54em;
     -fx-font-family: "IBM Plex Sans Light";
-    /* -fx-effect: dropshadow(gaussian, -bisq-white, 0, 0, 0, 2);*/
+    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
     -fx-cursor: hand;
 }
 
+.bisq-big-grey-button:default {
+    -fx-background-color: -bisq-green;
+    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
+}
+
+.bisq-big-grey-button:default:hover {
+    -fx-background-color: -bisq-green-lighter;
+}
+
 .bisq-big-grey-button:hover {
-    -fx-background-color: -bisq-white;
+    -fx-background-color: derive(-bisq-grey-17, 10%);
 }
 
 /* Big transparent button */
@@ -829,7 +836,7 @@
 
 .bisq-transparent-button:hover {
     -fx-background-color: transparent;
-    -fx-background-color: rgba(255, 255, 255, .04);
+    /* -fx-background-color: rgba(255, 255, 255, .04);*/
 }
 
 .bisq-transparent-button:disabled {
@@ -881,11 +888,11 @@
     -fx-border-width: 0px;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
 }
 
 .bisq-create-offer-button:hover {
-    -fx-background-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
+    -fx-background-color: -bisq-green-lighter;
 }
 
 /* Bisq other buttons */
@@ -927,8 +934,7 @@
 }
 
 .toggle-button:hover {
-    -fx-background-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
+    -fx-background-color: derive(-bisq-grey-19, 10%);
 }
 
 .toggle-button:selected {
@@ -937,7 +943,7 @@
 }
 
 .toggle-button:selected:hover {
-    -fx-background-color: derive(-bisq-green, -25%);
+    -fx-background-color: -bisq-green-lighter;
     -fx-text-fill: -fx-light-text-color;
 }
 

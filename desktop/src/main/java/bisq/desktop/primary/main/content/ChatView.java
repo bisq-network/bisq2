@@ -71,7 +71,6 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         this.helpPane = helpPane;
 
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-        createOfferButton.setDefaultButton(true);
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
         createOfferButton.setMinHeight(37);
         createOfferButton.getStyleClass().add("bisq-create-offer-button");
