@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -34,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+
+import static bisq.settings.DontShowAgainKey.TRADE_GUIDE_BOX;
 
 @Slf4j
 public abstract class ChatController<V extends ChatView, M extends ChatModel> implements Controller {
@@ -147,13 +150,16 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public void onToggleHelp() {
         boolean visible = !model.getHelpVisible().get();
-        onCloseSideBar();
+       // onCloseSideBar();
         model.getHelpVisible().set(visible);
-        model.getSideBarVisible().set(visible);
+
+        DontShowAgainService.putDontShowAgain(TRADE_GUIDE_BOX.name(), false);
+        
+     /*   model.getSideBarVisible().set(visible);
         model.getSideBarWidth().set(visible ? 540 : 0);
         if (visible) {
             //tradeChatHelp.setChannel();
-        }
+        }*/
     }
 
     public void onCloseSideBar() {

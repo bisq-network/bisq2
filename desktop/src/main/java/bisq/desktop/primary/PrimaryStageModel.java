@@ -38,8 +38,8 @@ public class PrimaryStageModel extends NavigationModel {
     private final Optional<Double> stageY;
     private final Optional<Double> stageWidth;
     private final Optional<Double> stageHeight;
-    private final double prefWidth = 1400;
-    private final double prefHeight = 1000;
+    private final double prefWidth = MIN_WIDTH;
+    private final double prefHeight = MIN_HEIGHT;
 
     public PrimaryStageModel(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;

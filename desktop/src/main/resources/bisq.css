@@ -250,6 +250,21 @@
       -fx-fill: -bs-rd-error-red;*/
 }
 
+/*******************************************************************************
+ *                                                                             *
+ * Separator                                                                   *
+ *                                                                             *
+ ******************************************************************************/
+
+.separator:horizontal .line {
+    -fx-border-color: -bisq-grey-9;
+    -fx-border-width: 0.5;
+}
+
+.separator:vertical .line {
+    -fx-border-color: -bisq-grey-9;
+    -fx-border-width: 0.5;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -331,6 +346,13 @@
     -fx-font-size: 3.15em;
 }
 
+.bisq-text-headline-5 {
+    -fx-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-size: 2.5em;
+    -fx-line-spacing: -0.16em;
+}
+
 .bisq-text-1 {
     -fx-fill: -bisq-white;
     -fx-font-size: 1.25em;
@@ -346,6 +368,7 @@
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.1em;
     -fx-line-spacing: -0.12em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-4 {
@@ -627,7 +650,7 @@
 }
 
 .button.icon-button {
-    -fx-padding: 5;
+    -fx-padding: 0;
     -fx-background-color: transparent;
     -fx-focus-traversable: false;
     -fx-cursor: hand;
@@ -869,8 +892,10 @@
 .bisq-button-1 {
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-grey-3;
+    -fx-background-radius: 4;
     -fx-text-fill: -bisq-white;
     -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-button-1:hover {
@@ -1033,9 +1058,10 @@
 .bisq-toggle-button:focused,
 .bisq-toggle-button:selected,
 .bisq-toggle-button:focused:selected {
-    -fx-background-color: TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT;
+    -fx-background-color: transparent;
     -fx-background-radius: 4px;
     -fx-background-insets: 0px;
+    -fx-padding: 2px;
     -bisq-toggle-color: -bisq-green;
     -bisq-untoggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
@@ -1049,10 +1075,17 @@
 }
 
 .bisq-toggle-button:selected {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+}
+
+.bisq-toggle-button:selected:hover {
+    -fx-background-color: transparent;
     -fx-text-fill: -bisq-white;
 }
 
 .bisq-toggle-button:hover {
+    -fx-background-color: transparent;
     -fx-text-fill: -bisq-grey-9;
 }
 
@@ -2006,6 +2039,7 @@ tree-table-view:focused {
     -fx-text-fill: -fx-light-text-color;
 }
 
+
 #bisq-easy-next-button {
     -fx-background-color: transparent;
     -fx-background-radius: 4;
@@ -2023,4 +2057,20 @@ tree-table-view:focused {
 #sellBtcWarning {
     -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 0 0 16 16;
+}
+
+#bisq-easy-trade-info-headline-label {
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-text-fill: -fx-light-text-color;
+}
+
+#bisq-easy-trade-info-content-label {
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -fx-light-text-color;
+}
+
+.separator-line {
+    -fx-border-color: -bisq-grey-7;
+    -fx-border-width: 0 0 1 0;
 }

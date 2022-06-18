@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
@@ -71,6 +72,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
@@ -88,9 +90,17 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
+         /*   model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
                     .map(ChannelSelection.View.ChannelItem::new)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()));*/
+
+            //todo do not use the visible flag but create a separate list for the choosen channels
+            channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                    .map(c -> {
+                        return new ChannelSelection.View.ChannelItem(c);
+                    })
+                    /* .map(ChannelSelection.View.ChannelItem::new)*/
+                    .to(chatService.getPublicTradeChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
                     channel -> {
@@ -129,6 +139,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 return;
             }
 
+            channelItemsPin.unbind();
             chatService.selectTradeChannel(channelItem.getChannel());
         }
 
@@ -255,7 +266,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return new ListCell<>() {
                 private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
-              
+
                 final Label label = new Label();
                 final HBox hBox = new HBox();
 

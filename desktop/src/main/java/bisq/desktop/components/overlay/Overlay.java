@@ -23,7 +23,7 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
-import bisq.desktop.common.utils.DontShowAgainLookup;
+import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
@@ -198,7 +198,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public void show(boolean showAgainChecked) {
-        if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
+        if (dontShowAgainId == null || DontShowAgainService.showAgain(dontShowAgainId)) {
             createGridPane();
             if (LanguageRepository.isDefaultLanguageRTL()) {
                 getRootContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
@@ -885,8 +885,8 @@ public abstract class Overlay<T extends Overlay<T>> {
             buttonBox.getChildren().add(0, dontShowAgainCheckBox);
 
             dontShowAgainCheckBox.setSelected(isChecked);
-            DontShowAgainLookup.dontShowAgain(dontShowAgainId, isChecked);
-            dontShowAgainCheckBox.setOnAction(e -> DontShowAgainLookup.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
+            DontShowAgainService.putDontShowAgain(dontShowAgainId, isChecked);
+            dontShowAgainCheckBox.setOnAction(e -> DontShowAgainService.putDontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
     }
 

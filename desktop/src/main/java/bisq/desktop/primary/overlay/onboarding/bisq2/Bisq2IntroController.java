@@ -18,13 +18,15 @@
 package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.application.DefaultApplicationService;
+import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
 
 @Slf4j
 public class Bisq2IntroController implements Controller {
@@ -48,7 +50,7 @@ public class Bisq2IntroController implements Controller {
     }
 
     void onNext() {
-        settingsService.setCookie(CookieKey.BISQ_2_ONBOARDED, true);
+        DontShowAgainService.dontShowAgain(BISQ_2_INTRO);
         Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
     }
 }

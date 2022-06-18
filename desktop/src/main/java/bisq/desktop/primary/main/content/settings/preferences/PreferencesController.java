@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.settings.CookieKey;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 
@@ -46,7 +46,7 @@ public class PreferencesController implements Controller {
 
     public void onResetDontShowAgain(boolean isSelected) {
         if (isSelected) {
-            settingsService.setCookie(CookieKey.SHOW_AGAIN_BISQ_EASY_ONBOARDING, false);
+            DontShowAgainService.resetDontShowAgain();
         }
     }
 }

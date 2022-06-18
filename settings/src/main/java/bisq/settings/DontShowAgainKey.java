@@ -15,23 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.utils;
+package bisq.settings;
 
-import bisq.settings.SettingsService;
-
-public class DontShowAgainLookup {
-
-    private static SettingsService settingsService;
-
-    public static void setPreferences(SettingsService settingsService) {
-        DontShowAgainLookup.settingsService = settingsService;
-    }
-
-    public static boolean showAgain(String key) {
-        return settingsService.showAgain(key);
-    }
-
-    public static void dontShowAgain(String key, boolean dontShowAgain) {
-        settingsService.dontShowAgain(key, dontShowAgain);
-    }
+/**
+ * Enum for don't show again checkboxes. If possible use the enum and not local keys to have better control about 
+ * the entries. We do not persist the key, but use the name of the enum as string for the key.
+ */
+public enum DontShowAgainKey {
+    BISQ_2_INTRO,
+    BISQ_EASY_INTRO,
+    TRADE_GUIDE_BOX
 }

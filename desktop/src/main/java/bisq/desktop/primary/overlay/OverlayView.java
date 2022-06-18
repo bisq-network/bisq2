@@ -118,7 +118,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     private void show(double prefWidth, double prefHeight) {
         prefWidth = Math.min(prefWidth, owner.getWidth());
         prefHeight = Math.min(prefHeight, owner.getHeight());
-        
+
         root.setMinWidth(prefWidth);
         root.setMinHeight(prefHeight);
         root.setMaxWidth(prefWidth);

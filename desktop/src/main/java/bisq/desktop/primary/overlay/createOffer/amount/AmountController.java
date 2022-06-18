@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+// TODO open bug when opening popup with amount screen the values are not set
 @Slf4j
 public class AmountController implements Controller {
     private final AmountModel model;

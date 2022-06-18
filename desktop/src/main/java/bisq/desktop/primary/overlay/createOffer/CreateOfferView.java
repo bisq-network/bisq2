@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -29,6 +30,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -76,6 +78,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
 
         VBox.setMargin(buttons, new Insets(0, 0, 40, 0));
         model.getView().addListener((observable, oldValue, newValue) -> {
+            content.getChildren().clear();
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 content.getChildren().add(childRoot);
@@ -88,8 +91,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 } else {
                     Transitions.fadeIn(childRoot);
                 }
-            } else {
-                content.getChildren().clear();
             }
         });
     }
@@ -98,7 +99,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     protected void onViewAttached() {
         nextButton.textProperty().bind(model.getNextButtonText());
         backButton.textProperty().bind(model.getBackButtonText());
-        skipButton.textProperty().bind(model.getSkipButtonText());
 
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
@@ -162,19 +162,34 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         Label market = getTopPaneLabel(Res.get("onboarding.navProgress.market"));
         Label amount = getTopPaneLabel(Res.get("onboarding.navProgress.amount"));
         Label method = getTopPaneLabel(Res.get("onboarding.navProgress.method"));
-        Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.complete"));
+        Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.review"));
 
-        Button skipButton = new Button(Res.get("onboarding.navProgress.skip"));
-        skipButton.getStyleClass().add("bisq-transparent-grey-button");
+        Button skipButton = BisqIconButton.createIconButton("close");
 
-        HBox hBox = new HBox(50);
+        HBox hBox = new HBox(10);
         hBox.setAlignment(Pos.CENTER);
         hBox.setId("onboarding-top-panel");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
         HBox.setMargin(skipButton, new Insets(0, 20, 0, -135));
-        hBox.getChildren().addAll(Spacer.fillHBox(), direction, market, amount, method, complete, Spacer.fillHBox(), skipButton);
+        hBox.getChildren().addAll(Spacer.fillHBox(),
+                direction,
+                getSeparator(),
+                market,
+                getSeparator(),
+                amount,
+                getSeparator(),
+                method,
+                getSeparator(),
+                complete,
+                Spacer.fillHBox(), skipButton);
 
         return new Triple<>(hBox, skipButton, List.of(direction, market, amount, method, complete));
+    }
+
+    private Separator getSeparator() {
+        Separator line = new Separator();
+        line.setPrefWidth(30);
+        return line;
     }
 
     private Label getTopPaneLabel(String text) {

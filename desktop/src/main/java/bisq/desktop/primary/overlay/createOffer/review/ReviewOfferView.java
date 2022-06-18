@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.complete;
+package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
@@ -33,18 +33,18 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompletedController> {
+class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferController> {
     private final Label headLineLabel, subtitleLabel, takeOfferLabel;
     private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
-    private final VBox content, feedback;
-    private Button viewOfferButton;
-    private Subscription showFeedbackPin;
+    private final VBox content, createOfferSuccessFeedback, takeOfferSuccessFeedback;
+    private Button viewOfferButton, openPrivateChannelButton;
+    private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
-    OfferCompletedView(OfferCompletedModel model,
-                       OfferCompletedController controller,
-                       Pane myOfferListView,
-                       Pane takersListView) {
+    ReviewOfferView(ReviewOfferModel model,
+                    ReviewOfferController controller,
+                    Pane myOfferListView,
+                    Pane takersListView) {
         super(new StackPane(), model, controller);
         this.takersListView = takersListView;
 
@@ -71,17 +71,28 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
 
         content.getChildren().addAll(headLineLabel, subtitleLabel, myOfferListView, takeOfferLabel, takersListView);
 
-        feedback = new VBox();
-        setupFeedback();
+        createOfferSuccessFeedback = new VBox();
+        createOfferSuccessFeedback.setVisible(false);
+        viewOfferButton = new Button(Res.get("onboarding.completed.createOfferSuccess.viewOffer"));
+        configCreateOfferSuccess();
 
-        StackPane.setMargin(feedback, new Insets(-55, 0, 380, 0));
-        root.getChildren().addAll(content, feedback);
+        takeOfferSuccessFeedback = new VBox();
+        takeOfferSuccessFeedback.setVisible(false);
+        openPrivateChannelButton = new Button(Res.get("onboarding.completed.takeOfferSuccess.openPrivateChannel"));
+        configTakeOfferSuccess();
+
+        StackPane.setMargin(createOfferSuccessFeedback, new Insets(-55, 0, 380, 0));
+        StackPane.setMargin(takeOfferSuccessFeedback, new Insets(-55, 0, 380, 0));
+        root.getChildren().addAll(content, createOfferSuccessFeedback, takeOfferSuccessFeedback);
     }
 
     @Override
     protected void onViewAttached() {
         Transitions.removeEffect(content);
+        
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
+        openPrivateChannelButton.setOnAction(e -> controller.onOpenPrivateChat());
+        
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
             takeOfferLabel.setVisible(matchingOffersFound);
             takeOfferLabel.setManaged(matchingOffersFound);
@@ -97,12 +108,22 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
             }
         });
 
-        showFeedbackPin = EasyBind.subscribe(model.getShowFeedback(),
-                showFeedback -> {
-                    feedback.setVisible(showFeedback);
-                    if (showFeedback) {
+        showCreateOfferSuccessPin = EasyBind.subscribe(model.getShowCreateOfferSuccess(),
+                show -> {
+                    createOfferSuccessFeedback.setVisible(show);
+                    if (show) {
                         Transitions.blurLight(content, -0.5);
-                        Transitions.slideInTop(feedback, 450);
+                        Transitions.slideInTop(createOfferSuccessFeedback, 450);
+                    } else {
+                        Transitions.removeEffect(content);
+                    }
+                });
+        showTakeOfferSuccessPin = EasyBind.subscribe(model.getShowTakeOfferSuccess(),
+                show -> {
+                    takeOfferSuccessFeedback.setVisible(show);
+                    if (show) {
+                        Transitions.blurLight(content, -0.5);
+                        Transitions.slideInTop(takeOfferSuccessFeedback, 450);
                     } else {
                         Transitions.removeEffect(content);
                     }
@@ -112,20 +133,24 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
     @Override
     protected void onViewDetached() {
         viewOfferButton.setOnAction(null);
+        openPrivateChannelButton.setOnAction(null);
         matchingOffersFoundPin.unsubscribe();
-        showFeedbackPin.unsubscribe();
+        showCreateOfferSuccessPin.unsubscribe();
+        showTakeOfferSuccessPin.unsubscribe();
     }
 
-    private void setupFeedback() {
+    private void configCreateOfferSuccess() {
         double width = 700;
-        feedback.setAlignment(Pos.TOP_CENTER);
-        feedback.setMaxWidth(width);
-        feedback.setId("sellBtcWarning");
+        createOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
+        createOfferSuccessFeedback.setMaxWidth(width);
+        createOfferSuccessFeedback.setId("sellBtcWarning");
+        createOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        createOfferSuccessFeedback.setSpacing(30);
 
-        Label headLineLabel = new Label(Res.get("onboarding.completed.feedback.headline"));
+        Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("onboarding.completed.feedback.subTitle"));
+        Label subtitleLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMinWidth(width - 200);
@@ -133,11 +158,32 @@ class OfferCompletedView extends View<StackPane, OfferCompletedModel, OfferCompl
         subtitleLabel.setMinHeight(100);
         subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        viewOfferButton = new Button(Res.get("onboarding.completed.feedback.viewOffer"));
         viewOfferButton.setDefaultButton(true);
-        
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 30, 0));
-        VBox.setMargin(viewOfferButton, new Insets(50, 0, 30, 0));
-        feedback.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
+
+        createOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, viewOfferButton);
+    }
+
+    private void configTakeOfferSuccess() {
+        double width = 700;
+        takeOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
+        takeOfferSuccessFeedback.setMaxWidth(width);
+        takeOfferSuccessFeedback.setId("sellBtcWarning");
+        takeOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        takeOfferSuccessFeedback.setSpacing(30);
+
+        Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));
+        headLineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        Label subtitleLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.subTitle"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.setMinWidth(width - 200);
+        subtitleLabel.setMaxWidth(subtitleLabel.getMinWidth());
+        subtitleLabel.setMinHeight(100);
+        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+
+        openPrivateChannelButton.setDefaultButton(true);
+
+        takeOfferSuccessFeedback.getChildren().addAll(headLineLabel, subtitleLabel, openPrivateChannelButton);
     }
 }

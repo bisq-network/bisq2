@@ -126,7 +126,7 @@ public class QuotedMessageBlock {
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
         private final Label userName;
-        private final Button removeButton;
+        private final Button closeButton;
         private final Text quotedMessage;
         private Subscription roboHashNodeSubscription;
 
@@ -138,11 +138,11 @@ public class QuotedMessageBlock {
 
             Label headline = new Label(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-9");
-            removeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-            HBox.setMargin(removeButton, new Insets(0, -25, 0, 0));
-            HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), removeButton);
+            closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
+            HBox.setMargin(closeButton, new Insets(0, -25, 0, 0));
+            HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), closeButton);
             topBox.setAlignment(Pos.CENTER);
-            topBox.setPadding(new Insets(5, 10, -5, 10));
+            topBox.setPadding(new Insets(5, 30, -5, 10));
 
             userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
@@ -170,7 +170,7 @@ public class QuotedMessageBlock {
                 }
             });
 
-            removeButton.setOnAction(e -> controller.close());
+            closeButton.setOnAction(e -> controller.close());
         }
 
         @Override
@@ -178,7 +178,7 @@ public class QuotedMessageBlock {
             userName.textProperty().unbind();
             quotedMessage.textProperty().unbind();
             roboHashNodeSubscription.unsubscribe();
-            removeButton.setOnAction(null);
+            closeButton.setOnAction(null);
         }
     }
 }

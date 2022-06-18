@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.complete;
+package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -36,7 +36,7 @@ import lombok.Setter;
 import java.util.List;
 
 @Getter
-class OfferCompletedModel implements Model {
+class ReviewOfferModel implements Model {
     @Setter
     private PublicTradeChannel selectedChannel;
     @Setter
@@ -51,8 +51,9 @@ class OfferCompletedModel implements Model {
     private List<String> paymentMethods = List.of("SEPA");
     final private ObjectProperty<PublicTradeChatMessage> myOfferMessage = new SimpleObjectProperty<>();
     final private BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
-    private final BooleanProperty showFeedback = new SimpleBooleanProperty();
+    private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
+    private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
 
-    OfferCompletedModel() {
+    ReviewOfferModel() {
     }
 }
