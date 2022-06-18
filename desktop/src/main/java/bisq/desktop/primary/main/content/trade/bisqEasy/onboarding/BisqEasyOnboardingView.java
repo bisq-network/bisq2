@@ -91,7 +91,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         dontShowAgain.setSelected(false);
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
         openChatButton.setOnAction(e -> controller.onOpenChat());
-        dontShowAgain.setOnAction(e -> controller.onDontShowAgain(dontShowAgain.isSelected()));
+        dontShowAgain.setOnAction(e -> controller.onDontShowAgain());
     }
 
     @Override
@@ -138,9 +138,6 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
-       /* int width = 600;
-        hBox.setMinWidth(width);
-        hBox.setMaxWidth(width);*/
         return hBox;
     }
 }

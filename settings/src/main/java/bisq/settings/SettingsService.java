@@ -32,17 +32,9 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
 
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        DontShowAgainService.setSettingsService(this);
     }
 
-    public boolean showAgain(String key) {
-        return !persistableStore.getDontShowAgainMap().containsKey(key) ||
-                !persistableStore.getDontShowAgainMap().get(key);
-    }
-
-    public void dontShowAgain(String key, boolean dontShowAgain) {
-        persistableStore.getDontShowAgainMap().put(key, dontShowAgain);
-        persist();
-    }
 
     public DisplaySettings getDisplaySettings() {
         return persistableStore.getDisplaySettings();
@@ -83,4 +75,5 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
         persistableStore.setRequiredTotalReputationScore(value);
         persist();
     }
+
 }

@@ -28,8 +28,6 @@ enum CookieKey {
   STAGE_W = 2;
   STAGE_H = 3;
   NAVIGATION_TARGET = 4;
-  BISQ_2_ONBOARDED = 5;
-  SHOW_AGAIN_BISQ_EASY_ONBOARDING = 6;
 }
 
 message CookieMapEntry {

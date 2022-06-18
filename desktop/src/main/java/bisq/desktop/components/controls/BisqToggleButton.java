@@ -31,14 +31,15 @@ import java.util.List;
 
 public class BisqToggleButton extends ToggleButton {
 
+    public BisqToggleButton() {
+        this("");
+    }
+
     public BisqToggleButton(String text) {
         super(text);
         this.getStyleClass().add("bisq-toggle-button");
     }
 
-    public BisqToggleButton() {
-        this.getStyleClass().add("bisq-toggle-button");
-    }
 
     @Override
     protected Skin<?> createDefaultSkin() {

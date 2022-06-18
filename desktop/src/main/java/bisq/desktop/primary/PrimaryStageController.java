@@ -20,7 +20,7 @@ package bisq.desktop.primary;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
-import bisq.desktop.common.utils.DontShowAgainLookup;
+import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -40,6 +40,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+
+import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
 
 @Slf4j
 public class PrimaryStageController extends NavigationController {
@@ -69,7 +71,6 @@ public class PrimaryStageController extends NavigationController {
         Browser.setHostServices(applicationJavaFxApplicationData.hostServices());
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
-        DontShowAgainLookup.setPreferences(settingsService);
         AnchorPane viewRoot = view.getRoot();
         Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
@@ -112,7 +113,7 @@ public class PrimaryStageController extends NavigationController {
 
     public void onDomainInitialized() {
         splashController.stopAnimation();
-        if (!settingsService.getCookie().getAsOptionalBoolean(CookieKey.BISQ_2_ONBOARDED).orElse(false)) {
+        if (DontShowAgainService.showAgain(BISQ_2_INTRO)) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
         } else if (applicationService.getChatUserService().isDefaultUserProfileMissing()) {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);

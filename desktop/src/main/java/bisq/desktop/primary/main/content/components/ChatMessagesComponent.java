@@ -20,7 +20,9 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
+import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
@@ -31,10 +33,7 @@ import bisq.social.user.ChatUser;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -49,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static bisq.settings.DontShowAgainKey.TRADE_GUIDE_BOX;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -119,8 +119,20 @@ public class ChatMessagesComponent {
             if (model.isDiscussionsChat) {
                 selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(model.selectedChannel::set);
             } else {
-                selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
+                    model.selectedChannel.set(channel);
+                    model.isTradeGuideBoxVisible.set(displayTradeGuileBox());
+                });
             }
+
+            model.isTradeGuideBoxVisible.set(displayTradeGuileBox());
+
+            DontShowAgainService.getUpdateFlag().addObserver(e -> model.isTradeGuideBoxVisible.set(displayTradeGuileBox()));
+        }
+
+        private boolean displayTradeGuileBox() {
+            return DontShowAgainService.showAgain(TRADE_GUIDE_BOX) &&
+                    model.getSelectedChannel().get() instanceof PrivateTradeChannel;
         }
 
         @Override
@@ -152,11 +164,6 @@ public class ChatMessagesComponent {
             }
         }
 
-        public void showChatUserDetails(ChatMessage chatMessage) {
-            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author ->
-                    model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
-        }
-
         public void onReply(ChatMessage chatMessage) {
             if (!chatService.isMyMessage(chatMessage)) {
                 quotedMessageBlock.reply(chatMessage);
@@ -176,6 +183,11 @@ public class ChatMessagesComponent {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
+        }
+
+        private void showChatUserDetails(ChatMessage chatMessage) {
+            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author ->
+                    model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 
         private void mentionUser(ChatUser chatUser) {
@@ -199,6 +211,11 @@ public class ChatMessagesComponent {
             //todo
             view.inputField.positionCaret(content.length());
         }
+
+        public void onCloseTradeGuideBox() {
+            model.getIsTradeGuideBoxVisible().set(false);
+            DontShowAgainService.dontShowAgain(TRADE_GUIDE_BOX);
+        }
     }
 
     @Getter
@@ -210,6 +227,7 @@ public class ChatMessagesComponent {
         private final ObservableList<ChatUser> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
         private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
+        private final BooleanProperty isTradeGuideBoxVisible = new SimpleBooleanProperty();
 
         private Model(boolean isDiscussionsChat) {
             this.isDiscussionsChat = isDiscussionsChat;
@@ -224,9 +242,14 @@ public class ChatMessagesComponent {
         private final Button sendButton;
         private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
+        private final TradeGuideBox tradeGuideBox;
+        private final Button closeTradeGuideBoxButton;
 
         private View(Model model, Controller controller, Pane messagesListView, Pane quotedMessageBlock) {
             super(new VBox(), model, controller);
+
+            tradeGuideBox = new TradeGuideBox();
+            closeTradeGuideBoxButton = tradeGuideBox.getCloseButton();
 
             inputField = new BisqTextArea();
             inputField.setId("chat-input-field");
@@ -238,22 +261,21 @@ public class ChatMessagesComponent {
             sendButton.setMinWidth(31);
             sendButton.setMaxWidth(31);
 
-            StackPane stackPane = new StackPane(inputField, sendButton);
+            StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
-          
-            //todo bottomBox
-            HBox.setHgrow(stackPane, Priority.ALWAYS);
-            HBox bottomBox = new HBox(10, stackPane);
+            HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
+            HBox bottomBox = new HBox(10, bottomBoxStackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
 
-            VBox.setVgrow(messagesListView, Priority.ALWAYS);
+            VBox.setVgrow(tradeGuideBox, Priority.SOMETIMES);
+            VBox.setMargin(tradeGuideBox, new Insets(0, 24, 24, 24));
             VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
-            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
+            root.getChildren().addAll(tradeGuideBox, messagesListView, Spacer.fillVBox(), quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
@@ -266,7 +288,18 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewAttached() {
+            tradeGuideBox.visibleProperty().bind(model.getIsTradeGuideBoxVisible());
+            tradeGuideBox.managedProperty().bind(model.getIsTradeGuideBoxVisible());
             inputField.textProperty().bindBidirectional(model.getTextInput());
+
+            userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
+                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
+                    inputField.textProperty()
+            ));
+            channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
+                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
+                    inputField.textProperty()
+            ));
 
             inputField.setOnKeyPressed(event -> {
                 if (event.getCode() == KeyCode.ENTER) {
@@ -279,32 +312,27 @@ public class ChatMessagesComponent {
                     }
                 }
             });
-
             sendButton.setOnAction(event -> {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
+            closeTradeGuideBoxButton.setOnAction(e -> controller.onCloseTradeGuideBox());
 
             userMentionPopup.setItems(model.mentionableUsers);
-            userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
-                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '@'),
-                    inputField.textProperty()
-            ));
-
             channelMentionPopup.setItems(model.mentionableChannels);
-            channelMentionPopup.filterProperty().bind(Bindings.createStringBinding(
-                    () -> StringUtils.deriveWordStartingWith(inputField.getText(), '#'),
-                    inputField.textProperty()
-            ));
         }
 
         @Override
         protected void onViewDetached() {
+            tradeGuideBox.visibleProperty().unbind();
+            tradeGuideBox.managedProperty().unbind();
             inputField.textProperty().unbindBidirectional(model.getTextInput());
-            inputField.setOnKeyPressed(null);
-            sendButton.setOnAction(null);
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
+
+            inputField.setOnKeyPressed(null);
+            sendButton.setOnAction(null);
+            closeTradeGuideBoxButton.setOnAction(null);
         }
     }
 }

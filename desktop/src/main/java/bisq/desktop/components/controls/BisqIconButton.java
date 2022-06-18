@@ -42,7 +42,7 @@ public class BisqIconButton extends Button {
 
     public static Button createIconButton(AwesomeIcon icon) {
         Button button = AwesomeDude.createIconButton(icon);
-         button.getStyleClass().add("icon-button");
+        button.getStyleClass().add("icon-button");
         return button;
     }
 
