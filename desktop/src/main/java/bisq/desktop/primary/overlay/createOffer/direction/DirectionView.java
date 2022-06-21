@@ -20,7 +20,6 @@ package bisq.desktop.primary.overlay.createOffer.direction;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.geometry.Insets;
@@ -44,7 +43,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
     private final VBox reputationInfo;
     private final VBox content;
     private Subscription directionSubscription, showReputationInfoPin;
-    private Button gainReputationButton, withoutReputationButton, closeButton;
+    private Button gainReputationButton, withoutReputationButton, backToBuyButton;
 
     public DirectionView(DirectionModel model, DirectionController controller) {
         super(new StackPane(), model, controller);
@@ -94,7 +93,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
         gainReputationButton.setOnAction(evt -> controller.onGainReputation());
         withoutReputationButton.setOnAction(evt -> controller.onIgnoreReputation());
-        closeButton.setOnAction(evt -> controller.onCloseReputationInfo());
+        backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
         directionSubscription = EasyBind.subscribe(model.getDirection(), direction -> {
             if (direction != null) {
@@ -129,7 +128,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         sellButton.setOnAction(null);
         gainReputationButton.setOnAction(null);
         withoutReputationButton.setOnAction(null);
-        closeButton.setOnAction(null);
+        backToBuyButton.setOnAction(null);
 
         directionSubscription.unsubscribe();
         showReputationInfoPin.unsubscribe();
@@ -159,33 +158,41 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
     private void setupReputationInfo() {
         double width = 700;
-        reputationInfo.setAlignment(Pos.TOP_CENTER);
+        reputationInfo.setAlignment(Pos.TOP_LEFT);
         reputationInfo.setMaxWidth(width);
         reputationInfo.setId("sellBtcWarning");
         reputationInfo.setVisible(false);
+        reputationInfo.setPadding(new Insets(30, 30, 30, 30));
 
         Label headLineLabel = new Label(Res.get("onboarding.direction.feedback.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
+        headLineLabel.setTextAlignment(TextAlignment.CENTER);
+        headLineLabel.setAlignment(Pos.CENTER);
+        headLineLabel.setMaxWidth(width - 60);
 
-        Label subtitleLabel = new Label(Res.get("onboarding.direction.feedback.subTitle"));
-        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMaxWidth(width - 200);
-        subtitleLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        Label subtitleLabel1 = new Label(Res.get("onboarding.direction.feedback.subTitle1"));
+        subtitleLabel1.setMaxWidth(width - 60);
+        subtitleLabel1.getStyleClass().addAll("bisq-text-1", "wrap-text");
 
         gainReputationButton = new Button(Res.get("onboarding.direction.feedback.gainReputation"));
-        gainReputationButton.setDefaultButton(true);
+        gainReputationButton.getStyleClass().add("bisq-text-link");
+
+        Label subtitleLabel2 = new Label(Res.get("onboarding.direction.feedback.subTitle2"));
+        subtitleLabel2.setMaxWidth(width - 60);
+        subtitleLabel2.getStyleClass().addAll("bisq-text-1", "wrap-text");
 
         withoutReputationButton = new Button(Res.get("onboarding.direction.feedback.tradeWithoutReputation"));
 
-        closeButton = BisqIconButton.createIconButton("close-round");
+        backToBuyButton = new Button(Res.get("onboarding.direction.feedback.backToBuy"));
+        backToBuyButton.setDefaultButton(true);
 
-        HBox buttons = new HBox(7, withoutReputationButton, gainReputationButton);
+        HBox buttons = new HBox(7, withoutReputationButton, backToBuyButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(closeButton, new Insets(3, 0, 0, width - 35));
-        VBox.setMargin(headLineLabel, new Insets(-10, 0, 30, 0));
-        VBox.setMargin(buttons, new Insets(50, 0, 30, 0));
-        reputationInfo.getChildren().addAll(closeButton, headLineLabel, subtitleLabel, buttons);
+        // VBox.setMargin(closeButton, new Insets(3, 0, 0, width - 35));
+        VBox.setMargin(headLineLabel, new Insets(0, 0, 20, 0));
+        VBox.setMargin(gainReputationButton, new Insets(10, 0, 30, 0));
+        VBox.setMargin(buttons, new Insets(50, 0, 20, 0));
+        reputationInfo.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationButton, subtitleLabel2, buttons);
     }
 }

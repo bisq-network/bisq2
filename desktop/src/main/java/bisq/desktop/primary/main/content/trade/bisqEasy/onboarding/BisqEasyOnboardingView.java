@@ -55,7 +55,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                 Res.get("bisqEasy.onboarding.left.content3"),
                 "onboarding-2-offer",
                 "onboarding-2-chat",
-                "onboarding-3-method",
+                "onboarding-1-reputation",
                 Res.get("bisqEasy.onboarding.left.button")
         );
         createOfferButton = leftBoxPair.second();

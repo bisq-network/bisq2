@@ -20,6 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.components.controls.skins.BisqToggleButtonSkin;
 import javafx.css.*;
 import javafx.css.converter.PaintConverter;
+import javafx.scene.Node;
 import javafx.scene.control.Skin;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.paint.Color;
@@ -36,10 +37,13 @@ public class BisqToggleButton extends ToggleButton {
     }
 
     public BisqToggleButton(String text) {
-        super(text);
-        this.getStyleClass().add("bisq-toggle-button");
+        this(text, null);
     }
 
+    public BisqToggleButton(String text, Node graphic) {
+        super(text, graphic);
+        this.getStyleClass().add("bisq-toggle-button");
+    }
 
     @Override
     protected Skin<?> createDefaultSkin() {

@@ -28,10 +28,12 @@ public class ManageReputationController implements Controller {
     private final ManageReputationModel model;
     @Getter
     private final ManageReputationView view;
+    private final ChatUserIdentityComboBox chatUserIdentityComboBox;
 
     public ManageReputationController(DefaultApplicationService applicationService) {
+        chatUserIdentityComboBox = new ChatUserIdentityComboBox(applicationService.getChatUserService());
         model = new ManageReputationModel();
-        view = new ManageReputationView(model, this);
+        view = new ManageReputationView(model, this, chatUserIdentityComboBox.getRoot());
     }
 
     @Override

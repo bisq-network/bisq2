@@ -75,6 +75,9 @@
 #search {
     -fx-image: url("images/search.png");
 }
+#search-white {
+    -fx-image: url("images/search-white.png");
+}
 
 #chat-trust {
     -fx-image: url("images/trust.png");

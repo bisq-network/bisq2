@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 import bisq.common.currency.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -63,7 +64,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        ImageView searchIcon = ImageUtil.getImageViewById("search");
+        ImageView searchIcon = ImageUtil.getImageViewById("search-white");
         searchField = new TextField();
         searchField.setPromptText(Res.get("search"));
         searchField.getStyleClass().add("small-search-text");
@@ -133,7 +134,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getSelectionCellFactory() {
         return column -> new TableCell<>() {
             private Subscription selectionPin;
-            private final ToggleButton toggleButton = new ToggleButton();
+            private final BisqToggleButton toggleButton = new BisqToggleButton();
 
             {
                 toggleButton.getStyleClass().add("onboarding-market-table-toggle-button");

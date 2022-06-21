@@ -20,15 +20,18 @@ package bisq.desktop.components.controls.skins;
 import bisq.desktop.components.controls.BisqToggleButton;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.skin.ToggleButtonSkin;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeLineCap;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class BisqToggleButtonSkin extends ToggleButtonSkin {
-    
+
     public BisqToggleButtonSkin(BisqToggleButton toggleButton) {
         super(toggleButton);
 
@@ -48,25 +51,35 @@ public class BisqToggleButtonSkin extends ToggleButtonSkin {
         circle.setTranslateX(computeCirclePosition(circleRadius, line));
         circle.setSmooth(true);
 
-        final StackPane main = new StackPane(line, circle);
-        main.setCursor(Cursor.HAND);
-        main.setPadding(new Insets(0, 5, 0, 0));
+        StackPane stackPane = new StackPane(line, circle);
+        stackPane.setCursor(Cursor.HAND);
+        stackPane.setPadding(new Insets(0, 5, 0, 0));
 
         toggleButton.selectedProperty().addListener(observable -> {
             circle.setTranslateX(computeCirclePosition(circleRadius, line));
         });
 
-        toggleButton.setGraphic(main);
+        if (toggleButton.getGraphic() != null) {
+            Node graphic = toggleButton.getGraphic();
+            double distance = line.getStrokeWidth() + 70;
+            stackPane.setPadding(new Insets(0, 5, 0, -30));
+            StackPane.setMargin(graphic, new Insets(0, 0, 0, distance));
+            stackPane.getChildren().add(graphic);
+            toggleButton.setGraphicTextGap(5);
+            toggleButton.setStyle("-fx-padding: 0 0 0 10;");
+        }
+
+        toggleButton.setGraphic(stackPane);
     }
 
     private Paint computeLineColor(BisqToggleButton toggleButton) {
         return toggleButton.isSelected() ? toggleButton.getToggleLineColor() : toggleButton.getUnToggleLineColor();
     }
-    
+
     private Paint computeCircleColor(BisqToggleButton toggleButton) {
         return toggleButton.isSelected() ? toggleButton.getToggleColor() : toggleButton.getUnToggleColor();
     }
-    
+
     private double computeCirclePosition(double circleRadius, Line line) {
         return (getSkinnable().isSelected() ? 1 : -1) * ((line.getLayoutBounds().getWidth() / 2) - circleRadius + 2);
     }

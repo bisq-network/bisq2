@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.desktop.common.view.View;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,8 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageReputationView extends View<VBox, ManageReputationModel, ManageReputationController> {
 
     public ManageReputationView(ManageReputationModel model,
-                                ManageReputationController controller) {
+                                ManageReputationController controller,
+                                Pane chatUserIdentityComboBox) {
         super(new VBox(), model, controller);
+
+
+        root.getChildren().addAll(chatUserIdentityComboBox);
     }
 
     @Override
