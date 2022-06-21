@@ -18,7 +18,6 @@
 package bisq.wallets.elementsd;
 
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.DaemonRpcClient;
@@ -100,7 +99,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
                                          ElementsdWallet receiverWallet,
                                          double amount) {
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
-        String txId = senderWallet.sendLBtcToAddress(receiverAddress, amount);
+        String txId = senderWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), receiverAddress, amount);
         mineOneBlock();
         return txId;
     }
@@ -121,9 +120,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         daemon.createOrLoadWallet(walletPath, Optional.of(WALLET_PASSPHRASE));
         loadedWalletPaths.add(walletPath);
 
-        ElementsdWallet walletBackend = newWallet(walletPath);
-        walletBackend.walletPassphrase(Optional.of(WALLET_PASSPHRASE), BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
-        return walletBackend;
+        return newWallet(walletPath);
     }
 
     public Optional<ElementsdListUnspentResponseEntry> filterUtxosByTxId(

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Optional;
 
 public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstanceTests {
 
@@ -37,18 +38,24 @@ public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstan
 
     @Test
     void issueAsset() {
-        elementsdMinerWallet.issueAsset(2, 1);
+        elementsdMinerWallet.issueAsset(
+                Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), 2, 1
+        );
     }
 
     @Test
     public void sendOneLiquidAssetToAddress() throws MalformedURLException {
-        ElementsdIssueAssetResponse issueAssetResponse = elementsdMinerWallet.issueAsset(2, 1);
+        ElementsdIssueAssetResponse issueAssetResponse = elementsdMinerWallet.issueAsset(
+                Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), 2, 1
+        );
         String assetLabel = issueAssetResponse.getAsset();
 
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        elementsdMinerWallet.sendAssetToAddress(assetLabel, receiverAddress, 1);
+        elementsdMinerWallet.sendAssetToAddress(
+                Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), assetLabel, receiverAddress, 1
+        );
         elementsdRegtestSetup.mineOneBlock();
 
         Assertions.assertThat(receiverBackend.getAssetBalance(assetLabel))

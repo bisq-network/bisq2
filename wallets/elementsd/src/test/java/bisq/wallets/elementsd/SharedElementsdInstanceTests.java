@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class SharedElementsdInstanceTests
@@ -73,7 +74,7 @@ public abstract class SharedElementsdInstanceTests
         String txOutProof = bitcoindDaemon.getTxOutProof(List.of(bitcoindTxId));
         elementsdRegtestSetup.mineOneBlock();
 
-        elementsdMinerWallet.claimPegin(rawBitcoindTx, txOutProof);
+        elementsdMinerWallet.claimPegin(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), rawBitcoindTx, txOutProof);
         elementsdRegtestSetup.mineOneBlock();
     }
 }

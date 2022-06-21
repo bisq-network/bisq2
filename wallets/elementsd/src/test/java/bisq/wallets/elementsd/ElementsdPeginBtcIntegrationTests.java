@@ -21,6 +21,7 @@ import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +45,7 @@ public class ElementsdPeginBtcIntegrationTests extends SharedElementsdInstanceTe
         String txOutProof = bitcoindDaemon.getTxOutProof(List.of(bitcoindTxId));
         elementsdRegtestSetup.mineOneBlock();
 
-        elementsdMinerWallet.claimPegin(rawBitcoindTx, txOutProof);
+        elementsdMinerWallet.claimPegin(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), rawBitcoindTx, txOutProof);
         elementsdRegtestSetup.mineOneBlock();
 
         assertThat(elementsdMinerWallet.getLBtcBalance())

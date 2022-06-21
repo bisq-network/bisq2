@@ -21,6 +21,7 @@ import bisq.wallets.core.model.AddressType;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,7 +32,7 @@ public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdI
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        elementsdMinerWallet.sendLBtcToAddress(receiverAddress, 1);
+        elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
 
         assertThat(receiverBackend.getLBtcBalance())
                 .isEqualTo(1);
