@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.method;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.controls.TextInputBox;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -27,11 +28,12 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -44,7 +46,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     private final ListChangeListener<String> allPaymentMethodsListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
-    private final Label addCustomMethodIcon;
+    private final Button addCustomMethodButton;
 
     public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
         super(new VBox(), model, controller);
@@ -70,17 +72,21 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
 
         customMethodTextInputBox = new TextInputBox(Res.get("onboarding.method.customMethod"),
                 Res.get("onboarding.method.customMethod.prompt"));
-        customMethodTextInputBox.setPrefWidth(230);
-        addCustomMethodIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN, "15");
-        addCustomMethodIcon.setTooltip(new Tooltip(Res.get("onboarding.method.customMethod.add")));
-        StackPane.setMargin(addCustomMethodIcon, new Insets(5,0,0,203));
-        StackPane stackPane = new StackPane( customMethodTextInputBox, addCustomMethodIcon);
-        stackPane.setAlignment(Pos.TOP_CENTER);
+        customMethodTextInputBox.setPrefWidth(300);
+
+        //  addCustomMethodButton = new Button(Res.get("onboarding.method.customMethod.addButton"), Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "12"));
+        addCustomMethodButton = new Button(Res.get("onboarding.method.customMethod.addButton"));
+        addCustomMethodButton.setDefaultButton(true);
+        addCustomMethodButton.setMinHeight(50);
+
+        HBox.setMargin(addCustomMethodButton, new Insets(0, 0, 1, 0));
+        HBox hBox = new HBox(10, customMethodTextInputBox, addCustomMethodButton);
+        hBox.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
         VBox.setMargin(flowPane, new Insets(80, 65, 33, 65));
         VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, stackPane);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, hBox);
 
         allPaymentMethodsListener = c -> {
             c.next();
@@ -91,13 +97,14 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewAttached() {
         customMethodTextInputBox.textProperty().bindBidirectional(model.getCustomMethod());
-        addCustomMethodIcon.visibleProperty().bind(model.getAddCustomMethodIconVisible());
+        addCustomMethodButton.visibleProperty().bind(model.getAddCustomMethodIconVisible());
+        addCustomMethodButton.managedProperty().bind(model.getAddCustomMethodIconVisible());
         nonFoundLabel.visibleProperty().bind(model.getPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getPaymentMethodsEmpty());
         flowPane.visibleProperty().bind(model.getPaymentMethodsEmpty().not());
         flowPane.managedProperty().bind(model.getPaymentMethodsEmpty().not());
 
-        addCustomMethodIcon.setOnMouseClicked(e -> controller.onAddCustomMethod());
+        addCustomMethodButton.setOnAction(e -> controller.onAddCustomMethod());
 
         model.getAllPaymentMethods().addListener(allPaymentMethodsListener);
         fillPaymentMethods();
@@ -106,13 +113,14 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewDetached() {
         customMethodTextInputBox.textProperty().unbindBidirectional(model.getCustomMethod());
-        addCustomMethodIcon.visibleProperty().unbind();
+        addCustomMethodButton.visibleProperty().unbind();
+        addCustomMethodButton.managedProperty().unbind();
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
         flowPane.managedProperty().unbind();
 
-        addCustomMethodIcon.setOnMouseClicked(null);
+        addCustomMethodButton.setOnAction(null);
 
         model.getAllPaymentMethods().removeListener(allPaymentMethodsListener);
     }
@@ -123,26 +131,27 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             String paymentMethod = model.getAllPaymentMethods().get(i);
             String displayString = Res.has("paymentMethod." + paymentMethod) ? Res.get("paymentMethod." + paymentMethod) : paymentMethod;
             ImageView icon = ImageUtil.getImageViewById(paymentMethod);
-            ToggleButton button = new ToggleButton(displayString, icon);
+            BisqToggleButton button = new BisqToggleButton(displayString, icon);
             if (paymentMethod.length() > 13) {
                 button.setTooltip(new Tooltip(displayString));
             }
-            button.setGraphicTextGap(10);
+           // button.setGraphicTextGap(10);
             button.setAlignment(Pos.CENTER_LEFT);
-            button.getStyleClass().setAll("bisq-border-icon-button");
+            button.setId("bisq-border-icon-toggle-button");
             button.setSelected(model.getSelectedPaymentMethods().contains(paymentMethod));
             button.setOnAction(e -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
             button.setMinHeight(35);
             button.setMaxHeight(35);
-            button.setMinWidth(142);
-            button.setPrefWidth(142);
-            button.setMaxWidth(142);
+            int width = 180;
+            button.setMinWidth(width);
+            button.setPrefWidth(width);
+            button.setMaxWidth(width);
             StackPane stackPane = new StackPane(button);
 
             model.getAddedCustomMethods().stream()
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .forEach(customMethod -> {
-                        button.setPadding(new Insets(0, 0, 0, 0));
+                        //button.setPadding(new Insets(0, 0, 0, 0));
                         Label closeCustomIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "15");
                         closeCustomIcon.setCursor(Cursor.HAND);
                         closeCustomIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));

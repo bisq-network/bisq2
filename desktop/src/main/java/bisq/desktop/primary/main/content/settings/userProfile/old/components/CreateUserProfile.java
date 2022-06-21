@@ -145,7 +145,7 @@ public class CreateUserProfile {
 
                             model.powProgress.set(0);
                             model.roboHashIconVisible.set(true);
-                            model.createProfileButtonDisable.set(model.nickName.get() == null || model.nickName.get().isEmpty());
+                            //model.createProfileButtonDisable.set(model.nickName.get() == null || model.nickName.get().isEmpty());
                         });
                     }));
         }

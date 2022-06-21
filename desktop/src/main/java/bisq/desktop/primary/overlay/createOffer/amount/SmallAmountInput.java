@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -155,13 +156,14 @@ public class SmallAmountInput {
             codeLabel.setId("quote-amount-text-field");
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
 
-            Button marketValueInfo = BisqIconButton.createIconButton("info-circle-solid");
+            Button marketValueInfo =  BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN, "0.9em");
+            marketValueInfo.setOpacity(0.5);
             Tooltip tooltip = new Tooltip(Res.get("onboarding.amount.marketValueInfo"));
             tooltip.getStyleClass().add("dark-tooltip");
             marketValueInfo.setTooltip(tooltip);
 
             HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
-            HBox.setMargin(marketValueInfo, new Insets(2, 0, 0, 0));
+            HBox.setMargin(marketValueInfo, new Insets(0, 0, 0, 5));
             root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
 
             //  Listeners on view component events

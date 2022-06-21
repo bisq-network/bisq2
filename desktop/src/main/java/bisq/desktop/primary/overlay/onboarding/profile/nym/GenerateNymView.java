@@ -112,6 +112,7 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonMouseTransparent());
 
         regenerateButton.setOnAction(e -> controller.onCreateTempIdentity());
+        roboIconView.setOnMouseClicked(e -> controller.onCreateTempIdentity());
         createProfileButton.setOnAction(e -> controller.onNext());
     }
 
@@ -130,6 +131,7 @@ public class GenerateNymView extends View<VBox, GenerateNymModel, GenerateNymCon
         createProfileButton.mouseTransparentProperty().unbind();
 
         regenerateButton.setOnAction(null);
+        roboIconView.setOnMouseClicked(null);
         createProfileButton.setOnAction(null);
     }
 

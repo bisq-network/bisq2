@@ -430,7 +430,6 @@
 .bisq-text-13 {
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.1em;
-    -fx-font-family: "IBM Plex Sans";
 }
 
 .bisq-text-14 {
@@ -572,6 +571,11 @@
 
 .font-light {
     -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-125 {
+    -fx-font-size: 1.25em;
+    -fx-font-size: 1.25em;
 }
 
 /*
@@ -719,27 +723,31 @@
     -fx-background-color: -bisq-content-bg;
 }
 
-.bisq-border-icon-button {
+#bisq-border-icon-toggle-button {
     -fx-background-color: -bisq-content-bg;
     -fx-background-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
     -fx-border-color: -bisq-border-color-grey;
-    -fx-border-width: 1;
+    -fx-border-width: 0.75;
     -fx-border-radius: 4;
-    -fx-padding: 0 0 0 10;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 0, 0, 0, 2);
 }
 
-.bisq-border-icon-button:hover {
+#bisq-border-icon-toggle-button:hover {
+    -fx-background-color: derive(-bisq-content-bg, 10%) !important;
     -fx-border-color: -bisq-border-color-grey-hover;
-    -fx-background-color: -bisq-content-bg;
 }
 
-.bisq-border-icon-button:selected {
+#bisq-border-icon-toggle-button:selected {
+    -fx-background-color: derive(-bisq-content-bg, -10%) !important;
     -fx-border-color: -bisq-green;
-    -fx-background-color: -bisq-green;
-    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+#bisq-border-icon-toggle-button:selected:hover {
+    -fx-background-color: derive(-bisq-content-bg, -30%) !important;
+    -fx-border-color: -bisq-green;
 }
 
 .custom-payment-method-label {
@@ -891,6 +899,26 @@
     -fx-text-fill: -bisq-grey-9;
 }
 
+
+.bisq-text-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.25em;
+    -fx-underline: true;
+    -fx-cursor: hand;
+    -fx-padding: 0;
+}
+
+.bisq-text-link:hover {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-green;
+}
+
+.bisq-text-link:disabled {
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-grey-9;
+}
+
 .bisq-create-offer-button {
     -fx-background-color: -bisq-green;
     -fx-background-radius: 8;
@@ -945,7 +973,7 @@
 }
 
 .toggle-button:hover {
-    -fx-background-color: derive(-bisq-grey-19, 10%);
+    -fx-background-color: derive(-bisq-grey-19, 10%) !important;
 }
 
 .toggle-button:selected {
@@ -1102,7 +1130,7 @@
 }
 
 .bisq-toggle-button:hover {
-    -fx-background-color: transparent;
+    -fx-background-color: transparent !important;
     -fx-text-fill: -bisq-grey-9;
 }
 
@@ -1776,7 +1804,7 @@ tree-table-view:focused {
 }
 
 .small-search-box {
-    -fx-background-color: -bisq-grey-3;
+    -fx-background-color: -bisq-grey-2;
     -fx-background-radius: 6;
     -fx-border-width: 0;
 }

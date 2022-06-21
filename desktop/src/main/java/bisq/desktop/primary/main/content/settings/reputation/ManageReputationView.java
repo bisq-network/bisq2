@@ -15,24 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.reputation;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
+import bisq.desktop.common.view.View;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsView extends TabView<SettingsModel, SettingsController> {
+@Slf4j
+public class ManageReputationView extends View<VBox, ManageReputationModel, ManageReputationController> {
 
-    public SettingsView(SettingsModel model, SettingsController controller) {
-        super(model, controller);
+    public ManageReputationView(ManageReputationModel model,
+                                ManageReputationController controller,
+                                Pane chatUserIdentityComboBox) {
+        super(new VBox(), model, controller);
 
-        addTab(Res.get("settings.userProfile"), NavigationTarget.USER_PROFILE);
-        addTab(Res.get("settings.reputation"), NavigationTarget.MANAGE_REPUTATION);
-        addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
-        addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
 
-        headlineLabel.setText(Res.get("settings"));
+        root.getChildren().addAll(chatUserIdentityComboBox);
     }
 
     @Override
