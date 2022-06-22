@@ -288,6 +288,9 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     @Getter
     @Slf4j
     public static class Skin<T> extends ComboBoxListViewSkin<T> {
+        protected final static double DEFAULT_ARROW_X_L = 22;
+        protected final static double DEFAULT_ARROW_X_M = 31.5;
+        protected final static double DEFAULT_ARROW_X_R = 41;
         protected final TextInputBox textInputBox;
         protected final ImageView arrow;
         protected final Polygon listBackground = new Polygon();
@@ -296,6 +299,10 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected final Pane buttonPane;
         private final DropShadow dropShadow;
         protected ListView<T> listView;
+
+        protected double arrowX_l = DEFAULT_ARROW_X_L;
+        protected double arrowX_m = DEFAULT_ARROW_X_M;
+        protected double arrowX_r = DEFAULT_ARROW_X_R;
 
         public Skin(ComboBox<T> control, String description, String prompt) {
             super(control);
@@ -389,9 +396,6 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 double x = 5;
                 double listOffset = 8;
                 // relative to visible top-left point 
-                double arrowX_l = 22;
-                double arrowX_m = 31.5;
-                double arrowX_r = 41;
                 double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
                 double width = comboBox.getWidth() - 10;
                 double y = textInputBox.getHeight() - 25;

@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.top;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {
@@ -30,7 +29,7 @@ public class TopPanelController implements Controller {
         TopPanelModel model = new TopPanelModel();
         UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getChatUserService());
         MarketPriceComponent marketPriceComponent = new MarketPriceComponent(applicationService.getMarketPriceService());
-        view = new TopPanelView(model, this, userProfileSelection.getRoot(), marketPriceComponent.getRootPane());
+        view = new TopPanelView(model, this, userProfileSelection, marketPriceComponent.getRootPane());
     }
 
     @Override
