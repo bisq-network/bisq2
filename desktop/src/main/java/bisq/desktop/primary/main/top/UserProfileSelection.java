@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.top;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -25,12 +25,13 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -57,6 +58,14 @@ public class UserProfileSelection {
 
     public Pane getRoot() {
         return controller.view.getRoot();
+    }
+
+    public void setComboBoxWidth(double width) {
+        controller.model.comboBoxWidth.set(width);
+    }
+
+    public void setIsLeftAligned(boolean isLeftAligned) {
+        controller.model.isLeftAligned.set(isLeftAligned);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -101,37 +110,42 @@ public class UserProfileSelection {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<ListItem> selectedUserProfile = new SimpleObjectProperty<>();
         private final ObservableList<ListItem> userProfiles = FXCollections.observableArrayList();
+        private final DoubleProperty comboBoxWidth = new SimpleDoubleProperty();
+        private final BooleanProperty isLeftAligned = new SimpleBooleanProperty();
 
         private Model() {
         }
     }
 
-
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final UserProfileComboBox comboBox;
-        private Subscription subscription;
+        private Subscription selectedUserProfilePin, isLeftAlignedPin, comboBoxWidthPin;
 
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
+            comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
             root.getChildren().addAll(comboBox);
         }
 
         @Override
         protected void onViewAttached() {
-            comboBox.prefWidthProperty().bind(root.widthProperty());
             comboBox.setOnChangeConfirmed(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
-            subscription = EasyBind.subscribe(model.selectedUserProfile,
+            selectedUserProfilePin = EasyBind.subscribe(model.selectedUserProfile,
                     selected -> UIThread.runOnNextRenderFrame(() -> comboBox.getSelectionModel().select(selected)));
+            isLeftAlignedPin = EasyBind.subscribe(model.isLeftAligned, comboBox::setIsLeftAligned);
+            comboBoxWidthPin = EasyBind.subscribe(model.comboBoxWidth, w -> comboBox.setComboBoxWidth(w.doubleValue()));
         }
 
         @Override
         protected void onViewDetached() {
             comboBox.prefWidthProperty().unbind();
             comboBox.setOnChangeConfirmed(null);
-            subscription.unsubscribe();
+            selectedUserProfilePin.unsubscribe();
+            isLeftAlignedPin.unsubscribe();
+            comboBoxWidthPin.unsubscribe();
         }
     }
 
@@ -150,10 +164,18 @@ public class UserProfileSelection {
     }
 
     private static class UserProfileComboBox extends AutoCompleteComboBox<ListItem> {
+        private final static int DEFAULT_COMBO_BOX_WIDTH = 200;
+        private final static int Y_OFFSET = 30;
+
+        private boolean isLeftAligned;
+
         public UserProfileComboBox(ObservableList<ListItem> items, String description) {
             super(items, description);
 
+            setPrefWidth(DEFAULT_COMBO_BOX_WIDTH);
+
             setCellFactory(param -> new ListCell<>() {
+                private ChangeListener<Number> labelWidthListener;
                 private final ImageView imageView;
                 private final Label label;
                 private final HBox hBox;
@@ -162,15 +184,21 @@ public class UserProfileSelection {
                     label = new Label();
                     label.setMouseTransparent(true);
                     label.getStyleClass().add("bisq-input-box-text-input");
-                    HBox.setMargin(label, new Insets(14, 0, 0, 10));
 
                     imageView = new ImageView();
-                    imageView.setFitWidth(50);
-                    imageView.setFitHeight(50);
-                    setStyle("-fx-pref-height: 50; -fx-padding: 0 0 0 0;");
+                    imageView.setFitWidth(UserProfileSkin.ICON_SIZE);
+                    imageView.setFitHeight(UserProfileSkin.ICON_SIZE);
+                    setPrefHeight(50);
+                    setPadding(new Insets(10, 0, 0, 10));
 
-                    hBox = new HBox();
-                    hBox.getChildren().addAll(imageView, label);
+                    hBox = new HBox(10);
+                    hBox.setPadding(new Insets(0, 10, 0, 10));
+                    if (isLeftAligned) {
+                        hBox.setAlignment(Pos.CENTER_RIGHT);
+                        hBox.getChildren().addAll(label, imageView);
+                    } else {
+                        hBox.getChildren().addAll(imageView, label);
+                    }
                 }
 
                 @Override
@@ -180,12 +208,38 @@ public class UserProfileSelection {
                     if (item != null && !empty) {
                         imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().proofOfWork().getPayload()));
                         label.setText(item.chatUserIdentity.getNickName());
+
+                        labelWidthListener = (observable, oldValue, newValue) -> {
+                            if (newValue.doubleValue() > 0) {
+                                UserProfileComboBox.this.setComboBoxWidth(calculateWidth(label));
+                                label.widthProperty().removeListener(labelWidthListener);
+                            }
+                        };
+                        label.widthProperty().addListener(labelWidthListener);
+
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
+                        if (labelWidthListener != null) {
+                            label.widthProperty().removeListener(labelWidthListener);
+                        }
+
                     }
                 }
             });
+        }
+
+        private void setIsLeftAligned(boolean isLeftAligned) {
+            this.isLeftAligned = isLeftAligned;
+            ((UserProfileSkin) skin).setIsLeftAligned(isLeftAligned);
+        }
+
+        private void setComboBoxWidth(double width) {
+            if (width == 0) {
+                width = DEFAULT_COMBO_BOX_WIDTH;
+            }
+            setPrefWidth(width);
+            ((UserProfileSkin) skin).setComboBoxWidth(width);
         }
 
         @Override
@@ -196,62 +250,102 @@ public class UserProfileSelection {
             }
             return skin;
         }
+
+        private double calculateWidth(Label label) {
+            double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 70;
+            return Math.max(width, UserProfileComboBox.this.getPrefWidth());
+        }
+
     }
 
     private static class UserProfileSkin extends AutoCompleteComboBox.Skin<ListItem> {
+        private final static int ICON_SIZE = 30;
+        private final static int ICON_PADDING = 17;
+        private final static int ARROW_WIDTH = 10;
+        private final static int ARROW_ICON_PADDING = 10;
+        private final static int TEXT_PADDING = 6;
         private final Label userNameLabel;
+        private final ImageView imageView;
+        private final ChangeListener<Number> userNameLabelWidthListener;
+        private boolean isLeftAligned;
 
         public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
             super(control, description, prompt);
 
-            ImageView imageView = new ImageView();
-            imageView.setFitWidth(35);
-            imageView.setFitHeight(35);
+            int offset = 5;
+            arrowX_l = DEFAULT_ARROW_X_L - offset;
+            arrowX_m = DEFAULT_ARROW_X_M - offset;
+            arrowX_r = DEFAULT_ARROW_X_R - offset;
+
+            imageView = new ImageView();
+            imageView.setFitWidth(ICON_SIZE);
+            imageView.setFitHeight(ICON_SIZE);
             imageView.setLayoutY(7);
 
             arrow.setLayoutY(23);
             userNameLabel = new Label();
             userNameLabel.setId("user-name-label");
             userNameLabel.setLayoutY(12);
-            buttonPane.getChildren().clear();
-            buttonPane.getChildren().addAll(userNameLabel, arrow, imageView);
+            buttonPane.getChildren().setAll(userNameLabel, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
+            buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
 
-            control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>(
-                    (ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
-                        if (newValue != null) {
-                            ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
-                            if (chatUserIdentity != null) {
-                                imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork().getPayload()));
-                                userNameLabel.setText(chatUserIdentity.getNickName());
-                                buttonPane.layout();
-                                //  Tooltip.install(buttonPane, new Tooltip(chatUserIdentity.getTooltipString()));
-                            }
-                        }
-                    }).get());
+            control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>((ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
+                    if (chatUserIdentity != null) {
+                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork().getPayload()));
+                        userNameLabel.setText(chatUserIdentity.getNickName());
+                        buttonPane.layout();
+                    }
+                }
+            }).get());
 
-        /*    buttonPane.setOnMouseEntered(e -> {
-                userNameLabel.setVisible(true);
-                arrow.setVisible(true);
-            });
-            buttonPane.setOnMouseExited(e -> {
-                userNameLabel.setVisible(false);
-                arrow.setVisible(false);
-            });
-            userNameLabel.setVisible(false);
-            arrow.setVisible(false);*/
+            UserProfileComboBox userProfileComboBox = (UserProfileComboBox) control;
+            userNameLabelWidthListener = new ChangeListener<>() {
+                @Override
+                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                    if (newValue.doubleValue() > 0) {
+                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(userNameLabel));
+                        userNameLabel.widthProperty().removeListener(userNameLabelWidthListener);
+                    }
+                }
+            };
+            userNameLabel.widthProperty().addListener(userNameLabelWidthListener);
+        }
 
-            //  UIThread.runOnNextRenderFrame(()-> userNameLabel.layout());
+        private void setIsLeftAligned(boolean isLeftAligned) {
+            this.isLeftAligned = isLeftAligned;
+        }
+
+        private void setComboBoxWidth(double width) {
+            buttonPane.setPrefWidth(width);
         }
 
         @Override
-        protected void layoutChildren(final double x, final double y,
-                                      final double w, final double h) {
+        protected void layoutChildren(final double x, final double y, final double w, final double h) {
+            if (isLeftAligned) {
+                double offset = comboBox.getWidth() - 5;
+                arrowX_l = offset - DEFAULT_ARROW_X_L;
+                arrowX_m = offset - DEFAULT_ARROW_X_M;
+                arrowX_r = offset - DEFAULT_ARROW_X_R;
+            }
             super.layoutChildren(x, y, w, h);
 
-            if (userNameLabel.getWidth() > 0) {
-                userNameLabel.setLayoutX(-userNameLabel.getWidth() - 35);
-                arrow.setLayoutX(-25);
+            if (isLeftAligned) {
+                if (userNameLabel.getWidth() > 0) {
+                    double iconX = buttonPane.getPrefWidth() - ICON_PADDING - ICON_SIZE;
+                    imageView.setX(iconX);
+                    double arrowX = iconX - ARROW_ICON_PADDING - ARROW_WIDTH;
+                    arrow.setLayoutX(arrowX);
+                    userNameLabel.setLayoutX(arrowX - TEXT_PADDING - userNameLabel.getWidth());
+                }
+            } else {
+                if (userNameLabel.getWidth() > 0) {
+                    imageView.setX(ICON_PADDING);
+                    arrow.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING);
+                    userNameLabel.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
+                }
             }
         }
 
