@@ -28,6 +28,10 @@ public class ElectrumCliFacade {
         this.electrumCli = electrumCli;
     }
 
+    public void enableLoggingToFile() {
+        electrumCli.setConfig("log_to_file", "true");
+    }
+
     public void setRpcHost(String host) {
         electrumCli.setConfig("rpchost", host);
     }
