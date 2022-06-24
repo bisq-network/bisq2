@@ -17,7 +17,11 @@
 
 package bisq.wallets.elementsd.rpc;
 
-import bisq.wallets.bitcoind.rpc.calls.*;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import bisq.wallets.bitcoind.rpc.calls.BitcoindGetNewAddressRpcCall;
+import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
+import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;
+import bisq.wallets.bitcoind.rpc.calls.BitcoindWalletLockRpcCall;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.calls.*;
@@ -26,10 +30,8 @@ import bisq.wallets.elementsd.rpc.responses.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 public class ElementsdWallet {
-    public static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.MINUTES.toSeconds(1);
     private final WalletRpcClient rpcClient;
 
     public ElementsdWallet(WalletRpcClient rpcClient) {
@@ -37,7 +39,7 @@ public class ElementsdWallet {
     }
 
     public String claimPegin(Optional<String> passphrase, String bitcoinTxId, String txOutProof) {
-        walletPassphrase(passphrase, DEFAULT_WALLET_TIMEOUT);
+        walletPassphrase(passphrase);
 
         var request = ElementsdClaimPeginRpcCall.Request.builder()
                 .bitcoinTxId(bitcoinTxId)
@@ -85,7 +87,7 @@ public class ElementsdWallet {
     }
 
     public ElementsdIssueAssetResponse issueAsset(Optional<String> passphrase, double assetAmount, double tokenAmount) {
-        walletPassphrase(passphrase, DEFAULT_WALLET_TIMEOUT);
+        walletPassphrase(passphrase);
 
         var request = ElementsIssueAssetRpcCall.Request.builder()
                 .assetAmount(assetAmount)
@@ -118,7 +120,7 @@ public class ElementsdWallet {
     }
 
     public String sendAssetToAddress(Optional<String> passphrase, String assetLabel, String address, double amount) {
-        walletPassphrase(passphrase, DEFAULT_WALLET_TIMEOUT);
+        walletPassphrase(passphrase);
 
         var request = ElementsdSendToAddressRpcCall.Request.builder()
                 .assetLabel(assetLabel)
@@ -133,7 +135,7 @@ public class ElementsdWallet {
     }
 
     public String signMessage(Optional<String> passphrase, String address, String message) {
-        walletPassphrase(passphrase, DEFAULT_WALLET_TIMEOUT);
+        walletPassphrase(passphrase);
 
         var request = BitcoindSignMessageRpcCall.Request.builder()
                 .address(address)
@@ -167,17 +169,7 @@ public class ElementsdWallet {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void walletPassphrase(Optional<String> passphrase, long timeout) {
-        String passphraseString = passphrase.orElse("");
-        if (passphraseString.isEmpty()) {
-            return;
-        }
-
-        var request = BitcoindWalletPassphraseRpcCall.Request.builder()
-                .passphrase(passphrase.get())
-                .timeout(timeout)
-                .build();
-        var rpcCall = new BitcoindWalletPassphraseRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+    private void walletPassphrase(Optional<String> passphrase) {
+        BitcoindWallet.walletPassphrase(rpcClient, passphrase);
     }
 }
