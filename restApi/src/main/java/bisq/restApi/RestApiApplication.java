@@ -19,7 +19,6 @@ package bisq.restApi;
 import bisq.application.DefaultApplicationService;
 import bisq.restApi.endpoints.ChatApi;
 import bisq.restApi.endpoints.KeyPairApi;
-import bisq.restApi.endpoints.OfferApi;
 import bisq.restApi.error.CustomExceptionMapper;
 import bisq.restApi.error.StatusException;
 import bisq.restApi.util.StaticFileHandler;
@@ -73,7 +72,6 @@ public class RestApiApplication extends ResourceConfig {
                 .register(StatusException.StatusExceptionMapper.class)
                 .register(KeyPairApi.class)
                 .register(ChatApi.class)
-                .register(OfferApi.class)
                 .register(SwaggerResolution.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);

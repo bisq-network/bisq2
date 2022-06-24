@@ -2,11 +2,13 @@ package bisq.restApi.dto;
 
 import bisq.common.currency.Market;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 @Schema(name = "Market")
-@Data
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = false)
 public class MarketDto extends BaseDto<MarketDto> {
 
@@ -15,12 +17,13 @@ public class MarketDto extends BaseDto<MarketDto> {
     protected String baseCurrencyName;
     protected String quoteCurrencyName;
 
-    public MarketDto loadFieldsFrom(Market market) {
-        setBaseCurrencyCode(market.baseCurrencyCode());
-        setQuoteCurrencyCode(market.quoteCurrencyCode());
-        setBaseCurrencyName(market.baseCurrencyName());
-        setQuoteCurrencyName(market.quoteCurrencyName());
-        return this;
+    public static MarketDto from(Market market) {
+        MarketDto dto = new MarketDto();
+        dto.setBaseCurrencyCode(market.baseCurrencyCode());
+        dto.setQuoteCurrencyCode(market.quoteCurrencyCode());
+        dto.setBaseCurrencyName(market.baseCurrencyName());
+        dto.setQuoteCurrencyName(market.quoteCurrencyName());
+        return dto;
     }
 }
 

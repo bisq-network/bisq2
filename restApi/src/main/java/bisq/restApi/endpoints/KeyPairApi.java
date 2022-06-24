@@ -18,8 +18,8 @@
 package bisq.restApi.endpoints;
 
 import bisq.restApi.RestApiApplication;
-import bisq.restApi.error.StatusException;
 import bisq.restApi.dto.KeyPairDto;
+import bisq.restApi.error.StatusException;
 import bisq.security.KeyPairService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,7 +69,7 @@ public class KeyPairApi {
     public KeyPairDto getOrCreateKeyPair(
             @Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
-        return new KeyPairDto(keyPair);
+        return KeyPairDto.from(keyPair);
     }
 
     /**
@@ -89,7 +89,7 @@ public class KeyPairApi {
     @GET
     @Path("get/{key-id}")
     public KeyPairDto findKeyPair(@Parameter(description = DESC_KEY_ID) @PathParam("key-id") String keyId) {
-        return new KeyPairDto(keyPairService.findKeyPair(keyId)
+        return KeyPairDto.from(keyPairService.findKeyPair(keyId)
                 .orElseThrow(() -> new StatusException(Response.Status.NOT_FOUND, "Could not find the key pair for ID " + keyId)));
     }
 }

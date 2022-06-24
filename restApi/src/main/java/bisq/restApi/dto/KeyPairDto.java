@@ -22,14 +22,17 @@ import lombok.Getter;
 @Getter
 @Schema(name = "KeyPair")
 public class KeyPairDto {
-    byte[] publicKey;
-    byte[] privateKey;
+    protected byte[] publicKey;
+    protected byte[] privateKey;
 
-    public KeyPairDto(java.security.KeyPair k) {
+    public static KeyPairDto from(java.security.KeyPair k) {
         if (k != null) {
-            publicKey = k.getPublic().getEncoded();
-            privateKey = k.getPrivate().getEncoded();
+            KeyPairDto dto = new KeyPairDto();
+            dto.privateKey = k.getPublic().getEncoded();
+            dto.privateKey = k.getPrivate().getEncoded();
+            return dto;
         }
+        return null;
     }
 }
 
