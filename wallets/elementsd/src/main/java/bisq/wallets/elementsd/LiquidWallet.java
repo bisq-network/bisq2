@@ -18,7 +18,6 @@
 package bisq.wallets.elementsd;
 
 import bisq.common.observable.ObservableSet;
-import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.Wallet;
@@ -60,7 +59,6 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     @Override
     public void initialize(Optional<String> walletPassphrase) {
         daemon.createOrLoadWallet(walletPath, walletPassphrase);
-        wallet.walletPassphrase(walletPassphrase, BitcoindWallet.DEFAULT_WALLET_TIMEOUT);
     }
 
     @Override

@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BitcoindWallet {
 
-    public static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.MINUTES.toSeconds(1);
+    private static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.SECONDS.toSeconds(15);
     private final WalletRpcClient rpcClient;
 
     public BitcoindWallet(WalletRpcClient rpcClient) {
@@ -152,7 +152,11 @@ public class BitcoindWallet {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void walletPassphrase(Optional<String> passphrase) {
+    private void walletPassphrase(Optional<String> passphrase) {
+        walletPassphrase(rpcClient, passphrase);
+    }
+
+    public static void walletPassphrase(WalletRpcClient rpcClient, Optional<String> passphrase) {
         String passphraseString = passphrase.orElse("");
         if (passphraseString.isEmpty()) {
             return;
