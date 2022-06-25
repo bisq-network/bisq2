@@ -90,9 +90,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
             model.getSideBarWidth().set(240);
 
             ChatUserDetails chatUserDetails = new ChatUserDetails(chatService, chatUser);
-            chatUserDetails.setOnSendPrivateMessage(chatMessagesComponent::openPrivateChannel);
+            chatUserDetails.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
             chatUserDetails.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
-            chatUserDetails.setOnMentionUser(chatMessagesComponent::mentionUser);
+            chatUserDetails.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
             model.setChatUserDetails(Optional.of(chatUserDetails));
             model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
         });
@@ -186,8 +186,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     }
 
     protected void cleanupChatUserDetails() {
-        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUser(null));
-        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessage(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));
+        model.getChatUserDetails().ifPresent(e -> e.setOnSendPrivateMessageHandler(null));
         model.getChatUserDetails().ifPresent(e -> e.setIgnoreUserStateHandler(null));
         model.setChatUserDetails(Optional.empty());
         model.getChatUserDetailsRoot().set(null);

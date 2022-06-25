@@ -340,21 +340,21 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     }
 
 
-    public Observable<ChatUserIdentity> getSelectedUserProfile() {
+    public Observable<ChatUserIdentity> getSelectedChatUserIdentity() {
         return persistableStore.getSelectedChatUserIdentity();
     }
 
-    public ObservableSet<ChatUserIdentity> getUserProfiles() {
+    public ObservableSet<ChatUserIdentity> getChatUserIdentities() {
         return persistableStore.getChatUserIdentities();
     }
 
     public Collection<ChatUser> getMentionableChatUsers() {
         // TODO: implement logic
-        return getUserProfiles().stream().map(ChatUserIdentity::getChatUser).toList();
+        return getChatUserIdentities().stream().map(ChatUserIdentity::getChatUser).toList();
     }
 
-    public Optional<ChatUserIdentity> findUserProfile(String profileId) {
-        return getUserProfiles().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
+    public Optional<ChatUserIdentity> findChatUserIdentity(String profileId) {
+        return getChatUserIdentities().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

@@ -72,8 +72,8 @@ public class ChatUserIdentityComboBox {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getUserProfiles());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedUserProfile());
+            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getChatUserIdentities());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedChatUserIdentity());
         }
 
         @Override

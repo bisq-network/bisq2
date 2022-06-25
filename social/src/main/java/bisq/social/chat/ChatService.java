@@ -334,12 +334,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
-        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedChatUserIdentity().get())
                 .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getProfileId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer, String receiversProfileId) {
-        return chatUserService.findUserProfile(receiversProfileId)
+        return chatUserService.findChatUserIdentity(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -513,12 +513,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer) {
-        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedChatUserIdentity().get())
                 .flatMap(e -> createPrivateDiscussionChannel(peer, e.getProfileId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer, String receiversProfileId) {
-        return chatUserService.findUserProfile(receiversProfileId)
+        return chatUserService.findChatUserIdentity(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
                             getPrivateDiscussionChannels().add(privateDiscussionChannel);
@@ -630,7 +630,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String authorId = chatMessage.getAuthorId();
-        return chatUserService.getUserProfiles().stream()
+        return chatUserService.getChatUserIdentities().stream()
                 .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(authorId));
     }
 

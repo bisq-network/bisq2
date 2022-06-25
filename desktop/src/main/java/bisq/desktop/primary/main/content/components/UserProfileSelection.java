@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
+package bisq.desktop.primary.main.content.components;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -85,11 +85,11 @@ public class UserProfileSelection {
 
         @Override
         public void onActivate() {
-            selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedUserProfile(),
+            selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
             userProfilesPin = FxBindings.<ChatUserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
-                    .to(chatUserService.getUserProfiles());
+                    .to(chatUserService.getChatUserIdentities());
         }
 
         @Override

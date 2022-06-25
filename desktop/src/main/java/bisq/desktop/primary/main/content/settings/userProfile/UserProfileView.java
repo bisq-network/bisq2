@@ -18,22 +18,42 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import javafx.geometry.Insets;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
 
+    private final Pane chatUserDetailsPane;
+    private Subscription chatUserDetailsPin;
+
     public UserProfileView(UserProfileModel model,
-                           UserProfileController controller) {
+                           UserProfileController controller,
+                           UserProfileSelection userProfileSelection) {
         super(new VBox(), model, controller);
+
+        root.setSpacing(20);
+        root.setPadding(new Insets(20));
+
+        chatUserDetailsPane = new Pane();
+
+        root.getChildren().addAll(userProfileSelection.getRoot(), chatUserDetailsPane);
     }
 
     @Override
     protected void onViewAttached() {
+        chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
+            chatUserDetailsPane.getChildren().setAll(editUserProfile.getRoot());
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        chatUserDetailsPin.unsubscribe();
     }
 }

@@ -15,17 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUser;
-import javafx.beans.property.*;
+import bisq.social.user.ChatUserIdentity;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -37,57 +40,38 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
 @Slf4j
-public class ChatUserDetails implements Comparable<ChatUserDetails> {
+public class EditUserProfile {
     private final Controller controller;
 
-    public ChatUserDetails(ChatService chatService, ChatUser chatUser) {
-        controller = new Controller(chatService, chatUser);
+    public EditUserProfile(ChatService chatService, ChatUserIdentity chatUserIdentity) {
+        controller = new Controller(chatService, chatUserIdentity);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    public void setOnMentionUserHandler(Consumer<ChatUser> handler) {
-        controller.model.mentionUserHandler = Optional.ofNullable(handler);
-    }
-
-    public void setOnSendPrivateMessageHandler(Consumer<ChatUser> handler) {
-        controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
-    }
-
-    public void setIgnoreUserStateHandler(Runnable handler) {
-        controller.model.ignoreUserStateHandler = Optional.ofNullable(handler);
-    }
-
-    @Override
-    public int compareTo(ChatUserDetails o) {
-        return controller.model.chatUser.getNym().compareTo(o.controller.model.chatUser.getNym());
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
+        private final ChatService chatService;
         private final Model model;
         @Getter
         private final View view;
 
 
-        private Controller(ChatService chatService, ChatUser chatUser) {
-            model = new Model(chatService, chatUser);
+        private Controller(ChatService chatService, ChatUserIdentity chatUserIdentity) {
+            this.chatService = chatService;
+            model = new Model(chatUserIdentity);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            ChatUser chatUser = model.chatUser;
+            ChatUser chatUser = model.chatUserIdentity.getChatUser();
             if (chatUser == null) {
                 return;
             }
 
-            model.ignoreButtonText.set(Res.get("social.ignore"));
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
             model.terms.set(chatUser.getTerms());
@@ -102,39 +86,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         @Override
         public void onDeactivate() {
         }
-
-        public void onSendPrivateMessage() {
-            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.chatUser));
-        }
-
-        public void onMentionUser() {
-            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUser));
-        }
-
-        public void onToggleIgnoreUser() {
-            model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
-            if (model.ignoreUserSelected.get()) {
-                model.chatService.ignoreChatUser(model.chatUser);
-                model.ignoreButtonText.set(Res.get("social.undoIgnore"));
-            } else {
-                model.chatService.undoIgnoreChatUser(model.chatUser);
-                model.ignoreButtonText.set(Res.get("social.ignore"));
-            }
-            model.ignoreUserStateHandler.ifPresent(Runnable::run);
-        }
-
-        public void onReportUser() {
-            // todo open popup for editing reason
-            model.chatService.reportChatUser(model.chatUser, "");
-        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ChatService chatService;
-        private final ChatUser chatUser;
-        private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
-        private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
-        private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
+        private final ChatUserIdentity chatUserIdentity;
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
@@ -143,21 +98,16 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty terms = new SimpleStringProperty();
         private final StringProperty reputationScore = new SimpleStringProperty();
         private final StringProperty profileAge = new SimpleStringProperty();
-        private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
-        private final StringProperty ignoreButtonText = new SimpleStringProperty();
 
-        private Model(ChatService chatService, ChatUser chatUser) {
-            this.chatService = chatService;
-            this.chatUser = chatUser;
+        private Model(ChatUserIdentity chatUserIdentity) {
+            this.chatUserIdentity = chatUserIdentity;
         }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nym, nickName, bio, reputationScore, profileAge, optionsLabel;
-        private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
-        private final Label terms;
+        private final Label nym, nickName, bio, reputationScore, profileAge, terms;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -186,8 +136,6 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.setMinWidth(200);
             VBox.setMargin(nym, new Insets(0, 0, 24, 0));
 
-            privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
-            VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
             VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);
             bio = (Label) bioBox.getChildren().get(1);
@@ -198,19 +146,6 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"), false);
             profileAge = (Label) profileAgeBox.getChildren().get(1);
 
-            optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
-            optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
-
-            mentionButton = new Button(Res.get("social.mention"));
-            ignoreButton = new Button();
-            reportButton = new Button(Res.get("social.report"));
-            mentionButton.getStyleClass().add("bisq-text-button");
-            ignoreButton.getStyleClass().add("bisq-text-button");
-            reportButton.getStyleClass().add("bisq-text-button");
-            VBox optionsBox = new VBox(5, optionsLabel, mentionButton, ignoreButton, reportButton);
-            optionsBox.setAlignment(Pos.CENTER_LEFT);
-            VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
-
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(24, -45, 15, -55));
 
@@ -218,9 +153,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             terms = (Label) chatRulesBox.getChildren().get(1);
             terms.setText(Res.get("social.chat.chatRules.content"));
 
-            root.getChildren().addAll(nickName, roboIconImageView, nym, privateMsgButton,
+            root.getChildren().addAll(nickName, roboIconImageView, nym,
                     bioBox, reputationScoreBox, profileAgeBox,
-                    optionsBox, separator, chatRulesBox);
+                    separator, chatRulesBox);
         }
 
         @Override
@@ -231,17 +166,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             terms.textProperty().bind(model.terms);
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
-            ignoreButton.textProperty().bind(model.ignoreButtonText);
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
                 }
             });
-
-            privateMsgButton.setOnAction(e -> controller.onSendPrivateMessage());
-            mentionButton.setOnAction(e -> controller.onMentionUser());
-            ignoreButton.setOnAction(e -> controller.onToggleIgnoreUser());
-            reportButton.setOnAction(e -> controller.onReportUser());
         }
 
         @Override
@@ -252,14 +181,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             terms.textProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
-            ignoreButton.textProperty().unbind();
-
             roboHashNodeSubscription.unsubscribe();
-
-            privateMsgButton.setOnAction(null);
-            mentionButton.setOnAction(null);
-            ignoreButton.setOnAction(null);
-            reportButton.setOnAction(null);
         }
 
         private VBox getInfoBox(String title, boolean smaller) {

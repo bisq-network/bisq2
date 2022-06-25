@@ -18,7 +18,12 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.social.chat.ChatService;
+import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,14 +33,25 @@ public class UserProfileController implements Controller {
     private final UserProfileModel model;
     @Getter
     private final UserProfileView view;
+    private final ChatUserService chatUserService;
+    private final UserProfileSelection userProfileSelection;
+    private final ChatService chatService;
+    private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
+        chatUserService = applicationService.getChatUserService();
+        chatService = applicationService.getChatService();
+        userProfileSelection = new UserProfileSelection(chatUserService);
+
         model = new UserProfileModel();
-        view = new UserProfileView(model, this);
+        view = new UserProfileView(model, this, userProfileSelection);
     }
 
     @Override
     public void onActivate() {
+        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+                chatUserIdentity -> model.getEditUserProfile().set(new EditUserProfile(chatService, chatUserIdentity))
+        );
     }
 
     @Override
