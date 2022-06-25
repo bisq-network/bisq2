@@ -28,15 +28,10 @@ public class GenerateNymModel implements Model {
     private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final StringProperty nymId = new SimpleStringProperty();
-    private final BooleanProperty createProfileButtonMouseTransparent = new SimpleBooleanProperty();
     private final BooleanProperty reGenerateButtonMouseTransparent = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
     private final DoubleProperty powProgress = new SimpleDoubleProperty();
- /*   @Setter
-    private ProofOfWork proofOfWork;
-    @Setter
-    private KeyPair tempKeyPair = null;
-    @Setter
-    private String tempKeyId;*/
-
+    private final StringProperty nickName = new SimpleStringProperty();
+    private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
+    private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
 }

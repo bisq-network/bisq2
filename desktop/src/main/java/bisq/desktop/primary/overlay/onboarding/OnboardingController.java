@@ -24,14 +24,10 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.bisq2.Bisq2IntroController;
-import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
-import bisq.desktop.primary.overlay.onboarding.profile.nickName.AddNickNameController;
 import bisq.desktop.primary.overlay.onboarding.profile.nym.GenerateNymController;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
@@ -42,9 +38,6 @@ public class OnboardingController extends NavigationController {
     private final OnboardingModel model;
     @Getter
     private final OnboardingView view;
-    private final AddNickNameController addNickNameController;
-    private final GenerateNymController generateNymController;
-    private Subscription tempIdentityPin;
 
     public OnboardingController(DefaultApplicationService applicationService) {
         super(NavigationTarget.ONBOARDING);
@@ -52,9 +45,6 @@ public class OnboardingController extends NavigationController {
         this.applicationService = applicationService;
         model = new OnboardingModel();
         view = new OnboardingView(model, this);
-
-        generateNymController = new GenerateNymController(applicationService);
-        addNickNameController = new AddNickNameController(applicationService);
     }
 
     @Override
@@ -64,13 +54,10 @@ public class OnboardingController extends NavigationController {
     @Override
     public void onActivate() {
         OverlayController.setTransitionsType(Transitions.Type.LIGHT);
-
-        tempIdentityPin = EasyBind.subscribe(generateNymController.getTempIdentity(), addNickNameController::setTempIdentity);
     }
 
     @Override
     public void onDeactivate() {
-        tempIdentityPin.unsubscribe();
     }
 
     @Override
@@ -80,16 +67,7 @@ public class OnboardingController extends NavigationController {
                 return Optional.of(new Bisq2IntroController(applicationService));
             }
             case ONBOARDING_GENERATE_NYM -> {
-                return Optional.of(generateNymController);
-            }
-            case ONBOARDING_ADD_NICKNAME -> {
-                return Optional.of(addNickNameController);
-            }
-           /* case ONBOARDING_BISQ_EASY_OLD -> {
-                return Optional.of(new BisqEasyIntroController(applicationService));
-            }*/
-            case CREATE_OFFER -> {
-                return Optional.of(new CreateOfferController(applicationService));
+                return Optional.of(new GenerateNymController(applicationService));
             }
             default -> {
                 return Optional.empty();
