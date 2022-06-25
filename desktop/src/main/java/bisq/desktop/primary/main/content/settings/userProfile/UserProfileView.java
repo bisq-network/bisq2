@@ -52,7 +52,8 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
 
         addNewUserButton = new Button(Res.get("settings.userProfile.addNewUser"));
         addNewUserButton.setDefaultButton(true);
-        
+
+        VBox.setMargin(editUserProfilePane, new Insets(-40,0,0,0));
         root.getChildren().addAll(selectionVBox, editUserProfilePane, addNewUserButton);
     }
 

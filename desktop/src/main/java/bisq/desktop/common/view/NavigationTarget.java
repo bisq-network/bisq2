@@ -41,6 +41,8 @@ public enum NavigationTarget {
 
     CREATE_OFFER(OVERLAY, false),
 
+    CREATE_PROFILE(OVERLAY, false),
+
     CREATE_OFFER_DIRECTION(CREATE_OFFER, false),
     CREATE_OFFER_MARKET(CREATE_OFFER, false),
     CREATE_OFFER_AMOUNT(CREATE_OFFER, false),

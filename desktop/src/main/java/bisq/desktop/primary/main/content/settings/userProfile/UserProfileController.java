@@ -28,22 +28,23 @@ import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.common.view.NavigationTarget.ONBOARDING_GENERATE_NYM;
+import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE;
 
 @Slf4j
 public class UserProfileController implements Controller {
-
     private final UserProfileModel model;
     @Getter
     private final UserProfileView view;
     private final ChatUserService chatUserService;
     private final UserProfileSelection userProfileSelection;
     private final ChatService chatService;
+    private final DefaultApplicationService applicationService;
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
         chatService = applicationService.getChatService();
+        this.applicationService = applicationService;
         userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();
@@ -62,6 +63,6 @@ public class UserProfileController implements Controller {
     }
 
     public void onAddNewChatUser() {
-        Navigation.navigateTo(ONBOARDING_GENERATE_NYM);
+        Navigation.navigateTo(CREATE_PROFILE);
     }
 }

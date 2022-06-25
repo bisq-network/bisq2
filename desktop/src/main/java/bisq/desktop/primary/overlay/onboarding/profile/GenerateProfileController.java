@@ -43,22 +43,30 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class GenerateProfileController implements Controller {
-    private final GenerateProfileModel model;
+    protected final GenerateProfileModel model;
     @Getter
-    private final GenerateProfileView view;
-    private final ChatUserService chatUserService;
-    private final KeyPairService keyPairService;
-    private final ProofOfWorkService proofOfWorkService;
-    private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
-    private Subscription nickNameSubscription;
+    protected final GenerateProfileView view;
+    protected final ChatUserService chatUserService;
+    protected final KeyPairService keyPairService;
+    protected final ProofOfWorkService proofOfWorkService;
+    protected Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
+    protected Subscription nickNameSubscription;
 
     public GenerateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         chatUserService = applicationService.getChatUserService();
 
-        model = new GenerateProfileModel();
-        view = new GenerateProfileView(model, this);
+        model = getGenerateProfileModel();
+        view = getGenerateProfileView();
+    }
+
+    protected GenerateProfileView getGenerateProfileView() {
+        return new GenerateProfileView(model, this);
+    }
+
+     protected GenerateProfileModel getGenerateProfileModel() {
+        return new GenerateProfileModel();
     }
 
     @Override
@@ -101,9 +109,13 @@ public class GenerateProfileController implements Controller {
                 .thenAccept(chatUserIdentity -> UIThread.run(() -> {
                     OverlayController.hide();
                     Navigation.navigateTo(NavigationTarget.MAIN);
-                    UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+                    UIThread.runOnNextRenderFrame(() -> navigateNext());
                     model.getCreateProfileProgress().set(0);
                 }));
+    }
+
+    protected void navigateNext() {
+        Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }
 
     void onRegenerate() {

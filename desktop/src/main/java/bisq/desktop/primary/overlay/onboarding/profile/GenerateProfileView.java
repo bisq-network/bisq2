@@ -36,13 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GenerateProfileView extends View<VBox, GenerateProfileModel, GenerateProfileController> {
-    private final Button regenerateButton;
-    private final Button createProfileButton;
-    private final Label nymId;
-    private final ImageView roboIconView;
-    private final ProgressIndicator powProgressIndicator;
-    private final TextInputBox nicknameTextInputBox;
-    private final ProgressIndicator createProfileIndicator;
+    protected final Button regenerateButton;
+    protected final Button createProfileButton;
+    protected final Label nymId;
+    protected final ImageView roboIconView;
+    protected final ProgressIndicator powProgressIndicator;
+    protected final TextInputBox nicknameTextInputBox;
+    protected final ProgressIndicator createProfileIndicator;
 
     public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
         super(new VBox(), model, controller);

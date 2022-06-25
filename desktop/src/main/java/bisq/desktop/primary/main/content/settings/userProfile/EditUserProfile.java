@@ -143,10 +143,10 @@ public class EditUserProfile {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            int width = 300;
+            int width = 400;
             root.setPrefWidth(width);
             root.getStyleClass().add("bisq-box-2");
-            root.setStyle("-fx-background-insets: 20 0 45 0;");
+            root.setStyle("-fx-background-insets: 20 0 0 0;");
             root.setPadding(new Insets(0, 30, 0, 30));
             root.setAlignment(Pos.TOP_LEFT);
 
@@ -185,7 +185,6 @@ public class EditUserProfile {
             termsTextArea = termsBox.third();
 
             editButton = new Button(Res.get("edit"));
-            editButton.setDefaultButton(true);
 
             saveButton = new Button(Res.get("save"));
             saveButton.setDefaultButton(true);
@@ -202,8 +201,8 @@ public class EditUserProfile {
 
             VBox.setMargin(headlineLabel, new Insets(0, 0, 0, -30));
             VBox.setMargin(nameAndIconBox, new Insets(15, 0, 24, 0));
-            VBox.setMargin(editButton, new Insets(35, 0, 0, -30));
-            VBox.setMargin(buttonBar, new Insets(35, 0, 0, -30));
+            VBox.setMargin(editButton, new Insets(35, 0, 20, 0));
+            VBox.setMargin(buttonBar, new Insets(35, 0, 20, 0));
             root.getChildren().addAll(headlineLabel, nameAndIconBox,
                     bioBox.first(), reputationScoreBox.first(), profileAgeBox.first(), termsBox.first(),
                     editButton, buttonBar);
