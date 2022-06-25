@@ -15,20 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.profile.nickName;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
 import javafx.beans.property.*;
+import javafx.scene.image.Image;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-public class AddNickNameModel implements Model {
-    private final StringProperty nickName = new SimpleStringProperty();
+public class GenerateProfileModel implements Model {
+    private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
+    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final StringProperty nymId = new SimpleStringProperty();
+    private final BooleanProperty reGenerateButtonMouseTransparent = new SimpleBooleanProperty();
+    private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
+    private final DoubleProperty powProgress = new SimpleDoubleProperty();
+    private final StringProperty nickName = new SimpleStringProperty();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
-    @Setter
-    private TempIdentity tempIdentity;
 }

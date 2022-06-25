@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.profile.nym;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
@@ -25,7 +25,6 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
@@ -43,28 +42,24 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class GenerateNymController implements Controller {
-    private final GenerateNymModel model;
+public class GenerateProfileController implements Controller {
+    private final GenerateProfileModel model;
     @Getter
-    private final GenerateNymView view;
+    private final GenerateProfileView view;
     private final ChatUserService chatUserService;
     private final KeyPairService keyPairService;
     private final ProofOfWorkService proofOfWorkService;
     private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
     private Subscription nickNameSubscription;
 
-    public GenerateNymController(DefaultApplicationService applicationService) {
+    public GenerateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         chatUserService = applicationService.getChatUserService();
 
-        model = new GenerateNymModel();
-        view = new GenerateNymView(model, this);
+        model = new GenerateProfileModel();
+        view = new GenerateProfileView(model, this);
     }
-
- /*   public ReadOnlyObjectProperty<TempIdentity> getTempIdentity() {
-        return model.getTempIdentity();
-    }*/
 
     @Override
     public void onActivate() {

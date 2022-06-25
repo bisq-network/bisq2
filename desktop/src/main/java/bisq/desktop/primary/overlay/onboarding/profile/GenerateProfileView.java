@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.profile.nickName;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.TextInputBox;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -30,34 +29,35 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AddNickNameView extends View<VBox, AddNickNameModel, AddNickNameController> {
+public class GenerateProfileView extends View<VBox, GenerateProfileModel, GenerateProfileController> {
+    private final Button regenerateButton;
     private final Button createProfileButton;
-    private final TextInputBox nicknameTextInputBox;
+    private final Label nymId;
     private final ImageView roboIconView;
+    private final ProgressIndicator powProgressIndicator;
+    private final TextInputBox nicknameTextInputBox;
     private final ProgressIndicator createProfileIndicator;
-    private final Label nickName, nymId;
 
-    public AddNickNameView(AddNickNameModel model, AddNickNameController controller) {
+    public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(8);
-        root.setPadding(new Insets(10, 0, 30, 0));
+        root.setPadding(new Insets(10, 0, 10, 0));
 
-        Label headLineLabel = new Label(Res.get("addNickName.headline"));
+        Label headLineLabel = new Label(Res.get("generateNym.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("addNickName.subTitle"));
+        Label subtitleLabel = new Label(Res.get("generateNym.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-
 
         roboIconView = new ImageView();
         roboIconView.setCursor(Cursor.HAND);
@@ -65,25 +65,41 @@ public class AddNickNameView extends View<VBox, AddNickNameModel, AddNickNameCon
         roboIconView.setFitWidth(size);
         roboIconView.setFitHeight(size);
 
-        nickName = new Label();
-        nickName.setTextAlignment(TextAlignment.CENTER);
-        nickName.setAlignment(Pos.CENTER);
-        nickName.getStyleClass().addAll("bisq-text-5");
+        int indicatorSize = size / 2;
+        powProgressIndicator = new ProgressIndicator();
+        powProgressIndicator.setMinSize(indicatorSize, indicatorSize);
+        powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
+        powProgressIndicator.setOpacity(0.5);
+
+        StackPane roboIconPane = new StackPane();
+        roboIconPane.setMinSize(size, size);
+        roboIconPane.setMaxSize(size, size);
+        roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
+
+        //VBox profileIdBox = getValueBox(Res.get("generateNym.nymId"));
+        Label titleLabel = new Label(Res.get("generateNym.nymId").toUpperCase());
+        titleLabel.getStyleClass().add("bisq-text-4");
 
         nymId = new Label();
-        nymId.setTextAlignment(TextAlignment.CENTER);
-        nymId.setAlignment(Pos.CENTER);
-        nymId.getStyleClass().addAll("bisq-text-3");
+        nymId.getStyleClass().add("bisq-text-8");
 
-        HBox displayName = new HBox(3, nickName, nymId);
-        displayName.setAlignment(Pos.CENTER);
+        VBox nymIdBox = new VBox(titleLabel, nymId);
+        nymIdBox.setAlignment(Pos.CENTER);
+
 
         nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"),
                 Res.get("addNickName.nickName.prompt"));
-        nicknameTextInputBox.setPrefWidth(400);
+        nicknameTextInputBox.setPrefWidth(300);
 
+        VBox roboVBox = new VBox(8, roboIconPane, nymIdBox);
+        roboVBox.setAlignment(Pos.CENTER);
 
-        createProfileButton = new Button(Res.get("addNickName.createProfile"));
+        HBox centerHhBox = new HBox(30, roboVBox, nicknameTextInputBox);
+        centerHhBox.setAlignment(Pos.CENTER);
+
+        regenerateButton = new Button(Res.get("generateNym.regenerate"));
+
+        createProfileButton = new Button(Res.get("generateNym.createProfile"));
         createProfileButton.setGraphicTextGap(8.0);
         createProfileButton.setContentDisplay(ContentDisplay.RIGHT);
         createProfileButton.setDefaultButton(true);
@@ -94,54 +110,73 @@ public class AddNickNameView extends View<VBox, AddNickNameModel, AddNickNameCon
         createProfileIndicator.setMaxHeight(24);
         createProfileIndicator.setManaged(false);
         createProfileIndicator.setVisible(false);
-        HBox hBox = new HBox(10, createProfileButton, createProfileIndicator);
-        hBox.setAlignment(Pos.CENTER);
+
+        HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator);
+        buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 3, 0));
-        VBox.setMargin(nicknameTextInputBox, new Insets(30, 0, 50, 0));
-
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 50, 0));
+        VBox.setMargin(buttons, new Insets(70, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
-                roboIconView,
-                displayName,
-                nicknameTextInputBox,
-                hBox
+                centerHhBox,
+                buttons
         );
     }
 
     @Override
     protected void onViewAttached() {
-        roboIconView.setImage(RoboHash.getImage(model.getTempIdentity().proofOfWork().getPayload()));
-        nickName.textProperty().bind(model.getNickName());
+        roboIconView.imageProperty().bind(model.getRoboHashImage());
+        roboIconView.managedProperty().bind(model.getRoboHashIconVisible());
+        roboIconView.visibleProperty().bind(model.getRoboHashIconVisible());
+        powProgressIndicator.managedProperty().bind(model.getRoboHashIconVisible().not());
+        powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
+        powProgressIndicator.progressProperty().bind(model.getPowProgress());
+
         nymId.textProperty().bind(model.getNymId());
+        nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
+        regenerateButton.mouseTransparentProperty().bind(model.getReGenerateButtonMouseTransparent());
+
         nicknameTextInputBox.textProperty().bindBidirectional(model.getNickName());
-        
+
         createProfileButton.disableProperty().bind(model.getCreateProfileButtonDisabled());
+        createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonDisabled());
         createProfileIndicator.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
         createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
         createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
-        createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonDisabled());
 
+        regenerateButton.setOnAction(e -> controller.onRegenerate());
+        roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
         createProfileButton.setOnAction(e -> controller.onCreateUserProfile());
+
 
         nicknameTextInputBox.requestFocus();
     }
 
     @Override
     protected void onViewDetached() {
-        roboIconView.setImage(null);
-        nickName.textProperty().unbind();
+        roboIconView.imageProperty().unbind();
+        roboIconView.managedProperty().unbind();
+        roboIconView.visibleProperty().unbind();
+        powProgressIndicator.managedProperty().unbind();
+        powProgressIndicator.visibleProperty().unbind();
+        powProgressIndicator.progressProperty().unbind();
+
         nymId.textProperty().unbind();
+        nymId.disableProperty().unbind();
+        regenerateButton.mouseTransparentProperty().unbind();
+
         nicknameTextInputBox.textProperty().unbindBidirectional(model.getNickName());
-        
+
         createProfileButton.disableProperty().unbind();
+        createProfileButton.mouseTransparentProperty().unbind();
         createProfileIndicator.managedProperty().unbind();
         createProfileIndicator.visibleProperty().unbind();
         createProfileIndicator.progressProperty().unbind();
-        createProfileButton.mouseTransparentProperty().unbind();
-        
+
+        regenerateButton.setOnAction(null);
+        roboIconView.setOnMouseClicked(null);
         createProfileButton.setOnAction(null);
     }
 }
