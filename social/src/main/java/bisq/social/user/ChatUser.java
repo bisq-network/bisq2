@@ -56,22 +56,21 @@ public class ChatUser implements DistributedData {
     private transient final String id;
     private transient final String nym;
 
-    public ChatUser(String nickName, 
-                    ProofOfWork proofOfWork, 
+    public ChatUser(String nickName,
+                    ProofOfWork proofOfWork,
                     NetworkId networkId,
                     String terms,
-                    String bio
-                    ) {
+                    String bio) {
         this(nickName,
                 proofOfWork,
                 networkId,
                 terms,
-                bio, 
+                bio,
                 new MetaData(TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
     public ChatUser(String nickName,
-                    ProofOfWork proofOfWork, 
+                    ProofOfWork proofOfWork,
                     NetworkId networkId,
                     String terms,
                     String bio,
@@ -82,17 +81,23 @@ public class ChatUser implements DistributedData {
         this.terms = terms;
         this.bio = bio;
         this.metaData = metaData;
-        
+
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
         nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
+        
+        log.error("ChatUser {} {} {}", nickName, terms,bio);
+    }
+
+    public static ChatUser from(ChatUser chatUser, String terms, String bio) {
+        return new ChatUser(chatUser.getNickName(), chatUser.getProofOfWork(), chatUser.getNetworkId(), terms, bio);
     }
 
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
-                .setBio(bio)
                 .setTerms(terms)
+                .setBio(bio)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
                 .setMetaData(metaData.toProto())
@@ -107,7 +112,7 @@ public class ChatUser implements DistributedData {
                 proto.getBio(),
                 MetaData.fromProto(proto.getMetaData()));
     }
-    
+
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
@@ -142,6 +147,7 @@ public class ChatUser implements DistributedData {
     public String getBurnScoreAsString() {
         return "301"; //todo implement instead of hardcode
     }
+
     //todo
     public String getAccountAgeAsString() {
         return "274 days"; //todo implement instead of hardcode

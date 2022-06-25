@@ -19,7 +19,9 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +31,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
 
-    private final Pane chatUserDetailsPane;
+    private final Pane editUserProfilePane;
     private Subscription chatUserDetailsPin;
 
     public UserProfileView(UserProfileModel model,
@@ -37,18 +39,21 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
                            UserProfileSelection userProfileSelection) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(20);
+        root.setSpacing(30);
         root.setPadding(new Insets(20));
 
-        chatUserDetailsPane = new Pane();
+        Label selectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
+        selectLabel.getStyleClass().add("bisq-text-4");
+        VBox selectionVBox = new VBox(0, selectLabel, userProfileSelection.getRoot());
 
-        root.getChildren().addAll(userProfileSelection.getRoot(), chatUserDetailsPane);
+        editUserProfilePane = new Pane();
+        root.getChildren().addAll(selectionVBox, editUserProfilePane);
     }
 
     @Override
     protected void onViewAttached() {
         chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
-            chatUserDetailsPane.getChildren().setAll(editUserProfile.getRoot());
+            editUserProfilePane.getChildren().setAll(editUserProfile.getRoot());
         });
     }
 

@@ -52,6 +52,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         int index = 0;
         for (ProtocolListItem protocol : model.getSortedItems()) {
             Pane protocolBox = getProtocolBox(protocol);
+            GridPane.setHgrow(protocolBox, Priority.ALWAYS);
             if (protocol.getSwapProtocolType() != SwapProtocol.Type.SATOSHI_SQUARE) {
                 protocolBox.setOpacity(0.4);
             }
@@ -68,7 +69,6 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         StackPane pane = new StackPane();
         pane.getStyleClass().add("bisq-box-2");
         pane.setMinWidth(360);
-        GridPane.setHgrow(pane, Priority.ALWAYS);
 
         VBox box = new VBox();
         pane.getChildren().add(box);
