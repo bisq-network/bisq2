@@ -21,6 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -32,6 +33,7 @@ import org.fxmisc.easybind.Subscription;
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
 
     private final Pane editUserProfilePane;
+    private final Button addNewUserButton;
     private Subscription chatUserDetailsPin;
 
     public UserProfileView(UserProfileModel model,
@@ -47,7 +49,11 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         VBox selectionVBox = new VBox(0, selectLabel, userProfileSelection.getRoot());
 
         editUserProfilePane = new Pane();
-        root.getChildren().addAll(selectionVBox, editUserProfilePane);
+
+        addNewUserButton = new Button(Res.get("settings.userProfile.addNewUser"));
+        addNewUserButton.setDefaultButton(true);
+        
+        root.getChildren().addAll(selectionVBox, editUserProfilePane, addNewUserButton);
     }
 
     @Override
@@ -55,10 +61,13 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
             editUserProfilePane.getChildren().setAll(editUserProfile.getRoot());
         });
+
+        addNewUserButton.setOnAction(e -> controller.onAddNewChatUser());
     }
 
     @Override
     protected void onViewDetached() {
         chatUserDetailsPin.unsubscribe();
+        addNewUserButton.setOnAction(null);
     }
 }

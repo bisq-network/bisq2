@@ -21,11 +21,14 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.desktop.common.view.NavigationTarget.ONBOARDING_GENERATE_NYM;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -56,5 +59,9 @@ public class UserProfileController implements Controller {
 
     @Override
     public void onDeactivate() {
+    }
+
+    public void onAddNewChatUser() {
+        Navigation.navigateTo(ONBOARDING_GENERATE_NYM);
     }
 }
