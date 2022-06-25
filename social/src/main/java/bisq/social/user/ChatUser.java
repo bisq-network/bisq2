@@ -85,8 +85,6 @@ public class ChatUser implements DistributedData {
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
         nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
-        
-        log.error("ChatUser {} {} {}", nickName, terms,bio);
     }
 
     public static ChatUser from(ChatUser chatUser, String terms, String bio) {
