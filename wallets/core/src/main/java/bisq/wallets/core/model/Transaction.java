@@ -20,8 +20,6 @@ package bisq.wallets.core.model;
 public interface Transaction {
     String getTxId();
 
-    String getAddress();
-
     double getAmount();
 
     int getConfirmations();

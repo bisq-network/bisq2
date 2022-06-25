@@ -24,7 +24,4 @@ public interface Utxo {
 
     double getAmount();
 
-    int getConfirmations();
-
-    boolean isReused();
 }

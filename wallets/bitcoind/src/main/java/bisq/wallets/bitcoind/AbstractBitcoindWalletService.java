@@ -29,7 +29,6 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.exceptions.WalletNotInitializedException;
-import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
@@ -128,10 +127,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
 
     @Override
-    public CompletableFuture<String> getNewAddress(String label) {
+    public CompletableFuture<String> getNewAddress() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            String receiveAddress = wallet.getNewAddress(AddressType.BECH32, label);
+            String receiveAddress = wallet.getNewAddress();
 
             // getNewAddress updates the receive adresses set
             persist();

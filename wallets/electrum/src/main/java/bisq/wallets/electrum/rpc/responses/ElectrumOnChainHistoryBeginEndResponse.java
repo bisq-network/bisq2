@@ -15,31 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core;
+package bisq.wallets.electrum.rpc.responses;
 
-import bisq.common.observable.ObservableSet;
-import bisq.wallets.core.model.Transaction;
-import bisq.wallets.core.model.Utxo;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface Wallet {
-    void initialize(Optional<String> walletPassphrase);
-
-    void shutdown();
-
-    double getBalance();
-
-    String getNewAddress();
-
-    ObservableSet<String> getReceiveAddresses();
-
-    List<? extends Transaction> listTransactions();
-
-    List<? extends Utxo> listUnspent();
-
-    String sendToAddress(Optional<String> passphrase, String address, double amount);
-
-    String signMessage(Optional<String> passphrase, String address, String message);
+@Getter
+@Setter
+public class ElectrumOnChainHistoryBeginEndResponse {
+    @JsonProperty("BTC_balance")
+    private String btcBalance;
+    @JsonProperty("block_height")
+    private int blockHeight;
+    private String date;
 }

@@ -15,31 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core;
+package bisq.wallets.electrum.rpc.calls;
 
-import bisq.common.observable.ObservableSet;
-import bisq.wallets.core.model.Transaction;
-import bisq.wallets.core.model.Utxo;
+import bisq.wallets.core.rpc.call.DaemonRpcCall;
 
-import java.util.List;
-import java.util.Optional;
+public class ElectrumStopRpcCall extends DaemonRpcCall<Void, String> {
+    public ElectrumStopRpcCall() {
+        super(null);
+    }
 
-public interface Wallet {
-    void initialize(Optional<String> walletPassphrase);
+    @Override
+    public String getRpcMethodName() {
+        return "stop";
+    }
 
-    void shutdown();
+    @Override
+    public boolean isResponseValid(String response) {
+        return response.equals("Daemon stopped");
+    }
 
-    double getBalance();
-
-    String getNewAddress();
-
-    ObservableSet<String> getReceiveAddresses();
-
-    List<? extends Transaction> listTransactions();
-
-    List<? extends Utxo> listUnspent();
-
-    String sendToAddress(Optional<String> passphrase, String address, double amount);
-
-    String signMessage(Optional<String> passphrase, String address, String message);
+    @Override
+    public Class<String> getRpcResponseClass() {
+        return String.class;
+    }
 }

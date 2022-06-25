@@ -17,6 +17,7 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
+import bisq.wallets.core.model.Utxo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +26,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class ElectrumListUnspentResponseEntry {
+public class ElectrumListUnspentResponseEntry implements Utxo {
     private String address;
     @JsonProperty("bip32_paths")
     private Map<String, String> bip32Paths;
@@ -56,4 +57,14 @@ public class ElectrumListUnspentResponseEntry {
     private String witnessScript;
     @JsonProperty("witness_utxo")
     private String witnessUtxo;
+
+    @Override
+    public String getTxId() {
+        return prevOutHash;
+    }
+
+    @Override
+    public double getAmount() {
+        return Double.parseDouble(value);
+    }
 }

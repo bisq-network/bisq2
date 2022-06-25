@@ -44,11 +44,6 @@ public class WalletTransactionsView extends View<VBox, WalletTransactionsModel, 
                 .valuePropertySupplier(WalletTransactionListItem::txIdProperty)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
-                .title(Res.get("address"))
-                .minWidth(150)
-                .valuePropertySupplier(WalletTransactionListItem::addressProperty)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("amount"))
                 .minWidth(120)
                 .valuePropertySupplier(WalletTransactionListItem::amountProperty)

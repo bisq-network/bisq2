@@ -18,8 +18,6 @@
 package bisq.desktop.primary.main.content.wallet.utxos;
 
 import bisq.wallets.core.model.Utxo;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -27,15 +25,11 @@ public class WalletUtxoListItem {
     private final StringProperty txId = new SimpleStringProperty(this, "wallet.column.txId");
     private final StringProperty address = new SimpleStringProperty(this, "address");
     private final StringProperty amount = new SimpleStringProperty(this, "amount");
-    private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
-    private final BooleanProperty reused = new SimpleBooleanProperty(this, "wallet.column.reused");
 
     public WalletUtxoListItem(Utxo utxo) {
         txId.set(utxo.getTxId());
         address.set(utxo.getAddress());
         amount.set(String.valueOf(utxo.getAmount()));
-        confirmations.set(String.valueOf(utxo.getConfirmations()));
-        reused.set(utxo.isReused());
     }
 
     public StringProperty txIdProperty() {
@@ -50,11 +44,4 @@ public class WalletUtxoListItem {
         return amount;
     }
 
-    public StringProperty confirmationsProperty() {
-        return confirmations;
-    }
-
-    public BooleanProperty getReusedProperty() {
-        return reused;
-    }
 }
