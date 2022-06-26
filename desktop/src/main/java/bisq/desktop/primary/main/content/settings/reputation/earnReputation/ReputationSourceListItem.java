@@ -15,18 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.reputation.earnReputation;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.social.user.reputation.Reputation;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public class SettingsModel extends TabModel {
+@Getter
+@EqualsAndHashCode
+public class ReputationSourceListItem {
+    private final Reputation.Source source;
+    private final String displayString;
 
-    public SettingsModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.REPUTATION;
+    public ReputationSourceListItem(Reputation.Source source) {
+        this.source = source;
+        displayString = source.getDisplayString();
     }
 }

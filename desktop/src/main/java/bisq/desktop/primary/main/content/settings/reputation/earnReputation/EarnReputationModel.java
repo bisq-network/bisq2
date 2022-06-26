@@ -15,18 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.reputation.earnReputation;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsModel extends TabModel {
-
-    public SettingsModel() {
-    }
-
+@Slf4j
+@Getter
+public class EarnReputationModel extends TabModel {
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.REPUTATION;
+        return NavigationTarget.BURN_BSQ;
     }
 }

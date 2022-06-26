@@ -15,19 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.earnReputation.burn;
 
 import bisq.desktop.common.view.Model;
 import bisq.social.user.ChatUserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class ManageReputationModel implements Model {
+public class BurnBsqModel implements Model {
     private final ObjectProperty<ChatUserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
-    public ManageReputationModel() {
-    }
+    private final StringProperty txId = new SimpleStringProperty();
 }

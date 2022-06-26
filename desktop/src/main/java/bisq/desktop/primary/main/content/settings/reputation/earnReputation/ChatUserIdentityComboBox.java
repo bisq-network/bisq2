@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.earnReputation;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;

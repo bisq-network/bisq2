@@ -44,7 +44,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
-        VBox.setVgrow(firstBox, Priority.ALWAYS);
+        VBox.setVgrow(firstBox, Priority.NEVER);
         root.getChildren().add(firstBox);
 
         VBox secondBox = getWidgetBox(
@@ -68,7 +68,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         HBox hBox = new HBox(16, secondBox, thirdBox);
         hBox.setFillHeight(true);
         
-        VBox.setVgrow(hBox, Priority.ALWAYS);
+        VBox.setVgrow(hBox, Priority.NEVER);
         root.getChildren().add(hBox);
     }
 

@@ -28,27 +28,37 @@ public enum NavigationTarget {
     ROOT(),
 
     PRIMARY_STAGE(ROOT, false),
-    
+
     SPLASH(PRIMARY_STAGE, false),
-
+    
+    //////////////////////////////////////////////////////////////////////
+    // OVERLAY
+    //////////////////////////////////////////////////////////////////////
+    
     OVERLAY(PRIMARY_STAGE, false),
-    ONBOARDING(OVERLAY, false),
 
+    ONBOARDING(OVERLAY, false),
     ONBOARDING_BISQ_2_INTRO(ONBOARDING, false),
     ONBOARDING_GENERATE_NYM(ONBOARDING, false),
     ONBOARDING_ADD_NICKNAME(ONBOARDING, false),
     ONBOARDING_BISQ_EASY_OLD(ONBOARDING, false),
 
     CREATE_OFFER(OVERLAY, false),
-
-    CREATE_PROFILE(OVERLAY, false),
-
     CREATE_OFFER_DIRECTION(CREATE_OFFER, false),
     CREATE_OFFER_MARKET(CREATE_OFFER, false),
     CREATE_OFFER_AMOUNT(CREATE_OFFER, false),
     CREATE_OFFER_PAYMENT_METHOD(CREATE_OFFER, false),
     CREATE_OFFER_OFFER_COMPLETED(CREATE_OFFER, false),
 
+    CREATE_PROFILE(OVERLAY, false),
+
+    EARN_REPUTATION(OVERLAY, false),
+    BURN_BSQ(EARN_REPUTATION, false),
+    BSQ_BOND(EARN_REPUTATION, false),
+
+    //////////////////////////////////////////////////////////////////////
+    // MAIN
+    //////////////////////////////////////////////////////////////////////
     
     MAIN(PRIMARY_STAGE, false),
 
@@ -66,6 +76,8 @@ public enum NavigationTarget {
     OPEN_SOURCE_ACADEMY(CONTENT),
 
     EVENTS(CONTENT),
+    
+    SUPPORT(CONTENT),
 
     TRADE_OVERVIEW(CONTENT),
     TRADE_OVERVIEW_LIST(TRADE_OVERVIEW),
@@ -94,8 +106,8 @@ public enum NavigationTarget {
     NETWORK_INFO(SETTINGS),
     ABOUT(SETTINGS),
     USER_PROFILE(SETTINGS),
-    MANAGE_REPUTATION(SETTINGS),
-    
+    REPUTATION(SETTINGS),
+
     WALLET_BITCOIN(CONTENT),
     WALLET_BITCOIN_TRANSACTIONS(WALLET_BITCOIN),
     WALLET_BITCOIN_SEND(WALLET_BITCOIN),

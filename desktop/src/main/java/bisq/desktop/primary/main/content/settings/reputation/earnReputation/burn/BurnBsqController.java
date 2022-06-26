@@ -15,38 +15,35 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.earnReputation.burn;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.social.chat.ChatService;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ManageReputationController implements Controller {
+public class BurnBsqController implements Controller {
 
-    private final ManageReputationModel model;
+    private final BurnBsqModel model;
     @Getter
-    private final ManageReputationView view;
+    private final BurnBsqView view;
     private final ChatUserService chatUserService;
     private final UserProfileSelection userProfileSelection;
-    private final ChatService chatService;
-    private final DefaultApplicationService applicationService;
     private Pin selectedUserProfilePin;
 
-    public ManageReputationController(DefaultApplicationService applicationService) {
+    public BurnBsqController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
-        chatService = applicationService.getChatService();
-        this.applicationService = applicationService;
         userProfileSelection = new UserProfileSelection(chatUserService);
 
-        model = new ManageReputationModel();
-        view = new ManageReputationView(model, this, userProfileSelection);
+        model = new BurnBsqModel();
+        view = new BurnBsqView(model, this, userProfileSelection.getRoot());
     }
 
     @Override
@@ -58,5 +55,14 @@ public class ManageReputationController implements Controller {
 
     @Override
     public void onDeactivate() {
+        selectedUserProfilePin.unbind();
+    }
+
+    void onClose() {
+        OverlayController.hide();
+    }
+
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/reputation");
     }
 }
