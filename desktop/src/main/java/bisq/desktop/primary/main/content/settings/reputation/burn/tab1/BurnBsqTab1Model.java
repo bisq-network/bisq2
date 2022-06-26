@@ -15,20 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.earnReputation;
+package bisq.desktop.primary.main.content.settings.reputation.burn.tab1;
 
-import bisq.social.user.reputation.Reputation;
-import lombok.EqualsAndHashCode;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-@EqualsAndHashCode
-public class ReputationSourceListItem {
-    private final Reputation.Source source;
-    private final String displayString;
-
-    public ReputationSourceListItem(Reputation.Source source) {
-        this.source = source;
-        displayString = source.getDisplayString();
-    }
+public class BurnBsqTab1Model implements Model {
 }

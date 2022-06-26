@@ -52,9 +52,11 @@ public enum NavigationTarget {
 
     CREATE_PROFILE(OVERLAY, false),
 
-    EARN_REPUTATION(OVERLAY, false),
-    BURN_BSQ(EARN_REPUTATION, false),
-    BSQ_BOND(EARN_REPUTATION, false),
+    BURN_BSQ(OVERLAY, false),
+    BURN_BSQ_TAB_1(BURN_BSQ, false),
+    BURN_BSQ_TAB_2(BURN_BSQ, false),
+    BURN_BSQ_TAB_3(BURN_BSQ, false),
+    BSQ_BOND(OVERLAY, false),
 
     //////////////////////////////////////////////////////////////////////
     // MAIN

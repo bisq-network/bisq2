@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bond;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.settings.reputation.earnReputation.ReputationSourceListItem;
+import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.social.user.ChatUserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

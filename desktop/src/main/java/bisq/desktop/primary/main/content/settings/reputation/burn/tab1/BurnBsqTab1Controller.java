@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.burn.tab1;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
@@ -26,14 +26,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ReputationController implements Controller {
-    private final ReputationModel model;
+public class BurnBsqTab1Controller implements Controller {
+    private final BurnBsqTab1Model model;
     @Getter
-    private final ReputationView view;
+    private final BurnBsqTab1View view;
 
-    public ReputationController(DefaultApplicationService applicationService) {
-        model = new ReputationModel();
-        view = new ReputationView(model, this);
+    public BurnBsqTab1Controller(DefaultApplicationService applicationService) {
+        model = new BurnBsqTab1Model();
+        view = new BurnBsqTab1View(model, this);
     }
 
     @Override
@@ -44,15 +44,11 @@ public class ReputationController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onBurnBsq() {
-        Navigation.navigateTo(NavigationTarget.BURN_BSQ);
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/reputation/burnBsq");
     }
 
-    public void onBsqBond() {
-        Navigation.navigateTo(NavigationTarget.BSQ_BOND);
-    }
-
-    public void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation");
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.BURN_BSQ_TAB_2);
     }
 }

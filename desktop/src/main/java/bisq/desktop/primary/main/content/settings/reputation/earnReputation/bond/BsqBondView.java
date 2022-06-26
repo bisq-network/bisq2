@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bon
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.TextInputBox;
-import bisq.desktop.primary.main.content.settings.reputation.earnReputation.ReputationSourceListItem;
+import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -46,7 +46,7 @@ public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
         root.setSpacing(20);
         root.setAlignment(Pos.CENTER_LEFT);
 
-        Label headLine = new Label(Res.get("reputation.burnedBsq.headline"));
+        Label headLine = new Label(Res.get("reputation.burnedBsq.howToHeadline"));
         headLine.getStyleClass().add("bisq-text-15");
 
         Label info = new Label(Res.get("reputation.burnedBsq.info"));

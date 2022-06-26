@@ -15,63 +15,74 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.earnReputation;
+package bisq.desktop.primary.main.content.settings.reputation.burn;
 
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.PrimaryStageModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EarnReputationView extends TabView<EarnReputationModel, EarnReputationController> {
+public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
 
-    public EarnReputationView(EarnReputationModel model, EarnReputationController controller) {
+    private final Button closeButton;
+
+    public BurnBsqView(BurnBsqModel model, BurnBsqController controller) {
         super(model, controller);
 
-        root.setMinWidth(PrimaryStageModel.MIN_WIDTH - 20);
-        root.setMaxWidth(PrimaryStageModel.MIN_WIDTH - 20);
-        root.setMinHeight(PrimaryStageModel.MIN_HEIGHT- 20);
-        root.setMaxHeight(PrimaryStageModel.MIN_HEIGHT- 20);
-        vBox.setPrefHeight(PrimaryStageModel.MIN_HEIGHT- 20);
+        double width = PrimaryStageModel.MIN_WIDTH - 20;
+        root.setMinWidth(width);
+        root.setMaxWidth(width);
+        double height = PrimaryStageModel.MIN_HEIGHT - 40;
+        root.setMinHeight(height);
+        root.setMaxHeight(height);
+        vBox.setPrefHeight(height);
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
 
-        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-white", "bisq-text-grey-9");
-        addTab(Res.get("reputation.source.BURNED_BSQ"),
-                NavigationTarget.BURN_BSQ,
+        Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
+        //Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-white", "bisq-text-grey-9");
+        addTab(Res.get("reputation.burnedBsq.tab1"),
+                NavigationTarget.BURN_BSQ_TAB_1,
                 styles);
-        addTab(Res.get("reputation.source.BSQ_BOND"),
-                NavigationTarget.BSQ_BOND,
+        addTab(Res.get("reputation.burnedBsq.tab2"),
+                NavigationTarget.BURN_BSQ_TAB_2,
+                styles);
+        addTab(Res.get("reputation.burnedBsq.tab3"),
+                NavigationTarget.BURN_BSQ_TAB_3,
                 styles);
 
-        headlineLabel.setText(Res.get("reputation.earnReputation"));
+        closeButton = BisqIconButton.createIconButton("close");
+
+
+        headLine.setText(Res.get("reputation.burnBsq"));
 
         // Make tabs left aligned and headline on top
         tabs.getChildren().remove(0, 2); // remove headline and spacer
 
-        headlineLabel.getStyleClass().remove("bisq-content-headline-label");
-        headlineLabel.getStyleClass().add("bisq-popup-headline-label");
+        headLine.getStyleClass().remove("bisq-content-headline-label");
+        headLine.getStyleClass().add("bisq-text-15");
 
-        ImageView icon = ImageUtil.getImageViewById("onboarding-1-reputation");
-        HBox.setMargin(icon, new Insets(0, 0, 0, 0));
-        HBox.setMargin(headlineLabel, new Insets(2, 0, 0, 2));
-        HBox hBox = new HBox(7, icon, headlineLabel);
+        HBox.setMargin(closeButton, new Insets(-1, -15, 0, 0));
+        HBox hBox = new HBox(7, headLine, Spacer.fillHBox(), closeButton);
+
         VBox.setMargin(hBox, new Insets(0, 0, 32, 0));
         vBox.getChildren().add(0, hBox);
 
         line.getStyleClass().remove("bisq-darkest-bg");
         line.getStyleClass().add("bisq-mid-grey");
-        selectionMarker.getStyleClass().remove("bisq-green-line");
-        selectionMarker.getStyleClass().add("bisq-white-bg");
+       /* selectionMarker.getStyleClass().remove("bisq-green-line");
+        selectionMarker.getStyleClass().add("bisq-white-bg");*/
 
         StackPane.setMargin(lineAndMarker, new Insets(100, 110, 0, 0));
     }
@@ -80,9 +91,11 @@ public class EarnReputationView extends TabView<EarnReputationModel, EarnReputat
     protected void onViewAttached() {
         line.prefWidthProperty().unbind();
         line.prefWidthProperty().bind(root.widthProperty().subtract(136));
+        closeButton.setOnAction(e -> controller.onClose());
     }
 
     @Override
     protected void onViewDetached() {
+        closeButton.setOnAction(null);
     }
 }

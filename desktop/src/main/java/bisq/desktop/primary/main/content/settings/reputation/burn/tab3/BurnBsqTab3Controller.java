@@ -15,13 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.earnReputation.burn;
+package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.social.user.ChatUserService;
@@ -29,27 +32,30 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqController implements Controller {
+public class BurnBsqTab3Controller implements Controller {
 
-    private final BurnBsqModel model;
+    private final BurnBsqTab3Model model;
     @Getter
-    private final BurnBsqView view;
+    private final BurnBsqTab3View view;
     private final ChatUserService chatUserService;
     private final UserProfileSelection userProfileSelection;
     private Pin selectedUserProfilePin;
 
-    public BurnBsqController(DefaultApplicationService applicationService) {
+    public BurnBsqTab3Controller(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
         userProfileSelection = new UserProfileSelection(chatUserService);
 
-        model = new BurnBsqModel();
-        view = new BurnBsqView(model, this, userProfileSelection.getRoot());
+        model = new BurnBsqTab3Model();
+        view = new BurnBsqTab3View(model, this, userProfileSelection.getRoot());
     }
 
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
-                chatUserIdentity -> model.getSelectedChatUserIdentity().set(chatUserIdentity)
+                chatUserIdentity -> {
+                    model.getSelectedChatUserIdentity().set(chatUserIdentity);
+                    model.getPubKeyHash().set(chatUserIdentity.getChatUser().getId());
+                }
         );
     }
 
@@ -58,11 +64,19 @@ public class BurnBsqController implements Controller {
         selectedUserProfilePin.unbind();
     }
 
-    void onClose() {
-        OverlayController.hide();
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.BURN_BSQ_TAB_2);
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation");
+        Browser.open("https://bisq.wiki/reputation/burnBsq");
+    }
+
+    void onCopyToClipboard(String pubKeyHash) {
+        ClipboardUtil.copyToClipboard(pubKeyHash);
+    }
+
+    void onClose() {
+        OverlayController.hide();
     }
 }

@@ -23,7 +23,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.desktop.primary.main.content.settings.reputation.earnReputation.ReputationSourceListItem;
+import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.Reputation;

@@ -19,27 +19,36 @@ package bisq.social.user.reputation;
 
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
+import bisq.i18n.Res;
 import bisq.social.user.proof.Proof;
+import lombok.Getter;
 
-public record Reputation(Type type, Proof proof) implements Proto {
-    public enum Type {
-        BURNED_BSQ,
-        BURNED_BSQ_AGE,
-        IDENTITY_AGE,
-        BISQ1_ACCOUNT_AGE,
-        BISQ1_SIGNED_ACCOUNT_AGE_WITNESS
+public record Reputation(Source source, Proof proof) implements Proto {
+    public enum Source {
+        BURNED_BSQ(Res.get("reputation.source.BURNED_BSQ")),
+        BSQ_BOND(Res.get("reputation.source.BSQ_BOND")),
+        PROFILE_AGE(Res.get("reputation.source.PROFILE_AGE")),
+        BISQ1_ACCOUNT_AGE(Res.get("reputation.source.BISQ1_ACCOUNT_AGE")),
+        BISQ1_SIGNED_ACCOUNT_AGE_WITNESS(Res.get("reputation.source.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS"));
+
+        @Getter
+        private final String displayString;
+
+        Source(String displayString) {
+            this.displayString = displayString;
+        }
     }
-    
+
     @Override
     public bisq.social.protobuf.Reputation toProto() {
         return bisq.social.protobuf.Reputation.newBuilder()
-                .setType(type.name())
+                .setType(source.name())
                 .setProof(proof.toProto())
                 .build();
     }
 
     public static Reputation fromProto(bisq.social.protobuf.Reputation proto) {
-        return new Reputation(ProtobufUtils.enumFromProto(Type.class, proto.getType()),
+        return new Reputation(ProtobufUtils.enumFromProto(Source.class, proto.getType()),
                 Proof.fromProto(proto.getProof()));
     }
 }

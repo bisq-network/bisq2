@@ -66,12 +66,14 @@ public class TextInputBox extends Pane {
         setMinHeight(50);
         setMaxHeight(50);
         getChildren().addAll(descriptionLabel, inputTextField);
-        EasyBind.subscribe(prefWidthProperty(), w -> {
+        EasyBind.subscribe(widthProperty(), w -> {
             double width = w.doubleValue();
-            inputTextField.setMinWidth(width - 50);
-            inputTextField.setMaxWidth(width - 50);
-            setMinWidth(width);
-            setMaxWidth(width);
+            if (width > 0) {
+                inputTextField.setMinWidth(width - 50);
+                inputTextField.setMaxWidth(width - 50);
+                setMinWidth(width);
+                setMaxWidth(width);
+            }
         });
 
         EasyBind.subscribe(descriptionProperty, description -> {

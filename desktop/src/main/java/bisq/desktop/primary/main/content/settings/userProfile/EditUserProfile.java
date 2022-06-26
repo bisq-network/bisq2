@@ -143,16 +143,10 @@ public class EditUserProfile {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            int width = 400;
-            root.setPrefWidth(width);
-            root.getStyleClass().add("bisq-box-2");
-            root.setStyle("-fx-background-insets: 20 0 0 0;");
-            root.setPadding(new Insets(0, 30, 0, 30));
             root.setAlignment(Pos.TOP_LEFT);
 
             Label headlineLabel = new Label(Res.get("settings.userProfile.selectedProfile").toUpperCase());
             headlineLabel.getStyleClass().add("bisq-text-4");
-            headlineLabel.setPrefWidth(width);
 
             nickName = new Label();
             nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
@@ -165,10 +159,10 @@ public class EditUserProfile {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            
-            VBox nameAndIconBox= new VBox(10,nickName,roboIconImageView,nym);
+
+            VBox nameAndIconBox = new VBox(10, nickName, roboIconImageView, nym);
             nameAndIconBox.setAlignment(Pos.TOP_CENTER);
-            
+
             Triple<VBox, Label, BisqTextArea> bioBox = getEditableInfoBox(Res.get("social.chatUser.bio"));
             bio = bioBox.second();
             bioTextArea = bioBox.third();
@@ -199,13 +193,18 @@ public class EditUserProfile {
             buttonBar.setManaged(false);
             buttonBar.setVisible(false);
 
-            VBox.setMargin(headlineLabel, new Insets(0, 0, 0, -30));
-            VBox.setMargin(nameAndIconBox, new Insets(15, 0, 24, 0));
-            VBox.setMargin(editButton, new Insets(35, 0, 20, 0));
-            VBox.setMargin(buttonBar, new Insets(35, 0, 20, 0));
-            root.getChildren().addAll(headlineLabel, nameAndIconBox,
-                    bioBox.first(), reputationScoreBox.first(), profileAgeBox.first(), termsBox.first(),
-                    editButton, buttonBar);
+
+            VBox.setMargin(nameAndIconBox, new Insets(0, 0, 20, 0));
+            VBox.setMargin(editButton, new Insets(20, 0, 0, 0));
+            VBox.setMargin(buttonBar, new Insets(20, 0, 0, 0));
+            VBox mainVBox = new VBox(10, headlineLabel, nameAndIconBox,
+                    bioBox.first(), reputationScoreBox.first(), profileAgeBox.first(), termsBox.first(), editButton, buttonBar);
+            mainVBox.getStyleClass().add("bisq-box-2");
+            mainVBox.setPadding(new Insets(30));
+
+            VBox.setMargin(headlineLabel, new Insets(0, 0, 0, 0));
+
+            root.getChildren().addAll(headlineLabel, mainVBox);
         }
 
         @Override

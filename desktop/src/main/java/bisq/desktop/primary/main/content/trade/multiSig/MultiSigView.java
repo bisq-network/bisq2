@@ -36,7 +36,7 @@ public class MultiSigView extends TabView<MultiSigModel, MultiSigController> {
         addTab(Res.get("pendingTrades"), NavigationTarget.MULTI_SIG_PENDING_TRADES);
         addTab(Res.get("closedTrades"), NavigationTarget.MULTI_SIG_CLOSED_TRADES);
 
-        headlineLabel.setText(Res.get("multiSig"));
+        headLine.setText(Res.get("multiSig"));
 
         viewChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {

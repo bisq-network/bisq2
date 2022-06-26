@@ -438,6 +438,12 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+.bisq-text-15 {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-green;
+}
+
 .wrap-text {
     -fx-wrap-text: true;
 }

@@ -30,55 +30,50 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
-    private final Button openPopupButton;
-    private final Button learnMoreButton;
+    private final Button burnBsqButton, bsqBondButton, learnMoreButton;
 
     public ReputationView(ReputationModel model,
                           ReputationController controller) {
         super(new VBox(), model, controller);
 
-        root.setSpacing(0);
-
         Label headlineLabel = new Label(Res.get("reputation.headline"));
-        // headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.getStyleClass().add("bisq-text-headline-4");
+        headlineLabel.getStyleClass().add("bisq-text-headline-5");
 
         Label infoLabel = new Label(Res.get("reputation.info"));
-        // infoLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        infoLabel.getStyleClass().addAll("bisq-text-6", "wrap-text");
+        infoLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        openPopupButton = new Button(Res.get("reputation.earnReputation"));
-        openPopupButton.setMaxWidth(Double.MAX_VALUE);
-        openPopupButton.getStyleClass().add("bisq-big-green-button");
+        burnBsqButton = new Button(Res.get("reputation.burnBsq"));
+
+        bsqBondButton = new Button(Res.get("reputation.bsqBond"));
 
         learnMoreButton = new Button(Res.get("reputation.learnMore"));
-        learnMoreButton.setMaxWidth(Double.MAX_VALUE);
-        learnMoreButton.getStyleClass().add("bisq-big-grey-button");
+        learnMoreButton.getStyleClass().add("bisq-text-button");
 
-        HBox.setHgrow(openPopupButton, Priority.ALWAYS);
-        HBox.setHgrow(learnMoreButton, Priority.ALWAYS);
-        HBox buttons = new HBox(20, openPopupButton, learnMoreButton);
-        buttons.setMaxWidth(Double.MAX_VALUE);
+        HBox buttons = new HBox(20, burnBsqButton, bsqBondButton);
 
         VBox.setVgrow(infoLabel, Priority.ALWAYS);
-        VBox.setMargin(infoLabel, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, infoLabel, buttons);
+        VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
+        VBox.setMargin(learnMoreButton, new Insets(0, 0, 10, 0));
+        VBox vBox = new VBox(16, headlineLabel, infoLabel, learnMoreButton, buttons);
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(30));
         vBox.setAlignment(Pos.TOP_LEFT);
-
+        
+        VBox.setMargin(vBox, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(vBox);
     }
 
     @Override
     protected void onViewAttached() {
-        openPopupButton.setOnAction(e -> controller.onOpenPopup());
+        burnBsqButton.setOnAction(e -> controller.onBurnBsq());
+        bsqBondButton.setOnAction(e -> controller.onBsqBond());
         learnMoreButton.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
-        openPopupButton.setOnAction(null);
+        burnBsqButton.setOnAction(null);
+        bsqBondButton.setOnAction(null);
         learnMoreButton.setOnAction(null);
     }
 }

@@ -48,7 +48,7 @@ public class UserProfileController implements Controller {
         userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();
-        view = new UserProfileView(model, this, userProfileSelection);
+        view = new UserProfileView(model, this, userProfileSelection.getRoot());
     }
 
     @Override

@@ -18,12 +18,13 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -31,14 +32,12 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
-
-    private final Pane editUserProfilePane;
-    private final Button addNewUserButton;
+    private final Button createNewProfileButton;
     private Subscription chatUserDetailsPin;
 
     public UserProfileView(UserProfileModel model,
                            UserProfileController controller,
-                           UserProfileSelection userProfileSelection) {
+                           Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
@@ -46,29 +45,34 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
 
         Label selectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
         selectLabel.getStyleClass().add("bisq-text-4");
-        VBox selectionVBox = new VBox(0, selectLabel, userProfileSelection.getRoot());
+        userProfileSelection.setMinHeight(50);
+        VBox.setVgrow(selectLabel, Priority.ALWAYS);
+        VBox selectionVBox = new VBox(0, selectLabel, userProfileSelection);
 
-        editUserProfilePane = new Pane();
+        createNewProfileButton = new Button(Res.get("settings.userProfile.createNewProfile"));
+        createNewProfileButton.setDefaultButton(true);
+        createNewProfileButton.setMinWidth(300);
 
-        addNewUserButton = new Button(Res.get("settings.userProfile.addNewUser"));
-        addNewUserButton.setDefaultButton(true);
-
-        VBox.setMargin(editUserProfilePane, new Insets(-40,0,0,0));
-        root.getChildren().addAll(selectionVBox, editUserProfilePane, addNewUserButton);
+        VBox.setMargin(createNewProfileButton, new Insets(-15,0,0,0));
+        root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
         chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
-            editUserProfilePane.getChildren().setAll(editUserProfile.getRoot());
+            Pane editUserProfileRoot = editUserProfile.getRoot();
+            editUserProfileRoot.setMaxWidth(300);
+            VBox.setMargin(editUserProfileRoot, new Insets(-40, 0, 0, 0));
+            VBox.setVgrow(editUserProfileRoot, Priority.ALWAYS);
+            root.getChildren().set(1, editUserProfileRoot);
         });
 
-        addNewUserButton.setOnAction(e -> controller.onAddNewChatUser());
+        createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
     }
 
     @Override
     protected void onViewDetached() {
         chatUserDetailsPin.unsubscribe();
-        addNewUserButton.setOnAction(null);
+        createNewProfileButton.setOnAction(null);
     }
 }

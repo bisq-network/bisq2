@@ -22,7 +22,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.settings.reputation.earnReputation.EarnReputationController;
+import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.GenerateNewProfileController;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
@@ -110,8 +110,8 @@ public class OverlayController extends NavigationController {
             case CREATE_PROFILE -> {
                 return Optional.of(new GenerateNewProfileController(applicationService));
             }
-            case EARN_REPUTATION -> {
-                return Optional.of(new EarnReputationController(applicationService));
+            case BURN_BSQ -> {
+                return Optional.of(new BurnBsqController(applicationService));
             }
             default -> {
                 return Optional.empty();

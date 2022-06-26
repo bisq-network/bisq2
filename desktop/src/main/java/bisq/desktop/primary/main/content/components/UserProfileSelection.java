@@ -125,6 +125,8 @@ public class UserProfileSelection {
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
+            root.setMinHeight(60);
+            
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
             root.getChildren().addAll(comboBox);
