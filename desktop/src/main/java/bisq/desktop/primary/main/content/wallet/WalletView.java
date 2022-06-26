@@ -32,7 +32,7 @@ public class WalletView extends TabView<WalletModel, WalletController> {
         addTab(Res.get("wallet.tab.receive"), controller.getReceiveTabNavigationTarget());
         addTab(Res.get("wallet.tab.utxos"), controller.getUtxoTabNavigationTarget());
 
-        headlineLabel.setText(Res.get("wallet"));
+        headLine.setText(Res.get("wallet"));
     }
 
     @Override

@@ -27,12 +27,12 @@ public class SettingsView extends TabView<SettingsModel, SettingsController> {
         super(model, controller);
 
         addTab(Res.get("settings.userProfile"), NavigationTarget.USER_PROFILE);
-        addTab(Res.get("settings.reputation"), NavigationTarget.MANAGE_REPUTATION);
+        addTab(Res.get("settings.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
         addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
 
-        headlineLabel.setText(Res.get("settings"));
+        headLine.setText(Res.get("settings"));
     }
 
     @Override

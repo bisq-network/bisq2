@@ -54,7 +54,7 @@ public class OnboardNewbieController implements Controller {
     public OnboardNewbieController(DefaultApplicationService applicationService) {
         tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
-        model = new OnboardNewbieModel(applicationService.getChatUserService().getSelectedUserProfile().get().getProfileId());
+        model = new OnboardNewbieModel(applicationService.getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());

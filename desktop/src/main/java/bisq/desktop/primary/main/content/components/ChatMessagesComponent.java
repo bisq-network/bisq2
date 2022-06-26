@@ -148,7 +148,7 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
                 checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel publicTradeChannel) {

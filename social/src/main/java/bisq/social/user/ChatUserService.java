@@ -117,7 +117,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                String keyId,
                                                                                KeyPair keyPair,
                                                                                ProofOfWork proofOfWork) {
-        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, "","");
+        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, "", "");
     }
 
     public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
@@ -147,11 +147,41 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 });
     }
 
-    public void selectUserProfile(ChatUserIdentity value) {
-        persistableStore.getSelectedChatUserIdentity().set(value);
+    public void selectUserProfile(ChatUserIdentity chatUserIdentity) {
+        persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
         persist();
     }
 
+    public CompletableFuture<DataService.BroadCastDataResult> editChatUser(ChatUserIdentity chatUserIdentity, String terms, String bio) {
+        Identity identity = chatUserIdentity.getIdentity();
+        ChatUser oldChatUser = chatUserIdentity.getChatUser();
+        ChatUser newChatUser = ChatUser.from(oldChatUser, terms, bio);
+        ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newChatUser);
+
+        synchronized (lock) {
+            persistableStore.getChatUserIdentities().remove(chatUserIdentity);
+            persistableStore.getChatUserIdentities().add(newChatUserIdentity);
+            persistableStore.getSelectedChatUserIdentity().set(newChatUserIdentity);
+        }
+        persist();
+
+        return networkService.removeAuthenticatedData(oldChatUser, identity.getNodeIdAndKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newChatUser, identity.getNodeIdAndKeyPair()));
+    }
+
+    public void replaceChatUser(ChatUser newChatUser) {
+        findChatUserIdentity(newChatUser.getNym())
+                .ifPresent(chatUserIdentity -> {
+                    Identity identity = chatUserIdentity.getIdentity();
+                    ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newChatUser);
+                    synchronized (lock) {
+                        persistableStore.getChatUserIdentities().remove(chatUserIdentity);
+                        persistableStore.getChatUserIdentities().add(newChatUserIdentity);
+                        persistableStore.getSelectedChatUserIdentity().set(newChatUserIdentity);
+                    }
+                    persist();
+                });
+    }
 
     public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, Identity identity) {
         String chatUserId = chatUser.getId();
@@ -340,21 +370,21 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     }
 
 
-    public Observable<ChatUserIdentity> getSelectedUserProfile() {
+    public Observable<ChatUserIdentity> getSelectedChatUserIdentity() {
         return persistableStore.getSelectedChatUserIdentity();
     }
 
-    public ObservableSet<ChatUserIdentity> getUserProfiles() {
+    public ObservableSet<ChatUserIdentity> getChatUserIdentities() {
         return persistableStore.getChatUserIdentities();
     }
 
     public Collection<ChatUser> getMentionableChatUsers() {
         // TODO: implement logic
-        return getUserProfiles().stream().map(ChatUserIdentity::getChatUser).toList();
+        return getChatUserIdentities().stream().map(ChatUserIdentity::getChatUser).toList();
     }
 
-    public Optional<ChatUserIdentity> findUserProfile(String profileId) {
-        return getUserProfiles().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
+    public Optional<ChatUserIdentity> findChatUserIdentity(String profileId) {
+        return getChatUserIdentities().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

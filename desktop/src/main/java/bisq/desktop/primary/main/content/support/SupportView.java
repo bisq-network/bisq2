@@ -15,23 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.support;
 
 import bisq.desktop.common.view.View;
-import javafx.scene.layout.Pane;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class ManageReputationView extends View<VBox, ManageReputationModel, ManageReputationController> {
-
-    public ManageReputationView(ManageReputationModel model,
-                                ManageReputationController controller,
-                                Pane chatUserIdentityComboBox) {
+public class SupportView extends View<VBox, SupportModel, SupportController> {
+    public SupportView(SupportModel model, SupportController controller) {
         super(new VBox(), model, controller);
 
-
-        root.getChildren().addAll(chatUserIdentityComboBox);
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override

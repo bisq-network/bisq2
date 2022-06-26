@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.top;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import javafx.geometry.Insets;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;

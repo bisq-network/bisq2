@@ -77,6 +77,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-community",
                 NavigationTarget.DASHBOARD, false);
 
+        LeftNavButton trade = createNavigationButton(Res.get("trade"),
+                "nav-trade",
+                NavigationTarget.TRADE_OVERVIEW, true);
+
+        VBox tradeSubMenuItems = createSubmenu(
+                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY),
+                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
+                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
+                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
+                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY),
+                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP)
+        );
+
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 "nav-learn",
                 NavigationTarget.EDUCATION, true);
@@ -98,23 +111,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-events",
                 NavigationTarget.EVENTS, false);
 
-        LeftNavButton trade = createNavigationButton(Res.get("trade"),
-                "nav-trade",
-                NavigationTarget.TRADE_OVERVIEW, true);
+        LeftNavButton support = createNavigationButton(Res.get("support"),
+                "nav-support",
+                NavigationTarget.SUPPORT, false);
 
-        VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY),
-                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
-                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
-                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
-                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY),
-                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP)
-        );
-/*
-        LeftNavButton markets = createNavigationButton(Res.get("markets"),
-                ImageUtil.getImageViewById("nav-markets"),
-                NavigationTarget.MARKETS);
-*/
 
         //todo lower prio menu add design
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
@@ -125,6 +125,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
                 createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
         );
+
 
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 "nav-settings",
@@ -172,8 +173,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
         mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, chat, learn, learnSubMenuItems,
-                events, wallet, walletSubMenuItems,  /*markets,
-                wallet, walletSubMenuItems, support,*/ settings);
+                events, support, wallet, walletSubMenuItems, settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }

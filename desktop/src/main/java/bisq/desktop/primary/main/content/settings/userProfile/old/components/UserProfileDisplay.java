@@ -63,7 +63,7 @@ public class UserProfileDisplay {
 
         @Override
         public void onActivate() {
-            pin = FxBindings.subscribe(chatUserService.getSelectedUserProfile(),
+            pin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                     userProfile -> {
                         model.userName.set(userProfile.getIdentity().domainId());
                         model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));

@@ -52,11 +52,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         return controller.view.getRoot();
     }
 
-    public void setOnMentionUser(Consumer<ChatUser> handler) {
+    public void setOnMentionUserHandler(Consumer<ChatUser> handler) {
         controller.model.mentionUserHandler = Optional.ofNullable(handler);
     }
 
-    public void setOnSendPrivateMessage(Consumer<ChatUser> handler) {
+    public void setOnSendPrivateMessageHandler(Consumer<ChatUser> handler) {
         controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 

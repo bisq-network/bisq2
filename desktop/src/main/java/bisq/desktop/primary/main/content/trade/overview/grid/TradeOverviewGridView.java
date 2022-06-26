@@ -52,6 +52,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         int index = 0;
         for (ProtocolListItem protocol : model.getSortedItems()) {
             Pane protocolBox = getProtocolBox(protocol);
+            GridPane.setHgrow(protocolBox, Priority.ALWAYS);
             if (protocol.getSwapProtocolType() != SwapProtocol.Type.SATOSHI_SQUARE) {
                 protocolBox.setOpacity(0.4);
             }
@@ -68,16 +69,15 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         StackPane pane = new StackPane();
         pane.getStyleClass().add("bisq-box-2");
         pane.setMinWidth(360);
-        GridPane.setHgrow(pane, Priority.ALWAYS);
 
-        VBox box = new VBox();
-        pane.getChildren().add(box);
+        VBox vBox = new VBox();
+        pane.getChildren().add(vBox);
 
         Label headlineLabel = new Label(protocol.getProtocolsName());
         headlineLabel.setPadding(new Insets(16, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
-        box.getChildren().add(headlineLabel);
+        vBox.getChildren().add(headlineLabel);
 
         Label basicInfo = new Label(protocol.getBasicInfo());
         basicInfo.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -85,7 +85,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         basicInfo.setAlignment(Pos.TOP_LEFT);
         basicInfo.setMaxWidth(384);
         basicInfo.setMinHeight(60);
-        box.getChildren().addAll(basicInfo, Layout.separator());
+        vBox.getChildren().addAll(basicInfo, Layout.separator());
 
         GridPane paramsPane = new GridPane();
         paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
@@ -135,9 +135,9 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
                 1
         );
 
-        box.getChildren().add(paramsPane);
-        box.setCursor(Cursor.HAND);
-        box.setOnMouseClicked(e -> controller.onSelect(protocol));
+        vBox.getChildren().add(paramsPane);
+        vBox.setCursor(Cursor.HAND);
+        vBox.setOnMouseClicked(e -> controller.onSelect(protocol));
 
         String title = protocol.getSwapProtocolType() == SwapProtocol.Type.SATOSHI_SQUARE ?
                 Res.get("select") :

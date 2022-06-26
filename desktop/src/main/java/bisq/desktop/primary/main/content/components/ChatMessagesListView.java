@@ -288,7 +288,7 @@ public class ChatMessagesListView {
 
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
                 if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
                     chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity)
                             .whenComplete((result, throwable) -> {
@@ -303,7 +303,7 @@ public class ChatMessagesListView {
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
+            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedChatUserIdentity().get();
             chatService.publishPublicTradeChatMessage(chatMessage, chatUserIdentity)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
@@ -320,10 +320,10 @@ public class ChatMessagesListView {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
                 chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, chatUserIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage privateDiscussionChatMessage) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedUserProfile().get();
+                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
                 chatService.publishEditedDiscussionChatMessage(privateDiscussionChatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.burn;
 
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -72,8 +72,8 @@ public class ChatUserIdentityComboBox {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getUserProfiles());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedUserProfile());
+            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getChatUserIdentities());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedChatUserIdentity());
         }
 
         @Override

@@ -32,6 +32,7 @@ import bisq.desktop.primary.main.content.education.security.SecurityAcademyContr
 import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyController;
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
+import bisq.desktop.primary.main.content.support.SupportController;
 import bisq.desktop.primary.main.content.trade.TradeController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.BisqEasyController;
 import bisq.desktop.primary.main.content.trade.bsqSwap.BsqSwapController;
@@ -102,6 +103,9 @@ public class ContentController extends NavigationController {
             }
             case EVENTS -> {
                 return Optional.of(new EventsController(applicationService));
+            }
+            case SUPPORT -> {
+                return Optional.of(new SupportController(applicationService));
             }
             case TRADE_OVERVIEW -> {
                 return Optional.of(new TradeController(applicationService));

@@ -67,7 +67,7 @@ public class ChannelAdmin {
         @Override
         public void onActivate() {
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile)
-                    .to(chatUserService.getSelectedUserProfile());
+                    .to(chatUserService.getSelectedChatUserIdentity());
         }
 
         @Override

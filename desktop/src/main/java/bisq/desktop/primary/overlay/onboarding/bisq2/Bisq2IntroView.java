@@ -19,7 +19,6 @@ package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,6 +27,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -46,24 +46,27 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         Label headlineLabel = new Label(Res.get("bisqEasy.onBoarding.bisq2.intro.headline"));
         headlineLabel.getStyleClass().add("bisq-popup-green-headline-label");
 
-        Label subtitleLabel = new Label(Res.get("bisqEasy.onBoarding.bisq2.intro.subTitle").toUpperCase());
-        subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.setMaxWidth(300);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3");
-
         nextButton = new Button(Res.get("start"));
         nextButton.setDefaultButton(true);
 
-        VBox.setMargin(logo, new Insets(50, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(-20, 0, 5, 0));
-        VBox.setMargin(nextButton, new Insets(20, 0, 50, 0));
-        VBox vBox = new VBox(23, getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line1"), "intro-1"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line2"), "intro-2"),
-                getIconAndText(Res.get("bisqEasy.onBoarding.bisq2.intro.line3"), "intro-3"));
+        HBox hBox = new HBox(23, getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline1"),
+                Res.get("bisqEasy.onBoarding.bisq2.intro.line1"),
+                "intro-1"),
+                getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline2"),
+                        Res.get("bisqEasy.onBoarding.bisq2.intro.line2"),
+                        "intro-2"),
+                getWidgetBox(Res.get("bisqEasy.onBoarding.bisq2.intro.headline3"),
+                        Res.get("bisqEasy.onBoarding.bisq2.intro.line3"),
+                        "intro-3"));
+        hBox.setAlignment(Pos.CENTER);
+        hBox.setPadding(new Insets(20));
+
+        VBox.setMargin(logo, new Insets(30, 0, 0, 0));
+        VBox.setMargin(hBox, new Insets(10, 0, 0, 0));
+        VBox.setMargin(nextButton, new Insets(30, 0, 30, 0));
         root.getChildren().addAll(logo,
                 headlineLabel,
-                subtitleLabel,
-                new HBox(Spacer.fillHBox(), vBox, Spacer.fillHBox()),
+                hBox,
                 nextButton);
     }
 
@@ -77,14 +80,20 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
         nextButton.setOnAction(null);
     }
 
-    public HBox getIconAndText(String text, String imageId) {
-        Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
-        label.setWrapText(true);
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(0, 0, 0, 4));
-        HBox hBox = new HBox(15, bulletPoint, label);
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        return hBox;
+    private VBox getWidgetBox(String headline, String content, String imageId) {
+        ImageView icon = ImageUtil.getImageViewById(imageId);
+
+        Label headlineLabel = new Label(headline);
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+
+        Label contentLabel = new Label(content);
+        contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        contentLabel.setTextAlignment(TextAlignment.CENTER);
+
+        VBox vBox = new VBox(16, icon, headlineLabel, contentLabel);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setPrefWidth(350);
+        vBox.setFillWidth(true);
+        return vBox;
     }
 }

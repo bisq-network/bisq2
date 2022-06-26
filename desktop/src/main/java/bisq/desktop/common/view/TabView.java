@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<StackPane, M, C>
         implements TransitionedView {
-    protected final Label headlineLabel;
+    protected final Label headLine;
     protected final HBox tabs;
     protected final Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
@@ -53,14 +53,14 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         vBox = new VBox();
         vBox.setFillWidth(true);
 
-        headlineLabel = new Label();
-        headlineLabel.getStyleClass().add("bisq-content-headline-label");
-        HBox.setMargin(headlineLabel, new Insets(-5, 0, 0, -2));
+        headLine = new Label();
+        headLine.getStyleClass().add("bisq-content-headline-label");
+        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
 
         tabs = new HBox();
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
-        tabs.getChildren().addAll(headlineLabel, Spacer.fillHBox());
+        tabs.getChildren().addAll(headLine, Spacer.fillHBox());
         tabs.setMinHeight(52);
 
         scrollPane = new ScrollPane();

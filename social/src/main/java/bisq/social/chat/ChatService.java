@@ -67,7 +67,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final ProofOfWorkService proofOfWorkService;
-    private final Map<String, ChatUser> ChatUserById = new ConcurrentHashMap<>();
+    private final Map<String, ChatUser> chatUserById = new ConcurrentHashMap<>();
 
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
@@ -130,7 +130,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         if (distributedData instanceof ChatUser chatUser &&
                 hasAuthorValidProofOfWork(chatUser.getProofOfWork())) {
             // Only if we have not already that chatUser we apply it
-            if (findChatUser(chatUser.getId()).isEmpty()) {
+
+            Optional<ChatUser> optionalChatUser = findChatUser(chatUser.getId());
+            if (optionalChatUser.isEmpty()) {
                 log.info("We got a new chatUser {}", chatUser);
                 // It might be that we received the chat message before the chat user. In that case the 
                 // message would not be displayed. To avoid this situation we check if there are messages containing the 
@@ -161,7 +163,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                         findPublicTradeChannel(message.getChannelId())
                                 .ifPresent(channel -> removePublicTradeChatMessage(message, channel)));
 
-                addChatUser(chatUser);
+                putChatUser(chatUser);
 
                 // Now we add them again
                 publicDiscussionChatMessages.forEach(message ->
@@ -170,6 +172,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 publicTradeChatMessages.forEach(message ->
                         findPublicTradeChannel(message.getChannelId())
                                 .ifPresent(channel -> addPublicTradeChatMessage(message, channel)));
+            } else if (!optionalChatUser.get().equals(chatUser)) {
+                // We have that chat user but data are different (e.g. edited user)
+                putChatUser(chatUser);
+                chatUserService.replaceChatUser(chatUser);
+
             }
         } else if (distributedData instanceof PublicTradeChatMessage message &&
                 isValidProofOfWorkOrChatUserNotFound(message)) {
@@ -334,12 +341,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer) {
-        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedChatUserIdentity().get())
                 .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getProfileId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(ChatUser peer, String receiversProfileId) {
-        return chatUserService.findUserProfile(receiversProfileId)
+        return chatUserService.findChatUserIdentity(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -513,12 +520,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer) {
-        return Optional.ofNullable(chatUserService.getSelectedUserProfile().get())
+        return Optional.ofNullable(chatUserService.getSelectedChatUserIdentity().get())
                 .flatMap(e -> createPrivateDiscussionChannel(peer, e.getProfileId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(ChatUser peer, String receiversProfileId) {
-        return chatUserService.findUserProfile(receiversProfileId)
+        return chatUserService.findChatUserIdentity(receiversProfileId)
                 .map(myUserProfile -> {
                             PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
                             getPrivateDiscussionChannels().add(privateDiscussionChannel);
@@ -604,11 +611,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public Optional<ChatUser> findChatUser(String chatUserId) {
-        return Optional.ofNullable(ChatUserById.get(chatUserId));
+        return Optional.ofNullable(chatUserById.get(chatUserId));
     }
 
-    private void addChatUser(ChatUser chatUser) {
-        ChatUserById.put(chatUser.getId(), chatUser);
+    private void putChatUser(ChatUser chatUser) {
+        chatUserById.put(chatUser.getId(), chatUser);
     }
 
 
@@ -630,7 +637,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public boolean isMyMessage(ChatMessage chatMessage) {
         String authorId = chatMessage.getAuthorId();
-        return chatUserService.getUserProfiles().stream()
+        return chatUserService.getChatUserIdentities().stream()
                 .anyMatch(userprofile -> userprofile.getChatUser().getId().equals(authorId));
     }
 

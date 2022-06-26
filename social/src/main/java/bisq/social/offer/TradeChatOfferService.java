@@ -65,7 +65,7 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
                                                                                     Set<String> selectedPaymentMethods,
                                                                                     String makersTradeTerms,
                                                                                     long requiredTotalReputationScore) {
-        ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedUserProfile().get();
+        ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedChatUserIdentity().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(direction,
                 market,
                 baseSideAmount,

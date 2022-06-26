@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.top;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {

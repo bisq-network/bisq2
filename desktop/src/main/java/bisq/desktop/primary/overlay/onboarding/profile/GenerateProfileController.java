@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.onboarding.profile.nym;
+package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.util.StringUtils;
@@ -24,16 +24,17 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.NymIdGenerator;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.security.KeyPair;
 import java.util.Optional;
@@ -41,52 +42,89 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class GenerateNymController implements Controller {
-    private final GenerateNymModel model;
+public class GenerateProfileController implements Controller {
+    protected final GenerateProfileModel model;
     @Getter
-    private final GenerateNymView view;
-    private final ChatUserService chatUserService;
-    private final KeyPairService keyPairService;
-    private final ProofOfWorkService proofOfWorkService;
-    private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
+    protected final GenerateProfileView view;
+    protected final ChatUserService chatUserService;
+    protected final KeyPairService keyPairService;
+    protected final ProofOfWorkService proofOfWorkService;
+    protected Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
+    protected Subscription nickNameSubscription;
 
-    public GenerateNymController(DefaultApplicationService applicationService) {
+    public GenerateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
         chatUserService = applicationService.getChatUserService();
 
-        model = new GenerateNymModel();
-        view = new GenerateNymView(model, this);
+        model = getGenerateProfileModel();
+        view = getGenerateProfileView();
     }
 
-    public ReadOnlyObjectProperty<TempIdentity> getTempIdentity() {
-        return model.getTempIdentity();
+    protected GenerateProfileView getGenerateProfileView() {
+        return new GenerateProfileView(model, this);
+    }
+
+     protected GenerateProfileModel getGenerateProfileModel() {
+        return new GenerateProfileModel();
     }
 
     @Override
     public void onActivate() {
-        model.getCreateProfileButtonMouseTransparent().set(true);
-        onCreateTempIdentity();
+        nickNameSubscription = EasyBind.subscribe(model.getNickName(),
+                nickName -> {
+                    TempIdentity tempIdentity = model.getTempIdentity().get();
+                    if (tempIdentity != null) {
+                        model.getNymId().set(tempIdentity.profileId());
+                    }
+
+                    model.getCreateProfileButtonDisabled().set(model.getCreateProfileProgress().get() == -1 ||
+                            nickName == null || nickName.isEmpty());
+                });
+        // model.getCreateProfileButtonMouseTransparent().set(true);
+        onRegenerate();
     }
 
     @Override
     public void onDeactivate() {
+        if (nickNameSubscription != null) {
+            nickNameSubscription.unsubscribe();
+        }
         // Does only cancel downstream calls not actual running task
         // We pass the isCanceled flag to stop the running task
         mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
     }
 
-    void onNext() {
-        Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
+    void onCreateUserProfile() {
+        model.getCreateProfileProgress().set(-1);
+        TempIdentity tempIdentity = model.getTempIdentity().get();
+        chatUserService.createNewInitializedUserProfile(tempIdentity.profileId(),
+                        model.getNickName().get(),
+                        tempIdentity.tempKeyId(),
+                        tempIdentity.tempKeyPair(),
+                        tempIdentity.proofOfWork(),
+                        "",
+                        "")
+                .thenCompose(chatUserService::publishNewChatUser)
+                .thenAccept(chatUserIdentity -> UIThread.run(() -> {
+                    OverlayController.hide();
+                    Navigation.navigateTo(NavigationTarget.MAIN);
+                    UIThread.runOnNextRenderFrame(() -> navigateNext());
+                    model.getCreateProfileProgress().set(0);
+                }));
     }
 
-    void onCreateTempIdentity() {
+    protected void navigateNext() {
+        Navigation.navigateTo(NavigationTarget.DASHBOARD);
+    }
+
+    void onRegenerate() {
         KeyPair tempKeyPair = keyPairService.generateKeyPair();
         byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
         model.getRoboHashImage().set(null);
         model.getRoboHashIconVisible().set(false);
         model.getReGenerateButtonMouseTransparent().set(true);
-        model.getCreateProfileButtonMouseTransparent().set(true);
+        // model.getCreateProfileButtonDisabled().set(true);
         model.getPowProgress().set(-1);
         model.getNymId().set(Res.get("generateNym.nymId.generating"));
         long ts = System.currentTimeMillis();
@@ -122,7 +160,7 @@ public class GenerateNymController implements Controller {
                         model.getPowProgress().set(0);
                         model.getRoboHashIconVisible().set(true);
                         model.getReGenerateButtonMouseTransparent().set(false);
-                        model.getCreateProfileButtonMouseTransparent().set(false);
+                        // model.getCreateProfileButtonMouseTransparent().set(false);
                     });
                 }));
     }
