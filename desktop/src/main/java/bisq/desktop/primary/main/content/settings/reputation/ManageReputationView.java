@@ -18,24 +18,40 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.desktop.common.view.View;
-import javafx.scene.layout.Pane;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.i18n.Res;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ManageReputationView extends View<VBox, ManageReputationModel, ManageReputationController> {
 
+    private final Button addNewUserButton;
+
     public ManageReputationView(ManageReputationModel model,
                                 ManageReputationController controller,
-                                Pane chatUserIdentityComboBox) {
+                                UserProfileSelection userProfileSelection) {
         super(new VBox(), model, controller);
 
+        root.setSpacing(30);
+        root.setPadding(new Insets(20));
 
-        root.getChildren().addAll(chatUserIdentityComboBox);
+        Label selectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
+        selectLabel.getStyleClass().add("bisq-text-4");
+        VBox selectionVBox = new VBox(0, selectLabel, userProfileSelection.getRoot());
+
+        addNewUserButton = new Button(Res.get("settings.userProfile.addNewUser"));
+        addNewUserButton.setDefaultButton(true);
+
+        root.getChildren().addAll(selectionVBox, addNewUserButton);
     }
 
     @Override
     protected void onViewAttached() {
+
     }
 
     @Override

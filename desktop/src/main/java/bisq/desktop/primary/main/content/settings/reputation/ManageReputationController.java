@@ -18,7 +18,12 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.social.chat.ChatService;
+import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,16 +33,27 @@ public class ManageReputationController implements Controller {
     private final ManageReputationModel model;
     @Getter
     private final ManageReputationView view;
-    private final ChatUserIdentityComboBox chatUserIdentityComboBox;
+    private final ChatUserService chatUserService;
+    private final UserProfileSelection userProfileSelection;
+    private final ChatService chatService;
+    private final DefaultApplicationService applicationService;
+    private Pin selectedUserProfilePin;
 
     public ManageReputationController(DefaultApplicationService applicationService) {
-        chatUserIdentityComboBox = new ChatUserIdentityComboBox(applicationService.getChatUserService());
+        chatUserService = applicationService.getChatUserService();
+        chatService = applicationService.getChatService();
+        this.applicationService = applicationService;
+        userProfileSelection = new UserProfileSelection(chatUserService);
+
         model = new ManageReputationModel();
-        view = new ManageReputationView(model, this, chatUserIdentityComboBox.getRoot());
+        view = new ManageReputationView(model, this, userProfileSelection);
     }
 
     @Override
     public void onActivate() {
+        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+                chatUserIdentity -> model.getSelectedChatUserIdentity().set(chatUserIdentity)
+        );
     }
 
     @Override
