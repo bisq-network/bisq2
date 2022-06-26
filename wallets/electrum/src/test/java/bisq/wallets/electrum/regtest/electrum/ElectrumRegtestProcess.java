@@ -59,6 +59,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     public void start() throws IOException, InterruptedException {
         super.start();
 
+        electrumCliFacade.enableLoggingToFile();
         electrumCliFacade.setRpcHost(rpcHostSpec.host());
         electrumCliFacade.setRpcPort(rpcHostSpec.port());
 
