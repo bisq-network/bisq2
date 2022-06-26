@@ -20,16 +20,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
-@Schema(title = "KeyPair")
-public class KeyPairDto {
-    byte[] publicKey;
-    byte[] privateKey;
+@Schema(name = "KeyPair")
+public final class KeyPairDto {
+    private byte[] publicKey;
+    private byte[] privateKey;
 
-    public KeyPairDto(java.security.KeyPair k) {
-        if (k != null) {
-            publicKey = k.getPublic().getEncoded();
-            privateKey = k.getPrivate().getEncoded();
-        }
+    public static KeyPairDto from(java.security.KeyPair keyPair) {
+        KeyPairDto dto = new KeyPairDto();
+        dto.publicKey = keyPair.getPublic().getEncoded();
+        dto.privateKey = keyPair.getPrivate().getEncoded();
+        return dto;
     }
 }
 

@@ -21,7 +21,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,11 +38,14 @@ import java.util.Arrays;
  * This handler is limited to html,css,json and javascript files.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class StaticFileHandler implements HttpHandler {
     private static final String NOT_FOUND = "404 (Not Found)\n";
 
     public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js"};
+
+    public StaticFileHandler(@NonNull String rootContext) {
+        this.rootContext = rootContext;
+    }
 
     @Getter
     @Setter

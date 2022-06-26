@@ -16,11 +16,12 @@
  */
 package bisq.restApi;
 
+import bisq.application.DefaultApplicationService;
+import bisq.restApi.endpoints.ChatApi;
 import bisq.restApi.endpoints.KeyPairApi;
 import bisq.restApi.error.CustomExceptionMapper;
 import bisq.restApi.error.StatusException;
 import bisq.restApi.util.StaticFileHandler;
-import bisq.application.DefaultApplicationService;
 import com.sun.net.httpserver.HttpServer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,33 +39,24 @@ import java.net.URI;
 @Slf4j
 public class RestApiApplication extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/api/v1";
-
-    @Getter
-    protected final DefaultApplicationService applicationService;
-
-    public RestApiApplication() {
-        applicationService = new DefaultApplicationService(new String[]{"--appName=bisq2_API"});
-        applicationService.initialize().join();
-    }
-
-    protected static HttpServer httpServer;
+    private static HttpServer httpServer;
 
     public static void main(String[] args) throws Exception {
-        startServer();
+        RestApiApplication restApiApplication = new RestApiApplication(args);
+        startServer(restApiApplication);
     }
 
     public static void stopServer() {
         httpServer.stop(2);
     }
 
-    public static void startServer() throws Exception {
+    public static void startServer( RestApiApplication restApiApplication) throws Exception {
         // 'config' acts as application in jax-rs
-        ResourceConfig app = new RestApiApplication()
+        ResourceConfig app = restApiApplication
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
-//                .register(ProtoWriter.class)
-//                .register(KeyPairWriter.class)
                 .register(KeyPairApi.class)
+                .register(ChatApi.class)
                 .register(SwaggerResolution.class);
 
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), app);
@@ -79,5 +71,13 @@ public class RestApiApplication extends ResourceConfig {
         Thread.currentThread().join();
 
         stopServer();
+    }
+
+    @Getter
+    private final DefaultApplicationService applicationService;
+
+    public RestApiApplication(String[] args) {
+        applicationService = new DefaultApplicationService(args);
+        applicationService.initialize().join();
     }
 }
