@@ -23,6 +23,7 @@ import bisq.restApi.error.CustomExceptionMapper;
 import bisq.restApi.error.StatusException;
 import bisq.restApi.util.StaticFileHandler;
 import com.sun.net.httpserver.HttpServer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -38,36 +39,20 @@ import java.net.URI;
 @Slf4j
 public class RestApiApplication extends ResourceConfig {
     public static final String BASE_URL = "http://localhost:8082/api/v1";
-
-    public DefaultApplicationService getApplicationService() {
-        if (applicationService == null) {
-            // TODO needs to be read from System
-            String[] args = "--appName=bisq2_API --add-opens java.base/java.lang.reflect=ALL-UNNAMED -Dbisq.application.appName=REST -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 -Duser.language=en -Duser.country=US".split(" ");
-
-            applicationService = new DefaultApplicationService(args);
-            applicationService.initialize().join();
-        }
-        return applicationService;
-    }
-
-    protected DefaultApplicationService applicationService;
-
-    public RestApiApplication() {
-    }
-
-    protected static HttpServer httpServer;
+    private static HttpServer httpServer;
 
     public static void main(String[] args) throws Exception {
-        startServer();
+        RestApiApplication restApiApplication = new RestApiApplication(args);
+        startServer(restApiApplication);
     }
 
     public static void stopServer() {
         httpServer.stop(2);
     }
 
-    public static void startServer() throws Exception {
+    public static void startServer( RestApiApplication restApiApplication) throws Exception {
         // 'config' acts as application in jax-rs
-        ResourceConfig app = new RestApiApplication()
+        ResourceConfig app = restApiApplication
                 .register(CustomExceptionMapper.class)
                 .register(StatusException.StatusExceptionMapper.class)
                 .register(KeyPairApi.class)
@@ -86,5 +71,13 @@ public class RestApiApplication extends ResourceConfig {
         Thread.currentThread().join();
 
         stopServer();
+    }
+
+    @Getter
+    private final DefaultApplicationService applicationService;
+
+    public RestApiApplication(String[] args) {
+        applicationService = new DefaultApplicationService(args);
+        applicationService.initialize().join();
     }
 }

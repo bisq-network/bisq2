@@ -4,21 +4,18 @@ import bisq.social.chat.channels.PublicDiscussionChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Set;
 
 
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
-@Setter
 @ToString
 @Schema(name = "PublicDiscussionChannel")
-public class PublicDiscussionChannelDto extends BaseDto<PublicDiscussionChannelDto> {
-
+public final class PublicDiscussionChannelDto {
     @EqualsAndHashCode.Include
-    protected String id;
+    private String id;
     private String channelName;
     private String description;
     private String channelAdminId;
@@ -26,11 +23,11 @@ public class PublicDiscussionChannelDto extends BaseDto<PublicDiscussionChannelD
 
     public static PublicDiscussionChannelDto from(PublicDiscussionChannel publicDiscussionChannel) {
         PublicDiscussionChannelDto dto = new PublicDiscussionChannelDto();
-        dto.setId(publicDiscussionChannel.getId());
-        dto.setChannelName(publicDiscussionChannel.getChannelName());
-        dto.setDescription(publicDiscussionChannel.getDescription());
-        dto.setChannelAdminId(publicDiscussionChannel.getChannelAdminId());
-        dto.setChannelModeratorIds(publicDiscussionChannel.getChannelModeratorIds());
+        dto.id = publicDiscussionChannel.getId();
+        dto.channelName = publicDiscussionChannel.getChannelName();
+        dto.description = publicDiscussionChannel.getDescription();
+        dto.channelAdminId = publicDiscussionChannel.getChannelAdminId();
+        dto.channelModeratorIds = publicDiscussionChannel.getChannelModeratorIds();
         return dto;
     }
 }
