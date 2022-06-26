@@ -27,7 +27,6 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.PublicTradeChatMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,7 +65,7 @@ public class ChatUser implements DistributedData {
                 networkId,
                 terms,
                 bio,
-                new MetaData(TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100000, ChatUser.class.getSimpleName()));
     }
 
     public ChatUser(String nickName,
