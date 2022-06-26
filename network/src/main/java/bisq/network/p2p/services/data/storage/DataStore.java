@@ -61,7 +61,7 @@ public class DataStore<T extends DataRequest> implements PersistableStore<DataSt
 
     public static PersistableStore<?> fromProto(bisq.network.protobuf.DataStore proto) {
         return new DataStore<>(proto.getMapEntriesList().stream()
-                .collect(Collectors.toMap(e -> new ByteArray(e.getKey().toByteArray()), e -> DataRequest.fromProto(e.getValue()))));
+                .collect(Collectors.toMap(e -> ByteArray.fromProto(e.getKey()), e -> DataRequest.fromProto(e.getValue()))));
     }
 
     @Override
