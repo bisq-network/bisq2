@@ -17,7 +17,20 @@
 
 package bisq.offer.spec;
 
-public record FixPrice(long value) implements PriceSpec {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class FixPrice implements PriceSpec {
+    private final long value;
+
+    public FixPrice(long value) {
+        this.value = value;
+    }
+
     public static FixPrice fromProto(bisq.offer.protobuf.FixPrice proto) {
         return new FixPrice(proto.getValue());
     }

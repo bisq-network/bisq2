@@ -17,7 +17,22 @@
 
 package bisq.offer.options;
 
-public record ContractOption(long maxTradeLimit, long maxTradePeriod) implements OfferOption {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ContractOption implements OfferOption {
+    private final long maxTradeLimit;
+    private final long maxTradePeriod;
+
+    public ContractOption(long maxTradeLimit, long maxTradePeriod) {
+        this.maxTradeLimit = maxTradeLimit;
+        this.maxTradePeriod = maxTradePeriod;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setContractOption(bisq.offer.protobuf.ContractOption.newBuilder()
                         .setMaxTradeLimit(maxTradeLimit)

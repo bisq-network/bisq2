@@ -122,7 +122,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
                                                 List<SettlementMethod> selectedQuoteSideSettlementMethods) {
         String offerId = StringUtils.createUid();
         return identityService.getOrCreateIdentity(offerId).thenApply(identity -> {
-            NetworkId makerNetworkId = identity.networkId();
+            NetworkId makerNetworkId = identity.getNetworkId();
             List<SwapProtocolType> protocolTypes = new ArrayList<>(List.of(selectedProtocolTyp));
 
             FixPrice priceSpec = new FixPrice(fixPrice.getValue());

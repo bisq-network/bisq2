@@ -17,8 +17,22 @@
 
 package bisq.offer.options;
 
-// For some fiat methods is useful to know the makers bank or county of bank.
-public record FiatSettlementOption(String countyCodeOfBank, String bankName) implements OfferOption {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class FiatSettlementOption implements OfferOption {
+    private final String countyCodeOfBank;
+    private final String bankName;
+
+    public FiatSettlementOption(String countyCodeOfBank, String bankName) {
+        this.countyCodeOfBank = countyCodeOfBank;
+        this.bankName = bankName;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setFiatSettlementOption(bisq.offer.protobuf.FiatSettlementOption.newBuilder()
                         .setCountyCodeOfBank(countyCodeOfBank)
@@ -30,10 +44,3 @@ public record FiatSettlementOption(String countyCodeOfBank, String bankName) imp
         return new FiatSettlementOption(proto.getCountyCodeOfBank(), proto.getBankName());
     }
 }
-
-
-// Bisq 1
-//    private final String countryCode;
-//    private final List<String> acceptedCountryCodes;
-//    private final String bankId;
-//    private final List<String> acceptedBankIds;

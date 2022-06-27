@@ -206,7 +206,7 @@ public class Offer implements DistributedData {
     public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPrice fixPriceSpec) {
             Monetary base = getBaseAmountAsMonetary();
-            Quote quote = Quote.fromPrice(fixPriceSpec.value(), market);
+            Quote quote = Quote.fromPrice(fixPriceSpec.getValue(), market);
             long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
             return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
         } else if (priceSpec instanceof FloatPrice floatPrice) {
@@ -220,7 +220,7 @@ public class Offer implements DistributedData {
 
     public Quote getQuote(MarketPriceService marketPriceService) {
         if (priceSpec instanceof FixPrice fixPriceSpec) {
-            return Quote.fromPrice(fixPriceSpec.value(), market);
+            return Quote.fromPrice(fixPriceSpec.getValue(), market);
         } else if (priceSpec instanceof FloatPrice floatPrice) {
             Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
             //todo

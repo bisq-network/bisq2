@@ -20,8 +20,14 @@ package bisq.offer.options;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-// Data for verifying fee payment. Open question how we deal with fees...
-public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) implements OfferOption {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class FeeOption implements OfferOption {
     public enum FeeType implements ProtoEnum {
         BTC,
         BSQ;
@@ -34,6 +40,16 @@ public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String fee
         public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto) {
             return ProtobufUtils.enumFromProto(FeeType.class, proto.name());
         }
+    }
+
+    private final FeeType feeType;
+    private final int blockHeightAtFeePayment;
+    private final String feeTxId;
+
+    public FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) {
+        this.feeType = feeType;
+        this.blockHeightAtFeePayment = blockHeightAtFeePayment;
+        this.feeTxId = feeTxId;
     }
 
     public bisq.offer.protobuf.OfferOption toProto() {
@@ -50,9 +66,3 @@ public record FeeOption(FeeType feeType, int blockHeightAtFeePayment, String fee
                 proto.getFeeTxId());
     }
 }
-//  Bisq 1
-//    private String offerFeePaymentTxId;
-//    private final long blockHeightAtOfferCreation;
-//    private final long txFee;
-//    private final long makerFee;
-//    private final boolean isCurrencyForMakerFeeBtc;

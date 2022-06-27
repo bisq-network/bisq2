@@ -17,11 +17,23 @@
 
 package bisq.offer.options;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// Information about supported dispute resolution and chosen dispute agent
-public record SupportOption(Set<DisputeAgent> disputeAgents) implements OfferOption {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class SupportOption implements OfferOption {
+    private final Set<DisputeAgent> disputeAgents;
+
+    public SupportOption(Set<DisputeAgent> disputeAgents) {
+        this.disputeAgents = disputeAgents;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setSupportOption(bisq.offer.protobuf.SupportOption.newBuilder()
                         .addAllDisputeAgents(disputeAgents.stream()

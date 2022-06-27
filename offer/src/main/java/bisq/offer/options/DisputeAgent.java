@@ -20,8 +20,14 @@ package bisq.offer.options;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.NetworkId;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record DisputeAgent(Type type, NetworkId networkId) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class DisputeAgent {
     public enum Type implements ProtoEnum {
         MEDIATOR,
         ARBITRATOR;
@@ -31,9 +37,17 @@ public record DisputeAgent(Type type, NetworkId networkId) {
             return bisq.offer.protobuf.DisputeAgent.Type.valueOf(name());
         }
 
-        public static DisputeAgent.Type fromProto(bisq.offer.protobuf.DisputeAgent.Type proto) {
+        public static Type fromProto(bisq.offer.protobuf.DisputeAgent.Type proto) {
             return ProtobufUtils.enumFromProto(Type.class, proto.name());
         }
+    }
+
+    private final Type type;
+    private final NetworkId networkId;
+
+    public DisputeAgent(Type type, NetworkId networkId) {
+        this.type = type;
+        this.networkId = networkId;
     }
 
     public bisq.offer.protobuf.DisputeAgent toProto() {
