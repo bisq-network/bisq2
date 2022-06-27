@@ -19,14 +19,31 @@ package bisq.wallets.electrum.regtest.electrumx;
 
 import bisq.wallets.core.RpcConfig;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.nio.file.Path;
 
 @Builder
-public record ElectrumXServerConfig(
-        Path dataDir,
-        int port,
-        int rpcPort,
-        RpcConfig bitcoindRpcConfig
-) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ElectrumXServerConfig {
+    private final Path dataDir;
+    private final int port;
+    private final int rpcPort;
+    private final RpcConfig bitcoindRpcConfig;
+
+    public ElectrumXServerConfig(
+            Path dataDir,
+            int port,
+            int rpcPort,
+            RpcConfig bitcoindRpcConfig
+    ) {
+        this.dataDir = dataDir;
+        this.port = port;
+        this.rpcPort = rpcPort;
+        this.bitcoindRpcConfig = bitcoindRpcConfig;
+    }
 }

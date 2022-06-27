@@ -210,8 +210,8 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             this.numOffersAsInteger = numOffersAsInteger;
             this.numUsers = String.valueOf(numUsersAsInteger);
             icon = MarketImageComposition.imageBoxForMarket(
-                    market.baseCurrencyCode().toLowerCase(),
-                    market.quoteCurrencyCode().toLowerCase());
+                    market.getBaseCurrencyCode().toLowerCase(),
+                    market.getQuoteCurrencyCode().toLowerCase());
             icon.getStyleClass().add("onboarding-market-table-view");
             this.numUsersAsInteger = numUsersAsInteger;
         }

@@ -83,7 +83,7 @@ public class PriceInput {
         private void updateFromMarketPrice() {
             if (model.selectedMarket != null) {
                 model.marketString.set(model.selectedMarket.toString());
-                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.baseCurrencyCode()));
+                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.getBaseCurrencyCode()));
             }
             if (model.isCreateOffer) {
                 model.fixPrice.set(null);
@@ -143,7 +143,7 @@ public class PriceInput {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            model.fixPrice.set(marketPrice.quote());
+            model.fixPrice.set(marketPrice.getQuote());
         }
     }
 

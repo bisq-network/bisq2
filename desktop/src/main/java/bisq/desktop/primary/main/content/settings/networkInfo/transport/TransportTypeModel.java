@@ -128,7 +128,7 @@ public class TransportTypeModel implements Model {
         allNodes = new ArrayList<>(serviceNode.getNodesById().getAllNodes());
         connectionListItems.setAll(allNodes.stream()
                 .flatMap(node -> node.getAllConnections().map(c -> new Pair<>(c, node.getNodeId())))
-                .map(pair -> new ConnectionListItem(pair.first(), pair.second()))
+                .map(pair -> new ConnectionListItem(pair.getFirst(), pair.getSecond()))
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
                 .stream()

@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 public abstract class ChatMessage {
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
-    
+
     @Getter
     protected final String channelId;
     protected final Optional<String> optionalText;
@@ -85,19 +85,19 @@ public abstract class ChatMessage {
 
     public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATETRADECHATMESSAGE -> {
+            case PRIVATETRADECHATMESSAGE: {
                 return PrivateTradeChatMessage.fromProto(proto);
             }
-            case PRIVATEDISCUSSIONCHATMESSAGE -> {
+            case PRIVATEDISCUSSIONCHATMESSAGE: {
                 return PrivateDiscussionChatMessage.fromProto(proto);
             }
-            case PUBLICTRADECHATMESSAGE -> {
+            case PUBLICTRADECHATMESSAGE: {
                 return PublicTradeChatMessage.fromProto(proto);
             }
-            case PUBLICDISCUSSIONCHATMESSAGE -> {
+            case PUBLICDISCUSSIONCHATMESSAGE: {
                 return PublicDiscussionChatMessage.fromProto(proto);
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }
@@ -109,13 +109,13 @@ public abstract class ChatMessage {
             try {
                 bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PUBLICTRADECHATMESSAGE -> {
+                    case PUBLICTRADECHATMESSAGE: {
                         return PublicTradeChatMessage.fromProto(proto);
                     }
-                    case PUBLICDISCUSSIONCHATMESSAGE -> {
+                    case PUBLICDISCUSSIONCHATMESSAGE: {
                         return PublicDiscussionChatMessage.fromProto(proto);
                     }
-                    case MESSAGE_NOT_SET -> {
+                    case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
                     }
                 }
@@ -131,13 +131,13 @@ public abstract class ChatMessage {
             try {
                 bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PRIVATETRADECHATMESSAGE -> {
+                    case PRIVATETRADECHATMESSAGE: {
                         return PrivateTradeChatMessage.fromProto(proto);
                     }
-                    case PRIVATEDISCUSSIONCHATMESSAGE -> {
+                    case PRIVATEDISCUSSIONCHATMESSAGE: {
                         return PrivateDiscussionChatMessage.fromProto(proto);
                     }
-                    case MESSAGE_NOT_SET -> {
+                    case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
                     }
                 }

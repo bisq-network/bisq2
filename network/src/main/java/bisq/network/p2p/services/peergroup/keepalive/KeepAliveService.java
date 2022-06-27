@@ -24,6 +24,8 @@ import bisq.network.p2p.node.CloseReason;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.PeerGroup;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -37,11 +39,22 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class KeepAliveService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
-    public static record Config(long maxIdleTime, long interval) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final long maxIdleTime;
+        private final long interval;
+
+        public Config(long maxIdleTime, long interval) {
+            this.maxIdleTime = maxIdleTime;
+            this.interval = interval;
+        }
+
         public static Config from(com.typesafe.config.Config typesafeConfig) {
-            return new KeepAliveService.Config(
+            return new Config(
                     SECONDS.toMillis(typesafeConfig.getLong("maxIdleTimeInSeconds")),
-                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds")));
+                    SECONDS.toMillis(typesafeConfig.getLong("intervalInSeconds"))
+            );
         }
     }
 
@@ -60,7 +73,7 @@ public class KeepAliveService implements Node.Listener {
 
     public void initialize() {
         scheduler = Optional.of(Scheduler.run(this::sendPingIfRequired)
-                .periodically(config.interval())
+                .periodically(config.getInterval())
                 .name("KeepAliveService.scheduler-" + node));
     }
 
@@ -92,10 +105,11 @@ public class KeepAliveService implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof Ping ping) {
-            log.debug("Node {} received Ping with nonce {} from {}", node, ping.nonce(), connection.getPeerAddress());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.nonce()), connection));
-            log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.nonce(), connection.getPeerAddress(), connection.getId());
+        if (networkMessage instanceof Ping) {
+            Ping ping = (Ping) networkMessage;
+            log.debug("Node {} received Ping with nonce {} from {}", node, ping.getNonce(), connection.getPeerAddress());
+            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new Pong(ping.getNonce()), connection));
+            log.debug("Node {} sent Pong with nonce {} to {}. Connection={}", node, ping.getNonce(), connection.getPeerAddress(), connection.getId());
         }
     }
 
@@ -113,6 +127,6 @@ public class KeepAliveService implements Node.Listener {
     }
 
     private boolean isRequired(Connection connection) {
-        return System.currentTimeMillis() - connection.getMetrics().getLastUpdate().get() > config.maxIdleTime();
+        return System.currentTimeMillis() - connection.getMetrics().getLastUpdate().get() > config.getMaxIdleTime();
     }
 }

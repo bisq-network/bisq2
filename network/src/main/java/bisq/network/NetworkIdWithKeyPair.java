@@ -18,15 +18,29 @@
 package bisq.network;
 
 import bisq.security.PubKey;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.security.KeyPair;
 
-public record NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {
-    public String nodeId() {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class NetworkIdWithKeyPair {
+    private final NetworkId networkId;
+    private final KeyPair keyPair;
+
+    public NetworkIdWithKeyPair(NetworkId networkId, KeyPair keyPair) {
+        this.networkId = networkId;
+        this.keyPair = keyPair;
+    }
+
+    public String getNodeId() {
         return networkId.getNodeId();
     }
 
-    public PubKey pubKey() {
+    public PubKey getPubKey() {
         return networkId.getPubKey();
     }
 }

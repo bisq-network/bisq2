@@ -88,15 +88,12 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
 
     public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
         switch (proto.getMessageCase()) {
-            case COIN -> {
+            case COIN:
                 return Coin.fromProto(proto);
-            }
-            case FIAT -> {
+            case FIAT:
                 return Fiat.fromProto(proto);
-            }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET:
                 throw new UnresolvableProtobufMessageException(proto);
-            }
         }
         throw new UnresolvableProtobufMessageException(proto);
     }

@@ -23,11 +23,29 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
 import bisq.security.pow.ProofOfWork;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.security.KeyPair;
 
-public record Identity(String domainId, NetworkId networkId, KeyPair keyPair,
-                       ProofOfWork proofOfWork) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Identity implements Proto {
+    private final String domainId;
+    private final NetworkId networkId;
+    private final KeyPair keyPair;
+    private final ProofOfWork proofOfWork;
+
+    public Identity(String domainId, NetworkId networkId, KeyPair keyPair,
+                    ProofOfWork proofOfWork) {
+        this.domainId = domainId;
+        this.networkId = networkId;
+        this.keyPair = keyPair;
+        this.proofOfWork = proofOfWork;
+    }
+
     @Override
     public bisq.identity.protobuf.Identity toProto() {
         return bisq.identity.protobuf.Identity.newBuilder()
@@ -49,11 +67,11 @@ public record Identity(String domainId, NetworkId networkId, KeyPair keyPair,
         return new NetworkIdWithKeyPair(networkId, keyPair);
     }
 
-    public String nodeId() {
+    public String getNodeId() {
         return networkId.getNodeId();
     }
 
-    public PubKey pubKey() {
+    public PubKey getPubKey() {
         return networkId.getPubKey();
     }
 }

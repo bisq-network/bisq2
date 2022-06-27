@@ -18,8 +18,20 @@
 package bisq.network.p2p.services.peergroup.validateaddress;
 
 import bisq.network.p2p.message.NetworkMessage;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record AddressValidationResponse(int requestNonce) implements NetworkMessage {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class AddressValidationResponse implements NetworkMessage {
+    private final int requestNonce;
+
+    public AddressValidationResponse(int requestNonce) {
+        this.requestNonce = requestNonce;
+    }
+
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setAddressValidationResponse(

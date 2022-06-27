@@ -65,7 +65,7 @@ public class UserProfileDisplay {
         public void onActivate() {
             pin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                     userProfile -> {
-                        model.userName.set(userProfile.getIdentity().domainId());
+                        model.userName.set(userProfile.getIdentity().getDomainId());
                         model.id.set(Res.get("social.createUserProfile.id", userProfile.getChatUser().getId()));
                     /*    String entitledRoles = userProfile.getChatUser().getRoles().stream().map(e -> Res.get(e.type().name())).collect(Collectors.joining(", "));
                         model.entitlements.set(Res.get("social.createUserProfile.entitledRoles", entitledRoles));

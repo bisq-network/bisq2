@@ -18,9 +18,22 @@
 package bisq.wallets.electrum.regtest;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Builder
-public record CliProcessConfig(String binaryName, List<String> defaultArgs) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class CliProcessConfig {
+    private final String binaryName;
+    private final List<String> defaultArgs;
+
+    public CliProcessConfig(String binaryName, List<String> defaultArgs) {
+        this.binaryName = binaryName;
+        this.defaultArgs = defaultArgs;
+    }
 }

@@ -28,10 +28,10 @@ public interface ReputationProof {
 
     static ReputationProof fromProto(bisq.offer.protobuf.ReputationProof proto) {
         switch (proto.getMessageCase()) {
-            case ACCOUNTCREATIONDATEPROOF -> {
+            case ACCOUNTCREATIONDATEPROOF: {
                 return AccountCreationDateProof.fromProto(proto.getAccountCreationDateProof());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

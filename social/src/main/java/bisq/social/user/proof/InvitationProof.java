@@ -17,7 +17,20 @@
 
 package bisq.social.user.proof;
 
-public record InvitationProof(String invitationCode) implements Proof {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class InvitationProof implements Proof {
+    private final String invitationCode;
+
+    public InvitationProof(String invitationCode) {
+        this.invitationCode = invitationCode;
+    }
+
     @Override
     public bisq.social.protobuf.Proof toProto() {
         return getProofBuilder().setInvitationProof(

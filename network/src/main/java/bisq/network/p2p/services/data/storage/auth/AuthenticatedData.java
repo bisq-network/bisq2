@@ -51,13 +51,13 @@ public abstract class AuthenticatedData implements StorageData {
 
     public static AuthenticatedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
         switch (proto.getMessageCase()) {
-            case DEFAULTAUTHENTICATEDDATA -> {
+            case DEFAULTAUTHENTICATEDDATA  : {
                 return DefaultAuthenticatedData.fromProto(proto);
             }
-            case AUTHORIZEDDATA -> {
+            case AUTHORIZEDDATA  : {
                 return AuthorizedData.fromProto(proto);
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET  : {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

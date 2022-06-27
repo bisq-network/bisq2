@@ -58,7 +58,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                 "onboarding-1-reputation",
                 Res.get("bisqEasy.onboarding.left.button")
         );
-        createOfferButton = leftBoxPair.second();
+        createOfferButton = leftBoxPair.getSecond();
         createOfferButton.setDefaultButton(true);
 
         Pair<VBox, Button> rightBoxPair = getWidgetBox(
@@ -71,10 +71,10 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                 "onboarding-3-method",
                 Res.get("bisqEasy.onboarding.right.button")
         );
-        openChatButton = rightBoxPair.second();
+        openChatButton = rightBoxPair.getSecond();
 
-        VBox leftBox = leftBoxPair.first();
-        VBox rightBox = rightBoxPair.first();
+        VBox leftBox = leftBoxPair.getFirst();
+        VBox rightBox = rightBoxPair.getFirst();
         HBox.setHgrow(leftBox, Priority.ALWAYS);
         HBox.setHgrow(rightBox, Priority.ALWAYS);
         HBox hBox = new HBox(16, leftBox, rightBox);

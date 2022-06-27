@@ -165,7 +165,7 @@ public class BtcFiatAmountGroup {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            Quote marketPriceQuote = marketPrice.quote();
+            Quote marketPriceQuote = marketPrice.getQuote();
             model.fixPrice = marketPriceQuote;
             model.marketPriceString.set(marketPriceQuote == null ? "" : "@ " + QuoteFormatter.formatWithQuoteCode(marketPriceQuote));
             applyFixPrice();

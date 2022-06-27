@@ -18,8 +18,22 @@
 package bisq.common.locale;
 
 import bisq.common.proto.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Region(String code, String name) implements Proto {
+@Getter
+@EqualsAndHashCode
+@ToString
+public final class Region implements Proto {
+    private final String code;
+    private final String name;
+
+    public Region(String code, String name) {
+        this.code = code;
+        this.name = name;
+    }
+
     public bisq.common.protobuf.Region toProto() {
         return bisq.common.protobuf.Region.newBuilder()
                 .setCode(code)

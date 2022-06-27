@@ -81,7 +81,7 @@ public class ClearNetHttpClient extends BaseHttpClient {
             connection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(30));
             connection.setRequestProperty("User-Agent", userAgent);
             optionalHeader.ifPresent(header -> {
-                connection.setRequestProperty(header.first(), header.second());
+                connection.setRequestProperty(header.getFirst(), header.getSecond());
             });
 
             if (httpMethod == HttpMethod.POST) {

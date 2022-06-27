@@ -17,7 +17,22 @@
 
 package bisq.offer.options;
 
-public record CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) implements OfferOption {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class CollateralOption implements OfferOption {
+    private final long buyerSecurityDeposit;
+    private final long sellerSecurityDeposit;
+
+    public CollateralOption(long buyerSecurityDeposit, long sellerSecurityDeposit) {
+        this.buyerSecurityDeposit = buyerSecurityDeposit;
+        this.sellerSecurityDeposit = sellerSecurityDeposit;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setCollateralOption(bisq.offer.protobuf.CollateralOption.newBuilder()
                         .setBuyerSecurityDeposit(buyerSecurityDeposit)

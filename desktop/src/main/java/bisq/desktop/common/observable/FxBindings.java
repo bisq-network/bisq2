@@ -60,6 +60,7 @@ public class FxBindings {
         return observable.addObserver(e -> UIThread.run(() -> consumer.accept(e)));
     }
 
+
     public static class ObservableListBindings<T, R> {
         private final ObservableList<R> observer;
         @SuppressWarnings("unchecked")
@@ -79,37 +80,80 @@ public class FxBindings {
         }
     }
 
-    public record ObservablePropertyBindings<T>(ObjectProperty<T> observer) {
+
+    public static final class ObservablePropertyBindings<T> {
+        private final ObjectProperty<T> observer;
+
+        public ObservablePropertyBindings(ObjectProperty<T> observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<T> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
 
-    public record LongPropertyBindings(LongProperty observer) {
+
+    public static final class LongPropertyBindings {
+        private final LongProperty observer;
+
+        public LongPropertyBindings(LongProperty observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<Long> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
 
-    public record DoublePropertyBindings(DoubleProperty observer) {
+
+    public static final class DoublePropertyBindings {
+        private final DoubleProperty observer;
+
+        public DoublePropertyBindings(DoubleProperty observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<Double> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
 
-    public record IntegerPropertyBindings(IntegerProperty observer) {
+
+    public static final class IntegerPropertyBindings {
+        private final IntegerProperty observer;
+
+        public IntegerPropertyBindings(IntegerProperty observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<Integer> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
+
     }
 
-    public record BooleanPropertyBindings(BooleanProperty observer) {
+
+    public static final class BooleanPropertyBindings {
+        private final BooleanProperty observer;
+
+        public BooleanPropertyBindings(BooleanProperty observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<Boolean> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
 
-    public record StringPropertyBindings(StringProperty observer) {
+
+    public static final class StringPropertyBindings {
+        private final StringProperty observer;
+
+        public StringPropertyBindings(StringProperty observer) {
+            this.observer = observer;
+        }
+
         public Pin to(Observable<String> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }

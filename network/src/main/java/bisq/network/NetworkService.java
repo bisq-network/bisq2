@@ -53,10 +53,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -95,14 +92,99 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         }
     }
 
-    public record Config(String baseDir,
-                                Transport.Config transportConfig,
-                                Set<Transport.Type> supportedTransportTypes,
-                                ServiceNode.Config serviceNodeConfig,
-                                Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                                Map<Transport.Type, Set<Address>> seedAddressesByTransport,
-                                Optional<String> socks5ProxyAddress) {
+    public static final class Config {
+        private final String baseDir;
+        private final Transport.Config transportConfig;
+        private final Set<Transport.Type> supportedTransportTypes;
+        private final ServiceNode.Config serviceNodeConfig;
+        private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
+        private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
+        private final Map<Transport.Type, Set<Address>> seedAddressesByTransport;
+        private final Optional<String> socks5ProxyAddress;
+
+        public Config(String baseDir,
+                      Transport.Config transportConfig,
+                      Set<Transport.Type> supportedTransportTypes,
+                      ServiceNode.Config serviceNodeConfig,
+                      Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
+                      Map<Transport.Type, Integer> defaultNodePortByTransportType,
+                      Map<Transport.Type, Set<Address>> seedAddressesByTransport,
+                      Optional<String> socks5ProxyAddress) {
+            this.baseDir = baseDir;
+            this.transportConfig = transportConfig;
+            this.supportedTransportTypes = supportedTransportTypes;
+            this.serviceNodeConfig = serviceNodeConfig;
+            this.peerGroupServiceConfigByTransport = peerGroupServiceConfigByTransport;
+            this.defaultNodePortByTransportType = defaultNodePortByTransportType;
+            this.seedAddressesByTransport = seedAddressesByTransport;
+            this.socks5ProxyAddress = socks5ProxyAddress;
+        }
+
+        public String baseDir() {
+            return baseDir;
+        }
+
+        public Transport.Config transportConfig() {
+            return transportConfig;
+        }
+
+        public Set<Transport.Type> supportedTransportTypes() {
+            return supportedTransportTypes;
+        }
+
+        public ServiceNode.Config serviceNodeConfig() {
+            return serviceNodeConfig;
+        }
+
+        public Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport() {
+            return peerGroupServiceConfigByTransport;
+        }
+
+        public Map<Transport.Type, Integer> defaultNodePortByTransportType() {
+            return defaultNodePortByTransportType;
+        }
+
+        public Map<Transport.Type, Set<Address>> seedAddressesByTransport() {
+            return seedAddressesByTransport;
+        }
+
+        public Optional<String> socks5ProxyAddress() {
+            return socks5ProxyAddress;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Config) obj;
+            return Objects.equals(this.baseDir, that.baseDir) &&
+                    Objects.equals(this.transportConfig, that.transportConfig) &&
+                    Objects.equals(this.supportedTransportTypes, that.supportedTransportTypes) &&
+                    Objects.equals(this.serviceNodeConfig, that.serviceNodeConfig) &&
+                    Objects.equals(this.peerGroupServiceConfigByTransport, that.peerGroupServiceConfigByTransport) &&
+                    Objects.equals(this.defaultNodePortByTransportType, that.defaultNodePortByTransportType) &&
+                    Objects.equals(this.seedAddressesByTransport, that.seedAddressesByTransport) &&
+                    Objects.equals(this.socks5ProxyAddress, that.socks5ProxyAddress);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(baseDir, transportConfig, supportedTransportTypes, serviceNodeConfig, peerGroupServiceConfigByTransport, defaultNodePortByTransportType, seedAddressesByTransport, socks5ProxyAddress);
+        }
+
+        @Override
+        public String toString() {
+            return "Config[" +
+                    "baseDir=" + baseDir + ", " +
+                    "transportConfig=" + transportConfig + ", " +
+                    "supportedTransportTypes=" + supportedTransportTypes + ", " +
+                    "serviceNodeConfig=" + serviceNodeConfig + ", " +
+                    "peerGroupServiceConfigByTransport=" + peerGroupServiceConfigByTransport + ", " +
+                    "defaultNodePortByTransportType=" + defaultNodePortByTransportType + ", " +
+                    "seedAddressesByTransport=" + seedAddressesByTransport + ", " +
+                    "socks5ProxyAddress=" + socks5ProxyAddress + ']';
+        }
+
     }
 
     @Getter
@@ -127,7 +209,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         this.keyPairService = keyPairService;
         httpService = new HttpService();
 
-        boolean supportsDataService = config.serviceNodeConfig().services().contains(ServiceNode.Service.DATA);
+        boolean supportsDataService = config.serviceNodeConfig().getServices().contains(ServiceNode.Service.DATA);
         dataService = supportsDataService ? Optional.of(new DataService(new StorageService(persistenceService))) : Optional.empty();
 
         socks5ProxyAddress = config.socks5ProxyAddress;
@@ -235,8 +317,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                                                             NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
         return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
                         receiverNetworkId,
-                        senderNetworkIdWithKeyPair.keyPair(),
-                        senderNetworkIdWithKeyPair.nodeId()),
+                        senderNetworkIdWithKeyPair.getKeyPair(),
+                        senderNetworkIdWithKeyPair.getNodeId()),
                 NETWORK_IO_POOL);
     }
 
@@ -247,9 +329,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
     public CompletableFuture<BroadCastDataResult> publishAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
-        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
@@ -264,9 +346,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
     public CompletableFuture<BroadCastDataResult> removeAuthenticatedData(DistributedData distributedData, NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when removeData is called.");
-        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
-        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> {
                     DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
@@ -284,9 +366,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                                                                         PrivateKey authorizedPrivateKey,
                                                                         PublicKey authorizedPublicKey) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
-        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
-        KeyPair keyPair = ownerNetworkIdWithKeyPair.keyPair();
+        String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
+        KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     try {
@@ -308,8 +390,8 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData,
                                                                         NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
-        String nodeId = ownerNetworkIdWithKeyPair.nodeId();
-        PubKey pubKey = ownerNetworkIdWithKeyPair.pubKey();
+        String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
+        PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
         return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
                 .thenCompose(list -> dataService.get().addAppendOnlyData(appendOnlyData)
                         .whenComplete((broadCastResultFutures, throwable) -> {

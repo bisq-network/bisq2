@@ -93,13 +93,15 @@ public class AddressValidationService implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof AddressValidationRequest addressValidationRequest) {
+        if (networkMessage instanceof AddressValidationRequest) {
+            AddressValidationRequest addressValidationRequest = (AddressValidationRequest) networkMessage;
             Address peerAddress = connection.getPeerAddress();
-            if (connection instanceof InboundConnection inboundConnection) {
-                log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.nonce(), peerAddress);
+            if (connection instanceof InboundConnection) {
+                InboundConnection inboundConnection = (InboundConnection) connection;
+                log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.getNonce(), peerAddress);
                 requesters.add(connection.getId());
-                NETWORK_IO_POOL.submit(() -> node.send(new AddressValidationResponse(addressValidationRequest.nonce()), inboundConnection));
-                log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.nonce(), peerAddress, inboundConnection.getId());
+                NETWORK_IO_POOL.submit(() -> node.send(new AddressValidationResponse(addressValidationRequest.getNonce()), inboundConnection));
+                log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.getNonce(), peerAddress, inboundConnection.getId());
             } else {
                 log.warn("Node {}  got a AddressValidationRequest at {}. We expect an inbound connection. We close that connection.", node, connection);
                 banList.add(peerAddress, BanList.Reason.ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON);

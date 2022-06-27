@@ -333,7 +333,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
                 for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
                     Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox submenu) {
+                    if (item instanceof VBox) {
+                        VBox submenu = (VBox) item;
                         if (submenu.getChildren().contains(selectedLeftNavButton)) {
                             targetY += submenu.getLayoutY();
                             break;
@@ -344,8 +345,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 int index = mainMenuItems.getChildren().indexOf(selectedLeftNavButton);
                 for (int i = 0; i < index; i++) {
                     Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox submenu) {
-                        targetY -= submenu.getHeight();
+                    if (item instanceof VBox) {
+                        targetY -= ((VBox) item).getHeight();
                     }
                 }
             }
@@ -359,13 +360,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
             Node item = mainMenuItems.getChildren().get(i);
-            if (item instanceof VBox submenu) {
+            if (item instanceof VBox) {
+                VBox submenu = (VBox) item;
                 LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
                 boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
                         || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
                 parentMenuItem.setHighlighted(isSubmenuActive);
-
-                //  Layout.toggleStyleClass(submenu, "bisq-dark-bg", isSubmenuActive);
 
                 Transitions.animateHeight(
                         submenu,

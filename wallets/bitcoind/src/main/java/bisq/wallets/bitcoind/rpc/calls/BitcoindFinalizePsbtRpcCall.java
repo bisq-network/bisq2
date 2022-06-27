@@ -19,11 +19,22 @@ package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class BitcoindFinalizePsbtRpcCall
         extends DaemonRpcCall<BitcoindFinalizePsbtRpcCall.Request, BitcoindFinalizePsbtResponse> {
+    
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String psbt;
 
-    public record Request(String psbt) {
+        public Request(String psbt) {
+            this.psbt = psbt;
+        }
     }
 
     public BitcoindFinalizePsbtRpcCall(Request request) {

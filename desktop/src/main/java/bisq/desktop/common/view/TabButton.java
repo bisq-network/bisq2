@@ -71,13 +71,13 @@ public class TabButton extends Pane implements Toggle {
         label.setPadding(new Insets(7, 0, 0, 0));
         label.setMouseTransparent(true);
 
-        label.getStyleClass().addAll("bisq-tab-button-label", styles.normal());
+        label.getStyleClass().addAll("bisq-tab-button-label", styles.getNormal());
         label.setGraphic(icon);
         getChildren().addAll(label);
 
         hoverProperty().addListener((ov, wasHovered, isHovered) -> {
             if (isSelected()) return;
-            Layout.chooseStyleClass(label, styles.hoover(), styles.normal(), isHovered);
+            Layout.chooseStyleClass(label, styles.getHoover(), styles.getNormal(), isHovered);
             label.setGraphic(isHovered ? iconHover : icon);
         });
     }
@@ -119,7 +119,7 @@ public class TabButton extends Pane implements Toggle {
     @Override
     public void setSelected(boolean selected) {
         selectedProperty.set(selected);
-        Layout.chooseStyleClass(label, styles.selected(), styles.normal(), selected);
+        Layout.chooseStyleClass(label, styles.getSelected(), styles.getNormal(), selected);
         label.setGraphic(selected ? iconSelected : icon);
     }
 }

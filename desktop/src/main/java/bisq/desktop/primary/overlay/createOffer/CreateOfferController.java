@@ -24,11 +24,11 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.createOffer.market.MarketController;
 import bisq.desktop.primary.overlay.createOffer.amount.AmountController;
-import bisq.desktop.primary.overlay.createOffer.review.ReviewOfferController;
 import bisq.desktop.primary.overlay.createOffer.direction.DirectionController;
+import bisq.desktop.primary.overlay.createOffer.market.MarketController;
 import bisq.desktop.primary.overlay.createOffer.method.PaymentMethodController;
+import bisq.desktop.primary.overlay.createOffer.review.ReviewOfferController;
 import bisq.i18n.Res;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -125,19 +125,24 @@ public class CreateOfferController extends NavigationController {
         model.getBackButtonText().set(Res.get("back"));
 
         switch (navigationTarget) {
-            case CREATE_OFFER_DIRECTION -> {
+            case CREATE_OFFER_DIRECTION: {
                 model.getBackButtonVisible().set(false);
+                break;
             }
-            case CREATE_OFFER_MARKET -> {
+            case CREATE_OFFER_MARKET: {
+                break;
             }
-            case CREATE_OFFER_AMOUNT -> {
+            case CREATE_OFFER_AMOUNT: {
+                break;
             }
-            case CREATE_OFFER_PAYMENT_METHOD -> {
+            case CREATE_OFFER_PAYMENT_METHOD: {
+                break;
             }
-            case CREATE_OFFER_OFFER_COMPLETED -> {
+            case CREATE_OFFER_OFFER_COMPLETED: {
                 model.getNextButtonVisible().set(false);
+                break;
             }
-            default -> {
+            default: {
             }
         }
     }
@@ -145,22 +150,22 @@ public class CreateOfferController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case CREATE_OFFER_DIRECTION -> {
+            case CREATE_OFFER_DIRECTION: {
                 return Optional.of(directionController);
             }
-            case CREATE_OFFER_MARKET -> {
+            case CREATE_OFFER_MARKET: {
                 return Optional.of(marketController);
             }
-            case CREATE_OFFER_AMOUNT -> {
+            case CREATE_OFFER_AMOUNT: {
                 return Optional.of(amountController);
             }
-            case CREATE_OFFER_PAYMENT_METHOD -> {
+            case CREATE_OFFER_PAYMENT_METHOD: {
                 return Optional.of(paymentMethodController);
             }
-            case CREATE_OFFER_OFFER_COMPLETED -> {
+            case CREATE_OFFER_OFFER_COMPLETED: {
                 return Optional.of(reviewOfferController);
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

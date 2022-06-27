@@ -34,6 +34,7 @@ import bisq.social.user.role.Role;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -49,12 +50,22 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
-    public static record Config(List<String> btcMemPoolProviders,
-                                List<String> bsqMemPoolProviders) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final List<String> btcMemPoolProviders;
+        private final List<String> bsqMemPoolProviders;
+
+        public Config(List<String> btcMemPoolProviders,
+                      List<String> bsqMemPoolProviders) {
+            this.btcMemPoolProviders = btcMemPoolProviders;
+            this.bsqMemPoolProviders = bsqMemPoolProviders;
+        }
+
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             List<String> btcMemPoolProviders = typeSafeConfig.getStringList("btcMemPoolProviders");
             List<String> bsqMemPoolProviders = typeSafeConfig.getStringList("bsqMemPoolProviders");
-            return new ProofOfBurnVerificationService.Config(btcMemPoolProviders, bsqMemPoolProviders);
+            return new Config(btcMemPoolProviders, bsqMemPoolProviders);
         }
     }
 
@@ -111,7 +122,7 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
         } else {
             return supplyAsync(() -> {
                 try {
-                    BaseHttpClient httpClient = getApiHttpClient(config.bsqMemPoolProviders());
+                    BaseHttpClient httpClient = getApiHttpClient(config.getBsqMemPoolProviders());
                     String jsonBsqTx = httpClient.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                     Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
                     checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
@@ -154,12 +165,15 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
     }
 
     public long getMinBurnAmount(Role.Type type) {
-        return switch (type) {
+        switch (type) {
             //todo for dev testing reduced to 6 BSQ
-            case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
-            case CHANNEL_MODERATOR -> 10000;
-            default -> 0;
-        };
+            case LIQUIDITY_PROVIDER:
+                return USE_DEV_TEST_POB_VALUES ? 600 : 5000;
+            case CHANNEL_MODERATOR:
+                return 10000;
+            default:
+                return 0;
+        }
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

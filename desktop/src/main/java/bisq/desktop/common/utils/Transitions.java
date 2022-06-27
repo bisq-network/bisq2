@@ -31,6 +31,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.Effect;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -230,7 +231,9 @@ public class Transitions {
         if (node != null) {
             node.setMouseTransparent(false);
             removeEffectTimeLine = new Timeline();
-            if (node.getEffect() instanceof GaussianBlur gaussianBlur) {
+            Effect effect = node.getEffect();
+            if (effect instanceof GaussianBlur) {
+                GaussianBlur gaussianBlur = (GaussianBlur) effect;
                 KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
                 removeEffectTimeLine.getKeyFrames().add(kf1);
@@ -297,8 +300,10 @@ public class Transitions {
         UIScheduler.run(() -> slideInLeft(nodeIn, () -> {
         })).after(DEFAULT_DURATION / 4);
         slideOutRight(nodeOut, () -> {
-            if (nodeOut.getParent() != null) {
-                if (nodeOut.getParent() instanceof Pane pane) {
+            Parent parent = nodeOut.getParent();
+            if (parent != null) {
+                if (parent instanceof Pane) {
+                    Pane pane = (Pane) parent;
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -310,8 +315,10 @@ public class Transitions {
         UIScheduler.run(() -> slideInRight(nodeIn, () -> {
         })).after(DEFAULT_DURATION / 4);
         slideOutLeft(nodeOut, () -> {
-            if (nodeOut.getParent() != null) {
-                if (nodeOut.getParent() instanceof Pane pane) {
+            Parent parent = nodeOut.getParent();
+            if (parent != null) {
+                if (parent instanceof Pane) {
+                    Pane pane = (Pane) parent;
                     pane.getChildren().remove(nodeOut);
                 }
             }
@@ -331,38 +338,39 @@ public class Transitions {
             nodeIn.setOpacity(0);
 
             UIScheduler.run(() -> {
-                        if (newView instanceof TransitionedView transitionedView) {
-                            transitionedView.onStartTransition();
+                        if (newView instanceof TransitionedView) {
+                            ((TransitionedView) newView).onStartTransition();
                         }
                         fadeIn(nodeIn,
                                 DEFAULT_DURATION / 2,
                                 () -> {
-                                    if (newView instanceof TransitionedView transitionedView) {
-                                        transitionedView.onTransitionCompleted();
+                                    if (newView instanceof TransitionedView) {
+                                        ((TransitionedView) newView).onTransitionCompleted();
                                     }
                                 });
                     })
                     .after(DEFAULT_DURATION / 2);
             slideOutRight(nodeOut, () -> {
-                if (nodeOut.getParent() != null) {
-                    if (nodeOut.getParent() instanceof Pane pane) {
+                Parent parent = nodeOut.getParent();
+                if (parent != null) {
+                    if (parent instanceof Pane) {
+                        Pane pane = (Pane) parent;
                         pane.getChildren().remove(nodeOut);
                     }
                 }
             });
         } else {
-            if (newView instanceof TransitionedView transitionedView) {
-                transitionedView.onStartTransition();
+            if (newView instanceof TransitionedView) {
+                ((TransitionedView) newView).onStartTransition();
             }
             Transitions.fadeIn(nodeIn,
                     DEFAULT_DURATION,
                     () -> {
-                        if (newView instanceof TransitionedView transitionedView) {
-                            transitionedView.onTransitionCompleted();
+                        if (newView instanceof TransitionedView) {
+                            ((TransitionedView) newView).onTransitionCompleted();
                         }
                     });
         }
-
     }
 
     public static void slideInTop(Region node, int duration) {

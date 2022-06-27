@@ -18,8 +18,20 @@
 package bisq.network.p2p.node;
 
 import bisq.common.proto.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Load(int numConnections) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Load implements Proto {
+    private final int numConnections;
+
+    public Load(int numConnections) {
+        this.numConnections = numConnections;
+    }
+
     public bisq.network.protobuf.Load toProto() {
         return bisq.network.protobuf.Load.newBuilder().setNumConnections(numConnections).build();
     }

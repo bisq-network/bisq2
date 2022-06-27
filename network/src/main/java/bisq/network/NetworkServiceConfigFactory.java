@@ -39,14 +39,7 @@ import static java.util.stream.Collectors.toMap;
 @Slf4j
 public class NetworkServiceConfigFactory {
     public static NetworkService.Config getConfig(String baseDir, Config typesafeConfig) {
-        Set<Transport.Type> supportedTransportTypes = new HashSet<>(typesafeConfig.getEnumList(Transport.Type.class,
-                "supportedTransportTypes"));
-
-     /*   supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR, Transport.Type.I2P);
-        supportedTransportTypes = Set.of(Transport.Type.I2P);
-        supportedTransportTypes = Set.of(Transport.Type.CLEAR, Transport.Type.TOR);
-        supportedTransportTypes = Set.of(Transport.Type.CLEAR);
-        supportedTransportTypes = Set.of(Transport.Type.TOR);*/
+        Set<Transport.Type> supportedTransportTypes = new HashSet<>(typesafeConfig.getEnumList(Transport.Type.class, "supportedTransportTypes"));
 
         ServiceNode.Config serviceNodeConfig = new ServiceNode.Config(Set.of(
                 ServiceNode.Service.CONFIDENTIAL,
@@ -58,8 +51,7 @@ public class NetworkServiceConfigFactory {
         Config seedConfig = typesafeConfig.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
         Map<Transport.Type, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
-                .collect(toMap(
-                        supportedTransportType -> supportedTransportType,
+                .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
         PeerGroup.Config peerGroupConfig = PeerGroup.Config.from(typesafeConfig.getConfig("peerGroupConfig"));
@@ -107,27 +99,23 @@ public class NetworkServiceConfigFactory {
 
     public static Set<Address> getSeedAddresses(Transport.Type transportType, Config config) {
         switch (transportType) {
-            case TOR -> {
+            case TOR: {
                 return ConfigUtil.getStringList(config, "tor").stream()
-                        .map(Address::new)
-                        .collect(Collectors.toSet());
+                        .map(Address::new).
+                        collect(Collectors.toSet());
             }
-            case I2P -> {
+            case I2P: {
                 return ConfigUtil.getStringList(config, "i2p").stream()
                         .map(Address::new)
                         .collect(Collectors.toSet());
             }
-            case CLEAR -> {
+            case CLEAR: {
                 return ConfigUtil.getStringList(config, "clear").stream()
                         .map(Address::new)
                         .collect(Collectors.toSet());
             }
-            default -> {
-               /* List<Address> seedAddresses = new ArrayList<>();
-                for (int i = 0; i < 3; i++) {
-                    seedAddresses.add(Address.localHost(8000 + i));
-                }*/
-                return new HashSet<>();
+            default: {
+                throw new RuntimeException("Unhandled case. transportType=" + transportType);
             }
         }
     }

@@ -21,17 +21,17 @@ import bisq.common.encoding.Hex;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqTextFieldWithCopyIcon;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.security.DigestUtil;
-import bisq.social.user.role.Role;
+import bisq.social.user.ChatUserService;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
-import bisq.social.user.ChatUserService;
+import bisq.social.user.role.Role;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -258,12 +258,23 @@ public class RoleSelection {
 
         private RoleItem(Role.Type type) {
             this.type = type;
-            String info = switch (type) {
-                case LIQUIDITY_PROVIDER -> Res.get("social.createUserProfile.liquidityProvider.info");
-                case CHANNEL_ADMIN -> Res.get("social.createUserProfile.administrator.info");
-                case CHANNEL_MODERATOR -> Res.get("social.createUserProfile.moderator.info");
-                case MEDIATOR -> Res.get("social.createUserProfile.mediator.info");
-            };
+            String info;
+            switch (type) {
+                case LIQUIDITY_PROVIDER:
+                    info = Res.get("social.createUserProfile.liquidityProvider.info");
+                    break;
+                case CHANNEL_ADMIN:
+                    info = Res.get("social.createUserProfile.administrator.info");
+                    break;
+                case CHANNEL_MODERATOR:
+                    info = Res.get("social.createUserProfile.moderator.info");
+                    break;
+                case MEDIATOR:
+                    info = Res.get("social.createUserProfile.mediator.info");
+                    break;
+                default:
+                    throw new RuntimeException("Unhandled case. type=" + type);
+            }
             this.typeName = Res.get(type.name()) + "\n" + info;
         }
 
@@ -317,7 +328,7 @@ public class RoleSelection {
             gridPane.addTextFieldWithCopyIcon(Res.get("social.createUserProfile.entitlement.popup.pubKeyHash"), pubKeyHash);
             firstField = gridPane.addTextField("", "");
             switch (roleItem.getType()) {
-                case LIQUIDITY_PROVIDER -> {
+                case LIQUIDITY_PROVIDER: {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.proofOfBurn"));
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
@@ -336,8 +347,10 @@ public class RoleSelection {
                                         });
                             }
                     );
+                    break;
                 }
-                case MEDIATOR, CHANNEL_ADMIN -> {
+                case MEDIATOR:
+                case CHANNEL_ADMIN: {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.bondedRole.txId"));
                     secondField = new TextField();
                     secondField = gridPane.addTextField(Res.get("social.createUserProfile.entitlement.popup.bondedRole.sig"), "");
@@ -359,8 +372,9 @@ public class RoleSelection {
                                         });
                             }
                     );
+                    break;
                 }
-                case CHANNEL_MODERATOR -> {
+                case CHANNEL_MODERATOR: {
                     firstField.setPromptText(Res.get("social.createUserProfile.entitlement.popup.moderator.code"));
                     onAction(() -> {
                                 actionButton.setDisable(true); //todo add busy animation
@@ -380,6 +394,7 @@ public class RoleSelection {
                                         });
                             }
                     );
+                    break;
                 }
             }
         }

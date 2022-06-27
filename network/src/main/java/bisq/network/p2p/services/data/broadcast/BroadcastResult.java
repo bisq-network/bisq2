@@ -17,5 +17,21 @@
 
 package bisq.network.p2p.services.data.broadcast;
 
-public record BroadcastResult(int numSuccess, int numFaults, long duration) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class BroadcastResult {
+    private final int numSuccess;
+    private final int numFaults;
+    private final long duration;
+
+    public BroadcastResult(int numSuccess, int numFaults, long duration) {
+        this.numSuccess = numSuccess;
+        this.numFaults = numFaults;
+        this.duration = duration;
+    }
 }

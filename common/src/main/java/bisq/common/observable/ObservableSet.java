@@ -17,6 +17,9 @@
 
 package bisq.common.observable;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -25,9 +28,20 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
-    private record Observer<M, L>(Collection<L> collection,
-                                  Function<M, L> mapFunction,
-                                  Consumer<Runnable> executor) {
+    @EqualsAndHashCode
+    @ToString
+    private static final class Observer<M, L> {
+        private final Collection<L> collection;
+        private final Function<M, L> mapFunction;
+        private final Consumer<Runnable> executor;
+
+        private Observer(Collection<L> collection,
+                         Function<M, L> mapFunction,
+                         Consumer<Runnable> executor) {
+            this.collection = collection;
+            this.mapFunction = mapFunction;
+            this.executor = executor;
+        }
 
         public void add(M element) {
             executor.accept(() -> {

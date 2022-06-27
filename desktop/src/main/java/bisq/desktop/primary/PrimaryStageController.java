@@ -20,7 +20,6 @@ package bisq.desktop.primary;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -33,6 +32,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
 import bisq.settings.CookieKey;
 import bisq.settings.DisplaySettings;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
 import javafx.scene.layout.AnchorPane;
@@ -64,18 +64,18 @@ public class PrimaryStageController extends NavigationController {
         this.onStageReadyHandler = onStageReadyHandler;
 
         model = new PrimaryStageModel(applicationService);
-        view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.stage());
+        view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
 
         splashController = new SplashController(applicationService);
 
-        Browser.setHostServices(applicationJavaFxApplicationData.hostServices());
+        Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
         AnchorPane viewRoot = view.getRoot();
         Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
-                applicationService.getApplicationConfig().baseDir(),
+                applicationService.getApplicationConfig().getBaseDir(),
                 displaySettings,
                 this::shutdown);
 
@@ -99,13 +99,13 @@ public class PrimaryStageController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case SPLASH -> {
+            case SPLASH: {
                 return Optional.of(splashController);
             }
-            case MAIN -> {
+            case MAIN: {
                 return Optional.of(new MainController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

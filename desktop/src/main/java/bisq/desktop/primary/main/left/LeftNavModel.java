@@ -66,8 +66,12 @@ public class LeftNavModel implements Model {
                     serviceNode.getPeerGroupService().ifPresent(peerGroupService -> {
                         PeerGroup peerGroup = peerGroupService.getPeerGroup();
                         switch (type) {
-                            case TOR -> torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
-                            case I2P -> i2pNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
+                            case TOR:
+                                torNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
+                                break;
+                            case I2P:
+                                i2pNumTargetConnections.set(String.valueOf(peerGroup.getTargetNumConnectedPeers()));
+                                break;
                         }
 
                         Node defaultNode = serviceNode.getDefaultNode();
@@ -94,8 +98,12 @@ public class LeftNavModel implements Model {
     private void onNumConnectionsChanged(Transport.Type type, PeerGroup peerGroup) {
         UIThread.run(() -> {
             switch (type) {
-                case TOR -> torNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
-                case I2P -> i2pNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
+                case TOR:
+                    torNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
+                    break;
+                case I2P:
+                    i2pNumConnections.set(String.valueOf(peerGroup.getNumConnections()));
+                    break;
             }
         });
     }

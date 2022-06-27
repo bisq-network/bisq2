@@ -19,14 +19,28 @@ package bisq.network.p2p.services.data.inventory;
 
 import bisq.common.proto.Proto;
 import bisq.network.p2p.services.data.DataRequest;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Getter
+@ToString
+@EqualsAndHashCode
 @Slf4j
-public record Inventory(Set<? extends DataRequest> entries, int numDropped) implements Proto {
+public class Inventory implements Proto {
+    private final Set<? extends DataRequest> entries;
+    private final int numDropped;
+
+    public Inventory(Set<? extends DataRequest> entries, int numDropped) {
+        this.entries = entries;
+        this.numDropped = numDropped;
+    }
+
     public bisq.network.protobuf.Inventory toProto() {
         return bisq.network.protobuf.Inventory.newBuilder()
                 .addAllEntries(entries.stream().map(e -> e.toProto().getDataRequest()).collect(Collectors.toList()))

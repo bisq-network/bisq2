@@ -86,34 +86,23 @@ public class OverlayController extends NavigationController {
     public void onDeactivate() {
     }
 
-    @Override
-    public void onNavigateToChild(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case ONBOARDING -> {
-            }
-            case CREATE_OFFER -> {
-            }
-            default -> {
-            }
-        }
-    }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case ONBOARDING -> {
+            case ONBOARDING: {
                 return Optional.of(new OnboardingController(applicationService));
             }
-            case CREATE_OFFER -> {
+            case CREATE_OFFER: {
                 return Optional.of(new CreateOfferController(applicationService));
             }
-            case CREATE_PROFILE -> {
+            case CREATE_PROFILE: {
                 return Optional.of(new GenerateNewProfileController(applicationService));
             }
-            case BURN_BSQ -> {
+            case BURN_BSQ: {
                 return Optional.of(new BurnBsqController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

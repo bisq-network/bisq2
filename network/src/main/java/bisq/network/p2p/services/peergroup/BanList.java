@@ -18,6 +18,9 @@
 package bisq.network.p2p.services.peergroup;
 
 import bisq.network.p2p.node.Address;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +32,17 @@ public class BanList {
         ADDRESS_VALIDATION_REQUEST_ON_OUTBOUND_CON
     }
 
-    public record Entry(Reason reason, long eventDate) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Entry {
+        private final Reason reason;
+        private final long eventDate;
+
+        public Entry(Reason reason, long eventDate) {
+            this.reason = reason;
+            this.eventDate = eventDate;
+        }
     }
 
     private final Map<Address, Entry> entryMap = new ConcurrentHashMap<>();

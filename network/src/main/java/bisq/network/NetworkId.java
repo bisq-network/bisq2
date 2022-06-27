@@ -68,7 +68,18 @@ public class NetworkId implements Proto {
         return new NetworkId(addressByNetworkType, PubKey.fromProto(proto.getPubKey()), proto.getNodeId());
     }
 
-    private record AddressTransportTypeTuple(Transport.Type transportType, Address address) implements Proto {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    private static final class AddressTransportTypeTuple implements Proto {
+        private final Transport.Type transportType;
+        private final Address address;
+
+        private AddressTransportTypeTuple(Transport.Type transportType, Address address) {
+            this.transportType = transportType;
+            this.address = address;
+        }
+
         public bisq.network.protobuf.AddressTransportTypeTuple toProto() {
             return bisq.network.protobuf.AddressTransportTypeTuple.newBuilder()
                     .setTransportType(transportType.name())
@@ -80,5 +91,6 @@ public class NetworkId implements Proto {
             Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
             return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
         }
+
     }
 }

@@ -208,7 +208,7 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().proofOfWork().getPayload()));
+                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
                         label.setText(item.chatUserIdentity.getNickName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
@@ -296,7 +296,7 @@ public class UserProfileSelection {
                 if (newValue != null) {
                     ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
                     if (chatUserIdentity != null) {
-                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().proofOfWork().getPayload()));
+                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
                         userNameLabel.setText(chatUserIdentity.getNickName());
                         buttonPane.layout();
                     }

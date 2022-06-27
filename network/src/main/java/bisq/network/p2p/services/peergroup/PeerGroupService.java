@@ -32,6 +32,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -76,22 +77,47 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     @Getter
     private final Persistence<PeerGroupStore> persistence;
 
-    public static record Config(PeerGroup.Config peerGroupConfig,
-                                PeerExchangeStrategy.Config peerExchangeConfig,
-                                KeepAliveService.Config keepAliveServiceConfig,
-                                long bootstrapTime,
-                                long interval,
-                                long timeout,
-                                long maxAge,
-                                int maxReported,
-                                int maxPersisted,
-                                int maxSeeds) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final PeerGroup.Config peerGroupConfig;
+        private final PeerExchangeStrategy.Config peerExchangeConfig;
+        private final KeepAliveService.Config keepAliveServiceConfig;
+        private final long bootstrapTime;
+        private final long interval;
+        private final long timeout;
+        private final long maxAge;
+        private final int maxReported;
+        private final int maxPersisted;
+        private final int maxSeeds;
+
+        public Config(PeerGroup.Config peerGroupConfig,
+                      PeerExchangeStrategy.Config peerExchangeConfig,
+                      KeepAliveService.Config keepAliveServiceConfig,
+                      long bootstrapTime,
+                      long interval,
+                      long timeout,
+                      long maxAge,
+                      int maxReported,
+                      int maxPersisted,
+                      int maxSeeds) {
+            this.peerGroupConfig = peerGroupConfig;
+            this.peerExchangeConfig = peerExchangeConfig;
+            this.keepAliveServiceConfig = keepAliveServiceConfig;
+            this.bootstrapTime = bootstrapTime;
+            this.interval = interval;
+            this.timeout = timeout;
+            this.maxAge = maxAge;
+            this.maxReported = maxReported;
+            this.maxPersisted = maxPersisted;
+            this.maxSeeds = maxSeeds;
+        }
 
         public static Config from(PeerGroup.Config peerGroupConfig,
                                   PeerExchangeStrategy.Config peerExchangeStrategyConfig,
                                   KeepAliveService.Config keepAliveServiceConfig,
                                   com.typesafe.config.Config typesafeConfig) {
-            return new PeerGroupService.Config(peerGroupConfig,
+            return new Config(peerGroupConfig,
                     peerExchangeStrategyConfig,
                     keepAliveServiceConfig,
                     SECONDS.toMillis(typesafeConfig.getLong("bootstrapTimeInSeconds")),
@@ -116,10 +142,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         this.config = config;
         peerGroup = new PeerGroup(node, config.peerGroupConfig, seedNodeAddresses, banList, this);
         PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup,
-                config.peerExchangeConfig(),
+                config.getPeerExchangeConfig(),
                 persistableStore);
         peerExchangeService = new PeerExchangeService(node, peerExchangeStrategy, this);
-        keepAliveService = new KeepAliveService(node, peerGroup, config.keepAliveServiceConfig());
+        keepAliveService = new KeepAliveService(node, peerGroup, config.getKeepAliveServiceConfig());
         addressValidationService = new AddressValidationService(node, banList);
         String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name();
         persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
@@ -130,9 +156,9 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         setState(PeerGroupService.State.STARTING);
         peerExchangeService.doInitialPeerExchange().join();
         log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                node, config.interval());
+                node, config.getInterval());
         scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
-                .periodically(config.interval())
+                .periodically(config.getInterval())
                 .name("PeerGroupService.scheduler-" + node));
         keepAliveService.initialize();
         setState(State.RUNNING);
@@ -240,10 +266,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                 .filter(this::mayDisconnect)
                 .filter(peerGroup::isASeed)
                 .sorted(comparator)
-                .skip(config.maxSeeds())
+                .skip(config.getMaxSeeds())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too " +
                                 "many connections to seeds.",
-                        node, connection.getPeersCapability().address()))
+                        node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS_TO_SEEDS));
     }
 
@@ -251,10 +277,10 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         log.debug("Node {} called maybeCloseAgedConnections", node);
         peerGroup.getAllConnections()
                 .filter(this::mayDisconnect)
-                .filter(connection -> connection.getMetrics().getAge() > config.maxAge())
+                .filter(connection -> connection.getMetrics().getAge() > config.getMaxAge())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as the connection age " +
                                 "is too old.",
-                        node, connection.getPeersCapability().address()))
+                        node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.AGED_CONNECTION));
 
     }
@@ -267,7 +293,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                 .sorted(comparator)
                 .skip(peerGroup.getMaxInboundConnections())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many inbound connections.",
-                        node, connection.getPeersCapability().address()))
+                        node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_INBOUND_CONNECTIONS));
 
     }
@@ -280,7 +306,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                 .sorted(comparator)
                 .skip(peerGroup.getMaxNumConnectedPeers())
                 .peek(connection -> log.info("{} -> {}: Send CloseConnectionMessage as we have too many connections.",
-                        node, connection.getPeersCapability().address()))
+                        node, connection.getPeersCapability().getAddress()))
                 .forEach(connection -> node.closeConnectionGracefully(connection, CloseReason.TOO_MANY_CONNECTIONS));
 
     }
@@ -317,7 +343,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
         log.info("Node {} has not sufficient connections and calls peerExchangeService.doFurtherPeerExchange", node);
         peerExchangeService.doFurtherPeerExchange()
-                .orTimeout(config.timeout(), MILLISECONDS)
+                .orTimeout(config.getTimeout(), MILLISECONDS)
                 .exceptionally(throwable -> {
                     log.error("Node {} failed at maybeCreateConnections with {}", node, throwable);
                     return null;
@@ -327,7 +353,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeRemoveReportedPeers() {
         List<Peer> reportedPeers = new ArrayList<>(peerGroup.getReportedPeers());
-        int exceeding = reportedPeers.size() - config.maxReported();
+        int exceeding = reportedPeers.size() - config.getMaxReported();
         if (exceeding > 0) {
             reportedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> candidates = reportedPeers.subList(0, Math.min(exceeding, reportedPeers.size()));
@@ -338,7 +364,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
 
     private void maybeRemovePersistedPeers() {
         List<Peer> persistedPeers = new ArrayList<>(persistableStore.getPersistedPeers());
-        int exceeding = persistedPeers.size() - config.maxPersisted();
+        int exceeding = persistedPeers.size() - config.getMaxPersisted();
         if (exceeding > 0) {
             persistedPeers.sort(Comparator.comparing(Peer::getDate));
             List<Peer> candidates = persistedPeers.subList(0, Math.min(exceeding, persistedPeers.size()));
@@ -381,7 +407,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     }
 
     private boolean notBootstrapping(Connection connection) {
-        return connection.getMetrics().getAge() > config.bootstrapTime();
+        return connection.getMetrics().getAge() > config.getBootstrapTime();
     }
 
     private int getMissingOutboundConnections() {

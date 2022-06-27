@@ -35,7 +35,7 @@ public class CountryRepository {
     }
 
     public static Optional<Country> findCountry(Locale locale) {
-        return countries.stream().filter(c -> c.code().equals(locale.getCountry())).findAny();
+        return countries.stream().filter(c -> c.getCode().equals(locale.getCountry())).findAny();
     }
 
     public static List<Country> getCountries() {
@@ -82,7 +82,7 @@ public class CountryRepository {
         countries.add(new Country("GE", "Georgia", new Region("AS", RegionRepository.getRegionName("AS"))));
         countries.add(new Country("BW", "Botswana", new Region("AF", RegionRepository.getRegionName("AF"))));
         countries.add(new Country("IR", "Iran", new Region("AS", RegionRepository.getRegionName("AS"))));
-        countries.sort(Comparator.comparing(Country::name));
+        countries.sort(Comparator.comparing(Country::getName));
     }
 
 

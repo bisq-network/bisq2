@@ -65,10 +65,10 @@ public abstract class LiquidSwapTakerProtocol extends TakerProtocol<TakerProtoco
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof ProtocolMessage protocolMessage) {
-            if (protocolMessage.getOfferId().equals(getId())) {
-                if (networkMessage instanceof LiquidSwapTakeOfferResponse liquidSwapTakeOfferResponse) {
-                    onTakeOfferResponse(liquidSwapTakeOfferResponse);
+        if (networkMessage instanceof ProtocolMessage) {
+            if (((ProtocolMessage) networkMessage).getOfferId().equals(getId())) {
+                if (networkMessage instanceof LiquidSwapTakeOfferResponse) {
+                    onTakeOfferResponse((LiquidSwapTakeOfferResponse) networkMessage);
                 }
             }
         }

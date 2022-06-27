@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.education;
 
-import bisq.desktop.common.view.View;
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -73,8 +73,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
                     double value = newValue.doubleValue() - MARGIN;
                     root.setMinWidth(value);
                 };
-                if (parent instanceof VBox vBox) {
-                    vBox.widthProperty().addListener(widthListener);
+                if (parent != null) {
+                    ((VBox) parent).widthProperty().addListener(widthListener);
                 }
             }
         }
@@ -88,8 +88,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
     protected void onViewDetached() {
         subscriptions.forEach(Subscription::unsubscribe);
 
-        if (widthListener != null && parent instanceof VBox vBox) {
-            vBox.widthProperty().removeListener(widthListener);
+        if (widthListener != null && parent instanceof VBox) {
+            ((VBox) parent).widthProperty().removeListener(widthListener);
         }
     }
 

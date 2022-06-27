@@ -3,8 +3,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -69,8 +70,8 @@ public abstract class ChannelSelection {
 
         public Model() {
             filteredList.setPredicate(item -> {
-                if (item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
-                    return publicTradeChannel.isVisible();
+                if (item.getChannel() instanceof PublicTradeChannel) {
+                    return ((PublicTradeChannel) item.getChannel()).isVisible();
                 } else {
                     return true;
                 }
@@ -142,8 +143,10 @@ public abstract class ChannelSelection {
 
         private void adjustHeight() {
             UIThread.runOnNextRenderFrame(() -> {
-                if (listView.lookup(".list-cell") instanceof ListCell listCell) {
-                    listView.setPrefHeight(listCell.getHeight() * listView.getItems().size() + 10);
+                Node lookupNode = listView.lookup(".list-cell");
+                if (lookupNode instanceof ListCell) {
+                    //noinspection rawtypes
+                    listView.setPrefHeight(((ListCell) lookupNode).getHeight() * listView.getItems().size() + 10);
                 }
             });
         }
@@ -158,8 +161,10 @@ public abstract class ChannelSelection {
             }
 
             public String getDisplayString() {
-                if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    return publicTradeChannel.getMarket().map(Market::getMarketCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                if (channel instanceof PublicTradeChannel) {
+                    return ((PublicTradeChannel) channel).getMarket()
+                            .map(Market::getMarketCodes)
+                            .orElse(Res.get("tradeChat.addMarketChannel.any"));
                 } else {
                     return channel.getDisplayString();
                 }

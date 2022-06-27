@@ -200,16 +200,16 @@ public class Offer implements DistributedData {
     }
 
     public Monetary getBaseAmountAsMonetary() {
-        return Monetary.from(baseAmount, market.baseCurrencyCode());
+        return Monetary.from(baseAmount, market.getBaseCurrencyCode());
     }
 
     public Monetary getQuoteAmountAsMonetary(MarketPriceService marketPriceService) {
-        if (priceSpec instanceof FixPrice fixPriceSpec) {
+        if (priceSpec instanceof FixPrice) {
             Monetary base = getBaseAmountAsMonetary();
-            Quote quote = Quote.fromPrice(fixPriceSpec.value(), market);
+            Quote quote = Quote.fromPrice(((FixPrice) priceSpec).getValue(), market);
             long quoteAmountValue = Quote.toQuoteMonetary(base, quote).getValue();
-            return Monetary.from(quoteAmountValue, market.quoteCurrencyCode());
-        } else if (priceSpec instanceof FloatPrice floatPrice) {
+            return Monetary.from(quoteAmountValue, market.getQuoteCurrencyCode());
+        } else if (priceSpec instanceof FloatPrice) {
             Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
             //todo
             throw new RuntimeException("floatPrice not impl yet");
@@ -219,9 +219,9 @@ public class Offer implements DistributedData {
     }
 
     public Quote getQuote(MarketPriceService marketPriceService) {
-        if (priceSpec instanceof FixPrice fixPriceSpec) {
-            return Quote.fromPrice(fixPriceSpec.value(), market);
-        } else if (priceSpec instanceof FloatPrice floatPrice) {
+        if (priceSpec instanceof FixPrice) {
+            return Quote.fromPrice(((FixPrice) priceSpec).getValue(), market);
+        } else if (priceSpec instanceof FloatPrice) {
             Optional<MarketPrice> marketPrice = marketPriceService.getMarketPrice(market);
             //todo
             throw new RuntimeException("floatPrice not impl yet");

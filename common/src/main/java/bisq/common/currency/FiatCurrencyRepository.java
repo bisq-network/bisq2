@@ -43,7 +43,7 @@ public class FiatCurrencyRepository {
     // Need to be called at application setup with user locale
     public static void initialize(Locale locale) {
         currencyByCode = CountryRepository.getCountries().stream()
-                .map(country -> getCurrencyByCountryCode(country.code(), locale))
+                .map(country -> getCurrencyByCountryCode(country.getCode(), locale))
                 .distinct()
                 .collect(Collectors.toMap(FiatCurrency::getCode, Function.identity(), (x, y) -> x, HashMap::new));
 

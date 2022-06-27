@@ -75,7 +75,7 @@ public class GenerateProfileController implements Controller {
                 nickName -> {
                     TempIdentity tempIdentity = model.getTempIdentity().get();
                     if (tempIdentity != null) {
-                        model.getNymId().set(tempIdentity.profileId());
+                        model.getNymId().set(tempIdentity.getProfileId());
                     }
 
                     model.getCreateProfileButtonDisabled().set(model.getCreateProfileProgress().get() == -1 ||
@@ -98,11 +98,11 @@ public class GenerateProfileController implements Controller {
     void onCreateUserProfile() {
         model.getCreateProfileProgress().set(-1);
         TempIdentity tempIdentity = model.getTempIdentity().get();
-        chatUserService.createNewInitializedUserProfile(tempIdentity.profileId(),
+        chatUserService.createNewInitializedUserProfile(tempIdentity.getProfileId(),
                         model.getNickName().get(),
-                        tempIdentity.tempKeyId(),
-                        tempIdentity.tempKeyPair(),
-                        tempIdentity.proofOfWork(),
+                        tempIdentity.getTempKeyId(),
+                        tempIdentity.getTempKeyPair(),
+                        tempIdentity.getProofOfWork(),
                         "",
                         "")
                 .thenCompose(chatUserService::publishNewChatUser)

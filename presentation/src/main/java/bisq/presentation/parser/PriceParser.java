@@ -26,6 +26,6 @@ public class PriceParser {
     }
 
     public static Quote parse(String value, Market market) {
-        return parse(value, market.baseCurrencyCode(), market.quoteCurrencyCode());
+        return parse(value, market.getBaseCurrencyCode(), market.getQuoteCurrencyCode());
     }
 }

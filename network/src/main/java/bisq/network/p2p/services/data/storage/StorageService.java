@@ -148,12 +148,12 @@ public class StorageService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<StorageData>> onAddDataRequest(AddDataRequest addDataRequest) {
-        if (addDataRequest instanceof AddMailboxRequest addMailboxRequest) {
-            return onAddMailboxRequest(addMailboxRequest);
-        } else if (addDataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-            return onAddAuthenticatedDataRequest(addAuthenticatedDataRequest);
-        } else if (addDataRequest instanceof AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
-            return onAddAppendOnlyDataRequest(addAppendOnlyDataRequest);
+        if (addDataRequest instanceof AddMailboxRequest) {
+            return onAddMailboxRequest((AddMailboxRequest) addDataRequest);
+        } else if (addDataRequest instanceof AddAuthenticatedDataRequest) {
+            return onAddAuthenticatedDataRequest((AddAuthenticatedDataRequest) addDataRequest);
+        } else if (addDataRequest instanceof AddAppendOnlyDataRequest) {
+            return onAddAppendOnlyDataRequest((AddAppendOnlyDataRequest) addDataRequest);
         } else {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
@@ -215,10 +215,10 @@ public class StorageService {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Optional<StorageData>> onRemoveDataRequest(RemoveDataRequest removeDataRequest) {
-        if (removeDataRequest instanceof RemoveMailboxRequest removeMailboxRequest) {
-            return onRemoveMailboxRequest(removeMailboxRequest);
-        } else if (removeDataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
-            return onRemoveAuthenticatedDataRequest(removeAuthenticatedDataRequest);
+        if (removeDataRequest instanceof RemoveMailboxRequest) {
+            return onRemoveMailboxRequest((RemoveMailboxRequest) removeDataRequest);
+        } else if (removeDataRequest instanceof RemoveAuthenticatedDataRequest) {
+            return onRemoveAuthenticatedDataRequest((RemoveAuthenticatedDataRequest) removeDataRequest);
         } else {
             return CompletableFuture.failedFuture(
                     new IllegalArgumentException("AddRequest called with invalid addDataRequest: " +
@@ -273,7 +273,7 @@ public class StorageService {
     private Inventory getInventory(DataFilter dataFilter,
                                    Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet) {
         HashSet<? extends DataRequest> result = entrySet.stream()
-                .filter(mapEntry -> !dataFilter.filterEntries().contains(getFilterEntry(mapEntry)))
+                .filter(mapEntry -> !dataFilter.getFilterEntries().contains(getFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(HashSet::new));
         return new Inventory(result, entrySet.size() - result.size());
@@ -305,12 +305,12 @@ public class StorageService {
         if (dataRequest instanceof AddAppendOnlyDataRequest) {
             // AddAppendOnlyDataRequest does not use a seq nr.
             return new FilterEntry(hash, 0);
-        } else if (dataRequest instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
+        } else if (dataRequest instanceof AddAuthenticatedDataRequest) {
             // AddMailboxRequest extends AddAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = addAuthenticatedDataRequest.getAuthenticatedSequentialData().getSequenceNumber();
-        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest removeAuthenticatedDataRequest) {
+            sequenceNumber = ((AddAuthenticatedDataRequest) dataRequest).getAuthenticatedSequentialData().getSequenceNumber();
+        } else if (dataRequest instanceof RemoveAuthenticatedDataRequest) {
             // RemoveMailboxRequest extends RemoveAuthenticatedDataRequest so its covered here as well
-            sequenceNumber = removeAuthenticatedDataRequest.getSequenceNumber();
+            sequenceNumber = ((RemoveAuthenticatedDataRequest) dataRequest).getSequenceNumber();
         }
         return new FilterEntry(hash, sequenceNumber);
     }
@@ -375,13 +375,23 @@ public class StorageService {
     }
 
     private Stream<DataStorageService<? extends DataRequest>> getStoresByStoreType(StoreType storeType) {
-        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream =
-                switch (storeType) {
-                    case ALL -> getAllStores().collect(Collectors.toList());
-                    case AUTHENTICATED_DATA_STORE -> new ArrayList<>(authenticatedDataStores.values());
-                    case MAILBOX_DATA_STORE -> new ArrayList<>(mailboxStores.values());
-                    case APPEND_ONLY_DATA_STORE -> new ArrayList<>(appendOnlyDataStores.values());
-                };
+        List<DataStorageService<? extends DataRequest>> dataStorageServiceStream;
+        switch (storeType) {
+            case ALL:
+                dataStorageServiceStream = getAllStores().collect(Collectors.toList());
+                break;
+            case AUTHENTICATED_DATA_STORE:
+                dataStorageServiceStream = new ArrayList<>(authenticatedDataStores.values());
+                break;
+            case MAILBOX_DATA_STORE:
+                dataStorageServiceStream = new ArrayList<>(mailboxStores.values());
+                break;
+            case APPEND_ONLY_DATA_STORE:
+                dataStorageServiceStream = new ArrayList<>(appendOnlyDataStores.values());
+                break;
+            default:
+                throw new RuntimeException("Unhandled case. storeType= " + storeType);
+        }
         return dataStorageServiceStream.stream();
     }
 

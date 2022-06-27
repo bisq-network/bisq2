@@ -70,14 +70,14 @@ public class OfferbookModel implements Model {
     }
 
     boolean isMyOffer(OfferListItem item) {
-        return keyPairService.findKeyPair(item.getOffer().getMakerNetworkId().getPubKey().keyId()).isPresent();
+        return keyPairService.findKeyPair(item.getOffer().getMakerNetworkId().getPubKey().getKeyId()).isPresent();
     }
 
     String getActionButtonTitle(OfferListItem item) {
         if (isMyOffer(item)) {
             return Res.get("remove");
         } else {
-            String currencyCode = item.getOffer().getMarket().baseCurrencyCode();
+            String currencyCode = item.getOffer().getMarket().getBaseCurrencyCode();
             String dir = item.getOffer().getDirection().isBuy() ?
                     Res.get("direction.label.sell", currencyCode) :
                     Res.get("direction.label.buy", currencyCode);

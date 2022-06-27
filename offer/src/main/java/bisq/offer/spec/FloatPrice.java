@@ -17,7 +17,20 @@
 
 package bisq.offer.spec;
 
-public record FloatPrice(double value) implements PriceSpec {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class FloatPrice implements PriceSpec {
+    private final double value;
+
+    public FloatPrice(double value) {
+        this.value = value;
+    }
+
     public static FloatPrice fromProto(bisq.offer.protobuf.FloatPrice proto) {
         return new FloatPrice(proto.getValue());
     }

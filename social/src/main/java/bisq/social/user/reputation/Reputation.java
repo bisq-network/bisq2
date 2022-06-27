@@ -21,9 +21,14 @@ import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
 import bisq.i18n.Res;
 import bisq.social.user.proof.Proof;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
-public record Reputation(Source source, Proof proof) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Reputation implements Proto {
     public enum Source {
         BURNED_BSQ(Res.get("reputation.source.BURNED_BSQ")),
         BSQ_BOND(Res.get("reputation.source.BSQ_BOND")),
@@ -37,6 +42,14 @@ public record Reputation(Source source, Proof proof) implements Proto {
         Source(String displayString) {
             this.displayString = displayString;
         }
+    }
+
+    private final Source source;
+    private final Proof proof;
+
+    public Reputation(Source source, Proof proof) {
+        this.source = source;
+        this.proof = proof;
     }
 
     @Override

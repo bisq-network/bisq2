@@ -28,13 +28,13 @@ import java.util.Locale;
 
 public class ApplicationSetup {
     static void initialize(ApplicationConfig applicationConfig) {
-        LogSetup.setup(Paths.get(applicationConfig.baseDir(), "bisq").toString());
+        LogSetup.setup(Paths.get(applicationConfig.getBaseDir(), "bisq").toString());
         LogSetup.setLevel(Level.INFO);
 
         Locale locale = applicationConfig.getLocale();
         LocaleRepository.initialize(locale);
         Res.initialize(locale);
 
-        DevMode.setDevMode(applicationConfig.devMode());
+        DevMode.setDevMode(applicationConfig.isDevMode());
     }
 }

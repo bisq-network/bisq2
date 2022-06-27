@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public class SettingsController extends TabController<SettingsModel>  {
+public class SettingsController extends TabController<SettingsModel> {
     private final DefaultApplicationService applicationService;
     @Getter
     private final SettingsView view;
@@ -54,22 +54,22 @@ public class SettingsController extends TabController<SettingsModel>  {
 
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case USER_PROFILE -> {
+            case USER_PROFILE: {
                 return Optional.of(new UserProfileController(applicationService));
             }
-            case REPUTATION -> {
+            case REPUTATION: {
                 return Optional.of(new ReputationController(applicationService));
             }
-            case PREFERENCES -> {
+            case PREFERENCES: {
                 return Optional.of(new PreferencesController(applicationService));
             }
-            case NETWORK_INFO -> {
+            case NETWORK_INFO: {
                 return Optional.of(new NetworkInfoController(applicationService));
             }
-            case ABOUT -> {
+            case ABOUT: {
                 return Optional.of(new AboutController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

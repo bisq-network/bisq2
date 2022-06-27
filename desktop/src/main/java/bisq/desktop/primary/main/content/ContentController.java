@@ -74,70 +74,70 @@ public class ContentController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case DASHBOARD -> {
+            case DASHBOARD: {
                 return Optional.of(new DashboardController(applicationService));
             }
-            case DISCUSS -> {
+            case DISCUSS: {
                 return Optional.of(new DiscussionsController(applicationService));
             }
-            case EDUCATION -> {
+            case EDUCATION: {
                 return Optional.of(new EducationController(applicationService));
             }
-            case BISQ_ACADEMY -> {
+            case BISQ_ACADEMY: {
                 return Optional.of(new BisqAcademyController(applicationService));
             }
-            case BITCOIN_ACADEMY -> {
+            case BITCOIN_ACADEMY: {
                 return Optional.of(new BitcoinAcademyController(applicationService));
             }
-            case SECURITY_ACADEMY -> {
+            case SECURITY_ACADEMY: {
                 return Optional.of(new SecurityAcademyController(applicationService));
             }
-            case PRIVACY_ACADEMY -> {
+            case PRIVACY_ACADEMY: {
                 return Optional.of(new PrivacyAcademyController(applicationService));
             }
-            case WALLETS_ACADEMY -> {
+            case WALLETS_ACADEMY: {
                 return Optional.of(new WalletsAcademyController(applicationService));
             }
-            case OPEN_SOURCE_ACADEMY -> {
+            case OPEN_SOURCE_ACADEMY: {
                 return Optional.of(new OpenSourceAcademyController(applicationService));
             }
-            case EVENTS -> {
+            case EVENTS: {
                 return Optional.of(new EventsController(applicationService));
             }
-            case SUPPORT -> {
+            case SUPPORT: {
                 return Optional.of(new SupportController(applicationService));
             }
-            case TRADE_OVERVIEW -> {
+            case TRADE_OVERVIEW: {
                 return Optional.of(new TradeController(applicationService));
             }
-            case BISQ_EASY -> {
+            case BISQ_EASY: {
                 return Optional.of(new BisqEasyController(applicationService));
             }
-            case LIQUID_SWAP -> {
+            case LIQUID_SWAP: {
                 return Optional.of(new LiquidSwapController(applicationService));
             }
-            case BISQ_MULTI_SIG -> {
+            case BISQ_MULTI_SIG: {
                 return Optional.of(new MultiSigController(applicationService));
             }
-            case ATOMIC_CROSS_CHAIN_SWAP -> {
+            case ATOMIC_CROSS_CHAIN_SWAP: {
                 return Optional.of(new XmrSwapController(applicationService));
             }
-            case BSQ_SWAP -> {
+            case BSQ_SWAP: {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LN_3_PARTY -> {
+            case LN_3_PARTY: {
                 return Optional.of(new LightningController(applicationService));
             }
-            case WALLET_BITCOIN -> {
+            case WALLET_BITCOIN: {
                 return Optional.of(new BitcoinWalletController(applicationService));
             }
-            case WALLET_LBTC -> {
+            case WALLET_LBTC: {
                 return Optional.of(new LBtcWalletController(applicationService));
             }
-            case SETTINGS -> {
+            case SETTINGS: {
                 return Optional.of(new SettingsController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

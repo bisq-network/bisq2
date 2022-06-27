@@ -18,6 +18,19 @@
 package bisq.contract;
 
 import bisq.network.NetworkId;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Party(Role role, NetworkId networkId) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Party {
+    private final Role role;
+    private final NetworkId networkId;
+
+    public Party(Role role, NetworkId networkId) {
+        this.role = role;
+        this.networkId = networkId;
+    }
 }

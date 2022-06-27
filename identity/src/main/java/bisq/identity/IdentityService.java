@@ -32,6 +32,7 @@ import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import com.google.common.collect.Streams;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.KeyPair;
@@ -50,7 +51,15 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
-    public record Config(int minPoolSize) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final int minPoolSize;
+
+        public Config(int minPoolSize) {
+            this.minPoolSize = minPoolSize;
+        }
+
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             return new Config(typeSafeConfig.getInt("minPoolSize"));
         }
@@ -129,7 +138,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return getActiveIdentityByDomainId().values().stream()
-                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
     }
@@ -137,7 +146,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
     }
@@ -145,7 +154,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return persistableStore.getRetired().stream()
-                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
     }
@@ -155,7 +164,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
             return Streams.concat(getActiveIdentityByDomainId().values().stream(),
                             Streams.concat(persistableStore.getRetired().stream(),
                                     persistableStore.getPool().stream()))
-                    .filter(e -> e.networkId().getNodeId().equals(nodeId))
+                    .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
     }
@@ -193,13 +202,13 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.findNetworkId(identity.nodeId(), identity.pubKey()).isPresent())
+                    .filter(identity -> networkService.findNetworkId(identity.getNodeId(), identity.getPubKey()).isPresent())
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny()) // If none is initialized we take any
                     .map(pooledIdentity -> {
                         Identity clonedIdentity;
                         synchronized (lock) {
-                            clonedIdentity = new Identity(domainId, pooledIdentity.networkId(), pooledIdentity.keyPair(), pooledIdentity.proofOfWork());
+                            clonedIdentity = new Identity(domainId, pooledIdentity.getNetworkId(), pooledIdentity.getKeyPair(), pooledIdentity.getProofOfWork());
                             persistableStore.getPool().remove(pooledIdentity);
                             getActiveIdentityByDomainId().put(domainId, clonedIdentity);
                         }
@@ -228,14 +237,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     private void initializeActiveIdentities() {
         getActiveIdentityByDomainId().values().forEach(identity ->
-                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
+                networkService.maybeInitializeServer(identity.getNodeId(), identity.getPubKey()).values()
                         .forEach(value -> value.whenComplete((result, throwable) -> {
                                     if (throwable == null && result) {
                                         log.info("Network node for active identity {} initialized. NetworkId={}",
-                                                identity.domainId(), identity.networkId());
+                                                identity.getDomainId(), identity.getNetworkId());
                                     } else {
                                         log.error("Initializing network node for active identity {} failed. NetworkId={}",
-                                                identity.domainId(), identity.networkId());
+                                                identity.getDomainId(), identity.getNetworkId());
                                     }
                                 })
                         ));
@@ -243,14 +252,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     private void initializePooledIdentities() {
         persistableStore.getPool().forEach(identity ->
-                networkService.maybeInitializeServer(identity.nodeId(), identity.pubKey()).values()
+                networkService.maybeInitializeServer(identity.getNodeId(), identity.getPubKey()).values()
                         .forEach(value -> value.whenComplete((result, throwable) -> {
                                     if (throwable == null && result) {
                                         log.info("Network node for pooled identity {} initialized. NetworkId={}",
-                                                identity.domainId(), identity.networkId());
+                                                identity.getDomainId(), identity.getNetworkId());
                                     } else {
                                         log.error("Initializing network node for pooled identity {} failed. NetworkId={}",
-                                                identity.domainId(), identity.networkId());
+                                                identity.getDomainId(), identity.getNetworkId());
                                     }
                                 })
                         ));
@@ -261,14 +270,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                 .whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
-                                identity.domainId(), identity.networkId());
+                                identity.getDomainId(), identity.getNetworkId());
                         synchronized (lock) {
                             persistableStore.getPool().add(identity);
                         }
                         persist();
                     } else {
                         log.error("Creation and initializing network node for pooled identity {} failed. NetworkId={}",
-                                identity.domainId(), identity.networkId());
+                                identity.getDomainId(), identity.getNetworkId());
                     }
                 });
     }
@@ -284,10 +293,10 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
                 }).whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for active identity {} created and initialized. NetworkId={}",
-                                identity.domainId(), identity.networkId());
+                                identity.getDomainId(), identity.getNetworkId());
                     } else {
                         log.error("Creation and initializing network node for active identity {} failed. NetworkId={}",
-                                identity.domainId(), identity.networkId());
+                                identity.getDomainId(), identity.getNetworkId());
                     }
                 });
     }

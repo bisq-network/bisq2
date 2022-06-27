@@ -154,7 +154,7 @@ public class OnboardNewbieController implements Controller {
         }
 
         String amount = AmountFormatter.formatAmountWithCode(model.getBaseSideAmount(), true);
-        String quoteCurrency = model.getSelectedMarket().quoteCurrencyCode();
+        String quoteCurrency = model.getSelectedMarket().getQuoteCurrencyCode();
         String paymentMethods = Joiner.on(", ").join(model.getSelectedPaymentMethods());
 
         String previewText = Res.get("createOffer.tradeChatOffer.chatMessage", amount, quoteCurrency, paymentMethods);

@@ -136,34 +136,34 @@ public class SettlementSelection {
 
             model.visibility.set(true);
 
-            model.baseSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, market.baseCurrencyCode())
+            model.baseSideAccountObservableList.setAll(model.accountService.getMatchingAccounts(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
                     .map(AccountListItem::new)
                     .collect(Collectors.toList()));
-            List<AccountListItem> collect = model.accountService.getMatchingAccounts(selectedProtocolTyp, market.quoteCurrencyCode())
+            List<AccountListItem> collect = model.accountService.getMatchingAccounts(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
                     .map(AccountListItem::new)
                     .collect(Collectors.toList());
             model.quoteSideAccountObservableList.clear();
             model.quoteSideAccountObservableList.setAll(collect);
 
-            model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, market.baseCurrencyCode())
+            model.baseSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, market.getBaseCurrencyCode())
                     .stream()
-                    .map(e -> new SettlementListItem(e, market.baseCurrencyCode()))
+                    .map(e -> new SettlementListItem(e, market.getBaseCurrencyCode()))
                     .collect(Collectors.toList()));
-            model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, market.quoteCurrencyCode())
+            model.quoteSideSettlementObservableList.setAll(SettlementMethod.from(selectedProtocolTyp, market.getQuoteCurrencyCode())
                     .stream()
-                    .map(e -> new SettlementListItem(e, market.quoteCurrencyCode()))
+                    .map(e -> new SettlementListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));
 
             // For Fiat we show always accounts. If no accounts set up yet the user gets the create-account button 
             // displayed (as prompt in the table view)
-            if (TradeCurrency.isFiat(market.baseCurrencyCode())) {
+            if (TradeCurrency.isFiat(market.getBaseCurrencyCode())) {
                 model.baseSideAccountsVisibility.set(true);
             } else {
                 model.baseSideAccountsVisibility.set(!model.baseSideAccountObservableList.isEmpty());
             }
-            if (TradeCurrency.isFiat(market.quoteCurrencyCode())) {
+            if (TradeCurrency.isFiat(market.getQuoteCurrencyCode())) {
                 model.quoteSideAccountsVisibility.set(true);
             } else {
                 model.quoteSideAccountsVisibility.set(!model.quoteSideAccountObservableList.isEmpty());
@@ -192,17 +192,17 @@ public class SettlementSelection {
 
             if (model.baseSideAccountsVisibility.get()) {
                 model.baseSideDescription.set(Res.get("createOffer.account.description",
-                        baseSideVerb, market.baseCurrencyCode()));
+                        baseSideVerb, market.getBaseCurrencyCode()));
             } else {
                 model.baseSideDescription.set(Res.get("createOffer.settlement.description",
-                        baseSideVerb, market.baseCurrencyCode()));
+                        baseSideVerb, market.getBaseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
                 model.quoteSideDescription.set(Res.get("createOffer.account.description",
-                        quoteSideVerb, market.quoteCurrencyCode()));
+                        quoteSideVerb, market.getQuoteCurrencyCode()));
             } else {
                 model.quoteSideDescription.set(Res.get("createOffer.settlement.description",
-                        quoteSideVerb, market.quoteCurrencyCode()));
+                        quoteSideVerb, market.getQuoteCurrencyCode()));
             }
         }
 

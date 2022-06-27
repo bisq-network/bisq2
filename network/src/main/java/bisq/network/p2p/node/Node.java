@@ -32,6 +32,7 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.EOFException;
@@ -88,11 +89,26 @@ public class Node implements Connection.Handler {
         }
     }
 
-    public static record Config(Transport.Type transportType,
-                                Set<Transport.Type> supportedTransportTypes,
-                                AuthorizationService authorizationService,
-                                Transport.Config transportConfig,
-                                int socketTimeout) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final Transport.Type transportType;
+        private final Set<Transport.Type> supportedTransportTypes;
+        private final AuthorizationService authorizationService;
+        private final Transport.Config transportConfig;
+        private final int socketTimeout;
+
+        public Config(Transport.Type transportType,
+                      Set<Transport.Type> supportedTransportTypes,
+                      AuthorizationService authorizationService,
+                      Transport.Config transportConfig,
+                      int socketTimeout) {
+            this.transportType = transportType;
+            this.supportedTransportTypes = supportedTransportTypes;
+            this.authorizationService = authorizationService;
+            this.transportConfig = transportConfig;
+            this.socketTimeout = socketTimeout;
+        }
     }
 
     private final BanList banList;
@@ -118,9 +134,9 @@ public class Node implements Connection.Handler {
 
     public Node(BanList banList, Config config, String nodeId) {
         this.banList = banList;
-        transportType = config.transportType();
-        transport = getTransport(transportType, config.transportConfig());
-        authorizationService = config.authorizationService();
+        transportType = config.getTransportType();
+        transport = getTransport(transportType, config.getTransportConfig());
+        authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
     }
@@ -132,13 +148,14 @@ public class Node implements Connection.Handler {
 
     public void maybeInitializeServer(int port) {
         switch (state.get()) {
-            case CREATED -> {
+            case CREATED: {
                 setState(State.INITIALIZE_SERVER);
                 transport.initialize();
                 createServerAndListen(port);
                 setState(State.SERVER_INITIALIZED);
+                break;
             }
-            case INITIALIZE_SERVER -> {
+            case INITIALIZE_SERVER: {
                 log.warn("Node has started initializing. We pause the thread and check afterwards if the " +
                         "node initialisation has been completed in the meantime.");
                 try {
@@ -147,37 +164,41 @@ public class Node implements Connection.Handler {
                     e.printStackTrace();
                 }
                 maybeInitializeServer(port);
+                break;
             }
-            case SERVER_INITIALIZED -> {
+            case SERVER_INITIALIZED: {
                 log.debug("Node is already initialized. We ignore the initializeServer call.");
+                break;
             }
-            case SHUTDOWN_STARTED -> {
+            case SHUTDOWN_STARTED: {
                 log.warn("Node shutdown has been started. We ignore the initializeServer call.");
+                break;
             }
-            case SHUTDOWN_COMPLETE -> {
+            case SHUTDOWN_COMPLETE: {
                 log.warn("Node is already shutdown. We ignore the initializeServer call.");
+                break;
             }
         }
     }
 
     private void createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
-        myCapability = Optional.of(new Capability(serverSocketResult.address(), config.supportedTransportTypes()));
+        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), config.getSupportedTransportTypes()));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 this::handleException));
     }
 
     private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.socketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-        log.debug("Inbound handshake request at: {}", myCapability.address());
+        log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
             ConnectionHandshake.Result result = connectionHandshake.onSocket(getMyLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
 
-            Address address = result.capability().address();
-            log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.address());
+            Address address = result.getCapability().getAddress();
+            log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
 
             // As time passed we check again if connection is still not available
             if (inboundConnectionsByAddress.containsKey(address)) {
@@ -194,9 +215,9 @@ public class Node implements Connection.Handler {
 
             InboundConnection connection = new InboundConnection(socket,
                     serverSocketResult,
-                    result.capability(),
-                    result.load(),
-                    result.metrics(),
+                    result.getCapability(),
+                    result.getLoad(),
+                    result.getMetrics(),
                     this,
                     this::handleException);
             inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
@@ -303,19 +324,19 @@ public class Node implements Connection.Handler {
             return outboundConnectionsByAddress.get(address);
         }
 
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.socketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
-        log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.address(), address);
+        log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
             ConnectionHandshake.Result result = connectionHandshake.start(getMyLoad()); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
-            log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.address(), address);
+            log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);
-            if (! address.isClearNetAddress()) {
+            if (!address.isClearNetAddress()) {
                 // For clearnet this check doesn't make sense because:
                 // - the peer binds to 127.0.0.1, therefore reports 127.0.0.1 in the handshake
                 // - we use the peer's public IP to connect to him
-                checkArgument(address.equals(result.capability().address()),
+                checkArgument(address.equals(result.getCapability().getAddress()),
                         "Peers reported address must match address we used to connect");
             }
 
@@ -335,9 +356,9 @@ public class Node implements Connection.Handler {
 
             OutboundConnection connection = new OutboundConnection(socket,
                     address,
-                    result.capability(),
-                    result.load(),
-                    result.metrics(),
+                    result.getCapability(),
+                    result.getLoad(),
+                    result.getMetrics(),
                     this,
                     this::handleException);
             outboundConnectionsByAddress.put(address, connection);
@@ -371,7 +392,8 @@ public class Node implements Connection.Handler {
             return;
         }
         if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
-            if (networkMessage instanceof CloseConnectionMessage closeConnectionMessage) {
+            if (networkMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this,
                         connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
@@ -518,11 +540,16 @@ public class Node implements Connection.Handler {
     }
 
     private Transport getTransport(Transport.Type transportType, Transport.Config config) {
-        return switch (transportType) {
-            case TOR -> new TorTransport(config);
-            case I2P -> new I2PTransport(config);
-            case CLEAR -> new ClearNetTransport(config);
-        };
+        switch (transportType) {
+            case TOR:
+                return new TorTransport(config);
+            case I2P:
+                return new I2PTransport(config);
+            case CLEAR:
+                return new ClearNetTransport(config);
+            default:
+                throw new RuntimeException("Unhandled transportType");
+        }
     }
 
     private Load getMyLoad() {

@@ -60,7 +60,8 @@ class AddressValidationHandler implements Connection.Listener {
                 )
                 .whenComplete((connection, throwable) -> {
                     if (throwable == null) {
-                        if (connection instanceof OutboundConnection outboundConnection) {
+                        if (connection instanceof OutboundConnection) {
+                            OutboundConnection outboundConnection = (OutboundConnection) connection;
                             this.outboundConnection = outboundConnection;
                             outboundConnection.addListener(this);
                         } else {
@@ -77,9 +78,10 @@ class AddressValidationHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof AddressValidationResponse addressValidationResponse) {
+        if (networkMessage instanceof AddressValidationResponse) {
+            AddressValidationResponse addressValidationResponse = (AddressValidationResponse) networkMessage;
             Objects.requireNonNull(outboundConnection);
-            if (addressValidationResponse.requestNonce() == nonce &&
+            if (addressValidationResponse.getRequestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {
                 log.debug("Node {} received valid AddressValidationResponse from {}", node, addressOfInboundConnection);
                 node.closeConnectionGracefullyAsync(outboundConnection, CloseReason.ADDRESS_VALIDATION_COMPLETED);
@@ -90,7 +92,7 @@ class AddressValidationHandler implements Connection.Listener {
                                 "Response nonce: {}. Request nonce: {}. " +
                                 "connection.getPeerAddress()={}. address={}",
                         node, addressOfInboundConnection,
-                        addressValidationResponse.requestNonce(), nonce,
+                        addressValidationResponse.getRequestNonce(), nonce,
                         outboundConnection.getPeerAddress(), addressOfInboundConnection);
                 banList.add(addressOfInboundConnection, BanList.Reason.ADDRESS_VALIDATION_FAILED);
                 banList.add(outboundConnection.getPeerAddress(), BanList.Reason.ADDRESS_VALIDATION_FAILED);

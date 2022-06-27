@@ -17,7 +17,24 @@
 
 package bisq.social.user.proof;
 
-public record ProofOfBurnProof(String txId, long burntAmount, long date) implements Proof {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ProofOfBurnProof implements Proof {
+    private final String txId;
+    private final long burntAmount;
+    private final long date;
+
+    public ProofOfBurnProof(String txId, long burntAmount, long date) {
+        this.txId = txId;
+        this.burntAmount = burntAmount;
+        this.date = date;
+    }
+
     @Override
     public bisq.social.protobuf.Proof toProto() {
         return getProofBuilder().setProofOfBurnProof(

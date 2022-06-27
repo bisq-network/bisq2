@@ -54,8 +54,8 @@ public class HybridEncryption {
 
         // Use that shared secret to derive the hmacKey and the sessionKey
         Pair<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first());
-        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second());
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.getFirst());
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.getSecond());
 
         IvParameterSpec ivSpec = SymEncryption.generateIv();
         byte[] cypherText = SymEncryption.encrypt(message, sessionKey, ivSpec);
@@ -76,11 +76,11 @@ public class HybridEncryption {
     }
 
     public static byte[] decryptAndVerify(ConfidentialData confidentialData, KeyPair receiversKeyPair) throws GeneralSecurityException {
-        byte[] encodedSenderPublicKey = confidentialData.encodedSenderPublicKey();
-        byte[] hmac = confidentialData.hmac();
-        byte[] iv = confidentialData.iv();
-        byte[] cypherText = confidentialData.cypherText();
-        byte[] signature = confidentialData.signature();
+        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
+        byte[] hmac = confidentialData.getHmac();
+        byte[] iv = confidentialData.getIv();
+        byte[] cypherText = confidentialData.getCypherText();
+        byte[] signature = confidentialData.getSignature();
 
         PublicKey senderPublicKey = KeyGeneration.generatePublic(encodedSenderPublicKey);
         byte[] messageToVerify = concat(hmac, cypherText);
@@ -90,8 +90,8 @@ public class HybridEncryption {
         byte[] sharedSecret = SymEncryption.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
 
         Pair<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first());
-        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second());
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.getFirst());
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.getSecond());
 
         byte[] encodedReceiverPublicKey = receiversKeyPair.getPublic().getEncoded();
         byte[] input = getHmacInput(iv, cypherText, encodedSenderPublicKey, encodedReceiverPublicKey);

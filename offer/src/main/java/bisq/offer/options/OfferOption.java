@@ -29,28 +29,28 @@ public interface OfferOption extends Proto {
 
     static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {
         switch (proto.getMessageCase()) {
-            case AMOUNTOPTION -> {
-                AmountOption.fromProto(proto.getAmountOption());
+            case AMOUNTOPTION: {
+                return AmountOption.fromProto(proto.getAmountOption());
             }
-            case COLLATERALOPTION -> {
-                CollateralOption.fromProto(proto.getCollateralOption());
+            case COLLATERALOPTION: {
+                return CollateralOption.fromProto(proto.getCollateralOption());
             }
-            case CONTRACTOPTION -> {
-                ContractOption.fromProto(proto.getContractOption());
+            case CONTRACTOPTION: {
+                return ContractOption.fromProto(proto.getContractOption());
             }
-            case FEEOPTION -> {
-                FeeOption.fromProto(proto.getFeeOption());
+            case FEEOPTION: {
+                return FeeOption.fromProto(proto.getFeeOption());
             }
-            case FIATSETTLEMENTOPTION -> {
-                FiatSettlementOption.fromProto(proto.getFiatSettlementOption());
+            case FIATSETTLEMENTOPTION: {
+                return FiatSettlementOption.fromProto(proto.getFiatSettlementOption());
             }
-            case REPUTATIONOPTION -> {
-                ReputationOption.fromProto(proto.getReputationOption());
+            case REPUTATIONOPTION: {
+                return ReputationOption.fromProto(proto.getReputationOption());
             }
-            case SUPPORTOPTION -> {
-                SupportOption.fromProto(proto.getSupportOption());
+            case SUPPORTOPTION: {
+                return SupportOption.fromProto(proto.getSupportOption());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

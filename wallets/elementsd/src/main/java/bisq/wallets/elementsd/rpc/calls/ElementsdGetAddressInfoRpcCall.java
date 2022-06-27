@@ -19,10 +19,22 @@ package bisq.wallets.elementsd.rpc.calls;
 
 import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElementsdGetAddressInfoRpcCall
         extends WalletRpcCall<ElementsdGetAddressInfoRpcCall.Request, ElementsdGetAddressInfoResponse> {
-    public record Request(String address) {
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String address;
+
+        public Request(String address) {
+            this.address = address;
+        }
     }
 
     public ElementsdGetAddressInfoRpcCall(Request request) {

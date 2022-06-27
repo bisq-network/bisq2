@@ -17,8 +17,23 @@
 
 package bisq.offer.options;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
 // Notarizing account creation date with Open time stamp
-public record AccountCreationDateProof(String hashOfAccount, String otsProof) implements ReputationProof {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class AccountCreationDateProof implements ReputationProof {
+    private final String hashOfAccount;
+    private final String otsProof;
+
+    public AccountCreationDateProof(String hashOfAccount, String otsProof) {
+        this.hashOfAccount = hashOfAccount;
+        this.otsProof = otsProof;
+    }
+
     public bisq.offer.protobuf.ReputationProof toProto() {
         return getReputationProofBuilder().setAccountCreationDateProof(
                         bisq.offer.protobuf.AccountCreationDateProof.newBuilder()

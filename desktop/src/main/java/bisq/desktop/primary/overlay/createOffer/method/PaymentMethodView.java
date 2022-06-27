@@ -135,7 +135,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             if (paymentMethod.length() > 13) {
                 button.setTooltip(new Tooltip(displayString));
             }
-           // button.setGraphicTextGap(10);
             button.setAlignment(Pos.CENTER_LEFT);
             button.setId("bisq-border-icon-toggle-button");
             button.setSelected(model.getSelectedPaymentMethods().contains(paymentMethod));
@@ -151,11 +150,10 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             model.getAddedCustomMethods().stream()
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .forEach(customMethod -> {
-                        //button.setPadding(new Insets(0, 0, 0, 0));
                         Label closeCustomIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "15");
                         closeCustomIcon.setCursor(Cursor.HAND);
                         closeCustomIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
-                        StackPane.setMargin(closeCustomIcon, new Insets(-14, 0, 0, 120));
+                        StackPane.setMargin(closeCustomIcon, new Insets(-14, 0, 0, 156));
                         stackPane.getChildren().add(closeCustomIcon);
                     });
             flowPane.getChildren().add(stackPane);

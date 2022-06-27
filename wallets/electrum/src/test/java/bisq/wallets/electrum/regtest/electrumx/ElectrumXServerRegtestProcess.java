@@ -34,9 +34,9 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
     private final ElectrumXRpc electrumXRpc;
 
     public ElectrumXServerRegtestProcess(ElectrumXServerConfig serverConfig) {
-        super(serverConfig.dataDir());
+        super(serverConfig.getDataDir());
         this.serverConfig = serverConfig;
-        electrumXRpc = new ElectrumXRpc(serverConfig.rpcPort());
+        electrumXRpc = new ElectrumXRpc(serverConfig.getRpcPort());
     }
 
     @Override
@@ -50,12 +50,12 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
 
     private Map<String, String> getEnvironmentVars() {
         Map<String, String> envMap = new HashMap<>();
-        envMap.put("SERVICES", "tcp://127.0.0.1:" + serverConfig.port() +
-                ",rpc://127.0.0.1:" + serverConfig.rpcPort());
+        envMap.put("SERVICES", "tcp://127.0.0.1:" + serverConfig.getPort() +
+                ",rpc://127.0.0.1:" + serverConfig.getRpcPort());
         envMap.put("COIN", "Bitcoin");
         envMap.put("NET", "regtest");
 
-        RpcConfig bitcoindRpcConfig = serverConfig.bitcoindRpcConfig();
+        RpcConfig bitcoindRpcConfig = serverConfig.getBitcoindRpcConfig();
         envMap.put("DAEMON_URL",
                 "http://" + bitcoindRpcConfig.getUser() + ":" + bitcoindRpcConfig.getPassword() +
                         "@" + bitcoindRpcConfig.getHostname() + ":" + bitcoindRpcConfig.getPort());
@@ -75,6 +75,6 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
     }
 
     public int getPort() {
-        return serverConfig.port();
+        return serverConfig.getPort();
     }
 }

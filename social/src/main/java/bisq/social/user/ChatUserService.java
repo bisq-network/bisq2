@@ -46,6 +46,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -56,6 +57,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -67,12 +69,22 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
-    public static record Config(List<String> btcMemPoolProviders,
-                                List<String> bsqMemPoolProviders) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final List<String> btcMemPoolProviders;
+        private final List<String> bsqMemPoolProviders;
+
+        public Config(List<String> btcMemPoolProviders,
+                      List<String> bsqMemPoolProviders) {
+            this.btcMemPoolProviders = btcMemPoolProviders;
+            this.bsqMemPoolProviders = bsqMemPoolProviders;
+        }
+
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             List<String> btcMemPoolProviders = typeSafeConfig.getStringList("btcMemPoolProviders");
             List<String> bsqMemPoolProviders = typeSafeConfig.getStringList("bsqMemPoolProviders");
-            return new ChatUserService.Config(btcMemPoolProviders, bsqMemPoolProviders);
+            return new Config(btcMemPoolProviders, bsqMemPoolProviders);
         }
     }
 
@@ -129,7 +141,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                String bio) {
         return identityService.createNewInitializedIdentity(profileId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
-                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().networkId(), terms, bio);
+                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().add(chatUserIdentity);
@@ -141,7 +153,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 .thenApply(chatUserIdentity -> {
                     // We don't wait for the reply but start an async task
                     CompletableFuture.runAsync(() -> openTimestampService.maybeCreateOrUpgradeTimestamp(
-                                    new ByteArray(chatUserIdentity.getIdentity().pubKey().hash())),
+                                    new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash())),
                             ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
                     return chatUserIdentity;
                 });
@@ -278,7 +290,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         } else {
             return supplyAsync(() -> {
                 try {
-                    BaseHttpClient httpClient = getApiHttpClient(config.bsqMemPoolProviders());
+                    BaseHttpClient httpClient = getApiHttpClient(config.getBsqMemPoolProviders());
                     String jsonBsqTx = httpClient.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
                     Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
                     checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
@@ -326,8 +338,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
         return supplyAsync(() -> {
             try {
-                BaseHttpClient httpClientBsq = getApiHttpClient(config.bsqMemPoolProviders());
-                BaseHttpClient httpClientBtc = getApiHttpClient(config.btcMemPoolProviders());
+                BaseHttpClient httpClientBsq = getApiHttpClient(config.getBsqMemPoolProviders());
+                BaseHttpClient httpClientBtc = getApiHttpClient(config.getBtcMemPoolProviders());
                 String jsonBsqTx = httpClientBsq.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBsq.userAgent)));
                 String jsonBtcTx = httpClientBtc.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClientBtc.userAgent)));
                 checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), "bsq tx sanity checks");
@@ -361,12 +373,15 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     //todo work out concept how to adjust those values
     public long getMinBurnAmount(Role.Type type) {
-        return switch (type) {
+        switch (type) {
             //todo for dev testing reduced to 6 BSQ
-            case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
-            case CHANNEL_MODERATOR -> 10000;
-            default -> 0;
-        };
+            case LIQUIDITY_PROVIDER:
+                return USE_DEV_TEST_POB_VALUES ? 600 : 5000;
+            case CHANNEL_MODERATOR:
+                return 10000;
+            default:
+                return 0;
+        }
     }
 
 
@@ -380,7 +395,9 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public Collection<ChatUser> getMentionableChatUsers() {
         // TODO: implement logic
-        return getChatUserIdentities().stream().map(ChatUserIdentity::getChatUser).toList();
+        return getChatUserIdentities().stream()
+                .map(ChatUserIdentity::getChatUser)
+                .collect(Collectors.toList());
     }
 
     public Optional<ChatUserIdentity> findChatUserIdentity(String profileId) {

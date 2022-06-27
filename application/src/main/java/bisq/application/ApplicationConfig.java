@@ -19,15 +19,35 @@ package bisq.application;
 
 import bisq.common.locale.LocaleRepository;
 import bisq.common.options.PropertiesReader;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Locale;
 import java.util.Properties;
 
-public record ApplicationConfig(String baseDir,
-                                String appName,
-                                boolean devMode,
-                                boolean isBitcoindRegtest,
-                                boolean isElementsdRegtest) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ApplicationConfig {
+    private final String baseDir;
+    private final String appName;
+    private final boolean devMode;
+    private final boolean isBitcoindRegtest;
+    private final boolean isElementsdRegtest;
+
+    public ApplicationConfig(String baseDir,
+                             String appName,
+                             boolean devMode,
+                             boolean isBitcoindRegtest,
+                             boolean isElementsdRegtest) {
+        this.baseDir = baseDir;
+        this.appName = appName;
+        this.devMode = devMode;
+        this.isBitcoindRegtest = isBitcoindRegtest;
+        this.isElementsdRegtest = isElementsdRegtest;
+    }
+
     // To ensure the locale is set initially we should write it to property file instead of persisting it in
     // preferences which might be read out to a later moment.
     public Locale getLocale() {

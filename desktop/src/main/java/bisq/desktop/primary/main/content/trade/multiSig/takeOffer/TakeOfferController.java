@@ -23,23 +23,35 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
-import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.components.TakersSettlementSelection;
 import bisq.desktop.primary.main.content.trade.components.AmountPriceGroup;
 import bisq.desktop.primary.main.content.trade.components.DirectionSelection;
+import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
+import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.components.TakersSettlementSelection;
 import bisq.offer.Offer;
 import bisq.offer.spec.Direction;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.protocol.ProtocolService;
 import javafx.beans.property.BooleanProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData>, Controller {
-    public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class InitData {
+        private final Offer offer;
+        private final BooleanProperty showTakeOfferTab;
+
+        public InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+            this.offer = offer;
+            this.showTakeOfferTab = showTakeOfferTab;
+        }
     }
 
     private final MarketPriceService marketPriceService;
@@ -74,7 +86,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
 
     @Override
     public void initWithData(InitData initData) {
-        Offer offer = initData.offer();
+        Offer offer = initData.getOffer();
         model.offer = offer;
         Direction direction = offer.getDirection();
         model.direction = direction;

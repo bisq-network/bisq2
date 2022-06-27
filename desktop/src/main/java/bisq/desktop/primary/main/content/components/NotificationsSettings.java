@@ -133,14 +133,17 @@ public class NotificationsSettings {
 
         private void update() {
             switch (model.notificationSetting.get()) {
-                case ALL -> {
+                case ALL: {
                     toggleGroup.selectToggle(all);
+                    break;
                 }
-                case MENTION -> {
+                case MENTION: {
                     toggleGroup.selectToggle(mention);
+                    break;
                 }
-                case NEVER -> {
+                case NEVER: {
                     toggleGroup.selectToggle(none);
+                    break;
                 }
             }
         }

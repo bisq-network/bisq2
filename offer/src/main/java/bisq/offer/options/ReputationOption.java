@@ -17,12 +17,23 @@
 
 package bisq.offer.options;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// Provides reputation proofs. E.g.Account age witness hash, signed account age witness,
-// tx nodeId and signature of burned BSQ, or social media account address,...
-public record ReputationOption(Set<ReputationProof> reputationProofs) implements OfferOption {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ReputationOption implements OfferOption {
+    private final Set<ReputationProof> reputationProofs;
+
+    public ReputationOption(Set<ReputationProof> reputationProofs) {
+        this.reputationProofs = reputationProofs;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setReputationOption(
                         bisq.offer.protobuf.ReputationOption.newBuilder()

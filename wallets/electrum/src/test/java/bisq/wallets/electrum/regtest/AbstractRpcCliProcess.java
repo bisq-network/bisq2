@@ -52,8 +52,8 @@ public abstract class AbstractRpcCliProcess {
 
     private List<String> createArgsList(String... args) {
         List<String> allArgs = new ArrayList<>();
-        allArgs.add(cliProcessConfig.binaryName());
-        allArgs.addAll(cliProcessConfig.defaultArgs());
+        allArgs.add(cliProcessConfig.getBinaryName());
+        allArgs.addAll(cliProcessConfig.getDefaultArgs());
         allArgs.addAll(Arrays.asList(args));
         return allArgs;
     }

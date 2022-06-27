@@ -174,7 +174,7 @@ public class MarketPriceComponent {
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 
-                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote(), true));
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.getQuote(), true));
                         quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(8);
@@ -196,7 +196,7 @@ public class MarketPriceComponent {
                         market.setStyle("-fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 0.8em");
                         market.setPadding(new Insets(3, 0, 0, 0));
 
-                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.quote(), true));
+                        Label quote = new Label(QuoteFormatter.format(item.marketPrice.getQuote(), true));
                         quote.setStyle("-fx-text-fill: -fx-light-text-color; -fx-font-family: \"IBM Plex Sans Light\"; -fx-font-size: 1.05em");
                         HBox box = Layout.hBoxWith(market, quote);
                         box.setSpacing(13);
@@ -238,9 +238,9 @@ public class MarketPriceComponent {
 
         private ListItem(MarketPrice marketPrice) {
             this.marketPrice = marketPrice;
-            code = marketPrice.code();
+            code = marketPrice.getCode();
             String pair = TradeCurrency.isFiat(code) ? ("BTC/" + code) : (code + "/BTC");
-            displayStringProperty.set(pair + ": " + QuoteFormatter.format(marketPrice.quote(), true));
+            displayStringProperty.set(pair + ": " + QuoteFormatter.format(marketPrice.getQuote(), true));
         }
     }
 }

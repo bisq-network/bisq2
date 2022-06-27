@@ -89,7 +89,7 @@ public class BsqTxValidator {
     public static Optional<String> getOpReturnData(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
-            JsonArray voutArray = vinAndVout.second();
+            JsonArray voutArray = vinAndVout.getSecond();
             for (JsonElement x : voutArray) {
                 JsonObject y = x.getAsJsonObject();
                 if (y.get("txOutputType").getAsString().matches(".*OP_RETURN.*")) {

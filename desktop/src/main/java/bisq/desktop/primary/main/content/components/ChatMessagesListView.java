@@ -184,42 +184,42 @@ public class ChatMessagesListView {
             if (model.isDiscussionsChat) {
                 selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
+                    if (channel instanceof PublicDiscussionChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PublicDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(publicDiscussionChannel.getChatMessages());
+                                .to(((PublicDiscussionChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
+                    } else if (channel instanceof PrivateDiscussionChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(privateDiscussionChannel.getChatMessages());
+                                .to(((PrivateDiscussionChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
             } else {
                 selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicTradeChannel publicTradeChannel) {
+                    if (channel instanceof PublicTradeChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(publicTradeChannel.getChatMessages());
+                                .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
+                    } else if (channel instanceof PrivateTradeChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(privateTradeChannel.getChatMessages());
+                                .to(((PrivateTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -230,7 +230,8 @@ public class ChatMessagesListView {
         public void onDeactivate() {
             selectedChannelPin.unbind();
             if (chatMessagesPin != null) {
-                chatMessagesPin.unbind();chatMessagesPin=null;
+                chatMessagesPin.unbind();
+                chatMessagesPin = null;
             }
         }
 
@@ -275,7 +276,7 @@ public class ChatMessagesListView {
                                 .ifPresent(privateTradeChannel -> {
                                     TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
                                     String dirString = tradeChatOffer.getDirection().mirror().displayString();
-                                    String baseCurrencyCode = tradeChatOffer.getMarket().baseCurrencyCode();
+                                    String baseCurrencyCode = tradeChatOffer.getMarket().getBaseCurrencyCode();
                                     String text = chatMessage.getText();
                                     Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
                                     chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
@@ -289,14 +290,14 @@ public class ChatMessagesListView {
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
-                    chatService.deletePublicTradeChatMessage(marketChatMessage, chatUserIdentity)
+                if (chatMessage instanceof PublicTradeChatMessage) {
+                    chatService.deletePublicTradeChatMessage((PublicTradeChatMessage) chatMessage, chatUserIdentity)
                             .whenComplete((result, throwable) -> {
                                 log.error("onDeleteMessage result {}", result);
                                 log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
-                } else if (chatMessage instanceof PublicDiscussionChatMessage privateDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage(privateDiscussionChatMessage, chatUserIdentity);
+                } else if (chatMessage instanceof PublicDiscussionChatMessage) {
+                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, chatUserIdentity);
                 }
                 //todo delete private message
             }
@@ -319,12 +320,12 @@ public class ChatMessagesListView {
             if (!chatService.isMyMessage(chatMessage)) {
                 return;
             }
-            if (chatMessage instanceof PublicTradeChatMessage marketChatMessage) {
+            if (chatMessage instanceof PublicTradeChatMessage) {
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedTradeChatMessage(marketChatMessage, editedText, chatUserIdentity);
-            } else if (chatMessage instanceof PublicDiscussionChatMessage privateDiscussionChatMessage) {
+                chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, chatUserIdentity);
+            } else if (chatMessage instanceof PublicDiscussionChatMessage) {
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedDiscussionChatMessage(privateDiscussionChatMessage, editedText, chatUserIdentity);
+                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, chatUserIdentity);
             }
             //todo editing private message not supported yet
         }
@@ -415,8 +416,8 @@ public class ChatMessagesListView {
 
 
         public boolean isOfferMessage(ChatMessage chatMessage) {
-            return chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage &&
-                    publicTradeChatMessage.getTradeChatOffer().isPresent();
+            return chatMessage instanceof PublicTradeChatMessage &&
+                    ((PublicTradeChatMessage) chatMessage).getTradeChatOffer().isPresent();
         }
     }
 
@@ -783,13 +784,13 @@ public class ChatMessagesListView {
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(25);
 
-                                    quotedMessageField.setText(quotation.message());
+                                    quotedMessageField.setText(quotation.getMessage());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
 
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
                                     roboIconImageView.setFitHeight(25);
-                                    Image image = RoboHash.getImage(quotation.proofOfWork().getPayload());
+                                    Image image = RoboHash.getImage(quotation.getProofOfWork().getPayload());
                                     roboIconImageView.setImage(image);
 
                                     Label userName = new Label(quotation.getUserName());
@@ -826,9 +827,6 @@ public class ChatMessagesListView {
                             editButtonsHBox.setManaged(true);
                             message.setVisible(false);
                             message.setManaged(false);
-
-                            ChatMessage chatMessage = item.getChatMessage();
-                            boolean isOfferMessage = chatMessage instanceof PublicTradeChatMessage publicTradeChatMessage && publicTradeChatMessage.getTradeChatOffer().isPresent();
 
                             editInputField.setOnKeyPressed(event -> {
                                 if (event.getCode() == KeyCode.ENTER) {
@@ -875,10 +873,10 @@ public class ChatMessagesListView {
         public ChatMessageListItem(T chatMessage, ChatService chatService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
 
-            if (chatMessage instanceof PrivateTradeChatMessage privateTradeChatMessage) {
-                author = Optional.of(privateTradeChatMessage.getAuthor());
-            } else if (chatMessage instanceof PrivateDiscussionChatMessage privateDiscussionChatMessage) {
-                author = Optional.of(privateDiscussionChatMessage.getAuthor());
+            if (chatMessage instanceof PrivateTradeChatMessage) {
+                author = Optional.of(((PrivateTradeChatMessage) chatMessage).getAuthor());
+            } else if (chatMessage instanceof PrivateDiscussionChatMessage) {
+                author = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getAuthor());
             } else {
                 author = chatService.findChatUser(chatMessage.getAuthorId());
             }

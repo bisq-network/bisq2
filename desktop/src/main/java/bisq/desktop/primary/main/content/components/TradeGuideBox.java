@@ -70,8 +70,8 @@ public class TradeGuideBox extends VBox {
                 new Pair<>("bisqEasy.privateTradeChannel.tradeInfo.step4", "onboarding-3-method")
         );
         for (Pair<String, String> item : items) {
-            String resourceKey = item.first();
-            String iconId = item.second();
+            String resourceKey = item.getFirst();
+            String iconId = item.getSecond();
 
             Label contentHeadlineLabel = new Label(Res.get(resourceKey + ".headline")/*, ImageUtil.getImageViewById(iconId)*/);
             //  headlineLabel.setGraphicTextGap(16.0);
@@ -125,16 +125,16 @@ public class TradeGuideBox extends VBox {
 
     private void select(int i) {
         if (visibleItem != null) {
-            visibleItem.first().setManaged(false);
-            visibleItem.first().setVisible(false);
-            visibleItem.second().setManaged(false);
-            visibleItem.second().setVisible(false);
+            visibleItem.getFirst().setManaged(false);
+            visibleItem.getFirst().setVisible(false);
+            visibleItem.getSecond().setManaged(false);
+            visibleItem.getSecond().setVisible(false);
         }
         visibleItem = labelItems.get(i);
-        visibleItem.first().setManaged(true);
-        visibleItem.first().setVisible(true);
-        visibleItem.second().setManaged(true);
-        visibleItem.second().setVisible(true);
+        visibleItem.getFirst().setManaged(true);
+        visibleItem.getFirst().setVisible(true);
+        visibleItem.getSecond().setManaged(true);
+        visibleItem.getSecond().setVisible(true);
 
         boolean first = index == 0;
         back.setManaged(!first);

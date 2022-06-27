@@ -21,10 +21,28 @@ import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumPasswordResponse;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElectrumPasswordRpcCall extends DaemonRpcCall<ElectrumPasswordRpcCall.Request, ElectrumPasswordResponse> {
     @Builder
-    public static record Request(String password, @JsonProperty("new_password") String newPassword) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String password;
+        @JsonProperty("new_password")
+        private final String newPassword;
+
+        public Request(String password, @JsonProperty("new_password") String newPassword) {
+            this.password = password;
+            this.newPassword = newPassword;
+        }
+
+        public String getPassword() {
+            return password;
+        }
     }
 
     public ElectrumPasswordRpcCall(Request request) {

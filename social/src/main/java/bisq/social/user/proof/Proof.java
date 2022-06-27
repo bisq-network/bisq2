@@ -46,16 +46,16 @@ public interface Proof extends Proto {
 
     static Proof fromProto(bisq.social.protobuf.Proof proto) {
         switch (proto.getMessageCase()) {
-            case PROOFOFBURNPROOF -> {
+            case PROOFOFBURNPROOF: {
                 return ProofOfBurnProof.fromProto(proto.getProofOfBurnProof());
             }
-            case BONDEDROLEPROOF -> {
+            case BONDEDROLEPROOF: {
                 return BondedRoleProof.fromProto(proto.getBondedRoleProof());
             }
-            case INVITATIONPROOF -> {
+            case INVITATIONPROOF: {
                 return InvitationProof.fromProto(proto.getInvitationProof());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

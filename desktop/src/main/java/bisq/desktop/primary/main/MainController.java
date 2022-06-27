@@ -66,10 +66,10 @@ public class MainController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case CONTENT -> {
+            case CONTENT: {
                 return Optional.of(new ContentController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

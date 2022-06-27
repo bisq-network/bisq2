@@ -23,7 +23,9 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.services.peergroup.BanList;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -47,7 +49,9 @@ public class ConnectionHandshake {
     private final AuthorizationService authorizationService;
 
     @Getter
-    public static class Request implements NetworkMessage {
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request implements NetworkMessage {
         private final Capability capability;
         private final Load load;
 
@@ -72,7 +76,9 @@ public class ConnectionHandshake {
     }
 
     @Getter
-    public static class Response implements NetworkMessage {
+    @ToString
+    @EqualsAndHashCode
+    public static final class Response implements NetworkMessage {
         private final Capability capability;
         private final Load load;
 
@@ -96,7 +102,19 @@ public class ConnectionHandshake {
         }
     }
 
-    static record Result(Capability capability, Load load, Metrics metrics) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    static final class Result {
+        private final Capability capability;
+        private final Load load;
+        private final Metrics metrics;
+
+        Result(Capability capability, Load load, Metrics metrics) {
+            this.capability = capability;
+            this.load = load;
+            this.metrics = metrics;
+        }
     }
 
     ConnectionHandshake(Socket socket, BanList banList, int socketTimeout, Capability capability, AuthorizationService authorizationService) {
@@ -138,11 +156,12 @@ public class ConnectionHandshake {
                 throw new ConnectionException("Invalid version. responseEnvelope.version()=" +
                         responseNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
             }
-            if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response response)) {
+            if (!(responseNetworkEnvelope.getNetworkMessage() instanceof Response)) {
                 throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
                         responseNetworkEnvelope);
             }
-            if (banList.isBanned(response.getCapability().address())) {
+            Response response = (Response) responseNetworkEnvelope.getNetworkMessage();
+            if (banList.isBanned(response.getCapability().getAddress())) {
                 throw new ConnectionException("Peers address is in quarantine. response=" + response);
             }
             if (!authorizationService.isAuthorized(responseNetworkEnvelope.getAuthorizationToken())) {
@@ -157,8 +176,8 @@ public class ConnectionHandshake {
                 socket.close();
             } catch (IOException ignore) {
             }
-            if (e instanceof ConnectionException handShakeException) {
-                throw handShakeException;
+            if (e instanceof ConnectionException) {
+                throw (ConnectionException) e;
             } else {
                 throw new ConnectionException(e);
             }
@@ -181,11 +200,12 @@ public class ConnectionHandshake {
                 throw new ConnectionException("Invalid version. requestEnvelop.version()=" +
                         requestNetworkEnvelope.getVersion() + "; Version.VERSION=" + NetworkEnvelope.VERSION);
             }
-            if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request request)) {
+            if (!(requestNetworkEnvelope.getNetworkMessage() instanceof Request)) {
                 throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
                         requestNetworkEnvelope);
             }
-            if (banList.isBanned(request.getCapability().address())) {
+            Request request = (Request) requestNetworkEnvelope.getNetworkMessage();
+            if (banList.isBanned(request.getCapability().getAddress())) {
                 throw new ConnectionException("Peers address is in quarantine. request=" + request);
             }
             if (!authorizationService.isAuthorized(requestNetworkEnvelope.getAuthorizationToken())) {
@@ -209,8 +229,8 @@ public class ConnectionHandshake {
                 socket.close();
             } catch (IOException ignore) {
             }
-            if (e instanceof ConnectionException connectionException) {
-                throw connectionException;
+            if (e instanceof ConnectionException) {
+                throw (ConnectionException) e;
             } else {
                 throw new ConnectionException(e);
             }

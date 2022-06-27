@@ -118,13 +118,13 @@ public class DefaultApplicationService extends ServiceProvider {
         applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
         ApplicationSetup.initialize(applicationConfig);
 
-        persistenceService = new PersistenceService(applicationConfig.baseDir());
+        persistenceService = new PersistenceService(applicationConfig.getBaseDir());
 
         securityService = new SecurityService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.baseDir(),
+        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.getBaseDir(),
                 getConfig("bisq.networkServiceConfig"));
         KeyPairService keyPairService = securityService.getKeyPairService();
         networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
@@ -158,7 +158,7 @@ public class DefaultApplicationService extends ServiceProvider {
         protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
 
 
-        Path walletsDataDir = Path.of(applicationConfig.baseDir() + File.separator + "wallets");
+        Path walletsDataDir = Path.of(applicationConfig.getBaseDir() + File.separator + "wallets");
 
         // Bitcoin Wallet Service
         Optional<RpcConfig> walletConfig = !applicationConfig.isBitcoindRegtest() ? Optional.empty()

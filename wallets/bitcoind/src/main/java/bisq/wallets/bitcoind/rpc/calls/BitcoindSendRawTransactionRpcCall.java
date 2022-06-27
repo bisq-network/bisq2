@@ -18,10 +18,23 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSendRawTransactionRpcCall.Request, String> {
-    public record Request(String hexstring) {
+   
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        @JsonProperty("hexstring")
+        private final String hexString;
 
+        public Request(String hexString) {
+            this.hexString = hexString;
+        }
     }
 
     public BitcoindSendRawTransactionRpcCall(Request request) {

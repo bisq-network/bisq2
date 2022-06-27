@@ -38,7 +38,7 @@ public class PaymentMethodRepository {
 
     public static List<String> getPaymentMethodsForMarket(Market market) {
         return FIAT_CURRENCIES_BY_PAYMENT_METHOD.entrySet().stream()
-                .filter(e -> e.getValue().contains(market.quoteCurrencyCode()))
+                .filter(e -> e.getValue().contains(market.getQuoteCurrencyCode()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }

@@ -20,11 +20,25 @@ package bisq.network.p2p.node;
 import bisq.common.proto.Proto;
 import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.node.transport.Transport;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record Capability(Address address, Set<Transport.Type> supportedTransportTypes) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Capability implements Proto {
+    private final Address address;
+    private final Set<Transport.Type> supportedTransportTypes;
+
+    public Capability(Address address, Set<Transport.Type> supportedTransportTypes) {
+        this.address = address;
+        this.supportedTransportTypes = supportedTransportTypes;
+    }
+
     public bisq.network.protobuf.Capability toProto() {
         return bisq.network.protobuf.Capability.newBuilder()
                 .setAddress(address.toProto())

@@ -61,21 +61,22 @@ class PeerExchangeRequestHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PeerExchangeResponse response) {
-            if (response.nonce() == nonce) {
+        if (networkMessage instanceof PeerExchangeResponse) {
+            PeerExchangeResponse response = (PeerExchangeResponse) networkMessage;
+            if (response.getNonce() == nonce) {
                /* String addresses = StringUtils.truncate(response.peers().stream()
                         .map(peer -> peer.getAddress().toString())
                         .collect(Collectors.toList()).toString());
                 log.debug("Node {} received PeerExchangeResponse from {} with {}",
                         node, connection.getPeerAddress(), addresses);*/
                 log.info("Node {} received PeerExchangeResponse from {} with {} peers",
-                        node, connection.getPeerAddress(), response.peers().size());
+                        node, connection.getPeerAddress(), response.getPeers().size());
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 removeListeners();
-                future.complete(response.peers());
+                future.complete(response.getPeers());
             } else {
                 log.warn("Node {} received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
-                        node, connection.getPeerAddress(), response.nonce(), nonce);
+                        node, connection.getPeerAddress(), response.getNonce(), nonce);
             }
         }
     }

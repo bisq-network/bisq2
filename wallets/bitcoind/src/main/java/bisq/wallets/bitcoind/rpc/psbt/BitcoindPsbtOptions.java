@@ -17,7 +17,19 @@
 
 package bisq.wallets.bitcoind.rpc.psbt;
 
-public record BitcoindPsbtOptions(
-        boolean includeWatching,
-        int[] subtractFeeFromOutputs) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class BitcoindPsbtOptions {
+    private final boolean includeWatching;
+    private final int[] subtractFeeFromOutputs;
+
+    public BitcoindPsbtOptions(boolean includeWatching, int[] subtractFeeFromOutputs) {
+        this.includeWatching = includeWatching;
+        this.subtractFeeFromOutputs = subtractFeeFromOutputs;
+    }
 }

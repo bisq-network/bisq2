@@ -18,19 +18,33 @@
 package bisq.offer.spec;
 
 import bisq.common.proto.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Optional;
 
-/**
- * @param settlementMethodName Name of SettlementMethod enum
- * @param saltedMakerAccountId Salted local ID of maker's settlement account.
- *                             In case maker had multiple accounts for same settlement method they
- *                             can define which account to use for that offer.
- *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
- *                             offers using the same account. We could use the pubkeyhash of the chosen identity as
- *                             salt.
- */
-public record SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class SettlementSpec implements Proto {
+    private final String settlementMethodName;
+    private final Optional<String> saltedMakerAccountId;
+
+    /**
+     * @param settlementMethodName Name of SettlementMethod enum
+     * @param saltedMakerAccountId Salted local ID of maker's settlement account.
+     *                             In case maker had multiple accounts for same settlement method they
+     *                             can define which account to use for that offer.
+     *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
+     *                             offers using the same account. We could use the pubkeyhash of the chosen identity as
+     *                             salt.
+     */
+    public SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) {
+        this.settlementMethodName = settlementMethodName;
+        this.saltedMakerAccountId = saltedMakerAccountId;
+    }
+
     public bisq.offer.protobuf.SettlementSpec toProto() {
         bisq.offer.protobuf.SettlementSpec.Builder builder = bisq.offer.protobuf.SettlementSpec.newBuilder()
                 .setSettlementMethodName(settlementMethodName);

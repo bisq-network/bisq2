@@ -111,7 +111,7 @@ public class BigAmountInput {
                 return;
             }
 
-            model.code.set(model.isBaseCurrency ? model.selectedMarket.baseCurrencyCode() : model.selectedMarket.quoteCurrencyCode());
+            model.code.set(model.isBaseCurrency ? model.selectedMarket.getBaseCurrencyCode() : model.selectedMarket.getQuoteCurrencyCode());
         }
     }
 

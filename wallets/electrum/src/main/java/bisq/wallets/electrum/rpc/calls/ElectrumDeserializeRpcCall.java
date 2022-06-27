@@ -19,11 +19,22 @@ package bisq.wallets.electrum.rpc.calls;
 
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeResponse;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElectrumDeserializeRpcCall
         extends DaemonRpcCall<ElectrumDeserializeRpcCall.Request, ElectrumDeserializeResponse> {
 
-    public record Request(String tx) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String tx;
+
+        public Request(String tx) {
+            this.tx = tx;
+        }
     }
 
     public ElectrumDeserializeRpcCall(Request request) {

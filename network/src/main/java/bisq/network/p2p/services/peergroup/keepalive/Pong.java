@@ -18,8 +18,20 @@
 package bisq.network.p2p.services.peergroup.keepalive;
 
 import bisq.network.p2p.message.NetworkMessage;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Pong(int requestNonce) implements NetworkMessage {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Pong implements NetworkMessage {
+    private final int requestNonce;
+
+    public Pong(int requestNonce) {
+        this.requestNonce = requestNonce;
+    }
+
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setPong(

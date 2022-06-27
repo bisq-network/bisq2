@@ -17,7 +17,22 @@
 
 package bisq.social.user.proof;
 
-public record BondedRoleProof(String txId, String signature) implements Proof {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class BondedRoleProof implements Proof {
+    private final String txId;
+    private final String signature;
+
+    public BondedRoleProof(String txId, String signature) {
+        this.txId = txId;
+        this.signature = signature;
+    }
+
     @Override
     public bisq.social.protobuf.Proof toProto() {
         return getProofBuilder().setBondedRoleProof(

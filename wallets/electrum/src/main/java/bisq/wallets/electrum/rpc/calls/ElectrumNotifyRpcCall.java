@@ -19,9 +19,24 @@ package bisq.wallets.electrum.rpc.calls;
 
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElectrumNotifyRpcCall extends DaemonRpcCall<ElectrumNotifyRpcCall.Request, String> {
-    public record Request(String address, @JsonProperty("URL") String url) {
+   
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String address;
+        @JsonProperty("URL")
+        private final String url;
+
+        public Request(String address, @JsonProperty("URL") String url) {
+            this.address = address;
+            this.url = url;
+        }
     }
 
     public ElectrumNotifyRpcCall(Request request) {

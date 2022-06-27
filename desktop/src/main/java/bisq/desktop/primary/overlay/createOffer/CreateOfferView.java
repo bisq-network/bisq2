@@ -66,9 +66,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         root.setPrefHeight(OverlayModel.HEIGHT);
 
         Triple<HBox, Button, List<Label>> topPane = getTopPane();
-        topPaneBox = topPane.first();
-        skipButton = topPane.second();
-        navigationProgressLabelList = topPane.third();
+        topPaneBox = topPane.getFirst();
+        skipButton = topPane.getSecond();
+        navigationProgressLabelList = topPane.getThird();
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);

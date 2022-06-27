@@ -18,14 +18,28 @@
 package bisq.common.currency;
 
 import bisq.common.proto.Proto;
-import lombok.Setter;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-public record Market(String baseCurrencyCode,
-                     String quoteCurrencyCode,
-                     String baseCurrencyName,
-                     String quoteCurrencyName) implements Proto {
-    @Setter
-    private static String QUOTE_SEPARATOR = "/";
+@Getter
+@EqualsAndHashCode
+public final class Market implements Proto {
+    private static final String QUOTE_SEPARATOR = "/";
+
+    private final String baseCurrencyCode;
+    private final String quoteCurrencyCode;
+    private final String baseCurrencyName;
+    private final String quoteCurrencyName;
+
+    public Market(String baseCurrencyCode,
+                  String quoteCurrencyCode,
+                  String baseCurrencyName,
+                  String quoteCurrencyName) {
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.quoteCurrencyCode = quoteCurrencyCode;
+        this.baseCurrencyName = baseCurrencyName;
+        this.quoteCurrencyName = quoteCurrencyName;
+    }
 
     public bisq.common.protobuf.Market toProto() {
         return bisq.common.protobuf.Market.newBuilder()
@@ -43,12 +57,7 @@ public record Market(String baseCurrencyCode,
                 proto.getQuoteCurrencyName());
     }
 
-    @Override
-    public String toString() {
-        return getNonBitcoinCurrency() + " (" + getMarketCodes() + ")";
-    }   
-  
-
+    //todo make static utils
     private String getNonBitcoinCurrency() {
         return isFiat() ? quoteCurrencyName : baseCurrencyName;
     }
@@ -63,5 +72,10 @@ public record Market(String baseCurrencyCode,
 
     public String getMarketName() {
         return baseCurrencyName + QUOTE_SEPARATOR + quoteCurrencyName;
+    }
+
+    @Override
+    public String toString() {
+        return getNonBitcoinCurrency() + " (" + getMarketCodes() + ")";
     }
 }

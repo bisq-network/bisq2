@@ -71,7 +71,8 @@ public class ReputationService implements DataService.Listener {
 
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData authorizedProofOfBurnData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData) {
+            AuthorizedProofOfBurnData authorizedProofOfBurnData = (AuthorizedProofOfBurnData) authenticatedData.getDistributedData();
             addAuthorizedProofOfBurnData(authorizedProofOfBurnData);
 
             if (!isBatchProcessing) {
@@ -91,15 +92,15 @@ public class ReputationService implements DataService.Listener {
 
     public Optional<ReputationScore> findReputationScore(ChatUser chatUser) {
         // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
-        byte[] preImage =  chatUser.getId().getBytes(Charsets.UTF_8);
+        byte[] preImage = chatUser.getId().getBytes(Charsets.UTF_8);
         byte[] hashOfPreImage = DigestUtil.hash(preImage);
         ByteArray hash = new ByteArray(hashOfPreImage);
         Optional<ReputationScore> optionalReputationScore = findAuthorizedProofOfBurnDataSet(hash)
                 .map(set -> ReputationScoreCalculation.getReputationScore(hash));
-        if(optionalReputationScore.isEmpty()){
+        if (optionalReputationScore.isEmpty()) {
             //todo random dummy values
             double randomValue = new Random().nextInt(100) / 100d;
-            optionalReputationScore = Optional.of(new ReputationScore(1000, randomValue,10, randomValue));
+            optionalReputationScore = Optional.of(new ReputationScore(1000, randomValue, 10, randomValue));
         }
         return optionalReputationScore;
     }

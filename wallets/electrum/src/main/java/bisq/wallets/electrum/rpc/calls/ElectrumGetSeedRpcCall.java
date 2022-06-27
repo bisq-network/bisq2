@@ -18,9 +18,21 @@
 package bisq.wallets.electrum.rpc.calls;
 
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElectrumGetSeedRpcCall extends DaemonRpcCall<ElectrumGetSeedRpcCall.Request, String> {
-    public record Request(String password) {
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String password;
+
+        public Request(String password) {
+            this.password = password;
+        }
     }
 
     public ElectrumGetSeedRpcCall(Request request) {

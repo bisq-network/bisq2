@@ -61,16 +61,16 @@ public class PendingTradeListItem implements TableItem {
         price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
-        String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
-        String quoteCurrencyCode = offer.getMarket().quoteCurrencyCode();
+        String baseCurrencyCode = offer.getMarket().getBaseCurrencyCode();
+        String quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
 
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);

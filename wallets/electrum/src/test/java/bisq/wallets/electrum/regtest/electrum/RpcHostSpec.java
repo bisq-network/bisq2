@@ -17,5 +17,19 @@
 
 package bisq.wallets.electrum.regtest.electrum;
 
-public record RpcHostSpec(String host, int port) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class RpcHostSpec {
+    private final String host;
+    private final int port;
+
+    public RpcHostSpec(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
 }

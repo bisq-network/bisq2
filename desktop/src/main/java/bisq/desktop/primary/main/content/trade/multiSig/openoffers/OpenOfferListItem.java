@@ -60,16 +60,16 @@ public class OpenOfferListItem implements TableItem {
         price = QuoteFormatter.format(offer.getQuote(marketPriceService));
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(settlementMethodName -> Res.get(settlementMethodName))
                 .collect(Collectors.joining("\n"));
 
-        String baseCurrencyCode = offer.getMarket().baseCurrencyCode();
-        String quoteCurrencyCode = offer.getMarket().quoteCurrencyCode();
+        String baseCurrencyCode = offer.getMarket().getBaseCurrencyCode();
+        String quoteCurrencyCode = offer.getMarket().getQuoteCurrencyCode();
 
         boolean isBaseCurrencyFiat = TradeCurrency.isFiat(baseCurrencyCode);
         boolean isQuoteCurrencyFiat = TradeCurrency.isFiat(quoteCurrencyCode);

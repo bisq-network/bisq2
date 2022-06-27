@@ -17,7 +17,20 @@
 
 package bisq.offer.options;
 
-public record AmountOption(double minAmountAsPercentage) implements OfferOption {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class AmountOption implements OfferOption {
+    private final double minAmountAsPercentage;
+
+    public AmountOption(double minAmountAsPercentage) {
+        this.minAmountAsPercentage = minAmountAsPercentage;
+    }
+
     public bisq.offer.protobuf.OfferOption toProto() {
         return getOfferOptionBuilder().setAmountOption(bisq.offer.protobuf.AmountOption.newBuilder()
                         .setMinAmountAsPercentage(minAmountAsPercentage))

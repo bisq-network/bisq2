@@ -19,10 +19,25 @@ package bisq.wallets.electrum.rpc.calls;
 
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElectrumVerifyMessageRpcCall extends DaemonRpcCall<ElectrumVerifyMessageRpcCall.Request, String> {
     @Builder
-    public static record Request(String address, String signature, String message) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String address;
+        private final String signature;
+        private final String message;
+
+        public Request(String address, String signature, String message) {
+            this.address = address;
+            this.signature = signature;
+            this.message = message;
+        }
     }
 
     public ElectrumVerifyMessageRpcCall(Request request) {
