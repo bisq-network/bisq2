@@ -61,7 +61,13 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  */
 @Slf4j
 public class ServiceNode {
-    public static record Config(Set<Service> services) {
+    @Getter
+    public static final class Config {
+        private final Set<Service> services;
+
+        public Config(Set<Service> services) {
+            this.services = services;
+        }
     }
 
     public interface Listener {
@@ -110,24 +116,24 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       Set<Address> seedNodeAddresses, 
+                       Set<Address> seedNodeAddresses,
                        Transport.Type transportType) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
         defaultNode = nodesById.getDefaultNode();
-        Set<Service> services = config.services();
+        Set<Service> services = config.getServices();
 
         if (services.contains(Service.PEER_GROUP)) {
-            PeerGroupService peerGroupService = new PeerGroupService(persistenceService, 
-                    defaultNode, 
+            PeerGroupService peerGroupService = new PeerGroupService(persistenceService,
+                    defaultNode,
                     banList,
-                    peerGroupServiceConfig, 
+                    peerGroupServiceConfig,
                     seedNodeAddresses,
                     transportType);
             this.peerGroupService = Optional.of(peerGroupService);
 
             if (services.contains(Service.DATA)) {
-                dataServicePerTransport = Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.transportType(),
+                dataServicePerTransport = Optional.of(dataService.orElseThrow().getDataServicePerTransport(nodeConfig.getTransportType(),
                         defaultNode,
                         peerGroupService));
             }

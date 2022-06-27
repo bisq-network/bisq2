@@ -19,6 +19,9 @@ package bisq.network.p2p.node.transport;
 
 import bisq.network.p2p.node.Address;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -48,10 +51,30 @@ public interface Transport {
         }
     }
 
-    record Config(String baseDir) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    final class Config {
+        private final String baseDir;
+
+        public Config(String baseDir) {
+            this.baseDir = baseDir;
+        }
     }
 
-    record ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    final class ServerSocketResult {
+        private final String nodeId;
+        private final ServerSocket serverSocket;
+        private final Address address;
+
+        public ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
+            this.nodeId = nodeId;
+            this.serverSocket = serverSocket;
+            this.address = address;
+        }
     }
 
     Boolean initialize();

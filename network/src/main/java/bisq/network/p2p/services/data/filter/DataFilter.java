@@ -19,11 +19,23 @@ package bisq.network.p2p.services.data.filter;
 
 
 import bisq.common.proto.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record DataFilter(Set<FilterEntry> filterEntries) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class DataFilter implements Proto {
+    private final Set<FilterEntry> filterEntries;
+
+    public DataFilter(Set<FilterEntry> filterEntries) {
+        this.filterEntries = filterEntries;
+    }
+
     public bisq.network.protobuf.DataFilter toProto() {
         return bisq.network.protobuf.DataFilter.newBuilder()
                 .addAllFilterEntries(filterEntries.stream()

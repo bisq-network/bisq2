@@ -273,7 +273,7 @@ public class StorageService {
     private Inventory getInventory(DataFilter dataFilter,
                                    Set<? extends Map.Entry<ByteArray, ? extends DataRequest>> entrySet) {
         HashSet<? extends DataRequest> result = entrySet.stream()
-                .filter(mapEntry -> !dataFilter.filterEntries().contains(getFilterEntry(mapEntry)))
+                .filter(mapEntry -> !dataFilter.getFilterEntries().contains(getFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toCollection(HashSet::new));
         return new Inventory(result, entrySet.size() - result.size());

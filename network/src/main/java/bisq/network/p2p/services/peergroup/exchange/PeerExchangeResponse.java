@@ -19,11 +19,25 @@ package bisq.network.p2p.services.peergroup.exchange;
 
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.Peer;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public record PeerExchangeResponse(int nonce, Set<Peer> peers) implements NetworkMessage {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class PeerExchangeResponse implements NetworkMessage {
+    private final int nonce;
+    private final Set<Peer> peers;
+
+    public PeerExchangeResponse(int nonce, Set<Peer> peers) {
+        this.nonce = nonce;
+        this.peers = peers;
+    }
+
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder().setPeerExchangeResponse(

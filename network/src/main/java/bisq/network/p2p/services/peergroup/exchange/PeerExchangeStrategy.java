@@ -197,7 +197,7 @@ public class PeerExchangeStrategy {
     private Set<Address> getReported() {
         return peerGroup.getReportedPeers().stream()
                 .filter(peerGroup::isNotInQuarantine)
-                .sorted(Comparator.comparing(peer -> peer.getLoad().numConnections()))
+                .sorted(Comparator.comparing(peer -> peer.getLoad().getNumConnections()))
                 .sorted(Comparator.comparing(Peer::getDate))
                 .map(Peer::getAddress)
                 .filter(this::isNotUsed)
@@ -218,7 +218,7 @@ public class PeerExchangeStrategy {
     private Set<Address> getConnected() {
         return peerGroup.getAllConnectedPeers()
                 .filter(peerGroup::isNotInQuarantine)
-                .sorted(Comparator.comparing(peer -> peer.getLoad().numConnections()))
+                .sorted(Comparator.comparing(peer -> peer.getLoad().getNumConnections()))
                 .sorted(Comparator.comparing(Peer::getDate))
                 .map(Peer::getAddress)
                 .filter(this::notASeed)

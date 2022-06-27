@@ -64,15 +64,15 @@ class KeepAliveHandler implements Connection.Listener {
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof Pong pong) {
-            if (pong.requestNonce() == nonce) {
+            if (pong.getRequestNonce() == nonce) {
                 log.info("Node {} received Pong from {} with nonce {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.requestNonce(), connection.getId());
+                        node, connection.getPeerAddress(), pong.getRequestNonce(), connection.getId());
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 future.complete(null);
             } else {
                 log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), pong.requestNonce(), nonce, connection.getId());
+                        node, connection.getPeerAddress(), pong.getRequestNonce(), nonce, connection.getId());
             }
         }
     }

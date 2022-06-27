@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 public class InventoryService implements Node.Listener {
     private static final long TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
-
     private final Node node;
     private final PeerGroup peerGroup;
     private final Map<String, InventoryHandler> requestHandlerMap = new ConcurrentHashMap<>();
@@ -78,11 +77,11 @@ public class InventoryService implements Node.Listener {
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
         if (networkMessage instanceof InventoryRequest request) {
-            log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.nonce(), connection.getPeerAddress());
-            Inventory inventory = inventoryProvider.apply(request.dataFilter());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.nonce()), connection));
+            log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.getNonce(), connection.getPeerAddress());
+            Inventory inventory = inventoryProvider.apply(request.getDataFilter());
+            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.getNonce()), connection));
             log.debug("Node {} sent GetInventoryResponse with inventory {} and nonce {} to {}. Connection={}",
-                    node, inventory, request.nonce(), connection.getPeerAddress(), connection.getId());
+                    node, inventory, request.getNonce(), connection.getPeerAddress(), connection.getId());
         }
     }
 

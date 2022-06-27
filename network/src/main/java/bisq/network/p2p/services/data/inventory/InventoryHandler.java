@@ -71,9 +71,9 @@ class InventoryHandler implements Connection.Listener {
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof InventoryResponse response) {
-            if (response.requestNonce() == nonce) {
+            if (response.getRequestNonce() == nonce) {
                 Map<String, Integer> map = new HashMap<>();
-                response.inventory().entries().stream()
+                response.getInventory().entries().stream()
                         .filter(e -> e instanceof AddAuthenticatedDataRequest)
                         .map(e -> (AddAuthenticatedDataRequest) e)
                         .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
@@ -83,7 +83,7 @@ class InventoryHandler implements Connection.Listener {
                             map.putIfAbsent(simpleName, 0);
                             map.put(simpleName, map.get(simpleName) + 1);
                         });
-                response.inventory().entries().stream()
+                response.getInventory().entries().stream()
                         .filter(e -> e instanceof AddAppendOnlyDataRequest)
                         .map(e -> (AddAppendOnlyDataRequest) e)
                         .map(AddAppendOnlyDataRequest::getAppendOnlyData)
@@ -101,10 +101,10 @@ class InventoryHandler implements Connection.Listener {
                         "\n##########################################################################################");
                 removeListeners();
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
-                future.complete(response.inventory());
+                future.complete(response.getInventory());
             } else {
                 log.warn("Node {} received Pong from {} with invalid nonce {}. Request nonce was {}. Connection={}",
-                        node, connection.getPeerAddress(), response.requestNonce(), nonce, connection.getId());
+                        node, connection.getPeerAddress(), response.getRequestNonce(), nonce, connection.getId());
             }
         }
     }

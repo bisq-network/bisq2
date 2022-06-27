@@ -38,13 +38,13 @@ public final class Server {
     private final Future<?> future;
 
     Server(Transport.ServerSocketResult serverSocketResult, Consumer<Socket> socketHandler, Consumer<Exception> exceptionHandler) {
-        serverSocket = serverSocketResult.serverSocket();
-        address = serverSocketResult.address();
+        serverSocket = serverSocketResult.getServerSocket();
+        address = serverSocketResult.getAddress();
         log.debug("Create server: {}", serverSocketResult);
         future = NetworkService.NETWORK_IO_POOL.submit(() -> {
             Thread.currentThread().setName("Server.listen-" +
-                    StringUtils.truncate(serverSocketResult.nodeId()) + "-" +
-                    StringUtils.truncate(serverSocketResult.address().toString()));
+                    StringUtils.truncate(serverSocketResult.getNodeId()) + "-" +
+                    StringUtils.truncate(serverSocketResult.getAddress().toString()));
             try {
                 while (isNotStopped()) {
                     Socket socket = serverSocket.accept();
@@ -52,7 +52,7 @@ public final class Server {
                     if (isNotStopped()) {
                         // Call handler on new thread
                         NetworkService.NETWORK_IO_POOL.submit(() -> {
-                            Thread.currentThread().setName("Server.acceptSocket-" + serverSocketResult.address());
+                            Thread.currentThread().setName("Server.acceptSocket-" + serverSocketResult.getAddress());
                             socketHandler.accept(socket);
                         });
                     }

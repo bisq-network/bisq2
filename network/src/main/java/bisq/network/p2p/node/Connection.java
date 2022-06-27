@@ -221,7 +221,7 @@ public abstract class Connection {
     }
 
     public Address getPeerAddress() {
-        return peersCapability.address();
+        return peersCapability.getAddress();
     }
 
     // Only at outbound connections we can be sure that the peer address is correct.
@@ -244,13 +244,13 @@ public abstract class Connection {
 
     @Override
     public String toString() {
-        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().address() +
+        return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
                 ", socket=" + socket +
                 ", keyId=" + getId() + "]'";
     }
 
     private String getThreadNameId() {
-        return StringUtils.truncate(getPeersCapability().address().toString() + "-" + id.substring(0, 8));
+        return StringUtils.truncate(getPeersCapability().getAddress().toString() + "-" + id.substring(0, 8));
     }
 
     private boolean isInputStreamActive() {

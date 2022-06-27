@@ -19,8 +19,22 @@ package bisq.network.p2p.services.data.filter;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record FilterEntry(byte[] hash, int sequenceNumber) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class FilterEntry implements Proto {
+    private final byte[] hash;
+    private final int sequenceNumber;
+
+    public FilterEntry(byte[] hash, int sequenceNumber) {
+        this.hash = hash;
+        this.sequenceNumber = sequenceNumber;
+    }
+
     public bisq.network.protobuf.FilterEntry toProto() {
         return bisq.network.protobuf.FilterEntry.newBuilder()
                 .setHash(ByteString.copyFrom(hash))

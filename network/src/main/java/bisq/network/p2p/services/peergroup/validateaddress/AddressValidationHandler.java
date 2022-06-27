@@ -79,7 +79,7 @@ class AddressValidationHandler implements Connection.Listener {
     public void onNetworkMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof AddressValidationResponse addressValidationResponse) {
             Objects.requireNonNull(outboundConnection);
-            if (addressValidationResponse.requestNonce() == nonce &&
+            if (addressValidationResponse.getRequestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {
                 log.debug("Node {} received valid AddressValidationResponse from {}", node, addressOfInboundConnection);
                 node.closeConnectionGracefullyAsync(outboundConnection, CloseReason.ADDRESS_VALIDATION_COMPLETED);
@@ -90,7 +90,7 @@ class AddressValidationHandler implements Connection.Listener {
                                 "Response nonce: {}. Request nonce: {}. " +
                                 "connection.getPeerAddress()={}. address={}",
                         node, addressOfInboundConnection,
-                        addressValidationResponse.requestNonce(), nonce,
+                        addressValidationResponse.getRequestNonce(), nonce,
                         outboundConnection.getPeerAddress(), addressOfInboundConnection);
                 banList.add(addressOfInboundConnection, BanList.Reason.ADDRESS_VALIDATION_FAILED);
                 banList.add(outboundConnection.getPeerAddress(), BanList.Reason.ADDRESS_VALIDATION_FAILED);

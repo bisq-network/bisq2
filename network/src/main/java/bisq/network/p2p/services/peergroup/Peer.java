@@ -69,7 +69,7 @@ public class Peer implements Proto {
     }
 
     public Address getAddress() {
-        return capability.address();
+        return capability.getAddress();
     }
 
     public long getAge() {

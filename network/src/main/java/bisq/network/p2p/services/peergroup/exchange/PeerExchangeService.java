@@ -164,9 +164,9 @@ public class PeerExchangeService implements Node.Listener {
         if (networkMessage instanceof PeerExchangeRequest request) {
             //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
-            peerExchangeStrategy.addReportedPeers(request.peers(), peerAddress);
+            peerExchangeStrategy.addReportedPeers(request.getPeers(), peerAddress);
             Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
-            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.nonce(), myPeers), connection));
+            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
     }
