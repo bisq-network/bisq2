@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -272,10 +271,11 @@ public class ChatMessagesComponent {
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
 
+            VBox.setVgrow(messagesListView, Priority.ALWAYS);
             VBox.setVgrow(tradeGuideBox, Priority.SOMETIMES);
             VBox.setMargin(tradeGuideBox, new Insets(0, 24, 24, 24));
             VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
-            root.getChildren().addAll(tradeGuideBox, messagesListView, Spacer.fillVBox(), quotedMessageBlock, bottomBox);
+            root.getChildren().addAll(tradeGuideBox, messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);

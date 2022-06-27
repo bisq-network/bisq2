@@ -20,11 +20,9 @@ package bisq.common.currency;
 import bisq.common.proto.Proto;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 @Getter
 @EqualsAndHashCode
-@ToString
 public final class Market implements Proto {
     private static final String QUOTE_SEPARATOR = "/";
 
@@ -74,5 +72,10 @@ public final class Market implements Proto {
 
     public String getMarketName() {
         return baseCurrencyName + QUOTE_SEPARATOR + quoteCurrencyName;
+    }
+
+    @Override
+    public String toString() {
+        return getNonBitcoinCurrency() + " (" + getMarketCodes() + ")";
     }
 }

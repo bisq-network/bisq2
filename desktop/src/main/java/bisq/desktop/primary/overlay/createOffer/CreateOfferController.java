@@ -130,10 +130,13 @@ public class CreateOfferController extends NavigationController {
                 break;
             }
             case CREATE_OFFER_MARKET: {
+                break;
             }
             case CREATE_OFFER_AMOUNT: {
+                break;
             }
             case CREATE_OFFER_PAYMENT_METHOD: {
+                break;
             }
             case CREATE_OFFER_OFFER_COMPLETED: {
                 model.getNextButtonVisible().set(false);
