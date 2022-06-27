@@ -30,7 +30,9 @@ import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import com.google.gson.Gson;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -48,10 +50,29 @@ public class MarketPriceService {
     public static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
     private static final long REQUEST_INTERVAL_SEC = 180;
 
-    public static record Config(Set<Provider> providers) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final Set<Provider> providers;
+
+        public Config(Set<Provider> providers) {
+            this.providers = providers;
+        }
     }
 
-    public static record Provider(String url, String operator, Transport.Type transportType) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Provider {
+        private final String url;
+        private final String operator;
+        private final Transport.Type transportType;
+
+        public Provider(String url, String operator, Transport.Type transportType) {
+            this.url = url;
+            this.operator = operator;
+            this.transportType = transportType;
+        }
     }
 
     private static class PendingRequestException extends Exception {

@@ -32,6 +32,7 @@ import com.eternitywall.ots.VerifyResult;
 import com.eternitywall.ots.exceptions.DeserializationException;
 import com.eternitywall.ots.op.OpSHA256;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -58,7 +59,15 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     @Getter
     private final List<String> calendars;
 
-    public record Config(List<String> calendars) {
+    @Getter
+    @ToString
+    public static final class Config {
+        private final List<String> calendars;
+
+        public Config(List<String> calendars) {
+            this.calendars = calendars;
+        }
+
         public static Config from(com.typesafe.config.Config typeSafeConfig) {
             return new Config(typeSafeConfig.getStringList("calendars"));
         }
@@ -67,7 +76,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     public OpenTimestampService(IdentityService identityService, PersistenceService persistenceService, Config config) {
         this.identityService = identityService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        calendars = config.calendars();
+        calendars = config.getCalendars();
     }
 
 
@@ -127,7 +136,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
 
     private void maybeCreateOrUpgradeTimestampsOfActiveIdentities() {
         identityService.getActiveIdentityByDomainId().values().stream()
-                .map(identity -> new ByteArray(identity.pubKey().hash()))
+                .map(identity -> new ByteArray(identity.getPubKey().hash()))
                 .forEach(this::maybeCreateOrUpgradeTimestamp);
     }
 
