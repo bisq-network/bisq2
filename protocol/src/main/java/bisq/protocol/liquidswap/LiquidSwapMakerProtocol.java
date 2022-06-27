@@ -64,10 +64,10 @@ public abstract class LiquidSwapMakerProtocol extends MakerProtocol<MakerProtoco
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof ProtocolMessage protocolMessage) {
-            if (protocolMessage.getOfferId().equals(getId())) {
-                if (networkMessage instanceof LiquidSwapFinalizeTxRequest liquidSwapFinalizeTxRequest) {
-                    onLiquidSwapFinalizeTxRequest(liquidSwapFinalizeTxRequest);
+        if (networkMessage instanceof ProtocolMessage) {
+            if (((ProtocolMessage) networkMessage).getOfferId().equals(getId())) {
+                if (networkMessage instanceof LiquidSwapFinalizeTxRequest) {
+                    onLiquidSwapFinalizeTxRequest((LiquidSwapFinalizeTxRequest) networkMessage);
                 }
             }
         }

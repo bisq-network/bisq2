@@ -106,14 +106,14 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof ConfidentialMessage confidentialMessage) {
-            if (confidentialMessage instanceof RelayMessage) {
+        if (networkMessage instanceof ConfidentialMessage) {
+            if (networkMessage instanceof RelayMessage) {
                 //todo
                 // RelayMessage relayMessage = (RelayMessage) proto;
                 // Address targetAddress = relayMessage.getTargetAddress();
                 // send(proto, targetAddress);
             } else {
-                processConfidentialMessage(confidentialMessage);
+                processConfidentialMessage((ConfidentialMessage) networkMessage);
             }
         }
     }
@@ -171,9 +171,9 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             Connection connection = nodesById.getConnection(senderNodeId, address);
             return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
-            if (networkMessage instanceof MailboxMessage mailboxMessage) {
+            if (networkMessage instanceof MailboxMessage) {
                 ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
-                return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
                 log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
@@ -193,8 +193,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
             nodesById.send(senderNodeId, confidentialMessage, connection);
             return new Result(State.SENT);
         } catch (Throwable throwable) {
-            if (networkMessage instanceof MailboxMessage mailboxMessage) {
-                return storeMailBoxMessage(mailboxMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+            if (networkMessage instanceof MailboxMessage) {
+                return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
             } else {
                 log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);

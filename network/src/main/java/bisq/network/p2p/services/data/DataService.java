@@ -116,10 +116,10 @@ public class DataService implements DataNetworkService.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof AddDataRequest addDataRequest) {
-            processAddDataRequest(addDataRequest, true);
-        } else if (networkMessage instanceof RemoveDataRequest removeDataRequest) {
-            processRemoveDataRequest(removeDataRequest, true);
+        if (networkMessage instanceof AddDataRequest) {
+            processAddDataRequest((AddDataRequest) networkMessage, true);
+        } else if (networkMessage instanceof RemoveDataRequest) {
+            processRemoveDataRequest((RemoveDataRequest) networkMessage, true);
         }
     }
 
@@ -283,11 +283,11 @@ public class DataService implements DataNetworkService.Listener {
     public void requestInventory(DataFilter dataFilter, DataNetworkService dataNetworkService) {
         dataNetworkService.requestInventory(dataFilter).forEach(future -> {
             future.whenComplete(((inventory, throwable) -> {
-                inventory.entries().forEach(dataRequest -> {
-                    if (dataRequest instanceof AddDataRequest addDataRequest) {
-                        processAddDataRequest(addDataRequest, false);
-                    } else if (dataRequest instanceof RemoveDataRequest removeDataRequest) {
-                        processRemoveDataRequest(removeDataRequest, false);
+                inventory.getEntries().forEach(dataRequest -> {
+                    if (dataRequest instanceof AddDataRequest) {
+                        processAddDataRequest((AddDataRequest) dataRequest, false);
+                    } else if (dataRequest instanceof RemoveDataRequest) {
+                        processRemoveDataRequest((RemoveDataRequest) dataRequest, false);
                     }
                 });
             }));
@@ -318,12 +318,12 @@ public class DataService implements DataNetworkService.Listener {
                     optionalData.ifPresent(storageData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls
-                        if (storageData instanceof AuthenticatedData authenticatedData) {
-                            listeners.forEach(listener -> listener.onAuthenticatedDataAdded(authenticatedData));
-                        } else if (storageData instanceof MailboxData mailboxData) {
-                            listeners.forEach(listener -> listener.onMailboxDataAdded(mailboxData));
-                        } else if (storageData instanceof AppendOnlyData appendOnlyData) {
-                            listeners.forEach(listener -> listener.onAppendOnlyDataAdded(appendOnlyData));
+                        if (storageData instanceof AuthenticatedData) {
+                            listeners.forEach(listener -> listener.onAuthenticatedDataAdded((AuthenticatedData) storageData));
+                        } else if (storageData instanceof MailboxData) {
+                            listeners.forEach(listener -> listener.onMailboxDataAdded((MailboxData) storageData));
+                        } else if (storageData instanceof AppendOnlyData) {
+                            listeners.forEach(listener -> listener.onAppendOnlyDataAdded((AppendOnlyData) storageData));
                         }
                         if (allowReBroadcast) {
                             dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(addDataRequest));
@@ -338,8 +338,8 @@ public class DataService implements DataNetworkService.Listener {
                     optionalData.ifPresent(storageData -> {
                         // We get called on dispatcher thread with onMessage, and we don't switch thread in 
                         // async calls
-                        if (storageData instanceof AuthenticatedData authenticatedData) {
-                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved(authenticatedData));
+                        if (storageData instanceof AuthenticatedData) {
+                            listeners.forEach(listener -> listener.onAuthenticatedDataRemoved((AuthenticatedData) storageData));
                         }
                         if (allowReBroadcast) {
                             dataNetworkServiceByTransportType.values().forEach(e -> e.reBroadcast(removeDataRequest));

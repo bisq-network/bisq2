@@ -63,13 +63,13 @@ public class OnboardingController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case ONBOARDING_BISQ_2_INTRO -> {
+            case ONBOARDING_BISQ_2_INTRO: {
                 return Optional.of(new Bisq2IntroController(applicationService));
             }
-            case ONBOARDING_GENERATE_NYM -> {
+            case ONBOARDING_GENERATE_NYM: {
                 return Optional.of(new GenerateProfileController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

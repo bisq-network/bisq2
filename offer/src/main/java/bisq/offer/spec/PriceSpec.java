@@ -29,13 +29,13 @@ public interface PriceSpec extends Proto {
 
     static PriceSpec fromProto(bisq.offer.protobuf.PriceSpec proto) {
         switch (proto.getMessageCase()) {
-            case FIXPRICE -> {
+            case FIXPRICE: {
                 return FixPrice.fromProto(proto.getFixPrice());
             }
-            case FLOATPRICE -> {
+            case FLOATPRICE: {
                 return FloatPrice.fromProto(proto.getFloatPrice());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

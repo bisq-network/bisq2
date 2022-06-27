@@ -60,7 +60,8 @@ class AddressValidationHandler implements Connection.Listener {
                 )
                 .whenComplete((connection, throwable) -> {
                     if (throwable == null) {
-                        if (connection instanceof OutboundConnection outboundConnection) {
+                        if (connection instanceof OutboundConnection) {
+                            OutboundConnection outboundConnection = (OutboundConnection) connection;
                             this.outboundConnection = outboundConnection;
                             outboundConnection.addListener(this);
                         } else {
@@ -77,7 +78,8 @@ class AddressValidationHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof AddressValidationResponse addressValidationResponse) {
+        if (networkMessage instanceof AddressValidationResponse) {
+            AddressValidationResponse addressValidationResponse = (AddressValidationResponse) networkMessage;
             Objects.requireNonNull(outboundConnection);
             if (addressValidationResponse.getRequestNonce() == nonce &&
                     outboundConnection.getPeerAddress().equals(addressOfInboundConnection)) {

@@ -42,15 +42,15 @@ public class OfferBookService {
         dataService.addListener(new DataService.Listener() {
             @Override
             public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-                if (authenticatedData.getDistributedData() instanceof Offer offer) {
-                    offers.add(offer);
+                if (authenticatedData.getDistributedData() instanceof Offer) {
+                    offers.add((Offer) authenticatedData.getDistributedData());
                 }
             }
 
             @Override
             public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-                if (authenticatedData.getDistributedData() instanceof Offer offer) {
-                    offers.remove(offer);
+                if (authenticatedData.getDistributedData() instanceof Offer) {
+                    offers.remove((Offer) authenticatedData.getDistributedData());
                 }
             }
         });

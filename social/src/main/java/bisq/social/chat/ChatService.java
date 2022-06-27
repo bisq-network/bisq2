@@ -99,12 +99,14 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTradeChatMessage message) {
+        if (networkMessage instanceof PrivateTradeChatMessage) {
+            PrivateTradeChatMessage message = (PrivateTradeChatMessage) networkMessage;
             if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
                 getOrCreatePrivateTradeChannel(message)
                         .ifPresent(channel -> addPrivateTradeChatMessage(message, channel));
             }
-        } else if (networkMessage instanceof PrivateDiscussionChatMessage message) {
+        } else if (networkMessage instanceof PrivateDiscussionChatMessage) {
+            PrivateDiscussionChatMessage message = (PrivateDiscussionChatMessage) networkMessage;
             if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
                 getOrCreatePrivateDiscussionChannel(message)
                         .ifPresent(channel -> addPrivateDiscussionChatMessage(message, channel));
@@ -127,10 +129,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         // re-apply the messages to the list, triggering a refresh in the UI list.
         // We do not persist the chat user as it is kept in the p2p store, and we use the TTL for its validity.
 
-        if (distributedData instanceof ChatUser chatUser &&
-                hasAuthorValidProofOfWork(chatUser.getProofOfWork())) {
+        if (distributedData instanceof ChatUser &&
+                hasAuthorValidProofOfWork(((ChatUser) distributedData).getProofOfWork())) {
             // Only if we have not already that chatUser we apply it
-
+            ChatUser chatUser = (ChatUser) distributedData;
             Optional<ChatUser> optionalChatUser = findChatUser(chatUser.getId());
             if (optionalChatUser.isEmpty()) {
                 log.info("We got a new chatUser {}", chatUser);
@@ -178,12 +180,14 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 chatUserService.replaceChatUser(chatUser);
 
             }
-        } else if (distributedData instanceof PublicTradeChatMessage message &&
-                isValidProofOfWorkOrChatUserNotFound(message)) {
+        } else if (distributedData instanceof PublicTradeChatMessage &&
+                isValidProofOfWorkOrChatUserNotFound((PublicTradeChatMessage) distributedData)) {
+            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
-        } else if (distributedData instanceof PublicDiscussionChatMessage message &&
-                isValidProofOfWorkOrChatUserNotFound(message)) {
+        } else if (distributedData instanceof PublicDiscussionChatMessage &&
+                isValidProofOfWorkOrChatUserNotFound((PublicDiscussionChatMessage) distributedData)) {
+            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
             findPublicDiscussionChannel(message.getChannelId())
                     .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
         }
@@ -192,10 +196,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage message) {
+        if (distributedData instanceof PublicTradeChatMessage) {
+            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
             findPublicTradeChannel(message.getChannelId())
                     .ifPresent(channel -> removePublicTradeChatMessage(message, channel));
-        } else if (distributedData instanceof PublicDiscussionChatMessage message) {
+        } else if (distributedData instanceof PublicDiscussionChatMessage) {
+            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
             findPublicDiscussionChannel(message.getChannelId())
                     .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel));
         }
@@ -383,9 +389,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public void selectTradeChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateTradeChannel privateTradeChannel) {
+        if (channel instanceof PrivateTradeChannel) {
             // remove expired messages
-            purgePrivateTradeChannel(privateTradeChannel);
+            purgePrivateTradeChannel((PrivateTradeChannel) channel);
         }
         getSelectedTradeChannel().set(channel);
         persist();
@@ -561,9 +567,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
 
     public void selectDiscussionChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
+        if (channel instanceof PrivateDiscussionChannel) {
             // remove expired messages
-            purgePrivateDiscussionChannel(privateDiscussionChannel);
+            purgePrivateDiscussionChannel((PrivateDiscussionChannel) channel);
         }
         getSelectedDiscussionChannel().set(channel);
         persist();

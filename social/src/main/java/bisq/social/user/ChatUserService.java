@@ -45,7 +45,6 @@ import bisq.social.user.role.Role;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +57,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static bisq.security.SignatureUtil.bitcoinSigToDer;
 import static bisq.security.SignatureUtil.formatMessageForSigning;
@@ -373,12 +373,15 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     //todo work out concept how to adjust those values
     public long getMinBurnAmount(Role.Type type) {
-        return switch (type) {
+        switch (type) {
             //todo for dev testing reduced to 6 BSQ
-            case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
-            case CHANNEL_MODERATOR -> 10000;
-            default -> 0;
-        };
+            case LIQUIDITY_PROVIDER:
+                return USE_DEV_TEST_POB_VALUES ? 600 : 5000;
+            case CHANNEL_MODERATOR:
+                return 10000;
+            default:
+                return 0;
+        }
     }
 
 
@@ -392,7 +395,9 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public Collection<ChatUser> getMentionableChatUsers() {
         // TODO: implement logic
-        return getChatUserIdentities().stream().map(ChatUserIdentity::getChatUser).toList();
+        return getChatUserIdentities().stream()
+                .map(ChatUserIdentity::getChatUser)
+                .collect(Collectors.toList());
     }
 
     public Optional<ChatUserIdentity> findChatUserIdentity(String profileId) {

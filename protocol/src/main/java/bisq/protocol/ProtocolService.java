@@ -78,10 +78,10 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                         identityService.getOrCreateIdentity(protocolModel.getId())
                                 .thenApply(identity -> {
                                     Protocol<? extends ProtocolModel> protocol;
-                                    if (protocolModel instanceof MakerProtocolModel makerProtocolModel) {
-                                        protocol = getMakerProtocol(makerProtocolModel, identity.getNodeIdAndKeyPair());
-                                    } else if (protocolModel instanceof TakerProtocolModel takerProtocolModel) {
-                                        protocol = getTakerProtocol(takerProtocolModel, identity.getNodeIdAndKeyPair());
+                                    if (protocolModel instanceof MakerProtocolModel) {
+                                        protocol = getMakerProtocol((MakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
+                                    } else if (protocolModel instanceof TakerProtocolModel) {
+                                        protocol = getTakerProtocol((TakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
                                     } else {
                                         return false;
                                     }
@@ -106,7 +106,8 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof TakeOfferRequest takeOfferRequest) {
+        if (networkMessage instanceof TakeOfferRequest) {
+            TakeOfferRequest takeOfferRequest = (TakeOfferRequest) networkMessage;
             String offerId = takeOfferRequest.getContract().getOffer().getId();
             openOfferService.findOpenOffer(offerId)
                     .ifPresent(openOffer -> identityService.getOrCreateIdentity(offerId)
@@ -148,27 +149,45 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                 });
     }
 
-    private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel, NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
-        return switch (protocolModel.getContract().getProtocolType()) {
-            case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> LiquidSwapTakerProtocol.getProtocol(networkService, this, protocolModel, takerNodeIdAndKeyPair);
-            case BSQ_SWAP -> null;
-            case LN_SWAP -> null;
-            case MULTISIG -> null;
-            case BSQ_BOND -> null;
-            case REPUTATION -> null;
-        };
+    private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel,
+                                                               NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
+        switch (protocolModel.getContract().getProtocolType()) {
+            case BTC_XMR_SWAP:
+                return null;
+            case LIQUID_SWAP:
+                return LiquidSwapTakerProtocol.getProtocol(networkService, this, protocolModel, takerNodeIdAndKeyPair);
+            case BSQ_SWAP:
+                return null;
+            case LN_SWAP:
+                return null;
+            case MULTISIG:
+                return null;
+            case BSQ_BOND:
+                return null;
+            case REPUTATION:
+                return null;
+        }
+        return null;
     }
 
-    private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel, NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
-        return switch (protocolModel.getContract().getProtocolType()) {
-            case BTC_XMR_SWAP -> null;
-            case LIQUID_SWAP -> LiquidSwapMakerProtocol.getProtocol(networkService, this, protocolModel, makerNetworkIdWithKeyPair);
-            case BSQ_SWAP -> null;
-            case LN_SWAP -> null;
-            case MULTISIG -> null;
-            case BSQ_BOND -> null;
-            case REPUTATION -> null;
-        };
+    private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel,
+                                                                                           NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
+        switch (protocolModel.getContract().getProtocolType()) {
+            case BTC_XMR_SWAP:
+                return null;
+            case LIQUID_SWAP:
+                return LiquidSwapMakerProtocol.getProtocol(networkService, this, protocolModel, makerNetworkIdWithKeyPair);
+            case BSQ_SWAP:
+                return null;
+            case LN_SWAP:
+                return null;
+            case MULTISIG:
+                return null;
+            case BSQ_BOND:
+                return null;
+            case REPUTATION:
+                return null;
+        }
+        return null;
     }
 }

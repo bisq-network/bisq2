@@ -287,7 +287,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
+                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
+                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
                         Pair<String, String> pair = publicTradeChannel.getMarket()
                                 .map(market -> new Pair<>(market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()))
                                 .orElse(new Pair<>("any-base", "any-quote"));

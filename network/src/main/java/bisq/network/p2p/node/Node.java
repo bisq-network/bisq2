@@ -148,13 +148,14 @@ public class Node implements Connection.Handler {
 
     public void maybeInitializeServer(int port) {
         switch (state.get()) {
-            case CREATED -> {
+            case CREATED: {
                 setState(State.INITIALIZE_SERVER);
                 transport.initialize();
                 createServerAndListen(port);
                 setState(State.SERVER_INITIALIZED);
+                break;
             }
-            case INITIALIZE_SERVER -> {
+            case INITIALIZE_SERVER: {
                 log.warn("Node has started initializing. We pause the thread and check afterwards if the " +
                         "node initialisation has been completed in the meantime.");
                 try {
@@ -163,15 +164,19 @@ public class Node implements Connection.Handler {
                     e.printStackTrace();
                 }
                 maybeInitializeServer(port);
+                break;
             }
-            case SERVER_INITIALIZED -> {
+            case SERVER_INITIALIZED: {
                 log.debug("Node is already initialized. We ignore the initializeServer call.");
+                break;
             }
-            case SHUTDOWN_STARTED -> {
+            case SHUTDOWN_STARTED: {
                 log.warn("Node shutdown has been started. We ignore the initializeServer call.");
+                break;
             }
-            case SHUTDOWN_COMPLETE -> {
+            case SHUTDOWN_COMPLETE: {
                 log.warn("Node is already shutdown. We ignore the initializeServer call.");
+                break;
             }
         }
     }
@@ -387,7 +392,8 @@ public class Node implements Connection.Handler {
             return;
         }
         if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
-            if (networkMessage instanceof CloseConnectionMessage closeConnectionMessage) {
+            if (networkMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this,
                         connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
                 closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
@@ -534,11 +540,16 @@ public class Node implements Connection.Handler {
     }
 
     private Transport getTransport(Transport.Type transportType, Transport.Config config) {
-        return switch (transportType) {
-            case TOR -> new TorTransport(config);
-            case I2P -> new I2PTransport(config);
-            case CLEAR -> new ClearNetTransport(config);
-        };
+        switch (transportType) {
+            case TOR:
+                return new TorTransport(config);
+            case I2P:
+                return new I2PTransport(config);
+            case CLEAR:
+                return new ClearNetTransport(config);
+            default:
+                throw new RuntimeException("Unhandled transportType");
+        }
     }
 
     private Load getMyLoad() {

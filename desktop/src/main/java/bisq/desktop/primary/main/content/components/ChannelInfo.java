@@ -105,12 +105,13 @@ public class ChannelInfo {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                model.description.set(publicTradeChannel.getDescription());
+            if (channel instanceof PublicTradeChannel) {
+                model.description.set(((PublicTradeChannel) channel).getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
-            } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
+            } else if (channel instanceof PublicDiscussionChannel) {
+                PublicDiscussionChannel publicDiscussionChannel = (PublicDiscussionChannel) channel;
                 model.description.set(publicDiscussionChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = chatService.findChatUser(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);

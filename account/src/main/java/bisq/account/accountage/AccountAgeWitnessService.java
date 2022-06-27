@@ -69,8 +69,8 @@ public class AccountAgeWitnessService implements DataService.Listener {
 
     @Override
     public void onAppendOnlyDataAdded(AppendOnlyData appendOnlyData) {
-        if (appendOnlyData instanceof AccountAgeWitnessData accountAgeWitnessData) {
-            log.info("onAccountAgeWitnessDataAdded {}", accountAgeWitnessData);
+        if (appendOnlyData instanceof AccountAgeWitnessData) {
+            log.info("onAccountAgeWitnessDataAdded {}", appendOnlyData);
         }
     }
 }

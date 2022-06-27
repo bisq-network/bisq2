@@ -76,7 +76,8 @@ public class InventoryService implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof InventoryRequest request) {
+        if (networkMessage instanceof InventoryRequest) {
+            InventoryRequest request = (InventoryRequest) networkMessage;
             log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.getNonce(), connection.getPeerAddress());
             Inventory inventory = inventoryProvider.apply(request.getDataFilter());
             NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.getNonce()), connection));

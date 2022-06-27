@@ -93,9 +93,11 @@ public class AddressValidationService implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof AddressValidationRequest addressValidationRequest) {
+        if (networkMessage instanceof AddressValidationRequest) {
+            AddressValidationRequest addressValidationRequest = (AddressValidationRequest) networkMessage;
             Address peerAddress = connection.getPeerAddress();
-            if (connection instanceof InboundConnection inboundConnection) {
+            if (connection instanceof InboundConnection) {
+                InboundConnection inboundConnection = (InboundConnection) connection;
                 log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.getNonce(), peerAddress);
                 requesters.add(connection.getId());
                 NETWORK_IO_POOL.submit(() -> node.send(new AddressValidationResponse(addressValidationRequest.getNonce()), inboundConnection));

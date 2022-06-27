@@ -165,12 +165,15 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
     }
 
     public long getMinBurnAmount(Role.Type type) {
-        return switch (type) {
+        switch (type) {
             //todo for dev testing reduced to 6 BSQ
-            case LIQUIDITY_PROVIDER -> USE_DEV_TEST_POB_VALUES ? 600 : 5000;
-            case CHANNEL_MODERATOR -> 10000;
-            default -> 0;
-        };
+            case LIQUIDITY_PROVIDER:
+                return USE_DEV_TEST_POB_VALUES ? 600 : 5000;
+            case CHANNEL_MODERATOR:
+                return 10000;
+            default:
+                return 0;
+        }
     }
 
     private BaseHttpClient getApiHttpClient(List<String> providerUrls) {

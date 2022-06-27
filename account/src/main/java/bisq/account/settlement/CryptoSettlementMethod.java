@@ -33,15 +33,24 @@ public enum CryptoSettlementMethod implements SettlementMethod {
     }
 
     public static List<CryptoSettlementMethod> getSettlementMethods(SwapProtocolType protocolType, String code) {
-        return switch (protocolType) {
-            case BTC_XMR_SWAP -> List.of(CryptoSettlementMethod.NATIVE_CHAIN);
-            case LIQUID_SWAP -> List.of(CryptoSettlementMethod.NATIVE_CHAIN);
-            case BSQ_SWAP -> List.of(CryptoSettlementMethod.NATIVE_CHAIN);
-            case LN_SWAP -> List.of(values());
-            case MULTISIG -> List.of(values());
-            case BSQ_BOND -> List.of(values());
-            case REPUTATION -> List.of(values());
-        };
+        switch (protocolType) {
+            case BTC_XMR_SWAP:
+                return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
+            case LIQUID_SWAP:
+                return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
+            case BSQ_SWAP:
+                return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
+            case LN_SWAP:
+                return List.of(values());
+            case MULTISIG:
+                return List.of(values());
+            case BSQ_BOND:
+                return List.of(values());
+            case REPUTATION:
+                return List.of(values());
+            default:
+                throw new RuntimeException("Not handled case: protocolType=" + protocolType);
+        }
     }
 
     @Override

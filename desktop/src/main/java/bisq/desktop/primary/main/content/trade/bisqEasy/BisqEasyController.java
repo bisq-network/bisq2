@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy;
 
 import bisq.application.DefaultApplicationService;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.BisqEasyChatController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.onboarding.BisqEasyOnboardingController;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class BisqEasyController extends NavigationController {
 
     @Override
     public void onActivate() {
-        if (DontShowAgainService.showAgain(BISQ_EASY_INTRO)){
+        if (DontShowAgainService.showAgain(BISQ_EASY_INTRO)) {
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_INTRO);
         } else {
             Navigation.navigateTo(NavigationTarget.BISQ_EASY_CHAT);
@@ -68,14 +68,13 @@ public class BisqEasyController extends NavigationController {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case BISQ_EASY_CHAT -> {
+            case BISQ_EASY_CHAT: {
                 return Optional.of(new BisqEasyChatController(applicationService));
             }
-            case BISQ_EASY_INTRO -> {
+            case BISQ_EASY_INTRO: {
                 return Optional.of(new BisqEasyOnboardingController(applicationService));
             }
-
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

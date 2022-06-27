@@ -53,13 +53,13 @@ public class TradeController extends TabController<TradeModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_OVERVIEW_LIST -> {
+            case TRADE_OVERVIEW_LIST: {
                 return Optional.of(new TradeOverviewListController(applicationService));
             }
-            case TRADE_OVERVIEW_GRID -> {
+            case TRADE_OVERVIEW_GRID: {
                 return Optional.of(new TradeOverviewGridController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

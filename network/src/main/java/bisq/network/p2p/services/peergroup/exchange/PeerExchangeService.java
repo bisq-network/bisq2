@@ -84,7 +84,9 @@ public class PeerExchangeService implements Node.Listener {
         }
         log.info("Node {} starts peer exchange with: {}", node,
                 StringUtils.truncate(candidates.stream()
-                        .map(Address::toString).toList().toString()));
+                        .map(Address::toString)
+                        .collect(Collectors.toList())
+                        .toString()));
         List<CompletableFuture<Boolean>> allFutures = candidates.stream()
                 .map(this::doPeerExchangeAsync)
                 .collect(Collectors.toList());
@@ -161,7 +163,8 @@ public class PeerExchangeService implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        if (networkMessage instanceof PeerExchangeRequest request) {
+        if (networkMessage instanceof PeerExchangeRequest) {
+            PeerExchangeRequest request = (PeerExchangeRequest) networkMessage;
             //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
             peerExchangeStrategy.addReportedPeers(request.getPeers(), peerAddress);

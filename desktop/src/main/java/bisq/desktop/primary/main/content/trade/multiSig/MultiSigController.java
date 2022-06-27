@@ -68,27 +68,27 @@ public class MultiSigController extends TabController<MultiSigModel> implements 
         model.showCreateOffer.set(false);
         model.showTakeOffer.set(false);
         switch (navigationTarget) {
-            case MULTI_SIG_OFFER_BOOK -> {
+            case MULTI_SIG_OFFER_BOOK: {
                 return Optional.of(offerbookController);
             }
-            case MULTI_SIG_CREATE_OFFER -> {
+            case MULTI_SIG_CREATE_OFFER: {
                 model.showCreateOffer.set(true);
                 return Optional.of(new MultiSigCreateOfferController(applicationService));
             }
-            case MULTI_SIG_TAKE_OFFER -> {
+            case MULTI_SIG_TAKE_OFFER: {
                 model.showTakeOffer.set(true);
                 return Optional.of(new TakeOfferController(applicationService));
             }
-            case MULTI_SIG_OPEN_OFFERS -> {
+            case MULTI_SIG_OPEN_OFFERS: {
                 return Optional.of(new OpenOffersController(applicationService));
             }
-            case MULTI_SIG_PENDING_TRADES -> {
+            case MULTI_SIG_PENDING_TRADES: {
                 return Optional.of(new PendingTradesController(applicationService));
             }
-            case MULTI_SIG_CLOSED_TRADES -> {
+            case MULTI_SIG_CLOSED_TRADES: {
                 return Optional.of(new ClosedTradesController(applicationService));
             }
-            default -> {
+            default: {
                 return Optional.empty();
             }
         }

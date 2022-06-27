@@ -35,25 +35,25 @@ public interface DataRequest extends BroadcastMessage {
 
     static DataRequest fromProto(bisq.network.protobuf.DataRequest proto) {
         switch (proto.getMessageCase()) {
-            case ADDAUTHENTICATEDDATAREQUEST -> {
+            case ADDAUTHENTICATEDDATAREQUEST: {
                 return AddAuthenticatedDataRequest.fromProto(proto.getAddAuthenticatedDataRequest());
             }
-            case REMOVEAUTHENTICATEDDATAREQUEST -> {
+            case REMOVEAUTHENTICATEDDATAREQUEST: {
                 return RemoveAuthenticatedDataRequest.fromProto(proto.getRemoveAuthenticatedDataRequest());
             }
-            case REFRESHAUTHENTICATEDDATAREQUEST -> {
+            case REFRESHAUTHENTICATEDDATAREQUEST: {
                 return RefreshAuthenticatedDataRequest.fromProto(proto.getRefreshAuthenticatedDataRequest());
             }
-            case ADDMAILBOXREQUEST -> {
+            case ADDMAILBOXREQUEST: {
                 return AddMailboxRequest.fromProto(proto.getAddMailboxRequest());
             }
-            case REMOVEMAILBOXREQUEST -> {
+            case REMOVEMAILBOXREQUEST: {
                 return RemoveMailboxRequest.fromProto(proto.getRemoveMailboxRequest());
             }
-            case ADDAPPENDONLYDATAREQUEST -> {
+            case ADDAPPENDONLYDATAREQUEST: {
                 return AddAppendOnlyDataRequest.fromProto(proto.getAddAppendOnlyDataRequest());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }

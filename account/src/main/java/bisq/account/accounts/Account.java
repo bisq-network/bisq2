@@ -20,6 +20,7 @@ package bisq.account.accounts;
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,15 +67,16 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
 
 
     //todo
-    public static Account<?> fromProto(bisq.account.protobuf.Account account) {
-        switch (account.getMessageCase()) {
-            case SEPAACCOUNT -> {
-                return SepaAccount.fromProto(account.getSepaAccount());
+    public static Account<?> fromProto(bisq.account.protobuf.Account proto) {
+        switch (proto.getMessageCase()) {
+            case SEPAACCOUNT: {
+                return SepaAccount.fromProto(proto.getSepaAccount());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
+                throw new UnresolvableProtobufMessageException(proto);
             }
         }
-        return null;
+        throw new UnresolvableProtobufMessageException(proto);
     }
 
     abstract public bisq.account.protobuf.Account toProto();

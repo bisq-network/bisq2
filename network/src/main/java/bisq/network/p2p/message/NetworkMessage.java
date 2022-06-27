@@ -44,55 +44,53 @@ public interface NetworkMessage extends Proto {
 
     static NetworkMessage fromProto(bisq.network.protobuf.NetworkMessage proto) {
         switch (proto.getMessageCase()) {
-            case CONNECTIONHANDSHAKEREQUEST -> {
+            case CONNECTIONHANDSHAKEREQUEST: {
                 return ConnectionHandshake.Request.fromProto(proto.getConnectionHandshakeRequest());
             }
-            case CONNECTIONHANDSHAKERESPONSE -> {
+            case CONNECTIONHANDSHAKERESPONSE: {
                 return ConnectionHandshake.Response.fromProto(proto.getConnectionHandshakeResponse());
             }
-            case CLOSECONNECTIONMESSAGE -> {
+            case CLOSECONNECTIONMESSAGE: {
                 return CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
             }
-            case PEEREXCHANGEREQUEST -> {
+            case PEEREXCHANGEREQUEST: {
                 return PeerExchangeRequest.fromProto(proto.getPeerExchangeRequest());
             }
-            case PEEREXCHANGERESPONSE -> {
+            case PEEREXCHANGERESPONSE: {
                 return PeerExchangeResponse.fromProto(proto.getPeerExchangeResponse());
             }
-            case ADDRESSVALIDATIONREQUEST -> {
+            case ADDRESSVALIDATIONREQUEST: {
                 return AddressValidationRequest.fromProto(proto.getAddressValidationRequest());
             }
-            case ADDRESSVALIDATIONRESPONSE -> {
+            case ADDRESSVALIDATIONRESPONSE: {
                 return AddressValidationResponse.fromProto(proto.getAddressValidationResponse());
             }
-            case PING -> {
+            case PING: {
                 return Ping.fromProto(proto.getPing());
             }
-            case PONG -> {
+            case PONG: {
                 return Pong.fromProto(proto.getPong());
             }
-            case CONFIDENTIALMESSAGE -> {
+            case CONFIDENTIALMESSAGE: {
                 return ConfidentialMessage.fromProto(proto.getConfidentialMessage());
             }
-            case INVENTORYREQUEST -> {
+            case INVENTORYREQUEST: {
                 return InventoryRequest.fromProto(proto.getInventoryRequest());
             }
-            case INVENTORYRESPONSE -> {
+            case INVENTORYRESPONSE: {
                 return InventoryResponse.fromProto(proto.getInventoryResponse());
             }
-            case DATAREQUEST -> {
+            case DATAREQUEST: {
                 return DataRequest.fromProto(proto.getDataRequest());
             }
-            case EXTERNALNETWORKMESSAGE -> {
+            case EXTERNALNETWORKMESSAGE: {
                 // Externally defined messages
                 return ExternalNetworkMessage.fromProto(proto.getExternalNetworkMessage());
             }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
         }
-       /* switch (proto.getMessageCase()) {
-        }*/
         throw new UnresolvableProtobufMessageException(proto);
     }
 }

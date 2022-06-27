@@ -29,7 +29,6 @@ import javafx.scene.layout.HBox;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -247,10 +246,18 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
             setCellFactory(cellFactory.get());
         } else {
             switch (defaultCellFactory) {
-                case TEXT -> applyTextCellFactory();
-                case TEXT_INPUT -> applyTextInputCellFactory();
-                case BUTTON -> applyButtonCellFactory();
-                case CHECKBOX -> applyCheckBoxCellFactory();
+                case TEXT:
+                    applyTextCellFactory();
+                    break;
+                case TEXT_INPUT:
+                    applyTextInputCellFactory();
+                    break;
+                case BUTTON:
+                    applyButtonCellFactory();
+                    break;
+                case CHECKBOX:
+                    applyCheckBoxCellFactory();
+                    break;
             }
         }
     }
@@ -312,12 +319,12 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             public void updateItem(final S item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (previousItem instanceof TableItem tableItem) {
-                                        tableItem.deactivate();
+                                    if (previousItem instanceof TableItem) {
+                                        ((TableItem) previousItem).deactivate();
                                     }
                                     previousItem = item;
-                                    if (item instanceof TableItem tableItem) {
-                                        tableItem.activate();
+                                    if (item instanceof TableItem) {
+                                        ((TableItem) item).activate();
                                     }
                                     if (value.isPresent()) {
                                         setText(value.get());
@@ -332,8 +339,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
                                 } else {
                                     if (previousItem != null) {
-                                        if (previousItem instanceof TableItem tableItem) {
-                                            tableItem.deactivate();
+                                        if (previousItem instanceof TableItem) {
+                                            ((TableItem) previousItem).deactivate();
                                         }
                                         previousItem = null;
                                     }
@@ -368,13 +375,13 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     isVisibleFunction.ifPresent(function -> textField.setVisible(function.apply(item)));
                                     setGraphic(textField);
 
-                                    if (previousItem instanceof TableItem tableItem) {
-                                        tableItem.deactivate();
+                                    if (previousItem instanceof TableItem) {
+                                        ((TableItem) previousItem).deactivate();
                                     }
                                     previousItem = item;
 
-                                    if (item instanceof TableItem tableItem) {
-                                        tableItem.activate();
+                                    if (item instanceof TableItem) {
+                                        ((TableItem) item).activate();
                                     }
                                     if (value.isPresent()) {
                                         textField.setText(value.get());
@@ -389,8 +396,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
                                 } else {
                                     if (previousItem != null) {
-                                        if (previousItem instanceof TableItem tableItem) {
-                                            tableItem.deactivate();
+                                        if (previousItem instanceof TableItem) {
+                                            ((TableItem) previousItem).deactivate();
                                         }
                                         previousItem = null;
                                     }
@@ -419,7 +426,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                             {
                                 try {
                                     button = buttonClass.orElse(Button.class).getDeclaredConstructor().newInstance();
-                                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                             }
@@ -434,13 +441,13 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     isVisibleFunction.ifPresent(function -> button.setVisible(function.apply(item)));
                                     setGraphic(button);
 
-                                    if (previousItem instanceof TableItem tableItem) {
-                                        tableItem.deactivate();
+                                    if (previousItem instanceof TableItem) {
+                                        ((TableItem) previousItem).deactivate();
                                     }
                                     previousItem = item;
 
-                                    if (item instanceof TableItem tableItem) {
-                                        tableItem.activate();
+                                    if (item instanceof TableItem) {
+                                        ((TableItem) item).activate();
                                     }
                                     if (value.isPresent()) {
                                         button.setText(value.get());
@@ -455,8 +462,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
                                 } else {
                                     if (previousItem != null) {
-                                        if (previousItem instanceof TableItem tableItem) {
-                                            tableItem.deactivate();
+                                        if (previousItem instanceof TableItem) {
+                                            ((TableItem) previousItem).deactivate();
                                         }
                                         previousItem = null;
                                     }
@@ -489,13 +496,13 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     checkBox.setOnAction(event -> onToggleHandler.accept(item, checkBox.isSelected()));
                                     isVisibleFunction.ifPresent(function -> checkBox.setVisible(function.apply(item)));
                                     setGraphic(checkBox);
-                                    if (previousItem instanceof TableItem tableItem) {
-                                        tableItem.deactivate();
+                                    if (previousItem instanceof TableItem) {
+                                        ((TableItem) previousItem).deactivate();
                                     }
                                     previousItem = item;
 
-                                    if (item instanceof TableItem tableItem) {
-                                        tableItem.activate();
+                                    if (item instanceof TableItem) {
+                                        ((TableItem) item).activate();
                                     }
                                     if (value.isPresent()) {
                                         checkBox.setText(value.get());
@@ -510,8 +517,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                                     }
                                 } else {
                                     if (previousItem != null) {
-                                        if (previousItem instanceof TableItem tableItem) {
-                                            tableItem.deactivate();
+                                        if (previousItem instanceof TableItem) {
+                                            ((TableItem) previousItem).deactivate();
                                         }
                                         previousItem = null;
                                     }

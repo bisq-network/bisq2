@@ -166,7 +166,8 @@ public class OfferbookController implements Controller {
     }
 
     void onUpdateItemWithButton(OfferListItem item, ButtonBase button) {
-        if (item != null && button instanceof BisqIconButton bisqIconButton) {
+        if (item != null && button instanceof BisqIconButton) {
+            BisqIconButton bisqIconButton = (BisqIconButton) button;
             boolean isMyOffer = model.isMyOffer(item);
             bisqIconButton.setMinWidth(200);
             bisqIconButton.setMaxWidth(200);

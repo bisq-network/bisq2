@@ -357,9 +357,9 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             // Hack to get listView from base class and put it into a container with the listBackground below.
             if (listView == null) {
                 Node node = super.getPopupContent();
-                if (node instanceof ListView _listView) {
-                    //noinspection unchecked
-                    listView = _listView;
+                if (node instanceof ListView) {
+                    //noinspection unchecked,rawtypes
+                    listView = (ListView) node;
                     listView.setId("bisq-combo-box-list-view");
 
                     // Hack to get access to background and insert our polygon
@@ -367,8 +367,8 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                             (ChangeListener<Parent>) (observable, oldValue, newValue) -> {
                                 if (newValue != null && listView.getParent() != null) {
                                     Parent rootPopup = listView.getParent().getParent();
-                                    if (rootPopup instanceof Pane pane && pane.getChildren().size() == 1) {
-                                        pane.getChildren().add(0, listBackground);
+                                    if (rootPopup instanceof Pane && ((Pane) rootPopup).getChildren().size() == 1) {
+                                        ((Pane) rootPopup).getChildren().add(0, listBackground);
                                     }
                                 }
                             }).get());

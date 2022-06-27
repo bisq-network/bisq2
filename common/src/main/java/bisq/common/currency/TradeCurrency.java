@@ -60,15 +60,12 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto 
 
     public static TradeCurrency fromProto(bisq.common.protobuf.TradeCurrency proto) {
         switch (proto.getMessageCase()) {
-            case CRYPTOCURRENCY -> {
+            case CRYPTOCURRENCY:
                 return CryptoCurrency.fromProto(proto, proto.getCryptoCurrency());
-            }
-            case FIATCURRENCY -> {
+            case FIATCURRENCY:
                 return FiatCurrency.fromProto(proto, proto.getFiatCurrency());
-            }
-            case MESSAGE_NOT_SET -> {
+            case MESSAGE_NOT_SET:
                 throw new UnresolvableProtobufMessageException(proto);
-            }
         }
         throw new UnresolvableProtobufMessageException(proto);
     }

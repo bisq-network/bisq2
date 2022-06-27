@@ -70,10 +70,11 @@ class InventoryHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof InventoryResponse response) {
+        if (networkMessage instanceof InventoryResponse) {
+            InventoryResponse response = (InventoryResponse) networkMessage;
             if (response.getRequestNonce() == nonce) {
                 Map<String, Integer> map = new HashMap<>();
-                response.getInventory().entries().stream()
+                response.getInventory().getEntries().stream()
                         .filter(e -> e instanceof AddAuthenticatedDataRequest)
                         .map(e -> (AddAuthenticatedDataRequest) e)
                         .map(AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
@@ -83,7 +84,7 @@ class InventoryHandler implements Connection.Listener {
                             map.putIfAbsent(simpleName, 0);
                             map.put(simpleName, map.get(simpleName) + 1);
                         });
-                response.getInventory().entries().stream()
+                response.getInventory().getEntries().stream()
                         .filter(e -> e instanceof AddAppendOnlyDataRequest)
                         .map(e -> (AddAppendOnlyDataRequest) e)
                         .map(AddAppendOnlyDataRequest::getAppendOnlyData)

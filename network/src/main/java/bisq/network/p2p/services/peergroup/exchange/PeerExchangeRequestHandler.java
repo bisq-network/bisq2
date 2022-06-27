@@ -61,7 +61,8 @@ class PeerExchangeRequestHandler implements Connection.Listener {
 
     @Override
     public void onNetworkMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PeerExchangeResponse response) {
+        if (networkMessage instanceof PeerExchangeResponse) {
+            PeerExchangeResponse response = (PeerExchangeResponse) networkMessage;
             if (response.getNonce() == nonce) {
                /* String addresses = StringUtils.truncate(response.peers().stream()
                         .map(peer -> peer.getAddress().toString())

@@ -20,11 +20,11 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.ChatMessage;
@@ -151,14 +151,14 @@ public class ChatMessagesComponent {
                 ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
                 checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
-                if (channel instanceof PublicTradeChannel publicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, publicTradeChannel, chatUserIdentity);
-                } else if (channel instanceof PublicDiscussionChannel publicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, publicDiscussionChannel, chatUserIdentity);
-                } else if (channel instanceof PrivateTradeChannel privateTradeChannel) {
-                    chatService.sendPrivateTradeChatMessage(text, quotation, privateTradeChannel);
-                } else if (channel instanceof PrivateDiscussionChannel privateDiscussionChannel) {
-                    chatService.sendPrivateDiscussionChatMessage(text, quotation, privateDiscussionChannel);
+                if (channel instanceof PublicTradeChannel) {
+                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, chatUserIdentity);
+                } else if (channel instanceof PublicDiscussionChannel) {
+                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, chatUserIdentity);
+                } else if (channel instanceof PrivateTradeChannel) {
+                    chatService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                } else if (channel instanceof PrivateDiscussionChannel) {
+                    chatService.sendPrivateDiscussionChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
                 }
                 quotedMessageBlock.close();
             }
