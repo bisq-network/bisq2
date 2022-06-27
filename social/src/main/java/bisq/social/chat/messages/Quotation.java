@@ -3,8 +3,26 @@ package bisq.social.chat.messages;
 import bisq.common.proto.Proto;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.user.NymLookup;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record Quotation(String nym, String nickName, ProofOfWork proofOfWork, String message) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class Quotation implements Proto {
+    private final String nym;
+    private final String nickName;
+    private final ProofOfWork proofOfWork;
+    private final String message;
+
+    public Quotation(String nym, String nickName, ProofOfWork proofOfWork, String message) {
+        this.nym = nym;
+        this.nickName = nickName;
+        this.proofOfWork = proofOfWork;
+        this.message = message;
+    }
+
     public bisq.social.protobuf.Quotation toProto() {
         return bisq.social.protobuf.Quotation.newBuilder()
                 .setNym(nym)

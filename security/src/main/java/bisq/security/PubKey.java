@@ -26,12 +26,15 @@ import lombok.ToString;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
-@Getter
+
 @ToString
 @EqualsAndHashCode
 public final class PubKey implements Proto {
+    @Getter
     private final PublicKey publicKey;
+    @Getter
     private final String keyId;
+    private transient byte[] hash;
 
     public PubKey(PublicKey publicKey, String keyId) {
         this.publicKey = publicKey;
@@ -52,5 +55,12 @@ public final class PubKey implements Proto {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public byte[] getHash() {
+        if (hash == null) {
+            hash = DigestUtil.hash(publicKey.getEncoded());
+        }
+        return hash;
     }
 }

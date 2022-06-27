@@ -21,16 +21,21 @@ import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 import bisq.social.user.proof.Proof;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.List;
 
+@Getter
+@ToString
+@EqualsAndHashCode
 /**
  * Role of a user profile. Requires some proof for verifying that the associated Role to a user profile
  * is valid.
  */
-public record Role(Type type, Proof proof) implements Proto, Comparable<Role> {
+public final class Role implements Proto, Comparable<Role> {
     public enum Type implements ProtoEnum {
         LIQUIDITY_PROVIDER(Proof.Type.PROOF_OF_BURN),
         CHANNEL_ADMIN(Proof.Type.BONDED_ROLE),
@@ -52,6 +57,14 @@ public record Role(Type type, Proof proof) implements Proto, Comparable<Role> {
         public static Type fromProto(bisq.social.protobuf.Role.Type proto) {
             return ProtobufUtils.enumFromProto(Type.class, proto.name());
         }
+    }
+
+    private final Type type;
+    private final Proof proof;
+
+    public Role(Type type, Proof proof) {
+        this.type = type;
+        this.proof = proof;
     }
 
     @Override

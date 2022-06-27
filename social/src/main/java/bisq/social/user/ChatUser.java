@@ -81,7 +81,7 @@ public class ChatUser implements DistributedData {
         this.bio = bio;
         this.metaData = metaData;
 
-        pubKeyHash = DigestUtil.hash(networkId.getPubKey().publicKey().getEncoded());
+        pubKeyHash = DigestUtil.hash(networkId.getPubKey().getPublicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
         nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
     }
@@ -149,7 +149,4 @@ public class ChatUser implements DistributedData {
     public String getAccountAgeAsString() {
         return "274 days"; //todo implement instead of hardcode
     }
-
-   /* public static record BurnInfo(long totalBsqBurned, long firstBurnDate) {
-    }*/
 }
