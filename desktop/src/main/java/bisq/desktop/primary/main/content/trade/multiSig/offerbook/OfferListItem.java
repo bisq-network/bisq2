@@ -57,11 +57,11 @@ public class OfferListItem implements TableItem {
         price = QuoteFormatter.format(offer.getQuote(marketPriceService));
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 

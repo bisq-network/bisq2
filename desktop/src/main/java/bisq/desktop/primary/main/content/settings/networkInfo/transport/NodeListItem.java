@@ -60,7 +60,7 @@ public class NodeListItem implements TableItem {
                 .or(() -> identityService.findActiveIdentityByNodeId(node.getNodeId()).map(i -> Res.get("table.nodes.type.active")))
                 .or(() -> identityService.findRetiredIdentityByNodeId(node.getNodeId()).map(i -> Res.get("table.nodes.type.retired")))
                 .orElseGet(() -> nodeId.equals(Node.DEFAULT) ? Res.get("table.nodes.type.gossip") : Res.get("na"));
-        domainId = identityService.findAnyIdentityByNodeId(node.getNodeId()).map(Identity::domainId)
+        domainId = identityService.findAnyIdentityByNodeId(node.getNodeId()).map(Identity::getDomainId)
                 .orElse(Res.get("na"));
         address = node.findMyAddress().orElseThrow().getFullAddress();
 

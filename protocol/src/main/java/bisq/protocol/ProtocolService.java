@@ -131,7 +131,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                                                           String quoteSideSettlementMethod) {
         return identityService.getOrCreateIdentity(offer.getId())
                 .thenApply(identity -> {
-                    Contract contract = new Contract(identity.networkId(),
+                    Contract contract = new Contract(identity.getNetworkId(),
                             protocolType,
                             offer,
                             baseSideAmount,

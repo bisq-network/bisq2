@@ -783,13 +783,13 @@ public class ChatMessagesListView {
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(25);
 
-                                    quotedMessageField.setText(quotation.message());
+                                    quotedMessageField.setText(quotation.getMessage());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
 
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
                                     roboIconImageView.setFitHeight(25);
-                                    Image image = RoboHash.getImage(quotation.proofOfWork().getPayload());
+                                    Image image = RoboHash.getImage(quotation.getProofOfWork().getPayload());
                                     roboIconImageView.setImage(image);
 
                                     Label userName = new Label(quotation.getUserName());

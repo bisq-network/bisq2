@@ -143,7 +143,7 @@ public class PriceInput {
             if (model.selectedMarket == null) return;
             MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
-            model.fixPrice.set(marketPrice.quote());
+            model.fixPrice.set(marketPrice.getQuote());
         }
     }
 

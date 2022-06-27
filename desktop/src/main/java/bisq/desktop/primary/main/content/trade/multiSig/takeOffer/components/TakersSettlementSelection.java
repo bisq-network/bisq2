@@ -148,14 +148,14 @@ public class TakersSettlementSelection {
 
             String baseSideCode = market.getBaseCurrencyCode();
             Set<SettlementMethod> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
-                    .map(SettlementSpec::settlementMethodName)
+                    .map(SettlementSpec::getSettlementMethodName)
                     .map(settlementMethodName -> {
                         return SettlementMethod.from(settlementMethodName, baseSideCode);
                     })
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
             Set<SettlementMethod> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
-                    .map(SettlementSpec::settlementMethodName)
+                    .map(SettlementSpec::getSettlementMethodName)
                     .map(settlementMethodName -> SettlementMethod.from(settlementMethodName, quoteSideCode))
                     .collect(Collectors.toSet());
 

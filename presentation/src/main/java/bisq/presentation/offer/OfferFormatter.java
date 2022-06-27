@@ -50,7 +50,7 @@ class OfferFormatter {
     }
 
     static String formatTransferOptions(FiatSettlementOption settlementOption) {
-        return settlementOption.bankName() + " / " + settlementOption.countyCodeOfBank();
+        return settlementOption.getBankName() + " / " + settlementOption.getCountyCodeOfBank();
     }
 
     static String formatTransferTypes(List<SettlementMethod> settlementMethods) {

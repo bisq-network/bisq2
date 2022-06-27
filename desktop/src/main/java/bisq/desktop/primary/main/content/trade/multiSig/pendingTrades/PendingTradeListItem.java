@@ -61,11 +61,11 @@ public class PendingTradeListItem implements TableItem {
         price = QuoteFormatter.format(Quote.of(contract.getBaseSideAmount(), contract.getQuoteSideAmount()));
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
-                .map(SettlementSpec::settlementMethodName)
+                .map(SettlementSpec::getSettlementMethodName)
                 .map(Res::get)
                 .collect(Collectors.joining("\n"));
 

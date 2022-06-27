@@ -229,15 +229,15 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         // so clients can react on it as they wish.
         DataService.BroadCastDataResult mailboxFuture = dataService.get().addMailboxData(mailboxData,
                         senderKeyPair,
-                        receiverPubKey.publicKey())
+                        receiverPubKey.getPublicKey())
                 .join();
         return new Result(State.ADDED_TO_MAILBOX).setMailboxFuture(mailboxFuture);
     }
 
     private ConfidentialMessage getConfidentialMessage(NetworkMessage networkMessage, PubKey receiverPubKey, KeyPair senderKeyPair) {
         try {
-            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(networkMessage.serialize(), receiverPubKey.publicKey(), senderKeyPair);
-            return new ConfidentialMessage(confidentialData, receiverPubKey.keyId());
+            ConfidentialData confidentialData = HybridEncryption.encryptAndSign(networkMessage.serialize(), receiverPubKey.getPublicKey(), senderKeyPair);
+            return new ConfidentialMessage(confidentialData, receiverPubKey.getKeyId());
         } catch (GeneralSecurityException e) {
             log.error("HybridEncryption.encryptAndSign failed at getConfidentialMessage.", e);
             throw new RuntimeException(e);

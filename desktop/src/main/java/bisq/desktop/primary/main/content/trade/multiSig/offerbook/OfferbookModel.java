@@ -70,7 +70,7 @@ public class OfferbookModel implements Model {
     }
 
     boolean isMyOffer(OfferListItem item) {
-        return keyPairService.findKeyPair(item.getOffer().getMakerNetworkId().getPubKey().keyId()).isPresent();
+        return keyPairService.findKeyPair(item.getOffer().getMakerNetworkId().getPubKey().getKeyId()).isPresent();
     }
 
     String getActionButtonTitle(OfferListItem item) {
