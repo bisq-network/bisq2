@@ -19,11 +19,25 @@ package bisq.security;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
-public record PubKey(PublicKey publicKey, String keyId) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class PubKey implements Proto {
+    private final PublicKey publicKey;
+    private final String keyId;
+
+    public PubKey(PublicKey publicKey, String keyId) {
+        this.publicKey = publicKey;
+        this.keyId = keyId;
+    }
+
     public bisq.security.protobuf.PubKey toProto() {
         return bisq.security.protobuf.PubKey.newBuilder()
                 .setPublicKey(ByteString.copyFrom(publicKey.getEncoded()))
@@ -38,9 +52,5 @@ public record PubKey(PublicKey publicKey, String keyId) implements Proto {
         } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public byte[] hash() {
-        return DigestUtil.hash(publicKey.getEncoded());
     }
 }

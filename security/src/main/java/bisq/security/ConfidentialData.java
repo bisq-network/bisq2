@@ -19,12 +19,32 @@ package bisq.security;
 
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record ConfidentialData(byte[] encodedSenderPublicKey,
-                               byte[] hmac,
-                               byte[] iv,
-                               byte[] cypherText,
-                               byte[] signature) implements Proto {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ConfidentialData implements Proto {
+    private final byte[] encodedSenderPublicKey;
+    private final byte[] hmac;
+    private final byte[] iv;
+    private final byte[] cypherText;
+    private final byte[] signature;
+
+    public ConfidentialData(byte[] encodedSenderPublicKey,
+                            byte[] hmac,
+                            byte[] iv,
+                            byte[] cypherText,
+                            byte[] signature) {
+        this.encodedSenderPublicKey = encodedSenderPublicKey;
+        this.hmac = hmac;
+        this.iv = iv;
+        this.cypherText = cypherText;
+        this.signature = signature;
+    }
+
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setEncodedSenderPublicKey(ByteString.copyFrom(encodedSenderPublicKey))
