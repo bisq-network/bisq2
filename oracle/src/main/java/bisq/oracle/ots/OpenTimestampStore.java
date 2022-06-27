@@ -55,7 +55,7 @@ public class OpenTimestampStore implements PersistableStore<OpenTimestampStore> 
     public static OpenTimestampStore fromProto(bisq.oracle.protobuf.OpenTimestampStore proto) {
         Map<ByteArray, ByteArray> timestampByPubKeyHash = proto.getTimestampEntriesList().stream()
                 .map(ByteArrayMapEntry::fromProto)
-                .collect(Collectors.toMap(ByteArrayMapEntry::key, ByteArrayMapEntry::value));
+                .collect(Collectors.toMap(ByteArrayMapEntry::getKey, ByteArrayMapEntry::getValue));
         return new OpenTimestampStore(timestampByPubKeyHash);
     }
 

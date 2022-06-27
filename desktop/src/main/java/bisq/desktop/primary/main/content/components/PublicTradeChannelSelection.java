@@ -289,11 +289,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
                         Pair<String, String> pair = publicTradeChannel.getMarket()
-                                .map(market -> new Pair<>(market.baseCurrencyCode(), market.quoteCurrencyCode()))
+                                .map(market -> new Pair<>(market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()))
                                 .orElse(new Pair<>("any-base", "any-quote"));
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
-                                pair.first().toLowerCase(),
-                                pair.second().toLowerCase()));
+                                pair.getFirst().toLowerCase(),
+                                pair.getSecond().toLowerCase()));
                         label.setText(item.getDisplayString());
                         label.setGraphicTextGap(8);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

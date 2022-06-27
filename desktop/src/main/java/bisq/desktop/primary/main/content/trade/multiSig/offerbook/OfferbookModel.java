@@ -77,7 +77,7 @@ public class OfferbookModel implements Model {
         if (isMyOffer(item)) {
             return Res.get("remove");
         } else {
-            String currencyCode = item.getOffer().getMarket().baseCurrencyCode();
+            String currencyCode = item.getOffer().getMarket().getBaseCurrencyCode();
             String dir = item.getOffer().getDirection().isBuy() ?
                     Res.get("direction.label.sell", currencyCode) :
                     Res.get("direction.label.buy", currencyCode);

@@ -45,7 +45,7 @@ public class BtcTxValidator {
     public static String getFirstInputPubKey(String jsonTxt) {
         try {
             Pair<JsonArray, JsonArray> vinAndVout = getVinAndVout(jsonTxt);
-            JsonArray vinArray = vinAndVout.first();
+            JsonArray vinArray = vinAndVout.getFirst();
             for (JsonElement x : vinArray) {
                 JsonObject vin = x.getAsJsonObject();
                 // pubKey in witness or scriptsig (legacy or segwit txs)

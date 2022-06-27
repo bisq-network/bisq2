@@ -18,8 +18,22 @@
 package bisq.common.data;
 
 import bisq.common.proto.Proto;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record ByteArrayMapEntry(ByteArray key, ByteArray value) implements Proto {
+@Getter
+@EqualsAndHashCode
+@ToString
+public final class ByteArrayMapEntry implements Proto {
+    private final ByteArray key;
+    private final ByteArray value;
+
+    public ByteArrayMapEntry(ByteArray key, ByteArray value) {
+        this.key = key;
+        this.value = value;
+    }
+
     public bisq.common.protobuf.ByteArrayMapEntry toProto() {
         return bisq.common.protobuf.ByteArrayMapEntry.newBuilder()
                 .setKey(key.toProto())

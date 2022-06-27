@@ -146,14 +146,14 @@ public class TakersSettlementSelection {
 
             model.visibility.set(true);
 
-            String baseSideCode = market.baseCurrencyCode();
+            String baseSideCode = market.getBaseCurrencyCode();
             Set<SettlementMethod> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
                     .map(SettlementSpec::settlementMethodName)
                     .map(settlementMethodName -> {
                         return SettlementMethod.from(settlementMethodName, baseSideCode);
                     })
                     .collect(Collectors.toSet());
-            String quoteSideCode = market.quoteCurrencyCode();
+            String quoteSideCode = market.getQuoteCurrencyCode();
             Set<SettlementMethod> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
                     .map(SettlementSpec::settlementMethodName)
                     .map(settlementMethodName -> SettlementMethod.from(settlementMethodName, quoteSideCode))
@@ -243,17 +243,17 @@ public class TakersSettlementSelection {
 
             if (model.baseSideAccountsVisibility.get()) {
                 model.baseSideDescription.set(Res.get("takeOffer.account.description",
-                        baseSideVerb, market.baseCurrencyCode()));
+                        baseSideVerb, market.getBaseCurrencyCode()));
             } else {
                 model.baseSideDescription.set(Res.get("takeOffer.settlement.description",
-                        baseSideVerb, market.baseCurrencyCode()));
+                        baseSideVerb, market.getBaseCurrencyCode()));
             }
             if (model.quoteSideAccountsVisibility.get()) {
                 model.quoteSideDescription.set(Res.get("takeOffer.account.description",
-                        quoteSideVerb, market.quoteCurrencyCode()));
+                        quoteSideVerb, market.getQuoteCurrencyCode()));
             } else {
                 model.quoteSideDescription.set(Res.get("takeOffer.settlement.description",
-                        quoteSideVerb, market.quoteCurrencyCode()));
+                        quoteSideVerb, market.getQuoteCurrencyCode()));
             }
         }
 

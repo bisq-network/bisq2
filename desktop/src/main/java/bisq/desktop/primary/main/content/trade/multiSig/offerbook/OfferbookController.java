@@ -106,9 +106,9 @@ public class OfferbookController implements Controller {
 
     private void applyMarketChange(Market market) {
         if (market != null) {
-            model.priceHeaderTitle.set(Res.get("offerbook.table.header.price", market.quoteCurrencyCode(), market.baseCurrencyCode()));
-            model.baseAmountHeaderTitle.set(Res.get("offerbook.table.header.baseAmount", market.baseCurrencyCode()));
-            model.quoteAmountHeaderTitle.set(Res.get("offerbook.table.header.quoteAmount", market.quoteCurrencyCode()));
+            model.priceHeaderTitle.set(Res.get("offerbook.table.header.price", market.getQuoteCurrencyCode(), market.getBaseCurrencyCode()));
+            model.baseAmountHeaderTitle.set(Res.get("offerbook.table.header.baseAmount", market.getBaseCurrencyCode()));
+            model.quoteAmountHeaderTitle.set(Res.get("offerbook.table.header.quoteAmount", market.getQuoteCurrencyCode()));
         }
         updateFilterPredicate();
     }

@@ -129,10 +129,10 @@ public class PaymentMethodsSelection {
             }
             if (model.direction == Direction.SELL) {
                 model.description.set(Res.get("satoshisquareapp.createOffer.paymentMethods.toReceive",
-                        model.selectedMarket.quoteCurrencyCode()));
+                        model.selectedMarket.getQuoteCurrencyCode()));
             } else {
                 model.description.set(Res.get("satoshisquareapp.createOffer.paymentMethods.toSpend",
-                        model.selectedMarket.quoteCurrencyCode()));
+                        model.selectedMarket.getQuoteCurrencyCode()));
             }
         }
 

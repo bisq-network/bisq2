@@ -21,16 +21,25 @@ import bisq.common.data.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
 public class DecimalFormatters {
-    /**
-     * Wrapper to make DecimalFormat immutable and expose only what we use.
-     */
-    public record Format(java.text.DecimalFormat decimalFormat) {
+    @EqualsAndHashCode
+    @ToString
+    public static final class Format {
+        private final DecimalFormat decimalFormat;
+
+        /**
+         * Wrapper to make DecimalFormat immutable and expose only what we use.
+         */
+        public Format(DecimalFormat decimalFormat) {
+            this.decimalFormat = decimalFormat;
+        }
 
         public String format(long number) {
             return decimalFormat.format(number);
@@ -57,8 +66,8 @@ public class DecimalFormatters {
     }
 
     private static Format getDecimalFormat(Pair<Locale, Integer> pair) {
-        Locale locale = pair.first();
-        int precision = pair.second();
+        Locale locale = pair.getFirst();
+        int precision = pair.getSecond();
         DecimalFormat decimalFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         if (precision > 0) {
             decimalFormat.applyPattern(getPattern(precision));

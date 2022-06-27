@@ -102,7 +102,7 @@ public class TorHttpClient extends BaseHttpClient {
 
             HttpUriRequest request = getHttpUriRequest(httpMethod, baseUrl, param);
             optionalHeader.ifPresent(header -> {
-                request.setHeader(header.first(), header.second());
+                request.setHeader(header.getFirst(), header.getSecond());
             });
 
             try (CloseableHttpResponse httpResponse = closeableHttpClient.execute(request, context)) {

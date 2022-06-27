@@ -38,7 +38,7 @@ public final class SepaAccount extends CountryBasedAccount<FiatSettlementMethod>
                        Country country) {
         super(accountName,
                 METHOD,
-                new SepaAccountPayload(METHOD.name(), holderName, iban, bic, country.code()),
+                new SepaAccountPayload(METHOD.name(), holderName, iban, bic, country.getCode()),
                 FiatSettlementMethod.getTradeCurrencies(METHOD),
                 country);
     }

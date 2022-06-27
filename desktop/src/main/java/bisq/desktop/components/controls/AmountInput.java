@@ -127,7 +127,7 @@ public class AmountInput {
                 return;
             }
 
-            model.code.set(model.isBaseCurrency ? model.selectedMarket.baseCurrencyCode() : model.selectedMarket.quoteCurrencyCode());
+            model.code.set(model.isBaseCurrency ? model.selectedMarket.getBaseCurrencyCode() : model.selectedMarket.getQuoteCurrencyCode());
             String code = model.code.get();
             model.prompt.set(Res.get("createOffer.volume.prompt", code));
             String dir;

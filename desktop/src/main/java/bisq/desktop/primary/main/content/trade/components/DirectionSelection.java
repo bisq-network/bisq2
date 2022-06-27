@@ -77,14 +77,14 @@ public class DirectionSelection {
         private void setSelectedMarket(Market selectedMarket) {
             model.selectedMarket = selectedMarket;
             if (selectedMarket != null) {
-                model.baseCode.set(selectedMarket.baseCurrencyCode());
+                model.baseCode.set(selectedMarket.getBaseCurrencyCode());
             }
         }
 
         @Override
         public void onActivate() {
             if (model.selectedMarket != null) {
-                model.baseCode.set(model.selectedMarket.baseCurrencyCode());
+                model.baseCode.set(model.selectedMarket.getBaseCurrencyCode());
             }
             if (model.direction.get() == null) {
                 model.direction.set(Direction.BUY);

@@ -115,7 +115,7 @@ public class Quote implements Comparable<Quote>, Proto {
     }
 
     public static Quote fromPrice(long value, Market market) {
-        return fromPrice(value, market.baseCurrencyCode(), market.quoteCurrencyCode());
+        return fromPrice(value, market.getBaseCurrencyCode(), market.getQuoteCurrencyCode());
     }
 
     public static Quote fromPrice(long value, String baseCurrencyCode, String quoteCurrencyCode) {

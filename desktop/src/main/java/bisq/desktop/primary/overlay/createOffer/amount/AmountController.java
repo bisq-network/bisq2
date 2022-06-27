@@ -125,7 +125,7 @@ public class AmountController implements Controller {
         baseAmount.setAmount(null);
         if (model.getQuoteSideAmount().get() == null) {
             //todo we need to adjust to diff fiat exchange rates
-            quoteAmount.setAmount(Fiat.parse("100", model.getMarket().quoteCurrencyCode()));
+            quoteAmount.setAmount(Fiat.parse("100", model.getMarket().getQuoteCurrencyCode()));
         } else {
             quoteAmount.setAmount(model.getQuoteSideAmount().get());
         }

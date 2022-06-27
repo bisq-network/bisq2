@@ -61,12 +61,12 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         Pair<VBox, ToggleButton> buyPair = getBoxPair(Res.get("onboarding.direction.buy"), Res.get("onboarding.direction.buy.info"));
-        VBox buyBox = buyPair.first();
-        buyButton = buyPair.second();
+        VBox buyBox = buyPair.getFirst();
+        buyButton = buyPair.getSecond();
 
         Pair<VBox, ToggleButton> sellPair = getBoxPair(Res.get("onboarding.direction.sell"), Res.get("onboarding.direction.sell.info"));
-        VBox sellBox = sellPair.first();
-        sellButton = sellPair.second();
+        VBox sellBox = sellPair.getFirst();
+        sellButton = sellPair.getSecond();
 
         HBox boxes = new HBox(25, buyBox, sellBox);
         boxes.setAlignment(Pos.CENTER);

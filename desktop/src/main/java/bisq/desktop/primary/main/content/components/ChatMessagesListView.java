@@ -275,7 +275,7 @@ public class ChatMessagesListView {
                                 .ifPresent(privateTradeChannel -> {
                                     TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
                                     String dirString = tradeChatOffer.getDirection().mirror().displayString();
-                                    String baseCurrencyCode = tradeChatOffer.getMarket().baseCurrencyCode();
+                                    String baseCurrencyCode = tradeChatOffer.getMarket().getBaseCurrencyCode();
                                     String text = chatMessage.getText();
                                     Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
                                     chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),

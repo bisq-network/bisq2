@@ -16,10 +16,10 @@ public final class MarketDto {
 
     public static MarketDto from(Market market) {
         MarketDto dto = new MarketDto();
-        dto.baseCurrencyCode = market.baseCurrencyCode();
-        dto.quoteCurrencyCode = market.quoteCurrencyCode();
-        dto.baseCurrencyName = market.baseCurrencyName();
-        dto.quoteCurrencyName = market.quoteCurrencyName();
+        dto.baseCurrencyCode = market.getBaseCurrencyCode();
+        dto.quoteCurrencyCode = market.getQuoteCurrencyCode();
+        dto.baseCurrencyName = market.getBaseCurrencyName();
+        dto.quoteCurrencyName = market.getQuoteCurrencyName();
         return dto;
     }
 }

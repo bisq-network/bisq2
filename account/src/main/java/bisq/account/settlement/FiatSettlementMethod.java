@@ -60,13 +60,13 @@ public enum FiatSettlementMethod implements SettlementMethod {
 
     private static List<TradeCurrency> getRevolutCurrencies() {
         return getRevolutCountries().stream()
-                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.code()))
+                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()))
                 .collect(Collectors.toList());
     }
 
     private static List<TradeCurrency> getSepaTradeCurrencies() {
         return getSepaEuroCountries().stream()
-                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.code()))
+                .map(country -> FiatCurrencyRepository.getCurrencyByCountryCode(country.getCode()))
                 .collect(Collectors.toList());
     }
 
@@ -85,7 +85,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
         List<String> codes = List.of("AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES", "AD", "SM", "VA");
         List<Country> list = CountryRepository.getCountriesFromCodes(codes);
-        list.sort(Comparator.comparing(Country::name));
+        list.sort(Comparator.comparing(Country::getName));
         return list;
     }
 
@@ -95,7 +95,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
                 "NO", "PL", "PT", "RO", "SK", "SI", "ES", "SE", "GB",
                 "AU", "CA", "SG", "CH", "US");
         List<Country> list = CountryRepository.getCountriesFromCodes(codes);
-        list.sort(Comparator.comparing(Country::name));
+        list.sort(Comparator.comparing(Country::getName));
         return list;
     }
 

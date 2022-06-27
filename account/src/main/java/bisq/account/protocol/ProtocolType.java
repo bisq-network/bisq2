@@ -52,21 +52,21 @@ public interface ProtocolType extends ProtoEnum {
     }
 
     private static boolean isBtcXmrSwapSupported(Market market) {
-        String baseCurrencyCode = market.baseCurrencyCode();
-        String quoteCurrencyCode = market.quoteCurrencyCode();
+        String baseCurrencyCode = market.getBaseCurrencyCode();
+        String quoteCurrencyCode = market.getQuoteCurrencyCode();
         return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("XMR")) ||
                 (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("XMR"));
     }
 
     private static boolean isLiquidSwapSupported(Market market) {
         //todo we need a asset repository to check if any asset is a liquid asset
-        return (market.baseCurrencyCode().equals("L-BTC") ||
-                market.quoteCurrencyCode().equals("L-BTC"));
+        return (market.getBaseCurrencyCode().equals("L-BTC") ||
+                market.getQuoteCurrencyCode().equals("L-BTC"));
     }
 
     private static boolean isBsqSwapSupported(Market market) {
-        String baseCurrencyCode = market.baseCurrencyCode();
-        String quoteCurrencyCode = market.quoteCurrencyCode();
+        String baseCurrencyCode = market.getBaseCurrencyCode();
+        String quoteCurrencyCode = market.getQuoteCurrencyCode();
         return (baseCurrencyCode.equals("BTC") && quoteCurrencyCode.equals("BSQ")) ||
                 (quoteCurrencyCode.equals("BTC") && baseCurrencyCode.equals("BSQ"));
     }
@@ -76,7 +76,7 @@ public interface ProtocolType extends ProtoEnum {
     }
 
     private static boolean isMultiSigSupported(Market market) {
-        return market.quoteCurrencyCode().equals("BTC") || market.baseCurrencyCode().equals("BTC");
+        return market.getQuoteCurrencyCode().equals("BTC") || market.getBaseCurrencyCode().equals("BTC");
     }
 
     private static boolean isBsqBondSupported(Market market) {

@@ -48,8 +48,8 @@ public class TradeChatOffer implements Proto {
 
         chatMessageText = Res.get("createOffer.tradeChatOffer.chatMessage",
                 Res.get(direction.name().toLowerCase()).toUpperCase(),
-                AmountFormatter.formatAmountWithCode(Coin.of(baseSideAmount, market.baseCurrencyCode()), true),
-                market.quoteCurrencyCode(),
+                AmountFormatter.formatAmountWithCode(Coin.of(baseSideAmount, market.getBaseCurrencyCode()), true),
+                market.getQuoteCurrencyCode(),
                 Joiner.on(", ").join(this.paymentMethods));
     }
 

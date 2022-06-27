@@ -54,8 +54,8 @@ public class HybridEncryption {
 
         // Use that shared secret to derive the hmacKey and the sessionKey
         Pair<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first());
-        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second());
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.getFirst());
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.getSecond());
 
         IvParameterSpec ivSpec = SymEncryption.generateIv();
         byte[] cypherText = SymEncryption.encrypt(message, sessionKey, ivSpec);
@@ -90,8 +90,8 @@ public class HybridEncryption {
         byte[] sharedSecret = SymEncryption.generateSharedSecret(receiversKeyPair.getPrivate(), senderPublicKey);
 
         Pair<byte[], byte[]> tuple = deriveKeyMaterial(sharedSecret);
-        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.first());
-        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.second());
+        SecretKey hmacKey = SymEncryption.generateAESKey(tuple.getFirst());
+        SecretKey sessionKey = SymEncryption.generateAESKey(tuple.getSecond());
 
         byte[] encodedReceiverPublicKey = receiversKeyPair.getPublic().getEncoded();
         byte[] input = getHmacInput(iv, cypherText, encodedSenderPublicKey, encodedReceiverPublicKey);

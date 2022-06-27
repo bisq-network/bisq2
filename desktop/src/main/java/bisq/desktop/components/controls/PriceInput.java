@@ -83,7 +83,7 @@ public class PriceInput {
         private void updateFromMarketPrice() {
             if (model.selectedMarket != null) {
                 model.marketString.set(model.selectedMarket.toString());
-                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.baseCurrencyCode()));
+                model.description.set(Res.get("createOffer.price.fix.description.buy", model.selectedMarket.getBaseCurrencyCode()));
             }
             if (model.isCreateOffer) {
                 model.fixPrice.set(null);

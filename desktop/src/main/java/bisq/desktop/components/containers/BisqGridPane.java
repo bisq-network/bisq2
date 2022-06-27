@@ -183,7 +183,7 @@ public class BisqGridPane extends GridPane {
 
     public Pair<Button, Label> addButtonWithLabel(String label, Runnable handler) {
         Pair<Button, Label> pair = addButtonWithLabel(label);
-        pair.first().setOnAction(e -> handler.run());
+        pair.getFirst().setOnAction(e -> handler.run());
         return pair;
     }
 
