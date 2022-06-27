@@ -51,12 +51,12 @@ public class NetworkApplicationService extends ServiceProvider {
         applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
         ApplicationSetup.initialize(applicationConfig);
 
-        persistenceService = new PersistenceService(applicationConfig.baseDir());
+        persistenceService = new PersistenceService(applicationConfig.getBaseDir());
 
         securityService = new SecurityService(persistenceService);
 
         NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
-                applicationConfig.baseDir(),
+                applicationConfig.getBaseDir(),
                 getConfig("bisq.networkServiceConfig"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
     }
