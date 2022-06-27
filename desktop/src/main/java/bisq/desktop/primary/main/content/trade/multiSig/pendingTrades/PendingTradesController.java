@@ -22,12 +22,24 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.protocol.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PendingTradesController implements InitWithDataController<PendingTradesController.InitData> {
-    public static record InitData(TakerProtocol<TakerProtocolModel> protocol) {
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class InitData {
+        private final TakerProtocol<TakerProtocolModel> protocol;
+
+        public InitData(TakerProtocol<TakerProtocolModel> protocol) {
+            this.protocol = protocol;
+        }
+
     }
 
     private final PendingTradesModel model;

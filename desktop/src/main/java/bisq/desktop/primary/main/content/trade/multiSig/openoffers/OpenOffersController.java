@@ -27,12 +27,25 @@ import bisq.offer.Offer;
 import bisq.offer.OpenOffer;
 import bisq.offer.OpenOfferService;
 import javafx.beans.property.BooleanProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OpenOffersController implements Controller {
-    public static record InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class InitData {
+        private final Offer offer;
+        private final BooleanProperty showTakeOfferTab;
+
+        public InitData(Offer offer, BooleanProperty showTakeOfferTab) {
+            this.offer = offer;
+            this.showTakeOfferTab = showTakeOfferTab;
+        }
     }
 
     private final OpenOffersModel model;

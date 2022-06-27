@@ -20,6 +20,21 @@ package bisq.desktop.common;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.stage.Stage;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record JavaFxApplicationData(Stage stage, Application.Parameters parameters, HostServices hostServices) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class JavaFxApplicationData {
+    private final Stage stage;
+    private final Application.Parameters parameters;
+    private final HostServices hostServices;
+
+    public JavaFxApplicationData(Stage stage, Application.Parameters parameters, HostServices hostServices) {
+        this.stage = stage;
+        this.parameters = parameters;
+        this.hostServices = hostServices;
+    }
 }

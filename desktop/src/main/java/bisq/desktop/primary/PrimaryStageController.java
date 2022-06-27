@@ -64,18 +64,18 @@ public class PrimaryStageController extends NavigationController {
         this.onStageReadyHandler = onStageReadyHandler;
 
         model = new PrimaryStageModel(applicationService);
-        view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.stage());
+        view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
 
         splashController = new SplashController(applicationService);
 
-        Browser.setHostServices(applicationJavaFxApplicationData.hostServices());
+        Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         DisplaySettings displaySettings = settingsService.getDisplaySettings();
         Transitions.setDisplaySettings(displaySettings);
         AnchorPane viewRoot = view.getRoot();
         Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
-                applicationService.getApplicationConfig().baseDir(),
+                applicationService.getApplicationConfig().getBaseDir(),
                 displaySettings,
                 this::shutdown);
 

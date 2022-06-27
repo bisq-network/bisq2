@@ -31,12 +31,12 @@ public class BisqPopupMenu extends BisqPopup {
         box.setSpacing(5);
 
         for (BisqPopupMenuItem item : items) {
-            Button button = new Button(item.title());
+            Button button = new Button(item.getTitle());
             button.getStyleClass().add("bisq-popup-menu-item");
             button.setMaxWidth(Double.MAX_VALUE);
             
             button.setOnAction(evt -> { 
-                item.action().run();
+                item.getAction().run();
                 hide();
             });
             

@@ -33,7 +33,9 @@ import bisq.desktop.primary.main.content.trade.components.SettlementSelection;
 import bisq.offer.OpenOfferService;
 import bisq.offer.spec.Direction;
 import javafx.collections.SetChangeListener;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -43,7 +45,19 @@ import java.util.ArrayList;
 @Slf4j
 public class MultiSigCreateOfferController implements InitWithDataController<MultiSigCreateOfferController.InitData>, Controller {
 
-    public record InitData(Market market, Direction direction, boolean showCreateOfferTab) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class InitData {
+        private final Market market;
+        private final Direction direction;
+        private final boolean showCreateOfferTab;
+
+        public InitData(Market market, Direction direction, boolean showCreateOfferTab) {
+            this.market = market;
+            this.direction = direction;
+            this.showCreateOfferTab = showCreateOfferTab;
+        }
     }
 
     private final MultiSigCreateOfferModel model;
@@ -87,9 +101,9 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
 
     @Override
     public void initWithData(InitData data) {
-        marketSelection.setSelectedMarket(data.market());
-        directionSelection.setDirection(data.direction());
-        model.setShowCreateOfferTab(data.showCreateOfferTab());
+        marketSelection.setSelectedMarket(data.getMarket());
+        directionSelection.setDirection(data.getDirection());
+        model.setShowCreateOfferTab(data.isShowCreateOfferTab());
     }
 
     @Override
