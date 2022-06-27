@@ -60,8 +60,8 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         super.start();
 
         electrumCliFacade.enableLoggingToFile();
-        electrumCliFacade.setRpcHost(rpcHostSpec.host());
-        electrumCliFacade.setRpcPort(rpcHostSpec.port());
+        electrumCliFacade.setRpcHost(rpcHostSpec.getHost());
+        electrumCliFacade.setRpcPort(rpcHostSpec.getPort());
 
         // Restart and wait until JSON-RPC interface ready
         super.shutdown();
@@ -69,8 +69,8 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         super.start();
 
         rpcConfig = RpcConfig.builder()
-                .hostname(rpcHostSpec.host())
-                .port(rpcHostSpec.port())
+                .hostname(rpcHostSpec.getHost())
+                .port(rpcHostSpec.getPort())
                 .user(electrumCliFacade.getRpcUser())
                 .password(electrumCliFacade.getRpcPassword())
                 .build();

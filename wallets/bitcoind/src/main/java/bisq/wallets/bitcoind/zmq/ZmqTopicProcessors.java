@@ -30,9 +30,9 @@ public class ZmqTopicProcessors {
     }
 
     public void process(BitcoindZmqMessage zeroMqMessage) {
-        byte[] secondPart = zeroMqMessage.secondPart();
-        byte[] thirdPart = zeroMqMessage.thirdPart();
-        switch (zeroMqMessage.topic()) {
+        byte[] secondPart = zeroMqMessage.getSecondPart();
+        byte[] thirdPart = zeroMqMessage.getThirdPart();
+        switch (zeroMqMessage.getTopic()) {
             case TOPIC_HASHBLOCK -> processHashBlock(secondPart, thirdPart);
             case TOPIC_RAWTX -> rawTxProcessor.processRawTx(secondPart, thirdPart);
         }

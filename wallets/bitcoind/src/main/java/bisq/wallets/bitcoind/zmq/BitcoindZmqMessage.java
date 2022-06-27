@@ -17,5 +17,21 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-public record BitcoindZmqMessage(BitcoindZmqTopic topic, byte[] secondPart, byte[] thirdPart) {
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class BitcoindZmqMessage {
+    private final BitcoindZmqTopic topic;
+    private final byte[] secondPart;
+    private final byte[] thirdPart;
+
+    public BitcoindZmqMessage(BitcoindZmqTopic topic, byte[] secondPart, byte[] thirdPart) {
+        this.topic = topic;
+        this.secondPart = secondPart;
+        this.thirdPart = thirdPart;
+    }
 }

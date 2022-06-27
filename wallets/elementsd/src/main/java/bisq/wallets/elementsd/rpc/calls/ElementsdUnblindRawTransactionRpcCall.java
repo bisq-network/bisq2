@@ -19,11 +19,22 @@ package bisq.wallets.elementsd.rpc.calls;
 
 import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdUnblindRawTransactionResponse;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class ElementsdUnblindRawTransactionRpcCall
         extends WalletRpcCall<ElementsdUnblindRawTransactionRpcCall.Request, ElementsdUnblindRawTransactionResponse> {
 
-    public record Request(String hex) {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        private final String hex;
+
+        public Request(String hex) {
+            this.hex = hex;
+        }
     }
 
     public ElementsdUnblindRawTransactionRpcCall(Request request) {

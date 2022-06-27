@@ -18,13 +18,29 @@
 package bisq.wallets.regtest.process;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Builder
-public record ProcessConfig(String name, List<String> args, Map<String, String> environmentVars) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ProcessConfig {
+    private final String name;
+    private final List<String> args;
+    private final Map<String, String> environmentVars;
+
+    public ProcessConfig(String name, List<String> args, Map<String, String> environmentVars) {
+        this.name = name;
+        this.args = args;
+        this.environmentVars = environmentVars;
+    }
+
     public List<String> toCommandList() {
         List<String> commands = new ArrayList<>();
         commands.add(name);

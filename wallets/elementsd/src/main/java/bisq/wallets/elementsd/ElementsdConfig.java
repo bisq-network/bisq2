@@ -19,6 +19,27 @@ package bisq.wallets.elementsd;
 
 
 import bisq.wallets.core.RpcConfig;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public record ElementsdConfig(RpcConfig bitcoindRpcConfig, RpcConfig elementsdRpcConfig) {
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ElementsdConfig {
+    private final RpcConfig bitcoindRpcConfig;
+    private final RpcConfig elementsdRpcConfig;
+
+    public ElementsdConfig(RpcConfig bitcoindRpcConfig, RpcConfig elementsdRpcConfig) {
+        this.bitcoindRpcConfig = bitcoindRpcConfig;
+        this.elementsdRpcConfig = elementsdRpcConfig;
+    }
+
+    public RpcConfig bitcoindRpcConfig() {
+        return bitcoindRpcConfig;
+    }
+
+    public RpcConfig elementsdRpcConfig() {
+        return elementsdRpcConfig;
+    }
 }

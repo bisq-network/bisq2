@@ -20,9 +20,22 @@ package bisq.wallets.bitcoind.rpc.calls;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindWarningResponse;
 import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 public class BitcoindUnloadWalletRpcCall extends DaemonRpcCall<BitcoindUnloadWalletRpcCall.Request, BitcoindWarningResponse> {
-    public record Request(@JsonProperty("wallet_name") String walletName) {
+ 
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Request {
+        @JsonProperty("wallet_name")
+        private final String walletName;
+
+        public Request(@JsonProperty("wallet_name") String walletName) {
+            this.walletName = walletName;
+        }
     }
 
     public BitcoindUnloadWalletRpcCall(Request request) {

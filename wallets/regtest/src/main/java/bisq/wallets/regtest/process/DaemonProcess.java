@@ -83,7 +83,7 @@ public abstract class DaemonProcess implements BisqProcess {
         processBuilder.redirectErrorStream(true);
 
         Map<String, String> environment = processBuilder.environment();
-        environment.putAll(processConfig.environmentVars());
+        environment.putAll(processConfig.getEnvironmentVars());
 
         return processBuilder.start();
     }
