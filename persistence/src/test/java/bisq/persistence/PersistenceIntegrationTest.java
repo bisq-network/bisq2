@@ -20,13 +20,21 @@ package bisq.persistence;
 import bisq.common.proto.Proto;
 import bisq.common.util.OsUtils;
 import com.google.protobuf.Message;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 
 @Slf4j
 public class PersistenceIntegrationTest {
-    record MockObject(int value) implements Proto {
+    @Getter
+    static final class MockObject implements Proto {
+        private final int value;
+
+        MockObject(int value) {
+            this.value = value;
+        }
+
         @Override
         public Message toProto() {
             return null;

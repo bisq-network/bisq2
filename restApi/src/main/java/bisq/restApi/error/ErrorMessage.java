@@ -16,9 +16,17 @@
  */
 package bisq.restApi.error;
 
-/**
- * Class to be returned to send an error message
- */
-public record ErrorMessage(String error) {
-}
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ErrorMessage {
+    private final String error;
+
+    public ErrorMessage(String error) {
+        this.error = error;
+    }
+}
