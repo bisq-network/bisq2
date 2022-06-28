@@ -45,7 +45,7 @@ import java.security.KeyPair;
 @Tag(name = "Key Pair API")
 public class KeyPairApi {
     public static final String DESC_KEY_ID = "The ID for identifying the key which we look up or create in case it does not exist.";
-    
+
     private final KeyPairService keyPairService;
 
     public KeyPairApi(@Context Application application) {

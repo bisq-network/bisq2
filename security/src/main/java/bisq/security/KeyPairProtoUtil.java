@@ -17,7 +17,6 @@
 
 package bisq.security;
 
-import bisq.security.protobuf.KeyPair;
 import com.google.protobuf.ByteString;
 
 import java.security.GeneralSecurityException;

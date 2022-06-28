@@ -27,7 +27,7 @@ public class BitcoinAcademyController implements Controller {
     private final BitcoinAcademyModel model;
 
     public BitcoinAcademyController(DefaultApplicationService applicationService) {
-       model= new BitcoinAcademyModel();
+        model = new BitcoinAcademyModel();
         view = new BitcoinAcademyView(model, this);
     }
 

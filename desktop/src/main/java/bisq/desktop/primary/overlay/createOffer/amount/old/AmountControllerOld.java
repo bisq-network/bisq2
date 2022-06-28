@@ -145,7 +145,7 @@ public class AmountControllerOld implements Controller {
     }
 
     public void onBack() {
-       // Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        // Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
     }
 
     void onSkip() {

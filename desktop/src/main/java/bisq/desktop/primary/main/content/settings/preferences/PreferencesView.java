@@ -41,7 +41,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         resetDontShowAgain = new BisqToggleButton(Res.get("settings.preferences.resetDontShowAgain"));
-        VBox.setMargin(headlineLabel, new Insets(30,0,0,0));
+        VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(headlineLabel, resetDontShowAgain);
     }
 

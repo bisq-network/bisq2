@@ -85,7 +85,7 @@ public class FilterBox {
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);
-            
+
             root.getStyleClass().add("bg-grey-5");
             root.setAlignment(Pos.CENTER);
             root.setPadding(new Insets(14, 24, 14, 24));
@@ -96,7 +96,7 @@ public class FilterBox {
             textField.setPromptText(Res.get("search"));
             textField.setMinWidth(100);
             HBox.setHgrow(textField, Priority.ALWAYS);
-            
+
             root.getChildren().add(textField);
 
             listener = (observable, oldValue, newValue) -> controller.onSearch(textField.getText());

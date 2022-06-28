@@ -18,7 +18,7 @@
 package bisq.settings;
 
 /**
- * Enum for don't show again checkboxes. If possible use the enum and not local keys to have better control about 
+ * Enum for don't show again checkboxes. If possible use the enum and not local keys to have better control about
  * the entries. We do not persist the key, but use the name of the enum as string for the key.
  */
 public enum DontShowAgainKey {

@@ -42,5 +42,5 @@ public class OpenSourceAcademyView extends View<VBox, OpenSourceAcademyModel, Op
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

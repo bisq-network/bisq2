@@ -44,7 +44,7 @@ public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implemen
 
     private final Optional<Market> market;
     @Setter
-    private  boolean isVisible;
+    private boolean isVisible;
 
     // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();

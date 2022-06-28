@@ -27,7 +27,7 @@ public class SecurityAcademyController implements Controller {
     private final SecurityAcademyModel model;
 
     public SecurityAcademyController(DefaultApplicationService applicationService) {
-       model= new SecurityAcademyModel();
+        model = new SecurityAcademyModel();
         view = new SecurityAcademyView(model, this);
     }
 

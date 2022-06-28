@@ -169,7 +169,7 @@ public class AmountController implements Controller {
         if (fixPrice.getBaseMonetary().getClass() != baseCurrencyAmount.getClass()) return;
 
         Monetary exactAmount = fixPrice.toQuoteMonetary(baseCurrencyAmount);
-        quoteAmount.setAmount( exactAmount.round(0));
+        quoteAmount.setAmount(exactAmount.round(0));
     }
 
     private void setBaseFromQuote() {

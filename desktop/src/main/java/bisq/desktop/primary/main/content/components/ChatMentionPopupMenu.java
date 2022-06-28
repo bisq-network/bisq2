@@ -17,20 +17,20 @@ import java.util.stream.Collectors;
 public class ChatMentionPopupMenu<T> extends BisqPopup {
     @Setter
     private ToStringConverter<T> itemDisplayConverter;
-    
+
     @Setter
     private Consumer<T> selectionHandler;
-    
+
     @Setter
     private Collection<T> items;
-    
+
     private final StringProperty filter = new SimpleStringProperty(null);
 
     public ChatMentionPopupMenu(Node owner) {
         getStyleClass().add("chat-mention-popup-menu");
         setAlignment(Alignment.LEFT);
         setContentNode(new VBox());
-        
+
         filterProperty().addListener((ev, prev, current) -> {
             if (current != null) {
                 updateItems(current);
@@ -47,7 +47,7 @@ public class ChatMentionPopupMenu<T> extends BisqPopup {
     public StringProperty filterProperty() {
         return filter;
     }
-    
+
     private void updateItems(String filter) {
         List<Button> buttons = items
                 .stream()

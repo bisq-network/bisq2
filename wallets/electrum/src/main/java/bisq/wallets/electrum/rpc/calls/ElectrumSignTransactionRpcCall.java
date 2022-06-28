@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 public class ElectrumSignTransactionRpcCall extends DaemonRpcCall<ElectrumSignTransactionRpcCall.Request, String> {
-    
+
     @Getter
     @ToString
     @EqualsAndHashCode

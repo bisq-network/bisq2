@@ -18,10 +18,10 @@
 package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.application.DefaultApplicationService;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class Bisq2IntroController implements Controller {
     private final SettingsService settingsService;
 
     public Bisq2IntroController(DefaultApplicationService applicationService) {
-        settingsService=  applicationService.getSettingsService();
+        settingsService = applicationService.getSettingsService();
         model = new Bisq2IntroModel();
         view = new Bisq2IntroView(model, this);
     }

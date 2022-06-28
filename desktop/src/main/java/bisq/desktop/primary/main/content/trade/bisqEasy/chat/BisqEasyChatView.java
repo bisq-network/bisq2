@@ -52,7 +52,7 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyChatModel = model;
 
         toggleOffersButton = new BisqToggleButton();
-       // toggleOffersButton.getStyleClass().add("bisq-text-4");
+        // toggleOffersButton.getStyleClass().add("bisq-text-4");
         toggleOffersButton.setText("Offers only");
 
         centerToolbar.getChildren().add(3, toggleOffersButton);

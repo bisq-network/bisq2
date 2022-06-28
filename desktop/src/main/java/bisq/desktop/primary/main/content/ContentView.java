@@ -17,9 +17,9 @@
 
 package bisq.desktop.primary.main.content;
 
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationView;
-import bisq.desktop.common.utils.Layout;
 import javafx.geometry.Insets;
 import javafx.scene.layout.AnchorPane;
 import lombok.extern.slf4j.Slf4j;

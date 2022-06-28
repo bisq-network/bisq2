@@ -53,7 +53,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         createNewProfileButton.setDefaultButton(true);
         createNewProfileButton.setMinWidth(300);
 
-        VBox.setMargin(createNewProfileButton, new Insets(-15,0,0,0));
+        VBox.setMargin(createNewProfileButton, new Insets(-15, 0, 0, 0));
         root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, Spacer.fillVBox());
     }
 

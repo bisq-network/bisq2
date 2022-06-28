@@ -156,7 +156,7 @@ public class SmallAmountInput {
             codeLabel.setId("quote-amount-text-field");
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
 
-            Button marketValueInfo =  BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN, "0.9em");
+            Button marketValueInfo = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN, "0.9em");
             marketValueInfo.setOpacity(0.5);
             Tooltip tooltip = new Tooltip(Res.get("onboarding.amount.marketValueInfo"));
             tooltip.getStyleClass().add("dark-tooltip");

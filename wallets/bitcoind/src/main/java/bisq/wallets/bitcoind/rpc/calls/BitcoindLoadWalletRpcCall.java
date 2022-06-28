@@ -26,7 +26,7 @@ import lombok.ToString;
 
 public class BitcoindLoadWalletRpcCall
         extends DaemonRpcCall<BitcoindLoadWalletRpcCall.Request, BitcoindCreateOrLoadWalletResponse> {
-   
+
     @Getter
     @ToString
     @EqualsAndHashCode

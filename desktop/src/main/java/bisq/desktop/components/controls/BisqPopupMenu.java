@@ -34,17 +34,17 @@ public class BisqPopupMenu extends BisqPopup {
             Button button = new Button(item.getTitle());
             button.getStyleClass().add("bisq-popup-menu-item");
             button.setMaxWidth(Double.MAX_VALUE);
-            
-            button.setOnAction(evt -> { 
+
+            button.setOnAction(evt -> {
                 item.getAction().run();
                 hide();
             });
-            
+
             box.getChildren().add(button);
         }
-        
+
         setContentNode(box);
-        
+
         showingProperty().addListener((observable, wasShowing, isShowing) -> {
             if (wasShowing) {
                 onClose.run();

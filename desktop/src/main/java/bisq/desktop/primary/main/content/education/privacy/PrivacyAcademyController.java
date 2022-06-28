@@ -27,7 +27,7 @@ public class PrivacyAcademyController implements Controller {
     private final PrivacyAcademyModel model;
 
     public PrivacyAcademyController(DefaultApplicationService applicationService) {
-       model= new PrivacyAcademyModel();
+        model = new PrivacyAcademyModel();
         view = new PrivacyAcademyView(model, this);
     }
 

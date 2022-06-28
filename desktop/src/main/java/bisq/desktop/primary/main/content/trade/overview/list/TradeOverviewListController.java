@@ -24,13 +24,14 @@ import lombok.Getter;
 public class TradeOverviewListController extends TradeOverviewBaseController<TradeOverviewListModel> {
     @Getter
     private final TradeOverviewListView view;
-    
+
     public TradeOverviewListController(DefaultApplicationService applicationService) {
         super(new TradeOverviewListModel());
-        
+
         this.view = new TradeOverviewListView(model, this);
     }
 
     @Override
-    public void onDeactivate() {}
+    public void onDeactivate() {
+    }
 }

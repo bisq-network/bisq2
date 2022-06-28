@@ -19,12 +19,12 @@ package bisq.desktop.primary.main.content;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
+import bisq.settings.DontShowAgainService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
@@ -150,7 +150,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public void onToggleHelp() {
         boolean visible = !model.getHelpVisible().get();
-       // onCloseSideBar();
+        // onCloseSideBar();
         model.getHelpVisible().set(visible);
 
         DontShowAgainService.putDontShowAgain(TRADE_GUIDE_BOX.name(), false);

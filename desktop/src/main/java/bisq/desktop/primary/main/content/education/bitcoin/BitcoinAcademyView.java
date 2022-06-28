@@ -42,5 +42,5 @@ public class BitcoinAcademyView extends View<VBox, BitcoinAcademyModel, BitcoinA
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

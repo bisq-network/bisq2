@@ -66,7 +66,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         pubKeyHashHBox.setAlignment(Pos.CENTER_LEFT);
 
         closeButton = new Button(Res.get("close"));
-       // closeButton.setDefaultButton(true);
+        // closeButton.setDefaultButton(true);
 
         learnMoreButton = new Button(Res.get("reputation.learnMore"));
         learnMoreButton.getStyleClass().add("bisq-text-button");
@@ -99,7 +99,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
     @Override
     protected void onViewDetached() {
         pubKeyHash.textProperty().unbind();
-        
+
         copyButton.setOnAction(null);
         closeButton.setOnAction(null);
         backButton.setOnAction(null);

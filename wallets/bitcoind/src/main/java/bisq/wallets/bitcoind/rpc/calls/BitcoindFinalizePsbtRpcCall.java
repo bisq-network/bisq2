@@ -25,7 +25,7 @@ import lombok.ToString;
 
 public class BitcoindFinalizePsbtRpcCall
         extends DaemonRpcCall<BitcoindFinalizePsbtRpcCall.Request, BitcoindFinalizePsbtResponse> {
-    
+
     @Getter
     @ToString
     @EqualsAndHashCode

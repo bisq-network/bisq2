@@ -44,7 +44,7 @@ public class ChatStore implements PersistableStore<ChatStore> {
     private final Observable<Channel<? extends ChatMessage>> selectedDiscussionChannel = new Observable<>();
     private final ObservableSet<String> customTags = new ObservableSet<>();
     private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
-    
+
     public ChatStore() {
     }
 

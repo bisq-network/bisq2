@@ -27,7 +27,7 @@ public class WalletsAcademyController implements Controller {
     private final WalletsAcademyModel model;
 
     public WalletsAcademyController(DefaultApplicationService applicationService) {
-       model= new WalletsAcademyModel();
+        model = new WalletsAcademyModel();
         view = new WalletsAcademyView(model, this);
     }
 

@@ -30,11 +30,11 @@ public enum NavigationTarget {
     PRIMARY_STAGE(ROOT, false),
 
     SPLASH(PRIMARY_STAGE, false),
-    
+
     //////////////////////////////////////////////////////////////////////
     // OVERLAY
     //////////////////////////////////////////////////////////////////////
-    
+
     OVERLAY(PRIMARY_STAGE, false),
 
     ONBOARDING(OVERLAY, false),
@@ -62,7 +62,7 @@ public enum NavigationTarget {
     //////////////////////////////////////////////////////////////////////
     // MAIN
     //////////////////////////////////////////////////////////////////////
-    
+
     MAIN(PRIMARY_STAGE, false),
 
     CONTENT(MAIN, false),
@@ -79,7 +79,7 @@ public enum NavigationTarget {
     OPEN_SOURCE_ACADEMY(CONTENT),
 
     EVENTS(CONTENT),
-    
+
     SUPPORT(CONTENT),
 
     TRADE_OVERVIEW(CONTENT),

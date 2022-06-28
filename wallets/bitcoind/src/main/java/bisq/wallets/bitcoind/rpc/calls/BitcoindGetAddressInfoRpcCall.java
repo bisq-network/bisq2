@@ -25,7 +25,7 @@ import lombok.ToString;
 
 public class BitcoindGetAddressInfoRpcCall
         extends WalletRpcCall<BitcoindGetAddressInfoRpcCall.Request, BitcoindGetAddressInfoResponse> {
-  
+
     @Getter
     @ToString
     @EqualsAndHashCode

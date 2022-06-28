@@ -45,8 +45,8 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
      */
     @Override
     public Socket createSocket(final HttpContext context) {
-        InetSocketAddress socksaddr = (InetSocketAddress) context.getAttribute("socks.address");
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS, socksaddr);
+        InetSocketAddress socketAddress = (InetSocketAddress) context.getAttribute("socks.address");
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, socketAddress);
         return new Socket(proxy);
     }
 

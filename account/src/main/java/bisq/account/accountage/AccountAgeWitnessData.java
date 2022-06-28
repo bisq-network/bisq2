@@ -41,7 +41,7 @@ public class AccountAgeWitnessData implements AppendOnlyData {
             100000,
             AccountAgeWitnessData.class.getSimpleName());
 
-    public AccountAgeWitnessData(byte[] hash,  long date) {
+    public AccountAgeWitnessData(byte[] hash, long date) {
         this.hash = hash;
         this.date = date;
     }

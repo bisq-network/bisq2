@@ -65,7 +65,7 @@ public class GenerateProfileController implements Controller {
         return new GenerateProfileView(model, this);
     }
 
-     protected GenerateProfileModel getGenerateProfileModel() {
+    protected GenerateProfileModel getGenerateProfileModel() {
         return new GenerateProfileModel();
     }
 

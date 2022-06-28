@@ -42,5 +42,5 @@ public class SecurityAcademyView extends View<VBox, SecurityAcademyModel, Securi
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

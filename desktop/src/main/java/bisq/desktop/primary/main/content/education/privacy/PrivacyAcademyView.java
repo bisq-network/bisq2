@@ -42,5 +42,5 @@ public class PrivacyAcademyView extends View<VBox, PrivacyAcademyModel, PrivacyA
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

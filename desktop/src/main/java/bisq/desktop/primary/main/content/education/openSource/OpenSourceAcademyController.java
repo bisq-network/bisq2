@@ -27,7 +27,7 @@ public class OpenSourceAcademyController implements Controller {
     private final OpenSourceAcademyModel model;
 
     public OpenSourceAcademyController(DefaultApplicationService applicationService) {
-       model= new OpenSourceAcademyModel();
+        model = new OpenSourceAcademyModel();
         view = new OpenSourceAcademyView(model, this);
     }
 

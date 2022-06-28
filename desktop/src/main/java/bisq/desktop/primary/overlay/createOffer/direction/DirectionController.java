@@ -37,12 +37,12 @@ public class DirectionController implements Controller {
     private final Runnable onNextHandler;
     private final Consumer<Boolean> buttonsVisibleHandler;
 
-    public DirectionController(DefaultApplicationService applicationService, 
-                               Runnable onNextHandler, 
+    public DirectionController(DefaultApplicationService applicationService,
+                               Runnable onNextHandler,
                                Consumer<Boolean> buttonsVisibleHandler) {
         this.onNextHandler = onNextHandler;
         this.buttonsVisibleHandler = buttonsVisibleHandler;
-        
+
         model = new DirectionModel();
         view = new DirectionView(model, this);
         setDirection(Direction.BUY);
