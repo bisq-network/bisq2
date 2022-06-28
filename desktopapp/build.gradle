@@ -37,8 +37,8 @@ tasks.named('jar') {
 }
 
 javafx {
-    version = '17.0.1'
-    modules = ['javafx.base', 'javafx.controls', 'javafx.graphics']
+    version = '11.0.2'
+    modules = [ 'javafx.controls' ]
 }
 
 dependencies {

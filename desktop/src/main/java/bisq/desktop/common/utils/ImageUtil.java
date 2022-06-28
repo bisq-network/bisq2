@@ -77,7 +77,6 @@ public class ImageUtil {
         canvas.setWidth(width);
         canvas.setHeight(height);
         GraphicsContext graphicsContext2D = canvas.getGraphicsContext2D();
-        graphicsContext2D.setImageSmoothing(true);
 
         double radius = Math.min(height, width) / 2d;
         double x = width / 2d;
