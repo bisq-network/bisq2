@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OpenOfferStore implements PersistableStore<OpenOfferStore> {
+public final class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     @Getter
     private final ObservableSet<OpenOffer> openOffers = new ObservableSet<>();
 

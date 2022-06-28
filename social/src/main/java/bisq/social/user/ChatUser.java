@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class ChatUser implements DistributedData {
+public final class ChatUser implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
     private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
 

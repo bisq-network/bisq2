@@ -40,7 +40,7 @@ import java.security.PublicKey;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
-public class AuthorizedData extends AuthenticatedData {
+public final class AuthorizedData extends AuthenticatedData {
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;

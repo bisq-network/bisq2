@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode
 @ToString
-public class AccountStore implements PersistableStore<AccountStore> {
+public final class AccountStore implements PersistableStore<AccountStore> {
     private final List<Account<? extends SettlementMethod>> accounts = new CopyOnWriteArrayList<>();
 
     public AccountStore() {
@@ -52,7 +52,9 @@ public class AccountStore implements PersistableStore<AccountStore> {
     }
 
     public static PersistableStore<?> fromProto(bisq.account.protobuf.AccountStore proto) {
-        return new AccountStore(proto.getAccountsList().stream().map(Account::fromProto).collect(Collectors.toList()));
+        return new AccountStore(proto.getAccountsList().stream()
+                .map(Account::fromProto)
+                .collect(Collectors.toList()));
     }
 
     @Override

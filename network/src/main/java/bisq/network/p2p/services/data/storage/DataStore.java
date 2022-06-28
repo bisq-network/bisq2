@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @ToString
-public class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
+public final class DataStore<T extends DataRequest> implements PersistableStore<DataStore<T>> {
     @Getter
     private final Map<ByteArray, T> map = new ConcurrentHashMap<>();
 

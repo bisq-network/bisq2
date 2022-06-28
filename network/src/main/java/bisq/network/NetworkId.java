@@ -36,7 +36,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class NetworkId implements Proto {
+public final class NetworkId implements Proto {
     private final PubKey pubKey;
     private final String nodeId;
     private final Map<Transport.Type, Address> addressByNetworkType = new HashMap<>();

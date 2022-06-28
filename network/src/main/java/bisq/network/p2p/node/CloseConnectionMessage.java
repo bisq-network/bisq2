@@ -9,7 +9,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class CloseConnectionMessage implements NetworkMessage {
+public final class CloseConnectionMessage implements NetworkMessage {
     private final CloseReason closeReason;
 
     public CloseConnectionMessage(CloseReason closeReason) {

@@ -42,7 +42,7 @@ import java.util.Optional;
  */
 @EqualsAndHashCode
 @Slf4j
-public class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
+public final class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {
 

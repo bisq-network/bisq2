@@ -28,7 +28,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class MetaData implements Proto {
+public final class MetaData implements Proto {
     private final long ttl;
     private final int maxSizeInBytes;
     private final String fileName;

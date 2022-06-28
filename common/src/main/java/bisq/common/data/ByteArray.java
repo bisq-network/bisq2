@@ -25,7 +25,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 @Getter
-public class ByteArray implements Proto {
+public final class ByteArray implements Proto {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {

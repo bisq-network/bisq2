@@ -35,7 +35,7 @@ import java.util.Arrays;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
+public final class RemoveMailboxRequest implements MailboxRequest, RemoveDataRequest {
     private final MetaData metaData;
     private final byte[] hash;
     private final byte[] receiverPublicKeyBytes;

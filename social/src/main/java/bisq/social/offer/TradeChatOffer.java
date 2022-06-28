@@ -20,7 +20,7 @@ import java.util.Set;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public class TradeChatOffer implements Proto {
+public final class TradeChatOffer implements Proto {
     private final Direction direction;
     private final long baseSideAmount;
     private final Market market;

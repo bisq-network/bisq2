@@ -29,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PeerGroupStore implements PersistableStore<PeerGroupStore> {
+public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     @Getter
     private final Set<Peer> persistedPeers = new CopyOnWriteArraySet<>();
 

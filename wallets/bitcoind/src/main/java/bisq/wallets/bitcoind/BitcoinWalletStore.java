@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-public class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> {
+public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletStore> {
     @Getter
     @Setter
     private Optional<RpcConfig> rpcConfig = Optional.empty();

@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OpenTimestampStore implements PersistableStore<OpenTimestampStore> {
+public final class OpenTimestampStore implements PersistableStore<OpenTimestampStore> {
     @Getter
     private final Map<ByteArray, ByteArray> timestampByPubKeyHash = new ConcurrentHashMap<>();
 

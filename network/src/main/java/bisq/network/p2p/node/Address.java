@@ -27,7 +27,7 @@ import java.util.StringTokenizer;
 
 @EqualsAndHashCode
 @Getter
-public class Address implements Proto {
+public final class Address implements Proto {
     public static Address localHost(int port) {
         return new Address("127.0.0.1", port);
     }

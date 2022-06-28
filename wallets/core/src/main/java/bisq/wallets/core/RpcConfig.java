@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class RpcConfig implements Proto {
+public final class RpcConfig implements Proto {
     private String hostname;
     private int port;
     private String user;

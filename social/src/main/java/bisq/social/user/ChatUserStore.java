@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
-public class ChatUserStore implements PersistableStore<ChatUserStore> {
+public final class ChatUserStore implements PersistableStore<ChatUserStore> {
     private final Observable<ChatUserIdentity> selectedChatUserIdentity = new Observable<>();
     private final ObservableSet<ChatUserIdentity> chatUserIdentities;
     private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();

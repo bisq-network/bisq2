@@ -30,7 +30,7 @@ import java.util.Date;
 @Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Peer implements Proto {
+public final class Peer implements Proto {
     @EqualsAndHashCode.Include
     private final Capability capability;
     private final Load load;

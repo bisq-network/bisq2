@@ -36,7 +36,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
+public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
     private final String receiversNym;
     private final ChatUser author;
 

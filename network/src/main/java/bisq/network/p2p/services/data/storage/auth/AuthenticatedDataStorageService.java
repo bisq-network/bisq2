@@ -229,7 +229,7 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             map.put(byteArray, updatedRequest);
         }
         persist();
-        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().authenticatedData));
+        listeners.forEach(listener -> listener.onRefreshed(updatedRequest.getAuthenticatedSequentialData().getAuthenticatedData()));
         return new Result(true);
     }
 

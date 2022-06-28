@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
+public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRequest, RemoveDataRequest {
 
     public static RemoveAuthenticatedDataRequest from(AuthenticatedDataStorageService store, AuthenticatedData authenticatedData, KeyPair keyPair)
             throws GeneralSecurityException {

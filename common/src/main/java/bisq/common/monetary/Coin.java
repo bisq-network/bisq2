@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
-public class Coin extends Monetary {
+public final class Coin extends Monetary {
 
     public static Coin parse(String string, String code) {
         return parse(string, code, deriveExponent(code));

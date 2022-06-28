@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
-public class Fiat extends Monetary {
+public final class Fiat extends Monetary {
 
     public static Fiat parse(String string, String code) {
         return Fiat.of(new BigDecimal(string).movePointRight(4).longValue(),

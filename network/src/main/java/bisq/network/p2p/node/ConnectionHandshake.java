@@ -40,7 +40,7 @@ import java.net.SocketException;
  * The server awaits the Request and sends the Response.
  */
 @Slf4j
-public class ConnectionHandshake {
+public final class ConnectionHandshake {
     @Getter
     private final String id = StringUtils.createUid();
     private final Socket socket;

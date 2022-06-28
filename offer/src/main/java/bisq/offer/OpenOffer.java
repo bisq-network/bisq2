@@ -23,7 +23,7 @@ import lombok.Getter;
 
 @EqualsAndHashCode
 @Getter
-public class OpenOffer implements Proto {
+public final class OpenOffer implements Proto {
     private final Offer offer;
 
     public OpenOffer(Offer offer) {

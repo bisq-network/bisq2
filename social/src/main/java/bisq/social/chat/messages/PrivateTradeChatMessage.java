@@ -38,7 +38,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
+public final class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
     private final ChatUser author;
     private final String receiversNym;
 

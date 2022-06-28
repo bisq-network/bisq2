@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class Offer implements DistributedData {
+public final class Offer implements DistributedData {
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
     // Only used in payment method F2F

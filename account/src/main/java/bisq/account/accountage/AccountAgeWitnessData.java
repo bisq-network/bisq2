@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class AccountAgeWitnessData implements AppendOnlyData {
+public final class AccountAgeWitnessData implements AppendOnlyData {
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
     private final long date;                        // 8 byte
 

@@ -35,7 +35,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
+public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
     private static final String ID_ANY = "anyPublicTradeChannel";
 
     public Optional<Market> getMarket() {

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class ChatStore implements PersistableStore<ChatStore> {
+public final class ChatStore implements PersistableStore<ChatStore> {
 
     private final ObservableSet<PrivateTradeChannel> privateTradeChannels = new ObservableSet<>();
     private final ObservableSet<PrivateDiscussionChannel> privateDiscussionChannels = new ObservableSet<>();

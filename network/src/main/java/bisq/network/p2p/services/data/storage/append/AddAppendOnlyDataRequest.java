@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class AddAppendOnlyDataRequest implements AddDataRequest {
+public final class AddAppendOnlyDataRequest implements AddDataRequest {
     private final AppendOnlyData appendOnlyData;
 
     public AddAppendOnlyDataRequest(AppendOnlyData appendOnlyData) {

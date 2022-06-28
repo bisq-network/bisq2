@@ -19,7 +19,7 @@ package bisq.settings;
 
 import bisq.common.proto.Proto;
 
-public class DisplaySettings implements Proto {
+public final class DisplaySettings implements Proto {
     private boolean useAnimations = true;
 
     public DisplaySettings() {

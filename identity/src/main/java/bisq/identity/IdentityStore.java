@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class IdentityStore implements PersistableStore<IdentityStore> {
+public final class IdentityStore implements PersistableStore<IdentityStore> {
     @Getter
     private final Map<String, Identity> activeIdentityByDomainId = new ConcurrentHashMap<>();
     @Getter

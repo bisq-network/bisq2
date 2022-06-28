@@ -17,6 +17,7 @@
 
 package bisq.i18n;
 
+import bisq.common.application.DevMode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.MessageFormat;
@@ -35,7 +36,6 @@ public class Res {
         defaultBundle = ResourceBundle.getBundle("default", locale, new UTF8Control());
     }
 
-
     public static String get(String key, Object... arguments) {
         return MessageFormat.format(get(key), arguments);
     }
@@ -44,8 +44,10 @@ public class Res {
         try {
             if (defaultBundle.containsKey(key)) {
                 return defaultBundle.getString(key);
-            } else {
+            } else if (DevMode.isDevMode()) {
                 return "MISSING: " + key;
+            } else {
+                return "[" + key + "]";
             }
         } catch (MissingResourceException e) {
             log.warn("Missing resource for key: " + key, e);
