@@ -19,6 +19,8 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.common.data.Pair;
 import bisq.common.data.Triple;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
@@ -90,7 +92,10 @@ public class EditUserProfile {
         }
 
         public void onEdit() {
-            model.isEditMode.set(true);
+            //todo
+            Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP1);
+           
+           // model.isEditMode.set(true);
         }
 
         public void onCancelEdit() {

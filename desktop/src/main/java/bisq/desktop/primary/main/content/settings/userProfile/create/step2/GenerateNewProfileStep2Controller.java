@@ -15,32 +15,38 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.create;
+package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileController;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileModel;
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
+import bisq.social.user.ChatUserService;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class GenerateNewProfileController extends GenerateProfileController {
-    public GenerateNewProfileController(DefaultApplicationService applicationService) {
-        super(applicationService);
+@Slf4j
+public class GenerateNewProfileStep2Controller implements Controller {
+    private final GenerateNewProfileStep2Model model;
+    @Getter
+    private final GenerateNewProfileStep2View view;
+    private final ChatUserService chatUserService;
+
+    public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
+        chatUserService = applicationService.getChatUserService();
+
+        model = new GenerateNewProfileStep2Model();
+        view = new GenerateNewProfileStep2View(model, this);
     }
 
     @Override
-    protected GenerateProfileView getGenerateProfileView() {
-        return new GenerateNewProfileView((GenerateNewProfileModel) model, this);
+    public void onActivate() {
     }
 
     @Override
-    protected GenerateProfileModel getGenerateProfileModel() {
-        return new GenerateNewProfileModel();
+    public void onDeactivate() {
     }
 
-    @Override
-    protected void navigateNext() {
-        //todo
+    private void onSave() {
         OverlayController.hide();
     }
 }
