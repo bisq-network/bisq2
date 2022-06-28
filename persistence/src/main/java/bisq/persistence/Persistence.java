@@ -71,7 +71,7 @@ public class Persistence<T extends PersistableStore<T>> {
                 Any any = Any.parseDelimitedFrom(fileInputStream);
                 persistableStore = PersistableStore.fromAny(any);
             }
-            //noinspection unchecked
+            //noinspection unchecked,rawtypes
             return (Optional) Optional.of(persistableStore);
         } catch (Throwable exception) {
             log.error("Error at read for " + storagePath, exception);
