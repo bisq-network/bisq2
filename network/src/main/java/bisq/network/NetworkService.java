@@ -239,7 +239,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public InitializeServerResult maybeInitializeServer(String nodeId, PubKey pubKey) {
-        return maybeInitializeServer(getOrCreatePortByTransport(nodeId, pubKey), nodeId, pubKey);
+        return maybeInitializeServer(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
     }
 
     public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport,
@@ -250,7 +250,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         // If it was not already available before we persist it.
         initializeServerResult.values().forEach(future -> future.whenComplete((result, throwable) -> {
             if (throwable == null) {
-                persistNetworkId(nodeId, pubKey);
+                maybePersistInitializedNetworkId(nodeId, pubKey);
             }
         }));
         return initializeServerResult;
@@ -268,15 +268,13 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                 if (throwable != null) {
                     log.error(throwable.toString()); //todo
                 }
-                Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
-                if (supportedTransportTypes.size() == addressByNetworkType.size()) {
-                    Optional<NetworkId> optionalNetworkId = findNetworkId(nodeId, pubKey);
-                    if (optionalNetworkId.isPresent()) {
-                        future.complete(optionalNetworkId.get());
-                    } else {
-                        future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkId"));
-                    }
-                }
+
+                // We try to get the persisted networkId, if not present we create a new one, 
+                // if that fails we complete with an exception.
+                findNetworkId(nodeId)
+                        .or(() -> createNetworkId(nodeId, pubKey))
+                        .ifPresentOrElse(future::complete,
+                                () -> future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkId")));
             });
         });
         return future;
@@ -295,7 +293,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                     // If networkNode has not been created we create now one with the default pubKey (default keyId)
                     // and persist it.
                     if (throwable == null) {
-                        persistNetworkId(nodeId, keyPairService.getDefaultPubKey());
+                        maybePersistInitializedNetworkId(nodeId, keyPairService.getDefaultPubKey());
                     }
                 });
     }
@@ -463,12 +461,12 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     // We return the port by transport type if found from the persisted networkId, otherwise we
     // fill in a random free system port for all supported transport types. 
     private Map<Transport.Type, Integer> getDefaultPortByTransport() {
-        return getOrCreatePortByTransport(Node.DEFAULT, keyPairService.getDefaultPubKey());
+        return getOrCreatePortByTransport(Node.DEFAULT);
     }
 
-    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId, PubKey pubKey) {
-        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId, pubKey);
-        // If we have a persisted networkId and take that port otherwise we take random system port.  
+    private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId) {
+        Optional<NetworkId> networkIdOptional = findNetworkId(nodeId);
+        // If we have a persisted networkId we take that port otherwise we take random system port.  
         Map<Transport.Type, Integer> persistedOrRandomPortByTransport = supportedTransportTypes.stream()
                 .collect(Collectors.toMap(transportType -> transportType,
                         transportType -> networkIdOptional.stream()
@@ -527,31 +525,29 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         return serviceNodesByTransport.findAddress(transport, nodeId);
     }
 
-    public Optional<Address> findDefaultAddress(Transport.Type transport) {
-        return findAddress(transport, Node.DEFAULT);
+    public Optional<NetworkId> findNetworkId(String nodeId) {
+        return Optional.ofNullable(persistableStore.getNetworkIdByNodeId().get(nodeId));
     }
 
-    public Optional<NetworkId> findNetworkId(String nodeId, PubKey pubKey) {
-        Map<String, NetworkId> networkIdByNodeId = persistableStore.getNetworkIdByNodeId();
-        if (networkIdByNodeId.containsKey(nodeId)) {
-            return Optional.of(networkIdByNodeId.get(nodeId));
+    public Optional<NetworkId> createNetworkId(String nodeId, PubKey pubKey) {
+        Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+        if (supportedTransportTypes.size() == addressByNetworkType.size()) {
+            return Optional.of(new NetworkId(addressByNetworkType, pubKey, nodeId));
         } else {
-            Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
-            if (supportedTransportTypes.size() == addressByNetworkType.size()) {
-                NetworkId networkId = new NetworkId(addressByNetworkType, pubKey, nodeId);
-                networkIdByNodeId.put(nodeId, networkId);
-                persist();
-                return Optional.of(networkId);
-            } else {
-                return Optional.empty();
-            }
+            log.error("supportedTransportTypes.size() != addressByNetworkType.size(). " +
+                            "supportedTransportTypes={}, addressByNetworkType={}",
+                    supportedTransportTypes, addressByNetworkType);
+            return Optional.empty();
         }
     }
 
-    private void persistNetworkId(String nodeId, PubKey pubKey) {
-        if (findNetworkId(nodeId, pubKey).isEmpty()) {
-            log.error("NetworkId for {} must be present", nodeId);
-            throw new IllegalStateException("NetworkId for " + nodeId + " must be present");
+
+    private void maybePersistInitializedNetworkId(String nodeId, PubKey pubKey) {
+        if (findNetworkId(nodeId).isEmpty()) {
+            createNetworkId(nodeId, pubKey).ifPresent(networkId -> {
+                persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
+                persist();
+            });
         }
     }
 }

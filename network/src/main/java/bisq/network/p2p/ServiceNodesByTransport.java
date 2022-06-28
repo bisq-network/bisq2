@@ -106,8 +106,8 @@ public class ServiceNodesByTransport {
     public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
         return new InitializeServerResult(map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey()))
-                                , NETWORK_IO_POOL))));
+                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey())),
+                                NETWORK_IO_POOL))));
     }
 
     public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {

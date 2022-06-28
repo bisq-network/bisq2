@@ -40,12 +40,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * todo
- * add identity selection strategy. E.g. one identity per domain ID or one identity per context
- * type (e.g. fiat trades) or one global identity...
- * Add support for userName mapping with identity (not sure if should be done here or in social module)
- */
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore> {
     public final static String DEFAULT = "default";
@@ -101,7 +95,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     /**
      * We first look up if we find an identity in the active identities map, if not we take one from the pool and
      * clone it with the new domainId. If none present we create a fresh identity and initialize it.
-     * The active and pooled identities get initialized as start-up, so it can be expected that they are already
+     * The active and pooled identities get initialized at start-up, so it can be expected that they are already
      * initialized, but there is no guarantee for that.
      * Client code has to deal with the async nature of the node initialisation which takes a few seconds usually,
      * but user experience should in most cases not suffer from an additional delay.
@@ -169,7 +163,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         }
     }
 
-    public CompletableFuture<Identity> createNewInitializedIdentity(String profileId,
+    public CompletableFuture<Identity> createNewInitializedIdentity(String nymId,
                                                                     String keyId,
                                                                     KeyPair keyPair,
                                                                     ProofOfWork proofOfWork) {
@@ -178,10 +172,10 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
-                    Identity identity = new Identity(profileId, networkId, keyPair, proofOfWork);
+                    Identity identity = new Identity(nymId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {
                         persistableStore.getPool().add(identity);
-                        getActiveIdentityByDomainId().put(profileId, identity);
+                        getActiveIdentityByDomainId().put(nymId, identity);
                     }
                     persist();
                     return identity;
@@ -202,7 +196,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.findNetworkId(identity.getNodeId(), identity.getPubKey()).isPresent())
+                    .filter(identity -> networkService.findNetworkId(identity.getNodeId()).isPresent())
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny()) // If none is initialized we take any
                     .map(pooledIdentity -> {
@@ -306,8 +300,8 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-
-        return proofOfWorkService.mintNymProofOfWork(DigestUtil.hash(keyPair.getPublic().getEncoded()), ProofOfWorkService.MINT_NYM_DIFFICULTY)
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        return proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                 .thenCompose(proofOfWork -> networkService.getInitializedNetworkId(nodeId, pubKey)
                         .thenApply(networkId -> new Identity(domainId, networkId, keyPair, proofOfWork)));
     }

@@ -83,7 +83,6 @@ message ChatUser {
   security.ProofOfWork proofOfWork = 3;
   string terms  = 4;
   string bio   = 5;
-  network.MetaData metaData = 6;
 }
 
 message ChatUserIdentity {

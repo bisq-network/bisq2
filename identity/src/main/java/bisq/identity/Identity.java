@@ -38,8 +38,7 @@ public final class Identity implements Proto {
     private final KeyPair keyPair;
     private final ProofOfWork proofOfWork;
 
-    public Identity(String domainId, NetworkId networkId, KeyPair keyPair,
-                    ProofOfWork proofOfWork) {
+    public Identity(String domainId, NetworkId networkId, KeyPair keyPair, ProofOfWork proofOfWork) {
         this.domainId = domainId;
         this.networkId = networkId;
         this.keyPair = keyPair;

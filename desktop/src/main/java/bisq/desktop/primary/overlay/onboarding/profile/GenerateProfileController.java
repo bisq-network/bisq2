@@ -102,9 +102,7 @@ public class GenerateProfileController implements Controller {
                         model.getNickName().get(),
                         tempIdentity.getTempKeyId(),
                         tempIdentity.getTempKeyPair(),
-                        tempIdentity.getProofOfWork(),
-                        "",
-                        "")
+                        tempIdentity.getProofOfWork())
                 .thenCompose(chatUserService::publishNewChatUser)
                 .thenAccept(chatUserIdentity -> UIThread.run(() -> {
                     Navigation.navigateTo(NavigationTarget.MAIN);

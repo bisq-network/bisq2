@@ -140,7 +140,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
         socialService = new SocialService();
         ChatUserService.Config userProfileServiceConfig = ChatUserService.Config.from(getConfig("bisq.userProfileServiceConfig"));
-        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, keyPairService, identityService, openTimestampService, networkService);
+        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, identityService, openTimestampService, networkService);
         reputationService = new ReputationService(persistenceService, networkService, chatUserService);
         chatService = new ChatService(persistenceService, identityService, securityService, networkService, chatUserService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
