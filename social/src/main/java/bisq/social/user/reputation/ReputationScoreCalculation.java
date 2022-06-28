@@ -29,9 +29,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ReputationScoreCalculation {
-    private static double MAX_AGE = 30;
-    private static double BURN_BSQ_WEIGHT = 1000;
-    private static double BURN_BSQ_AGE_WEIGHT = 1;
+    private static final double MAX_AGE = 30;
+    private static final double BURN_BSQ_WEIGHT = 1000;
+    private static final double BURN_BSQ_AGE_WEIGHT = 1;
 
     private static final Map<ByteArray, Long> totalScoreByHash = new ConcurrentHashMap<>();
 

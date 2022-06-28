@@ -27,12 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BurnBsqTab1Controller implements Controller {
-    private final BurnBsqTab1Model model;
     @Getter
     private final BurnBsqTab1View view;
 
     public BurnBsqTab1Controller(DefaultApplicationService applicationService) {
-        model = new BurnBsqTab1Model();
+        BurnBsqTab1Model model = new BurnBsqTab1Model();
         view = new BurnBsqTab1View(model, this);
     }
 

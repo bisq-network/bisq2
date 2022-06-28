@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class LiquidWalletStore implements PersistableStore<LiquidWalletStore> {
+public final class LiquidWalletStore implements PersistableStore<LiquidWalletStore> {
     @Getter
     @Setter
     private Optional<RpcConfig> rpcConfig = Optional.empty();

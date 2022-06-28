@@ -19,7 +19,7 @@ package bisq.common.encoding;
 
 /**
  * We use Java 8 builtin Base64 because it is much faster than Guava and Apache versions:
- * http://java-performance.info/base64-encoding-and-decoding-performance/
+ * <a href="http://java-performance.info/base64-encoding-and-decoding-performance/">...</a>
  */
 public class Base64 {
 

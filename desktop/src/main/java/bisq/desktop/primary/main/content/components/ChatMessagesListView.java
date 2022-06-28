@@ -337,20 +337,14 @@ public class ChatMessagesListView {
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
             List<BisqPopupMenuItem> items = new ArrayList<>();
 
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> {
-                ClipboardUtil.copyToClipboard(chatMessage.getText());
-            }));
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> ClipboardUtil.copyToClipboard(chatMessage.getText())));
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
                 ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
             }));
 
             if (!chatService.isMyMessage(chatMessage)) {
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> {
-                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(chatService::ignoreChatUser);
-                }));
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> {
-                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportChatUser(author, ""));
-                }));
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(chatService::ignoreChatUser)));
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportChatUser(author, ""))));
             }
 
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
@@ -440,7 +434,7 @@ public class ChatMessagesListView {
                 messagesListView.getStyleClass().add("chat-messages-list-view");
             }
 
-            Label placeholder = new Label(Res.get("table.placeholder.noData"));
+            Label placeholder = new Label(Res.get("noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
 
@@ -525,9 +519,9 @@ public class ChatMessagesListView {
                             editInputField.setManaged(false);
 
                             // edit buttons
-                            saveEditButton = new Button(Res.get("shared.save"));
+                            saveEditButton = new Button(Res.get("save"));
                             saveEditButton.setDefaultButton(true);
-                            cancelEditButton = new Button(Res.get("shared.cancel"));
+                            cancelEditButton = new Button(Res.get("cancel"));
 
                             editButtonsHBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editButtonsHBox.setVisible(false);

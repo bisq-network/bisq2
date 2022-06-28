@@ -22,12 +22,11 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class BsqSwapController implements Controller {
-    private final BsqSwapModel model;
     @Getter
     private final BsqSwapView view;
 
     public BsqSwapController(DefaultApplicationService applicationService) {
-        model = new BsqSwapModel();
+        BsqSwapModel model = new BsqSwapModel();
         view = new BsqSwapView(model, this);
     }
 

@@ -141,8 +141,6 @@ public class ServiceNodesByTransport {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)
                             .setErrorMsg(throwable.getMessage()));
                 }
-            } else {
-                //todo relay case
             }
         });
         return resultsByType;

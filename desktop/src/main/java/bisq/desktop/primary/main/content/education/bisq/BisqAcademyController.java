@@ -24,10 +24,9 @@ import lombok.Getter;
 public class BisqAcademyController implements Controller {
     @Getter
     private final BisqAcademyView view;
-    private final BisqAcademyModel model;
 
     public BisqAcademyController(DefaultApplicationService applicationService) {
-        model = new BisqAcademyModel();
+        BisqAcademyModel model = new BisqAcademyModel();
         view = new BisqAcademyView(model, this);
     }
 

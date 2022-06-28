@@ -28,7 +28,7 @@ import lombok.Getter;
  */
 @EqualsAndHashCode
 @Getter
-public class ChatUserIdentity implements Proto {
+public final class ChatUserIdentity implements Proto {
     private final Identity identity;
     private final ChatUser chatUser;
 

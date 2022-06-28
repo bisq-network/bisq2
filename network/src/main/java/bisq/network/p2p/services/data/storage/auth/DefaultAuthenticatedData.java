@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class DefaultAuthenticatedData extends AuthenticatedData {
+public final class DefaultAuthenticatedData extends AuthenticatedData {
     public DefaultAuthenticatedData(DistributedData distributedData) {
         super(distributedData);
     }

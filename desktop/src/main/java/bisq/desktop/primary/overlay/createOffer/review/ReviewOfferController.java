@@ -193,6 +193,7 @@ public class ReviewOfferController implements Controller {
         Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
         return item ->
         {

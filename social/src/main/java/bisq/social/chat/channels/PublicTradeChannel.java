@@ -35,7 +35,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
+public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
     private static final String ID_ANY = "anyPublicTradeChannel";
 
     public Optional<Market> getMarket() {
@@ -44,7 +44,7 @@ public class PublicTradeChannel extends Channel<PublicTradeChatMessage> implemen
 
     private final Optional<Market> market;
     @Setter
-    private  boolean isVisible;
+    private boolean isVisible;
 
     // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();

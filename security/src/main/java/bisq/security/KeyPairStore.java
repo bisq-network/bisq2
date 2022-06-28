@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class KeyPairStore implements PersistableStore<KeyPairStore> {
+public final class KeyPairStore implements PersistableStore<KeyPairStore> {
     @Getter
     private final Map<String, KeyPair> keyPairsById = new ConcurrentHashMap<>();
 

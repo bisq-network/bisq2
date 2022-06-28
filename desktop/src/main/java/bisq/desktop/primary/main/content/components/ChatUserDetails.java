@@ -155,7 +155,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
         private final ImageView roboIconImageView;
-        private final Label nym, nickName, bio, reputationScore, profileAge, optionsLabel;
+        private final Label nym;
+        private final Label nickName;
+        private final Label bio;
+        private final Label reputationScore;
+        private final Label profileAge;
         private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
         private final Label terms;
         private Subscription roboHashNodeSubscription;
@@ -198,7 +202,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             VBox profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"), false);
             profileAge = (Label) profileAgeBox.getChildren().get(1);
 
-            optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
+            Label optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
             optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
 
             mentionButton = new Button(Res.get("social.mention"));

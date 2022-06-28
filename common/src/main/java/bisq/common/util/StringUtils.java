@@ -82,7 +82,7 @@ public class StringUtils {
         if (index < 0 || (index > 1 && text.charAt(index - 1) != ' ')) return null;
 
         String result = text.substring(index + 1);
-        if (result.matches("[a-zA-Z0-9]*$")) {
+        if (result.matches("[a-zA-Z\\d]*$")) {
             return result;
         }
         return null;

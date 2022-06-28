@@ -35,7 +35,7 @@ public enum OpReturnType {
     PROOF_OF_BURN((byte) 0x17);
 
     @Getter
-    private byte type;
+    private final byte type;
 
     OpReturnType(byte type) {
         this.type = type;

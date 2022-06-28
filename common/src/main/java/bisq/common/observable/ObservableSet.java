@@ -53,14 +53,12 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         }
 
         public void addAll(Collection<? extends M> values) {
-            executor.accept(() -> {
-                values.forEach(element -> {
-                    L item = mapFunction.apply(element);
-                    if (!collection.contains(item)) {
-                        collection.add(item);
-                    }
-                });
-            });
+            executor.accept(() -> values.forEach(element -> {
+                L item = mapFunction.apply(element);
+                if (!collection.contains(item)) {
+                    collection.add(item);
+                }
+            }));
         }
 
         public void remove(Object element) {

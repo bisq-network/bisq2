@@ -21,8 +21,8 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.currency.Market;
+import bisq.common.currency.TradeCurrency;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.table.TableItem;
@@ -149,9 +149,7 @@ public class TakersSettlementSelection {
             String baseSideCode = market.getBaseCurrencyCode();
             Set<SettlementMethod> baseSideSettlementMethodByName = model.offer.getBaseSideSettlementSpecs().stream()
                     .map(SettlementSpec::getSettlementMethodName)
-                    .map(settlementMethodName -> {
-                        return SettlementMethod.from(settlementMethodName, baseSideCode);
-                    })
+                    .map(settlementMethodName -> SettlementMethod.from(settlementMethodName, baseSideCode))
                     .collect(Collectors.toSet());
             String quoteSideCode = market.getQuoteCurrencyCode();
             Set<SettlementMethod> quoteSideSettlementMethodByName = model.offer.getQuoteSideSettlementSpecs().stream()
@@ -207,7 +205,7 @@ public class TakersSettlementSelection {
                 model.selectedQuoteSideSettlementMethod.set(model.selectedQuoteSideSettlementListItem.get().getSettlementMethod());
             }
 
-            // For Fiat we show always accounts. If no accounts set up yet the user gets the create-account button 
+            // For Fiat, we show always accounts. If no accounts set up yet the user gets the create-account button 
             // displayed (as prompt in the table view)
             if (TradeCurrency.isFiat(baseSideCode)) {
                 model.baseSideAccountsVisibility.set(true);
@@ -342,7 +340,6 @@ public class TakersSettlementSelection {
         private final Label baseSideLabel, quoteSideLabel;
         private final AutoCompleteComboBox<AccountListItem> baseSideAccountsComboBox, quoteSideAccountsComboBox;
         private final AutoCompleteComboBox<SettlementListItem> baseSideSettlementComboBox, quoteSideSettlementComboBox;
-        private final VBox baseSideBox, quoteSideBox;
 
         private View(Model model,
                      Controller controller) {
@@ -360,7 +357,7 @@ public class TakersSettlementSelection {
             setupSettlementStringConverter(baseSideSettlementComboBox);
             VBox.setMargin(baseSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
-            baseSideBox = new VBox();
+            VBox baseSideBox = new VBox();
             baseSideBox.setSpacing(10);
             baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsComboBox, baseSideSettlementComboBox);
 
@@ -375,7 +372,7 @@ public class TakersSettlementSelection {
             setupSettlementStringConverter(quoteSideSettlementComboBox);
             VBox.setMargin(quoteSideSettlementComboBox, new Insets(0, 0, 20, 0));
 
-            quoteSideBox = new VBox();
+            VBox quoteSideBox = new VBox();
             quoteSideBox.setSpacing(10);
             quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsComboBox, quoteSideSettlementComboBox);
 

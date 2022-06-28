@@ -38,7 +38,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
     private final VBox content, createOfferSuccessFeedback, takeOfferSuccessFeedback;
-    private Button viewOfferButton, openPrivateChannelButton;
+    private final Button viewOfferButton;
+    private final Button openPrivateChannelButton;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
     ReviewOfferView(ReviewOfferModel model,
@@ -89,10 +90,10 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     @Override
     protected void onViewAttached() {
         Transitions.removeEffect(content);
-        
+
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
         openPrivateChannelButton.setOnAction(e -> controller.onOpenPrivateChat());
-        
+
         matchingOffersFoundPin = EasyBind.subscribe(model.getMatchingOffersFound(), matchingOffersFound -> {
             takeOfferLabel.setVisible(matchingOffersFound);
             takeOfferLabel.setManaged(matchingOffersFound);
@@ -144,7 +145,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         createOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
         createOfferSuccessFeedback.setMaxWidth(width);
         createOfferSuccessFeedback.setId("sellBtcWarning");
-        createOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        createOfferSuccessFeedback.setPadding(new Insets(30, 0, 30, 0));
         createOfferSuccessFeedback.setSpacing(30);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.createOfferSuccess.headline"));
@@ -168,7 +169,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         takeOfferSuccessFeedback.setAlignment(Pos.TOP_CENTER);
         takeOfferSuccessFeedback.setMaxWidth(width);
         takeOfferSuccessFeedback.setId("sellBtcWarning");
-        takeOfferSuccessFeedback.setPadding(new Insets(30,0,30,0));
+        takeOfferSuccessFeedback.setPadding(new Insets(30, 0, 30, 0));
         takeOfferSuccessFeedback.setSpacing(30);
 
         Label headLineLabel = new Label(Res.get("onboarding.completed.takeOfferSuccess.headline"));

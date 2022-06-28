@@ -22,12 +22,11 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class LiquidSwapController implements Controller {
-    private final LiquidSwapModel model;
     @Getter
     private final LiquidSwapView view;
 
     public LiquidSwapController(DefaultApplicationService applicationService) {
-        model = new LiquidSwapModel();
+        LiquidSwapModel model = new LiquidSwapModel();
         view = new LiquidSwapView(model, this);
     }
 

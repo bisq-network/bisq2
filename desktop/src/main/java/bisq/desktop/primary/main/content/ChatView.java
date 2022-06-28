@@ -43,7 +43,8 @@ import org.fxmisc.easybind.Subscription;
 public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, channelInfoButton, helpButton, closeButton;
-    private final VBox left, center, sideBar;
+    private final VBox left;
+    private final VBox sideBar;
     private final HBox filterBoxRoot;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
@@ -133,7 +134,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         chatMessagesComponent.setMinWidth(500);
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+        VBox center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
         root.getItems().addAll(left, center, sideBar);
     }
 
@@ -155,7 +156,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         sideBar.managedProperty().bind(model.getSideBarVisible());
         createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
         createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
-        
+
         searchButton.setOnAction(e -> controller.onToggleFilterBox());
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());

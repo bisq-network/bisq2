@@ -325,10 +325,6 @@
     -fx-image: url("images/close-round.png");
 }
 
-#bisq-easy-onboarding-dummy {
-    -fx-image: url("images/onboarding/bisq-easy-onboarding-dummy.png");
-}
-
 /* Onboarding icons*/
 #info-circle-solid {
     -fx-image: url("images/onboarding/info-circle-solid.png");
@@ -337,10 +333,6 @@
 /*Dashboard*/
 #welcome-community {
     -fx-image: url("images/welcome-community.png");
-}
-
-#welcome-profile {
-    -fx-image: url("images/welcome-profile.png");
 }
 
 /* Protocols */

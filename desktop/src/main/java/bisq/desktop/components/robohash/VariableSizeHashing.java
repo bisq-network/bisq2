@@ -29,7 +29,7 @@ public class VariableSizeHashing {
     /**
      * Takes the hash value and distributes it over the buckets.
      * <p>
-     * Assumption: the value of hash is (much) larger than 16^bucketSizes.length and uniformly distributed (random)
+     * Assumption: the value of hash is (much) larger than `16^bucketSizes.length` and uniformly distributed (random)
      *
      * @param hash Any BigInteger that is to be split up in buckets according to the bucket configuration #bucketSizes.
      * @return buckets The distributed hash

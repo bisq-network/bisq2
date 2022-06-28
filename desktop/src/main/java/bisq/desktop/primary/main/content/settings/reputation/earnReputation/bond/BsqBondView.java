@@ -34,8 +34,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
-    private final Label pubKeyHashLabel;
-    private final TextInputBox txIdInputBox;
     private final ComboBox<ReputationSourceListItem> reputationSourcesComboBox;
     private final ChangeListener<ReputationSourceListItem> reputationSourceListener;
     private Subscription selectedSourcePin;
@@ -59,10 +57,10 @@ public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
         reputationSourcesComboBox = new ComboBox<>(model.getSources());
 
 
-        pubKeyHashLabel = new Label(Res.get("reputation.pubKeyHash"));
+        Label pubKeyHashLabel = new Label(Res.get("reputation.pubKeyHash"));
         pubKeyHashLabel.getStyleClass().addAll("bisq-text-3");
 
-        txIdInputBox = new TextInputBox(Res.get("reputation.txId"), Res.get("reputation.txId.prompt"));
+        TextInputBox txIdInputBox = new TextInputBox(Res.get("reputation.txId"), Res.get("reputation.txId.prompt"));
 
         VBox.setMargin(headLine, new Insets(25, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(30, 0, 0, 30));

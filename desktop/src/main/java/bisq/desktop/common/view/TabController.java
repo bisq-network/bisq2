@@ -36,7 +36,7 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
     @Override
     public void onActivateInternal() {
         super.onActivateInternal();
-        
+
         onTabSelected(model.getNavigationTarget());
     }
 

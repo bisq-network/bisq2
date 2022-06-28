@@ -36,8 +36,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Using Elliptic Curve Integrated Encryption Scheme for hybrid encryption.
  * <p>
  * Follows roughly the schemes described here:
- * https://cryptobook.nakov.com/asymmetric-key-ciphers/ecies-public-key-encryption
- * https://www.nominet.uk/how-elliptic-curve-cryptography-encryption-works/
+ * <a href="https://cryptobook.nakov.com/asymmetric-key-ciphers/ecies-public-key-encryption">...</a>
+ * <a href="https://www.nominet.uk/how-elliptic-curve-cryptography-encryption-works/">...</a>
  */
 @Slf4j
 public class HybridEncryption {

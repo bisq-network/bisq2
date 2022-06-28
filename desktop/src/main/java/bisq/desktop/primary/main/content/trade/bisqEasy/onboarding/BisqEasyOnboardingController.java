@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 
 import bisq.application.DefaultApplicationService;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +30,12 @@ import static bisq.settings.DontShowAgainKey.BISQ_EASY_INTRO;
 
 @Slf4j
 public class BisqEasyOnboardingController implements Controller {
-    private final BisqEasyOnboardingModel model;
     @Getter
     private final BisqEasyOnboardingView view;
-    private final SettingsService settingsService;
 
     public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        model = new BisqEasyOnboardingModel();
+        SettingsService settingsService = applicationService.getSettingsService();
+        BisqEasyOnboardingModel model = new BisqEasyOnboardingModel();
         view = new BisqEasyOnboardingView(model, this);
     }
 
@@ -57,7 +55,7 @@ public class BisqEasyOnboardingController implements Controller {
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
-    public void onDontShowAgain( ) {
+    public void onDontShowAgain() {
         DontShowAgainService.dontShowAgain(BISQ_EASY_INTRO);
     }
 }

@@ -42,7 +42,7 @@ public class NetworkInfoView extends View<VBox, NetworkInfoModel, NetworkInfoCon
         root.setFillWidth(true);
         root.setSpacing(20);
         accordion = new Accordion();
-       
+
         clear.ifPresent(childRoot -> {
             TitledPane titledPane = new TitledPane(Res.get("clearNet"), childRoot);
             accordion.getPanes().add(titledPane);

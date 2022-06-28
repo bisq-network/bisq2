@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @Slf4j
-public class Inventory implements Proto {
+public final class Inventory implements Proto {
     private final Set<? extends DataRequest> entries;
     private final int numDropped;
 

@@ -17,10 +17,10 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig.createOffer;
 
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
-import bisq.desktop.common.utils.Layout;
 import bisq.i18n.Res;
 import bisq.offer.Offer;
 import javafx.beans.value.ChangeListener;

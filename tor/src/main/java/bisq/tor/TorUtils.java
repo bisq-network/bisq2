@@ -61,14 +61,12 @@ public class TorUtils {
                     throw new IOException("Could not create file. File= " + file);
                 }
 
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                try {
+                try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                     tarArchiveInputStream.transferTo(fileOutputStream);
                 } catch (IOException ex) {
                     throw new IOException("Cannot transfer bytes to file " + file.getAbsolutePath(), ex);
-                } finally {
-                    fileOutputStream.close(); // Avoid "error=26, Text file busy" system error.
                 }
+                // Avoid "error=26, Text file busy" system error.
 
                 if (osType == OsType.OSX) {
                     if (!file.setExecutable(true, true)) {

@@ -37,7 +37,7 @@ import java.util.Arrays;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class RefreshAuthenticatedDataRequest implements DataRequest {
+public final class RefreshAuthenticatedDataRequest implements DataRequest {
     public static RefreshAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                        StorageData storageData,
                                                        KeyPair keyPair)

@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
-public class Coin extends Monetary {
+public final class Coin extends Monetary {
 
     public static Coin parse(String string, String code) {
         return parse(string, code, deriveExponent(code));
@@ -103,7 +103,7 @@ public class Coin extends Monetary {
     }
 
     Coin(long value, String code, int precision) {
-        // We add a `c` as prefix for crypto-currencies to avoid that we get a collusion with the code. 
+        // We add a `c` as prefix for cryptocurrencies to avoid that we get a collusion with the code. 
         // It happened in the past that altcoins used a fiat code.
 
         super(code + " [crypto]", value, code, precision, code.equals("BSQ") ? 2 : 4);

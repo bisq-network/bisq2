@@ -36,7 +36,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         super(new VBox(16), model, controller);
 
         root.setFillWidth(true);
-        
+
         VBox marketPrice = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
         VBox offersOnline = getValueBox(Res.get("dashboard.offersOnline"), "231");
         VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
@@ -62,12 +62,12 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.third.button"),
                 controller::onOpenDiscussionChat
         );
-        
+
         HBox.setHgrow(secondBox, Priority.ALWAYS);
         HBox.setHgrow(thirdBox, Priority.ALWAYS);
         HBox hBox = new HBox(16, secondBox, thirdBox);
         hBox.setFillHeight(true);
-        
+
         VBox.setVgrow(hBox, Priority.NEVER);
         root.getChildren().add(hBox);
     }
@@ -113,8 +113,8 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
     private VBox getBigWidgetBox() {
         Label headlineLabel = new Label(Res.get("dashboard.main.headline"));
-      //  Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
-      //  headlineLabel.setGraphicTextGap(16.0);
+        //  Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
+        //  headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
         Button button = new Button(Res.get("dashboard.main.button"));

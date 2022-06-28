@@ -33,14 +33,14 @@ import java.security.PublicKey;
 
 /**
  * Used for verifying if data publisher is authorized to publish this data (e.g. ProofOfBurnData, Filter, Alert, DisputeAgent...).
- * We use the provided signature and pubkey and check if the pubKey is in the set of provided authorized puKeys from
+ * We use the provided signature and pubKey and check if the pubKey is in the set of provided authorized puKeys from
  * the authorizedDistributedData object, which will return a hard coded set of pubKeys.
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
-public class AuthorizedData extends AuthenticatedData {
+public final class AuthorizedData extends AuthenticatedData {
     private final byte[] signature;
     private final byte[] authorizedPublicKeyBytes;
     transient private final PublicKey authorizedPublicKey;

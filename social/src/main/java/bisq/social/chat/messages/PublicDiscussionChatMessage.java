@@ -31,7 +31,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
+public final class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
     public PublicDiscussionChatMessage(String channelId,
                                        String authorId,
                                        String text,

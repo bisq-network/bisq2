@@ -19,6 +19,7 @@ package bisq.oracle.daobridge.dto.dao;
 
 import lombok.Getter;
 
+@SuppressWarnings("ALL")
 @Getter
 public enum ScriptType {
     UNDEFINED("undefined"),

@@ -32,5 +32,5 @@ public class SplashModel implements Model {
     private final ObjectProperty<ServiceNode.State> clearServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<ServiceNode.State> torServiceNodeState = new SimpleObjectProperty<>();
     private final ObjectProperty<ServiceNode.State> i2pServiceNodeState = new SimpleObjectProperty<>();
-    private  final DoubleProperty progress = new SimpleDoubleProperty(-1);
+    private final DoubleProperty progress = new SimpleDoubleProperty(-1);
 }

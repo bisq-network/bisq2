@@ -33,7 +33,7 @@ import lombok.ToString;
  */
 @EqualsAndHashCode
 @ToString
-public class MailboxData implements StorageData {
+public final class MailboxData implements StorageData {
     @Getter
     protected final ConfidentialMessage confidentialMessage;
     private final MetaData metaData;

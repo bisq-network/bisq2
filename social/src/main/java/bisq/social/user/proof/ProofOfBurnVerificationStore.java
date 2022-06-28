@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
-public class ProofOfBurnVerificationStore implements PersistableStore<ProofOfBurnVerificationStore> {
+public final class ProofOfBurnVerificationStore implements PersistableStore<ProofOfBurnVerificationStore> {
     private final Observable<ChatUserIdentity> selectedChatUserIdentity = new Observable<>();
     private final ObservableSet<ChatUserIdentity> chatUserIdentities;
     private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();

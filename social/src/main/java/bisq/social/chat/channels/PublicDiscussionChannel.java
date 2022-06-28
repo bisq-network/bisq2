@@ -33,7 +33,7 @@ import java.util.Set;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
+public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
 
     public enum ChannelId {
         BISQ_ID,
@@ -49,7 +49,7 @@ public class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage
     private final String description;
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
-    
+
     // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 

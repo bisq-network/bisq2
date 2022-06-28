@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class BisqEasyChatModel extends ChatModel {
     private final boolean isDiscussionsChat;
-    private final BooleanProperty offerOnly= new SimpleBooleanProperty();
+    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
 
     public BisqEasyChatModel(boolean isDiscussionsChat) {
         this.isDiscussionsChat = isDiscussionsChat;

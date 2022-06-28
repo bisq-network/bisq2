@@ -7,7 +7,7 @@ public class Configuration {
     private final static String ROOT = "";
 
     private final static int BUCKET_COLOR = 0;
-    
+
     private static final int COLOR_COUNT = 3;
     private static final int BG_COUNT = 15;
     private static final int BODY_COUNT = 15;

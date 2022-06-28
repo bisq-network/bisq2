@@ -25,7 +25,6 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
-import bisq.network.p2p.services.relay.RelayMessage;
 import bisq.security.ConfidentialData;
 import bisq.security.HybridEncryption;
 import bisq.security.KeyPairService;
@@ -107,14 +106,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
         if (networkMessage instanceof ConfidentialMessage) {
-            if (networkMessage instanceof RelayMessage) {
-                //todo
-                // RelayMessage relayMessage = (RelayMessage) proto;
-                // Address targetAddress = relayMessage.getTargetAddress();
-                // send(proto, targetAddress);
-            } else {
-                processConfidentialMessage((ConfidentialMessage) networkMessage);
-            }
+            processConfidentialMessage((ConfidentialMessage) networkMessage);
         }
     }
 

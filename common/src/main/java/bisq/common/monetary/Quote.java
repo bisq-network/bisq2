@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @ToString
 @Slf4j
-public class Quote implements Comparable<Quote>, Proto {
+public final class Quote implements Comparable<Quote>, Proto {
     @Setter
     private static String QUOTE_SEPARATOR = "/";
 

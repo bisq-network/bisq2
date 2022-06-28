@@ -198,14 +198,14 @@ public class ChatMessagesComponent {
         }
 
         public void fillUserMention(ChatUser user) {
-            String content = model.getTextInput().get().replaceAll("@[a-zA-Z0-9]*$", "@" + user.getNickName() + " ");
+            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());
         }
 
         public void fillChannelMention(Channel<?> channel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z0-9]*$", "#" + channel.getDisplayString() + " ");
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());

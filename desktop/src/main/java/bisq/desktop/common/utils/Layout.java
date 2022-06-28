@@ -65,23 +65,23 @@ public class Layout {
         vBox.getChildren().addAll(nodes);
         return vBox;
     }
-    
+
     public static Region separator() {
         Region separator = new Region();
         separator.getStyleClass().addAll("border-bottom");
         return separator;
     }
-    
+
     public static void addStyleClass(Node node, String className) {
         if (!node.getStyleClass().contains(className)) {
             node.getStyleClass().add(className);
         }
     }
-    
+
     public static void removeStyleClass(Node node, String className) {
         node.getStyleClass().remove(className);
     }
-    
+
     public static void toggleStyleClass(Node node, String className, boolean isPresent) {
         if (isPresent) {
             addStyleClass(node, className);
@@ -89,7 +89,7 @@ public class Layout {
             removeStyleClass(node, className);
         }
     }
-    
+
     public static void chooseStyleClass(Node node, String firstClass, String secondClass, boolean firstClassSelected) {
         toggleStyleClass(node, firstClass, firstClassSelected);
         toggleStyleClass(node, secondClass, !firstClassSelected);

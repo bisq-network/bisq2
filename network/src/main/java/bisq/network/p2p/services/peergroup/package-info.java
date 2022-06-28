@@ -27,7 +27,7 @@
  * <p>
  * PeerConfig: Holds configuration properties like target number of connections
  * <p>
- * Peer: Encapsulate another node with meta data useful for our context.
+ * Peer: Encapsulate another node with metadata useful for our context.
  * <p>
  * We have 4 categories of peers:
  * - Seed nodes (provided to application as hard coded list or application configuration, using PeerExchangeSelection)

@@ -23,7 +23,7 @@ Bisq v1 only allows peers to connect to each other over Tor, but Bisq v2 will ai
 - Simplify role of infrastructure operators
   - Seed nodes should only provide nodes with addresses to use as entry points to the network, nothing more.
   - Specialized nodes could provide certain services
-    - relay nodes could relay Tor messages to the I2P network (or vice versa)
+    - bridge nodes could transfer data from the Bisq 1 network to Bisq 2 network
     - service nodes could act as a proxy for mobile users with limited resource capabilities
     - other nodes could store mailbox messages
 

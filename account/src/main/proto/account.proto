@@ -130,7 +130,7 @@ message BankAccountPayload {
   string email = 8 [deprecated = true];
   oneof message {
     NationalBankAccountPayload national_bank_account_payload = 9;
-    /* SameBankAccountPayload same_bank_accont_payload = 10;
+    /* SameBankAccountPayload same_bank_account_payload = 10;
      SpecificBanksAccountPayload specific_banks_account_payload = 11;
      AchTransferAccountPayload ach_transfer_account_payload = 13;
      DomesticWireTransferAccountPayload domestic_wire_transfer_account_payload = 14;*/

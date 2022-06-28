@@ -21,7 +21,7 @@ import bisq.common.proto.Proto;
 import lombok.Data;
 
 @Data
-public class AuthorizationToken implements Proto {
+public final class AuthorizationToken implements Proto {
     public bisq.network.protobuf.AuthorizationToken toProto() {
         return bisq.network.protobuf.AuthorizationToken.newBuilder().build();
     }

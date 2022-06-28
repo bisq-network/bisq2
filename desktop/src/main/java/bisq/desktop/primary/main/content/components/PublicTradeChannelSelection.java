@@ -94,11 +94,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .collect(Collectors.toList()));*/
 
-            //todo do not use the visible flag but create a separate list for the choosen channels
+            //todo do not use the visible flag but create a separate list for the chosen channels
             channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(c -> {
-                        return new ChannelSelection.View.ChannelItem(c);
-                    })
+                    .map(ChannelSelection.View.ChannelItem::new)
                     /* .map(ChannelSelection.View.ChannelItem::new)*/
                     .to(chatService.getPublicTradeChannels());
 

@@ -27,11 +27,10 @@ public class SeedMain {
     }
 
     private static void keepRunning() {
-        while (true) {
-            try {
-                Thread.sleep(Long.MAX_VALUE);
-            } catch (InterruptedException ignore) {
-            }
+        try {
+            // block and wait shut down signal, like CTRL+C
+            Thread.currentThread().join();
+        } catch (InterruptedException ignore) {
         }
     }
 }

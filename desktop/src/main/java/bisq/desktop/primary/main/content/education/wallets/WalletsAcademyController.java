@@ -24,10 +24,9 @@ import lombok.Getter;
 public class WalletsAcademyController implements Controller {
     @Getter
     private final WalletsAcademyView view;
-    private final WalletsAcademyModel model;
 
     public WalletsAcademyController(DefaultApplicationService applicationService) {
-       model= new WalletsAcademyModel();
+        WalletsAcademyModel model = new WalletsAcademyModel();
         view = new WalletsAcademyView(model, this);
     }
 

@@ -112,13 +112,13 @@ public class SplashView extends View<VBox, SplashModel, SplashController> {
     private String getCompositeNetworkStatus(ServiceNode.State clearnetState, ServiceNode.State torState, ServiceNode.State i2pState) {
         ArrayList<String> networkStatuses = new ArrayList<>();
         if (clearnetState != null) {
-            networkStatuses.add( String.format("Clear %s%%", getServiceNodeStateProgress(clearnetState)) );
+            networkStatuses.add(String.format("Clear %s%%", getServiceNodeStateProgress(clearnetState)));
         }
         if (torState != null) {
-            networkStatuses.add( String.format("Tor %s%%", getServiceNodeStateProgress(torState)) );
+            networkStatuses.add(String.format("Tor %s%%", getServiceNodeStateProgress(torState)));
         }
         if (i2pState != null) {
-            networkStatuses.add(  String.format("I2P %s%%", getServiceNodeStateProgress(i2pState)) );
+            networkStatuses.add(String.format("I2P %s%%", getServiceNodeStateProgress(i2pState)));
         }
         return Joiner.on(" / ").join(networkStatuses).toUpperCase();
     }

@@ -116,7 +116,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.SUPPORT, false);
 
 
-        //todo lower prio menu add design
+        //todo lower priority menu add design
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET_BITCOIN, true);
@@ -200,7 +200,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             AtomicInteger duration = new AtomicInteger(400);
             if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
-                                .forEach(e -> e.setMenuExpanded(menuExpanded, duration.get() / 2)))
+                                .forEach(e -> e.setMenuExpanded(true, duration.get() / 2)))
                         .after(duration.get() / 2);
                 Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
                 networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
@@ -233,7 +233,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 expandIcon.setVisible(true);
                 expandIcon.setManaged(true);
 
-                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(menuExpanded, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
                             collapseIcon.setVisible(false);

@@ -21,8 +21,8 @@ import bisq.account.AccountService;
 import bisq.account.accounts.Account;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.currency.TradeCurrency;
 import bisq.common.currency.Market;
+import bisq.common.currency.TradeCurrency;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -156,7 +156,7 @@ public class SettlementSelection {
                     .map(e -> new SettlementListItem(e, market.getQuoteCurrencyCode()))
                     .collect(Collectors.toList()));
 
-            // For Fiat we show always accounts. If no accounts set up yet the user gets the create-account button 
+            // For Fiat, we show always accounts. If no accounts set up yet the user gets the create-account button 
             // displayed (as prompt in the table view)
             if (TradeCurrency.isFiat(market.getBaseCurrencyCode())) {
                 model.baseSideAccountsVisibility.set(true);
@@ -294,7 +294,6 @@ public class SettlementSelection {
         private final BisqTableView<AccountListItem> baseSideAccountsTableView, quoteSideAccountsTableView;
         private final BisqTableView<SettlementListItem> baseSideSettlementTableView, quoteSideSettlementTableView;
         private final Button baseSideButton, quoteSideButton;
-        private final VBox baseSideBox, quoteSideBox;
 
         private View(Model model,
                      Controller controller) {
@@ -318,7 +317,7 @@ public class SettlementSelection {
             configSettlementTableView(baseSideSettlementTableView, true);
             VBox.setMargin(baseSideSettlementTableView, new Insets(0, 0, 20, 0));
 
-            baseSideBox = new VBox();
+            VBox baseSideBox = new VBox();
             baseSideBox.setSpacing(10);
             baseSideBox.getChildren().addAll(baseSideLabel, baseSideAccountsTableView, baseSideSettlementTableView);
 
@@ -338,7 +337,7 @@ public class SettlementSelection {
             configSettlementTableView(quoteSideSettlementTableView, false);
             VBox.setMargin(quoteSideSettlementTableView, new Insets(0, 0, 20, 0));
 
-            quoteSideBox = new VBox();
+            VBox quoteSideBox = new VBox();
             quoteSideBox.setSpacing(10);
             quoteSideBox.getChildren().addAll(quoteSideLabel, quoteSideAccountsTableView, quoteSideSettlementTableView);
 

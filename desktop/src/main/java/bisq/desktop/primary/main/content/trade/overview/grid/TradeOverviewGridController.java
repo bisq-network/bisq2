@@ -32,5 +32,6 @@ public class TradeOverviewGridController extends TradeOverviewBaseController<Tra
     }
 
     @Override
-    public void onDeactivate() {}
+    public void onDeactivate() {
+    }
 }

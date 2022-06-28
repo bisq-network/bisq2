@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * Serves as flexible container for persisting UI states, layout,...
  * Should not be over-used for domain specific data where type safety and data integrity is important.
  */
-public class Cookie implements Proto {
+public final class Cookie implements Proto {
     private final Map<CookieKey, String> map = new HashMap<>();
 
     public Cookie() {

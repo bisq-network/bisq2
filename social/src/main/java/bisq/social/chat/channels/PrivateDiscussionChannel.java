@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
+public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
     private final ChatUser peer;
     private final ChatUserIdentity myProfile;
 

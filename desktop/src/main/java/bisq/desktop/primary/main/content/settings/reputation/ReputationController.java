@@ -27,12 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ReputationController implements Controller {
-    private final ReputationModel model;
     @Getter
     private final ReputationView view;
 
     public ReputationController(DefaultApplicationService applicationService) {
-        model = new ReputationModel();
+        ReputationModel model = new ReputationModel();
         view = new ReputationView(model, this);
     }
 

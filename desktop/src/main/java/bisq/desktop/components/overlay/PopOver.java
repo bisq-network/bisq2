@@ -48,8 +48,9 @@ public class PopOver {
     private UIScheduler fixPositionsScheduler;
 
     public PopOver(Region owner, Region content) {
-        this(owner, content, 0,0);
+        this(owner, content, 0, 0);
     }
+
     public PopOver(Region owner, Region content, double offsetX, double offsetY) {
         this.owner = owner;
         this.content = content;

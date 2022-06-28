@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 //TODO Test commented out as network layer has changed. not sure yet the test will be reactivate/rewritten or delete later.
 // leave it for now...
+@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class I2pIntegrationTest extends BaseTest {
    /* @Override

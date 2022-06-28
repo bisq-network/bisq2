@@ -49,7 +49,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
-        
+
         tableView = new BisqTableView<>(model.getSortedItems());
         tableView.getStyleClass().add("trade-overview-table-view");
         tableView.setMinHeight(500);
@@ -121,7 +121,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.access"))
                 .fixWidth(150)
-                .value(Res.get("shared.select"))
+                .value(Res.get("select"))
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .actionHandler(controller::onSelect)
                 .build());
@@ -130,6 +130,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
     private Callback<TableColumn<ProtocolListItem, ProtocolListItem>, TableCell<ProtocolListItem, ProtocolListItem>> getNameCellFactory() {
         return column -> new TableCell<>() {
             final Label label = new Label();
+
             {
                 label.setGraphicTextGap(10);
                 label.getStyleClass().add("bisq-text-5");
@@ -174,7 +175,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                             label.setMouseTransparent(false);
                             stars.add(label);
                         }
-                        
+
                         hBox.setSpacing(5);
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.getChildren().addAll(stars);

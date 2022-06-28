@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @EqualsAndHashCode
 @Getter
-public class ConfidentialMessage implements NetworkMessage, DistributedData {
+public final class ConfidentialMessage implements NetworkMessage, DistributedData {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 

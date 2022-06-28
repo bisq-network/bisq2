@@ -26,7 +26,7 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import java.net.ConnectException;
 
 abstract class AbstractRpcClient {
-    protected  <T, R> R invokeAndHandleExceptions(JsonRpcHttpClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
+    protected <T, R> R invokeAndHandleExceptions(JsonRpcHttpClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
         String rpcCallMethodName = rpcCall.getRpcMethodName();
         try {
             return jsonRpcHttpClient.invoke(

@@ -111,9 +111,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
                     } else {
                         Transitions.removeEffect(content);
                         if (reputationInfo.isVisible()) {
-                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2, () -> {
-                                reputationInfo.setVisible(false);
-                            });
+                            Transitions.fadeOut(reputationInfo, Transitions.DEFAULT_DURATION / 2, () -> reputationInfo.setVisible(false));
                         }
                     }
                 });

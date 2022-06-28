@@ -25,7 +25,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 public class BitcoindUnloadWalletRpcCall extends DaemonRpcCall<BitcoindUnloadWalletRpcCall.Request, BitcoindWarningResponse> {
- 
+
     @Getter
     @ToString
     @EqualsAndHashCode

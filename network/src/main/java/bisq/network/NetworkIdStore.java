@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class NetworkIdStore implements PersistableStore<NetworkIdStore> {
+public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     @Getter
     private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
 

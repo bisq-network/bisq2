@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public class NetworkEnvelope implements Proto {
+public final class NetworkEnvelope implements Proto {
     public static final int VERSION = 1;
 
     private final int version;

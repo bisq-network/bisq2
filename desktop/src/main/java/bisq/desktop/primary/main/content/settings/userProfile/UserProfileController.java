@@ -36,16 +36,11 @@ public class UserProfileController implements Controller {
     @Getter
     private final UserProfileView view;
     private final ChatUserService chatUserService;
-    private final UserProfileSelection userProfileSelection;
-    private final ChatService chatService;
-    private final DefaultApplicationService applicationService;
-    private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
-        chatService = applicationService.getChatService();
-        this.applicationService = applicationService;
-        userProfileSelection = new UserProfileSelection(chatUserService);
+        ChatService chatService = applicationService.getChatService();
+        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this, userProfileSelection.getRoot());
@@ -53,7 +48,7 @@ public class UserProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+        Pin selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                 chatUserIdentity -> model.getEditUserProfile().set(new EditUserProfile(chatUserService, chatUserIdentity))
         );
     }

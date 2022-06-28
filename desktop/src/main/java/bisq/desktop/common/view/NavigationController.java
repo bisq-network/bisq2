@@ -54,7 +54,7 @@ public abstract class NavigationController implements Controller {
                 Navigation.persistNavigationTarget(navigationTarget);
                 break;
             } else {
-                // If we as host do not handle that child target we go down one parent to see we have handle 
+                // If we as host do not handle that child target we go down one parent to see we have handled 
                 // any other target in the path. 
                 // At NavigationTarget.ROOT we don't have a parent and candidate is not present, exiting the while loop
                 candidate = candidate.get().getParent();

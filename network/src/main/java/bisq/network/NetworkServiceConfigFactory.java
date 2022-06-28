@@ -45,7 +45,6 @@ public class NetworkServiceConfigFactory {
                 ServiceNode.Service.CONFIDENTIAL,
                 ServiceNode.Service.PEER_GROUP,
                 ServiceNode.Service.DATA,
-                ServiceNode.Service.RELAY,
                 ServiceNode.Service.MONITOR));
 
         Config seedConfig = typesafeConfig.getConfig("seedAddressByTransportType");

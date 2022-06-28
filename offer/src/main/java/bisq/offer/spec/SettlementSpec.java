@@ -37,7 +37,7 @@ public final class SettlementSpec implements Proto {
      *                             In case maker had multiple accounts for same settlement method they
      *                             can define which account to use for that offer.
      *                             We combine the local ID with an offer specific salt, to not leak identity of multiple
-     *                             offers using the same account. We could use the pubkeyhash of the chosen identity as
+     *                             offers using the same account. We could use the pubKeyHash of the chosen identity as
      *                             salt.
      */
     public SettlementSpec(String settlementMethodName, Optional<String> saltedMakerAccountId) {

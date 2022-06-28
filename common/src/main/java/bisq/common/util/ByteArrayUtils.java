@@ -54,21 +54,21 @@ public class ByteArrayUtils {
     }
 
     public static byte[] copyRightAligned(byte[] src, int newLength) {
-        byte[] dest = new byte[newLength];
+        byte[] destination = new byte[newLength];
         int srcPos = Math.max(src.length - newLength, 0);
-        int destPos = Math.max(newLength - src.length, 0);
-        System.arraycopy(src, srcPos, dest, destPos, newLength - destPos);
-        return dest;
+        int destinationPosition = Math.max(newLength - src.length, 0);
+        System.arraycopy(src, srcPos, destination, destinationPosition, newLength - destinationPosition);
+        return destination;
     }
 
     public static byte[] copyOf(byte[] src) {
         return Arrays.copyOf(src, src.length);
     }
 
-    public static byte[] intsToBytesBE(int[] ints) {
-        byte[] bytes = new byte[ints.length * 4];
+    public static byte[] integersToBytesBE(int[] integers) {
+        byte[] bytes = new byte[integers.length * 4];
         int i = 0;
-        for (int v : ints) {
+        for (int v : integers) {
             bytes[i++] = (byte) (v >> 24);
             bytes[i++] = (byte) (v >> 16);
             bytes[i++] = (byte) (v >> 8);
@@ -77,11 +77,11 @@ public class ByteArrayUtils {
         return bytes;
     }
 
-    public static int[] bytesToIntsBE(byte[] bytes) {
-        int[] ints = new int[bytes.length / 4];
+    public static int[] bytesToIntegersBE(byte[] bytes) {
+        int[] integers = new int[bytes.length / 4];
         for (int i = 0, j = 0; i < bytes.length / 4; i++) {
-            ints[i] = Ints.fromBytes(bytes[j++], bytes[j++], bytes[j++], bytes[j++]);
+            integers[i] = Ints.fromBytes(bytes[j++], bytes[j++], bytes[j++], bytes[j++]);
         }
-        return ints;
+        return integers;
     }
 }

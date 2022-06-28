@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ProtocolStore implements PersistableStore<ProtocolStore> {
+public final class ProtocolStore implements PersistableStore<ProtocolStore> {
     @Getter
     private final Map<String, ProtocolModel> protocolModelByOfferId = new ConcurrentHashMap<>();
 

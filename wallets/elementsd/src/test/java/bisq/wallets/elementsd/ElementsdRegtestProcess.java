@@ -27,7 +27,6 @@ import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
 import bisq.wallets.regtest.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Collections;

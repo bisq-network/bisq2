@@ -59,7 +59,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             Address address = Address.localHost(port);
             seedNodeAddresses.add(address);
         }
-        PeerGroupService peerGroupService = new PeerGroupService(persistenceService, tempNode, banList, 
+        PeerGroupService peerGroupService = new PeerGroupService(persistenceService, tempNode, banList,
                 peerGroupServiceConfig, seedNodeAddresses, nodeConfig.getTransportType());
 
         CountDownLatch initSeedsLatch = new CountDownLatch(numNodes);

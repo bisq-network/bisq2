@@ -126,7 +126,7 @@ public class Persistence<T extends PersistableStore<T>> {
                 boolean renameSucceeded = FileUtils.renameFile(tempFile, storageFile);
                 if (!renameSucceeded) {
                     // At shut down we get sometimes renameSucceeded=false. 
-                    // As far I observed the temp file was never left and the storage file got updated, so it seems its
+                    // As far I observed the temp file was never left and the storage file got updated, so it seems it's
                     // not a critical issue.
                     log.debug("Renaming of tempFile to storageFile failed. tempFile={}, storageFile={}",
                             tempFile, storageFile);

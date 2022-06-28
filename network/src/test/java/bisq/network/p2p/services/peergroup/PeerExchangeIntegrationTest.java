@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class PeerExchangeIntegrationTest2 extends PeerExchangeBase {
+public class PeerExchangeIntegrationTest extends PeerExchangeBase {
     @Test
     public void testPeerExchange() throws InterruptedException {
       /*  bootstrapSeedNode();

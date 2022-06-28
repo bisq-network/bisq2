@@ -39,6 +39,7 @@ package bisq.common.util;
 // Taken from https://raw.githubusercontent.com/fabian-barney/Utils/master/utils/src/com/barney4j/utils/unit/BitUnit.java
 
 //todo would need a bit adjustment. not sure if we keep it...
+@SuppressWarnings("SpellCheckingInspection")
 public enum BitUnit {
 
     BIT {
@@ -189,7 +190,7 @@ public enum BitUnit {
 
     private static final double MAX = Double.MAX_VALUE;
 
-    static final double safeMulti(double d, double multi) {
+    static double safeMulti(double d, double multi) {
         double limit = MAX / multi;
 
         if (d > limit) {

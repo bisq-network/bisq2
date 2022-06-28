@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSendRawTransactionRpcCall.Request, String> {
-   
+
     @Getter
     @ToString
     @EqualsAndHashCode

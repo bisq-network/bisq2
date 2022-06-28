@@ -30,7 +30,7 @@ import java.security.PublicKey;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class MailboxSequentialData implements Proto {
+public final class MailboxSequentialData implements Proto {
     private final MailboxData mailboxData;
     private final byte[] senderPublicKeyHash;
     private final byte[] receiversPublicKeyHash;

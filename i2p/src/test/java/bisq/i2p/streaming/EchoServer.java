@@ -43,6 +43,7 @@ public class EchoServer {
         }
 
         public void run() {
+            //noinspection InfiniteLoopStatement
             while (true) {
                 try {
                     I2PSocket sock = this.socket.accept();

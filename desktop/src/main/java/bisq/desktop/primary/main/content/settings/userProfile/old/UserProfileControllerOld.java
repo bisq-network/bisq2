@@ -33,24 +33,19 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class UserProfileControllerOld implements Controller {
     private final UserProfileSelectionAtSettings userProfileSelection;
-    private final CreateUserProfile createUserProfile;
     @Getter
     private final UserProfileModelOld model;
     @Getter
     private final UserProfileViewOld view;
-    private final UserProfileDisplay userProfileDisplay;
-    private final ChannelAdmin channelAdmin;
-    private final ChatUserService chatUserService;
-    private final ChatService chatService;
     private Subscription selectedUserProfileSubscription;
 
     public UserProfileControllerOld(DefaultApplicationService applicationService) {
-        chatService = applicationService.getChatService();
-        chatUserService = applicationService.getChatUserService();
+        ChatService chatService = applicationService.getChatService();
+        ChatUserService chatUserService = applicationService.getChatUserService();
         userProfileSelection = new UserProfileSelectionAtSettings(chatUserService);
-        userProfileDisplay = new UserProfileDisplay(chatUserService);
-        createUserProfile = new CreateUserProfile(chatService, chatUserService, applicationService.getSecurityService());
-        channelAdmin = new ChannelAdmin(chatUserService, applicationService.getChatService());
+        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(chatUserService);
+        CreateUserProfile createUserProfile = new CreateUserProfile(chatService, chatUserService, applicationService.getSecurityService());
+        ChannelAdmin channelAdmin = new ChannelAdmin(chatUserService, applicationService.getChatService());
         model = new UserProfileModelOld(applicationService);
         view = new UserProfileViewOld(model,
                 this,

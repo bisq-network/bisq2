@@ -145,7 +145,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    toggleButton.setText(Res.get("shared.select"));
+                    toggleButton.setText(Res.get("select"));
                     toggleButton.setSelected(item.getSelected().get());
                     toggleButton.setOnAction(e -> controller.onSelect(item));
                     selectionPin = EasyBind.subscribe(model.getSelectedMarketListItem(), selectedItem -> {

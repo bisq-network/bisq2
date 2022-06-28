@@ -38,5 +38,6 @@ public class BisqPopupSkin implements Skin<BisqPopup> {
     }
 
     @Override
-    public void dispose() {}
+    public void dispose() {
+    }
 }

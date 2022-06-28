@@ -10,7 +10,7 @@ import lombok.Getter;
  * their action on the JavaFX application thread.
  * <p>
  * Taken from:
- * https://github.com/TomasMikula/ReactFX/blob/537fffdbb2958a77dfbca08b712bb2192862e960/reactfx/src/main/java/org/reactfx/util/FxTimer.java
+ * <a href="https://github.com/TomasMikula/ReactFX/blob/537fffdbb2958a77dfbca08b712bb2192862e960/reactfx/src/main/java/org/reactfx/util/FxTimer.java">...</a>
  */
 public class FxTimer {
     private final Duration actionTime;

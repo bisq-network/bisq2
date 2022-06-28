@@ -31,20 +31,20 @@ public class DateFormatter {
     public static String formatDateTime(Date date) {
         return formatDateTime(date, DateFormat.SHORT, DateFormat.SHORT, true, " ");
     }
-    
+
     public static String formatDateTimeV2(Date date) {
         return formatDateTime(date, DateFormat.MEDIUM, DateFormat.SHORT, true, " at ");
     }
-    
+
     private static String formatDateTime(Date date,
                                          int dateFormat,
                                          int timeFormat,
-                                         boolean useLocalTimezone, 
+                                         boolean useLocalTimezone,
                                          String delimiter) {
         if (date == null) {
             return "";
         }
-        
+
         DateFormat dateFormatter = DateFormat.getDateInstance(dateFormat, LocaleRepository.getDefaultLocale());
         DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, LocaleRepository.getDefaultLocale());
         if (!useLocalTimezone) {

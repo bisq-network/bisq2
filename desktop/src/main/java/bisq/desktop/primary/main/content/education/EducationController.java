@@ -24,10 +24,9 @@ import lombok.Getter;
 public class EducationController implements Controller {
     @Getter
     private final EducationView view;
-    private final EducationModel model;
 
     public EducationController(DefaultApplicationService applicationService) {
-        model = new EducationModel();
+        EducationModel model = new EducationModel();
         view = new EducationView(model, this);
     }
 

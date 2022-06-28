@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Generates a combination of and adverb + adjective + noun + a number from a given hash as input (hash of pubkey).
+ * Generates a combination of and adverb + adjective + noun + a number from a given hash as input (hash of pubKey).
  * Number of combinations: 4833 * 450 * 12591 * 1000 = 27385711200000 (2 ^ 44.6)
  * Algorithm and word lists borrowed from: <a href="https://raw.githubusercontent.com/Reckless-Satoshi/robosats/main/api/nick_generator/">Reckless-Satoshi</a>
  */

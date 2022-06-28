@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @ToString
 @Getter
-public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
@@ -109,6 +109,7 @@ public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
         return false;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {

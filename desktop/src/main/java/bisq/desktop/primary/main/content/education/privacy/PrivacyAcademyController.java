@@ -24,10 +24,9 @@ import lombok.Getter;
 public class PrivacyAcademyController implements Controller {
     @Getter
     private final PrivacyAcademyView view;
-    private final PrivacyAcademyModel model;
 
     public PrivacyAcademyController(DefaultApplicationService applicationService) {
-       model= new PrivacyAcademyModel();
+        PrivacyAcademyModel model = new PrivacyAcademyModel();
         view = new PrivacyAcademyView(model, this);
     }
 

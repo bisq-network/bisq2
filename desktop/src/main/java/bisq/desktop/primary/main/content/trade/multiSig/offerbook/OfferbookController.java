@@ -117,6 +117,7 @@ public class OfferbookController implements Controller {
         updateFilterPredicate();
     }
 
+    @SuppressWarnings("RedundantIfStatement")
     private void updateFilterPredicate() {
         model.filteredItems.setPredicate(item -> {
             if (!model.showAllMarkets.get() && !item.getOffer().getMarket().equals(model.selectedMarket)) {

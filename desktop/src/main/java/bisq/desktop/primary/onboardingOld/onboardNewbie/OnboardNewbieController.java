@@ -45,14 +45,13 @@ public class OnboardNewbieController implements Controller {
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
     private final ChatService chatService;
-    private final TradeChatOfferService tradeChatOfferService;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
     private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        tradeChatOfferService = applicationService.getTradeChatOfferService();
+        TradeChatOfferService tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         model = new OnboardNewbieModel(applicationService.getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
 

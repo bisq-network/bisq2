@@ -23,13 +23,13 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.ClipboardUtil;
-import bisq.settings.DontShowAgainService;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DisplaySettings;
+import bisq.settings.DontShowAgainService;
 import com.google.common.reflect.TypeToken;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
@@ -171,10 +171,10 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     private HPos buttonAlignment = HPos.RIGHT;
 
-    protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> closeHandlerOptional = Optional.empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.empty();
     protected boolean doCloseOnAction = true;
-    protected Optional<Runnable> secondaryActionHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> secondaryActionHandlerOptional = Optional.empty();
     protected boolean doCloseOnSecondaryAction = true;
     protected ChangeListener<Number> positionListener;
 
@@ -188,10 +188,8 @@ public abstract class Overlay<T extends Overlay<T>> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Overlay() {
-        //noinspection UnstableApiUsage
         TypeToken<T> typeToken = new TypeToken<>(getClass()) {
         };
-        //noinspection UnstableApiUsage
         if (!typeToken.isSupertypeOf(getClass())) {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
@@ -985,7 +983,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     // referenced in order from within the message via [1], [2] etc.
     // e.g. [HYPERLINK:https://bisq.wiki]
     private void preProcessMessage(String message) {
-        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)\\]");
+        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
         Matcher matcher = pattern.matcher(message);
         String work = message;
         while (matcher.find()) {  // extract hyperlinks & store in array

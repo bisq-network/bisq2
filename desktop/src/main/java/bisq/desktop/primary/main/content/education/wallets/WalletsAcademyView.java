@@ -42,5 +42,5 @@ public class WalletsAcademyView extends View<VBox, WalletsAcademyModel, WalletsA
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

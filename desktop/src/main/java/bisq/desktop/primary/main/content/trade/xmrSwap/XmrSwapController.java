@@ -22,12 +22,11 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class XmrSwapController implements Controller {
-    private final XmrSwapModel model;
     @Getter
     private final XmrSwapView view;
 
     public XmrSwapController(DefaultApplicationService applicationService) {
-        model = new XmrSwapModel();
+        XmrSwapModel model = new XmrSwapModel();
         view = new XmrSwapView(model, this);
     }
 

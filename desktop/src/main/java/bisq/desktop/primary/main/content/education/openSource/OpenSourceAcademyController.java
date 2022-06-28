@@ -24,10 +24,9 @@ import lombok.Getter;
 public class OpenSourceAcademyController implements Controller {
     @Getter
     private final OpenSourceAcademyView view;
-    private final OpenSourceAcademyModel model;
 
     public OpenSourceAcademyController(DefaultApplicationService applicationService) {
-       model= new OpenSourceAcademyModel();
+        OpenSourceAcademyModel model = new OpenSourceAcademyModel();
         view = new OpenSourceAcademyView(model, this);
     }
 

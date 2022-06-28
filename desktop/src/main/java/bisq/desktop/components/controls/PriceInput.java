@@ -148,7 +148,7 @@ public class PriceInput {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
+        private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
         private final MarketPriceService marketPriceService;
         private Market selectedMarket;
         private boolean hasFocus;

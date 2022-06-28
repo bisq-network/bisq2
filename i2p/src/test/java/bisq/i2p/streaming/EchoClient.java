@@ -20,7 +20,7 @@ public class EchoClient {
 
     public static void main(String[] args) {
         I2PSocketManager manager = I2PSocketManagerFactory.createManager();
-        System.out.println("Please enter a Destination (printed to sysout by EchoServer) :");
+        System.out.println("Please enter a Destination (printed to system out by EchoServer) :");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String destinationString;
         try {
@@ -66,7 +66,7 @@ public class EchoClient {
             // Read from server
             BufferedReader br2 = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            String s = null;
+            String s;
             while ((s = br2.readLine()) != null) {
                 System.out.println("Received from server: " + s);
             }

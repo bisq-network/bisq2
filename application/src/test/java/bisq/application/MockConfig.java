@@ -38,10 +38,11 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * REFERENCES
  * <p>
- * https://github.com/lightbend/config
- * https://www.stubbornjava.com/posts/typesafe-config-features-and-example-usage
- * https://florentfo.rest/2019/01/07/configuring-spark-applications-with-typesafe-config.html
+ * <a href="https://github.com/lightbend/config">...</a>
+ * <a href="https://www.stubbornjava.com/posts/typesafe-config-features-and-example-usage">...</a>
+ * <a href="https://florentfo.rest/2019/01/07/configuring-spark-applications-with-typesafe-config.html">...</a>
  */
+@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class MockConfig {
     public static final String NETWORK_CONFIG_PATH = "bisq.networkConfig";

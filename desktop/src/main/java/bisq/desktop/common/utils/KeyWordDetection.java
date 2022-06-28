@@ -44,7 +44,7 @@ public class KeyWordDetection {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;
-                } else if (word.matches("[0-9]{1,13}(\\.[0-9]*)?")) {
+                } else if (word.matches("\\d{1,13}(\\.\\d*)?")) {
                     spansBuilder.add(Collections.emptyList(), firstIndex - lastKwEnd);
                     spansBuilder.add(Collections.singleton("keyword-customTags"), lastIndex - firstIndex);
                     lastKwEnd = lastIndex;

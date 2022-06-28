@@ -35,7 +35,7 @@ import java.lang.ref.WeakReference;
 /**
  * TextArea does not support of adjustment of height based on the text content.
  * A freelance developer has provided an implementation for that feature based on ideas shared at:
- * https://stackoverflow.com/questions/18588765/how-can-i-make-a-textarea-stretch-to-fill-the-content-expanding-the-parent-in-t/46590540#46590540
+ * <a href="https://stackoverflow.com/questions/18588765/how-can-i-make-a-textarea-stretch-to-fill-the-content-expanding-the-parent-in-t/46590540#46590540">...</a>
  */
 @Slf4j
 public class BisqTextArea extends TextArea {

@@ -57,7 +57,6 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
     private final ChangeListener<Number> currentIndexListener;
     private Subscription topPaneBoxVisibleSubscription;
     private Scene rootScene;
-    private boolean firstOpened;
 
     public CreateOfferView(CreateOfferModel model, CreateOfferController controller) {
         super(new VBox(), model, controller);
@@ -158,7 +157,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         rootScene.setOnKeyReleased(null);
         model.getCurrentIndex().removeListener(currentIndexListener);
         topPaneBoxVisibleSubscription.unsubscribe();
-        firstOpened = false;
+        boolean firstOpened = false;
     }
 
     private Triple<HBox, Button, List<Label>> getTopPane() {

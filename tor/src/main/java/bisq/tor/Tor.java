@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Open TODO:
- * - check https://github.com/ACINQ/Tor_Onion_Proxy_Library
+ * - check <a href="https://github.com/ACINQ/Tor_Onion_Proxy_Library">...</a>
  * - support external running tor instance (external tor mode in netlayer)
  * - test use case with overriding existing torrc files
  * - test bridge and pluggable transports use cases
@@ -222,6 +222,7 @@ public class Tor {
             String asBase26 = new BigInteger(digest).toString(26);
             byte[] hash = asBase26.getBytes();
             // Authentication method ID 2 is User/Password
+            //noinspection Convert2Lambda
             socks5Proxy.setAuthenticationMethod(2,
                     new Authentication() {
                         @Override

@@ -22,12 +22,11 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class EventsController implements Controller {
-    private final EventsModel model;
     @Getter
     private final EventsView view;
 
     public EventsController(DefaultApplicationService applicationService) {
-        model = new EventsModel();
+        EventsModel model = new EventsModel();
         view = new EventsView(model, this);
     }
 

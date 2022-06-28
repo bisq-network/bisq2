@@ -24,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BtcTxValidator {
 
-    private static int PUBLIC_KEY_LENGTH = 33;
-
     public static boolean initialSanityChecks(String txId, String jsonTxt) {
         if (jsonTxt == null || jsonTxt.length() == 0) {
             return false;
@@ -50,6 +48,7 @@ public class BtcTxValidator {
                 JsonObject vin = x.getAsJsonObject();
                 // pubKey in witness or scriptsig (legacy or segwit txs)
                 JsonArray witnesses = vin.getAsJsonArray("witness");
+                int PUBLIC_KEY_LENGTH = 33;
                 if (witnesses != null) {
                     String witnessPubKey = witnesses.get(1).getAsString();
                     if (witnessPubKey.length() >= PUBLIC_KEY_LENGTH * 2) {

@@ -47,14 +47,13 @@ public class AmountControllerOld implements Controller {
     private final BtcFiatAmountGroup btcFiatAmountGroup;
     private final PaymentMethodsSelection paymentMethodsSelection;
     private final ChatService chatService;
-    private final TradeChatOfferService tradeChatOfferService;
 
     private Subscription selectedMarketSubscription, baseSideAmountSubscription;
     private final InvalidationListener paymentMethodsSelectionListener;
     private Subscription termsDisabledSubscription;
 
     public AmountControllerOld(DefaultApplicationService applicationService) {
-        tradeChatOfferService = applicationService.getTradeChatOfferService();
+        TradeChatOfferService tradeChatOfferService = applicationService.getTradeChatOfferService();
         chatService = applicationService.getChatService();
         model = new AmountModelOld(applicationService.getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
 
@@ -145,7 +144,7 @@ public class AmountControllerOld implements Controller {
     }
 
     public void onBack() {
-       // Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
+        // Navigation.navigateTo(NavigationTarget.ONBOARDING_MARKET);
     }
 
     void onSkip() {

@@ -36,14 +36,13 @@ public class MainController extends NavigationController {
     private final MainModel model = new MainModel();
     @Getter
     private final MainView view;
-    private final SettingsService settingsService;
     private final DefaultApplicationService applicationService;
     private final LeftNavController leftNavController;
 
     public MainController(DefaultApplicationService applicationService) {
         super(NavigationTarget.MAIN);
 
-        settingsService = applicationService.getSettingsService();
+        SettingsService settingsService = applicationService.getSettingsService();
         this.applicationService = applicationService;
 
         leftNavController = new LeftNavController(applicationService);
@@ -63,6 +62,7 @@ public class MainController extends NavigationController {
     public void onDeactivate() {
     }
 
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {

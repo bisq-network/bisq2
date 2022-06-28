@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
-public class SettingsStore implements PersistableStore<SettingsStore> {
+public final class SettingsStore implements PersistableStore<SettingsStore> {
     private final Cookie cookie;
     private DisplaySettings displaySettings = new DisplaySettings();
     private final Map<String, Boolean> dontShowAgainMap = new HashMap<>();

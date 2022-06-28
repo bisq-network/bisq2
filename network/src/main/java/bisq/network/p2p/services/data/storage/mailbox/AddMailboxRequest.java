@@ -36,7 +36,7 @@ import java.util.Optional;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public class AddMailboxRequest implements MailboxRequest, AddDataRequest {
+public final class AddMailboxRequest implements MailboxRequest, AddDataRequest {
 
     public static AddMailboxRequest from(MailboxData mailboxData,
                                          KeyPair senderKeyPair,

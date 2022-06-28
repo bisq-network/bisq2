@@ -26,15 +26,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GenerateNewProfileStep2Controller implements Controller {
-    private final GenerateNewProfileStep2Model model;
     @Getter
     private final GenerateNewProfileStep2View view;
-    private final ChatUserService chatUserService;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getChatUserService();
+        ChatUserService chatUserService = applicationService.getChatUserService();
 
-        model = new GenerateNewProfileStep2Model();
+        GenerateNewProfileStep2Model model = new GenerateNewProfileStep2Model();
         view = new GenerateNewProfileStep2View(model, this);
     }
 

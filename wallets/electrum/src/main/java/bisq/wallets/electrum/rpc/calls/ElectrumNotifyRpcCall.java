@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 public class ElectrumNotifyRpcCall extends DaemonRpcCall<ElectrumNotifyRpcCall.Request, String> {
-   
+
     @Getter
     @ToString
     @EqualsAndHashCode

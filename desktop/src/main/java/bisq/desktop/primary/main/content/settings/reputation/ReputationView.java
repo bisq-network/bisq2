@@ -58,7 +58,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(30));
         vBox.setAlignment(Pos.TOP_LEFT);
-        
+
         VBox.setMargin(vBox, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(vBox);
     }

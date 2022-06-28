@@ -36,6 +36,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
     BANK,
     OTHER;
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<FiatSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
         switch (protocolType) {
             case BTC_XMR_SWAP:
@@ -57,6 +58,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
         }
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<TradeCurrency> getTradeCurrencies(FiatSettlementMethod settlement) {
         switch (settlement) {
             case SEPA:
@@ -87,6 +89,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
     }
 
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<Country> getCountries(FiatSettlementMethod settlement) {
         switch (settlement) {
             case SEPA:

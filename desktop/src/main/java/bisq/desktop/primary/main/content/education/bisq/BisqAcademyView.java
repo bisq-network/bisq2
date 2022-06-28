@@ -28,10 +28,10 @@ public class BisqAcademyView extends View<VBox, BisqAcademyModel, BisqAcademyCon
 
     public BisqAcademyView(BisqAcademyModel model, BisqAcademyController controller) {
         super(new VBox(), model, controller);
-        
+
         Text headlineLabel = new Text(Res.get("academy.bisq"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        
+
         root.getChildren().add(headlineLabel);
     }
 
@@ -42,5 +42,5 @@ public class BisqAcademyView extends View<VBox, BisqAcademyModel, BisqAcademyCon
     @Override
     protected void onViewDetached() {
 
-    }    
+    }
 }

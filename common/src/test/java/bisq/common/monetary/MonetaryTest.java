@@ -41,20 +41,14 @@ public class MonetaryTest {
 
         FiatCurrencyRepository.initialize(Locale.US);
         assertEquals(1234567800, Fiat.parse("123456.78 USD").getValue());
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            assertEquals(1234567800, Fiat.parse("123456.78USD").getValue());
-        });
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            assertEquals(1234567800, Fiat.parse("123456.78 XYZ").getValue());
-        });
+        Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Fiat.parse("123456.78USD").getValue()));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Fiat.parse("123456.78 XYZ").getValue()));
 
         assertEquals(12345678, Coin.parse("0.12345678 BTC").getValue());
-        // We do not check the crypto-currency code as we do not want to be constrained
+        // We do not check the cryptocurrency code as we do not want to be constrained
         assertEquals(12345678, Coin.parse("0.12345678 UNDEFINED").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678 XMR").getValue());
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            assertEquals(1234567800, Coin.parse("123456.78 USD").getValue());
-        });
+        Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Coin.parse("123456.78 USD").getValue()));
     }
 
     @Test

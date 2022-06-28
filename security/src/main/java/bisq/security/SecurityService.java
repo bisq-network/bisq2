@@ -34,7 +34,7 @@ public class SecurityService {
 
     public SecurityService(PersistenceService persistenceService) {
         keyPairService = new KeyPairService(persistenceService);
-       proofOfWorkService = new EquihashProofOfWorkService(persistenceService);
+        proofOfWorkService = new EquihashProofOfWorkService(persistenceService);
     }
 
     public CompletableFuture<Boolean> initialize() {

@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public class Contract implements Proto {
+public final class Contract implements Proto {
     private final NetworkId takerNetworkId;
     private final SwapProtocolType protocolType;
     private final Offer offer;

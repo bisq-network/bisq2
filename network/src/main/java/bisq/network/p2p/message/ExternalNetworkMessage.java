@@ -21,7 +21,7 @@ import com.google.protobuf.Any;
 
 // Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
 // We wrap them into an Any binary blob.
-public class ExternalNetworkMessage {
+public final class ExternalNetworkMessage {
     private final NetworkMessage networkMessage;
 
     public ExternalNetworkMessage(NetworkMessage networkMessage) {

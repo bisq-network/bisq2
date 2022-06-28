@@ -48,7 +48,7 @@ public class OverlayWindow extends Pane {
     private final static double TOP_MARGIN = 57;
 
     private final Region content;
-    private Optional<Runnable> closeHandler = java.util.Optional.empty();
+    private final Optional<Runnable> closeHandler;
     private final Parent ownerRoot;
     private final Window rootWindow;
     private final Scene scene;

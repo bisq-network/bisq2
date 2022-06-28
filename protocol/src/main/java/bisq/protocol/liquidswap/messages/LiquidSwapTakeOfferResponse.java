@@ -22,11 +22,9 @@ import bisq.network.protobuf.NetworkMessage;
 import bisq.protocol.messages.ProtocolMessage;
 
 public class LiquidSwapTakeOfferResponse extends ProtocolMessage {
-    private final Contract contract;
 
     public LiquidSwapTakeOfferResponse(Contract contract) {
         super(contract.getOffer().getId());
-        this.contract = contract;
     }
 
     @Override

@@ -50,7 +50,7 @@ public class RestApiApplication extends ResourceConfig {
         httpServer.stop(2);
     }
 
-    public static void startServer( RestApiApplication restApiApplication) throws Exception {
+    public static void startServer(RestApiApplication restApiApplication) throws Exception {
         // 'config' acts as application in jax-rs
         ResourceConfig app = restApiApplication
                 .register(CustomExceptionMapper.class)

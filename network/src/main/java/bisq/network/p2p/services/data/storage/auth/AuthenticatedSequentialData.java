@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public class AuthenticatedSequentialData implements Proto {
+public final class AuthenticatedSequentialData implements Proto {
     public static AuthenticatedSequentialData from(AuthenticatedSequentialData data, int sequenceNumber) {
         return new AuthenticatedSequentialData(data.getAuthenticatedData(),
                 sequenceNumber,
@@ -39,10 +39,10 @@ public class AuthenticatedSequentialData implements Proto {
                 data.getCreated());
     }
 
-    protected final AuthenticatedData authenticatedData;
-    protected final int sequenceNumber;
-    protected final long created;
-    protected final byte[] pubKeyHash;
+    private final AuthenticatedData authenticatedData;
+    private final int sequenceNumber;
+    private final long created;
+    private final byte[] pubKeyHash;
 
     public AuthenticatedSequentialData(AuthenticatedData authenticatedData,
                                        int sequenceNumber,

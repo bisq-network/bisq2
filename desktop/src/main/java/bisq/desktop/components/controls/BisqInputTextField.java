@@ -29,9 +29,7 @@ public class BisqInputTextField extends TextField {
     public BisqInputTextField() {
         super();
 
-        textProperty().addListener((o, oldValue, newValue) -> {
-            refreshValidation();
-        });
+        textProperty().addListener((o, oldValue, newValue) -> refreshValidation());
 
         focusedProperty().addListener((o, oldValue, newValue) -> {
             if (validator != null) {

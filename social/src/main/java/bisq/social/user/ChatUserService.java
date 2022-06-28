@@ -66,7 +66,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ChatUserService implements PersistenceClient<ChatUserStore> {
-    // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
+    // For dev testing we use hard coded txId and a pubKeyHash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
     @Getter
@@ -92,7 +92,6 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     private final ChatUserStore persistableStore = new ChatUserStore();
     @Getter
     private final Persistence<ChatUserStore> persistence;
-    private final KeyPairService keyPairService;
     private final IdentityService identityService;
     private final NetworkService networkService;
     private final Object lock = new Object();
@@ -109,7 +108,6 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
         this.openTimestampService = openTimestampService;
-        this.keyPairService = keyPairService;
         this.identityService = identityService;
         this.networkService = networkService;
     }
@@ -333,9 +331,9 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     }
 
     public CompletableFuture<Optional<Proof>> verifyBondedRole(String txId, String signature, String pubKeyHash) {
-        // inputs: txid, signature from Bisq1
-        // process: get txinfo, grab pubkey from 1st output
-        // verify provided signature matches with pubkey from 1st output and hash of provided identity pubkey
+        // inputs: txId, signature from Bisq1
+        // process: get txInfo, grab pubKey from 1st output
+        // verify provided signature matches with pubKey from 1st output and hash of provided identity pubKey
         return supplyAsync(() -> {
             try {
                 BaseHttpClient httpClientBsq = getApiHttpClient(config.getBsqMemPoolProviders());

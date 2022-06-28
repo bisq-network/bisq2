@@ -41,8 +41,6 @@ public abstract class Executable<T extends ServiceProvider> {
     }
 
     protected void setDefaultUncaughtExceptionHandler() {
-        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            log.error("Uncaught exception", throwable);
-        });
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> log.error("Uncaught exception", throwable));
     }
 }
