@@ -23,7 +23,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
-import bisq.desktop.primary.main.content.settings.userProfile.create.GenerateNewProfileController;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step1.GenerateNewProfileStep1Controller;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import javafx.application.Platform;
@@ -96,8 +97,11 @@ public class OverlayController extends NavigationController {
             case CREATE_OFFER: {
                 return Optional.of(new CreateOfferController(applicationService));
             }
-            case CREATE_PROFILE: {
-                return Optional.of(new GenerateNewProfileController(applicationService));
+            case CREATE_PROFILE_STEP1: {
+                return Optional.of(new GenerateNewProfileStep1Controller(applicationService));
+            }
+            case CREATE_PROFILE_STEP2: {
+                return Optional.of(new GenerateNewProfileStep2Controller(applicationService));
             }
             case BURN_BSQ: {
                 return Optional.of(new BurnBsqController(applicationService));

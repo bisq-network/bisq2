@@ -15,11 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.create;
+package bisq.desktop.primary.main.content.settings.userProfile.create.step1;
 
-import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileModel;
-import lombok.Getter;
+import bisq.desktop.primary.overlay.OverlayModel;
+import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
+import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-@Getter
-public class GenerateNewProfileModel extends GenerateProfileModel {
+@Slf4j
+public class GenerateNewProfileStep1View extends GenerateProfileView {
+
+    public GenerateNewProfileStep1View(GenerateNewProfileStep1Model model, GenerateNewProfileStep1Controller controller) {
+        super(model, controller);
+
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
+
+        createProfileButton.setText(Res.get("next"));
+    }
 }

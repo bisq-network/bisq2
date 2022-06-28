@@ -150,7 +150,6 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
         createProfileButton.setOnAction(e -> controller.onCreateUserProfile());
 
-
         nicknameTextInputBox.requestFocus();
     }
 

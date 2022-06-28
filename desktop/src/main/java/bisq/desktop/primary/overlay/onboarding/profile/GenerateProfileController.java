@@ -107,14 +107,14 @@ public class GenerateProfileController implements Controller {
                         "")
                 .thenCompose(chatUserService::publishNewChatUser)
                 .thenAccept(chatUserIdentity -> UIThread.run(() -> {
-                    OverlayController.hide();
                     Navigation.navigateTo(NavigationTarget.MAIN);
-                    UIThread.runOnNextRenderFrame(() -> navigateNext());
+                    UIThread.runOnNextRenderFrame(this::navigateNext);
                     model.getCreateProfileProgress().set(0);
                 }));
     }
 
     protected void navigateNext() {
+        OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }
 

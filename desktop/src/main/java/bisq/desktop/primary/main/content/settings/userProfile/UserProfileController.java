@@ -28,7 +28,7 @@ import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE;
+import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE_STEP1;
 
 @Slf4j
 public class UserProfileController implements Controller {
@@ -63,6 +63,6 @@ public class UserProfileController implements Controller {
     }
 
     public void onAddNewChatUser() {
-        Navigation.navigateTo(CREATE_PROFILE);
+        Navigation.navigateTo(CREATE_PROFILE_STEP1);
     }
 }
