@@ -68,7 +68,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  * Creates domain instance with options and optional dependency to other domain objects.
  * Initializes the domain instances according to the requirements of their dependencies either in sequence
  * or in parallel.
- * Provides the completely setup instances to other clients (Api)
  */
 @Getter
 @Slf4j
@@ -214,7 +213,7 @@ public class DefaultApplicationService extends ServiceProvider {
                         tradeChatOfferService.initialize(),
                         bitcoinWalletService.initialize(),
                         lBtcWalletService.initialize()))
-                // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 mins)
+                // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 min)
                 .orTimeout(5, TimeUnit.MINUTES)
                 .thenApply(list -> list.stream().allMatch(e -> e))
                 .whenComplete((list, throwable) -> {
