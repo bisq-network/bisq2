@@ -34,7 +34,7 @@ import java.net.Socket;
 // This class routes connections over Socks, and avoids resolving hostnames locally.
 class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
-        // Only allow connection's to site's with valid certs.
+        // Only allow connections to sites with valid certs.
         super(sslContext, new DefaultHostnameVerifier());
         // Or to allow "insecure" (eg self-signed certs)
         // super(sslContext, ALLOW_ALL_HOSTNAME_VERIFIER);

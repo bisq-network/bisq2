@@ -20,11 +20,9 @@ package bisq.network.p2p;
 
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.NodesById;
 import bisq.network.p2p.node.transport.Transport;
@@ -35,7 +33,6 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.monitor.MonitorService;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
-import bisq.network.p2p.services.relay.RelayService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
@@ -88,7 +85,6 @@ public class ServiceNode {
         PEER_GROUP,
         DATA,
         CONFIDENTIAL,
-        RELAY,
         MONITOR
     }
 
@@ -103,7 +99,6 @@ public class ServiceNode {
     @Getter
     private Optional<DataNetworkService> dataServicePerTransport;
 
-    private Optional<RelayService> relayService;
     @Getter
     private Optional<MonitorService> monitorService;
     @Getter
@@ -138,10 +133,6 @@ public class ServiceNode {
                         peerGroupService));
             }
 
-            if (services.contains(Service.RELAY)) {
-                relayService = Optional.of(new RelayService(defaultNode));
-            }
-
             if (services.contains(Service.MONITOR)) {
                 monitorService = Optional.of(new MonitorService(defaultNode,
                         peerGroupService.getPeerGroup(),
@@ -160,7 +151,6 @@ public class ServiceNode {
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        relayService.map(RelayService::shutdown).orElse(CompletableFuture.completedFuture(null)),
                         monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
                 .orTimeout(4, TimeUnit.SECONDS)
                 .whenComplete((list, throwable) -> {
@@ -216,11 +206,6 @@ public class ServiceNode {
                                                               String senderNodeId) {
         return confidentialMessageService.map(service -> service.send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
-    }
-
-    public CompletableFuture<Connection> relay(NetworkMessage networkMessage, NetworkId networkId, KeyPair myKeyPair) {
-        return relayService.map(service -> service.relay(networkMessage, networkId, myKeyPair))
-                .orElseThrow(() -> new RuntimeException("RelayService not present at relay"));
     }
 
     public void addMessageListener(MessageListener messageListener) {
