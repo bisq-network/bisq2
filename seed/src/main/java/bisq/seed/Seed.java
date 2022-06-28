@@ -22,10 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Seed {
-    private NetworkApplicationService applicationService;
 
     public Seed(String[] args) {
-        applicationService = new NetworkApplicationService(args);
+        NetworkApplicationService applicationService = new NetworkApplicationService(args);
         applicationService.readAllPersisted().join();
         applicationService.initialize()
                 .whenComplete((success, throwable) -> {

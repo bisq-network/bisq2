@@ -63,7 +63,7 @@ import static java.math.BigInteger.ONE;
  * bits each and <i>n</i> bits in total. This allows working with 32-bit integers
  * throughout, for efficiency.
  *
- * @author: https://github.com/stejbac
+ * Author: <a href="https://github.com/stejbac">stejbac</a>
  */
 // Borrowed from: https://github.com/bisq-network/bisq
 @SuppressWarnings("UnstableApiUsage")

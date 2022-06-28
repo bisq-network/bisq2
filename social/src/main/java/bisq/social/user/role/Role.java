@@ -28,13 +28,14 @@ import lombok.ToString;
 
 import java.util.List;
 
-@Getter
-@ToString
-@EqualsAndHashCode
+
 /**
  * Role of a user profile. Requires some proof for verifying that the associated Role to a user profile
  * is valid.
  */
+@Getter
+@ToString
+@EqualsAndHashCode
 public final class Role implements Proto, Comparable<Role> {
     public enum Type implements ProtoEnum {
         LIQUIDITY_PROVIDER(Proof.Type.PROOF_OF_BURN),

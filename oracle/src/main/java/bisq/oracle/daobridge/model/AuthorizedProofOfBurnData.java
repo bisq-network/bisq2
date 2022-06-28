@@ -109,6 +109,7 @@ public class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
         return false;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {

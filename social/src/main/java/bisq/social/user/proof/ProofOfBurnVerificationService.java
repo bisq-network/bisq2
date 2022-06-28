@@ -47,7 +47,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ProofOfBurnVerificationService implements PersistenceClient<ProofOfBurnVerificationStore> {
-    // For dev testing we use hard coded txId and a pubkeyhash to get real data from Bisq explorer
+    // For dev testing we use hard coded txId and a pubKeyHash to get real data from Bisq explorer
     private static final boolean USE_DEV_TEST_POB_VALUES = true;
 
     @Getter
@@ -73,8 +73,6 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
     private final ProofOfBurnVerificationStore persistableStore = new ProofOfBurnVerificationStore();
     @Getter
     private final Persistence<ProofOfBurnVerificationStore> persistence;
-    private final KeyPairService keyPairService;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
@@ -87,8 +85,6 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
                                           NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
-        this.keyPairService = keyPairService;
-        this.identityService = identityService;
         this.networkService = networkService;
     }
 

@@ -40,5 +40,5 @@ public enum TxOutputType {
     LOCKUP_OUTPUT,
     LOCKUP_OP_RETURN_OUTPUT,
     UNLOCK_OUTPUT,
-    INVALID_OUTPUT;
+    INVALID_OUTPUT
 }

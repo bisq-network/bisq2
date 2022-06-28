@@ -55,7 +55,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     @Getter
     private final Persistence<OpenTimestampStore> persistence;
 
-    private IdentityService identityService;
+    private final IdentityService identityService;
     @Getter
     private final List<String> calendars;
 

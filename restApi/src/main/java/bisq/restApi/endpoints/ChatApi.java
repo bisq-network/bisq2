@@ -1,12 +1,10 @@
 package bisq.restApi.endpoints;
 
 import bisq.application.DefaultApplicationService;
-import bisq.identity.IdentityService;
 import bisq.restApi.RestApiApplication;
 import bisq.restApi.dto.PublicDiscussionChannelDto;
 import bisq.restApi.dto.PublicTradeChannelDto;
 import bisq.social.chat.ChatService;
-import bisq.social.user.ChatUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,14 +28,10 @@ import java.util.stream.Collectors;
 public class ChatApi {
 
     private final ChatService chatService;
-    private final ChatUserService chatUserService;
-    private final IdentityService identityService;
 
     public ChatApi(@Context Application application) {
         DefaultApplicationService appService = ((RestApiApplication) application).getApplicationService();
         chatService = appService.getChatService();
-        chatUserService = appService.getChatUserService();
-        identityService = appService.getIdentityService();
     }
 
     @GET

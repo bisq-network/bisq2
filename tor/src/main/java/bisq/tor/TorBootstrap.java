@@ -165,9 +165,7 @@ class TorBootstrap {
                 printWriter.println("");
                 printWriter.println("UseBridges 1");
             }
-            bridgeConfig.forEach(entry -> {
-                printWriter.println("Bridge " + entry);
-            });
+            bridgeConfig.forEach(entry -> printWriter.println("Bridge " + entry));
         }
         log.info("Added bridges to torrc");
     }

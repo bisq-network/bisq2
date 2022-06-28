@@ -60,10 +60,8 @@ public class ReputationService implements DataService.Listener {
                         .forEach(this::onAuthenticatedDataAdded));
         isBatchProcessing = false;
         if (!authorizedProofOfBurnDataSetByHash.isEmpty()) {
-            authorizedProofOfBurnDataSetByHash.keySet().forEach(pubKeyHash -> {
-                findAuthorizedProofOfBurnDataSet(pubKeyHash)
-                        .ifPresent(set -> ReputationScoreCalculation.addTotalScore(pubKeyHash, set));
-            });
+            authorizedProofOfBurnDataSetByHash.keySet().forEach(pubKeyHash -> findAuthorizedProofOfBurnDataSet(pubKeyHash)
+                    .ifPresent(set -> ReputationScoreCalculation.addTotalScore(pubKeyHash, set)));
             reputationChanged.set(reputationChanged.get() + 1);
         }
         return CompletableFuture.completedFuture(true);

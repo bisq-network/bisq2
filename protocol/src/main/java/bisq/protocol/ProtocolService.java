@@ -53,7 +53,6 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private final Persistence<ProtocolStore> persistence;
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final PersistenceService persistenceService;
     private final OpenOfferService openOfferService;
     @Getter
     private final ObservableSet<Protocol<? extends ProtocolModel>> protocols = new ObservableSet<>();
@@ -64,7 +63,6 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                            OpenOfferService openOfferService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.persistenceService = persistenceService;
         this.openOfferService = openOfferService;
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -149,6 +147,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                 });
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel,
                                                                NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
@@ -170,6 +169,7 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         return null;
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel,
                                                                                            NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
