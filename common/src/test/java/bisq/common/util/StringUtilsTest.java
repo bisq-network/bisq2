@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
 
+@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class StringUtilsTest {
 

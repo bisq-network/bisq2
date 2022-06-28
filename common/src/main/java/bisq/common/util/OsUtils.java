@@ -152,6 +152,6 @@ public class OsUtils {
                 parts.add(s.trim());
             }
         }
-        return parts.toArray(new String[parts.size()]);
+        return parts.toArray(new String[0]);
     }
 }

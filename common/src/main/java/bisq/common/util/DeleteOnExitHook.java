@@ -55,11 +55,10 @@ import java.util.List;
 
 /**
  * Based on package private java.io.DeleteOnExitHook. Adds a remove method to avoid
- * memory leak (https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633).
+ * memory leak (<a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633">...</a>).
  * <p>
  * This class holds a set of filenames to be deleted on VM exit through a shutdown hook.
- * A set is used both to prevent double-insertion of the same file as well as offer
- * quick removal.
+ * A set is used both to prevent double-insertion of the same file and offer quick removal.
  */
 @Slf4j
 class DeleteOnExitHook {

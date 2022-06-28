@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class RegionRepository {
     @Getter
     private static Region defaultRegion;

@@ -41,7 +41,7 @@ public abstract class TradeCurrency implements Comparable<TradeCurrency>, Proto 
 
     /**
      * We only can check if the currency is not fiat and if the code matches the format, but we do not maintain a list
-     * of crypto-currencies to be flexible with any newly added one.
+     * of cryptocurrencies to be flexible with any newly added one.
      */
     public static boolean isMaybeCrypto(String code) {
         return !isFiat(code) && code.length() >= 3;

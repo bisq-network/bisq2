@@ -24,17 +24,17 @@ import java.util.stream.Collectors;
 
 public class CryptoCurrencyRepository {
     @Getter
-    private static Map<String, String> nameByCode = new HashMap<>();
+    private static final Map<String, String> nameByCode = new HashMap<>();
     @Getter
-    private static Map<String, CryptoCurrency> currencyByCode = new HashMap<>();
+    private static final Map<String, CryptoCurrency> currencyByCode = new HashMap<>();
     @Getter
-    private static List<CryptoCurrency> majorCurrencies;
+    private static final List<CryptoCurrency> majorCurrencies;
     @Getter
-    private static List<CryptoCurrency> minorCurrencies;
+    private static final List<CryptoCurrency> minorCurrencies;
     @Getter
-    private static List<CryptoCurrency> allCurrencies;
+    private static final List<CryptoCurrency> allCurrencies;
     @Getter
-    private static CryptoCurrency defaultCurrency;
+    private static final CryptoCurrency defaultCurrency;
 
     static {
         CryptoCurrency btc = new CryptoCurrency("BTC", "Bitcoin");
@@ -77,7 +77,7 @@ public class CryptoCurrencyRepository {
     private static List<CryptoCurrency> initMajorCurrencies() {
         List<String> mainCodes = new ArrayList<>(List.of("BTC", "XMR", "L-BTC", "USDT", "GRIN", "ZEC", "ETH"));
         return mainCodes.stream()
-                .map(code -> currencyByCode.get(code))
+                .map(currencyByCode::get)
                 .distinct()
                 .collect(Collectors.toList());
     }

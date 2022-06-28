@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Locale;
 import java.util.Set;
 
+@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class LocaleRepository {
     @Getter

@@ -99,7 +99,7 @@ public class Equihash {
 
     @VisibleForTesting
     static int[] hashUpperBound(double difficulty) {
-        return ByteArrayUtils.bytesToIntsBE(ByteArrayUtils.copyRightAligned(
+        return ByteArrayUtils.bytesToIntegersBE(ByteArrayUtils.copyRightAligned(
                 inverseDifficultyMinusOne(difficulty).toByteArray(), HASH_BIT_LENGTH / 8
         ));
     }
@@ -231,11 +231,11 @@ public class Equihash {
         private int[] hashInputs(int... inputs) {
             var digest = new Blake2bDigest(HASH_BIT_LENGTH);
             digest.update(prefixBytes, 0, prefixBytes.length);
-            byte[] inputBytes = ByteArrayUtils.intsToBytesBE(inputs);
+            byte[] inputBytes = ByteArrayUtils.integersToBytesBE(inputs);
             digest.update(inputBytes, 0, inputBytes.length);
             byte[] outputBytes = new byte[HASH_BIT_LENGTH / 8];
             digest.doFinal(outputBytes, 0);
-            return ByteArrayUtils.bytesToIntsBE(outputBytes);
+            return ByteArrayUtils.bytesToIntegersBE(outputBytes);
         }
 
         Stream<int[]> streamInputsHits() {
