@@ -84,9 +84,6 @@ public class CompletableFutureUtils {
      * <br/>
      * "complete when any boolean future in the list completes with true, else complete when all complete with false"
      *
-     * @param filter
-     * @param list
-     * @return
      * @see "https://stackoverflow.com/a/58999999"
      */
     @SafeVarargs
