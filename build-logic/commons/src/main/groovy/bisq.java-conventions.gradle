@@ -9,8 +9,13 @@ repositories {
 
 java {
     toolchain {
+        // We use the Java 17 toolchain to use jpackage to create the binaries.
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+compileJava {
+    options.release = 11
 }
 
 dependencies {
