@@ -84,28 +84,21 @@ public class CompletableFutureUtils {
      * <br/>
      * "complete when any boolean future in the list completes with true, else complete when all complete with false"
      *
-     * @param filter
-     * @param list
-     * @return
      * @see "https://stackoverflow.com/a/58999999"
      */
     @SafeVarargs
-    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(
-            boolean filter, CompletableFuture<Boolean>... list) {
-        CompletableFuture<Boolean> allWithFailFast = CompletableFuture
-                .allOf(list)
+    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(boolean filter, CompletableFuture<Boolean>... list) {
+        CompletableFuture<Boolean> allWithFailFast = CompletableFuture.allOf(list)
                 .thenApply(__ -> {
-                            Stream.of(list)
-                                    .map(CompletableFuture::join);
+                            Stream.of(list).forEach(CompletableFuture::join);
                             return filter;
                         }
                 );
-        Stream.of(list)
-                .forEach(f -> f.thenAccept(result -> {
-                    if (result == filter) {
-                        allWithFailFast.complete(result);
-                    }
-                }));
+        Stream.of(list).forEach(f -> f.thenAccept(result -> {
+            if (result == filter) {
+                allWithFailFast.complete(result);
+            }
+        }));
         return allWithFailFast;
     }
 

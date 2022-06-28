@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -529,9 +530,12 @@ public class Node implements Connection.Handler {
             return;
         }
         if (exception instanceof EOFException) {
-            //log.debug(exception.toString(), exception);
+            log.debug(exception.toString(), exception);
         } else if (exception instanceof SocketException) {
-            //log.debug(exception.toString(), exception);
+            log.debug(exception.toString(), exception);
+        } else if (exception instanceof UnknownHostException) {
+            log.warn("UnknownHostException. Might happen if we try to connect to wrong network type");
+            log.warn(exception.toString(), exception);
         } else if (exception instanceof SocketTimeoutException) {
             log.warn(exception.toString(), exception);
         } else {

@@ -183,7 +183,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
     // Clear selection and query when ComboBox gets new focus. This is usually what user
     // wants - to have a blank slate for a new search. The primary motivation though
-    // was to work around UX glitches related to (starting) editing text when combobox
+    // was to work around UX glitches related to (starting) editing text when comboBox
     // had specific item selected.
     protected void clearOnFocus() {
         editor.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
@@ -321,7 +321,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             getChildren().setAll(buttonPane);
             buttonPane.autosize();
 
-            // The list pane has a 5x left and right padding. To not exceed clipping area we use dropshadow
+            // The list pane has a 5x left and right padding. To not exceed clipping area we use dropShadow
             // of 5 as well. Design had 25 but that would complicate layouts where comboBoxes would require 
             // larger paddings in containers or some adoptions to clipping areas...
 
