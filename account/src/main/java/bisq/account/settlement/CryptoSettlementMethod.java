@@ -32,6 +32,7 @@ public enum CryptoSettlementMethod implements SettlementMethod {
         return Res.get(name(), code);
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<CryptoSettlementMethod> getSettlementMethods(SwapProtocolType protocolType, String code) {
         switch (protocolType) {
             case BTC_XMR_SWAP:

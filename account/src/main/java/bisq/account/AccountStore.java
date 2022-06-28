@@ -47,7 +47,7 @@ public class AccountStore implements PersistableStore<AccountStore> {
     @Override
     public bisq.account.protobuf.AccountStore toProto() {
         return bisq.account.protobuf.AccountStore.newBuilder()
-                .addAllAccounts(accounts.stream().map(e -> e.toProto()).collect(Collectors.toSet()))
+                .addAllAccounts(accounts.stream().map(Account::toProto).collect(Collectors.toSet()))
                 .build();
     }
 

@@ -31,6 +31,7 @@ public enum BitcoinSettlementMethod implements SettlementMethod {
     OTHER;
 
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<BitcoinSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
         switch (protocolType) {
             case BTC_XMR_SWAP:
