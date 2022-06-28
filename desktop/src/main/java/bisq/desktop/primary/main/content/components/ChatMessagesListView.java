@@ -434,7 +434,7 @@ public class ChatMessagesListView {
                 messagesListView.getStyleClass().add("chat-messages-list-view");
             }
 
-            Label placeholder = new Label(Res.get("table.placeholder.noData"));
+            Label placeholder = new Label(Res.get("noData"));
             messagesListView.setPlaceholder(placeholder);
             messagesListView.setCellFactory(getCellFactory());
 
@@ -519,9 +519,9 @@ public class ChatMessagesListView {
                             editInputField.setManaged(false);
 
                             // edit buttons
-                            saveEditButton = new Button(Res.get("shared.save"));
+                            saveEditButton = new Button(Res.get("save"));
                             saveEditButton.setDefaultButton(true);
-                            cancelEditButton = new Button(Res.get("shared.cancel"));
+                            cancelEditButton = new Button(Res.get("cancel"));
 
                             editButtonsHBox = Layout.hBoxWith(Spacer.fillHBox(), cancelEditButton, saveEditButton);
                             editButtonsHBox.setVisible(false);

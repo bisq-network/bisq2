@@ -26,13 +26,12 @@ import java.util.ResourceBundle;
 
 @Slf4j
 public class Res {
-    private static ResourceBundle bisq1ResourceBundle, defaultBundle;
+    private static ResourceBundle defaultBundle;
 
     public static void initialize(Locale locale) {
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }
-        bisq1ResourceBundle = ResourceBundle.getBundle("displayStrings", locale, new UTF8Control());
         defaultBundle = ResourceBundle.getBundle("default", locale, new UTF8Control());
     }
 
@@ -45,8 +44,6 @@ public class Res {
         try {
             if (defaultBundle.containsKey(key)) {
                 return defaultBundle.getString(key);
-            } else if (bisq1ResourceBundle.containsKey(key)) {
-                return bisq1ResourceBundle.getString(key);
             } else {
                 return "MISSING: " + key;
             }
@@ -57,7 +54,7 @@ public class Res {
     }
 
     public static boolean has(String key) {
-        return defaultBundle.containsKey(key) || bisq1ResourceBundle.containsKey(key);
+        return defaultBundle.containsKey(key);
     }
 }
 

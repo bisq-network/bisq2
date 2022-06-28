@@ -68,7 +68,7 @@ public abstract class ChatMessage {
     }
 
     public String getText() {
-        return optionalText.orElse(Res.get("shared.na"));
+        return optionalText.orElse(Res.get("na"));
     }
 
     public bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {

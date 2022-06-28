@@ -121,7 +121,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
         tableView.getColumns().add(new BisqTableColumn.Builder<ProtocolListItem>()
                 .title(Res.get("trade.protocols.table.header.access"))
                 .fixWidth(150)
-                .value(Res.get("shared.select"))
+                .value(Res.get("select"))
                 .defaultCellFactory(BisqTableColumn.DefaultCellFactory.BUTTON)
                 .actionHandler(controller::onSelect)
                 .build());
