@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ChatMentionPopupMenu<T> extends BisqPopup {
     @Setter
@@ -62,7 +63,7 @@ public class ChatMentionPopupMenu<T> extends BisqPopup {
                     });
                     return button;
                 })
-                .toList();
+                .collect(Collectors.toList());
 
         ((VBox) contentNode).getChildren().setAll(buttons);
     }

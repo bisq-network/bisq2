@@ -41,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -223,11 +224,11 @@ public class MarketPriceService {
             candidates.addAll(providers.stream()
                     .filter(provider -> networkService.getSupportedTransportTypes().contains(Transport.Type.CLEAR))
                     .filter(provider -> Transport.Type.CLEAR == provider.transportType)
-                    .toList());
+                    .collect(Collectors.toList()));
             if (candidates.isEmpty()) {
                 candidates.addAll(providers.stream()
                         .filter(provider -> networkService.getSupportedTransportTypes().contains(provider.transportType))
-                        .toList());
+                        .collect(Collectors.toList()));
             }
         }
         if (candidates.isEmpty()) {
