@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -56,8 +57,6 @@ public class I2pClient {
 
     private Router router;
 
-    private final String host;
-    private final int port;
     private final long socketTimeout;
     private final String dirPath;
     // key = sessionId (relevant in the Bisq domain), value = socket manager at I2P level
@@ -83,8 +82,6 @@ public class I2pClient {
     }
 
     private I2pClient(String dirPath, String host, int port, long socketTimeout) {
-        this.host = host;
-        this.port = port;
         this.socketTimeout = socketTimeout;
         this.dirPath = dirPath;
         log.info("I2P client created with dirPath={}; host={}; port={}; socketTimeout={}",
@@ -124,7 +121,6 @@ public class I2pClient {
      * @param peer      Can be *.i2p, *b32.i2p or base 64 addresses. If not base64 we resolve it via name lookup
      * @param sessionId Session ID
      * @return The socket for the outbound connection
-     * @throws IOException
      */
     public Socket getSocket(String peer, String sessionId) throws IOException {
         try {
@@ -191,6 +187,7 @@ public class I2pClient {
         return sessionMap.get(sessionId);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private Properties getPropertiesForEmbeddedRouter() throws IOException {
         Properties p = new Properties();
         String i2pDirBasePath = dirPath + "/i2p-dir-base";
@@ -212,7 +209,7 @@ public class I2pClient {
                 "rambler_at_mail.i2p.crt",
                 "reseed_at_diva.exchange.crt")) {
             Files.copy(
-                    getClass().getResourceAsStream("/embedded/certificates/reseed/" + s),
+                    Objects.requireNonNull(getClass().getResourceAsStream("/embedded/certificates/reseed/" + s)),
                     Paths.get(embeddedRouterCertPath, s),
                     StandardCopyOption.REPLACE_EXISTING);
         }
@@ -225,6 +222,7 @@ public class I2pClient {
         return p;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private I2PSocketManager startEmbeddedRouter(File privKeyFile) throws IOException {
         I2PSocketManager manager = null;
         System.setProperty("I2P_DISABLE_OUTPUT_OVERRIDE", "true");
@@ -259,59 +257,58 @@ public class I2pClient {
         return manager;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private I2PSocketManager maybeCreateServerSession(String sessionId, int port) throws IOException {
         // There is one manager per sessionId
         // Creating the manager is a blocking call, so we synchronize this on sessionId to avoid creating it multiple times during bootstrap
-        synchronized (sessionId) {
-            if (!sessionMap.containsKey(sessionId)) {
-                long ts = System.currentTimeMillis();
-                log.info("Start to create server socket manager for session {} using port {}", sessionId, port);
+        if (!sessionMap.containsKey(sessionId)) {
+            long ts = System.currentTimeMillis();
+            log.info("Start to create server socket manager for session {} using port {}", sessionId, port);
 
-                String fileName = getFileName(sessionId);
-                String privKeyFileName = fileName + ".priv_key";
-                File privKeyFile = new File(privKeyFileName);
-                PrivateKeyFile pkf = new PrivateKeyFile(privKeyFile);
-                try {
-                    // Persist priv key to disk
-                    pkf.createIfAbsent();
-                } catch (I2PException e) {
-                    throw new IOException("Could not persist priv key to disk", e);
-                }
-
-                // Create a I2PSocketManager based on the locally persisted private key
-                // This allows the server to preserve its identity and be reachable at the same destination
-                I2PSocketManager manager;
-                try (FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
-                    manager = I2PSocketManagerFactory.createManager(privKeyInputStream); // Blocking while router builds tunnels
-                }
-
-                if (manager == null) {
-                    log.info("No I2P router found, initializing embedded one ...");
-                    manager = startEmbeddedRouter(privKeyFile);
-                }
-
-                // Set port (which is embedded in the generated destination)
-                I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
-                i2PSocketOptions.setLocalPort(port);
-                i2PSocketOptions.setConnectTimeout(Math.toIntExact(socketTimeout));
-                manager.setDefaultOptions(i2PSocketOptions);
-
-                // Persist destination to disk
-                String destinationBase64 = manager.getSession().getMyDestination().toBase64();
-                log.info("My destination: {}", destinationBase64);
-                String destinationFileName = fileName + ".destination";
-                File destinationFile = new File(destinationFileName);
-                if (!destinationFile.exists()) {
-                    FileUtils.write(destinationFileName, destinationBase64);
-                }
-
-                // Takes 10-30 sec
-                log.info("Server socket manager ready for session {}. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
-                sessionMap.put(sessionId, manager);
+            String fileName = getFileName(sessionId);
+            String privKeyFileName = fileName + ".priv_key";
+            File privKeyFile = new File(privKeyFileName);
+            PrivateKeyFile pkf = new PrivateKeyFile(privKeyFile);
+            try {
+                // Persist priv key to disk
+                pkf.createIfAbsent();
+            } catch (I2PException e) {
+                throw new IOException("Could not persist priv key to disk", e);
             }
 
-            return sessionMap.get(sessionId);
+            // Create a I2PSocketManager based on the locally persisted private key
+            // This allows the server to preserve its identity and be reachable at the same destination
+            I2PSocketManager manager;
+            try (FileInputStream privKeyInputStream = new FileInputStream(privKeyFile)) {
+                manager = I2PSocketManagerFactory.createManager(privKeyInputStream); // Blocking while router builds tunnels
+            }
+
+            if (manager == null) {
+                log.info("No I2P router found, initializing embedded one ...");
+                manager = startEmbeddedRouter(privKeyFile);
+            }
+
+            // Set port (which is embedded in the generated destination)
+            I2PSocketOptions i2PSocketOptions = manager.getDefaultOptions();
+            i2PSocketOptions.setLocalPort(port);
+            i2PSocketOptions.setConnectTimeout(Math.toIntExact(socketTimeout));
+            manager.setDefaultOptions(i2PSocketOptions);
+
+            // Persist destination to disk
+            String destinationBase64 = manager.getSession().getMyDestination().toBase64();
+            log.info("My destination: {}", destinationBase64);
+            String destinationFileName = fileName + ".destination";
+            File destinationFile = new File(destinationFileName);
+            if (!destinationFile.exists()) {
+                FileUtils.write(destinationFileName, destinationBase64);
+            }
+
+            // Takes 10-30 sec
+            log.info("Server socket manager ready for session {}. Took {} ms.", sessionId, System.currentTimeMillis() - ts);
+            sessionMap.put(sessionId, manager);
         }
+
+        return sessionMap.get(sessionId);
     }
 
     private Destination getDestinationFor(String peer) throws IOException {
