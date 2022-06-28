@@ -24,14 +24,11 @@ import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
 public class DashboardController implements Controller {
-    private final DashboardModel model;
     @Getter
     private final DashboardView view;
-    private final DefaultApplicationService applicationService;
 
     public DashboardController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new DashboardModel();
+        DashboardModel model = new DashboardModel();
         view = new DashboardView(model, this);
     }
 

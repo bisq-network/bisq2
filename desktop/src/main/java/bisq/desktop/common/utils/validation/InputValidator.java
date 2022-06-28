@@ -78,7 +78,7 @@ public class InputValidator {
 
         /*
             This function validates the input with array of validator functions.
-            If any function validation result is false, it short circuits
+            If any function validation result is false, it short-circuits
             as in && (and) operation.
         */
         public ValidationResult andValidation(String input, Validator... validators) {

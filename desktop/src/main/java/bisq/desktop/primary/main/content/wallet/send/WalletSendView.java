@@ -45,11 +45,11 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
 
         Button sendButton = new Button(Res.get("send"));
         sendButton.setOnMouseClicked(event -> controller.onSendButtonClicked());
-        Node sendButtonInHbox = alignButtonRightInHBox(sendButton);
+        Node sendButtonInHBox = alignButtonRightInHBox(sendButton);
 
         root.setSpacing(20);
         root.setPadding(new Insets(20, 20, 20, 0));
-        root.getChildren().addAll(addressTextField, amountTextField, sendButtonInHbox);
+        root.getChildren().addAll(addressTextField, amountTextField, sendButtonInHBox);
         root.setMaxWidth(330); // Right align Button
     }
 

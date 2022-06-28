@@ -25,14 +25,12 @@ import lombok.Getter;
 
 public class PreferencesController implements Controller {
 
-    private final PreferencesModel model;
     @Getter
     private final PreferencesView view;
-    private final SettingsService settingsService;
 
     public PreferencesController(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        model = new PreferencesModel(applicationService);
+        SettingsService settingsService = applicationService.getSettingsService();
+        PreferencesModel model = new PreferencesModel(applicationService);
         view = new PreferencesView(model, this);
     }
 

@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Controller> {
     private final TextInputBox pubKeyHash;
-    private final HBox pubKeyHashHBox;
     private final Button copyButton, closeButton, backButton, learnMoreButton;
 
     public BurnBsqTab3View(BurnBsqTab3Model model,
@@ -62,7 +61,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         copyButton = BisqIconButton.createIconButton(AwesomeIcon.COPY);
 
         HBox.setHgrow(pubKeyHash, Priority.ALWAYS);
-        pubKeyHashHBox = new HBox(10, pubKeyHash, copyButton);
+        HBox pubKeyHashHBox = new HBox(10, pubKeyHash, copyButton);
         pubKeyHashHBox.setAlignment(Pos.CENTER_LEFT);
 
         closeButton = new Button(Res.get("close"));

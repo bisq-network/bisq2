@@ -34,11 +34,11 @@ public class NetworkInfoController implements Controller {
     @Getter
     private final NetworkInfoView view;
     @Getter
-    private Optional<TransportTypeController> clearNetController = Optional.empty();
+    private final Optional<TransportTypeController> clearNetController = Optional.empty();
     @Getter
-    private Optional<TransportTypeController> torController = Optional.empty();
+    private final Optional<TransportTypeController> torController = Optional.empty();
     @Getter
-    private Optional<TransportTypeController> i2pController = Optional.empty();
+    private final Optional<TransportTypeController> i2pController = Optional.empty();
 
     public NetworkInfoController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;

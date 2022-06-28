@@ -197,7 +197,7 @@ public class PopOverSkin implements Skin<PopOver> {
 
         /*
          * The clip is a path and the path has to be filled with a color.
-         * Otherwise clipping will not work.
+         * Otherwise, clipping will not work.
          */
         clip.setFill(YELLOW);
 

@@ -62,11 +62,11 @@ public class ClosedTradeListItem implements TableItem {
 
         String baseSideSettlement = offer.getBaseSideSettlementSpecs().stream()
                 .map(SettlementSpec::getSettlementMethodName)
-                .map(settlementMethodName -> Res.get(settlementMethodName))
+                .map(Res::get)
                 .collect(Collectors.joining("\n"));
         String quoteSideSettlement = offer.getQuoteSideSettlementSpecs().stream()
                 .map(SettlementSpec::getSettlementMethodName)
-                .map(settlementMethodName -> Res.get(settlementMethodName))
+                .map(Res::get)
                 .collect(Collectors.joining("\n"));
 
         String baseCurrencyCode = offer.getMarket().getBaseCurrencyCode();

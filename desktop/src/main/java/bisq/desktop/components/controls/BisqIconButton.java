@@ -50,7 +50,6 @@ public class BisqIconButton extends Button {
 
     public static Button createIconButton(AwesomeIcon icon, String fontSize) {
         Label label = AwesomeDude.createIconLabel(icon, fontSize);
-        ;
         Button button = new Button();
         button.setGraphic(label);
         button.getStyleClass().add("icon-button");

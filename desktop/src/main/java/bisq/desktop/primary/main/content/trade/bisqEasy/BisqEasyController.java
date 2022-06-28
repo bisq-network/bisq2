@@ -41,13 +41,12 @@ public class BisqEasyController extends NavigationController {
     private final BisqEasyModel model;
     @Getter
     private final BisqEasyView view;
-    private final SettingsService settingsService;
 
     public BisqEasyController(DefaultApplicationService applicationService) {
         super(NavigationTarget.BISQ_EASY);
 
         this.applicationService = applicationService;
-        settingsService = applicationService.getSettingsService();
+        SettingsService settingsService = applicationService.getSettingsService();
         model = new BisqEasyModel();
         view = new BisqEasyView(model, this);
     }

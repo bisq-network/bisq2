@@ -77,10 +77,8 @@ public class PaymentMethodsSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatService chatService;
 
         private Controller(ChatService chatService) {
-            this.chatService = chatService;
             model = new Model();
             view = new View(model, this);
         }
@@ -189,9 +187,7 @@ public class PaymentMethodsSelection {
             selectedPaymentMethodsListener = c -> {
                 c.next();
                 selectedPaymentMethodsBox.getChildren().clear();
-                model.selectedPaymentMethods.forEach(paymentMethod -> {
-                    selectedPaymentMethodsBox.getChildren().add(getPaymentMethodItem(paymentMethod));
-                });
+                model.selectedPaymentMethods.forEach(paymentMethod -> selectedPaymentMethodsBox.getChildren().add(getPaymentMethodItem(paymentMethod)));
             };
             selectedItemListener = (observable, oldValue, newValue) -> {
                 controller.onAddPaymentMethod(comboBox.getSelectionModel().getSelectedItem());

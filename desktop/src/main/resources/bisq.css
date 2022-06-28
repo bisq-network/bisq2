@@ -42,7 +42,6 @@
     -bisq-green: #56ae48;
     -bisq-green-lighter: #53a746;
     -bisq-green-darker: #488e3e;
-    -bisq-green: #56ae48;
     -bisq-white: white;
     -bisq-black: #000000;
     -bisq-turquoise: #2cacaf;
@@ -196,7 +195,7 @@
 }
 
 .text-area .content {
-    /* is 1px less top and bottom than TextInput because of scrollpane border */
+    /* is 1px less top and bottom than TextInput because of scrollPane border */
     -fx-padding: 0.25em 0.583em 0.25em 0.583em; /* 3 7 3 7 */
     -fx-cursor: text;
     -fx-background-color: transparent;
@@ -580,7 +579,6 @@
 }
 
 .bisq-text-125 {
-    -fx-font-size: 1.25em;
     -fx-font-size: 1.25em;
 }
 
@@ -1114,9 +1112,9 @@
     -fx-background-insets: 0px;
     -fx-padding: 2px;
     -bisq-toggle-color: -bisq-green;
-    -bisq-untoggle-color: -bisq-white;
+    -bisq-un-toggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-untoggle-line-color: -bisq-grey-9;
+    -bisq-un-toggle-line-color: -bisq-grey-9;
     -bisq-size: 8;
 }
 
@@ -1141,7 +1139,7 @@
 }
 
 .bisq-toggle-button Line {
-    -fx-stroke: -bisq-untoggle-line-color;
+    -fx-stroke: -bisq-un-toggle-line-color;
 }
 
 .bisq-toggle-button:selected Line {
@@ -1149,7 +1147,7 @@
 }
 
 .bisq-toggle-button Circle {
-    -fx-fill: -bisq-untoggle-color;
+    -fx-fill: -bisq-un-toggle-color;
 }
 
 .bisq-toggle-button:selected Circle {
@@ -2049,7 +2047,7 @@ tree-table-view:focused {
     -fx-background-radius: 6px;
     -fx-background-insets: 0;
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
-    /* -fx-effect: dropshadow(three-pass-box, -bisq-white-transparent, 10, 0, 0, 3);*/
+    /* -fx-effect: dropShadow(three-pass-box, -bisq-white-transparent, 10, 0, 0, 3);*/
     -fx-font-size: 0.85em;
 }
 

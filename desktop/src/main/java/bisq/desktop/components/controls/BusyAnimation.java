@@ -30,7 +30,6 @@ public class BusyAnimation extends ProgressIndicator {
     }
 
     public BusyAnimation(boolean isRunning) {
-        getStyleClass().add("busyanimation");
         isRunningProperty.set(isRunning);
 
         updateVisibility();

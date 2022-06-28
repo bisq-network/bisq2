@@ -54,9 +54,7 @@ public class PaymentMethodController implements Controller {
 
     @Override
     public void onActivate() {
-        customMethodPin = EasyBind.subscribe(model.getCustomMethod(), customMethod -> {
-            model.getAddCustomMethodIconVisible().set(customMethod != null && !customMethod.isEmpty());
-        });
+        customMethodPin = EasyBind.subscribe(model.getCustomMethod(), customMethod -> model.getAddCustomMethodIconVisible().set(customMethod != null && !customMethod.isEmpty()));
     }
 
     @Override

@@ -53,12 +53,10 @@ public class ChannelAdmin {
         @Getter
         private final View view;
         private final ChatUserService chatUserService;
-        private final ChatService chatService;
         private Pin selectedUserProfilePin;
 
         private Controller(ChatUserService chatUserService, ChatService chatService) {
             this.chatUserService = chatUserService;
-            this.chatService = chatService;
 
             model = new Model();
             view = new View(model, this);

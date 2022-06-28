@@ -38,7 +38,8 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     private final Pane takersListView;
     private Subscription matchingOffersFoundPin;
     private final VBox content, createOfferSuccessFeedback, takeOfferSuccessFeedback;
-    private Button viewOfferButton, openPrivateChannelButton;
+    private final Button viewOfferButton;
+    private final Button openPrivateChannelButton;
     private Subscription showCreateOfferSuccessPin, showTakeOfferSuccessPin;
 
     ReviewOfferView(ReviewOfferModel model,

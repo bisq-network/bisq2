@@ -22,12 +22,11 @@ import bisq.desktop.common.view.Controller;
 import lombok.Getter;
 
 public class SupportController implements Controller {
-    private final SupportModel model;
     @Getter
     private final SupportView view;
 
     public SupportController(DefaultApplicationService applicationService) {
-        model = new SupportModel();
+        SupportModel model = new SupportModel();
         view = new SupportView(model, this);
     }
 

@@ -30,14 +30,12 @@ import static bisq.settings.DontShowAgainKey.BISQ_EASY_INTRO;
 
 @Slf4j
 public class BisqEasyOnboardingController implements Controller {
-    private final BisqEasyOnboardingModel model;
     @Getter
     private final BisqEasyOnboardingView view;
-    private final SettingsService settingsService;
 
     public BisqEasyOnboardingController(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        model = new BisqEasyOnboardingModel();
+        SettingsService settingsService = applicationService.getSettingsService();
+        BisqEasyOnboardingModel model = new BisqEasyOnboardingModel();
         view = new BisqEasyOnboardingView(model, this);
     }
 

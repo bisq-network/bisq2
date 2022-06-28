@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import javafx.scene.control.Control;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.SkinBase;
 import javafx.scene.control.Tooltip;
@@ -24,7 +25,7 @@ import javafx.scene.text.Text;
 
 public class TooltipUtil {
 
-    public static void showTooltipIfTruncated(SkinBase skinBase, Labeled labeled) {
+    public static void showTooltipIfTruncated(SkinBase<? extends Control> skinBase, Labeled labeled) {
         for (Object node : skinBase.getChildren()) {
             if (node instanceof Text) {
                 String displayedText = ((Text) node).getText();

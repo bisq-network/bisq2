@@ -132,7 +132,7 @@ public class Badge extends StackPane {
         this.position.set(position);
     }
 
-    private SimpleStringProperty text = new SimpleStringProperty("");
+    private final SimpleStringProperty text = new SimpleStringProperty("");
 
     public final String getText() {
         return text.get();

@@ -30,14 +30,12 @@ import static bisq.settings.DontShowAgainKey.BISQ_2_INTRO;
 
 @Slf4j
 public class Bisq2IntroController implements Controller {
-    private final Bisq2IntroModel model;
     @Getter
     private final Bisq2IntroView view;
-    private final SettingsService settingsService;
 
     public Bisq2IntroController(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
-        model = new Bisq2IntroModel();
+        SettingsService settingsService = applicationService.getSettingsService();
+        Bisq2IntroModel model = new Bisq2IntroModel();
         view = new Bisq2IntroView(model, this);
     }
 

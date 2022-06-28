@@ -52,7 +52,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     private Optional<Function<S, String>> valueSupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertySupplier = Optional.empty();
     private Optional<Function<S, StringProperty>> valuePropertyBiDirBindingSupplier = Optional.empty();
-    private Optional<Comparator<S>> comparator = Optional.empty();
+    private final Optional<Comparator<S>> comparator = Optional.empty();
     private Optional<String> value = Optional.empty();
     private Consumer<S> onActionHandler = item -> {
     };
@@ -63,7 +63,7 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
     };
     private BiConsumer<S, TextField> updateItemWithInputTextFieldHandler = (item, field) -> {
     };
-    private Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
+    private final Optional<Callback<TableColumn<S, S>, TableCell<S, S>>> cellFactory = Optional.empty();
 
     public static class Builder<S> {
         private Optional<String> title = Optional.empty();
@@ -123,8 +123,8 @@ public class BisqTableColumn<S> extends TableColumn<S, S> {
                     tableColumn.setComparator(comparator.get());
                 } else if (valueSupplier.isPresent()) {
                     tableColumn.setComparator(Comparator.comparing(e -> valueSupplier.get().apply(e)));
-                } else if (value.isPresent()) {
-                    tableColumn.setComparator(Comparator.comparing(e -> value.get()));
+                } else {
+                    value.ifPresent(s -> tableColumn.setComparator(Comparator.comparing(e -> s)));
                 }
                 //todo support for  valuePropertySupplier, valuePropertyBiDirBindingSupplier missing
             }

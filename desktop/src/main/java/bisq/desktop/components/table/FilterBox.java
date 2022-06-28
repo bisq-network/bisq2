@@ -81,7 +81,7 @@ public class FilterBox {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final ChangeListener<String> listener;
-        private TextField textField;
+        private final TextField textField;
 
         private View(Model model, Controller controller) {
             super(new HBox(), model, controller);

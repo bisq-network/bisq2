@@ -24,14 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OnboardProTraderController implements Controller {
-    private final OnboardProTraderModel model;
     @Getter
     private final OnboardProTraderView view;
-    private final DefaultApplicationService applicationService;
 
     public OnboardProTraderController(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        model = new OnboardProTraderModel();
+        OnboardProTraderModel model = new OnboardProTraderModel();
         view = new OnboardProTraderView(model, this);
     }
 

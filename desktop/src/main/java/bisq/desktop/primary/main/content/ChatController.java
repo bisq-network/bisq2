@@ -43,7 +43,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final ChatService chatService;
     protected final FilterBox filterBox;
     protected final M model;
-    private final ReputationService reputationService;
     @Getter
     protected V view;
     protected final ChatUserService chatUserService;
@@ -61,7 +60,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         chatUserService = applicationService.getChatUserService();
-        reputationService = applicationService.getReputationService();
+        ReputationService reputationService = applicationService.getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);

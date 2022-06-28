@@ -66,7 +66,6 @@ public class CreateUserProfile {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatService chatService;
         private final ChatUserService chatUserService;
         private final KeyPairService keyPairService;
         private final RoleSelection roleSelection;
@@ -74,7 +73,6 @@ public class CreateUserProfile {
         private Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
 
         private Controller(ChatService chatService, ChatUserService chatUserService, SecurityService securityService) {
-            this.chatService = chatService;
             this.chatUserService = chatUserService;
             keyPairService = securityService.getKeyPairService();
             proofOfWorkService = securityService.getProofOfWorkService();
@@ -116,11 +114,7 @@ public class CreateUserProfile {
                             model.proofOfWork,
                             "",
                             "")
-                    .thenAccept(userProfile -> {
-                        UIThread.run(() -> {
-                            reset();
-                        });
-                    });
+                    .thenAccept(userProfile -> UIThread.run(this::reset));
         }
 
         private void onCreateIdentity() {

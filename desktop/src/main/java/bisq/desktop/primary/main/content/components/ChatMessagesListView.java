@@ -337,20 +337,14 @@ public class ChatMessagesListView {
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
             List<BisqPopupMenuItem> items = new ArrayList<>();
 
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> {
-                ClipboardUtil.copyToClipboard(chatMessage.getText());
-            }));
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> ClipboardUtil.copyToClipboard(chatMessage.getText())));
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
                 ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
             }));
 
             if (!chatService.isMyMessage(chatMessage)) {
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> {
-                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(chatService::ignoreChatUser);
-                }));
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> {
-                    chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportChatUser(author, ""));
-                }));
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"), () -> chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(chatService::ignoreChatUser)));
+                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"), () -> chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportChatUser(author, ""))));
             }
 
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);

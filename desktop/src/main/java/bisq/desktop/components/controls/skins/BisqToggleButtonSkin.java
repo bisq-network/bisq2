@@ -55,9 +55,7 @@ public class BisqToggleButtonSkin extends ToggleButtonSkin {
         stackPane.setCursor(Cursor.HAND);
         stackPane.setPadding(new Insets(0, 5, 0, 0));
 
-        toggleButton.selectedProperty().addListener(observable -> {
-            circle.setTranslateX(computeCirclePosition(circleRadius, line));
-        });
+        toggleButton.selectedProperty().addListener(observable -> circle.setTranslateX(computeCirclePosition(circleRadius, line)));
 
         if (toggleButton.getGraphic() != null) {
             Node graphic = toggleButton.getGraphic();

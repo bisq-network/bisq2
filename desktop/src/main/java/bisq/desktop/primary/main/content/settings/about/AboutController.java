@@ -23,12 +23,11 @@ import lombok.Getter;
 
 public class AboutController implements Controller {
 
-    private final AboutModel model;
     @Getter
     private final AboutView view;
 
     public AboutController(DefaultApplicationService applicationService) {
-        model = new AboutModel(applicationService);
+        AboutModel model = new AboutModel(applicationService);
         view = new AboutView(model, this);
     }
 

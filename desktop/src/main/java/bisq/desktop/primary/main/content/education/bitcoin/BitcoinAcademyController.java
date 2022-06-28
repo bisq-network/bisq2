@@ -24,10 +24,9 @@ import lombok.Getter;
 public class BitcoinAcademyController implements Controller {
     @Getter
     private final BitcoinAcademyView view;
-    private final BitcoinAcademyModel model;
 
     public BitcoinAcademyController(DefaultApplicationService applicationService) {
-        model = new BitcoinAcademyModel();
+        BitcoinAcademyModel model = new BitcoinAcademyModel();
         view = new BitcoinAcademyView(model, this);
     }
 

@@ -38,12 +38,11 @@ public class BurnBsqTab3Controller implements Controller {
     @Getter
     private final BurnBsqTab3View view;
     private final ChatUserService chatUserService;
-    private final UserProfileSelection userProfileSelection;
     private Pin selectedUserProfilePin;
 
     public BurnBsqTab3Controller(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
-        userProfileSelection = new UserProfileSelection(chatUserService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BurnBsqTab3Model();
         view = new BurnBsqTab3View(model, this, userProfileSelection.getRoot());

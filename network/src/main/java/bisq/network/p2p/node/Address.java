@@ -66,7 +66,6 @@ public class Address implements Proto {
     }
 
     public boolean isClearNetAddress() {
-        //noinspection UnstableApiUsage
         return InetAddresses.isInetAddress(host);
     }
 

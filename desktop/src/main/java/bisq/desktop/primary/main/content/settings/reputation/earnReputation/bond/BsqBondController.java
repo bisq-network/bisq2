@@ -38,12 +38,11 @@ public class BsqBondController implements Controller {
     @Getter
     private final BsqBondView view;
     private final ChatUserService chatUserService;
-    private final UserProfileSelection userProfileSelection;
     private Pin selectedUserProfilePin;
 
     public BsqBondController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getChatUserService();
-        userProfileSelection = new UserProfileSelection(chatUserService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BsqBondModel();
         view = new BsqBondView(model, this, userProfileSelection.getRoot());
