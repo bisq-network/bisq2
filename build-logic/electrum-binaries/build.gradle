@@ -1,0 +1,21 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'org.gradle.kotlin.kotlin-dsl' version '2.1.7'
+}
+
+repositories {
+    mavenCentral()
+}
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = 'bisq.gradle.electrum.BisqElectrumPlugin'
+            implementationClass = 'bisq.gradle.electrum.BisqElectrumPlugin'
+        }
+    }
+}
+
+dependencies {
+    implementation group: 'org.bouncycastle', name: 'bcpg-jdk15on', version: '1.70'
+}

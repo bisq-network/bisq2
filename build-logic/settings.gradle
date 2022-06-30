@@ -7,4 +7,5 @@ dependencyResolutionManagement {
 }
 
 include 'commons'
+include 'electrum-binaries'
 include 'regtest'
