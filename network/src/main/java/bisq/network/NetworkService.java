@@ -248,11 +248,13 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         InitializeServerResult initializeServerResult = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
         // After server has been started we can be sure the networkId is available. 
         // If it was not already available before we persist it.
-        initializeServerResult.values().forEach(future -> future.whenComplete((result, throwable) -> {
-            if (throwable == null) {
-                maybePersistInitializedNetworkId(nodeId, pubKey);
-            }
-        }));
+        initializeServerResult.values()
+                .forEach(future -> future
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                findOrPersistNewNetworkId(nodeId, pubKey);
+                            }
+                        }));
         return initializeServerResult;
     }
 
@@ -263,20 +265,18 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
 
     public CompletableFuture<NetworkId> getInitializedNetworkId(String nodeId, PubKey pubKey) {
         CompletableFuture<NetworkId> future = new CompletableFuture<>();
-        maybeInitializeServer(nodeId, pubKey).forEach((transportType, resultFuture) -> {
-            resultFuture.whenComplete((initializeServerResult, throwable) -> {
-                if (throwable != null) {
-                    log.error(throwable.toString()); //todo
-                }
+        maybeInitializeServer(nodeId, pubKey)
+                .forEach((transportType, resultFuture) -> {
+                    resultFuture.whenComplete((initializeServerResult, throwable) -> {
+                        if (throwable != null) {
+                            log.error(throwable.toString()); //todo
+                        }
 
-                // We try to get the persisted networkId, if not present we create a new one, 
-                // if that fails we complete with an exception.
-                findNetworkId(nodeId)
-                        .or(() -> createNetworkId(nodeId, pubKey))
-                        .ifPresentOrElse(future::complete,
-                                () -> future.completeExceptionally(new IllegalStateException("NetworkId must be present at getInitializedNetworkId")));
-            });
-        });
+                        findOrPersistNewNetworkId(nodeId, pubKey)
+                                .ifPresentOrElse(future::complete,
+                                        () -> future.completeExceptionally(new IllegalStateException("NetworkId must be present")));
+                    });
+                });
         return future;
     }
 
@@ -289,13 +289,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         log.info("bootstrapToNetwork");
         String nodeId = Node.DEFAULT;
         return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
-                .whenComplete((result, throwable) -> {
-                    // If networkNode has not been created we create now one with the default pubKey (default keyId)
-                    // and persist it.
-                    if (throwable == null) {
-                        maybePersistInitializedNetworkId(nodeId, keyPairService.getDefaultPubKey());
-                    }
-                });
+                .thenCompose(result -> findOrPersistNewNetworkId(nodeId, keyPairService.getDefaultPubKey())
+                        .map(networkId -> CompletableFuture.completedFuture(result))
+                        .orElse(CompletableFuture.failedFuture(new IllegalStateException("NetworkId not present"))));
     }
 
 
@@ -534,6 +530,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         if (supportedTransportTypes.size() == addressByNetworkType.size()) {
             return Optional.of(new NetworkId(addressByNetworkType, pubKey, nodeId));
         } else {
+            //todo not sure if that is a valid case or better treated as exception
             log.error("supportedTransportTypes.size() != addressByNetworkType.size(). " +
                             "supportedTransportTypes={}, addressByNetworkType={}",
                     supportedTransportTypes, addressByNetworkType);
@@ -541,13 +538,14 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         }
     }
 
-
-    private void maybePersistInitializedNetworkId(String nodeId, PubKey pubKey) {
-        if (findNetworkId(nodeId).isEmpty()) {
-            createNetworkId(nodeId, pubKey).ifPresent(networkId -> {
-                persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
-                persist();
-            });
-        }
+    private Optional<NetworkId> findOrPersistNewNetworkId(String nodeId, PubKey pubKey) {
+        return findNetworkId(nodeId)
+                .or(() -> createNetworkId(nodeId, pubKey)
+                        .map(networkId -> {
+                            persistableStore.getNetworkIdByNodeId().put(nodeId, networkId);
+                            persist();
+                            return networkId;
+                        })
+                );
     }
 }
