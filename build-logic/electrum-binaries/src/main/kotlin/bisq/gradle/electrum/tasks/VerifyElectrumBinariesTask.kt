@@ -7,7 +7,11 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 
 abstract class VerifyElectrumBinariesTask : DefaultTask() {
@@ -18,6 +22,9 @@ abstract class VerifyElectrumBinariesTask : DefaultTask() {
     @get:InputDirectory
     abstract val inputDirectory: DirectoryProperty
 
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
     private val signatureVerifier = SignatureVerifier(
         allPublicKeyUrls = getPublicKeyUrls(),
         publicKeyFingerprints = getPublicKeyFingerprints()
@@ -27,17 +34,22 @@ abstract class VerifyElectrumBinariesTask : DefaultTask() {
     fun run() {
         val binaryNames: Set<String> = DownloadElectrumBinariesTask.getBinaryNames(electrumVersion.get())
         val downloadsDirectory = inputDirectory.asFile.get()
+        val outputDir: File = outputDirectory.asFile.get()
 
         for (filename in binaryNames) {
             println("Verifying: $filename")
+            val fileToVerify: File = downloadsDirectory.resolve(filename)
             val isSignatureValid = signatureVerifier.verifySignature(
                 signatureFile = downloadsDirectory.resolve("$filename.asc"),
-                fileToVerify = downloadsDirectory.resolve(filename)
+                fileToVerify = fileToVerify
             )
 
             if (!isSignatureValid) {
                 throw GradleException("Signature verification failed for $filename.")
             }
+
+            val targetPath = outputDir.resolve(filename).toPath()
+            Files.move(fileToVerify.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING)
         }
     }
 
