@@ -1,6 +1,11 @@
 plugins {
+    id 'bisq.gradle.electrum.BisqElectrumPlugin'
     id 'bisq.java-library'
     id 'bisq.protobuf'
+}
+
+electrum {
+    electrumVersion = '4.2.2'
 }
 
 dependencies {
