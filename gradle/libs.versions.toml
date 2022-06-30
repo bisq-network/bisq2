@@ -19,6 +19,8 @@ bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
 chimp-jsocks-lib = { strictly = '567e1cd6' }
 chimp-jtorctl-lib = { strictly = '9b5ba203' }
 
+failsafe-lib = { strictly = '3.2.4' }
+
 fontawesomefx-lib = { strictly = '8.0.0' }
 fontawesomefx-commons-lib = { strictly = '9.1.2' }
 fontawesomefx-materialdesignfont-lib = { strictly = '2.0.26-9.1.2' }
@@ -77,6 +79,8 @@ bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'boun
 
 chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib'  }
 chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
+
+failsafe = { module = 'dev.failsafe:failsafe', version.ref = 'failsafe-lib' }
 
 fontawesomefx = { module = 'de.jensd:fontawesomefx', version.ref = 'fontawesomefx-lib' }
 fontawesomefx-commons = { module = 'de.jensd:fontawesomefx-commons', version.ref = 'fontawesomefx-commons-lib' }

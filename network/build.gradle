@@ -9,6 +9,7 @@ dependencies {
     implementation project(':security')
     implementation project(':persistence')
 
+    implementation libs.failsafe
     implementation libs.google.guava
     implementation libs.typesafe.config
 
