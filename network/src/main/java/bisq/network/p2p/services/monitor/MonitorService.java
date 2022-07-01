@@ -40,8 +40,8 @@ public class MonitorService {
         this.peerGroupStore = peerGroupStore;
     }
 
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.completedFuture(null);
+    public CompletableFuture<Boolean> shutdown() {
+        return CompletableFuture.completedFuture(true);
     }
 
     public String getPeerGroupInfo() {

@@ -30,7 +30,7 @@ public class LBtcWalletController extends WalletController {
 
     @Override
     public WalletService getWalletService() {
-        return applicationService.getLBtcWalletService();
+        return applicationService.getLiquidWalletService();
     }
 
     @Override

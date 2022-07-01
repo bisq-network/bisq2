@@ -44,10 +44,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -90,7 +87,10 @@ public class Node implements Connection.Handler {
 
         void onDisconnect(Connection connection, CloseReason closeReason);
 
-        default void onStateChange(State state) {
+        default void onShutdown(Node node) {
+        }
+
+        default void onStateChange(Node.State state) {
         }
     }
 
@@ -134,7 +134,7 @@ public class Node implements Connection.Handler {
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
 
-    private volatile boolean isStopped;
+    private volatile boolean shutDownStarted;
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
 
@@ -410,7 +410,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
@@ -462,6 +462,10 @@ public class Node implements Connection.Handler {
         connection.close(closeReason);
     }
 
+    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
+        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
+    }
+
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
         try {
             connection.stopListening();
@@ -471,35 +475,30 @@ public class Node implements Connection.Handler {
         connection.close(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
-    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
-    }
-
     public CompletableFuture<List<Void>> shutdown() {
         log.info("Node {} shutdown", this);
-        if (isStopped) {
-            return CompletableFuture.completedFuture(null);
+        if (shutDownStarted) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
         }
         setState(State.SHUTDOWN_STARTED);
-        isStopped = true;
+        shutDownStarted = true;
 
         server.ifPresent(Server::shutdown);
         connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
 
-        Stream<CompletableFuture<Void>> connections = Stream.concat(inboundConnectionsByAddress.values().stream(),
-                        outboundConnectionsByAddress.values().stream())
-                .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN));
-        return CompletableFutureUtils.allOf(connections)
+        return CompletableFutureUtils.allOf(getAllConnections()
+                        .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN)))
                 .orTimeout(1, SECONDS)
-                .whenComplete((r, throwable) -> {
+                .whenComplete((list, throwable) -> {
                     transport.shutdown();
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
-                    listeners.clear();
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);
                     }
                     setState(State.SHUTDOWN_COMPLETE);
+                    listeners.forEach(listener -> listener.onShutdown(this));
+                    listeners.clear();
                 });
     }
 
@@ -536,7 +535,7 @@ public class Node implements Connection.Handler {
 
     private void handleException(Connection connection, Throwable exception) {
         log.warn("Node {} got called handleException. connection={}, exception={}", this, connection, exception.getMessage());
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (connection.isRunning()) {
@@ -547,7 +546,7 @@ public class Node implements Connection.Handler {
     private void handleException(Throwable exception) {
         log.debug("Node {} got called handleException. exception={}", this, exception.getMessage());
 
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (exception instanceof EOFException) {

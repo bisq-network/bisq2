@@ -91,11 +91,11 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
         dataService.ifPresent(service -> service.addListener(this));
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         nodesById.removeNodeListener(this);
         dataService.ifPresent(service -> service.removeListener(this));
         listeners.clear();
-        return completedFuture(null);
+        return completedFuture(true);
     }
 
 

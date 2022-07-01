@@ -228,9 +228,9 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
-                .thenCompose(list -> dataService.map(DataService::shutdown).orElse(completedFuture(null)));
+                .thenCompose(list -> dataService.map(DataService::shutdown).orElse(completedFuture(true)));
     }
 
 

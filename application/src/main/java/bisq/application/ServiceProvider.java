@@ -58,5 +58,5 @@ public abstract class ServiceProvider {
 
     public abstract CompletableFuture<Boolean> initialize();
 
-    public abstract CompletableFuture<Void> shutdown();
+    public abstract CompletableFuture<Boolean> shutdown();
 }

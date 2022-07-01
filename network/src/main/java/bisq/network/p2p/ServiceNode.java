@@ -73,7 +73,7 @@ public class ServiceNode {
 
     public enum State {
         CREATED,
-        INITIALIZE_DEFAULT_NODE_SERVER,
+        INITIALIZE_DEFAULT_NODE_SERVER, // We are interested mostly in the default nodes state not in domain specific nodes
         DEFAULT_NODE_SERVER_INITIALIZED,
         INITIALIZE_PEER_GROUP,
         PEER_GROUP_INITIALIZED,
@@ -115,7 +115,7 @@ public class ServiceNode {
                        Transport.Type transportType) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
-        defaultNode = nodesById.getDefaultNode();
+        defaultNode = nodesById.getOrCreateDefaultNode();
         Set<Service> services = config.getServices();
 
         if (services.contains(Service.PEER_GROUP)) {
@@ -145,17 +145,18 @@ public class ServiceNode {
         }
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         setState(State.SHUTDOWN_STARTED);
         return CompletableFutureUtils.allOf(nodesById.shutdown(),
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(null)),
-                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(null)))
+                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(true)),
+                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(true)),
+                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(true)),
+                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(true)))
                 .orTimeout(4, TimeUnit.SECONDS)
-                .whenComplete((list, throwable) -> {
+                .handle((list, throwable) -> {
                     setState(State.SHUTDOWN_COMPLETE);
-                }).thenApply(list -> null);
+                    return true;
+                });
     }
 
 

@@ -102,11 +102,11 @@ public class DataService implements DataNetworkService.Listener {
         return dataNetworkService;
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         dataNetworkServiceByTransportType.values().forEach(DataNetworkService::shutdown);
         storageService.shutdown();
         listeners.clear();
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(true);
     }
 
 

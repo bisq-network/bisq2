@@ -194,12 +194,9 @@ public abstract class Connection {
         if (future != null) {
             future.cancel(true);
         }
-        if (!socket.isClosed()) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                log.error("Error at socket.close", e);
-            }
+        try {
+            socket.close();
+        } catch (IOException ignore) {
         }
         NetworkService.DISPATCHER.submit(() -> {
             handler.handleConnectionClosed(this, closeReason);

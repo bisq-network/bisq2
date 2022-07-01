@@ -88,12 +88,12 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
                 .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();
-                    return null;
+                    return true;
                 });
     }
 

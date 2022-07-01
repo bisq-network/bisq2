@@ -58,10 +58,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.util.OsUtils.EXIT_FAILURE;
-import static bisq.common.util.OsUtils.EXIT_SUCCESS;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Creates domain specific options from program arguments and application options.
@@ -104,7 +102,7 @@ public class DefaultApplicationService extends ServiceProvider {
     private final ChatUserService chatUserService;
     private final ReputationService reputationService;
     private final BitcoinWalletService bitcoinWalletService;
-    private final LiquidWalletService lBtcWalletService;
+    private final LiquidWalletService liquidWalletService;
     private final OfferService offerService;
     private final SocialService socialService;
     private final SecurityService securityService;
@@ -164,9 +162,9 @@ public class DefaultApplicationService extends ServiceProvider {
                 : createRegtestWalletConfig();
         bitcoinWalletService = new BitcoinWalletService(persistenceService, walletsDataDir, walletConfig);
 
-        // L-BTC Wallet Service
+        // Liquid Wallet Service
         walletConfig = !applicationConfig.isElementsdRegtest() ? Optional.empty() : createRegtestWalletConfig();
-        lBtcWalletService = new LiquidWalletService(persistenceService, walletsDataDir, walletConfig);
+        liquidWalletService = new LiquidWalletService(persistenceService, walletsDataDir, walletConfig);
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -185,34 +183,18 @@ public class DefaultApplicationService extends ServiceProvider {
                 .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(openTimestampService.initialize(), State.OTS_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(marketPriceService.initialize(), State.MARKET_PRICE_SERVICE_INITIALIZED))
-                .whenComplete((list, throwable) -> {
-                    log.info("add dummy accounts");
-                    if (accountService.getAccounts().isEmpty()) {
-                        SepaAccount john_smith = new SepaAccount("SEPA-account-1",
-                                "John Smith",
-                                "iban_1234",
-                                "bic_1234",
-                                CountryRepository.getDefaultCountry());
-                        accountService.addAccount(john_smith);
-                        accountService.addAccount(new SepaAccount("SEPA-account-2",
-                                "Mary Smith",
-                                "iban_5678",
-                                "bic_5678",
-                                CountryRepository.getDefaultCountry()));
-                        accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
-                    }
-                })
+                .whenComplete((list, throwable) -> addDummyAccounts())
                 .thenCompose(result -> setStateAfter(accountAgeWitnessService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
-                        chatUserService.initialize()
+                        chatUserService.initialize() //todo move to social service
                                 .thenCompose(res -> reputationService.initialize()).
                                 thenCompose(res -> chatService.initialize()),
                         openOfferService.initialize(),
                         offerBookService.initialize(),
                         tradeChatOfferService.initialize(),
                         bitcoinWalletService.initialize(),
-                        lBtcWalletService.initialize()))
+                        liquidWalletService.initialize()))
                 // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 min)
                 .orTimeout(5, TimeUnit.MINUTES)
                 .thenApply(list -> list.stream().allMatch(e -> e))
@@ -227,34 +209,46 @@ public class DefaultApplicationService extends ServiceProvider {
                 });
     }
 
+    private void addDummyAccounts() {
+        log.info("add dummy accounts");
+        if (accountService.getAccounts().isEmpty()) {
+            SepaAccount john_smith = new SepaAccount("SEPA-account-1",
+                    "John Smith",
+                    "iban_1234",
+                    "bic_1234",
+                    CountryRepository.getDefaultCountry());
+            accountService.addAccount(john_smith);
+            accountService.addAccount(new SepaAccount("SEPA-account-2",
+                    "Mary Smith",
+                    "iban_5678",
+                    "bic_5678",
+                    CountryRepository.getDefaultCountry()));
+            accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
+        }
+    }
+
     @Override
-    public CompletableFuture<Void> shutdown() {
-        return runAsync(() -> openOfferService.shutdown()
-                        .thenCompose(list -> {
-                            marketPriceService.shutdown();
-                            return networkService.shutdown()
-                                    .whenComplete((__, throwable) -> {
-                                        if (throwable != null) {
-                                            log.error("Error at shutdown", throwable);
-                                            System.exit(EXIT_FAILURE);
-                                        } else {
-                                            // In case the application is a JavaFXApplication give it chance to trigger the exit
-                                            // via Platform.exit()
-                                            runAsync(() -> System.exit(EXIT_SUCCESS));
-                                        }
-                                    });
-                        })
-                        .thenRun(() -> {
-                            bitcoinWalletService.shutdown();
-                            lBtcWalletService.shutdown();
-                        })
-                , ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+    public CompletableFuture<Boolean> shutdown() {
+        //todo add service shutdown calls
+       return supplyAsync(() -> openOfferService.shutdown()
+                        .thenCompose(list -> CompletableFutureUtils.allOf(
+                                marketPriceService.shutdown(),
+                                networkService.shutdown())
+                        )
+                        .thenCompose(list -> CompletableFutureUtils.allOf(
+                                bitcoinWalletService.shutdown(),
+                                liquidWalletService.shutdown())
+                        )
+                        .handle((list, throwable) -> throwable == null)
+                        .join(),
+                ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
 
     public KeyPairService getKeyPairService() {
         return securityService.getKeyPairService();
     }
 
+    //todo move to Bisq.conf
     private Optional<RpcConfig> createRegtestWalletConfig() {
         int port = applicationConfig.isBitcoindRegtest() ? 18443 : 7040;
 

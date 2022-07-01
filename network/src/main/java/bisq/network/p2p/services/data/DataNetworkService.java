@@ -71,11 +71,11 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
         node.addListener(this);
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         node.removeListener(this);
         peerGroupService.removeListener(this);
         broadcaster.shutdown();
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(true);
     }
 
 

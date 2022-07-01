@@ -125,8 +125,9 @@ public class MarketPriceService {
         listeners.forEach(listener -> listener.onMarketSelected(market));
     }
 
-    public void shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         httpClient.ifPresent(BaseHttpClient::shutdown);
+        return CompletableFuture.completedFuture(true);
     }
 
     public Optional<MarketPrice> getMarketPrice(Market market) {

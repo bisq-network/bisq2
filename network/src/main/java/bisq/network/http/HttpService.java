@@ -30,6 +30,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpService {
+    public HttpService() {
+    }
+
     public BaseHttpClient getHttpClient(String url,
                                         String userAgent,
                                         Transport.Type transportType,
@@ -56,7 +59,7 @@ public class HttpService {
         }
     }
 
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.completedFuture(null);
+    public CompletableFuture<Boolean> shutdown() {
+        return CompletableFuture.completedFuture(true);
     }
 }

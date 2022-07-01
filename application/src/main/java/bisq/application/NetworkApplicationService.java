@@ -76,7 +76,7 @@ public class NetworkApplicationService extends ServiceProvider {
     }
 
     @Override
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         return networkService.shutdown()
                 .whenComplete((__, throwable) -> {
                     if (throwable == null) {
