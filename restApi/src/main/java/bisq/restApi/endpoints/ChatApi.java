@@ -31,7 +31,7 @@ public class ChatApi {
 
     public ChatApi(@Context Application application) {
         DefaultApplicationService appService = ((RestApiApplication) application).getApplicationService();
-        chatService = appService.getChatService();
+        chatService = appService.getSocialService().getChatService();
     }
 
     @GET
