@@ -77,12 +77,12 @@ public class MultiSigCreateOfferController implements InitWithDataController<Mul
             baseSideAmountSubscription, quoteSideAmountSubscription, fixPriceSubscription;
 
     public MultiSigCreateOfferController(DefaultApplicationService applicationService) {
-        openOfferService = applicationService.getOpenOfferService();
+        openOfferService = applicationService.getOfferService().getOpenOfferService();
         model = new MultiSigCreateOfferModel();
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         directionSelection = new DirectionSelection();
-        amountPriceGroup = new AmountPriceGroup(applicationService.getMarketPriceService());
+        amountPriceGroup = new AmountPriceGroup(applicationService.getOracleService().getMarketPriceService());
         protocolSelection = new ProtocolSelection();
         settlementSelection = new SettlementSelection(applicationService.getAccountService());
 

@@ -149,9 +149,9 @@ public class ChatMessagesListView {
                            boolean isCreateOfferMode,
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
-            this.chatService = applicationService.getChatService();
-            this.chatUserService = applicationService.getChatUserService();
-            this.reputationService = applicationService.getReputationService();
+            this.chatService = applicationService.getSocialService().getChatService();
+            this.chatUserService = applicationService.getSocialService().getChatUserService();
+            this.reputationService = applicationService.getSocialService().getReputationService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;

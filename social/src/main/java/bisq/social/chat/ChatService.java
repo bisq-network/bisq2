@@ -35,7 +35,6 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.security.SecurityService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.chat.channels.*;
@@ -71,12 +70,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public ChatService(PersistenceService persistenceService,
                        IdentityService identityService,
-                       SecurityService securityService,
+                       ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
                        ChatUserService chatUserService) {
         this.persistenceService = persistenceService;
         this.identityService = identityService;
-        proofOfWorkService = securityService.getProofOfWorkService();
+        this.proofOfWorkService = proofOfWorkService;
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.chatUserService = chatUserService;

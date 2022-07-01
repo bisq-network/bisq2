@@ -32,17 +32,20 @@ import java.util.Properties;
 public final class ApplicationConfig {
     private final String baseDir;
     private final String appName;
+    private final String version;
     private final boolean devMode;
     private final boolean isBitcoindRegtest;
     private final boolean isElementsdRegtest;
 
     public ApplicationConfig(String baseDir,
                              String appName,
+                             String version,
                              boolean devMode,
                              boolean isBitcoindRegtest,
                              boolean isElementsdRegtest) {
         this.baseDir = baseDir;
         this.appName = appName;
+        this.version = version;
         this.devMode = devMode;
         this.isBitcoindRegtest = isBitcoindRegtest;
         this.isElementsdRegtest = isElementsdRegtest;

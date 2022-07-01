@@ -68,7 +68,7 @@ public class TakeOfferController implements InitWithDataController<TakeOfferCont
             selectedBaseSideSettlementMethodSubscription, selectedQuoteSideSettlementMethodSubscription;
 
     public TakeOfferController(DefaultApplicationService applicationService) {
-        marketPriceService = applicationService.getMarketPriceService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
         protocolService = applicationService.getProtocolService();
         model = new TakeOfferModel();
 

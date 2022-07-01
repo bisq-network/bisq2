@@ -46,6 +46,19 @@ import java.util.concurrent.CompletableFuture;
 public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet,
         S extends PersistableStore<S>> implements WalletService, PersistenceClient<S> {
 
+    public static Optional<RpcConfig> getOptionalRegtestConfig(boolean isRegtest, int port) {
+        if (isRegtest) {
+            return Optional.of(RpcConfig.builder()
+                    .hostname("localhost")
+                    .port(port)
+                    .user("bisq")
+                    .password("bisq")
+                    .build());
+        } else {
+            return Optional.empty();
+        }
+    }
+
     private final String currencyCode;
     protected final Optional<RpcConfig> optionalRpcConfig;
     protected final Path walletsDataDir;

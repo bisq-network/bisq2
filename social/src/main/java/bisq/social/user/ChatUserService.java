@@ -98,13 +98,13 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     private final OpenTimestampService openTimestampService;
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
 
-    public ChatUserService(PersistenceService persistenceService,
-                           Config config,
+    public ChatUserService(Config config,
+                           PersistenceService persistenceService,
                            IdentityService identityService,
                            OpenTimestampService openTimestampService,
                            NetworkService networkService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.openTimestampService = openTimestampService;
         this.identityService = identityService;
         this.networkService = networkService;

@@ -17,8 +17,8 @@
 
 package bisq.application;
 
+import bisq.network.NetworkServiceConfig;
 import bisq.network.NetworkService;
-import bisq.network.NetworkServiceConfigFactory;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import lombok.Getter;
@@ -55,9 +55,9 @@ public class NetworkApplicationService extends ServiceProvider {
 
         securityService = new SecurityService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(
                 applicationConfig.getBaseDir(),
-                getConfig("bisq.networkServiceConfig"));
+                getConfig("bisq.network"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
     }
 

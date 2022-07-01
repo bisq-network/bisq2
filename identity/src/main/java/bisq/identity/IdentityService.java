@@ -69,10 +69,10 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     private final NetworkService networkService;
     private final Object lock = new Object();
 
-    public IdentityService(PersistenceService persistenceService,
+    public IdentityService(Config config,
+                           PersistenceService persistenceService,
                            SecurityService securityService,
-                           NetworkService networkService,
-                           Config config) {
+                           NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         keyPairService = securityService.getKeyPairService();
         proofOfWorkService = securityService.getProofOfWorkService();

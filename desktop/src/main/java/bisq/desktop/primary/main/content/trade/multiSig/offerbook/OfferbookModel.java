@@ -66,7 +66,7 @@ public class OfferbookModel implements Model {
     public OfferbookModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();
-        marketPriceService = applicationService.getMarketPriceService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
     }
 
     boolean isMyOffer(OfferListItem item) {

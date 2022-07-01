@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class MockConfig {
-    public static final String NETWORK_CONFIG_PATH = "bisq.networkConfig";
+    public static final String NETWORK_CONFIG_PATH = "bisq.network";
     public static final String NETWORK_IO_POOL_CONFIG_PATH = NETWORK_CONFIG_PATH + ".networkIOPool";
 
     private static final Config BISQ_CONFIG = ConfigFactory.load("mock");
@@ -69,7 +69,7 @@ public class MockConfig {
 
     /**
      * Return a Config for a given configuration path, e.g.,
-     * "bisq.networkConfig.torPeerGroupServiceConfig.peerExchangeConfig".
+     * "bisq.networkConfig.torPeerGroupServiceConfig.peerExchange".
      *
      * @param path String representing a valid path in bisq.conf
      * @return Config
@@ -81,7 +81,7 @@ public class MockConfig {
 
     public static void main(String[] args) {
         log.info("BISQ_CONFIG = {}", BISQ_CONFIG);
-        log.info("bisq.networkConfig.torPeerGroupServiceConfig = {}", getConfig("bisq.networkConfig.torPeerGroupServiceConfig"));
-        log.info("bisq.networkConfig.i2pPeerGroupServiceConfig = {}", getConfig("bisq.networkConfig.i2pPeerGroupServiceConfig"));
+        log.info("bisq.networkConfig.torPeerGroupService = {}", getConfig("bisq.networkConfig.torPeerGroup"));
+        log.info("bisq.networkConfig.i2pPeerGroupService = {}", getConfig("bisq.networkConfig.i2pPeerGroup"));
     }
 }

@@ -29,11 +29,11 @@ public class BridgeApplicationService extends NetworkApplicationService {
     public BridgeApplicationService(String[] args) {
         super(args);
 
-        IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
-        identityService = new IdentityService(getPersistenceService(),
+        identityService = new IdentityService(IdentityService.Config.from(getConfig("bisq.identity")),
+                getPersistenceService(),
                 getSecurityService(),
-                networkService,
-                identityServiceConfig);
+                networkService
+        );
 
         daoBridgeService = new DaoBridgeService(networkService,
                 identityService,

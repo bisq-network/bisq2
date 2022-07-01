@@ -241,11 +241,10 @@ public class ServiceNode {
         return nodesById.findMyAddress(nodeId);
     }
 
-    public Optional<Address> findMyDefaultAddresses() {
-        return findMyAddress(Node.DEFAULT);
-    }
-
     private void setState(State newState) {
+        if (newState == state.get()) {
+            return;
+        }
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);

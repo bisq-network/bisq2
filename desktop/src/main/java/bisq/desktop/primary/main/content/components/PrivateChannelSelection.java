@@ -45,7 +45,7 @@ public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PrivateChannelSelection(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
-        controller = new Controller(applicationService.getChatService(), isDiscussionsChat);
+        controller = new Controller(applicationService.getSocialService().getChatService(), isDiscussionsChat);
     }
 
     public Pane getRoot() {

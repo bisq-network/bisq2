@@ -38,7 +38,6 @@ import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -92,101 +91,6 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         }
     }
 
-    public static final class Config {
-        private final String baseDir;
-        private final Transport.Config transportConfig;
-        private final Set<Transport.Type> supportedTransportTypes;
-        private final ServiceNode.Config serviceNodeConfig;
-        private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
-        private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
-        private final Map<Transport.Type, Set<Address>> seedAddressesByTransport;
-        private final Optional<String> socks5ProxyAddress;
-
-        public Config(String baseDir,
-                      Transport.Config transportConfig,
-                      Set<Transport.Type> supportedTransportTypes,
-                      ServiceNode.Config serviceNodeConfig,
-                      Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                      Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                      Map<Transport.Type, Set<Address>> seedAddressesByTransport,
-                      Optional<String> socks5ProxyAddress) {
-            this.baseDir = baseDir;
-            this.transportConfig = transportConfig;
-            this.supportedTransportTypes = supportedTransportTypes;
-            this.serviceNodeConfig = serviceNodeConfig;
-            this.peerGroupServiceConfigByTransport = peerGroupServiceConfigByTransport;
-            this.defaultNodePortByTransportType = defaultNodePortByTransportType;
-            this.seedAddressesByTransport = seedAddressesByTransport;
-            this.socks5ProxyAddress = socks5ProxyAddress;
-        }
-
-        public String baseDir() {
-            return baseDir;
-        }
-
-        public Transport.Config transportConfig() {
-            return transportConfig;
-        }
-
-        public Set<Transport.Type> supportedTransportTypes() {
-            return supportedTransportTypes;
-        }
-
-        public ServiceNode.Config serviceNodeConfig() {
-            return serviceNodeConfig;
-        }
-
-        public Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport() {
-            return peerGroupServiceConfigByTransport;
-        }
-
-        public Map<Transport.Type, Integer> defaultNodePortByTransportType() {
-            return defaultNodePortByTransportType;
-        }
-
-        public Map<Transport.Type, Set<Address>> seedAddressesByTransport() {
-            return seedAddressesByTransport;
-        }
-
-        public Optional<String> socks5ProxyAddress() {
-            return socks5ProxyAddress;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) return true;
-            if (obj == null || obj.getClass() != this.getClass()) return false;
-            var that = (Config) obj;
-            return Objects.equals(this.baseDir, that.baseDir) &&
-                    Objects.equals(this.transportConfig, that.transportConfig) &&
-                    Objects.equals(this.supportedTransportTypes, that.supportedTransportTypes) &&
-                    Objects.equals(this.serviceNodeConfig, that.serviceNodeConfig) &&
-                    Objects.equals(this.peerGroupServiceConfigByTransport, that.peerGroupServiceConfigByTransport) &&
-                    Objects.equals(this.defaultNodePortByTransportType, that.defaultNodePortByTransportType) &&
-                    Objects.equals(this.seedAddressesByTransport, that.seedAddressesByTransport) &&
-                    Objects.equals(this.socks5ProxyAddress, that.socks5ProxyAddress);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(baseDir, transportConfig, supportedTransportTypes, serviceNodeConfig, peerGroupServiceConfigByTransport, defaultNodePortByTransportType, seedAddressesByTransport, socks5ProxyAddress);
-        }
-
-        @Override
-        public String toString() {
-            return "Config[" +
-                    "baseDir=" + baseDir + ", " +
-                    "transportConfig=" + transportConfig + ", " +
-                    "supportedTransportTypes=" + supportedTransportTypes + ", " +
-                    "serviceNodeConfig=" + serviceNodeConfig + ", " +
-                    "peerGroupServiceConfigByTransport=" + peerGroupServiceConfigByTransport + ", " +
-                    "defaultNodePortByTransportType=" + defaultNodePortByTransportType + ", " +
-                    "seedAddressesByTransport=" + seedAddressesByTransport + ", " +
-                    "socks5ProxyAddress=" + socks5ProxyAddress + ']';
-        }
-
-    }
-
     @Getter
     private final NetworkIdStore persistableStore = new NetworkIdStore();
     @Getter
@@ -203,27 +107,27 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
     @Getter
     private final Optional<DataService> dataService;
 
-    public NetworkService(Config config,
+    public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
                           KeyPairService keyPairService) {
         this.keyPairService = keyPairService;
         httpService = new HttpService();
 
-        boolean supportsDataService = config.serviceNodeConfig().getServices().contains(ServiceNode.Service.DATA);
+        boolean supportsDataService = config.getServiceNodeConfig().getServices().contains(ServiceNode.Service.DATA);
         dataService = supportsDataService ? Optional.of(new DataService(new StorageService(persistenceService))) : Optional.empty();
 
-        socks5ProxyAddress = config.socks5ProxyAddress;
-        supportedTransportTypes = config.supportedTransportTypes();
-        serviceNodesByTransport = new ServiceNodesByTransport(config.transportConfig(),
+        socks5ProxyAddress = config.getSocks5ProxyAddress();
+        supportedTransportTypes = config.getSupportedTransportTypes();
+        serviceNodesByTransport = new ServiceNodesByTransport(config.getTransportConfig(),
                 supportedTransportTypes,
-                config.serviceNodeConfig(),
-                config.peerGroupServiceConfigByTransport,
-                config.seedAddressesByTransport(),
+                config.getServiceNodeConfig(),
+                config.getPeerGroupServiceConfigByTransport(),
+                config.getSeedAddressesByTransport(),
                 dataService,
                 keyPairService,
                 persistenceService);
 
-        defaultNodePortByTransportType = config.defaultNodePortByTransportType();
+        defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }

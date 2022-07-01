@@ -44,7 +44,7 @@ public class MarketController implements Controller {
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
-        chatService = applicationService.getChatService();
+        chatService = applicationService.getSocialService().getChatService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }

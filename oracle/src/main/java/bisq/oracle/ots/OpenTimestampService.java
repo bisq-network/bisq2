@@ -73,7 +73,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
         }
     }
 
-    public OpenTimestampService(IdentityService identityService, PersistenceService persistenceService, Config config) {
+    public OpenTimestampService(Config config, IdentityService identityService, PersistenceService persistenceService) {
         this.identityService = identityService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         calendars = config.getCalendars();

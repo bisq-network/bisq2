@@ -17,7 +17,25 @@
 
 package bisq.offer;
 
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
+import lombok.Getter;
+
+import java.util.concurrent.CompletableFuture;
+
+@Getter
 public class OfferService {
-    public OfferService() {
+    private final OpenOfferService openOfferService;
+    private final OfferBookService offerBookService;
+
+    public OfferService(NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
+        openOfferService = new OpenOfferService(networkService, identityService, persistenceService);
+        offerBookService = new OfferBookService(networkService);
+    }
+
+    public CompletableFuture<Boolean> initialize() {
+        return openOfferService.initialize()
+                .thenCompose(result -> offerBookService.initialize());
     }
 }

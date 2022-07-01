@@ -18,40 +18,26 @@
 package bisq.application;
 
 import bisq.account.AccountService;
-import bisq.account.accountage.AccountAgeWitnessService;
-import bisq.account.accounts.RevolutAccount;
-import bisq.account.accounts.SepaAccount;
-import bisq.common.locale.CountryRepository;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.network.NetworkServiceConfigFactory;
-import bisq.offer.OfferBookService;
+import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
-import bisq.offer.OpenOfferService;
-import bisq.oracle.marketprice.MarketPriceService;
-import bisq.oracle.marketprice.MarketPriceServiceConfigFactory;
-import bisq.oracle.ots.OpenTimestampService;
+import bisq.oracle.OracleService;
 import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
-import bisq.social.chat.ChatService;
-import bisq.social.offer.TradeChatOfferService;
-import bisq.social.user.ChatUserService;
-import bisq.social.user.reputation.ReputationService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -71,100 +57,80 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class DefaultApplicationService extends ServiceProvider {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
+    private final OracleService oracleService;
 
     public enum State {
         CREATED,
         SECURITY_SERVICE_INITIALIZED,
         NETWORK_BOOTSTRAPPED,
         IDENTITY_SERVICE_INITIALIZED,
-        OTS_SERVICE_INITIALIZED,
+        ORACLE_SERVICE_INITIALIZED,
         DAO_BRIDGE_SERVICE_INITIALIZED,
         MARKET_PRICE_SERVICE_INITIALIZED,
         ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
         PROTOCOL_SERVICE_INITIALIZED,
+        SOCIAL_SERVICE_INITIALIZED,
         INIT_COMPLETE,
         INIT_FAILED
     }
 
     private final NetworkService networkService;
-    private final OpenOfferService openOfferService;
-    private final OpenTimestampService openTimestampService;
     private final IdentityService identityService;
-    private final MarketPriceService marketPriceService;
-    private final ApplicationConfig applicationConfig;
+    private final ApplicationConfig appConfig;
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
-    private final ChatService chatService;
     private final ProtocolService protocolService;
-    private final OfferBookService offerBookService;
     private final AccountService accountService;
-    private final TradeChatOfferService tradeChatOfferService;
-    private final ChatUserService chatUserService;
-    private final ReputationService reputationService;
     private final BitcoinWalletService bitcoinWalletService;
     private final LiquidWalletService liquidWalletService;
     private final OfferService offerService;
     private final SocialService socialService;
     private final SecurityService securityService;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final Observable<State> state = new Observable<>(State.CREATED);
 
     public DefaultApplicationService(String[] args) {
         super("Bisq");
 
-        applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-        ApplicationSetup.initialize(applicationConfig);
+        appConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
+        ApplicationSetup.initialize(appConfig);
 
-        persistenceService = new PersistenceService(applicationConfig.getBaseDir());
+        persistenceService = new PersistenceService(appConfig.getBaseDir());
 
         securityService = new SecurityService(persistenceService);
 
         settingsService = new SettingsService(persistenceService);
 
-        NetworkService.Config networkServiceConfig = NetworkServiceConfigFactory.getConfig(applicationConfig.getBaseDir(),
-                getConfig("bisq.networkServiceConfig"));
-        KeyPairService keyPairService = securityService.getKeyPairService();
-        networkService = new NetworkService(networkServiceConfig, persistenceService, keyPairService);
+        networkService = new NetworkService(NetworkServiceConfig.from(appConfig.getBaseDir(), getConfig("bisq.network")),
+                persistenceService,
+                securityService.getKeyPairService());
 
+        identityService = new IdentityService(IdentityService.Config.from(getConfig("bisq.identity")),
+                persistenceService,
+                securityService,
+                networkService);
 
-        IdentityService.Config identityServiceConfig = IdentityService.Config.from(getConfig("bisq.identityServiceConfig"));
-        identityService = new IdentityService(persistenceService, securityService, networkService, identityServiceConfig);
+        oracleService = new OracleService(OracleService.Config.from(getConfig("bisq.oracle")),
+                appConfig.getVersion(),
+                networkService,
+                identityService,
+                persistenceService);
 
-        openTimestampService = new OpenTimestampService(identityService, persistenceService,
-                OpenTimestampService.Config.from(getConfig("bisq.openTimestamp")));
+        accountService = new AccountService(networkService, persistenceService, identityService);
 
-        accountService = new AccountService(persistenceService);
-        accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
+        socialService = new SocialService(SocialService.Config.from(getConfig("bisq.social")),
+                persistenceService,
+                identityService,
+                securityService,
+                oracleService.getOpenTimestampService(),
+                networkService);
 
-        socialService = new SocialService();
-        ChatUserService.Config userProfileServiceConfig = ChatUserService.Config.from(getConfig("bisq.userProfileServiceConfig"));
-        chatUserService = new ChatUserService(persistenceService, userProfileServiceConfig, identityService, openTimestampService, networkService);
-        reputationService = new ReputationService(persistenceService, networkService, chatUserService);
-        chatService = new ChatService(persistenceService, identityService, securityService, networkService, chatUserService);
-        tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
+        offerService = new OfferService(networkService, identityService, persistenceService);
 
-        // add data use case is not available yet at networkService
-        offerService = new OfferService();
-        openOfferService = new OpenOfferService(networkService, identityService, persistenceService);
-        offerBookService = new OfferBookService(networkService);
+        protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
 
-        MarketPriceService.Config marketPriceServiceConf = MarketPriceServiceConfigFactory.getConfig();
-        marketPriceService = new MarketPriceService(marketPriceServiceConf, networkService, ApplicationVersion.VERSION);
-        // offerPresentationService = new OfferPresentationService(offerService, marketPriceService);
+        bitcoinWalletService = new BitcoinWalletService(persistenceService, appConfig.getBaseDir(), appConfig.isBitcoindRegtest());
 
-        protocolService = new ProtocolService(networkService, identityService, persistenceService, openOfferService);
-
-
-        Path walletsDataDir = Path.of(applicationConfig.getBaseDir() + File.separator + "wallets");
-
-        // Bitcoin Wallet Service
-        Optional<RpcConfig> walletConfig = !applicationConfig.isBitcoindRegtest() ? Optional.empty()
-                : createRegtestWalletConfig();
-        bitcoinWalletService = new BitcoinWalletService(persistenceService, walletsDataDir, walletConfig);
-
-        // Liquid Wallet Service
-        walletConfig = !applicationConfig.isElementsdRegtest() ? Optional.empty() : createRegtestWalletConfig();
-        liquidWalletService = new LiquidWalletService(persistenceService, walletsDataDir, walletConfig);
+        liquidWalletService = new LiquidWalletService(persistenceService, appConfig.getBaseDir(), appConfig.isElementsdRegtest());
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
@@ -177,22 +143,28 @@ public class DefaultApplicationService extends ServiceProvider {
      */
     @Override
     public CompletableFuture<Boolean> initialize() {
+        securityService.initialize()
+                .thenCompose(result -> networkService.bootstrapToNetwork())
+                .thenCompose(result -> identityService.initialize())
+                .thenCompose(result -> oracleService.initialize())
+                .thenCompose(result -> accountService.initialize())
+                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> offerService.initialize())
+                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> socialService.initialize());
+
+
         return CompletableFuture.completedFuture(true)
                 .thenCompose(result -> setStateAfter(securityService.initialize(), State.SECURITY_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfter(networkService.bootstrapToNetwork(), State.NETWORK_BOOTSTRAPPED))
                 .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(openTimestampService.initialize(), State.OTS_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(marketPriceService.initialize(), State.MARKET_PRICE_SERVICE_INITIALIZED))
-                .whenComplete((list, throwable) -> addDummyAccounts())
-                .thenCompose(result -> setStateAfter(accountAgeWitnessService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(oracleService.initialize(), State.ORACLE_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(accountService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
                 .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
+                .thenCompose(result -> setStateAfter(socialService.initialize(), State.SOCIAL_SERVICE_INITIALIZED))
                 .thenCompose(result -> CompletableFutureUtils.allOf(
-                        chatUserService.initialize() //todo move to social service
-                                .thenCompose(res -> reputationService.initialize()).
-                                thenCompose(res -> chatService.initialize()),
-                        openOfferService.initialize(),
-                        offerBookService.initialize(),
-                        tradeChatOfferService.initialize(),
+                        offerService.initialize(),
                         bitcoinWalletService.initialize(),
                         liquidWalletService.initialize()))
                 // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 min)
@@ -209,30 +181,11 @@ public class DefaultApplicationService extends ServiceProvider {
                 });
     }
 
-    private void addDummyAccounts() {
-        log.info("add dummy accounts");
-        if (accountService.getAccounts().isEmpty()) {
-            SepaAccount john_smith = new SepaAccount("SEPA-account-1",
-                    "John Smith",
-                    "iban_1234",
-                    "bic_1234",
-                    CountryRepository.getDefaultCountry());
-            accountService.addAccount(john_smith);
-            accountService.addAccount(new SepaAccount("SEPA-account-2",
-                    "Mary Smith",
-                    "iban_5678",
-                    "bic_5678",
-                    CountryRepository.getDefaultCountry()));
-            accountService.addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
-        }
-    }
-
     @Override
     public CompletableFuture<Boolean> shutdown() {
         //todo add service shutdown calls
-       return supplyAsync(() -> openOfferService.shutdown()
+        return supplyAsync(() -> socialService.shutdown()
                         .thenCompose(list -> CompletableFutureUtils.allOf(
-                                marketPriceService.shutdown(),
                                 networkService.shutdown())
                         )
                         .thenCompose(list -> CompletableFutureUtils.allOf(
@@ -249,9 +202,7 @@ public class DefaultApplicationService extends ServiceProvider {
     }
 
     //todo move to Bisq.conf
-    private Optional<RpcConfig> createRegtestWalletConfig() {
-        int port = applicationConfig.isBitcoindRegtest() ? 18443 : 7040;
-
+    private Optional<RpcConfig> createRegtestWalletConfig(int port) {
         var walletConfig = RpcConfig.builder()
                 .hostname("localhost")
                 .port(port)

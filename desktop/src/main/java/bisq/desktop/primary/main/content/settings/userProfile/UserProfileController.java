@@ -38,8 +38,8 @@ public class UserProfileController implements Controller {
     private final ChatUserService chatUserService;
 
     public UserProfileController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getChatUserService();
-        ChatService chatService = applicationService.getChatService();
+        chatUserService = applicationService.getSocialService().getChatUserService();
+        ChatService chatService = applicationService.getSocialService().getChatService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();

@@ -40,12 +40,12 @@ public class UserProfileControllerOld implements Controller {
     private Subscription selectedUserProfileSubscription;
 
     public UserProfileControllerOld(DefaultApplicationService applicationService) {
-        ChatService chatService = applicationService.getChatService();
-        ChatUserService chatUserService = applicationService.getChatUserService();
+        ChatService chatService = applicationService.getSocialService().getChatService();
+        ChatUserService chatUserService = applicationService.getSocialService().getChatUserService();
         userProfileSelection = new UserProfileSelectionAtSettings(chatUserService);
         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(chatUserService);
         CreateUserProfile createUserProfile = new CreateUserProfile(chatService, chatUserService, applicationService.getSecurityService());
-        ChannelAdmin channelAdmin = new ChannelAdmin(chatUserService, applicationService.getChatService());
+        ChannelAdmin channelAdmin = new ChannelAdmin(chatUserService, applicationService.getSocialService().getChatService());
         model = new UserProfileModelOld(applicationService);
         view = new UserProfileViewOld(model,
                 this,

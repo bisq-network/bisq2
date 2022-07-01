@@ -58,8 +58,8 @@ public class ReviewOfferController implements Controller {
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable closeHandler) {
-        chatService = applicationService.getChatService();
-        reputationService = applicationService.getReputationService();
+        chatService = applicationService.getSocialService().getChatService();
+        reputationService = applicationService.getSocialService().getReputationService();
         settingsService = applicationService.getSettingsService();
 
         myOfferListView = new ChatMessagesListView(applicationService,

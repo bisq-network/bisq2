@@ -59,6 +59,8 @@ public class ApplicationConfigFactory {
         String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
         log.info("Use application directory {}", appDir);
 
-        return new ApplicationConfig(appDir, appName, devMode, isBitcoindRegtest, isElementsdRegtest);
+        String version = typesafeConfig.getString("version");
+        
+        return new ApplicationConfig(appDir, appName, version, devMode, isBitcoindRegtest, isElementsdRegtest);
     }
 }
