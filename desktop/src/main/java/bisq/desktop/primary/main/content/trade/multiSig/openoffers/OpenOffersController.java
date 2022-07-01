@@ -60,7 +60,7 @@ public class OpenOffersController implements Controller {
         model = new OpenOffersModel(applicationService);
         view = new OpenOffersView(model, this);
 
-        openOfferService = applicationService.getOpenOfferService();
+        openOfferService = applicationService.getOfferService().getOpenOfferService();
     }
 
     @Override

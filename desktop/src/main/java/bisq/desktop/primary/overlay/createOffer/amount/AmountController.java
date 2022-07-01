@@ -54,7 +54,7 @@ public class AmountController implements Controller {
     public AmountController(DefaultApplicationService applicationService) {
         quoteAmount = new BigAmountInput(false);
         baseAmount = new SmallAmountInput(true);
-        price = new PriceInput(applicationService.getMarketPriceService());
+        price = new PriceInput(applicationService.getOracleService().getMarketPriceService());
 
         model = new AmountModel();
         view = new AmountView(model, this,

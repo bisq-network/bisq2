@@ -56,7 +56,7 @@ public class OpenOffersModel implements Model {
     public OpenOffersModel(DefaultApplicationService applicationService) {
         networkService = applicationService.getNetworkService();
         keyPairService = applicationService.getKeyPairService();
-        marketPriceService = applicationService.getMarketPriceService();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
     }
 
     void setRemoveOfferError(Offer offer, Throwable throwable) {

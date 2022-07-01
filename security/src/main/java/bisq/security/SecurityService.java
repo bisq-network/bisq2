@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.common.application.ModuleService;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.EquihashProofOfWorkService;
 import bisq.security.pow.ProofOfWorkService;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class SecurityService {
+public class SecurityService implements ModuleService {
     @Getter
     private final KeyPairService keyPairService;
     @Getter
@@ -41,5 +42,11 @@ public class SecurityService {
         log.info("initialize");
         proofOfWorkService.initialize();
         return keyPairService.initialize();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
     }
 }

@@ -25,6 +25,7 @@ import bisq.persistence.PersistableStore;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
  * Persists my user profiles and the selected user profile.
  */
 @Slf4j
+@Getter
 public final class ChatUserStore implements PersistableStore<ChatUserStore> {
     private final Observable<ChatUserIdentity> selectedChatUserIdentity = new Observable<>();
     private final ObservableSet<ChatUserIdentity> chatUserIdentities;
@@ -94,17 +96,5 @@ public final class ChatUserStore implements PersistableStore<ChatUserStore> {
         selectedChatUserIdentity.set(persisted.getSelectedChatUserIdentity().get());
         chatUserIdentities.addAll(persisted.getChatUserIdentities());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
-    }
-
-    Observable<ChatUserIdentity> getSelectedChatUserIdentity() {
-        return selectedChatUserIdentity;
-    }
-
-    ObservableSet<ChatUserIdentity> getChatUserIdentities() {
-        return chatUserIdentities;
-    }
-
-    Map<String, ProofOfBurnProof> getVerifiedProofOfBurnProofs() {
-        return verifiedProofOfBurnProofs;
     }
 }

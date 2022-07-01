@@ -94,8 +94,8 @@ public class ChatMessagesComponent {
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
-            this.chatService = applicationService.getChatService();
-            this.chatUserService = applicationService.getChatUserService();
+            this.chatService = applicationService.getSocialService().getChatService();
+            this.chatUserService = applicationService.getSocialService().getChatUserService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,

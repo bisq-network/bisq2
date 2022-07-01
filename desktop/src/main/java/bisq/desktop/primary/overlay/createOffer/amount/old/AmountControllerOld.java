@@ -53,12 +53,12 @@ public class AmountControllerOld implements Controller {
     private Subscription termsDisabledSubscription;
 
     public AmountControllerOld(DefaultApplicationService applicationService) {
-        TradeChatOfferService tradeChatOfferService = applicationService.getTradeChatOfferService();
-        chatService = applicationService.getChatService();
-        model = new AmountModelOld(applicationService.getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
+        TradeChatOfferService tradeChatOfferService = applicationService.getSocialService().getTradeChatOfferService();
+        chatService = applicationService.getSocialService().getChatService();
+        model = new AmountModelOld(applicationService.getSocialService().getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
-        btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getMarketPriceService());
+        btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getOracleService().getMarketPriceService());
 
         paymentMethodsSelection = new PaymentMethodsSelection(chatService);
 

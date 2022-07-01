@@ -31,6 +31,8 @@ import bisq.network.p2p.node.transport.TorTransport;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.peergroup.BanList;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +43,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static bisq.network.NetworkService.DISPATCHER;
+import static bisq.network.p2p.node.Node.State.INITIALIZE_SERVER;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -86,7 +87,10 @@ public class Node implements Connection.Handler {
 
         void onDisconnect(Connection connection, CloseReason closeReason);
 
-        default void onStateChange(State state) {
+        default void onShutdown(Node node) {
+        }
+
+        default void onStateChange(Node.State state) {
         }
     }
 
@@ -126,10 +130,11 @@ public class Node implements Connection.Handler {
     private final Transport.Type transportType;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final Map<String, ConnectionHandshake> connectionHandshakes = new ConcurrentHashMap<>();
+    private final RetryPolicy<Boolean> initializeServerRetryPolicy;
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
 
-    private volatile boolean isStopped;
+    private volatile boolean shutDownStarted;
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.CREATED);
 
@@ -140,6 +145,18 @@ public class Node implements Connection.Handler {
         authorizationService = config.getAuthorizationService();
         this.config = config;
         this.nodeId = nodeId;
+
+        initializeServerRetryPolicy = RetryPolicy.<Boolean>builder()
+                .handle(IllegalStateException.class)
+                .handleResultIf(result -> state.get() == INITIALIZE_SERVER)
+                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
+                .withJitter(0.25)
+                .withMaxDuration(Duration.ofMinutes(5))
+                .withMaxRetries(10)
+                .onRetry(e -> log.debug("Retry to call initializeServer. AttemptCount={}.", e.getAttemptCount()))
+                .onRetriesExceeded(e -> log.warn("InitializeServer failed. Max retries exceeded."))
+                .onSuccess(e -> log.debug("InitializeServer succeeded."))
+                .build();
     }
 
 
@@ -147,37 +164,37 @@ public class Node implements Connection.Handler {
     // Server
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeInitializeServer(int port) {
+    public boolean maybeInitializeServer(int port) {
+        return Failsafe.with(initializeServerRetryPolicy).get(() -> maybeDoInitializeServer(port));
+    }
+
+    private boolean maybeDoInitializeServer(int port) {
         switch (state.get()) {
             case CREATED: {
-                setState(State.INITIALIZE_SERVER);
+                setState(INITIALIZE_SERVER);
                 transport.initialize();
                 createServerAndListen(port);
                 setState(State.SERVER_INITIALIZED);
-                break;
+                return true;
             }
             case INITIALIZE_SERVER: {
-                log.warn("Node has started initializing. We pause the thread and check afterwards if the " +
-                        "node initialisation has been completed in the meantime.");
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                maybeInitializeServer(port);
-                break;
+                log.debug("Initializing node has already started. NodeId={}", nodeId);
+                throw new IllegalStateException("Initializing node has already started. NodeId=" + nodeId);
             }
             case SERVER_INITIALIZED: {
-                log.debug("Node is already initialized. We ignore the initializeServer call.");
-                break;
+                log.debug("Node is already initialized.");
+                return true;
             }
             case SHUTDOWN_STARTED: {
-                log.warn("Node shutdown has been started. We ignore the initializeServer call.");
-                break;
+                log.warn("Node shutdown has been started.");
+                return false;
             }
             case SHUTDOWN_COMPLETE: {
-                log.warn("Node is already shutdown. We ignore the initializeServer call.");
-                break;
+                log.warn("Node is already shutdown.");
+                return false;
+            }
+            default: {
+                throw new RuntimeException("Unhandled state " + state.get());
             }
         }
     }
@@ -187,7 +204,11 @@ public class Node implements Connection.Handler {
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), config.getSupportedTransportTypes()));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
-                this::handleException));
+                exception -> {
+                    handleException(exception);
+                    // If server fails we shut down the node
+                    shutdown();
+                }));
     }
 
     private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
@@ -389,7 +410,7 @@ public class Node implements Connection.Handler {
 
     @Override
     public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection) {
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
@@ -441,6 +462,10 @@ public class Node implements Connection.Handler {
         connection.close(closeReason);
     }
 
+    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
+        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
+    }
+
     public void closeConnectionGracefully(Connection connection, CloseReason closeReason) {
         try {
             connection.stopListening();
@@ -450,35 +475,30 @@ public class Node implements Connection.Handler {
         connection.close(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
     }
 
-    public CompletableFuture<Void> closeConnectionGracefullyAsync(Connection connection, CloseReason closeReason) {
-        return runAsync(() -> closeConnectionGracefully(connection, closeReason), NetworkService.NETWORK_IO_POOL);
-    }
-
     public CompletableFuture<List<Void>> shutdown() {
         log.info("Node {} shutdown", this);
-        if (isStopped) {
-            return CompletableFuture.completedFuture(null);
+        if (shutDownStarted) {
+            return CompletableFuture.completedFuture(new ArrayList<>());
         }
         setState(State.SHUTDOWN_STARTED);
-        isStopped = true;
+        shutDownStarted = true;
 
         server.ifPresent(Server::shutdown);
         connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
 
-        Stream<CompletableFuture<Void>> connections = Stream.concat(inboundConnectionsByAddress.values().stream(),
-                        outboundConnectionsByAddress.values().stream())
-                .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN));
-        return CompletableFutureUtils.allOf(connections)
+        return CompletableFutureUtils.allOf(getAllConnections()
+                        .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN)))
                 .orTimeout(1, SECONDS)
-                .whenComplete((r, throwable) -> {
+                .whenComplete((list, throwable) -> {
                     transport.shutdown();
                     outboundConnectionsByAddress.clear();
                     inboundConnectionsByAddress.clear();
-                    listeners.clear();
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);
                     }
                     setState(State.SHUTDOWN_COMPLETE);
+                    listeners.forEach(listener -> listener.onShutdown(this));
+                    listeners.clear();
                 });
     }
 
@@ -515,7 +535,7 @@ public class Node implements Connection.Handler {
 
     private void handleException(Connection connection, Throwable exception) {
         log.warn("Node {} got called handleException. connection={}, exception={}", this, connection, exception.getMessage());
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (connection.isRunning()) {
@@ -526,7 +546,7 @@ public class Node implements Connection.Handler {
     private void handleException(Throwable exception) {
         log.debug("Node {} got called handleException. exception={}", this, exception.getMessage());
 
-        if (isStopped) {
+        if (shutDownStarted) {
             return;
         }
         if (exception instanceof EOFException) {
@@ -561,6 +581,7 @@ public class Node implements Connection.Handler {
     }
 
     private void setState(State newState) {
+        log.info("Set new state {} for nodeId {}", newState, nodeId);
         checkArgument(newState.ordinal() > state.get().ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);

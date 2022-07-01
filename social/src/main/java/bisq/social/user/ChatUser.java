@@ -43,13 +43,18 @@ import lombok.extern.slf4j.Slf4j;
 public final class ChatUser implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
     private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
+    // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
+    private final static MetaData META_DATA = new MetaData(TTL, 100000, ChatUser.class.getSimpleName());
+
+    public static ChatUser from(ChatUser chatUser, String terms, String bio) {
+        return new ChatUser(chatUser.getNickName(), chatUser.getProofOfWork(), chatUser.getNetworkId(), terms, bio);
+    }
 
     private final String nickName;
     private final ProofOfWork proofOfWork;
     private final NetworkId networkId;
     private final String terms;
     private final String bio;
-    private final MetaData metaData;
 
     private transient final byte[] pubKeyHash;
     private transient final String id;
@@ -60,36 +65,18 @@ public final class ChatUser implements DistributedData {
                     NetworkId networkId,
                     String terms,
                     String bio) {
-        this(nickName,
-                proofOfWork,
-                networkId,
-                terms,
-                bio,
-                new MetaData(TTL, 100000, ChatUser.class.getSimpleName()));
-    }
-
-    public ChatUser(String nickName,
-                    ProofOfWork proofOfWork,
-                    NetworkId networkId,
-                    String terms,
-                    String bio,
-                    MetaData metaData) {
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
         this.terms = terms;
         this.bio = bio;
-        this.metaData = metaData;
 
         pubKeyHash = DigestUtil.hash(networkId.getPubKey().getPublicKey().getEncoded());
         id = Hex.encode(pubKeyHash);
         nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
     }
 
-    public static ChatUser from(ChatUser chatUser, String terms, String bio) {
-        return new ChatUser(chatUser.getNickName(), chatUser.getProofOfWork(), chatUser.getNetworkId(), terms, bio);
-    }
-
+    @Override
     public bisq.social.protobuf.ChatUser toProto() {
         return bisq.social.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
@@ -97,7 +84,6 @@ public final class ChatUser implements DistributedData {
                 .setBio(bio)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
-                .setMetaData(metaData.toProto())
                 .build();
     }
 
@@ -106,8 +92,7 @@ public final class ChatUser implements DistributedData {
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getTerms(),
-                proto.getBio(),
-                MetaData.fromProto(proto.getMetaData()));
+                proto.getBio());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -120,6 +105,16 @@ public final class ChatUser implements DistributedData {
         };
     }
 
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
+    public boolean isDataInvalid() {
+        //todo
+        return false;
+    }
 
     public String getTooltipString() {
         return Res.get("social.chatUser.tooltip", nickName, nym);
@@ -129,16 +124,6 @@ public final class ChatUser implements DistributedData {
         return NymLookup.getUserName(nym, nickName);
     }
 
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        //todo
-        return false;
-    }
 
     //todo
     public String getBurnScoreAsString() {

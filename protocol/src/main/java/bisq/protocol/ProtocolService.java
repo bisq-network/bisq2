@@ -18,6 +18,7 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
+import bisq.common.application.ModuleService;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
@@ -39,12 +40,11 @@ import bisq.protocol.messages.TakeOfferRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore> {
+public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore>, ModuleService {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("ProtocolService.dispatcher");
 
     @Getter
@@ -69,20 +69,25 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
         networkService.addMessageListener(this);
     }
 
-    public CompletableFuture<List<Boolean>> initialize() {
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return CompletableFutureUtils.allOf(persistableStore.getProtocolModelByOfferId().values().stream()
-                .map(protocolModel ->
-                        identityService.getOrCreateIdentity(protocolModel.getId())
-                                .thenApply(identity -> {
-                                    Protocol<? extends ProtocolModel> protocol;
-                                    if (protocolModel instanceof MakerProtocolModel) {
-                                        protocol = getMakerProtocol((MakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
-                                    } else if (protocolModel instanceof TakerProtocolModel) {
-                                        protocol = getTakerProtocol((TakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
-                                    } else {
-                                        return false;
-                                    }
+                        .map(protocolModel ->
+                                identityService.getOrCreateIdentity(protocolModel.getId())
+                                        .thenApply(identity -> {
+                                            Protocol<? extends ProtocolModel> protocol;
+                                            if (protocolModel instanceof MakerProtocolModel) {
+                                                protocol = getMakerProtocol((MakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
+                                            } else if (protocolModel instanceof TakerProtocolModel) {
+                                                protocol = getTakerProtocol((TakerProtocolModel) protocolModel, identity.getNodeIdAndKeyPair());
+                                            } else {
+                                                return false;
+                                            }
                                    /* // We do not rely on equals and hash code as protocol is very content rich. 
                                     // We just want to be sure to always have the latest version, so if we find 
                                     // one with the same id, we replace it with the new one.
@@ -92,14 +97,20 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
                                             .findAny();
                                     optionalProtocol.ifPresent(protocols::remove);*/
 
-                                    protocols.add(protocol);
-                                    persistableStore.add(protocolModel);
-                                    if (protocol.isPending()) {
-                                        protocol.onContinue();
-                                    }
-                                    return true;
-                                })
-                ));
+                                            protocols.add(protocol);
+                                            persistableStore.add(protocolModel);
+                                            if (protocol.isPending()) {
+                                                protocol.onContinue();
+                                            }
+                                            return true;
+                                        })
+                        ))
+                .thenApply(list -> true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override

@@ -3,7 +3,7 @@ package bisq.application;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class Executable<T extends ServiceProvider> {
+public abstract class Executable<T extends ApplicationService> {
     protected final T applicationService;
 
     public Executable(String[] args) {
@@ -35,10 +35,6 @@ public abstract class Executable<T extends ServiceProvider> {
     }
 
     abstract protected void onDomainInitialized();
-
-    public void shutdown() {
-        applicationService.shutdown();
-    }
 
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> log.error("Uncaught exception", throwable));

@@ -55,6 +55,7 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
 

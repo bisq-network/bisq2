@@ -58,9 +58,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
-        chatService = applicationService.getChatService();
-        chatUserService = applicationService.getChatUserService();
-        ReputationService reputationService = applicationService.getReputationService();
+        chatService = applicationService.getSocialService().getChatService();
+        chatUserService = applicationService.getSocialService().getChatUserService();
+        ReputationService reputationService = applicationService.getSocialService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);

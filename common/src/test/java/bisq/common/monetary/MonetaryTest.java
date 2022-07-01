@@ -39,7 +39,7 @@ public class MonetaryTest {
         assertEquals(1234, Fiat.parse("0.1234", "USD").getValue());
         assertEquals(1234, Fiat.parse("0.12341", "USD").getValue());
 
-        FiatCurrencyRepository.initialize(Locale.US);
+        FiatCurrencyRepository.setLocale(Locale.US);
         assertEquals(1234567800, Fiat.parse("123456.78 USD").getValue());
         Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Fiat.parse("123456.78USD").getValue()));
         Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Fiat.parse("123456.78 XYZ").getValue()));

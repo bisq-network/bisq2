@@ -15,8 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.application;
+package bisq.common.application;
 
-public class ApplicationVersion {
-    public static final String VERSION = "0.0.1";
+import java.util.concurrent.CompletableFuture;
+
+public interface ModuleService {
+    CompletableFuture<Boolean> initialize();
+
+    CompletableFuture<Boolean> shutdown();
 }

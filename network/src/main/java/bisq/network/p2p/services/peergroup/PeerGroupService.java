@@ -197,14 +197,14 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         setState(State.STOPPING);
         peerExchangeService.shutdown();
         addressValidationService.shutdown();
         keepAliveService.shutdown();
         scheduler.ifPresent(Scheduler::stop);
         setState(State.TERMINATED);
-        return CompletableFuture.completedFuture(null);
+        return CompletableFuture.completedFuture(true);
     }
 
 

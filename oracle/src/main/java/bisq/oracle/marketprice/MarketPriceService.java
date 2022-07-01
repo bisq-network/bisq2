@@ -54,11 +54,27 @@ public class MarketPriceService {
     @Getter
     @ToString
     public static final class Config {
+        public static Config from(com.typesafe.config.Config config) {
+            //todo move to conf
+            return new MarketPriceService.Config(Set.of(
+                    new MarketPriceService.Provider("https://price.bisq.wiz.biz/", "wiz", Transport.Type.CLEAR),
+
+                    // Sample I2P tunnel, see docs folder for instructions how to create one
+                    // new MarketPriceService.Provider("http://txvrt45gy3d73vubwddvyqvv5ke5b6ycmcohlcypbmpmsjyg4ofa.b32.i2p/", "tunnel-to-wiz", Transport.Type.I2P),
+
+                    new MarketPriceService.Provider("http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", "wiz", Transport.Type.TOR),
+                    new MarketPriceService.Provider("http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", "emzy", Transport.Type.TOR),
+                    new MarketPriceService.Provider("http://aprcndeiwdrkbf4fq7iozxbd27dl72oeo76n7zmjwdi4z34agdrnheyd.onion/", "mrosseel", Transport.Type.TOR),
+                    new MarketPriceService.Provider("http://devinpndvdwll4wiqcyq5e7itezmarg7rzicrvf6brzkwxdm374kmmyd.onion/", "devinbileck", Transport.Type.TOR),
+                    new MarketPriceService.Provider("http://ro7nv73awqs3ga2qtqeqawrjpbxwarsazznszvr6whv7tes5ehffopid.onion/", "alexej996", Transport.Type.TOR)));
+        }
+
         private final Set<Provider> providers;
 
         public Config(Set<Provider> providers) {
             this.providers = providers;
         }
+
     }
 
     @Getter
@@ -125,8 +141,9 @@ public class MarketPriceService {
         listeners.forEach(listener -> listener.onMarketSelected(market));
     }
 
-    public void shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         httpClient.ifPresent(BaseHttpClient::shutdown);
+        return CompletableFuture.completedFuture(true);
     }
 
     public Optional<MarketPrice> getMarketPrice(Market market) {

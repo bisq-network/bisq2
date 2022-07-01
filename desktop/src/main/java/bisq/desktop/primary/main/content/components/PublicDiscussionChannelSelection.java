@@ -39,7 +39,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
-        controller = new Controller(applicationService.getChatService());
+        controller = new Controller(applicationService.getSocialService().getChatService());
     }
 
     public Pane getRoot() {

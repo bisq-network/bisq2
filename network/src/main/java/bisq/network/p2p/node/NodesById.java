@@ -19,7 +19,6 @@ package bisq.network.p2p.node;
 
 
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.BanList;
 
@@ -34,12 +33,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Maintains nodes per nodeId.
+ * Maintains a map with nodes by nodeId.
  * Provides delegate methods to node with given nodeId
  */
 public class NodesById implements Node.Listener {
     public interface Listener {
         void onNodeAdded(Node node);
+
+        default void onNodeRemoved(Node node) {
+        }
     }
 
     private final Map<String, Node> map = new ConcurrentHashMap<>();
@@ -58,10 +60,6 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeInitializeServer(String nodeId) {
-        maybeInitializeServer(nodeId, NetworkUtils.findFreeSystemPort());
-    }
-
     public void maybeInitializeServer(String nodeId, int serverPort) {
         getOrCreateNode(nodeId).maybeInitializeServer(serverPort);
     }
@@ -76,6 +74,44 @@ public class NodesById implements Node.Listener {
 
     public Connection send(String senderNodeId, NetworkMessage networkMessage, Connection connection) {
         return getOrCreateNode(senderNodeId).send(networkMessage, connection);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        return CompletableFutureUtils.allOf(map.values().stream().map(Node::shutdown))
+                .orTimeout(2, TimeUnit.SECONDS)
+                .handle((list, throwable) -> {
+                    map.clear();
+                    listeners.clear();
+                    nodeListeners.clear();
+                    return throwable == null;
+                });
+    }
+
+    public Node getOrCreateDefaultNode() {
+        return getOrCreateNode(Node.DEFAULT);
+    }
+
+    public Optional<Address> findMyAddress(String nodeId) {
+        return findNode(nodeId).flatMap(Node::findMyAddress);
+    }
+
+    public Optional<Node> findNode(String nodeId) {
+        return Optional.ofNullable(map.get(nodeId));
+    }
+
+    public Collection<Node> getAllNodes() {
+        return map.values();
+    }
+
+    /**
+     * @return Addresses of nodes which have completed creating the server (e.g. hidden service is published).
+     * Before the server creation is complete we do not know our address.
+     */
+    public Map<String, Address> getAddressesByNodeId() {
+        //noinspection OptionalGetWithoutIsPresent
+        return map.entrySet().stream()
+                .filter(e -> e.getValue().findMyAddress().isPresent())
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().findMyAddress().get()));
     }
 
     public void addNodeListener(Node.Listener listener) {
@@ -94,46 +130,6 @@ public class NodesById implements Node.Listener {
         listeners.remove(listener);
     }
 
-    public void addNodeListener(String nodeId, Node.Listener listener) {
-        findNode(nodeId).ifPresent(node -> node.addListener(listener));
-    }
-
-    public void removeNodeListener(String nodeId, Node.Listener listener) {
-        findNode(nodeId).ifPresent(node -> node.removeListener(listener));
-    }
-
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(Node::shutdown))
-                .orTimeout(2, TimeUnit.SECONDS)
-                .thenApply(list -> {
-                    map.clear();
-                    return null;
-                });
-    }
-
-    public Node getDefaultNode() {
-        return getOrCreateNode(Node.DEFAULT);
-    }
-
-    public Optional<Address> findMyAddress(String nodeId) {
-        return findNode(nodeId).flatMap(Node::findMyAddress);
-    }
-
-    public Optional<Node> findNode(String nodeId) {
-        return Optional.ofNullable(map.get(nodeId));
-    }
-
-    public Collection<Node> getAllNodes() {
-        return map.values();
-    }
-
-    public Map<String, Address> getAddressesByNodeId() {
-        //noinspection OptionalGetWithoutIsPresent
-        return map.entrySet().stream()
-                .filter(e -> e.getValue().findMyAddress().isPresent())
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().findMyAddress().get()));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Node.Listener
@@ -141,7 +137,7 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
-        nodeListeners.forEach(messageListener -> messageListener.onMessage(networkMessage, connection, nodeId));
+        nodeListeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
     }
 
     @Override
@@ -150,6 +146,13 @@ public class NodesById implements Node.Listener {
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+    }
+
+    @Override
+    public void onShutdown(Node node) {
+        map.remove(node.getNodeId());
+        node.removeListener(this);
+        listeners.forEach(listener -> listener.onNodeRemoved(node));
     }
 
 

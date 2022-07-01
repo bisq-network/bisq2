@@ -120,6 +120,6 @@ public class OverlayController extends NavigationController {
     }
 
     public void onQuit() {
-        applicationService.shutdown().thenAccept(__ -> Platform.exit());
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 }

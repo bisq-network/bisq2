@@ -54,7 +54,6 @@ public class PersistenceService {
                                                                                  String subDir,
                                                                                  String fileName,
                                                                                  PersistableStore<T> persistableStore) {
-
         PersistableStoreResolver.addResolver(persistableStore.getResolver());
         clients.add(client);
         Persistence<T> persistence = new Persistence<>(baseDir + File.separator + subDir, fileName);

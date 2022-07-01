@@ -18,6 +18,7 @@
 package bisq.identity;
 
 
+import bisq.common.application.ModuleService;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -38,16 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * todo
- * add identity selection strategy. E.g. one identity per domain ID or one identity per context
- * type (e.g. fiat trades) or one global identity...
- * Add support for userName mapping with identity (not sure if should be done here or in social module)
- */
 @Slf4j
-public class IdentityService implements PersistenceClient<IdentityStore> {
+public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
@@ -74,10 +70,10 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     private final NetworkService networkService;
     private final Object lock = new Object();
 
-    public IdentityService(PersistenceService persistenceService,
+    public IdentityService(Config config,
+                           PersistenceService persistenceService,
                            SecurityService securityService,
-                           NetworkService networkService,
-                           Config config) {
+                           NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         keyPairService = securityService.getKeyPairService();
         proofOfWorkService = securityService.getProofOfWorkService();
@@ -85,11 +81,21 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         minPoolSize = config.minPoolSize;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         initializeActiveIdentities();
         initializePooledIdentities();
         initializeMissingPooledIdentities();
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 
@@ -101,7 +107,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     /**
      * We first look up if we find an identity in the active identities map, if not we take one from the pool and
      * clone it with the new domainId. If none present we create a fresh identity and initialize it.
-     * The active and pooled identities get initialized as start-up, so it can be expected that they are already
+     * The active and pooled identities get initialized at start-up, so it can be expected that they are already
      * initialized, but there is no guarantee for that.
      * Client code has to deal with the async nature of the node initialisation which takes a few seconds usually,
      * but user experience should in most cases not suffer from an additional delay.
@@ -113,12 +119,6 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         return findActiveIdentity(domainId).map(CompletableFuture::completedFuture)
                 .orElseGet(() -> swapPooledIdentity(domainId).map(CompletableFuture::completedFuture)
                         .orElseGet(() -> createAndInitializeNewActiveIdentity(domainId)));
-    }
-
-    public Optional<Identity> findActiveIdentity(String domainId) {
-        synchronized (lock) {
-            return Optional.ofNullable(getActiveIdentityByDomainId().get(domainId));
-        }
     }
 
     public void retireIdentity(String domainId) {
@@ -135,6 +135,12 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         }
     }
 
+    public Optional<Identity> findActiveIdentity(String domainId) {
+        synchronized (lock) {
+            return Optional.ofNullable(getActiveIdentityByDomainId().get(domainId));
+        }
+    }
+
     public Optional<Identity> findActiveIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return getActiveIdentityByDomainId().values().stream()
@@ -145,7 +151,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findPooledIdentityByNodeId(String nodeId) {
         synchronized (lock) {
-            return persistableStore.getPool().stream()
+            return getPool().stream()
                     .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -153,7 +159,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Optional<Identity> findRetiredIdentityByNodeId(String nodeId) {
         synchronized (lock) {
-            return persistableStore.getRetired().stream()
+            return getRetired().stream()
                     .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
@@ -162,14 +168,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     public Optional<Identity> findAnyIdentityByNodeId(String nodeId) {
         synchronized (lock) {
             return Streams.concat(getActiveIdentityByDomainId().values().stream(),
-                            Streams.concat(persistableStore.getRetired().stream(),
-                                    persistableStore.getPool().stream()))
+                            Streams.concat(getRetired().stream(),
+                                    getPool().stream()))
                     .filter(e -> e.getNetworkId().getNodeId().equals(nodeId))
                     .findAny();
         }
     }
 
-    public CompletableFuture<Identity> createNewInitializedIdentity(String profileId,
+    public CompletableFuture<Identity> createNewInitializedIdentity(String nymId,
                                                                     String keyId,
                                                                     KeyPair keyPair,
                                                                     ProofOfWork proofOfWork) {
@@ -178,10 +184,10 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
-                    Identity identity = new Identity(profileId, networkId, keyPair, proofOfWork);
+                    Identity identity = new Identity(nymId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {
                         persistableStore.getPool().add(identity);
-                        getActiveIdentityByDomainId().put(profileId, identity);
+                        getActiveIdentityByDomainId().put(nymId, identity);
                     }
                     persist();
                     return identity;
@@ -190,6 +196,14 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
 
     public Map<String, Identity> getActiveIdentityByDomainId() {
         return persistableStore.getActiveIdentityByDomainId();
+    }
+
+    public Set<Identity> getPool() {
+        return persistableStore.getPool();
+    }
+
+    public Set<Identity> getRetired() {
+        return persistableStore.getRetired();
     }
 
 
@@ -202,7 +216,7 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.findNetworkId(identity.getNodeId(), identity.getPubKey()).isPresent())
+                    .filter(identity -> networkService.findNetworkId(identity.getNodeId()).isPresent())
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny()) // If none is initialized we take any
                     .map(pooledIdentity -> {
@@ -306,8 +320,8 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-
-        return proofOfWorkService.mintNymProofOfWork(DigestUtil.hash(keyPair.getPublic().getEncoded()), ProofOfWorkService.MINT_NYM_DIFFICULTY)
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        return proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                 .thenCompose(proofOfWork -> networkService.getInitializedNetworkId(nodeId, pubKey)
                         .thenApply(networkId -> new Identity(domainId, networkId, keyPair, proofOfWork)));
     }

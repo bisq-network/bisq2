@@ -75,7 +75,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
-            super(applicationService.getChatService());
+            super(applicationService.getSocialService().getChatService());
 
             model = new Model();
             view = new View(model, this);

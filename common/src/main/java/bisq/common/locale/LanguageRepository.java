@@ -35,7 +35,7 @@ public class LanguageRepository {
         LanguageRepository.defaultLanguage = defaultLanguage;
     }
 
-    public static void initialize(Locale defaultLocale) {
+    public static void setLocale(Locale defaultLocale) {
         LanguageRepository.defaultLanguage = defaultLocale.getLanguage();
     }
 

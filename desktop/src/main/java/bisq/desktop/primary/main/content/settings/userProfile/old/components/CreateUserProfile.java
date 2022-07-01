@@ -106,14 +106,12 @@ public class CreateUserProfile {
         private void onCreateUserProfile() {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
-            String profileId = model.nymId.get();
-            chatUserService.createNewInitializedUserProfile(profileId,
+            String nymId = model.nymId.get();
+            chatUserService.createNewInitializedUserProfile(nymId,
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
-                            model.proofOfWork,
-                            "",
-                            "")
+                            model.proofOfWork)
                     .thenAccept(userProfile -> UIThread.run(this::reset));
         }
 

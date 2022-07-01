@@ -23,12 +23,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class ExecutorFactory {
     public static final ExecutorService WORKER_POOL = newFixedThreadPool("Worker-pool");
-    public static final AtomicInteger COUNTER = new AtomicInteger(0);
 
     public static void shutdownAndAwaitTermination(ExecutorService executor) {
         shutdownAndAwaitTermination(executor, 100);
@@ -45,7 +43,7 @@ public class ExecutorFactory {
 
     public static ExecutorService newSingleThreadExecutor(String name) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name + "-" + COUNTER.incrementAndGet())
+                .setNameFormat(getNameWithThreadNum(name))
                 .setDaemon(true)
                 .build();
         return Executors.newSingleThreadExecutor(threadFactory);
@@ -53,7 +51,7 @@ public class ExecutorFactory {
 
     public static ScheduledExecutorService newSingleThreadScheduledExecutor(String name) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name + "-" + COUNTER.incrementAndGet())
+                .setNameFormat(getNameWithThreadNum(name))
                 .setDaemon(true)
                 .build();
         return Executors.newSingleThreadScheduledExecutor(threadFactory);
@@ -65,7 +63,7 @@ public class ExecutorFactory {
      */
     public static ExecutorService newCachedThreadPool(String name) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+                .setNameFormat(getNameWithThreadNum(name))
                 .setDaemon(true)
                 .build();
         ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
@@ -83,7 +81,7 @@ public class ExecutorFactory {
 
     public static ExecutorService newFixedThreadPool(String name, int numThreads) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+                .setNameFormat(getNameWithThreadNum(name))
                 .setDaemon(true)
                 .build();
         return Executors.newFixedThreadPool(numThreads, threadFactory);
@@ -102,11 +100,15 @@ public class ExecutorFactory {
                                                            long keepAliveTimeInSec,
                                                            BlockingQueue<Runnable> workQueue) {
         ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+                .setNameFormat(getNameWithThreadNum(name))
                 .setDaemon(true)
                 .build();
 
         return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.MILLISECONDS, workQueue, threadFactory);
+    }
+
+    private static String getNameWithThreadNum(String name) {
+        return name + "-%d";
     }
 }

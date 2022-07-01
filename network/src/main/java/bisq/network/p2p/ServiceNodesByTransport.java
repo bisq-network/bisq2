@@ -88,12 +88,12 @@ public class ServiceNodesByTransport {
         });
     }
 
-    public CompletableFuture<Void> shutdown() {
+    public CompletableFuture<Boolean> shutdown() {
         return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
                 .orTimeout(6, TimeUnit.SECONDS)
                 .thenApply(list -> {
                     map.clear();
-                    return null;
+                    return true;
                 });
     }
 
@@ -106,8 +106,8 @@ public class ServiceNodesByTransport {
     public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
         return new InitializeServerResult(map.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey()))
-                                , NETWORK_IO_POOL))));
+                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey())),
+                                NETWORK_IO_POOL))));
     }
 
     public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {

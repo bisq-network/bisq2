@@ -55,7 +55,7 @@ public class Bisq1BridgeClient {
         BridgeApplicationService applicationService = new BridgeApplicationService(args);
         daoBridgeService = applicationService.getDaoBridgeService();
 
-        String url = daoBridgeService.getDaoBridgeConfig().getString("url");
+        String url = daoBridgeService.getConfig().getUrl();
         // We expect to request at localhost, so we use clear net 
         httpClient = applicationService.getNetworkService().getHttpClient(url, "Bisq1BridgeNode", Transport.Type.CLEAR);
 

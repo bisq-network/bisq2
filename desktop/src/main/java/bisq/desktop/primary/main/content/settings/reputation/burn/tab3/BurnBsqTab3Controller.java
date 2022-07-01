@@ -41,7 +41,7 @@ public class BurnBsqTab3Controller implements Controller {
     private Pin selectedUserProfilePin;
 
     public BurnBsqTab3Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getChatUserService();
+        chatUserService = applicationService.getSocialService().getChatUserService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BurnBsqTab3Model();

@@ -25,14 +25,6 @@ public class Seed {
 
     public Seed(String[] args) {
         NetworkApplicationService applicationService = new NetworkApplicationService(args);
-        applicationService.readAllPersisted().join();
-        applicationService.initialize()
-                .whenComplete((success, throwable) -> {
-                    if (success) {
-                        log.info("NetworkApplicationService initialized");
-                    } else {
-                        log.error("Initializing networkApplicationService failed", throwable);
-                    }
-                });
+        applicationService.readAllPersisted().thenCompose(result -> applicationService.initialize());
     }
 }

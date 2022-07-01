@@ -30,7 +30,7 @@ public class GenerateNewProfileStep2Controller implements Controller {
     private final GenerateNewProfileStep2View view;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        ChatUserService chatUserService = applicationService.getChatUserService();
+        ChatUserService chatUserService = applicationService.getSocialService().getChatUserService();
 
         GenerateNewProfileStep2Model model = new GenerateNewProfileStep2Model();
         view = new GenerateNewProfileStep2View(model, this);

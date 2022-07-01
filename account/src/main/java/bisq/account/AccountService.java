@@ -18,9 +18,16 @@
 package bisq.account;
 
 
+import bisq.account.accountage.AccountAgeWitnessService;
 import bisq.account.accounts.Account;
+import bisq.account.accounts.RevolutAccount;
+import bisq.account.accounts.SepaAccount;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
+import bisq.common.application.ModuleService;
+import bisq.common.locale.CountryRepository;
+import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -29,18 +36,38 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AccountService implements PersistenceClient<AccountStore> {
+public class AccountService implements PersistenceClient<AccountStore>, ModuleService {
     @Getter
     private final AccountStore persistableStore = new AccountStore();
     @Getter
     private final Persistence<AccountStore> persistence;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
-    public AccountService(PersistenceService persistenceService) {
+    public AccountService(NetworkService networkService, PersistenceService persistenceService, IdentityService identityService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        addDummyAccounts();
+        return accountAgeWitnessService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
+
 
     public void addAccount(Account<? extends SettlementMethod> account) {
         List<Account<? extends SettlementMethod>> accounts = persistableStore.getAccounts();
@@ -60,5 +87,23 @@ public class AccountService implements PersistenceClient<AccountStore> {
                 .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
+    }
+
+    private void addDummyAccounts() {
+        log.info("add dummy accounts");
+        if (getAccounts().isEmpty()) {
+            SepaAccount john_smith = new SepaAccount("SEPA-account-1",
+                    "John Smith",
+                    "iban_1234",
+                    "bic_1234",
+                    CountryRepository.getDefaultCountry());
+            addAccount(john_smith);
+            addAccount(new SepaAccount("SEPA-account-2",
+                    "Mary Smith",
+                    "iban_5678",
+                    "bic_5678",
+                    CountryRepository.getDefaultCountry()));
+            addAccount(new RevolutAccount("revolut-account", "john@gmail.com"));
+        }
     }
 }

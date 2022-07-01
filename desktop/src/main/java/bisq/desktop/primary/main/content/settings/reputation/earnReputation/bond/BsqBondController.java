@@ -41,7 +41,7 @@ public class BsqBondController implements Controller {
     private Pin selectedUserProfilePin;
 
     public BsqBondController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getChatUserService();
+        chatUserService = applicationService.getSocialService().getChatUserService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BsqBondModel();

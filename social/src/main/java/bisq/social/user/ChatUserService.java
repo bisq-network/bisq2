@@ -37,7 +37,6 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
-import bisq.security.KeyPairService;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.user.proof.*;
@@ -99,14 +98,13 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     private final OpenTimestampService openTimestampService;
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
 
-    public ChatUserService(PersistenceService persistenceService,
-                           Config config,
-                           KeyPairService keyPairService,
+    public ChatUserService(Config config,
+                           PersistenceService persistenceService,
                            IdentityService identityService,
                            OpenTimestampService openTimestampService,
                            NetworkService networkService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.openTimestampService = openTimestampService;
         this.identityService = identityService;
         this.networkService = networkService;
@@ -122,22 +120,22 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
+    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String nymId,
                                                                                String nickName,
                                                                                String keyId,
                                                                                KeyPair keyPair,
                                                                                ProofOfWork proofOfWork) {
-        return createNewInitializedUserProfile(profileId, nickName, keyId, keyPair, proofOfWork, "", "");
+        return createNewInitializedUserProfile(nymId, nickName, keyId, keyPair, proofOfWork, "", "");
     }
 
-    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String profileId,
+    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String nymId,
                                                                                String nickName,
                                                                                String keyId,
                                                                                KeyPair keyPair,
                                                                                ProofOfWork proofOfWork,
                                                                                String terms,
                                                                                String bio) {
-        return identityService.createNewInitializedIdentity(profileId, keyId, keyPair, proofOfWork)
+        return identityService.createNewInitializedIdentity(nymId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
                     ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);

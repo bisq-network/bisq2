@@ -57,7 +57,6 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
         this(getId(market), market, isVisible);
     }
 
-
     private PublicTradeChannel(String id, Optional<Market> market, boolean isVisible) {
         super(id, NotificationSetting.MENTION);
 
