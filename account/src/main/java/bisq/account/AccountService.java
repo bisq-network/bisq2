@@ -24,6 +24,7 @@ import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
+import bisq.common.application.ModuleService;
 import bisq.common.locale.CountryRepository;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -39,7 +40,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AccountService implements PersistenceClient<AccountStore> {
+public class AccountService implements PersistenceClient<AccountStore>, ModuleService {
     @Getter
     private final AccountStore persistableStore = new AccountStore();
     @Getter
@@ -50,6 +51,23 @@ public class AccountService implements PersistenceClient<AccountStore> {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        addDummyAccounts();
+        return accountAgeWitnessService.initialize();
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
+
 
     public void addAccount(Account<? extends SettlementMethod> account) {
         List<Account<? extends SettlementMethod>> accounts = persistableStore.getAccounts();
@@ -69,12 +87,6 @@ public class AccountService implements PersistenceClient<AccountStore> {
                 .filter(account -> settlementMethods.contains(account.getSettlementMethod()))
                 .filter(account -> account.getTradeCurrencyCodes().contains(currencyCode))
                 .collect(Collectors.toList());
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        addDummyAccounts();
-        return accountAgeWitnessService.initialize();
     }
 
     private void addDummyAccounts() {

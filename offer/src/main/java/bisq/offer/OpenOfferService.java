@@ -83,6 +83,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
 
 
     public CompletableFuture<List<BroadCastDataResult>> shutdown() {
+        log.info("shutdown");
         return CompletableFutureUtils.allOf(getOpenOffers().stream()
                 .map(openOffer -> removeFromNetwork(openOffer.getOffer())));
     }

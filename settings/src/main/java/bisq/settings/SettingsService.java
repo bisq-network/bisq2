@@ -17,14 +17,19 @@
 
 package bisq.settings;
 
+import bisq.common.application.ModuleService;
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsService implements PersistenceClient<SettingsStore> {
+import java.util.concurrent.CompletableFuture;
+
+@Slf4j
+public class SettingsService implements PersistenceClient<SettingsStore>, ModuleService {
     @Getter
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
@@ -35,6 +40,20 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
         DontShowAgainService.setSettingsService(this);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
 
     public DisplaySettings getDisplaySettings() {
         return persistableStore.getDisplaySettings();
@@ -75,5 +94,4 @@ public class SettingsService implements PersistenceClient<SettingsStore> {
         persistableStore.setRequiredTotalReputationScore(value);
         persist();
     }
-
 }

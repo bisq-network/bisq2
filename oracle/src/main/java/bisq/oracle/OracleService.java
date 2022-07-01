@@ -17,6 +17,7 @@
 
 package bisq.oracle;
 
+import bisq.common.application.ModuleService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -29,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class OracleService {
+public class OracleService implements ModuleService {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config openTimestamp;
@@ -57,9 +58,19 @@ public class OracleService {
                 applicationVersion);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return openTimestampService.initialize()
                 .thenCompose(result -> marketPriceService.initialize());
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
     }
 }

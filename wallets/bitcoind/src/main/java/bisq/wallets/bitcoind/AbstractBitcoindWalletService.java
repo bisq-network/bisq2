@@ -80,6 +80,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         observableBalanceAsCoin = new Observable<>(Coin.of(0, currencyCode));
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
@@ -94,6 +98,21 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
         return CompletableFuture.completedFuture(true);
     }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.supplyAsync(() -> {
+            zmqConnection.ifPresent(ZmqConnection::shutdown);
+            wallet.ifPresent(Wallet::shutdown);
+            return true;
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // WalletService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
@@ -123,21 +142,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         return CompletableFuture.completedFuture(true);
     }
 
-
-    @Override
-    public CompletableFuture<Void> shutdown() {
-        return CompletableFuture.runAsync(() -> {
-            zmqConnection.ifPresent(ZmqConnection::shutdown);
-            wallet.ifPresent(Wallet::shutdown);
-        });
-    }
-
-
     @Override
     public boolean isWalletReady() {
         return optionalRpcConfig.isPresent() || wallet.isPresent();
     }
-
 
     @Override
     public CompletableFuture<String> getNewAddress() {

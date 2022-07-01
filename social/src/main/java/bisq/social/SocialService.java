@@ -17,6 +17,7 @@
 
 package bisq.social;
 
+import bisq.common.application.ModuleService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.ots.OpenTimestampService;
@@ -34,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class SocialService {
+public class SocialService implements ModuleService {
     private final ChatUserService chatUserService;
     private final Config config;
     private final ReputationService reputationService;
@@ -72,6 +73,11 @@ public class SocialService {
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return chatUserService.initialize()
@@ -80,9 +86,8 @@ public class SocialService {
                 .thenCompose(result -> tradeChatOfferService.initialize());
     }
 
-
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
-
 }

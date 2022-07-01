@@ -20,26 +20,22 @@ package bisq.application;
 import bisq.account.AccountService;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.oracle.OracleService;
-import bisq.persistence.PersistenceService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
-import bisq.wallets.core.RpcConfig;
 import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +51,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  */
 @Getter
 @Slf4j
-public class DefaultApplicationService extends ServiceProvider {
+public class DefaultApplicationService extends ApplicationService {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
     private final OracleService oracleService;
 
@@ -76,8 +72,7 @@ public class DefaultApplicationService extends ServiceProvider {
 
     private final NetworkService networkService;
     private final IdentityService identityService;
-    private final ApplicationConfig appConfig;
-    private final PersistenceService persistenceService;
+   
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
     private final AccountService accountService;
@@ -89,110 +84,84 @@ public class DefaultApplicationService extends ServiceProvider {
     private final Observable<State> state = new Observable<>(State.CREATED);
 
     public DefaultApplicationService(String[] args) {
-        super("Bisq");
+        super("Bisq", args);
 
-        appConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-        ApplicationSetup.initialize(appConfig);
-
-        persistenceService = new PersistenceService(appConfig.getBaseDir());
+        bitcoinWalletService = new BitcoinWalletService(persistenceService, config.getBaseDir(), config.isBitcoindRegtest());
+        liquidWalletService = new LiquidWalletService(persistenceService, config.getBaseDir(), config.isElementsdRegtest());
 
         securityService = new SecurityService(persistenceService);
 
-        settingsService = new SettingsService(persistenceService);
-
-        networkService = new NetworkService(NetworkServiceConfig.from(appConfig.getBaseDir(), getConfig("bisq.network")),
+        networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
                 persistenceService,
                 securityService.getKeyPairService());
 
-        identityService = new IdentityService(IdentityService.Config.from(getConfig("bisq.identity")),
+        identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
                 persistenceService,
                 securityService,
                 networkService);
 
-        oracleService = new OracleService(OracleService.Config.from(getConfig("bisq.oracle")),
-                appConfig.getVersion(),
+        oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")),
+                config.getVersion(),
                 networkService,
                 identityService,
                 persistenceService);
-
         accountService = new AccountService(networkService, persistenceService, identityService);
 
-        socialService = new SocialService(SocialService.Config.from(getConfig("bisq.social")),
+        offerService = new OfferService(networkService, identityService, persistenceService);
+
+        socialService = new SocialService(SocialService.Config.from(getConfig("social")),
                 persistenceService,
                 identityService,
                 securityService,
                 oracleService.getOpenTimestampService(),
                 networkService);
-
-        offerService = new OfferService(networkService, identityService, persistenceService);
+        settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
-
-        bitcoinWalletService = new BitcoinWalletService(persistenceService, appConfig.getBaseDir(), appConfig.isBitcoindRegtest());
-
-        liquidWalletService = new LiquidWalletService(persistenceService, appConfig.getBaseDir(), appConfig.isElementsdRegtest());
     }
 
-    public CompletableFuture<Boolean> readAllPersisted() {
-        return persistenceService.readAllPersisted();
-    }
+   
 
-    /**
-     * Initializes all domain objects, services and repositories.
-     * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
-     */
+    // At the moment we do not initialize in parallel to keep thing simple, but can be optimized later
     @Override
     public CompletableFuture<Boolean> initialize() {
-        securityService.initialize()
-                .thenCompose(result -> networkService.bootstrapToNetwork())
+        return bitcoinWalletService.initialize()
+                .thenCompose(result -> liquidWalletService.initialize())
+                .thenCompose(result -> securityService.initialize())
+                .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
-                .thenCompose(result -> protocolService.initialize())
                 .thenCompose(result -> offerService.initialize())
+                .thenCompose(result -> socialService.initialize())
+                .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
-                .thenCompose(result -> protocolService.initialize())
-                .thenCompose(result -> socialService.initialize());
-
-
-        return CompletableFuture.completedFuture(true)
-                .thenCompose(result -> setStateAfter(securityService.initialize(), State.SECURITY_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(networkService.bootstrapToNetwork(), State.NETWORK_BOOTSTRAPPED))
-                .thenCompose(result -> setStateAfter(identityService.initialize(), State.IDENTITY_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(oracleService.initialize(), State.ORACLE_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(accountService.initialize(), State.ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfterList(protocolService.initialize(), State.PROTOCOL_SERVICE_INITIALIZED))
-                .thenCompose(result -> setStateAfter(socialService.initialize(), State.SOCIAL_SERVICE_INITIALIZED))
-                .thenCompose(result -> CompletableFutureUtils.allOf(
-                        offerService.initialize(),
-                        bitcoinWalletService.initialize(),
-                        liquidWalletService.initialize()))
-                // TODO Needs to increase if using embedded I2P router (i2p internal bootstrap timeouts after 5 min)
                 .orTimeout(5, TimeUnit.MINUTES)
-                .thenApply(list -> list.stream().allMatch(e -> e))
-                .whenComplete((list, throwable) -> {
-                    if (throwable == null) {
-                        log.info("All application services initialized");
-                        setState(State.INIT_COMPLETE);
+                .whenComplete((success, throwable) -> {
+                    if (success) {
+                        log.info("NetworkApplicationService initialized");
                     } else {
-                        log.error("Error at initializing application services", throwable);
-                        setState(State.INIT_FAILED);
+                        log.error("Initializing networkApplicationService failed", throwable);
                     }
                 });
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        //todo add service shutdown calls
-        return supplyAsync(() -> socialService.shutdown()
-                        .thenCompose(list -> CompletableFutureUtils.allOf(
-                                networkService.shutdown())
-                        )
-                        .thenCompose(list -> CompletableFutureUtils.allOf(
-                                bitcoinWalletService.shutdown(),
-                                liquidWalletService.shutdown())
-                        )
-                        .handle((list, throwable) -> throwable == null)
+        // We shut down services in opposite order as they are initialized
+        return supplyAsync(() -> protocolService.shutdown()
+                        .thenCompose(result -> settingsService.shutdown())
+                        .thenCompose(result -> socialService.shutdown())
+                        .thenCompose(result -> offerService.shutdown())
+                        .thenCompose(result -> accountService.shutdown())
+                        .thenCompose(result -> oracleService.shutdown())
+                        .thenCompose(result -> identityService.shutdown())
+                        .thenCompose(result -> networkService.shutdown())
+                        .thenCompose(result -> securityService.shutdown())
+                        .thenCompose(result -> liquidWalletService.shutdown())
+                        .thenCompose(result -> bitcoinWalletService.shutdown())
+                        .orTimeout(5, TimeUnit.MINUTES)
+                        .handle((result, throwable) -> throwable == null)
                         .join(),
                 ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
@@ -201,16 +170,6 @@ public class DefaultApplicationService extends ServiceProvider {
         return securityService.getKeyPairService();
     }
 
-    //todo move to Bisq.conf
-    private Optional<RpcConfig> createRegtestWalletConfig(int port) {
-        var walletConfig = RpcConfig.builder()
-                .hostname("localhost")
-                .port(port)
-                .user("bisq")
-                .password("bisq")
-                .build();
-        return Optional.of(walletConfig);
-    }
 
     private CompletableFuture<Boolean> setState(State newState) {
         checkArgument(state.get().ordinal() < newState.ordinal(),

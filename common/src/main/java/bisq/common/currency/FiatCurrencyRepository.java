@@ -37,11 +37,11 @@ public class FiatCurrencyRepository {
     private static FiatCurrency defaultCurrency;
 
     static {
-        initialize(LocaleRepository.getDefaultLocale());
+        setLocale(LocaleRepository.getDefaultLocale());
     }
 
     // Need to be called at application setup with user locale
-    public static void initialize(Locale locale) {
+    public static void setLocale(Locale locale) {
         currencyByCode = CountryRepository.getCountries().stream()
                 .map(country -> getCurrencyByCountryCode(country.getCode(), locale))
                 .distinct()

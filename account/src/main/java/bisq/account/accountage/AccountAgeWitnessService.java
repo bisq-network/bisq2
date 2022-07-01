@@ -46,6 +46,7 @@ public class AccountAgeWitnessService implements DataService.Listener {
     }
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         if (doTestPublish) {
             return publishAppendOnlyData(DigestUtil.hash("test".getBytes(StandardCharsets.UTF_8)));
         } else {

@@ -17,9 +17,9 @@
 
 package bisq.application;
 
-import bisq.network.NetworkServiceConfig;
+import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
-import bisq.persistence.PersistenceService;
+import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.util.OsUtils.EXIT_FAILURE;
-import static bisq.common.util.OsUtils.EXIT_SUCCESS;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Creates domain specific options from program arguments and application options.
@@ -39,52 +38,41 @@ import static bisq.common.util.OsUtils.EXIT_SUCCESS;
  */
 @Getter
 @Slf4j
-public class NetworkApplicationService extends ServiceProvider {
+public class NetworkApplicationService extends ApplicationService {
     protected final NetworkService networkService;
-    protected final ApplicationConfig applicationConfig;
-    protected final PersistenceService persistenceService;
     protected final SecurityService securityService;
 
     public NetworkApplicationService(String[] args) {
-        super("Seed");
-
-        applicationConfig = ApplicationConfigFactory.getConfig(getConfig("bisq.application"), args);
-        ApplicationSetup.initialize(applicationConfig);
-
-        persistenceService = new PersistenceService(applicationConfig.getBaseDir());
+        super("Seed", args);
 
         securityService = new SecurityService(persistenceService);
 
-        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(
-                applicationConfig.getBaseDir(),
-                getConfig("bisq.network"));
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(), getConfig("network"));
         networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
     }
 
-    public CompletableFuture<Boolean> readAllPersisted() {
-        return persistenceService.readAllPersisted();
-    }
-
-    /**
-     * Initializes all domain objects.
-     * We do in parallel as far as possible. If there are dependencies we chain those as sequence.
-     */
+    @Override
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
-                .thenCompose(result -> networkService.bootstrapToNetwork())
-                .orTimeout(10, TimeUnit.SECONDS);
+                .thenCompose(result -> networkService.initialize())
+                .orTimeout(5, TimeUnit.MINUTES)
+                .whenComplete((success, throwable) -> {
+                    if (success) {
+                        log.info("NetworkApplicationService initialized");
+                    } else {
+                        log.error("Initializing networkApplicationService failed", throwable);
+                    }
+                });
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return networkService.shutdown()
-                .whenComplete((__, throwable) -> {
-                    if (throwable == null) {
-                        System.exit(EXIT_SUCCESS);
-                    } else {
-                        log.error("Error at shutdown", throwable);
-                        System.exit(EXIT_FAILURE);
-                    }
-                });
+        // We shut down services in opposite order as they are initialized
+        return supplyAsync(() -> networkService.shutdown()
+                        .thenCompose(result -> securityService.shutdown())
+                        .orTimeout(2, TimeUnit.MINUTES)
+                        .handle((result, throwable) -> throwable == null)
+                        .join(),
+                ExecutorFactory.newSingleThreadExecutor("Shutdown"));
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.oracle.daobridge;
 
+import bisq.common.application.ModuleService;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
@@ -24,8 +25,8 @@ import bisq.network.NetworkService;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.security.KeyGeneration;
-import com.typesafe.config.Config;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -49,23 +50,40 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
-public class DaoBridgeService {
+public class DaoBridgeService implements ModuleService {
+
+    @Getter
+    @ToString
+    public static final class Config {
+        private final String privateKey;
+        private final String publicKey;
+        private final String url;
+
+        public Config(String privateKey, String publicKey, String url) {
+            this.privateKey = privateKey;
+            this.publicKey = publicKey;
+            this.url = url;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getString("privateKey"), config.getString("publicKey"), config.getString("url"));
+        }
+    }
+
     private final NetworkService networkService;
     private final IdentityService identityService;
     @Getter
-    private final Config daoBridgeConfig;
+    private final Config config;
     private Optional<PrivateKey> authorizedPrivateKey = Optional.empty();
     private Optional<PublicKey> authorizedPublicKey = Optional.empty();
 
-    public DaoBridgeService(NetworkService networkService,
-                            IdentityService identityService,
-                            Config daoBridgeConfig) {
+    public DaoBridgeService(DaoBridgeService.Config config, NetworkService networkService, IdentityService identityService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.daoBridgeConfig = daoBridgeConfig;
+        this.config = config;
 
-        String privateKey = daoBridgeConfig.getString("privateKey");
-        String publicKey = daoBridgeConfig.getString("publicKey");
+        String privateKey = config.getPrivateKey();
+        String publicKey = config.getPublicKey();
         if (privateKey != null && !privateKey.isEmpty() && publicKey != null && !publicKey.isEmpty()) {
             try {
                 authorizedPrivateKey = Optional.of(KeyGeneration.generatePrivate(Hex.decode(privateKey)));
@@ -78,6 +96,22 @@ public class DaoBridgeService {
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
+
+    
     public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnDtoSet) {
         checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
         checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");

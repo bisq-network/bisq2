@@ -18,6 +18,7 @@
 package bisq.network;
 
 
+import bisq.common.application.ModuleService;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
@@ -52,7 +53,10 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -70,7 +74,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkService implements PersistenceClient<NetworkIdStore> {
+public class NetworkService implements PersistenceClient<NetworkIdStore>, ModuleService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
     private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
@@ -132,7 +136,23 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Bootstrap to gossip network (initialize default node and initialize peerGroupService
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        String nodeId = Node.DEFAULT;
+        return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
+                .thenCompose(result -> findOrPersistNewNetworkId(nodeId, keyPairService.getDefaultPubKey())
+                        .map(networkId -> CompletableFuture.completedFuture(result))
+                        .orElse(CompletableFuture.failedFuture(new IllegalStateException("NetworkId not present"))));
+    }
+
     public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
                 .thenCompose(list -> dataService.map(DataService::shutdown).orElse(completedFuture(true)));
     }
@@ -182,20 +202,6 @@ public class NetworkService implements PersistenceClient<NetworkIdStore> {
                     });
                 });
         return future;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Bootstrap to gossip network (initialize default node and initialize peerGroupService
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<Boolean> bootstrapToNetwork() {
-        log.info("bootstrapToNetwork");
-        String nodeId = Node.DEFAULT;
-        return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
-                .thenCompose(result -> findOrPersistNewNetworkId(nodeId, keyPairService.getDefaultPubKey())
-                        .map(networkId -> CompletableFuture.completedFuture(result))
-                        .orElse(CompletableFuture.failedFuture(new IllegalStateException("NetworkId not present"))));
     }
 
 

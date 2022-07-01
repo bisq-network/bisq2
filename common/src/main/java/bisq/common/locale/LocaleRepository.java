@@ -17,11 +17,12 @@
 
 package bisq.common.locale;
 
-import bisq.common.currency.FiatCurrencyRepository;
+import bisq.common.options.PropertiesReader;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -30,28 +31,21 @@ public class LocaleRepository {
     @Getter
     private static Locale defaultLocale;
 
+    static {
+        Properties properties = PropertiesReader.getProperties("bisq.properties");
+        if (properties != null) {
+            Locale locale = new Locale(properties.getProperty("language"), properties.getProperty("country"));
+            setDefaultLocale(locale);
+        } else {
+            setDefaultLocale(Locale.getDefault());
+        }
+    }
+
     public static void setDefaultLocale(Locale defaultLocale) {
         if (isLocaleInvalid(defaultLocale)) {
             defaultLocale = Locale.US;
         }
         LocaleRepository.defaultLocale = defaultLocale;
-    }
-
-    public static void initialize(Locale defaultLocale) {
-        if (isLocaleInvalid(defaultLocale)) {
-            defaultLocale = Locale.US;
-        }
-        LocaleRepository.defaultLocale = defaultLocale;
-        CountryRepository.initialize(defaultLocale);
-        LanguageRepository.initialize(defaultLocale);
-        FiatCurrencyRepository.initialize(defaultLocale);
-    }
-
-    static {
-        defaultLocale = Locale.getDefault();
-        if (isLocaleInvalid(defaultLocale)) {
-            defaultLocale = Locale.US;
-        }
     }
 
     public static boolean isLocaleInvalid(Locale locale) {

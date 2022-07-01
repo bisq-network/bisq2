@@ -26,6 +26,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.util.OsUtils.EXIT_FAILURE;
 import static java.util.Objects.requireNonNull;
 
 @Slf4j
@@ -62,7 +63,11 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
                         }
                     } else {
                         log.error("Could not launch JavaFX application.", throwable);
-                        shutdown();
+                        if (Platform.isFxApplicationThread()) {
+                            applicationService.shutdown().thenAccept(result -> Platform.exit());
+                        } else {
+                            applicationService.shutdown().thenAccept(result -> System.exit(EXIT_FAILURE));
+                        }
                     }
                 });
     }
@@ -90,14 +95,5 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
                 }
             });
         });
-    }
-
-    @Override
-    public void shutdown() {
-        if (primaryStageController != null) {
-            primaryStageController.shutdown();
-        } else {
-            super.shutdown();
-        }
     }
 }

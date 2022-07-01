@@ -18,6 +18,7 @@
 package bisq.identity;
 
 
+import bisq.common.application.ModuleService;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
@@ -42,7 +43,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class IdentityService implements PersistenceClient<IdentityStore> {
+public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
@@ -80,11 +81,21 @@ public class IdentityService implements PersistenceClient<IdentityStore> {
         minPoolSize = config.minPoolSize;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // ModuleService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         initializeActiveIdentities();
         initializePooledIdentities();
         initializeMissingPooledIdentities();
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 

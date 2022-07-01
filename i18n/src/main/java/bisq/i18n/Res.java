@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
 public class Res {
     private static ResourceBundle defaultBundle;
 
-    public static void initialize(Locale locale) {
+    public static void setLocale(Locale locale) {
         if ("en".equalsIgnoreCase(locale.getLanguage())) {
             locale = Locale.ROOT;
         }

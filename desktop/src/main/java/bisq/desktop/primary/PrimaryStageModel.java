@@ -43,7 +43,7 @@ public class PrimaryStageModel extends NavigationModel {
 
     public PrimaryStageModel(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
-        title = applicationService.getAppConfig().getAppName();
+        title = applicationService.getConfig().getAppName();
 
         Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
         stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);

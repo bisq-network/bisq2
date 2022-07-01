@@ -78,6 +78,6 @@ public class RestApiApplication extends ResourceConfig {
 
     public RestApiApplication(String[] args) {
         applicationService = new DefaultApplicationService(args);
-        applicationService.initialize().join();
+        applicationService.readAllPersisted().thenCompose(result -> applicationService.initialize());
     }
 }

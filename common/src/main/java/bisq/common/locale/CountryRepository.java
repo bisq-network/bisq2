@@ -30,7 +30,7 @@ public class CountryRepository {
         CountryRepository.defaultCountry = defaultCountry;
     }
 
-    public static void initialize(Locale defaultLocale) {
+    public static void setLocale(Locale defaultLocale) {
         CountryRepository.defaultCountry = findCountry(defaultLocale).orElse(findCountry(Locale.US).orElseThrow());
     }
 

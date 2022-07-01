@@ -75,7 +75,7 @@ public class PrimaryStageController extends NavigationController {
         Notification.init(viewRoot, displaySettings);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
-                applicationService.getAppConfig().getBaseDir(),
+                applicationService.getConfig().getBaseDir(),
                 displaySettings,
                 this::shutdown);
 
@@ -149,8 +149,7 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void shutdown() {
-        applicationService.shutdown()
-                .thenAccept(__ -> Platform.exit());
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
     public void onStageXChanged(double value) {
