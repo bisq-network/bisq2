@@ -21,3 +21,8 @@ dependencies {
     implementation libs.google.guava
     implementation libs.typesafe.config
 }
+
+distZip.enabled = false
+distTar.enabled = false
+shadowDistZip.enabled = false
+shadowDistTar.enabled = false

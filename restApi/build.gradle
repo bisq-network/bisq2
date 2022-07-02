@@ -44,3 +44,7 @@ dependencies {
     implementation libs.swagger.jaxrs2.jakarta
 }
 
+distZip.enabled = false
+distTar.enabled = false
+shadowDistZip.enabled = false
+shadowDistTar.enabled = false

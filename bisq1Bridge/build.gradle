@@ -31,3 +31,8 @@ dependencies {
     implementation libs.bundles.jackson
     implementation libs.protobuf.java.util
 }
+
+distZip.enabled = false
+distTar.enabled = false
+shadowDistZip.enabled = false
+shadowDistTar.enabled = false
