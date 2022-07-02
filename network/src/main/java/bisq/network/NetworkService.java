@@ -86,20 +86,16 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     }
 
     public static class SendMessageResult extends HashMap<Transport.Type, ConfidentialMessageService.Result> {
-        public SendMessageResult(Map<Transport.Type, ConfidentialMessageService.Result> map) {
-            super(map);
-        }
-
         public SendMessageResult() {
             super();
         }
     }
 
-    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
     private final NetworkServiceStore persistableStore = new NetworkServiceStore();
     private final Persistence<NetworkServiceStore> persistence;
     private final KeyPairService keyPairService;
     private final HttpService httpService;
+    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance 
     private final Set<Transport.Type> supportedTransportTypes;
     private final ServiceNodesByTransport serviceNodesByTransport;
@@ -116,7 +112,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
 
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
-        serviceNodesByTransport = new ServiceNodesByTransport(config.getTransportConfig(),
+        serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 supportedTransportTypes,
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),

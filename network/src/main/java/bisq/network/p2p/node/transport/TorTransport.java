@@ -9,6 +9,9 @@ import bisq.tor.OnionAddress;
 import bisq.tor.Tor;
 import bisq.tor.TorServerSocket;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -17,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static java.io.File.separator;
 
@@ -24,19 +28,28 @@ import static java.io.File.separator;
 @Slf4j
 public class TorTransport implements Transport {
     public final static int DEFAULT_PORT = 9999;
-    private static TorTransport INSTANCE;
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Config implements Transport.Config {
+        public static Config from(String baseDir, com.typesafe.config.Config config) {
+            return new Config(baseDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
+        }
+
+        private final int socketTimeout;
+        private final String baseDir;
+
+        public Config(String baseDir, int socketTimeout) {
+            this.baseDir = baseDir;
+            this.socketTimeout = socketTimeout;
+        }
+    }
 
     private final String torDirPath;
     private final Tor tor;
 
-    public static TorTransport getInstance(Config config) {
-        if (INSTANCE == null) {
-            INSTANCE = new TorTransport(config);
-        }
-        return INSTANCE;
-    }
-
-    public TorTransport(Config config) {
+    public TorTransport(Transport.Config config) {
         torDirPath = config.getBaseDir() + separator + "tor";
         log.info("TorTransport using torDirPath: {}", torDirPath);
         // We get a singleton instance per application (torDirPath)

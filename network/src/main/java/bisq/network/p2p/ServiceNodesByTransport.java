@@ -57,7 +57,7 @@ public class ServiceNodesByTransport {
     @Getter
     private final Map<Transport.Type, ServiceNode> map = new ConcurrentHashMap<>();
 
-    public ServiceNodesByTransport(Transport.Config transportConfig,
+    public ServiceNodesByTransport(Map<Transport.Type, Transport.Config> configByTransportType,
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
@@ -65,14 +65,13 @@ public class ServiceNodesByTransport {
                                    Optional<DataService> dataService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService) {
-        long socketTimeout = TimeUnit.MINUTES.toMillis(5);
-
         supportedTransportTypes.forEach(transportType -> {
+            Transport.Config transportConfig = configByTransportType.get(transportType);
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
                     new UnrestrictedAuthorizationService(),
                     transportConfig,
-                    (int) socketTimeout);
+                    transportConfig.getSocketTimeout());
             Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
