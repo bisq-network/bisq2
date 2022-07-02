@@ -43,7 +43,7 @@ public class NetworkApplicationService extends ApplicationService {
     protected final SecurityService securityService;
 
     public NetworkApplicationService(String[] args) {
-        super("Seed", args);
+        super("network", args);
 
         securityService = new SecurityService(persistenceService);
 

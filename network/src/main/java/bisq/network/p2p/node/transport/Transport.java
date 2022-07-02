@@ -51,15 +51,9 @@ public interface Transport {
         }
     }
 
-    @Getter
-    @ToString
-    @EqualsAndHashCode
-    final class Config {
-        private final String baseDir;
-
-        public Config(String baseDir) {
-            this.baseDir = baseDir;
-        }
+    interface Config {
+        String getBaseDir();
+        int getSocketTimeout();
     }
 
     @Getter

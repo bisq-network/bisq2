@@ -5,6 +5,9 @@ import bisq.i2p.I2pClient;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -12,20 +15,45 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static java.io.File.separator;
 
-// Start I2P
-// Enable SAM at http://127.0.0.1:7657/configclients
-// Takes about 1-2 minutes until its ready
 @Slf4j
 public class I2PTransport implements Transport {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Config implements Transport.Config {
+        public static Config from(String baseDir, com.typesafe.config.Config config) {
+            return new Config(baseDir,
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    config.getInt("bandwidth"));
+        }
+
+        private final int socketTimeout;
+        private final int bandwidth;
+        private final String baseDir;
+
+        public Config(String baseDir, int socketTimeout, int bandwidth) {
+            this.baseDir = baseDir;
+            this.socketTimeout = socketTimeout;
+            this.bandwidth = bandwidth;
+        }
+    }
+
     private final String i2pDirPath;
     private I2pClient i2pClient;
     private boolean initializeCalled;
     private String sessionId;
 
-    public I2PTransport(Config config) {
+    public I2PTransport(Transport.Config config) {
+        // Demonstrate potential usage of specific config.
+        // Would be likely passed to i2p router not handled here...
+
+        // Failed to get config generic...
+        int bandwidth = ((Config) config).getBandwidth();
+
         i2pDirPath = config.getBaseDir() + separator + "i2p";
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
     }

@@ -74,10 +74,10 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
  * clearNet enabled clearNet is used for https.
  */
 @Slf4j
-public class NetworkService implements PersistenceClient<NetworkIdStore>, ModuleService {
+@Getter
+public class NetworkService implements PersistenceClient<NetworkServiceStore>, ModuleService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
 
     public static class InitializeServerResult extends HashMap<Transport.Type, CompletableFuture<Boolean>> {
         public InitializeServerResult(Map<Transport.Type, CompletableFuture<Boolean>> map) {
@@ -86,29 +86,19 @@ public class NetworkService implements PersistenceClient<NetworkIdStore>, Module
     }
 
     public static class SendMessageResult extends HashMap<Transport.Type, ConfidentialMessageService.Result> {
-        public SendMessageResult(Map<Transport.Type, ConfidentialMessageService.Result> map) {
-            super(map);
-        }
-
         public SendMessageResult() {
             super();
         }
     }
 
-    @Getter
-    private final NetworkIdStore persistableStore = new NetworkIdStore();
-    @Getter
-    private final Persistence<NetworkIdStore> persistence;
+    private final NetworkServiceStore persistableStore = new NetworkServiceStore();
+    private final Persistence<NetworkServiceStore> persistence;
     private final KeyPairService keyPairService;
-    @Getter
     private final HttpService httpService;
-    @Getter
+    private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
     private final Optional<String> socks5ProxyAddress; // Optional proxy address of external tor instance 
-    @Getter
     private final Set<Transport.Type> supportedTransportTypes;
-    @Getter
     private final ServiceNodesByTransport serviceNodesByTransport;
-    @Getter
     private final Optional<DataService> dataService;
 
     public NetworkService(NetworkServiceConfig config,
@@ -122,7 +112,7 @@ public class NetworkService implements PersistenceClient<NetworkIdStore>, Module
 
         socks5ProxyAddress = config.getSocks5ProxyAddress();
         supportedTransportTypes = config.getSupportedTransportTypes();
-        serviceNodesByTransport = new ServiceNodesByTransport(config.getTransportConfig(),
+        serviceNodesByTransport = new ServiceNodesByTransport(config.getConfigByTransportType(),
                 supportedTransportTypes,
                 config.getServiceNodeConfig(),
                 config.getPeerGroupServiceConfigByTransport(),

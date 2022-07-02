@@ -1,6 +1,9 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.network.p2p.node.Address;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -14,17 +17,29 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ClearNetTransport implements Transport {
-    private static ClearNetTransport INSTANCE;
-    private boolean initializeCalled;
 
-    public static ClearNetTransport getInstance(Config config) {
-        if (INSTANCE == null) {
-            INSTANCE = new ClearNetTransport(config);
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Config implements Transport.Config {
+        public static Config from(String baseDir, com.typesafe.config.Config config) {
+            return new Config(baseDir, (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")));
         }
-        return INSTANCE;
+
+        private final int socketTimeout;
+        private final String baseDir;
+
+        public Config(String baseDir, int socketTimeout) {
+            this.baseDir = baseDir;
+            this.socketTimeout = socketTimeout;
+        }
     }
 
-    public ClearNetTransport(Config config) {
+    private final Transport.Config config;
+    private boolean initializeCalled;
+
+    public ClearNetTransport(Transport.Config config) {
+        this.config = config;
     }
 
     @Override

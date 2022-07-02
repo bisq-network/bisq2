@@ -43,7 +43,17 @@ public abstract class BaseNetworkTest {
     }
 
     protected Transport.Config getTransportConfig(String baseDirName) {
-        return new Transport.Config(baseDirName);
+        return new Transport.Config() {
+            @Override
+            public String getBaseDir() {
+                return baseDirName;
+            }
+
+            @Override
+            public int getSocketTimeout() {
+                return 600;
+            }
+        };
     }
 
     protected String getBaseDirName() {
