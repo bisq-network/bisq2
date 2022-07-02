@@ -84,7 +84,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final Observable<State> state = new Observable<>(State.CREATED);
 
     public DefaultApplicationService(String[] args) {
-        super("Bisq", args);
+        super("default", args);
 
         bitcoinWalletService = new BitcoinWalletService(persistenceService, config.getBaseDir(), config.isBitcoindRegtest());
         liquidWalletService = new LiquidWalletService(persistenceService, config.getBaseDir(), config.isElementsdRegtest());
