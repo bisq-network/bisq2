@@ -271,7 +271,7 @@ message DataStore {
   repeated MapEntry mapEntries = 1;
 }
 
-message NetworkIdStore {
+message NetworkServiceStore {
   map<string, NetworkId> networkIdByNodeId = 1;
 }
 

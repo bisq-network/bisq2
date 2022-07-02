@@ -29,27 +29,27 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
+public final class NetworkServiceStore implements PersistableStore<NetworkServiceStore> {
     @Getter
     private final Map<String, NetworkId> networkIdByNodeId = new ConcurrentHashMap<>();
 
-    public NetworkIdStore() {
+    public NetworkServiceStore() {
     }
 
-    public NetworkIdStore(Map<String, NetworkId> networkIdByNodeId) {
+    public NetworkServiceStore(Map<String, NetworkId> networkIdByNodeId) {
         this.networkIdByNodeId.putAll(networkIdByNodeId);
     }
 
     @Override
-    public bisq.network.protobuf.NetworkIdStore toProto() {
-        return bisq.network.protobuf.NetworkIdStore.newBuilder()
+    public bisq.network.protobuf.NetworkServiceStore toProto() {
+        return bisq.network.protobuf.NetworkServiceStore.newBuilder()
                 .putAllNetworkIdByNodeId(networkIdByNodeId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toProto())))
                 .build();
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto) {
-        return new NetworkIdStore(proto.getNetworkIdByNodeIdMap().entrySet().stream()
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {
+        return new NetworkServiceStore(proto.getNetworkIdByNodeIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> NetworkId.fromProto(e.getValue()))));
     }
 
@@ -57,7 +57,7 @@ public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.network.protobuf.NetworkIdStore.class));
+                return fromProto(any.unpack(bisq.network.protobuf.NetworkServiceStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -65,13 +65,13 @@ public final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
     }
 
     @Override
-    public void applyPersisted(NetworkIdStore persisted) {
+    public void applyPersisted(NetworkServiceStore persisted) {
         networkIdByNodeId.clear();
         networkIdByNodeId.putAll(persisted.getNetworkIdByNodeId());
     }
 
     @Override
-    public NetworkIdStore getClone() {
-        return new NetworkIdStore(networkIdByNodeId);
+    public NetworkServiceStore getClone() {
+        return new NetworkServiceStore(networkIdByNodeId);
     }
 }
