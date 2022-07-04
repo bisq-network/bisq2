@@ -91,7 +91,7 @@ public class PeerExchangeService implements Node.Listener {
                 .map(this::doPeerExchangeAsync)
                 .collect(Collectors.toList());
 
-        // When ALL futures complete (successfully or not),
+        // When all futures complete successfully,
         // then consider peer exchange complete and decide whether it should be re-done, in case of too few peers
         CompletableFutureUtils.allOf(allFutures)
                 .thenApply(resultList -> {
@@ -112,9 +112,8 @@ public class PeerExchangeService implements Node.Listener {
                     return null;
                 });
 
-        // Complete when the first future completes (the first peer exchange succeeds), or when all futures fail
-        // This helps the initialization phase (and subsequent peer exchanges) complete as soon peers have been exchanged with at least one peer
-        return CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(true, allFutures)
+        // Complete when any peer exchange succeeds, or when all fail.
+        return CompletableFutureUtils.anyOf(allFutures)
                 .thenApply(result -> {
                     log.info("Node {} completed peer exchange to at least one candidate", node);
                     return null;
