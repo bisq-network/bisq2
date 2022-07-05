@@ -43,11 +43,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
+ */
 @Slf4j
 public class ServiceNodesByTransport {
     @Getter
@@ -84,11 +87,11 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
-                .orTimeout(6, TimeUnit.SECONDS)
-                .thenApply(list -> {
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
+        return CompletableFutureUtils.allOf(futures)
+                .handle((list, throwable) -> {
                     map.clear();
-                    return true;
+                    return throwable == null && list.stream().allMatch(e -> e);
                 });
     }
 
@@ -99,6 +102,10 @@ public class ServiceNodesByTransport {
 
     public void initializeNode(Transport.Type type, String nodeId, int portByTransport) {
         map.get(type).initializeNode(nodeId, portByTransport);
+    }
+
+    public boolean isNodeInitialized(Transport.Type type, String nodeId) {
+        return map.get(type).isNodeInitialized(nodeId);
     }
 
     public void initializePeerGroup(Transport.Type type) {
@@ -114,7 +121,11 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 try {
-                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage, address, receiverNetworkId.getPubKey(), senderKeyPair, senderNodeId);
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
+                            address,
+                            receiverNetworkId.getPubKey(),
+                            senderKeyPair,
+                            senderNodeId);
                     resultsByType.put(transportType, result);
                 } catch (Throwable throwable) {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)

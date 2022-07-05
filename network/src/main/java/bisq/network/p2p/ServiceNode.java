@@ -50,11 +50,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
- * Creates nodeRepository and a default node
- * Creates services according to services defined in Config
+ * Creates nodesById, the default node and the services according to the Config.
  */
 @Slf4j
 public class ServiceNode {
@@ -146,15 +146,17 @@ public class ServiceNode {
 
     public CompletableFuture<Boolean> shutdown() {
         setState(State.STOPPING);
-        return CompletableFutureUtils.allOf(nodesById.shutdown(),
-                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(true)),
-                        peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(true)),
-                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(CompletableFuture.completedFuture(true)),
-                        monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(true)))
+        return CompletableFutureUtils.allOf(
+                        confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(completedFuture(true)),
+                        peerGroupService.map(PeerGroupService::shutdown).orElse(completedFuture(true)),
+                        dataServicePerTransport.map(DataNetworkService::shutdown).orElse(completedFuture(true)),
+                        monitorService.map(MonitorService::shutdown).orElse(completedFuture(true)),
+                        nodesById.shutdown()
+                )
                 .orTimeout(4, TimeUnit.SECONDS)
                 .handle((list, throwable) -> {
                     setState(State.TERMINATED);
-                    return true;
+                    return throwable == null && list.stream().allMatch(e -> e);
                 });
     }
 
@@ -165,6 +167,10 @@ public class ServiceNode {
 
     public void initializeNode(String nodeId, int serverPort) {
         nodesById.initialize(nodeId, serverPort);
+    }
+
+    public boolean isNodeInitialized(String nodeId) {
+        return nodesById.isNodeInitialized(nodeId);
     }
 
     public void initializePeerGroup() {

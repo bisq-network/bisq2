@@ -18,7 +18,6 @@
 package bisq.network.p2p.services.confidential;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.services.data.DataService;
@@ -159,7 +158,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                        KeyPair senderKeyPair,
                        String senderNodeId) {
         try {
-            nodesById.initialize(senderNodeId, NetworkUtils.findFreeSystemPort());
+            // Node gets initialized at higher level services
+            nodesById.assertNodeIsInitialized(senderNodeId);
             Connection connection = nodesById.getConnection(senderNodeId, address);
             return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
@@ -181,7 +181,8 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
         try {
-            nodesById.initialize(senderNodeId, NetworkUtils.findFreeSystemPort());
+            // Node gets initialized at higher level services
+            nodesById.assertNodeIsInitialized(senderNodeId);
             nodesById.send(senderNodeId, confidentialMessage, connection);
             return new Result(State.SENT);
         } catch (Throwable throwable) {

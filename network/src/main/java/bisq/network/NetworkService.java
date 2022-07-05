@@ -175,14 +175,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                         entry -> {
                             Transport.Type type = entry.getKey();
                             Integer port = entry.getValue();
-                            return runAsync(() -> {
-                                try {
-                                    serviceNodesByTransport.initializeNode(type, nodeId, port);
-                                    findOrPersistNewNetworkId(nodeId, pubKey);
-                                } catch (Throwable t) {
-                                    log.error("initialize node failed", t);
-                                }
-                            }, NETWORK_IO_POOL);
+                            if (serviceNodesByTransport.isNodeInitialized(type, nodeId)) {
+                                return CompletableFuture.completedFuture(null);
+                            } else {
+                                return runAsync(() -> {
+                                    try {
+                                        serviceNodesByTransport.initializeNode(type, nodeId, port);
+                                        findOrPersistNewNetworkId(nodeId, pubKey);
+                                    } catch (Throwable t) {
+                                        log.error("initialize node failed", t);
+                                    }
+                                }, NETWORK_IO_POOL);
+                            }
                         }));
     }
 
@@ -203,19 +207,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
 
     public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
                                                             NetworkId receiverNetworkId,
-                                                            KeyPair senderKeyPair,
-                                                            String senderNodeId) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
-    }
-
-    public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
-                                                            NetworkId receiverNetworkId,
                                                             NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
-                        receiverNetworkId,
-                        senderNetworkIdWithKeyPair.getKeyPair(),
-                        senderNetworkIdWithKeyPair.getNodeId()),
-                NETWORK_IO_POOL);
+        return getInitializedNetworkId(senderNetworkIdWithKeyPair.getNodeId(), senderNetworkIdWithKeyPair.getPubKey())
+                .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
+                                receiverNetworkId,
+                                senderNetworkIdWithKeyPair.getKeyPair(),
+                                senderNetworkIdWithKeyPair.getNodeId()),
+                        NETWORK_IO_POOL));
     }
 
 
@@ -362,6 +360,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         return getOrCreatePortByTransport(Node.DEFAULT);
     }
 
+    //todo
     private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId) {
         Optional<NetworkId> networkIdOptional = findNetworkId(nodeId);
         // If we have a persisted networkId we take that port otherwise we take random system port.  
@@ -379,17 +378,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         if (nodeId.equals(Node.DEFAULT)) {
             if (defaultNodePortByTransportType.containsKey(CLEAR)) {
                 portByTransport.put(CLEAR, defaultNodePortByTransportType.get(CLEAR));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(CLEAR)) {
                 portByTransport.put(CLEAR, persistedOrRandomPortByTransport.get(CLEAR));
             }
             if (defaultNodePortByTransportType.containsKey(TOR)) {
                 portByTransport.put(TOR, defaultNodePortByTransportType.get(TOR));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(TOR)) {
                 portByTransport.put(TOR, persistedOrRandomPortByTransport.get(TOR));
             }
             if (defaultNodePortByTransportType.containsKey(I2P)) {
                 portByTransport.put(I2P, defaultNodePortByTransportType.get(I2P));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(I2P)) {
                 portByTransport.put(I2P, persistedOrRandomPortByTransport.get(I2P));
             }
         } else {
