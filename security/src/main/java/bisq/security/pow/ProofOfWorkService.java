@@ -17,7 +17,6 @@
 
 package bisq.security.pow;
 
-import bisq.common.util.ByteArrayUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -65,7 +64,7 @@ public abstract class ProofOfWorkService implements PersistenceClient<ProofOfWor
     }
 
     public CompletableFuture<ProofOfWork> mintNymProofOfWork(byte[] pubKeyHash, double nymDifficulty) {
-        return mint(pubKeyHash, ByteArrayUtils.copyOf(pubKeyHash), nymDifficulty);
+        return mint(pubKeyHash, null, nymDifficulty);
     }
 
     public boolean verify(ProofOfWork proofOfWork,
