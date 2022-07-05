@@ -31,10 +31,13 @@ import bisq.network.p2p.services.peergroup.validateaddress.AddressValidationServ
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -58,24 +61,6 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     public interface Listener {
         void onStateChanged(PeerGroupService.State state);
     }
-
-    private final Node node;
-    private final BanList banList;
-    private final Config config;
-    @Getter
-    private final PeerGroup peerGroup;
-    private final PeerExchangeService peerExchangeService;
-    private final KeepAliveService keepAliveService;
-    private final AddressValidationService addressValidationService;
-    private Optional<Scheduler> scheduler = Optional.empty();
-
-    @Getter
-    private final PeerGroupStore persistableStore = new PeerGroupStore();
-    @Getter
-    public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    @Getter
-    private final Persistence<PeerGroupStore> persistence;
 
     @Getter
     @ToString
@@ -131,6 +116,26 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         }
     }
 
+
+    private final Node node;
+    private final BanList banList;
+    private final Config config;
+    @Getter
+    private final PeerGroup peerGroup;
+    private final PeerExchangeService peerExchangeService;
+    private final KeepAliveService keepAliveService;
+    private final AddressValidationService addressValidationService;
+    private Optional<Scheduler> scheduler = Optional.empty();
+
+    @Getter
+    private final PeerGroupStore persistableStore = new PeerGroupStore();
+    @Getter
+    public AtomicReference<PeerGroupService.State> state = new AtomicReference<>(PeerGroupService.State.NEW);
+    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Persistence<PeerGroupStore> persistence;
+    private final RetryPolicy<Boolean> retryPolicy;
+
     public PeerGroupService(PersistenceService persistenceService,
                             Node node,
                             BanList banList,
@@ -149,19 +154,50 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
         addressValidationService = new AddressValidationService(node, banList);
         String fileName = persistableStore.getClass().getSimpleName() + "_" + transportType.name();
         persistence = persistenceService.getOrCreatePersistence(this, "db", fileName, persistableStore);
+
+        retryPolicy = RetryPolicy.<Boolean>builder()
+                .handle(IllegalStateException.class)
+                .handleResultIf(result -> state.get() == State.STARTING)
+                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
+                .withJitter(0.25)
+                .withMaxDuration(Duration.ofMinutes(5))
+                .withMaxRetries(10)
+                .onRetry(e -> log.info("Retry called. AttemptCount={}.", e.getAttemptCount()))
+                .onRetriesExceeded(e -> log.warn("Failed. Max retries exceeded."))
+                .onSuccess(e -> log.debug("Succeeded."))
+                .build();
     }
 
-    public void start() {
+    public void initialize() {
+        Failsafe.with(retryPolicy).run(this::doInitialize);
+    }
+
+    private void doInitialize() {
         log.debug("Node {} called initialize", node);
-        setState(PeerGroupService.State.STARTING);
-        peerExchangeService.doInitialPeerExchange().join();
-        log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
-                node, config.getInterval());
-        scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
-                .periodically(config.getInterval())
-                .name("PeerGroupService.scheduler-" + node));
-        keepAliveService.initialize();
-        setState(State.RUNNING);
+        switch (getState().get()) {
+            case NEW:
+                setState(PeerGroupService.State.STARTING);
+                //todo do we need async?
+                peerExchangeService.doInitialPeerExchange().join();
+                log.info("Node {} completed doInitialPeerExchange. Start periodic tasks with interval: {} ms",
+                        node, config.getInterval());
+                scheduler = Optional.of(Scheduler.run(this::runBlockingTasks)
+                        .periodically(config.getInterval())
+                        .name("PeerGroupService.scheduler-" + node));
+                keepAliveService.initialize();
+                setState(State.RUNNING);
+                break;
+            case STARTING:
+                throw new IllegalStateException("Already starting. NodeId=" + node.getNodeId());
+            case RUNNING:
+                log.debug("Got called while already running. We ignore that call.");
+                break;
+            case STOPPING:
+                throw new IllegalStateException("Already stopping. NodeId=" + node.getNodeId());
+            case TERMINATED:
+                throw new IllegalStateException("Already terminated. NodeId=" + node.getNodeId());
+        }
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -159,7 +159,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                        KeyPair senderKeyPair,
                        String senderNodeId) {
         try {
-            nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
+            nodesById.initialize(senderNodeId, NetworkUtils.findFreeSystemPort());
             Connection connection = nodesById.getConnection(senderNodeId, address);
             return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
         } catch (Throwable throwable) {
@@ -181,7 +181,7 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                         String senderNodeId) {
         ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
         try {
-            nodesById.maybeInitializeServer(senderNodeId, NetworkUtils.findFreeSystemPort());
+            nodesById.initialize(senderNodeId, NetworkUtils.findFreeSystemPort());
             nodesById.send(senderNodeId, confidentialMessage, connection);
             return new Result(State.SENT);
         } catch (Throwable throwable) {

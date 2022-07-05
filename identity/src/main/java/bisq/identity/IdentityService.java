@@ -251,9 +251,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
 
     private void initializeActiveIdentities() {
         getActiveIdentityByDomainId().values().forEach(identity ->
-                networkService.maybeInitializeServer(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(value -> value.whenComplete((result, throwable) -> {
-                                    if (throwable == null && result) {
+                networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
+                        .forEach(value -> value.whenComplete((__, throwable) -> {
+                                    if (throwable == null) {
                                         log.info("Network node for active identity {} initialized. NetworkId={}",
                                                 identity.getDomainId(), identity.getNetworkId());
                                     } else {
@@ -266,9 +266,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
 
     private void initializePooledIdentities() {
         persistableStore.getPool().forEach(identity ->
-                networkService.maybeInitializeServer(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(value -> value.whenComplete((result, throwable) -> {
-                                    if (throwable == null && result) {
+                networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
+                        .forEach(value -> value.whenComplete((__, throwable) -> {
+                                    if (throwable == null) {
                                         log.info("Network node for pooled identity {} initialized. NetworkId={}",
                                                 identity.getDomainId(), identity.getNetworkId());
                                     } else {

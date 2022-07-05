@@ -21,7 +21,6 @@ package bisq.network.p2p;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.network.NetworkService.InitializeServerResult;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
@@ -47,10 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 public class ServiceNodesByTransport {
@@ -101,28 +97,12 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return new InitializeServerResult(map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey())),
-                                NETWORK_IO_POOL))));
+    public void initializeNode(Transport.Type type, String nodeId, int portByTransport) {
+        map.get(type).initializeNode(nodeId, portByTransport);
     }
 
-    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return CompletableFutureUtils.allOf(map.entrySet().stream()
-                .map(entry -> {
-                    int port = portByTransport.get(entry.getKey());
-                    ServiceNode serviceNode = entry.getValue();
-                    return runAsync(() -> serviceNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
-                            .whenComplete((__, throwable) -> {
-                                if (throwable == null) {
-                                    serviceNode.maybeInitializePeerGroup();
-                                } else {
-                                    log.error(throwable.toString());
-                                }
-                            });
-                })).thenApply(list -> true);
+    public void initializePeerGroup(Transport.Type type) {
+        map.get(type).initializePeerGroup();
     }
 
     public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,

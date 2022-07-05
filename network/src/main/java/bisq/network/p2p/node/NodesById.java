@@ -60,8 +60,8 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeInitializeServer(String nodeId, int serverPort) {
-        getOrCreateNode(nodeId).maybeInitializeServer(serverPort);
+    public void initialize(String nodeId, int serverPort) {
+        getOrCreateNode(nodeId).initialize(serverPort);
     }
 
     public Connection getConnection(String nodeId, Address address) {

@@ -58,6 +58,7 @@ import static java.util.concurrent.CompletableFuture.runAsync;
  */
 @Slf4j
 public class ServiceNode {
+
     @Getter
     public static final class Config {
         private final Set<Service> services;
@@ -72,13 +73,11 @@ public class ServiceNode {
     }
 
     public enum State {
-        CREATED,
-        INITIALIZE_DEFAULT_NODE_SERVER, // We are interested mostly in the default nodes state not in domain specific nodes
-        DEFAULT_NODE_SERVER_INITIALIZED,
+        NEW,
         INITIALIZE_PEER_GROUP,
         PEER_GROUP_INITIALIZED,
-        SHUTDOWN_STARTED,
-        SHUTDOWN_COMPLETE
+        STOPPING,
+        TERMINATED
     }
 
     public enum Service {
@@ -102,7 +101,7 @@ public class ServiceNode {
     @Getter
     private Optional<MonitorService> monitorService;
     @Getter
-    public Observable<State> state = new Observable<>(State.CREATED);
+    public Observable<State> state = new Observable<>(State.NEW);
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
     public ServiceNode(Config config,
@@ -146,7 +145,7 @@ public class ServiceNode {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        setState(State.SHUTDOWN_STARTED);
+        setState(State.STOPPING);
         return CompletableFutureUtils.allOf(nodesById.shutdown(),
                         confidentialMessageService.map(ConfidentialMessageService::shutdown).orElse(CompletableFuture.completedFuture(true)),
                         peerGroupService.map(PeerGroupService::shutdown).orElse(CompletableFuture.completedFuture(true)),
@@ -154,7 +153,7 @@ public class ServiceNode {
                         monitorService.map(MonitorService::shutdown).orElse(CompletableFuture.completedFuture(true)))
                 .orTimeout(4, TimeUnit.SECONDS)
                 .handle((list, throwable) -> {
-                    setState(State.SHUTDOWN_COMPLETE);
+                    setState(State.TERMINATED);
                     return true;
                 });
     }
@@ -164,40 +163,12 @@ public class ServiceNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean maybeInitializeServer(String nodeId, int serverPort) {
-        if (nodeId.equals(Node.DEFAULT)) {
-            setState(State.INITIALIZE_DEFAULT_NODE_SERVER);
-        }
-        try {
-            nodesById.maybeInitializeServer(nodeId, serverPort);
-            if (nodeId.equals(Node.DEFAULT)) {
-                setState(State.DEFAULT_NODE_SERVER_INITIALIZED);
-            }
-            return true;
-        } catch (Throwable throwable) {
-            log.error("maybeInitializeServer failed. nodeId=" + nodeId + ";serverPort=" + serverPort, throwable);
-            return false;
-        }
+    public void initializeNode(String nodeId, int serverPort) {
+        nodesById.initialize(nodeId, serverPort);
     }
 
-    public void maybeInitializePeerGroup() {
-        if (state.get() == State.PEER_GROUP_INITIALIZED) {
-            log.debug("We had the peer group already initialized and ignore that call.");
-            return;
-        }
-        if (state.get() == State.INITIALIZE_PEER_GROUP) {
-            log.debug("We had the peer group already initialized but initialization is not completed yet.");
-            try {
-                Thread.sleep(1000);
-                maybeInitializePeerGroup();
-                return;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        setState(State.INITIALIZE_PEER_GROUP);
-        peerGroupService.ifPresent(PeerGroupService::start);
-        setState(State.PEER_GROUP_INITIALIZED);
+    public void initializePeerGroup() {
+        peerGroupService.ifPresent(PeerGroupService::initialize);
     }
 
     public ConfidentialMessageService.Result confidentialSend(NetworkMessage networkMessage,
