@@ -1,7 +1,7 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
-    id 'bisq.java-library'
+    id 'bisq.gradle.plugin.BisqPlugin'
     id 'bisq.gradle.desktop.regtest.BisqDesktopRegtestPlugin'
     id 'application'
     /* id 'distribution'*/ //todo as long we dont need a jar we leave that out, speeds up build
