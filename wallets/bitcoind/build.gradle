@@ -1,6 +1,11 @@
 plugins {
-    id 'bisq.java-library'
+    id 'bisq.gradle.plugin.BisqPlugin'
     id 'bisq.protobuf'
+}
+
+bisq {
+    runIntegrationTests = true
+    neededBinariesToRunIntegrationTests = ['bitcoind']
 }
 
 dependencies {

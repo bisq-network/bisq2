@@ -32,8 +32,14 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
-      - name: Gradle Build Action
+      - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.2.1
+        with:
+          arguments: build
 
-      - name: Execute Gradle build
-        run: ./gradlew build
+      - name: Gradle Build Action (wallets)
+        uses: gradle/gradle-build-action@v2.2.1
+        with:
+          arguments: build
+          build-root-directory: wallets
+          gradle-executable: ./gradlew
