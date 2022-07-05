@@ -10,7 +10,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 import java.nio.channels.Channels
-import java.nio.channels.ReadableByteChannel
 
 abstract class DownloadElectrumBinariesTask : DefaultTask() {
 
@@ -49,17 +48,22 @@ abstract class DownloadElectrumBinariesTask : DefaultTask() {
     }
 
     private fun downloadFile(url: String) {
-        val inputStream = URL(url).openStream()
-        val readableByteChannel: ReadableByteChannel = Channels.newChannel(inputStream)
+        URL(url).openStream().use { inputStream ->
+            Channels.newChannel(inputStream).use { readableByteChannel ->
+                println("Downloading: $url")
 
-        val outputDir: File = outputDir.get().asFile
-        val outputFileName = url.split("/").last()
-        val outputFilePath: File = outputDir.resolve(outputFileName)
-
-        println("Downloading: $url")
-        val fileOutputStream = FileOutputStream(outputFilePath)
-        fileOutputStream.channel
-            .transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
+                val outputFilePath: File = getOutputFileForUrl(url)
+                FileOutputStream(outputFilePath).use { fileOutputStream ->
+                    fileOutputStream.channel
+                        .transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
+                }
+            }
+        }
     }
 
+    private fun getOutputFileForUrl(url: String): File {
+        val outputDir: File = outputDir.get().asFile
+        val outputFileName = url.split("/").last()
+        return outputDir.resolve(outputFileName)
+    }
 }
