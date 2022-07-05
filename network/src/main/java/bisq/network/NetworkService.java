@@ -160,6 +160,11 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean isInitialized(String nodeId) {
+        return supportedTransportTypes.stream()
+                .allMatch(type -> serviceNodesByTransport.isInitialized(type, nodeId));
+    }
+
     public Map<Transport.Type, CompletableFuture<Void>> initializeNode(String nodeId, PubKey pubKey) {
         return initializeNode(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
     }
@@ -172,7 +177,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                         entry -> {
                             Transport.Type type = entry.getKey();
                             Integer port = entry.getValue();
-                            if (serviceNodesByTransport.isNodeInitialized(type, nodeId)) {
+                            if (serviceNodesByTransport.isInitialized(type, nodeId)) {
                                 return CompletableFuture.completedFuture(null);
                             } else {
                                 return runAsync(() -> {

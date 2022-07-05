@@ -135,7 +135,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                ProofOfWork proofOfWork,
                                                                                String terms,
                                                                                String bio) {
-        return identityService.createNewInitializedIdentity(nymId, keyId, keyPair, proofOfWork)
+        return identityService.createNewIdentity(nymId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
                     ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
