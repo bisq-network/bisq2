@@ -34,7 +34,6 @@ include 'seed'
 include 'settings'
 include 'social'
 include 'support'
-include 'tools'
 include 'tor'
 
 includeBuild('wallets')
