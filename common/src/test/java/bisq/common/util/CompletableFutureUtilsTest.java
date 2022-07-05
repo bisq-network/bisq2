@@ -57,37 +57,6 @@ public class CompletableFutureUtilsTest {
                 .get();
     }
 
-    @Test
-    public void testAnyOfBoolean_filterVal() throws ExecutionException, InterruptedException {
-        boolean expectedValue = true;
-
-        // Completes when C completes (C = first future that completes with true)
-        CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(
-                        expectedValue,
-                        createCompletableFutureBool(1000, "A", false),
-                        createCompletableFutureBool(2000, "B", false),
-                        createCompletableFutureBool(3000, "C", true)
-                )
-                .thenApply(res -> {
-                    log.info("CompletableFutureUtils.anyOfBooleanFiltered(A, B, C) completed: {}", res);
-                    return res;
-                })
-                .get();
-
-        // Completes when B completes (B = first future that completes with true)
-        CompletableFutureUtils.anyOfBooleanMatchingFilterOrAll(
-                        expectedValue,
-                        createCompletableFutureBool(1000, "A", false),
-                        createCompletableFutureBool(2000, "B", true),
-                        createCompletableFutureBool(3000, "C", true)
-                )
-                .thenApply(res -> {
-                    log.info("CompletableFutureUtils.anyOfBooleanFiltered(A, B, C) completed: {}", res);
-                    return res;
-                })
-                .get();
-    }
-
     private CompletableFuture<Boolean> createCompletableFutureBool(long sleepMs, String msg, boolean val) {
         return CompletableFuture.supplyAsync(() -> {
             try {
