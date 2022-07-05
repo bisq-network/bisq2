@@ -21,7 +21,6 @@ package bisq.network.p2p;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
-import bisq.network.NetworkService.InitializeServerResult;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Node;
@@ -44,14 +43,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+/**
+ * Maintains a map of ServiceNodes by transportType. Delegates to relevant ServiceNode.
+ */
 @Slf4j
 public class ServiceNodesByTransport {
     @Getter
@@ -88,11 +87,11 @@ public class ServiceNodesByTransport {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(ServiceNode::shutdown))
-                .orTimeout(6, TimeUnit.SECONDS)
-                .thenApply(list -> {
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(ServiceNode::shutdown);
+        return CompletableFutureUtils.allOf(futures)
+                .handle((list, throwable) -> {
                     map.clear();
-                    return true;
+                    return throwable == null && list.stream().allMatch(e -> e);
                 });
     }
 
@@ -101,28 +100,16 @@ public class ServiceNodesByTransport {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return new InitializeServerResult(map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                        supplyAsync(() -> entry.getValue().maybeInitializeServer(nodeId, portByTransport.get(entry.getKey())),
-                                NETWORK_IO_POOL))));
+    public void initializeNode(Transport.Type type, String nodeId, int portByTransport) {
+        map.get(type).initializeNode(nodeId, portByTransport);
     }
 
-    public CompletableFuture<Boolean> bootstrapToNetwork(Map<Transport.Type, Integer> portByTransport, String nodeId) {
-        return CompletableFutureUtils.allOf(map.entrySet().stream()
-                .map(entry -> {
-                    int port = portByTransport.get(entry.getKey());
-                    ServiceNode serviceNode = entry.getValue();
-                    return runAsync(() -> serviceNode.maybeInitializeServer(nodeId, port), NETWORK_IO_POOL)
-                            .whenComplete((__, throwable) -> {
-                                if (throwable == null) {
-                                    serviceNode.maybeInitializePeerGroup();
-                                } else {
-                                    log.error(throwable.toString());
-                                }
-                            });
-                })).thenApply(list -> true);
+    public boolean isNodeInitialized(Transport.Type type, String nodeId) {
+        return map.get(type).isNodeInitialized(nodeId);
+    }
+
+    public void initializePeerGroup(Transport.Type type) {
+        map.get(type).initializePeerGroup();
     }
 
     public NetworkService.SendMessageResult confidentialSend(NetworkMessage networkMessage,
@@ -134,7 +121,11 @@ public class ServiceNodesByTransport {
             if (map.containsKey(transportType)) {
                 ServiceNode serviceNode = map.get(transportType);
                 try {
-                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage, address, receiverNetworkId.getPubKey(), senderKeyPair, senderNodeId);
+                    ConfidentialMessageService.Result result = serviceNode.confidentialSend(networkMessage,
+                            address,
+                            receiverNetworkId.getPubKey(),
+                            senderKeyPair,
+                            senderNodeId);
                     resultsByType.put(transportType, result);
                 } catch (Throwable throwable) {
                     resultsByType.put(transportType, new ConfidentialMessageService.Result(ConfidentialMessageService.State.FAILED)

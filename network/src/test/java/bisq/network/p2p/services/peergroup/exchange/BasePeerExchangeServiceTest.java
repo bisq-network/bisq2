@@ -68,7 +68,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             int port = 10000 + i;
             Node seed = new Node(banList, nodeConfig, "seed_" + i);
             seeds.add(seed);
-            seed.maybeInitializeServer(port);
+            seed.initialize(port);
             initSeedsLatch.countDown();
             PeerGroup peerGroup = new PeerGroup(seed, new PeerGroup.Config(), seedNodeAddresses, banList, peerGroupService);
             PeerExchangeStrategy peerExchangeStrategy = new PeerExchangeStrategy(peerGroup, new PeerExchangeStrategy.Config(), peerGroupStore);
@@ -86,7 +86,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
             int port = 3000 + i;
             Node node = new Node(banList, nodeConfig, "node_" + i);
             nodes.add(node);
-            node.maybeInitializeServer(port);
+            node.initialize(port);
             initNodesLatch.countDown();
         }
         assertTrue(initNodesLatch.await(getTimeout(), TimeUnit.SECONDS));

@@ -97,18 +97,18 @@ public class TransportTypeModel implements Model {
 
             @Override
             public void onStateChange(Node.State state) {
-                if (state == Node.State.SERVER_INITIALIZED) {
+                if (state == Node.State.RUNNING) {
                     UIThread.run(() -> {
                         updateLists();
                         networkService.findDefaultNode(transportType)
-                                .filter(node -> node.getState().get() != Node.State.SERVER_INITIALIZED)
+                                .filter(node -> node.getState().get() != Node.State.RUNNING)
                                 .ifPresent(node -> node.removeListener(defaultNodeListener));
                     });
                 }
             }
         };
         networkService.findDefaultNode(transportType)
-                .filter(node -> node.getState().get() != Node.State.SERVER_INITIALIZED)
+                .filter(node -> node.getState().get() != Node.State.RUNNING)
                 .ifPresent(node -> node.addListener(defaultNodeListener));
 
         nodesByIdListener = node -> UIThread.run(() -> {
@@ -132,7 +132,7 @@ public class TransportTypeModel implements Model {
                 .collect(Collectors.toList()));
         nodeListItems.setAll(allNodes
                 .stream()
-                .filter(node -> node.getState().get() == Node.State.SERVER_INITIALIZED)
+                .filter(node -> node.getState().get() == Node.State.RUNNING)
                 .map(node -> new NodeListItem(node, identityService))
                 .collect(Collectors.toList()));
     }
@@ -174,7 +174,7 @@ public class TransportTypeModel implements Model {
             @Override
             public void onStateChange(Node.State state) {
                 UIThread.run(() -> {
-                    if (state == Node.State.SERVER_INITIALIZED) {
+                    if (state == Node.State.RUNNING) {
                         NodeListItem nodeListItem = new NodeListItem(node, identityService);
                         if (!nodeListItems.contains(nodeListItem)) {
                             nodeListItems.add(nodeListItem);

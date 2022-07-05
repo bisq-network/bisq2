@@ -60,13 +60,13 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static bisq.network.p2p.node.transport.Transport.Type.*;
 import static bisq.network.p2p.services.data.DataService.BroadCastDataResult;
 import static bisq.network.p2p.services.data.DataService.Listener;
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.CompletableFuture.*;
 
 /**
  * High level API for network access to p2p network as well to http services (over Tor). If user has only I2P selected
@@ -78,12 +78,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class NetworkService implements PersistenceClient<NetworkServiceStore>, ModuleService {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
-
-    public static class InitializeServerResult extends HashMap<Transport.Type, CompletableFuture<Boolean>> {
-        public InitializeServerResult(Map<Transport.Type, CompletableFuture<Boolean>> map) {
-            super(map);
-        }
-    }
 
     public static class SendMessageResult extends HashMap<Transport.Type, ConfidentialMessageService.Result> {
         public SendMessageResult() {
@@ -131,45 +125,69 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     // ModuleService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // Bootstrap to gossip network (initialize default node and initialize peerGroupService
+    /**
+     * Initialize default node and initialize peerGroupService.
+     * We require at least one successful bootstrap from the available transports.
+     */
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        PubKey pubKey = keyPairService.getDefaultPubKey();
         String nodeId = Node.DEFAULT;
-        return serviceNodesByTransport.bootstrapToNetwork(getDefaultPortByTransport(), nodeId)
-                .thenCompose(result -> findOrPersistNewNetworkId(nodeId, keyPairService.getDefaultPubKey())
-                        .map(networkId -> CompletableFuture.completedFuture(result))
-                        .orElse(CompletableFuture.failedFuture(new IllegalStateException("NetworkId not present"))));
+        Stream<CompletableFuture<Void>> futures = getDefaultPortByTransport().entrySet().stream()
+                .map(entry -> {
+                    Transport.Type type = entry.getKey();
+                    Integer port = entry.getValue();
+                    return runAsync(() -> {
+                        try {
+                            serviceNodesByTransport.initializeNode(type, nodeId, port);
+                            findOrPersistNewNetworkId(nodeId, pubKey);
+                            serviceNodesByTransport.initializePeerGroup(type);
+                        } catch (Throwable t) {
+                            log.error("initialize failed", t);
+                        }
+                    }, NETWORK_IO_POOL);
+                });
+        return CompletableFutureUtils.anyOf(futures).thenApply(__ -> true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFutureUtils.allOf(serviceNodesByTransport.shutdown(), httpService.shutdown())
-                .thenCompose(list -> dataService.map(DataService::shutdown).orElse(completedFuture(true)));
+        return CompletableFutureUtils.allOf(dataService.map(DataService::shutdown).orElse(completedFuture(true)),
+                        serviceNodesByTransport.shutdown(),
+                        httpService.shutdown())
+                .thenApply(list -> list.stream().filter(e -> e).count() == 3);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Initialize server
+    // Initialize node
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public InitializeServerResult maybeInitializeServer(String nodeId, PubKey pubKey) {
-        return maybeInitializeServer(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
+    public Map<Transport.Type, CompletableFuture<Void>> initializeNode(String nodeId, PubKey pubKey) {
+        return initializeNode(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
     }
 
-    public InitializeServerResult maybeInitializeServer(Map<Transport.Type, Integer> portByTransport,
-                                                        String nodeId,
-                                                        PubKey pubKey) {
-        InitializeServerResult initializeServerResult = serviceNodesByTransport.maybeInitializeServer(portByTransport, nodeId);
-        // After server has been started we can be sure the networkId is available. 
-        // If it was not already available before we persist it.
-        initializeServerResult.values()
-                .forEach(future -> future
-                        .whenComplete((result, throwable) -> {
-                            if (throwable == null) {
-                                findOrPersistNewNetworkId(nodeId, pubKey);
+    public Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
+                                                                       String nodeId,
+                                                                       PubKey pubKey) {
+        return portByTransport.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> {
+                            Transport.Type type = entry.getKey();
+                            Integer port = entry.getValue();
+                            if (serviceNodesByTransport.isNodeInitialized(type, nodeId)) {
+                                return CompletableFuture.completedFuture(null);
+                            } else {
+                                return runAsync(() -> {
+                                    try {
+                                        serviceNodesByTransport.initializeNode(type, nodeId, port);
+                                        findOrPersistNewNetworkId(nodeId, pubKey);
+                                    } catch (Throwable t) {
+                                        log.error("initialize node failed", t);
+                                    }
+                                }, NETWORK_IO_POOL);
                             }
                         }));
-        return initializeServerResult;
     }
 
 
@@ -178,20 +196,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<NetworkId> getInitializedNetworkId(String nodeId, PubKey pubKey) {
-        CompletableFuture<NetworkId> future = new CompletableFuture<>();
-        maybeInitializeServer(nodeId, pubKey)
-                .forEach((transportType, resultFuture) -> {
-                    resultFuture.whenComplete((initializeServerResult, throwable) -> {
-                        if (throwable != null) {
-                            log.error(throwable.toString()); //todo
-                        }
-
-                        findOrPersistNewNetworkId(nodeId, pubKey)
-                                .ifPresentOrElse(future::complete,
-                                        () -> future.completeExceptionally(new IllegalStateException("NetworkId must be present")));
-                    });
-                });
-        return future;
+        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values())
+                .thenApply(list -> findNetworkId(nodeId).orElseThrow());
     }
 
 
@@ -201,19 +207,13 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
 
     public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
                                                             NetworkId receiverNetworkId,
-                                                            KeyPair senderKeyPair,
-                                                            String senderNodeId) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage, receiverNetworkId, senderKeyPair, senderNodeId), NETWORK_IO_POOL);
-    }
-
-    public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
-                                                            NetworkId receiverNetworkId,
                                                             NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
-        return supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
-                        receiverNetworkId,
-                        senderNetworkIdWithKeyPair.getKeyPair(),
-                        senderNetworkIdWithKeyPair.getNodeId()),
-                NETWORK_IO_POOL);
+        return getInitializedNetworkId(senderNetworkIdWithKeyPair.getNodeId(), senderNetworkIdWithKeyPair.getPubKey())
+                .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
+                                receiverNetworkId,
+                                senderNetworkIdWithKeyPair.getKeyPair(),
+                                senderNetworkIdWithKeyPair.getNodeId()),
+                        NETWORK_IO_POOL));
     }
 
 
@@ -226,7 +226,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
+        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().addAuthenticatedData(authenticatedData, keyPair)
@@ -243,7 +243,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
+        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values())
                 .thenCompose(list -> {
                     DefaultAuthenticatedData authenticatedData = new DefaultAuthenticatedData(distributedData);
                     return dataService.get().removeAuthenticatedData(authenticatedData, keyPair)
@@ -263,7 +263,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
         KeyPair keyPair = ownerNetworkIdWithKeyPair.getKeyPair();
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values()) //todo
+        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values()) //todo
                 .thenCompose(list -> {
                     try {
                         byte[] signature = SignatureUtil.sign(authorizedDistributedData.serialize(), authorizedPrivateKey);
@@ -286,7 +286,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         String nodeId = ownerNetworkIdWithKeyPair.getNodeId();
         PubKey pubKey = ownerNetworkIdWithKeyPair.getPubKey();
-        return CompletableFutureUtils.allOf(maybeInitializeServer(nodeId, pubKey).values())
+        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values())
                 .thenCompose(list -> dataService.get().addAppendOnlyData(appendOnlyData)
                         .whenComplete((broadCastResultFutures, throwable) -> {
                             broadCastResultFutures.forEach((key, value) -> value.whenComplete((broadcastResult, throwable2) -> {
@@ -360,6 +360,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         return getOrCreatePortByTransport(Node.DEFAULT);
     }
 
+    //todo
     private Map<Transport.Type, Integer> getOrCreatePortByTransport(String nodeId) {
         Optional<NetworkId> networkIdOptional = findNetworkId(nodeId);
         // If we have a persisted networkId we take that port otherwise we take random system port.  
@@ -377,17 +378,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         if (nodeId.equals(Node.DEFAULT)) {
             if (defaultNodePortByTransportType.containsKey(CLEAR)) {
                 portByTransport.put(CLEAR, defaultNodePortByTransportType.get(CLEAR));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(CLEAR)) {
                 portByTransport.put(CLEAR, persistedOrRandomPortByTransport.get(CLEAR));
             }
             if (defaultNodePortByTransportType.containsKey(TOR)) {
                 portByTransport.put(TOR, defaultNodePortByTransportType.get(TOR));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(TOR)) {
                 portByTransport.put(TOR, persistedOrRandomPortByTransport.get(TOR));
             }
             if (defaultNodePortByTransportType.containsKey(I2P)) {
                 portByTransport.put(I2P, defaultNodePortByTransportType.get(I2P));
-            } else {
+            } else if (persistedOrRandomPortByTransport.containsKey(I2P)) {
                 portByTransport.put(I2P, persistedOrRandomPortByTransport.get(I2P));
             }
         } else {
@@ -432,8 +433,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         } else {
             //todo not sure if that is a valid case or better treated as exception
             log.error("supportedTransportTypes.size() != addressByNetworkType.size(). " +
-                            "supportedTransportTypes={}, addressByNetworkType={}",
-                    supportedTransportTypes, addressByNetworkType);
+                            "supportedTransportTypes={}, addressByNetworkType={}. nodeId={}",
+                    supportedTransportTypes, addressByNetworkType, nodeId);
             return Optional.empty();
         }
     }

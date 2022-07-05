@@ -17,9 +17,11 @@ package bisq.common.util;/*
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,8 +30,11 @@ public class CompletableFutureUtils {
     /**
      * @param collection Collection of futures
      * @param <T>        The generic type of the future
-     * @return Returns a CompletableFuture with a list of the futures we got as parameter once all futures
-     * are completed (incl. exceptionally completed).
+     * @return Returns a CompletableFuture with a list of the results once all futures
+     * have completed successfully. If any future got canceled or completed exceptionally the result also
+     * completes exceptionally.
+     * This is different to the `CompletableFuture.allOf` behaviour which completes successfully also if any of the futures
+     * complete exceptionally.
      */
     public static <T> CompletableFuture<List<T>> allOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
@@ -42,18 +47,29 @@ public class CompletableFutureUtils {
 
     @SafeVarargs
     public static <T> CompletableFuture<List<T>> allOf(CompletableFuture<T>... list) {
-        return CompletableFuture.allOf(list).thenApply(v ->
+        CompletableFuture<List<T>> result = CompletableFuture.allOf(list).thenApply(v ->
                 Stream.of(list)
                         .map(CompletableFuture::join)
                         .collect(Collectors.<T>toList())
         );
+
+        Arrays.stream(list)
+                .filter(future -> !CompletableFutureUtils.isCompleted(future))
+                .findAny()
+                .map(f -> f.handle((__, throwable) -> throwable).join())
+                .ifPresent(result::completeExceptionally);
+
+        return result;
     }
 
-    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(boolean filter, Collection<CompletableFuture<Boolean>> collection) {
-        //noinspection unchecked
-        return anyOfBooleanMatchingFilterOrAll(filter, collection.toArray(new CompletableFuture[0]));
-    }
-
+    /**
+     * @param collection Collection of futures
+     * @param <T>        The generic type of the future
+     * @return Returns a CompletableFuture with the result once any future has completed successfully.
+     * If all futures completed exceptionally the result also completes exceptionally.
+     * This is different to the `CompletableFuture.anyOf` behaviour which completes successfully also if any of the futures
+     * complete exceptionally.
+     */
     public static <T> CompletableFuture<T> anyOf(Collection<CompletableFuture<T>> collection) {
         //noinspection unchecked
         return anyOf(collection.toArray(new CompletableFuture[0]));
@@ -65,41 +81,27 @@ public class CompletableFutureUtils {
 
     @SafeVarargs
     public static <T> CompletableFuture<T> anyOf(CompletableFuture<T>... list) {
-        return CompletableFuture.anyOf(list).thenCompose(res ->
-                Stream.of(list)
-                        .filter(CompletableFuture::isDone)
-                        .findAny()
-                        .orElseThrow());
+        CompletableFuture<T> resultFuture = new CompletableFuture<>();
+        AtomicInteger remaining = new AtomicInteger(list.length);
+        Stream.of(list).forEach(future -> {
+            future.whenComplete((result, throwable) -> {
+                if (!resultFuture.isDone()) {
+                    if (throwable == null) {
+                        resultFuture.complete(result);
+                    } else {
+                        if (remaining.decrementAndGet() == 0) {
+                            resultFuture.completeExceptionally(throwable);
+                        }
+                    }
+                }
+            });
+        });
+        return resultFuture;
     }
 
-    /**
-     * Completes on any one of the following conditions:
-     * <br/>
-     * a) ANY of the CompletableFutures completes with the given filter, or
-     * <br/>
-     * b) ALL CompletableFutures complete
-     * <br/><br/>
-     * <p>
-     * Useful in situations such as
-     * <br/>
-     * "complete when any boolean future in the list completes with true, else complete when all complete with false"
-     *
-     * @see "https://stackoverflow.com/a/58999999"
-     */
-    @SafeVarargs
-    public static CompletableFuture<Boolean> anyOfBooleanMatchingFilterOrAll(boolean filter, CompletableFuture<Boolean>... list) {
-        CompletableFuture<Boolean> allWithFailFast = CompletableFuture.allOf(list)
-                .thenApply(__ -> {
-                            Stream.of(list).forEach(CompletableFuture::join);
-                            return filter;
-                        }
-                );
-        Stream.of(list).forEach(f -> f.thenAccept(result -> {
-            if (result == filter) {
-                allWithFailFast.complete(result);
-            }
-        }));
-        return allWithFailFast;
+    // Strangely the CompletableFuture API do not offer that method
+    public static <T> boolean isCompleted(CompletableFuture<T> future) {
+        return future.isDone() && !future.isCompletedExceptionally() && !future.isCancelled();
     }
 
     // CompletableFuture.applyToEither has some undesired error handling behavior (if first fail result fails).

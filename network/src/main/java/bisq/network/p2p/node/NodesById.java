@@ -31,6 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Maintains a map with nodes by nodeId.
@@ -60,8 +63,8 @@ public class NodesById implements Node.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeInitializeServer(String nodeId, int serverPort) {
-        getOrCreateNode(nodeId).maybeInitializeServer(serverPort);
+    public void initialize(String nodeId, int serverPort) {
+        getOrCreateNode(nodeId).initialize(serverPort);
     }
 
     public Connection getConnection(String nodeId, Address address) {
@@ -77,18 +80,29 @@ public class NodesById implements Node.Listener {
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        return CompletableFutureUtils.allOf(map.values().stream().map(Node::shutdown))
+        Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(Node::shutdown);
+        return CompletableFutureUtils.allOf(futures)
                 .orTimeout(2, TimeUnit.SECONDS)
                 .handle((list, throwable) -> {
                     map.clear();
                     listeners.clear();
                     nodeListeners.clear();
-                    return throwable == null;
+                    return throwable == null && list.stream().allMatch(e -> e);
                 });
     }
 
     public Node getOrCreateDefaultNode() {
         return getOrCreateNode(Node.DEFAULT);
+    }
+
+    public boolean isNodeInitialized(String nodeId) {
+        return findNode(nodeId)
+                .map(Node::isInitialized)
+                .orElse(false);
+    }
+
+    public void assertNodeIsInitialized(String nodeId) {
+        checkArgument(isNodeInitialized(nodeId), "Node must be present and initialized");
     }
 
     public Optional<Address> findMyAddress(String nodeId) {
