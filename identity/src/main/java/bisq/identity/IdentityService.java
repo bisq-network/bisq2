@@ -182,7 +182,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
+        return networkService.getNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
                     Identity identity = new Identity(nymId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {

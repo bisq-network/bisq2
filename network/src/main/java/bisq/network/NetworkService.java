@@ -53,10 +53,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -167,9 +164,9 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         return initializeNode(getOrCreatePortByTransport(nodeId), nodeId, pubKey);
     }
 
-    public Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
-                                                                       String nodeId,
-                                                                       PubKey pubKey) {
+    private Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
+                                                                        String nodeId,
+                                                                        PubKey pubKey) {
         return portByTransport.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> {
@@ -196,8 +193,20 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<NetworkId> getInitializedNetworkId(String nodeId, PubKey pubKey) {
-        return CompletableFutureUtils.allOf(initializeNode(nodeId, pubKey).values())
+        Collection<CompletableFuture<Void>> futures = initializeNode(nodeId, pubKey).values();
+        return CompletableFutureUtils.allOf(futures)
                 .thenApply(list -> findNetworkId(nodeId).orElseThrow());
+    }
+
+    public CompletableFuture<NetworkId> getNetworkId(String nodeId, PubKey pubKey) {
+        return findNetworkId(nodeId)
+                .map(networkId -> {
+                    // The networkId might come from persisted data, so we start initializing the node as well, but we 
+                    // do not wait for it being initialized.
+                    initializeNode(nodeId, pubKey);
+                    return CompletableFuture.completedFuture(networkId);
+                })
+                .orElse(getInitializedNetworkId(nodeId, pubKey));
     }
 
 
