@@ -133,4 +133,7 @@ public class DataNetworkService implements PeerGroupService.Listener, Node.Liste
         listeners.remove(listener);
     }
 
+    public boolean isNodeInitialized() {
+        return node.isInitialized();
+    }
 }

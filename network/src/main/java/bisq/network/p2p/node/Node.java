@@ -148,10 +148,14 @@ public class Node implements Connection.Handler {
                 .handleResultIf(result -> state.get() == STARTING)
                 .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
                 .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(10)
+                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(20)
                 .onRetry(e -> log.info("Retry to call initializeServer. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> log.warn("InitializeServer failed. Max retries exceeded."))
-                .onSuccess(e -> log.info("InitializeServer succeeded.")).build();
+                .onRetriesExceeded(e -> {
+                    log.warn("InitializeServer failed. Max retries exceeded. We shutdown the node.");
+                    shutdown();
+                })
+                .onSuccess(e -> log.debug("InitializeServer succeeded."))
+                .build();
     }
 
 
@@ -173,7 +177,7 @@ public class Node implements Connection.Handler {
                 break;
             }
             case STARTING: {
-                throw new IllegalStateException("Already starting. NodeId=" + nodeId);
+                throw new IllegalStateException("Already starting. NodeId=" + nodeId + "; transportType=" + transportType);
             }
             case RUNNING: {
                 log.debug("Got called while already running. We ignore that call.");
@@ -461,10 +465,6 @@ public class Node implements Connection.Handler {
                 .handle((list, throwable) -> throwable == null);
     }
 
-    boolean isInitialized() {
-        return getState().get() == Node.State.RUNNING;
-    }
-
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return transport.getSocksProxy();
     }
@@ -483,6 +483,10 @@ public class Node implements Connection.Handler {
 
     public int getNumConnections() {
         return inboundConnectionsByAddress.size() + outboundConnectionsByAddress.size();
+    }
+
+    public boolean isInitialized() {
+        return getState().get() == Node.State.RUNNING;
     }
 
     @Override

@@ -23,8 +23,11 @@ import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peergroup.PeerGroup;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -39,10 +42,21 @@ public class Broadcaster {
 
     private final Node node;
     private final PeerGroup peerGroup;
+    private final RetryPolicy<BroadcastResult> retryPolicy;
 
     public Broadcaster(Node node, PeerGroup peerGroup) {
         this.node = node;
         this.peerGroup = peerGroup;
+
+        retryPolicy = RetryPolicy.<BroadcastResult>builder()
+                .handle(IllegalStateException.class)
+                .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
+                .withJitter(0.25)
+                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(10)
+                .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
+                .onRetriesExceeded(e -> log.warn("Max retries exceeded."))
+                .onSuccess(e -> log.debug("Succeeded."))
+                .build();
     }
 
     public CompletableFuture<BroadcastResult> reBroadcast(BroadcastMessage broadcastMessage) {
@@ -55,6 +69,15 @@ public class Broadcaster {
     }
 
     public CompletableFuture<BroadcastResult> broadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
+        return Failsafe.with(retryPolicy).getAsync(() -> doBroadcast(broadcastMessage, distributionFactor).join());
+    }
+
+    public CompletableFuture<BroadcastResult> doBroadcast(BroadcastMessage broadcastMessage, double distributionFactor) {
+        if (!node.isInitialized()) {
+            throw new IllegalStateException("Node not initialized. node=" + node.getNodeId() + 
+                    "; transportType=" + node.getTransportType());
+        }
+
         long ts = System.currentTimeMillis();
         CompletableFuture<BroadcastResult> future = new CompletableFuture<BroadcastResult>()
                 .orTimeout(BROADCAST_TIMEOUT, TimeUnit.SECONDS);
