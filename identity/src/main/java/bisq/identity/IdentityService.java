@@ -119,6 +119,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
                         .orElseGet(() -> createAndInitializeNewActiveIdentity(domainId)));
     }
 
+    /**
+     * Creates new identity based on given parameters.
+     */
     public CompletableFuture<Identity> createNewIdentity(String domainId,
                                                          String keyId,
                                                          KeyPair keyPair,
@@ -126,7 +129,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        return networkService.getNetworkId(nodeId, pubKey)
+        return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
                     Identity identity = new Identity(domainId, networkId, keyPair, proofOfWork);
                     synchronized (lock) {

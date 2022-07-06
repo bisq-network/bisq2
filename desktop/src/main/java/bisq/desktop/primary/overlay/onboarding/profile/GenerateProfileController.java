@@ -98,12 +98,11 @@ public class GenerateProfileController implements Controller {
     void onCreateUserProfile() {
         model.getCreateProfileProgress().set(-1);
         TempIdentity tempIdentity = model.getTempIdentity().get();
-        chatUserService.createNewInitializedUserProfile(tempIdentity.getProfileId(),
+        chatUserService.createAndPublishNewChatUserIdentity(tempIdentity.getProfileId(),
                         model.getNickName().get(),
                         tempIdentity.getTempKeyId(),
                         tempIdentity.getTempKeyPair(),
                         tempIdentity.getProofOfWork())
-                .thenCompose(chatUserService::publishNewChatUser)
                 .thenAccept(chatUserIdentity -> UIThread.run(() -> {
                     Navigation.navigateTo(NavigationTarget.MAIN);
                     UIThread.runOnNextRenderFrame(this::navigateNext);

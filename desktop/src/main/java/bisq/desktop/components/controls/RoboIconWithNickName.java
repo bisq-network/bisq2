@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
 import bisq.social.user.ChatUserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -83,6 +84,7 @@ public class RoboIconWithNickName extends HBox {
     public void setUserProfile(ChatUserIdentity chatUserIdentity) {
         imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
         nickNameLabel.setText(chatUserIdentity.getNickName());
-        Tooltip.install(this, new Tooltip(chatUserIdentity.getTooltipString()));
+        Tooltip.install(this, new Tooltip(Res.get("social.chatUser.tooltip",
+                chatUserIdentity.getNickName(), chatUserIdentity.getProfileId())));
     }
 }

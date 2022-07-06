@@ -84,7 +84,7 @@ public class UserProfileSelectionAtSettings {
 
         public void onSelected(ChatUserIdentity value) {
             if (value != null) {
-                chatUserService.selectUserProfile(value);
+                chatUserService.selectChatUserIdentity(value);
             }
         }
     }

@@ -75,7 +75,7 @@ public class ChannelAdmin {
 
         public void onSelected(ChatUserIdentity value) {
             if (value != null) {
-                chatUserService.selectUserProfile(value);
+                chatUserService.selectChatUserIdentity(value);
             }
         }
 

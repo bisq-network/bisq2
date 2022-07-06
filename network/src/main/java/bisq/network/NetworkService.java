@@ -203,17 +203,6 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                 .thenApply(list -> findNetworkId(nodeId).orElseThrow());
     }
 
-    public CompletableFuture<NetworkId> getNetworkId(String nodeId, PubKey pubKey) {
-        return findNetworkId(nodeId)
-                .map(networkId -> {
-                    // The networkId might come from persisted data, so we start initializing the node as well, but we 
-                    // do not wait for it being initialized.
-                    initializeNode(nodeId, pubKey);
-                    return CompletableFuture.completedFuture(networkId);
-                })
-                .orElse(getInitializedNetworkId(nodeId, pubKey));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Send confidential message

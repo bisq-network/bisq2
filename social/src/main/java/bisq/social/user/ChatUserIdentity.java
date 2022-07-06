@@ -18,8 +18,8 @@
 package bisq.social.user;
 
 import bisq.common.proto.Proto;
-import bisq.i18n.Res;
 import bisq.identity.Identity;
+import bisq.network.NetworkIdWithKeyPair;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -37,14 +37,6 @@ public final class ChatUserIdentity implements Proto {
         this.chatUser = chatUser;
     }
 
-    public byte[] getPubKeyHash() {
-        return chatUser.getPubKeyHash();
-    }
-
-    public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", chatUser.getNickName(), getProfileId());
-    }
-
     public bisq.social.protobuf.ChatUserIdentity toProto() {
         return bisq.social.protobuf.ChatUserIdentity.newBuilder()
                 .setIdentity(identity.toProto())
@@ -57,11 +49,24 @@ public final class ChatUserIdentity implements Proto {
                 ChatUser.fromProto(proto.getChatUser()));
     }
 
+    // Delegates
+    public byte[] getPubKeyHash() {
+        return chatUser.getPubKeyHash();
+    }
+
+    public String getId() {
+        return chatUser.getId();
+    }
+
     public String getProfileId() {
         return chatUser.getNym();
     }
 
     public String getNickName() {
         return chatUser.getNickName();
+    }
+
+    public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
+        return identity.getNodeIdAndKeyPair();
     }
 }

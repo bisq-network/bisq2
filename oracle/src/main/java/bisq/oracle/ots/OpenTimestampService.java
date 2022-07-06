@@ -27,7 +27,6 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import com.eternitywall.ots.DetachedTimestampFile;
 import com.eternitywall.ots.OpenTimestamps;
-import com.eternitywall.ots.Timestamp;
 import com.eternitywall.ots.VerifyResult;
 import com.eternitywall.ots.exceptions.DeserializationException;
 import com.eternitywall.ots.op.OpSHA256;
@@ -89,6 +88,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
         Scheduler.run(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities)
                 .periodically(1, TimeUnit.HOURS)
                 .name("Manage-timestamps");
+        maybeCreateOrUpgradeTimestampsOfActiveIdentities();
         CompletableFuture.runAsync(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities,
                 ExecutorFactory.newSingleThreadExecutor("Manage-timestamps"));
         return CompletableFuture.completedFuture(true);
@@ -115,20 +115,30 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     /**
      * Check for given identity if we have a completed timestamp. Request or upgrade timestamp if required.
      */
-    public void maybeCreateOrUpgradeTimestamp(ByteArray pubKeyHash) {
-        Optional.ofNullable(persistableStore.getTimestampByPubKeyHash().get(pubKeyHash))
-                .ifPresentOrElse(timestamp -> {
+    public ByteArray maybeCreateOrUpgradeTimestamp(ByteArray pubKeyHash) {
+        return Optional.ofNullable(persistableStore.getTimestampByPubKeyHash().get(pubKeyHash))
+                .map(timestamp -> {
                     if (isTimestampComplete(timestamp)) {
                         log.info("Timestamp of pubKeyHash {} is already complete", pubKeyHash);
                     } else {
                         // Existing timestamp is not completed yet, we request an upgrade.
                         requestTimestampUpgrade(pubKeyHash, timestamp);
                     }
-                }, () -> {
-                    // If we don't had already a timestamp created we request one  
-                    requestTimestamp(pubKeyHash);
+                    return timestamp;
+                }).orElseGet(() -> {
+                    try {
+                        return requestTimestamp(pubKeyHash);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 });
     }
+
+    public CompletableFuture<ByteArray> maybeCreateOrUpgradeTimestampAsync(ByteArray pubKeyHash) {
+        return CompletableFuture.supplyAsync(() -> maybeCreateOrUpgradeTimestamp(pubKeyHash),
+                ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -155,17 +165,16 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
                 });
     }
 
-    private void requestTimestamp(ByteArray data) {
+    private ByteArray requestTimestamp(ByteArray data) throws Exception {
         log.info("Request timestamp of data {} from calendars {}", data, calendars);
         long ts = System.currentTimeMillis();
         // Blocking call to the ots server. Takes about 2 sec on clear net
-        doRequestTimestamp(data)
-                .ifPresent(timestamp -> {
-                    log.info("Response for timestamp of data {} received after {} ms. Timestamp: {} ",
-                            data, System.currentTimeMillis() - ts, timestamp);
-                    persistableStore.getTimestampByPubKeyHash().put(data, timestamp);
-                    persist();
-                });
+        ByteArray timestamp = doRequestTimestamp(data);
+        log.info("Response for timestamp of data {} received after {} ms. Timestamp: {} ",
+                data, System.currentTimeMillis() - ts, timestamp);
+        persistableStore.getTimestampByPubKeyHash().put(data, timestamp);
+        persist();
+        return timestamp;
     }
 
 
@@ -173,18 +182,13 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     // Private OTS library methods
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Optional<ByteArray> doRequestTimestamp(ByteArray data) {
-        try {
-            byte[] hash = new OpSHA256().call(data.getBytes());
-            DetachedTimestampFile ots = DetachedTimestampFile.from(new OpSHA256(), hash);
-            //This step is needed to actually stamp the DetachedTimestamp ots
-            Timestamp stampResult = OpenTimestamps.stamp(ots, calendars, null);
-            log.info("The timestamp proof has been created. Detached TimestampFile: {}", OpenTimestamps.info(ots));
-            return Optional.of(new ByteArray(ots.serialize()));
-        } catch (Exception e) {
-            log.error("Requesting timestamp failed", e);
-            return Optional.empty();
-        }
+    private ByteArray doRequestTimestamp(ByteArray data) throws Exception {
+        byte[] hash = new OpSHA256().call(data.getBytes());
+        DetachedTimestampFile ots = DetachedTimestampFile.from(new OpSHA256(), hash);
+        //This step is needed to actually stamp the DetachedTimestamp ots
+        OpenTimestamps.stamp(ots, calendars, null);
+        log.info("The timestamp proof has been created. Detached TimestampFile: {}", OpenTimestamps.info(ots));
+        return new ByteArray(ots.serialize());
     }
 
     private Optional<ByteArray> doRequestUpgrade(ByteArray ots) {

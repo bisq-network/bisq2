@@ -102,7 +102,7 @@ public class UserProfileSelection {
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                chatUserService.selectUserProfile(selectedItem.chatUserIdentity);
+                chatUserService.selectChatUserIdentity(selectedItem.chatUserIdentity);
             }
         }
     }
