@@ -4,38 +4,65 @@ import * as path from 'node:path';
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 
+interface PackageSpec {
+    readonly packageName: string;
+    readonly urlPrefix: string;
+    readonly unpackedTargetDir: string;
+}
 
 async function run(): Promise<void> {
     try {
-        const bitcoinVersion = core.getInput('bitcoin-core-version', {required: true});
-        let url = `https://bitcoin.org/bin/bitcoin-core-${bitcoinVersion}/bitcoin-${bitcoinVersion}-`;
+        let packageSpecs: Array<PackageSpec> = [
+            buildBitcoinCorePackageSpec(),
+            buildElementsCorePackageSpec()
+        ];
 
-        const platform = os.platform();
-        switch (platform) {
-            case "linux":
-                url += 'x86_64-linux-gnu.tar.gz'
-                break
-            case "win32":
-                url += 'win64.zip'
-                break
-            case "darwin":
-                url += 'osx64.tar.gz'
-                break
-            default:
-                throw 'Unknown OS';
+        for (let i = 0; i < packageSpecs.length; i++) {
+            const spec = packageSpecs[i];
+            console.log(`Installing ${spec.packageName}`)
+
+            let url = appendUrlSuffixForOs(spec.urlPrefix)
+            const extractedDirPath = await downloadAndUnpackArchive(url);
+
+            const binDirPath = path.join(extractedDirPath, spec.unpackedTargetDir, 'bin');
+            core.addPath(binDirPath);
         }
-
-        await downloadAndInstallBitcoinCore(bitcoinVersion, url);
 
     } catch (error: any) {
         core.setFailed(error.message);
     }
 }
 
-async function downloadAndInstallBitcoinCore(version: string, url: string) {
-    const extractedDirPath = await downloadAndUnpackArchive(url);
-    const binDirPath = path.join(extractedDirPath, `bitcoin-${version}`, 'bin');
-    core.addPath(binDirPath);
+function buildBitcoinCorePackageSpec(): PackageSpec {
+    const bitcoinVersion = core.getInput('bitcoin-core-version', {required: true});
+    return {
+        packageName: 'Bitcoin Core',
+        urlPrefix: `https://bitcoin.org/bin/bitcoin-core-${bitcoinVersion}/bitcoin-${bitcoinVersion}-`,
+        unpackedTargetDir: `bitcoin-${bitcoinVersion}`
+    }
+}
+
+function buildElementsCorePackageSpec(): PackageSpec {
+    const elementsVersion = core.getInput('elements-core-version', {required: true});
+    return {
+        packageName: 'Elements Core',
+        urlPrefix: `https://github.com/ElementsProject/elements/releases/download/elements-${elementsVersion}/elements-elements-${elementsVersion}-`,
+        unpackedTargetDir: `elements-elements-${elementsVersion}`
+    }
+}
+
+function appendUrlSuffixForOs(url_prefix: string): string {
+    const platform = os.platform();
+    switch (platform) {
+        case "linux":
+            return url_prefix + 'x86_64-linux-gnu.tar.gz';
+        case "win32":
+            return url_prefix + 'win64.zip';
+        case "darwin":
+            return url_prefix + 'osx64.tar.gz';
+        default:
+            throw 'Unknown OS';
+    }
 }
 
 async function downloadAndUnpackArchive(url: string) {
