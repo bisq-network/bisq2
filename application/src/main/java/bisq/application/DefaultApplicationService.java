@@ -35,7 +35,6 @@ import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -53,35 +52,28 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Slf4j
 public class DefaultApplicationService extends ApplicationService {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
-    private final OracleService oracleService;
 
     public enum State {
-        CREATED,
-        SECURITY_SERVICE_INITIALIZED,
-        NETWORK_BOOTSTRAPPED,
-        IDENTITY_SERVICE_INITIALIZED,
-        ORACLE_SERVICE_INITIALIZED,
-        DAO_BRIDGE_SERVICE_INITIALIZED,
-        MARKET_PRICE_SERVICE_INITIALIZED,
-        ACCOUNT_AGE_WITNESS_SERVICE_INITIALIZED,
-        PROTOCOL_SERVICE_INITIALIZED,
-        SOCIAL_SERVICE_INITIALIZED,
-        INIT_COMPLETE,
-        INIT_FAILED
+        NEW,
+        START_NETWORK,
+        NETWORK_STARTED,
+        INITIALIZE_COMPLETED,
+        INITIALIZE_FAILED
     }
 
-    private final NetworkService networkService;
-    private final IdentityService identityService;
-   
-    private final SettingsService settingsService;
-    private final ProtocolService protocolService;
-    private final AccountService accountService;
     private final BitcoinWalletService bitcoinWalletService;
     private final LiquidWalletService liquidWalletService;
+    private final SecurityService securityService;
+    private final NetworkService networkService;
+    private final IdentityService identityService;
+    private final OracleService oracleService;
+    private final AccountService accountService;
     private final OfferService offerService;
     private final SocialService socialService;
-    private final SecurityService securityService;
-    private final Observable<State> state = new Observable<>(State.CREATED);
+    private final SettingsService settingsService;
+    private final ProtocolService protocolService;
+    
+    private final Observable<State> state = new Observable<>(State.NEW);
 
     public DefaultApplicationService(String[] args) {
         super("default", args);
@@ -120,7 +112,6 @@ public class DefaultApplicationService extends ApplicationService {
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
     }
 
-   
 
     // At the moment we do not initialize in parallel to keep thing simple, but can be optimized later
     @Override
@@ -128,7 +119,9 @@ public class DefaultApplicationService extends ApplicationService {
         return bitcoinWalletService.initialize()
                 .thenCompose(result -> liquidWalletService.initialize())
                 .thenCompose(result -> securityService.initialize())
+                .whenComplete((r, t) -> setState(State.START_NETWORK))
                 .thenCompose(result -> networkService.initialize())
+                .whenComplete((r, t) -> setState(State.NETWORK_STARTED))
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
@@ -139,8 +132,10 @@ public class DefaultApplicationService extends ApplicationService {
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
+                        setState(State.INITIALIZE_COMPLETED);
                         log.info("NetworkApplicationService initialized");
                     } else {
+                        setState(State.INITIALIZE_FAILED);
                         log.error("Initializing networkApplicationService failed", throwable);
                     }
                 });
@@ -171,20 +166,10 @@ public class DefaultApplicationService extends ApplicationService {
     }
 
 
-    private CompletableFuture<Boolean> setState(State newState) {
+    private void setState(State newState) {
         checkArgument(state.get().ordinal() < newState.ordinal(),
                 "New state %s must have a higher ordinal as the current state %s", newState, state.get());
         state.set(newState);
         log.info("New state {}", newState);
-
-        return CompletableFuture.completedFuture(true);
-    }
-
-    private CompletableFuture<Boolean> setStateAfter(CompletableFuture<Boolean> initTask, State stateAfter) {
-        return initTask.thenCompose(result -> setState(stateAfter));
-    }
-
-    private CompletableFuture<Boolean> setStateAfterList(CompletableFuture<List<Boolean>> initTaskList, State stateAfter) {
-        return initTaskList.thenCompose(result -> setState(stateAfter));
     }
 }

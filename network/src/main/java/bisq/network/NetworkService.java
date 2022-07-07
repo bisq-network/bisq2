@@ -19,6 +19,7 @@ package bisq.network;
 
 
 import bisq.common.application.ModuleService;
+import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
@@ -137,7 +138,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                     return runAsync(() -> {
                         try {
                             serviceNodesByTransport.initializeNode(type, nodeId, port);
-                            findOrPersistNewNetworkId(nodeId, pubKey);
+                            maybePersistNewNetworkId(nodeId, pubKey);
                             serviceNodesByTransport.initializePeerGroup(type);
                         } catch (Throwable t) {
                             log.error("initialize failed", t);
@@ -172,6 +173,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     private Map<Transport.Type, CompletableFuture<Void>> initializeNode(Map<Transport.Type, Integer> portByTransport,
                                                                         String nodeId,
                                                                         PubKey pubKey) {
+        log.info("initializeNode {}", nodeId);
         return portByTransport.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         entry -> {
@@ -183,7 +185,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                                 return runAsync(() -> {
                                     try {
                                         serviceNodesByTransport.initializeNode(type, nodeId, port);
-                                        findOrPersistNewNetworkId(nodeId, pubKey);
+                                        maybePersistNewNetworkId(nodeId, pubKey);
                                     } catch (Throwable t) {
                                         log.error("initialize node failed", t);
                                     }
@@ -198,9 +200,18 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<NetworkId> getInitializedNetworkId(String nodeId, PubKey pubKey) {
+        log.info("getInitializedNetworkId {}", nodeId);
         Collection<CompletableFuture<Void>> futures = initializeNode(nodeId, pubKey).values();
+        // Once the node of the last transport is completed we are expected to be able to create the networkId
+        // as all addresses of all transports are available.
         return CompletableFutureUtils.allOf(futures)
-                .thenApply(list -> findNetworkId(nodeId).orElseThrow());
+                .thenApply(list -> findNetworkId(nodeId)
+                        .or(() -> createNetworkId(nodeId, pubKey))
+                        .orElseThrow(() -> {
+                            String errorMsg = "Unexpected case. No networkId available after all initializeNode calls are completed.";
+                            log.error(errorMsg);
+                            return new RuntimeException(errorMsg);
+                        }));
     }
 
 
@@ -311,8 +322,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
                         transportType -> findAddress(transportType, nodeId).orElseThrow()));
     }
 
-    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
-        return serviceNodesByTransport.getStateByTransportType();
+    public Map<Transport.Type, Observable<Node.State>> getNodeStateByTransportType() {
+        return serviceNodesByTransport.getNodeStateByTransportType();
     }
 
     public boolean isTransportTypeSupported(Transport.Type transportType) {
@@ -393,10 +404,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
 
     public Optional<NetworkId> createNetworkId(String nodeId, PubKey pubKey) {
         Map<Transport.Type, Address> addressByNetworkType = getAddressByNetworkType(nodeId);
+        // We need the addresses for all transports to be able to create the networkId.
         if (supportedTransportTypes.size() == addressByNetworkType.size()) {
             return Optional.of(new NetworkId(addressByNetworkType, pubKey, nodeId));
         } else {
-            //todo not sure if that is a valid case or better treated as exception
+            // Expected case at first startup or creation of new node when addresses of other transport types are 
+            // not available yet. 
             log.error("supportedTransportTypes.size() != addressByNetworkType.size(). " +
                             "supportedTransportTypes={}, addressByNetworkType={}. nodeId={}",
                     supportedTransportTypes, addressByNetworkType, nodeId);
@@ -404,7 +417,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         }
     }
 
-    private Optional<NetworkId> findOrPersistNewNetworkId(String nodeId, PubKey pubKey) {
+    // If not persisted we try to create the networkId and persist if available.
+    private Optional<NetworkId> maybePersistNewNetworkId(String nodeId, PubKey pubKey) {
         return findNetworkId(nodeId)
                 .or(() -> createNetworkId(nodeId, pubKey)
                         .map(networkId -> {

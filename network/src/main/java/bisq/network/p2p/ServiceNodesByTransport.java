@@ -18,6 +18,7 @@
 package bisq.network.p2p;
 
 
+import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
@@ -165,9 +166,9 @@ public class ServiceNodesByTransport {
                 });
     }
 
-    public Map<Transport.Type, ServiceNode.State> getStateByTransportType() {
+    public Map<Transport.Type, Observable<Node.State>> getNodeStateByTransportType() {
         return map.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getState().get()));
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDefaultNode().getObservableState()));
     }
 
     public Optional<ServiceNode> findServiceNode(Transport.Type transport) {
