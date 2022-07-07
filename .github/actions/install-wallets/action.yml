@@ -1,7 +1,7 @@
-name: 'Setup Bitcoin Core'
-description: 'Install Bitcoin Core'
+name: 'Install Wallets'
+description: 'Install Wallets needed for integration tests'
 inputs:
-  version:
+  bitcoin-core-version:
     description: 'Bitcoin Core Version'
     required: true
 runs:

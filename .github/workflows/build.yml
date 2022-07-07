@@ -21,10 +21,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3.0.2
 
-      - name: Install Bitcoin Core
-        uses: ./.github/actions/setup-bitcoin-core
+      - name: Install Wallets
+        uses: ./.github/actions/install-wallets
         with:
-          version: '22.0'
+          bitcoin-core-version: '22.0'
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3.4.1

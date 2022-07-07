@@ -46,7 +46,7 @@ const tc = __importStar(__nccwpck_require__(784));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const bitcoinVersion = core.getInput('version', { required: true });
+            const bitcoinVersion = core.getInput('bitcoin-core-version', { required: true });
             let url = `https://bitcoin.org/bin/bitcoin-core-${bitcoinVersion}/bitcoin-${bitcoinVersion}-`;
             const platform = os.platform();
             switch (platform) {
