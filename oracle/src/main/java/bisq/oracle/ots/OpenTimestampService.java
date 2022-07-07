@@ -88,7 +88,6 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
         Scheduler.run(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities)
                 .periodically(1, TimeUnit.HOURS)
                 .name("Manage-timestamps");
-        maybeCreateOrUpgradeTimestampsOfActiveIdentities();
         CompletableFuture.runAsync(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities,
                 ExecutorFactory.newSingleThreadExecutor("Manage-timestamps"));
         return CompletableFuture.completedFuture(true);

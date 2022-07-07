@@ -75,7 +75,11 @@ public class Node implements Connection.Handler {
     public static final String DEFAULT = "default";
 
     public enum State {
-        NEW, STARTING, RUNNING, STOPPING, TERMINATED
+        NEW,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        TERMINATED
     }
 
     public interface Listener {
@@ -131,7 +135,6 @@ public class Node implements Connection.Handler {
     private final RetryPolicy<Boolean> retryPolicy;
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
-    private final Object lock = new Object();
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.NEW);
 
@@ -168,7 +171,7 @@ public class Node implements Connection.Handler {
     }
 
     private void doInitialize(int port) {
-        synchronized (lock) {
+        synchronized (state) {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
@@ -185,9 +188,9 @@ public class Node implements Connection.Handler {
                     break;
                 }
                 case STOPPING:
-                    throw new IllegalStateException("Already stopping. NodeId=" + nodeId);
+                    throw new IllegalStateException("Already stopping. NodeId=" + nodeId + "; transportType=" + transportType);
                 case TERMINATED:
-                    throw new IllegalStateException("Already terminated. NodeId=" + nodeId);
+                    throw new IllegalStateException("Already terminated. NodeId=" + nodeId + "; transportType=" + transportType);
                 default: {
                     throw new IllegalStateException("Unhandled state " + state.get());
                 }
@@ -549,7 +552,7 @@ public class Node implements Connection.Handler {
     }
 
     private void setState(State newState) {
-        log.info("Set new state {} for nodeId {}", newState, nodeId);
+        log.info("Set new state {} for nodeId {}; transportType {}", newState, nodeId, transportType);
         checkArgument(newState.ordinal() > state.get().ordinal(),
                 "New state %s must have a higher ordinal as the current state %s. nodeId={}",
                 newState, state.get(), nodeId);

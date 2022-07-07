@@ -20,6 +20,8 @@ package bisq.tor;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,11 +36,15 @@ import java.net.Proxy;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static bisq.tor.Tor.State.RUNNING;
+import static bisq.tor.Tor.State.STARTING;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -63,18 +69,19 @@ public class Tor {
     private final static Map<String, Tor> TOR_BY_APP = new HashMap<>();
 
     public enum State {
-        NOT_STARTED,
+        NEW,
         STARTING,
-        STARTED,
-        SHUTDOWN_STARTED
+        RUNNING,
+        STOPPING,
+        TERMINATED
     }
 
     private final TorController torController;
     private final TorBootstrap torBootstrap;
     private final String torDirPath;
     @Getter
-    private final AtomicReference<State> state = new AtomicReference<>(State.NOT_STARTED);
-
+    private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
+    private final RetryPolicy<Boolean> retryPolicy;
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
@@ -99,86 +106,90 @@ public class Tor {
             Thread.currentThread().setName("Tor.shutdownHook");
             shutdown();
         }));
+
+        retryPolicy = RetryPolicy.<Boolean>builder()
+                .handle(IllegalStateException.class)
+                .handleResultIf(result -> state.get() == STARTING)
+                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(40))
+                .withJitter(0.25)
+                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(20)
+                .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
+                .onRetriesExceeded(e -> {
+                    log.warn("Failed. Max retries exceeded. We shutdown.");
+                    shutdown();
+                })
+                .onSuccess(e -> log.debug("Succeeded."))
+                .build();
     }
 
     public void shutdown() {
-        if (state.get() == State.SHUTDOWN_STARTED) {
+        if (state.get() == State.STOPPING || state.get() == State.TERMINATED) {
             return;
         }
         long ts = System.currentTimeMillis();
-        state.set(State.SHUTDOWN_STARTED);
+        setState(State.STOPPING);
 
         torBootstrap.shutdown();
         torController.shutdown();
 
-        state.set(State.NOT_STARTED);
         log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
+        setState(State.TERMINATED);
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
         return CompletableFuture.supplyAsync(() -> {
             Thread.currentThread().setName("Tor.startAsync");
-            try {
-                if (state.get() != State.NOT_STARTED) {
-                    throw new IllegalStateException("startAsync called with invalid state. State=" + state.get());
-                }
-                start();
-                return true;
-            } catch (IOException | InterruptedException exception) {
-                torBootstrap.deleteVersionFile();
-                throw new CompletionException(exception);
-            }
+            return start();
         }, executor);
     }
 
-    // Blocking start
-    // TODO find better solution for handling repeated start calls
-    public void start() throws IOException, InterruptedException {
-        try {
-            if (state.get() == State.STARTED) {
-                log.debug("Tor already started");
-                return;
-            }
-            if (state.get() == State.STARTING) {
-                log.debug("Tor is starting but has not completed yet. We wait until torController has started.");
-                CountDownLatch latch = new CountDownLatch(1);
-                torController.addListener(latch::countDown);
-                latch.await(30, TimeUnit.SECONDS);
-                while (state.get() == State.STARTING) {
-                    Thread.sleep(1000);
-                }
-                if (state.get() == State.STARTED) {
-                    log.debug("Tor already started");
-                } else {
-                    log.debug("Seems Tor got shut down in the meantime");
-                }
-                return;
-            }
-            if (state.get() == State.NOT_STARTED) {
-                state.set(State.STARTING);
+    public boolean start() {
+        return Failsafe.with(retryPolicy).get(this::doStart);
+    }
+
+    private boolean doStart() {
+        switch (state.get()) {
+            case NEW: {
+                setState(STARTING);
                 long ts = System.currentTimeMillis();
-                int controlPort = torBootstrap.start();
-                torController.start(controlPort);
-                proxyPort = torController.getProxyPort();
-                state.set(State.STARTED);
+                try {
+                    int controlPort = torBootstrap.start();
+                    torController.start(controlPort);
+                    proxyPort = torController.getProxyPort();
+                } catch (Exception exception) {
+                    torBootstrap.deleteVersionFile();
+                    log.error("Starting tor failed.", exception);
+                    shutdown();
+                    return false;
+                }
                 log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
-            } else {
-                throw new IllegalStateException("Invalid state at start. state=" + state.get());
+                setState(RUNNING);
+                return true;
             }
-        } catch (Exception exception) {
-            torBootstrap.deleteVersionFile();
-            throw exception;
+            case STARTING: {
+                throw new IllegalStateException("Already starting.");
+            }
+            case RUNNING: {
+                log.debug("Got called while already running. We ignore that call.");
+                return true;
+            }
+            case STOPPING:
+            case TERMINATED:
+                return false;
+            default: {
+                throw new IllegalStateException("Unhandled state " + state.get());
+            }
         }
     }
 
     public TorServerSocket getTorServerSocket() throws IOException {
-        checkArgument(state.get() == State.STARTED,
+        checkArgument(state.get() == RUNNING,
                 "Invalid state at Tor.getTorServerSocket. state=" + state.get());
         return new TorServerSocket(torDirPath, torController);
     }
 
     public Proxy getProxy(@Nullable String streamId) throws IOException {
-        checkArgument(state.get() == State.STARTED,
+        checkArgument(state.get() == RUNNING,
                 "Invalid state at Tor.getProxy. state=" + state.get());
         Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
         InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
@@ -207,7 +218,7 @@ public class Tor {
     }
 
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        checkArgument(state.get() == State.STARTED,
+        checkArgument(state.get() == RUNNING,
                 "Invalid state at Tor.getSocks5Proxy. state=" + state.get());
         checkArgument(proxyPort > -1, "proxyPort must be defined");
         Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, proxyPort);
@@ -250,5 +261,13 @@ public class Tor {
             e.printStackTrace();
         }
         return socks5Proxy;
+    }
+
+    private void setState(State newState) {
+        log.info("Set new state {}", newState);
+        checkArgument(newState.ordinal() > state.get().ordinal(),
+                "New state %s must have a higher ordinal as the current state %s",
+                newState, state.get());
+        state.set(newState);
     }
 }

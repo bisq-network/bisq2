@@ -87,6 +87,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
         initializeActiveIdentities();
         initializePooledIdentities();
         maybeFillUpPool();

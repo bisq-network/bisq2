@@ -71,7 +71,7 @@ public interface Transport {
         }
     }
 
-    Boolean initialize();
+    boolean initialize();
 
     ServerSocketResult getServerSocket(int port, String nodeId);
 
