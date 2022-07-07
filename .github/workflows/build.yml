@@ -25,6 +25,7 @@ jobs:
         uses: ./.github/actions/install-wallets
         with:
           bitcoin-core-version: '22.0'
+          elements-core-version: '0.21.0.2'
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3.4.1
