@@ -410,7 +410,7 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, M
         } else {
             // Expected case at first startup or creation of new node when addresses of other transport types are 
             // not available yet. 
-            log.error("supportedTransportTypes.size() != addressByNetworkType.size(). " +
+            log.debug("supportedTransportTypes.size() != addressByNetworkType.size(). " +
                             "supportedTransportTypes={}, addressByNetworkType={}. nodeId={}",
                     supportedTransportTypes, addressByNetworkType, nodeId);
             return Optional.empty();

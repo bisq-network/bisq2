@@ -113,11 +113,11 @@ public class SplashController implements Controller {
     private String mapState(Node.State state) {
         switch (state) {
             case NEW:
-                return "0%";
+                return "0";
             case STARTING:
-                return "50%";
+                return "50";
             case RUNNING:
-                return "100%";
+                return "100";
             default:
                 return "";
         }
