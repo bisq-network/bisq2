@@ -153,7 +153,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                     // published and confirmed which can take half a day or more.
                     ByteArray pubKeyHash = new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash());
                     openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
-
+                    
                     publishChatUser(chatUser, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
 
                     return chatUserIdentity;

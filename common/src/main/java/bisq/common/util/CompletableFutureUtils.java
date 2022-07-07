@@ -17,7 +17,6 @@ package bisq.common.util;/*
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -49,16 +48,21 @@ public class CompletableFutureUtils {
     public static <T> CompletableFuture<List<T>> allOf(CompletableFuture<T>... list) {
         CompletableFuture<List<T>> result = CompletableFuture.allOf(list).thenApply(v ->
                 Stream.of(list)
-                        .map(CompletableFuture::join)
+                        .map(future -> {
+                            // We want to return the results in list, not the futures. Once allOf call is complete
+                            // we know that all futures have completed (normally, exceptional or cancelled).
+                            // For exceptional and canceled cases we throw an exception.
+                            T res = future.join();
+                            if (future.isCompletedExceptionally()) {
+                                throw new RuntimeException((future.handle((r, throwable) -> throwable).join()));
+                            }
+                            if (future.isCancelled()) {
+                                throw new RuntimeException("Future got canceled");
+                            }
+                            return res;
+                        })
                         .collect(Collectors.<T>toList())
         );
-
-        Arrays.stream(list)
-                .filter(future -> !CompletableFutureUtils.isCompleted(future))
-                .findAny()
-                .map(f -> f.handle((__, throwable) -> throwable).join())
-                .ifPresent(result::completeExceptionally);
-
         return result;
     }
 

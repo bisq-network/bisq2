@@ -18,14 +18,20 @@
 package bisq.desktop.primary.splash;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
+import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 @Slf4j
@@ -38,6 +44,8 @@ public class SplashController implements Controller {
     private Pin pinClearnetStatus;
     private Pin pinTorStatus;
     private Pin pinI2pStatus;
+    private Subscription statePin;
+    private MonadicBinding<String> binding;
 
     public SplashController(DefaultApplicationService applicationService) {
         this.applicationService = applicationService;
@@ -49,19 +57,24 @@ public class SplashController implements Controller {
     public void onActivate() {
         pinApplicationStatus = FxBindings.bind(model.getApplicationState()).to(applicationService.getState());
 
-        Map<Transport.Type, ServiceNode> map = applicationService.getNetworkService().getServiceNodesByTransport().getMap();
-        ServiceNode clearnetNode = map.get(Transport.Type.CLEAR);
-        if (clearnetNode != null) {
-            pinClearnetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(clearnetNode.getState());
+        Map<Transport.Type, Observable<Node.State>> map = applicationService.getNetworkService().getNodeStateByTransportType();
+        if (map.containsKey(Transport.Type.CLEAR)) {
+            pinClearnetStatus = FxBindings.bind(model.getClearServiceNodeState()).to(map.get(Transport.Type.CLEAR));
         }
-        ServiceNode torNode = map.get(Transport.Type.TOR);
-        if (torNode != null) {
-            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(torNode.getState());
+        if (map.containsKey(Transport.Type.TOR)) {
+            pinTorStatus = FxBindings.bind(model.getTorServiceNodeState()).to(map.get(Transport.Type.TOR));
         }
-        ServiceNode i2pNode = map.get(Transport.Type.I2P);
-        if (i2pNode != null) {
-            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(i2pNode.getState());
+        if (map.containsKey(Transport.Type.I2P)) {
+            pinI2pStatus = FxBindings.bind(model.getI2pServiceNodeState()).to(map.get(Transport.Type.I2P));
         }
+
+        binding = EasyBind.combine(model.getClearServiceNodeState(),
+                model.getTorServiceNodeState(),
+                model.getI2pServiceNodeState(),
+                this::getStatus);
+
+        statePin = EasyBind.subscribe(binding, state -> model.getTransportState().set(state));
+
     }
 
     @Override
@@ -76,9 +89,37 @@ public class SplashController implements Controller {
         if (pinI2pStatus != null) {
             pinI2pStatus.unbind();
         }
+        statePin.unsubscribe();
     }
 
     public void stopAnimation() {
         model.getProgress().set(0);
+    }
+
+    private String getStatus(Node.State clearnetState, Node.State torState, Node.State i2pState) {
+        ArrayList<String> networkStatuses = new ArrayList<>();
+        if (clearnetState != null) {
+            networkStatuses.add(String.format("Clear %s%%", mapState(clearnetState)));
+        }
+        if (torState != null) {
+            networkStatuses.add(String.format("Tor %s%%", mapState(torState)));
+        }
+        if (i2pState != null) {
+            networkStatuses.add(String.format("I2P %s%%", mapState(i2pState)));
+        }
+        return Joiner.on(" | ").join(networkStatuses).toUpperCase();
+    }
+
+    private String mapState(Node.State state) {
+        switch (state) {
+            case NEW:
+                return "0";
+            case STARTING:
+                return "50";
+            case RUNNING:
+                return "100";
+            default:
+                return "";
+        }
     }
 }

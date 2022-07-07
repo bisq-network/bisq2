@@ -98,15 +98,21 @@ public class GenerateProfileController implements Controller {
     void onCreateUserProfile() {
         model.getCreateProfileProgress().set(-1);
         TempIdentity tempIdentity = model.getTempIdentity().get();
+        model.getCreateProfileButtonDisabled().set(true);
+        model.getReGenerateButtonDisabled().set(true);
         chatUserService.createAndPublishNewChatUserIdentity(tempIdentity.getProfileId(),
                         model.getNickName().get(),
                         tempIdentity.getTempKeyId(),
                         tempIdentity.getTempKeyPair(),
                         tempIdentity.getProofOfWork())
-                .thenAccept(chatUserIdentity -> UIThread.run(() -> {
-                    Navigation.navigateTo(NavigationTarget.MAIN);
-                    UIThread.runOnNextRenderFrame(this::navigateNext);
-                    model.getCreateProfileProgress().set(0);
+                .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                    if (throwable == null) {
+                        Navigation.navigateTo(NavigationTarget.MAIN);
+                        UIThread.runOnNextRenderFrame(this::navigateNext);
+                        model.getCreateProfileProgress().set(0);
+                    } else {
+                        //todo
+                    }
                 }));
     }
 
@@ -120,8 +126,7 @@ public class GenerateProfileController implements Controller {
         byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
         model.getRoboHashImage().set(null);
         model.getRoboHashIconVisible().set(false);
-        model.getReGenerateButtonMouseTransparent().set(true);
-        // model.getCreateProfileButtonDisabled().set(true);
+        model.getReGenerateButtonDisabled().set(true);
         model.getPowProgress().set(-1);
         model.getNymId().set(Res.get("generateNym.nymId.generating"));
         long ts = System.currentTimeMillis();
@@ -156,8 +161,7 @@ public class GenerateProfileController implements Controller {
 
                         model.getPowProgress().set(0);
                         model.getRoboHashIconVisible().set(true);
-                        model.getReGenerateButtonMouseTransparent().set(false);
-                        // model.getCreateProfileButtonMouseTransparent().set(false);
+                        model.getReGenerateButtonDisabled().set(false);
                     });
                 }));
     }

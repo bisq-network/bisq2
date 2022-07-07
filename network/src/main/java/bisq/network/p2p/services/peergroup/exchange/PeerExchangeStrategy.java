@@ -33,7 +33,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class PeerExchangeStrategy {
     private static final long REPORTED_PEERS_LIMIT = 200;
-    private static final long MAX_AGE = TimeUnit.DAYS.toMillis(10);
+    //todo for dev testing we set it short
+    private static final long MAX_AGE = TimeUnit.HOURS.toMillis(1);
 
     @Getter
     public static class Config {

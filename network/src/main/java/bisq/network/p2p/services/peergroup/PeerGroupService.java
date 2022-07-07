@@ -173,7 +173,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
     }
 
     private void doInitialize() {
-        log.debug("Node {} called initialize", node);
+        log.info("Node {} called initialize", node);
         switch (getState().get()) {
             case NEW:
                 setState(PeerGroupService.State.STARTING);

@@ -110,9 +110,9 @@ public class Tor {
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handle(IllegalStateException.class)
                 .handleResultIf(result -> state.get() == STARTING)
-                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(40))
+                .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
                 .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(20)
+                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
                 .onRetry(e -> log.info("Retry. AttemptCount={}.", e.getAttemptCount()))
                 .onRetriesExceeded(e -> {
                     log.warn("Failed. Max retries exceeded. We shutdown.");

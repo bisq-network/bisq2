@@ -27,7 +27,7 @@ public class GenerateProfileModel implements Model {
     private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final StringProperty nymId = new SimpleStringProperty();
-    private final BooleanProperty reGenerateButtonMouseTransparent = new SimpleBooleanProperty();
+    private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
     private final DoubleProperty powProgress = new SimpleDoubleProperty();
     private final StringProperty nickName = new SimpleStringProperty();

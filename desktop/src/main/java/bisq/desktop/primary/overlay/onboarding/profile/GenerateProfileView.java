@@ -57,6 +57,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         Label subtitleLabel = new Label(Res.get("generateNym.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
+        subtitleLabel.setMinHeight(40); // does not wrap without that...
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         roboIconView = new ImageView();
@@ -71,12 +72,12 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
         powProgressIndicator.setOpacity(0.5);
 
+        int paneWidth = 250;
         StackPane roboIconPane = new StackPane();
-        roboIconPane.setMinSize(size, size);
-        roboIconPane.setMaxSize(size, size);
+        roboIconPane.setMinSize(paneWidth, size);
+        roboIconPane.setMaxSize(paneWidth, size);
         roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
 
-        //VBox profileIdBox = getValueBox(Res.get("generateNym.nymId"));
         Label titleLabel = new Label(Res.get("generateNym.nymId").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
@@ -85,7 +86,6 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
 
         VBox nymIdBox = new VBox(titleLabel, nymId);
         nymIdBox.setAlignment(Pos.CENTER);
-
 
         nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"),
                 Res.get("addNickName.nickName.prompt"));
@@ -136,7 +136,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
 
         nymId.textProperty().bind(model.getNymId());
         nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
-        regenerateButton.mouseTransparentProperty().bind(model.getReGenerateButtonMouseTransparent());
+        regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
+        roboIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
+        nicknameTextInputBox.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
 
         nicknameTextInputBox.textProperty().bindBidirectional(model.getNickName());
 
@@ -148,7 +150,10 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
 
         regenerateButton.setOnAction(e -> controller.onRegenerate());
         roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
-        createProfileButton.setOnAction(e -> controller.onCreateUserProfile());
+        createProfileButton.setOnAction(e -> {
+            controller.onCreateUserProfile();
+            root.requestFocus();
+        });
 
         nicknameTextInputBox.requestFocus();
     }
@@ -164,7 +169,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
 
         nymId.textProperty().unbind();
         nymId.disableProperty().unbind();
-        regenerateButton.mouseTransparentProperty().unbind();
+        regenerateButton.disableProperty().unbind();
+        roboIconView.mouseTransparentProperty().unbind();
+        nicknameTextInputBox.mouseTransparentProperty().unbind();
 
         nicknameTextInputBox.textProperty().unbindBidirectional(model.getNickName());
 

@@ -18,6 +18,7 @@
 package bisq.network.p2p.node;
 
 
+import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.common.util.StringUtils;
@@ -137,6 +138,8 @@ public class Node implements Connection.Handler {
     private Optional<Capability> myCapability = Optional.empty();
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.NEW);
+    @Getter
+    public Observable<State> observableState = new Observable<>(State.NEW);
 
     public Node(BanList banList, Config config, String nodeId) {
         this.banList = banList;
@@ -557,6 +560,7 @@ public class Node implements Connection.Handler {
                 "New state %s must have a higher ordinal as the current state %s. nodeId={}",
                 newState, state.get(), nodeId);
         state.set(newState);
+        observableState.set(newState);
         listeners.forEach(listener -> listener.onStateChange(newState));
     }
 

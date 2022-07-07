@@ -21,7 +21,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
@@ -34,7 +33,6 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.chat.channels.*;
@@ -660,13 +658,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         allMarkets.forEach(market ->
                 maybeAddPublicTradeChannel(new PublicTradeChannel(market, false)));
 
-        // Dummy admin
-        Identity channelAdminIdentity = identityService.getOrCreateIdentity(IdentityService.DEFAULT).join();
-
-        byte[] hash = DigestUtil.hash(channelAdminIdentity.getKeyPair().getPublic().getEncoded());
-        ProofOfWork proofOfWork = proofOfWorkService.mintNymProofOfWork(hash, ProofOfWorkService.MINT_NYM_DIFFICULTY).join();
-        String channelAdminId = new ChatUser("Admin", proofOfWork, channelAdminIdentity.getNetworkId(), "", "").getId();
-
+        // todo channelAdmin not supported atm
+        String channelAdminId = "";
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
