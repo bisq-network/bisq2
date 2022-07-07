@@ -131,7 +131,7 @@ public class Node implements Connection.Handler {
     private final RetryPolicy<Boolean> retryPolicy;
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
-
+    private final Object lock = new Object();
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.NEW);
 
@@ -168,27 +168,29 @@ public class Node implements Connection.Handler {
     }
 
     private void doInitialize(int port) {
-        switch (state.get()) {
-            case NEW: {
-                setState(STARTING);
-                transport.initialize();
-                createServerAndListen(port);
-                setState(State.RUNNING);
-                break;
-            }
-            case STARTING: {
-                throw new IllegalStateException("Already starting. NodeId=" + nodeId + "; transportType=" + transportType);
-            }
-            case RUNNING: {
-                log.debug("Got called while already running. We ignore that call.");
-                break;
-            }
-            case STOPPING:
-                throw new IllegalStateException("Already stopping. NodeId=" + nodeId);
-            case TERMINATED:
-                throw new IllegalStateException("Already terminated. NodeId=" + nodeId);
-            default: {
-                throw new IllegalStateException("Unhandled state " + state.get());
+        synchronized (lock) {
+            switch (state.get()) {
+                case NEW: {
+                    setState(STARTING);
+                    transport.initialize();
+                    createServerAndListen(port);
+                    setState(State.RUNNING);
+                    break;
+                }
+                case STARTING: {
+                    throw new IllegalStateException("Already starting. NodeId=" + nodeId + "; transportType=" + transportType);
+                }
+                case RUNNING: {
+                    log.debug("Got called while already running. We ignore that call.");
+                    break;
+                }
+                case STOPPING:
+                    throw new IllegalStateException("Already stopping. NodeId=" + nodeId);
+                case TERMINATED:
+                    throw new IllegalStateException("Already terminated. NodeId=" + nodeId);
+                default: {
+                    throw new IllegalStateException("Unhandled state " + state.get());
+                }
             }
         }
     }
