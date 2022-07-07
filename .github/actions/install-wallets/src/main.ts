@@ -7,7 +7,7 @@ import * as tc from '@actions/tool-cache';
 
 async function run(): Promise<void> {
     try {
-        const bitcoinVersion = core.getInput('version', {required: true});
+        const bitcoinVersion = core.getInput('bitcoin-core-version', {required: true});
         let url = `https://bitcoin.org/bin/bitcoin-core-${bitcoinVersion}/bitcoin-${bitcoinVersion}-`;
 
         const platform = os.platform();
