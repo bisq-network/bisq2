@@ -107,7 +107,7 @@ public class CreateUserProfile {
             model.generateNewIdentityButtonDisable.set(true);
             model.feedback.set(Res.get("social.createUserProfile.prepare"));
             String nymId = model.nymId.get();
-            chatUserService.createNewInitializedUserProfile(nymId,
+            chatUserService.createAndPublishNewChatUserIdentity(nymId,
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,

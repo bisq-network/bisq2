@@ -33,6 +33,13 @@ import java.security.KeyPair;
 @ToString
 @EqualsAndHashCode
 public final class Identity implements Proto {
+    public static Identity from(String domainId, Identity identity) {
+        return new Identity(domainId,
+                identity.getNetworkId(),
+                identity.getKeyPair(),
+                identity.getProofOfWork());
+    }
+
     private final String domainId;
     private final NetworkId networkId;
     private final KeyPair keyPair;

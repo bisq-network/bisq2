@@ -22,12 +22,16 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 // Borrowed from: https://github.com/bisq-network/bisq
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements Proto {
     private final byte[] payload;
     private final long counter;
+    @Nullable
     private final byte[] challenge;
     private final double difficulty;
     private final long duration;
@@ -36,7 +40,7 @@ public final class ProofOfWork implements Proto {
     public ProofOfWork(byte[] payload,
                        long counter,
                        byte[] challenge,
-                       double difficulty,
+                       @Nullable double difficulty,
                        long duration,
                        byte[] solution) {
         this.payload = payload;
@@ -54,21 +58,22 @@ public final class ProofOfWork implements Proto {
 
     @Override
     public bisq.security.protobuf.ProofOfWork toProto() {
-        return bisq.security.protobuf.ProofOfWork.newBuilder()
+        bisq.security.protobuf.ProofOfWork.Builder builder = bisq.security.protobuf.ProofOfWork.newBuilder()
                 .setPayload(ByteString.copyFrom(payload))
                 .setCounter(counter)
-                .setChallenge(ByteString.copyFrom(challenge))
                 .setDifficulty(difficulty)
                 .setDuration(duration)
-                .setSolution(ByteString.copyFrom(solution))
-                .build();
+                .setSolution(ByteString.copyFrom(solution));
+
+        Optional.ofNullable(challenge).ifPresent(challenge -> builder.setChallenge(ByteString.copyFrom(challenge)));
+        return builder.build();
     }
 
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {
         return new ProofOfWork(
                 proto.getPayload().toByteArray(),
                 proto.getCounter(),
-                proto.getChallenge().toByteArray(),
+                proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
                 proto.getDifficulty(),
                 proto.getDuration(),
                 proto.getSolution().toByteArray()

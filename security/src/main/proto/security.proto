@@ -45,11 +45,11 @@ message KeyPairStore {
 }
 message ProofOfWorkStore {
 }
-    
+
 message ProofOfWork {
   bytes payload = 1;
   int64 counter = 2;
-  bytes challenge = 3;
+  optional bytes challenge = 3;
   double difficulty = 4;
   int64 duration = 5;
   bytes solution = 6;

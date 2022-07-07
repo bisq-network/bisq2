@@ -87,7 +87,7 @@ public final class Address implements Proto {
         if (host.equals("127.0.0.1")) {
             return "[" + port + "]";
         } else {
-            return "[" + StringUtils.truncate(host, 4) + ":" + port + "]";
+            return "[" + StringUtils.truncate(host, 10) + ":" + port + "]";
         }
     }
 

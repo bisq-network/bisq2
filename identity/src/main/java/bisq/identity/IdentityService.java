@@ -20,7 +20,6 @@ package bisq.identity;
 
 import bisq.common.application.ModuleService;
 import bisq.common.util.StringUtils;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -44,6 +43,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
+    public final static String POOL_DOMAIN_ID = "pool";
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
@@ -90,12 +90,11 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         log.info("initialize");
         initializeActiveIdentities();
         initializePooledIdentities();
-        initializeMissingPooledIdentities();
+        maybeFillUpPool();
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 
@@ -119,6 +118,27 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         return findActiveIdentity(domainId).map(CompletableFuture::completedFuture)
                 .orElseGet(() -> swapPooledIdentity(domainId).map(CompletableFuture::completedFuture)
                         .orElseGet(() -> createAndInitializeNewActiveIdentity(domainId)));
+    }
+
+    /**
+     * Creates new identity based on given parameters.
+     */
+    public CompletableFuture<Identity> createNewIdentity(String domainId,
+                                                         String keyId,
+                                                         KeyPair keyPair,
+                                                         ProofOfWork proofOfWork) {
+        keyPairService.persistKeyPair(keyId, keyPair);
+        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
+        String nodeId = StringUtils.createUid();
+        return networkService.getInitializedNetworkId(nodeId, pubKey)
+                .thenApply(networkId -> {
+                    Identity identity = new Identity(domainId, networkId, keyPair, proofOfWork);
+                    synchronized (lock) {
+                        getActiveIdentityByDomainId().put(domainId, identity);
+                    }
+                    persist();
+                    return identity;
+                });
     }
 
     public void retireIdentity(String domainId) {
@@ -175,25 +195,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         }
     }
 
-    public CompletableFuture<Identity> createNewInitializedIdentity(String nymId,
-                                                                    String keyId,
-                                                                    KeyPair keyPair,
-                                                                    ProofOfWork proofOfWork) {
-        keyPairService.persistKeyPair(keyId, keyPair);
-        PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
-        String nodeId = StringUtils.createUid();
-        return networkService.getInitializedNetworkId(nodeId, pubKey)
-                .thenApply(networkId -> {
-                    Identity identity = new Identity(nymId, networkId, keyPair, proofOfWork);
-                    synchronized (lock) {
-                        persistableStore.getPool().add(identity);
-                        getActiveIdentityByDomainId().put(nymId, identity);
-                    }
-                    persist();
-                    return identity;
-                });
-    }
-
     public Map<String, Identity> getActiveIdentityByDomainId() {
         return persistableStore.getActiveIdentityByDomainId();
     }
@@ -216,15 +217,15 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     private Optional<Identity> swapPooledIdentity(String domainId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
-                    .filter(identity -> networkService.findNetworkId(identity.getNodeId()).isPresent())
+                    .filter(identity -> networkService.isInitialized(identity.getNodeId()))
                     .findAny()
-                    .or(() -> persistableStore.getPool().stream().findAny()) // If none is initialized we take any
+                    .or(() -> persistableStore.getPool().stream().findAny())
                     .map(pooledIdentity -> {
-                        Identity clonedIdentity;
+                        Identity activeIdentity;
                         synchronized (lock) {
-                            clonedIdentity = new Identity(domainId, pooledIdentity.getNetworkId(), pooledIdentity.getKeyPair(), pooledIdentity.getProofOfWork());
+                            activeIdentity = Identity.from(domainId, pooledIdentity);
                             persistableStore.getPool().remove(pooledIdentity);
-                            getActiveIdentityByDomainId().put(domainId, clonedIdentity);
+                            getActiveIdentityByDomainId().put(domainId, activeIdentity);
                         }
                         persist();
 
@@ -232,12 +233,12 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
                         if (numMissingPooledIdentities() > 0) {
                             createAndInitializeNewPooledIdentity();
                         }
-                        return clonedIdentity;
+                        return activeIdentity;
                     });
         }
     }
 
-    private void initializeMissingPooledIdentities() {
+    private void maybeFillUpPool() {
         for (int i = 0; i < numMissingPooledIdentities(); i++) {
             createAndInitializeNewPooledIdentity();
         }
@@ -252,7 +253,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     private void initializeActiveIdentities() {
         getActiveIdentityByDomainId().values().forEach(identity ->
                 networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(value -> value.whenComplete((__, throwable) -> {
+                        .forEach(future -> future.whenComplete((__, throwable) -> {
                                     if (throwable == null) {
                                         log.info("Network node for active identity {} initialized. NetworkId={}",
                                                 identity.getDomainId(), identity.getNetworkId());
@@ -279,8 +280,8 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
                         ));
     }
 
-    private void createAndInitializeNewPooledIdentity() {
-        createAndInitializeNewIdentity(Res.get("na"))
+    private CompletableFuture<Identity> createAndInitializeNewPooledIdentity() {
+        return createAndInitializeNewIdentity(POOL_DOMAIN_ID)
                 .whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",

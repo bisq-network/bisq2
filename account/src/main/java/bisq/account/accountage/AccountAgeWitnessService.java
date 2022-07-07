@@ -59,8 +59,7 @@ public class AccountAgeWitnessService implements DataService.Listener {
         AccountAgeWitnessData accountAgeWitnessData = new AccountAgeWitnessData(hash, new Date().getTime());
         try {
             return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                    .thenCompose(identity -> networkService.publishAppendOnlyData(accountAgeWitnessData,
-                            identity.getNodeIdAndKeyPair()))
+                    .thenCompose(identity -> networkService.publishAppendOnlyData(accountAgeWitnessData))
                     .thenApply(broadCastDataResult -> true);
         } catch (Throwable e) {
             e.printStackTrace();

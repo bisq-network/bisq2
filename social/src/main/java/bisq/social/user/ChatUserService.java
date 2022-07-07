@@ -22,10 +22,10 @@ import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CollectionUtil;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.http.common.HttpException;
@@ -73,6 +73,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public static final class Config {
         private final List<String> btcMemPoolProviders;
         private final List<String> bsqMemPoolProviders;
+        //todo
+        private final long chatUserRepublishAge = TimeUnit.HOURS.toMillis(5);
 
         public Config(List<String> btcMemPoolProviders,
                       List<String> bsqMemPoolProviders) {
@@ -112,6 +114,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        getChatUserIdentities().forEach(i -> maybePublishChatUser(i.getChatUser(), i.getNodeIdAndKeyPair()));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -120,22 +124,22 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String nymId,
-                                                                               String nickName,
-                                                                               String keyId,
-                                                                               KeyPair keyPair,
-                                                                               ProofOfWork proofOfWork) {
-        return createNewInitializedUserProfile(nymId, nickName, keyId, keyPair, proofOfWork, "", "");
+    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nymId,
+                                                                                   String nickName,
+                                                                                   String keyId,
+                                                                                   KeyPair keyPair,
+                                                                                   ProofOfWork proofOfWork) {
+        return createAndPublishNewChatUserIdentity(nymId, nickName, keyId, keyPair, proofOfWork, "", "");
     }
 
-    public CompletableFuture<ChatUserIdentity> createNewInitializedUserProfile(String nymId,
-                                                                               String nickName,
-                                                                               String keyId,
-                                                                               KeyPair keyPair,
-                                                                               ProofOfWork proofOfWork,
-                                                                               String terms,
-                                                                               String bio) {
-        return identityService.createNewInitializedIdentity(nymId, keyId, keyPair, proofOfWork)
+    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nymId,
+                                                                                   String nickName,
+                                                                                   String keyId,
+                                                                                   KeyPair keyPair,
+                                                                                   ProofOfWork proofOfWork,
+                                                                                   String terms,
+                                                                                   String bio) {
+        return identityService.createNewIdentity(nymId, keyId, keyPair, proofOfWork)
                 .thenApply(identity -> {
                     ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
                     ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
@@ -144,18 +148,19 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                         persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
                     }
                     persist();
-                    return chatUserIdentity;
-                })
-                .thenApply(chatUserIdentity -> {
-                    // We don't wait for the reply but start an async task
-                    CompletableFuture.runAsync(() -> openTimestampService.maybeCreateOrUpgradeTimestamp(
-                                    new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash())),
-                            ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
+
+                    // We don't wait for OTS is completed as it will become usable only after the tx is 
+                    // published and confirmed which can take half a day or more.
+                    ByteArray pubKeyHash = new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash());
+                    openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
+
+                    publishChatUser(chatUser, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+
                     return chatUserIdentity;
                 });
     }
 
-    public void selectUserProfile(ChatUserIdentity chatUserIdentity) {
+    public void selectChatUserIdentity(ChatUserIdentity chatUserIdentity) {
         persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
         persist();
     }
@@ -203,33 +208,19 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 });
     }
 
-    public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, Identity identity) {
-        String chatUserId = chatUser.getId();
-        long currentTimeMillis = System.currentTimeMillis();
-        if (!publishTimeByChatUserId.containsKey(chatUserId)) {
-            publishTimeByChatUserId.put(chatUserId, currentTimeMillis);
-        }
-        long passed = currentTimeMillis - publishTimeByChatUserId.get(chatUserId);
-        if (passed == 0 || passed > TimeUnit.HOURS.toMillis(5)) {
-            return publishChatUser(chatUser, identity).thenApply(r -> true);
+    public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+        long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(chatUser.getId())).orElse(0L);
+        long passed = System.currentTimeMillis() - lastPublished;
+        if (passed > config.getChatUserRepublishAge()) {
+            return publishChatUser(chatUser, nodeIdAndKeyPair).thenApply(r -> true);
         } else {
             return CompletableFuture.completedFuture(false);
         }
     }
 
-    public CompletableFuture<ChatUserIdentity> publishNewChatUser(ChatUserIdentity chatUserIdentity) {
-        ChatUser chatUser = chatUserIdentity.getChatUser();
-        Identity identity = chatUserIdentity.getIdentity();
-        String chatUserId = chatUser.getId();
-        long currentTimeMillis = System.currentTimeMillis();
-        if (!publishTimeByChatUserId.containsKey(chatUserId)) {
-            publishTimeByChatUserId.put(chatUserId, currentTimeMillis);
-        }
-        return publishChatUser(chatUser, identity).thenApply(r -> chatUserIdentity);
-    }
-
-    public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(ChatUser chatUser, Identity identity) {
-        return networkService.publishAuthenticatedData(chatUser, identity.getNodeIdAndKeyPair());
+    public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(ChatUser chatUser, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+        publishTimeByChatUserId.put(chatUser.getId(), System.currentTimeMillis());
+        return networkService.publishAuthenticatedData(chatUser, nodeIdAndKeyPair);
     }
 
     public boolean isDefaultUserProfileMissing() {

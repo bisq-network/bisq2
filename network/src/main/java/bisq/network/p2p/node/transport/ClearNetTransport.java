@@ -43,7 +43,7 @@ public class ClearNetTransport implements Transport {
     }
 
     @Override
-    public Boolean initialize() {
+    public boolean initialize() {
         if (initializeCalled) {
             return true;
         }

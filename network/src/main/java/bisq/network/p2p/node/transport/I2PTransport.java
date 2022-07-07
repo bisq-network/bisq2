@@ -60,7 +60,7 @@ public class I2PTransport implements Transport {
 
 
     @Override
-    public Boolean initialize() {
+    public boolean initialize() {
         if (initializeCalled) {
             return true;
         }

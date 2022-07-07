@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
 
@@ -57,15 +58,13 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public Boolean initialize() {
+    public boolean initialize() {
         log.info("Initialize Tor");
-        long ts = System.currentTimeMillis();
         try {
-            tor.start();
-            log.info("Tor initialized after {} ms", System.currentTimeMillis() - ts);
+            checkArgument(tor.start(), "Tor start failed");
             return true;
         } catch (Exception e) {
-            log.error("tor.startAsync failed", e);
+            log.error("tor.start failed", e);
             throw new ConnectionException(e);
         }
     }

@@ -24,6 +24,7 @@ import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Longs;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,7 +41,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty) {
+    public CompletableFuture<ProofOfWork> mint(byte[] payload,  @Nullable byte[] challenge, double difficulty) {
         double scaledDifficulty = scaledDifficulty(difficulty);
         log.debug("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
@@ -56,8 +57,12 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
         });
     }
 
-    private byte[] getSeed(byte[] payload, byte[] challenge) {
-        return DigestUtil.sha256(Bytes.concat(payload, challenge));
+    private byte[] getSeed(byte[] payload, @Nullable byte[] challenge) {
+        if (challenge == null) {
+            return DigestUtil.sha256(payload);
+        } else {
+            return DigestUtil.sha256(Bytes.concat(payload, challenge));
+        }
     }
 
     @Override

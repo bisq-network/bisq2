@@ -104,7 +104,7 @@ public class ServiceNodesByTransport {
         map.get(type).initializeNode(nodeId, portByTransport);
     }
 
-    public boolean isNodeInitialized(Transport.Type type, String nodeId) {
+    public boolean isInitialized(Transport.Type type, String nodeId) {
         return map.get(type).isNodeInitialized(nodeId);
     }
 

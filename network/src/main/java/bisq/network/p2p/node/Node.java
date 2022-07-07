@@ -75,7 +75,11 @@ public class Node implements Connection.Handler {
     public static final String DEFAULT = "default";
 
     public enum State {
-        NEW, STARTING, RUNNING, STOPPING, TERMINATED
+        NEW,
+        STARTING,
+        RUNNING,
+        STOPPING,
+        TERMINATED
     }
 
     public interface Listener {
@@ -131,7 +135,6 @@ public class Node implements Connection.Handler {
     private final RetryPolicy<Boolean> retryPolicy;
     private Optional<Server> server = Optional.empty();
     private Optional<Capability> myCapability = Optional.empty();
-
     @Getter
     public AtomicReference<State> state = new AtomicReference<>(State.NEW);
 
@@ -148,10 +151,14 @@ public class Node implements Connection.Handler {
                 .handleResultIf(result -> state.get() == STARTING)
                 .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
                 .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(10)
+                .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(20)
                 .onRetry(e -> log.info("Retry to call initializeServer. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> log.warn("InitializeServer failed. Max retries exceeded."))
-                .onSuccess(e -> log.info("InitializeServer succeeded.")).build();
+                .onRetriesExceeded(e -> {
+                    log.warn("InitializeServer failed. Max retries exceeded. We shutdown the node.");
+                    shutdown();
+                })
+                .onSuccess(e -> log.debug("InitializeServer succeeded."))
+                .build();
     }
 
 
@@ -164,27 +171,29 @@ public class Node implements Connection.Handler {
     }
 
     private void doInitialize(int port) {
-        switch (state.get()) {
-            case NEW: {
-                setState(STARTING);
-                transport.initialize();
-                createServerAndListen(port);
-                setState(State.RUNNING);
-                break;
-            }
-            case STARTING: {
-                throw new IllegalStateException("Already starting. NodeId=" + nodeId);
-            }
-            case RUNNING: {
-                log.debug("Got called while already running. We ignore that call.");
-                break;
-            }
-            case STOPPING:
-                throw new IllegalStateException("Already stopping. NodeId=" + nodeId);
-            case TERMINATED:
-                throw new IllegalStateException("Already terminated. NodeId=" + nodeId);
-            default: {
-                throw new IllegalStateException("Unhandled state " + state.get());
+        synchronized (state) {
+            switch (state.get()) {
+                case NEW: {
+                    setState(STARTING);
+                    transport.initialize();
+                    createServerAndListen(port);
+                    setState(State.RUNNING);
+                    break;
+                }
+                case STARTING: {
+                    throw new IllegalStateException("Already starting. NodeId=" + nodeId + "; transportType=" + transportType);
+                }
+                case RUNNING: {
+                    log.debug("Got called while already running. We ignore that call.");
+                    break;
+                }
+                case STOPPING:
+                    throw new IllegalStateException("Already stopping. NodeId=" + nodeId + "; transportType=" + transportType);
+                case TERMINATED:
+                    throw new IllegalStateException("Already terminated. NodeId=" + nodeId + "; transportType=" + transportType);
+                default: {
+                    throw new IllegalStateException("Unhandled state " + state.get());
+                }
             }
         }
     }
@@ -461,10 +470,6 @@ public class Node implements Connection.Handler {
                 .handle((list, throwable) -> throwable == null);
     }
 
-    boolean isInitialized() {
-        return getState().get() == Node.State.RUNNING;
-    }
-
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return transport.getSocksProxy();
     }
@@ -483,6 +488,10 @@ public class Node implements Connection.Handler {
 
     public int getNumConnections() {
         return inboundConnectionsByAddress.size() + outboundConnectionsByAddress.size();
+    }
+
+    public boolean isInitialized() {
+        return getState().get() == Node.State.RUNNING;
     }
 
     @Override
@@ -543,7 +552,7 @@ public class Node implements Connection.Handler {
     }
 
     private void setState(State newState) {
-        log.info("Set new state {} for nodeId {}", newState, nodeId);
+        log.info("Set new state {} for nodeId {}; transportType {}", newState, nodeId, transportType);
         checkArgument(newState.ordinal() > state.get().ordinal(),
                 "New state %s must have a higher ordinal as the current state %s. nodeId={}",
                 newState, state.get(), nodeId);
