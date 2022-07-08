@@ -85,6 +85,7 @@ public abstract class DaemonProcess implements BisqProcess {
         Map<String, String> environment = processBuilder.environment();
         environment.putAll(processConfig.getEnvironmentVars());
 
+        log.info("Starting Process: " + processConfig);
         return processBuilder.start();
     }
 
