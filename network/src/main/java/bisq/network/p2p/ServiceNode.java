@@ -153,7 +153,7 @@ public class ServiceNode {
                         monitorService.map(MonitorService::shutdown).orElse(completedFuture(true)),
                         nodesById.shutdown()
                 )
-                .orTimeout(4, TimeUnit.SECONDS)
+                .orTimeout(10, TimeUnit.SECONDS)
                 .handle((list, throwable) -> {
                     setState(State.TERMINATED);
                     return throwable == null && list.stream().allMatch(e -> e);

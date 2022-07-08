@@ -76,7 +76,8 @@ public class TorTransport implements Transport {
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
             OnionAddress onionAddress = torServerSocket.bind(port, nodeId);
-            log.info("Tor hidden service Ready. Took {} ms. Onion address={}", System.currentTimeMillis() - ts, onionAddress);
+            log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}", 
+                    System.currentTimeMillis() - ts, onionAddress, nodeId);
             return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -99,13 +100,14 @@ public class TorTransport implements Transport {
 
     @Override
     public CompletableFuture<Void> shutdown() {
+        log.info("Shutdown tor.");
         if (tor == null) {
             return CompletableFuture.completedFuture(null);
         }
         return CompletableFuture.runAsync(tor::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
-    //todo move to torify lib
+    //todo move to tor lib
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         String fileName = torDirPath + separator + Constants.HS_DIR + separator + serverId + separator + "hostname";

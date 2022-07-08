@@ -126,6 +126,7 @@ public class Tor {
         if (state.get() == State.STOPPING || state.get() == State.TERMINATED) {
             return;
         }
+        log.info("Shutdown tor.");
         long ts = System.currentTimeMillis();
         setState(State.STOPPING);
 

@@ -82,7 +82,7 @@ public class NodesById implements Node.Listener {
     public CompletableFuture<Boolean> shutdown() {
         Stream<CompletableFuture<Boolean>> futures = map.values().stream().map(Node::shutdown);
         return CompletableFutureUtils.allOf(futures)
-                .orTimeout(2, TimeUnit.SECONDS)
+                .orTimeout(10, TimeUnit.SECONDS)
                 .handle((list, throwable) -> {
                     map.clear();
                     listeners.clear();

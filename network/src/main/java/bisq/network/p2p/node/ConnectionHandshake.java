@@ -238,9 +238,6 @@ public final class ConnectionHandshake {
     }
 
     void shutdown() {
-        try {
-            socket.close();
-        } catch (IOException ignore) {
-        }
+        // todo close pending requests but do not close sockets
     }
 }

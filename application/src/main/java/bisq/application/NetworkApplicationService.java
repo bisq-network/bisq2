@@ -70,7 +70,7 @@ public class NetworkApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> networkService.shutdown()
                         .thenCompose(result -> securityService.shutdown())
-                        .orTimeout(2, TimeUnit.MINUTES)
+                        .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
                         .join(),
                 ExecutorFactory.newSingleThreadExecutor("Shutdown"));

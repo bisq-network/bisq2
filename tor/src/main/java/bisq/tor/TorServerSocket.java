@@ -122,7 +122,7 @@ public class TorServerSocket extends ServerSocket {
     @Override
     public void close() throws IOException {
         super.close();
-
+        log.info("Close onionAddress={}", onionAddress);
         onionAddress.ifPresent(onionAddress -> {
             torController.removeHiddenServiceReadyListener(onionAddress.getServiceId());
             try {

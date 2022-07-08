@@ -49,6 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TorHttpClient extends BaseHttpClient {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private CloseableHttpClient closeableHttpClient;
+    private volatile boolean shutdownStarted;
 
     public TorHttpClient(String baseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
         super(baseUrl, userAgent);
@@ -57,6 +58,7 @@ public class TorHttpClient extends BaseHttpClient {
 
     @Override
     public void shutdown() {
+        shutdownStarted = true;
         try {
             if (closeableHttpClient != null) {
                 closeableHttpClient.close();
@@ -70,6 +72,9 @@ public class TorHttpClient extends BaseHttpClient {
     @Override
     protected String doRequest(String param, HttpMethod httpMethod, Optional<Pair<String, String>> optionalHeader) throws IOException {
         checkArgument(!hasPendingRequest, "We got called on the same HttpClient again while a request is still open.");
+        if (shutdownStarted) {
+            return "";
+        }
 
         hasPendingRequest = true;
         Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
