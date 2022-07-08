@@ -167,7 +167,7 @@ public abstract class Connection {
             if (sent) {
                 metrics.onSent(networkEnvelope);
                 if (networkMessage instanceof CloseConnectionMessage) {
-                    log.error("Sent {} from {}",
+                    log.info("Sent {} from {}",
                             StringUtils.truncate(networkMessage.toString(), 300), this);
                 } else {
                     log.debug("Sent {} from {}",
