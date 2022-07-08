@@ -1,10 +1,8 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.util.FileUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
-import bisq.tor.Constants;
 import bisq.tor.OnionAddress;
 import bisq.tor.Tor;
 import bisq.tor.TorServerSocket;
@@ -14,7 +12,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -76,7 +73,7 @@ public class TorTransport implements Transport {
         try {
             TorServerSocket torServerSocket = tor.getTorServerSocket();
             OnionAddress onionAddress = torServerSocket.bind(port, nodeId);
-            log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}", 
+            log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
                     System.currentTimeMillis() - ts, onionAddress, nodeId);
             return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
         } catch (IOException | InterruptedException e) {
@@ -107,19 +104,8 @@ public class TorTransport implements Transport {
         return CompletableFuture.runAsync(tor::shutdown, NetworkService.NETWORK_IO_POOL);
     }
 
-    //todo move to tor lib
     @Override
     public Optional<Address> getServerAddress(String serverId) {
-        String fileName = torDirPath + separator + Constants.HS_DIR + separator + serverId + separator + "hostname";
-        if (new File(fileName).exists()) {
-            try {
-                String host = FileUtils.readAsString(fileName);
-                return Optional.of(new Address(host, TorTransport.DEFAULT_PORT));
-            } catch (IOException e) {
-                log.error(e.toString(), e);
-            }
-        }
-
-        return Optional.empty();
+        return tor.getHostName(serverId).map(hostName -> new Address(hostName, TorTransport.DEFAULT_PORT));
     }
 }

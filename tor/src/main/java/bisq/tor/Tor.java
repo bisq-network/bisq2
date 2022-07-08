@@ -17,6 +17,7 @@
 
 package bisq.tor;
 
+import bisq.common.util.FileUtils;
 import com.runjva.sourceforge.jsocks.protocol.Authentication;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.net.SocketFactory;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,6 +41,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,6 +49,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static bisq.tor.Tor.State.RUNNING;
 import static bisq.tor.Tor.State.STARTING;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.io.File.separator;
 
 /**
  * Open TODO:
@@ -262,6 +266,19 @@ public class Tor {
             e.printStackTrace();
         }
         return socks5Proxy;
+    }
+
+    public Optional<String> getHostName(String serverId) {
+        String fileName = torDirPath + separator + Constants.HS_DIR + separator + serverId + separator + "hostname";
+        if (new File(fileName).exists()) {
+            try {
+                String host = FileUtils.readAsString(fileName);
+                return Optional.of(host);
+            } catch (IOException e) {
+                log.error(e.toString(), e);
+            }
+        }
+        return Optional.empty();
     }
 
     private void setState(State newState) {
