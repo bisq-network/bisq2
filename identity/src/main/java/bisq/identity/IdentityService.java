@@ -41,9 +41,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
-    public final static String POOL_DOMAIN_ID = "pool";
+    public final static String POOL_PREFIX = "pool-";
     public final static String DEFAULT = "default";
     private final int minPoolSize;
 
@@ -116,8 +119,36 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
      */
     public CompletableFuture<Identity> getOrCreateIdentity(String domainId) {
         return findActiveIdentity(domainId).map(CompletableFuture::completedFuture)
-                .orElseGet(() -> swapPooledIdentity(domainId).map(CompletableFuture::completedFuture)
+                .orElseGet(() -> swapAnyInitializedPooledIdentity(domainId).map(CompletableFuture::completedFuture)
                         .orElseGet(() -> createAndInitializeNewActiveIdentity(domainId)));
+    }
+
+    /**
+     * Takes a pooled identity and swaps it with the given domainId
+     *
+     * @param domainId       The new domain ID for the active identity
+     * @param pooledIdentity The pooled identity we want to swap.
+     * @return The new active identity which is a clone of the pooled identity with the new domain ID.
+     */
+    public Identity swapPooledIdentity(String domainId, Identity pooledIdentity) {
+        Identity newIdentity;
+        checkArgument(!getActiveIdentityByDomainId().containsKey(domainId),
+                "We got already an active identity with the newDomainId");
+        checkArgument(!getActiveIdentityByDomainId().containsKey(pooledIdentity.getDomainId()),
+                "We got already an active identity with the domainId of the pooledIdentity");
+        newIdentity = Identity.from(domainId, pooledIdentity);
+        synchronized (lock) {
+            boolean existed = persistableStore.getPool().remove(pooledIdentity);
+            checkArgument(existed, "The pooledIdentity did not exist in our pool");
+            getActiveIdentityByDomainId().put(domainId, newIdentity);
+        }
+        persist();
+
+        // Refill pool if needed
+        if (numMissingPooledIdentities() > 0) {
+            createAndInitializeNewPooledIdentity();
+        }
+        return checkNotNull(newIdentity);
     }
 
     /**
@@ -214,27 +245,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
 
     // If the pool is not empty we take an identity from the pool and clone it with the new domainId.
     // We search first for identities with initialized nodes, otherwise we take any.
-    private Optional<Identity> swapPooledIdentity(String domainId) {
+    private Optional<Identity> swapAnyInitializedPooledIdentity(String domainId) {
         synchronized (lock) {
             return persistableStore.getPool().stream()
                     .filter(identity -> networkService.isInitialized(identity.getNodeId()))
                     .findAny()
                     .or(() -> persistableStore.getPool().stream().findAny())
-                    .map(pooledIdentity -> {
-                        Identity activeIdentity;
-                        synchronized (lock) {
-                            activeIdentity = Identity.from(domainId, pooledIdentity);
-                            persistableStore.getPool().remove(pooledIdentity);
-                            getActiveIdentityByDomainId().put(domainId, activeIdentity);
-                        }
-                        persist();
-
-                        // Refill pool if needed
-                        if (numMissingPooledIdentities() > 0) {
-                            createAndInitializeNewPooledIdentity();
-                        }
-                        return activeIdentity;
-                    });
+                    .map(pooledIdentity -> swapPooledIdentity(domainId, pooledIdentity));
         }
     }
 
@@ -281,7 +298,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     }
 
     private CompletableFuture<Identity> createAndInitializeNewPooledIdentity() {
-        return createAndInitializeNewIdentity(POOL_DOMAIN_ID)
+        return createAndInitializeNewIdentity(POOL_PREFIX + StringUtils.createUid())
                 .whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
