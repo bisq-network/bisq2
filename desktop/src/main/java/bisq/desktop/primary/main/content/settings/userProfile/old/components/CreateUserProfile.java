@@ -111,7 +111,9 @@ public class CreateUserProfile {
                             model.nickName.get(),
                             model.tempKeyId,
                             model.tempKeyPair,
-                            model.proofOfWork)
+                            model.proofOfWork,
+                            "",
+                            "")
                     .thenAccept(userProfile -> UIThread.run(this::reset));
         }
 

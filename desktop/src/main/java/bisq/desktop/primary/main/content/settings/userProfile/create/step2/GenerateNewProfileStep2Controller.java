@@ -18,72 +18,122 @@
 package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.security.pow.ProofOfWorkService;
+import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import bisq.identity.Identity;
+import bisq.security.pow.ProofOfWork;
 import bisq.social.user.ChatUserService;
+import bisq.social.user.NymIdGenerator;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
 
 @Slf4j
-public class GenerateNewProfileStep2Controller implements Controller {
+public class GenerateNewProfileStep2Controller implements InitWithDataController<GenerateNewProfileStep2Controller.InitData> {
+
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class InitData {
+        private final Optional<TempIdentity> tempIdentity;
+        private final Optional<Identity> pooledIdentity;
+        private final String nickName;
+        private final String profileId;
+
+        public InitData(Optional<TempIdentity> tempIdentity,
+                        Optional<Identity> pooledIdentity,
+                        String nickName,
+                        String profileId) {
+            this.tempIdentity = tempIdentity;
+            this.pooledIdentity = pooledIdentity;
+            this.nickName = nickName;
+            this.profileId = profileId;
+        }
+    }
+
     protected final GenerateNewProfileStep2Model model;
     @Getter
     protected final GenerateNewProfileStep2View view;
     protected final ChatUserService chatUserService;
-    protected final ProofOfWorkService proofOfWorkService;
-
-    protected Subscription nickNameSubscription;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-
         chatUserService = applicationService.getSocialService().getChatUserService();
-        proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
 
-        model = getGenerateNewProfileStep2Model();
-        view = getGenerateNewProfileStep2View();
+        model = new GenerateNewProfileStep2Model();
+        view = new GenerateNewProfileStep2View(model, this);
     }
 
-    protected GenerateNewProfileStep2View getGenerateNewProfileStep2View() {
-        return new GenerateNewProfileStep2View(model, this);
-    }
-
-    protected GenerateNewProfileStep2Model getGenerateNewProfileStep2Model() {
-        return new GenerateNewProfileStep2Model();
+    @Override
+    public void initWithData(InitData data) {
+        model.setTempIdentity(data.getTempIdentity());
+        model.setPooledIdentity(data.getPooledIdentity());
+        model.getNickName().set(data.getNickName());
+        model.getProfileId().set(data.getProfileId());
+        if (data.getTempIdentity().isPresent()) {
+            TempIdentity tempIdentity = data.getTempIdentity().get();
+            model.getProfileId().set(tempIdentity.getProfileId());
+            model.getRoboHashImage().set(RoboHash.getImage(tempIdentity.getProofOfWork().getPayload()));
+        } else if (data.getPooledIdentity().isPresent()) {
+            Identity pooledIdentity = data.getPooledIdentity().get();
+            ProofOfWork proofOfWork = pooledIdentity.getProofOfWork();
+            String profileId = NymIdGenerator.fromHash(proofOfWork.getPayload());
+            model.getProfileId().set(profileId);
+            model.getRoboHashImage().set(RoboHash.getImage(proofOfWork.getPayload()));
+        }
     }
 
     @Override
     public void onActivate() {
-        model.getNickName().set(chatUserService.getSelectedChatUserIdentity().get().getNickName());
-        model.getNymId().set(chatUserService.getSelectedChatUserIdentity().get().getChatUser().getNym());
-        model.getRoboHashImage().set(RoboHash.getImage(chatUserService.getSelectedChatUserIdentity().get()
-                .getChatUser().getProofOfWork().getPayload()));
     }
 
     @Override
     public void onDeactivate() {
-        if (nickNameSubscription != null) {
-            nickNameSubscription.unsubscribe();
+    }
+
+    void onCancel() {
+        OverlayController.hide();
+    }
+
+    void onSave(String terms, String bio) {
+        model.getCreateProfileProgress().set(-1);
+        model.getCreateProfileButtonDisabled().set(true);
+
+        if (model.getTempIdentity().isPresent()) {
+            TempIdentity tempIdentity = model.getTempIdentity().get();
+            chatUserService.createAndPublishNewChatUserIdentity(tempIdentity.getProfileId(),
+                            model.getNickName().get(),
+                            tempIdentity.getTempKeyId(),
+                            tempIdentity.getTempKeyPair(),
+                            tempIdentity.getProofOfWork(),
+                            terms,
+                            bio)
+                    .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
+                        if (throwable == null) {
+                            model.getCreateProfileProgress().set(0);
+                            close();
+                        } else {
+                            //todo
+                        }
+                    }));
+        } else if (model.getPooledIdentity().isPresent()) {
+            Identity pooledIdentity = model.getPooledIdentity().get();
+            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+                    pooledIdentity,
+                    model.getNickName().get(),
+                    terms,
+                    bio);
+            model.getCreateProfileProgress().set(0);
+            close();
         }
     }
 
-    public void onCancel() {
+    private void close() {
         OverlayController.hide();
-    }
-
-    public void onSave(String tac, String credo) {
-        String credoFromTemp;
-        OverlayController.hide();
-        System.out.println("this are the rules__" + tac + "__and this is credo__" + credo);
-//        MockChatUser existing = chatUserService.getSelectedChatUserIdentity();
-//        MockChatUser newUser = new MockChatUser(existing.getNickName(), tac, credo);
-//        model.getSelectedChatUser().set(newUser);
-//        model.getChatUsers().remove(existing);
-//        model.getChatUsers().add(newUser);
-//        model.getIsEditable().set(false);
-        credoFromTemp = chatUserService.getSelectedChatUserIdentity().get().getNickName();
-        System.out.println("nickname from temp" + credoFromTemp);
     }
 }

@@ -105,7 +105,7 @@ public class GenerateProfileController implements Controller {
         mintNymProofOfWorkFuture.ifPresent(future -> future.cancel(true));
     }
 
-    void onCreateUserProfile() {
+    protected void onCreateUserProfile() {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
@@ -116,12 +116,13 @@ public class GenerateProfileController implements Controller {
                             model.getNickName().get(),
                             tempIdentity.getTempKeyId(),
                             tempIdentity.getTempKeyPair(),
-                            tempIdentity.getProofOfWork())
+                            tempIdentity.getProofOfWork(),
+                            "",
+                            "")
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
                         if (throwable == null) {
-                            Navigation.navigateTo(NavigationTarget.MAIN);
-                            UIThread.runOnNextRenderFrame(this::navigateNext);
                             model.getCreateProfileProgress().set(0);
+                            close();
                         } else {
                             //todo
                         }
@@ -130,16 +131,12 @@ public class GenerateProfileController implements Controller {
             Identity pooledIdentity = model.getPooledIdentity().get();
             chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
                     pooledIdentity,
-                    model.getNickName().get());
-            Navigation.navigateTo(NavigationTarget.MAIN);
-            UIThread.runOnNextRenderFrame(this::navigateNext);
+                    model.getNickName().get(),
+                    "",
+                    "");
             model.getCreateProfileProgress().set(0);
+            close();
         }
-    }
-
-    protected void navigateNext() {
-        OverlayController.hide();
-        Navigation.navigateTo(NavigationTarget.DASHBOARD);
     }
 
     void onRegenerate() {
@@ -161,7 +158,6 @@ public class GenerateProfileController implements Controller {
 
     void generateNewKeyPair() {
         setPreGenerateState();
-
         long ts = System.currentTimeMillis();
         KeyPair tempKeyPair = keyPairService.generateKeyPair();
         byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
@@ -185,6 +181,14 @@ public class GenerateProfileController implements Controller {
                         applyIdentityData(tempIdentity.getProofOfWork(), tempIdentity.getProfileId());
                     });
                 }));
+    }
+
+    private void close() {
+        Navigation.navigateTo(NavigationTarget.MAIN);
+        UIThread.runOnNextRenderFrame(() -> {
+            OverlayController.hide();
+            Navigation.navigateTo(NavigationTarget.DASHBOARD);
+        });
     }
 
     private void createSimulatedDelay(long powDuration) {

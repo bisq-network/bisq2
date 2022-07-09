@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.create.step1;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileController;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileModel;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
@@ -40,7 +41,12 @@ public class GenerateNewProfileStep1Controller extends GenerateProfileController
     }
 
     @Override
-    protected void navigateNext() {
-        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
+    protected void onCreateUserProfile() {
+        GenerateNewProfileStep2Controller.InitData initData = new GenerateNewProfileStep2Controller.InitData(
+                model.getTempIdentity(),
+                model.getPooledIdentity(),
+                model.getNickName().get(),
+                model.getProfileId().get());
+        Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
     }
 }

@@ -19,16 +19,23 @@ package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import bisq.identity.Identity;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Optional;
 
 @Getter
 public class GenerateNewProfileStep2Model implements Model {
-    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+    @Setter
+    private Optional<TempIdentity> tempIdentity = Optional.empty();
+    @Setter
+    private Optional<Identity> pooledIdentity = Optional.empty();
     private final StringProperty nickName = new SimpleStringProperty();
-    private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
-    private final StringProperty nymId = new SimpleStringProperty();
+    private final StringProperty profileId = new SimpleStringProperty();
+    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
     private final BooleanProperty isEditable = new SimpleBooleanProperty();

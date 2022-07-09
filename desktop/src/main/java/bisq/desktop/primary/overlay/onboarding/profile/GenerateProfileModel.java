@@ -32,12 +32,12 @@ public class GenerateProfileModel implements Model {
     private Optional<TempIdentity> tempIdentity = Optional.empty();
     @Setter
     private Optional<Identity> pooledIdentity = Optional.empty();
-    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+    private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty profileId = new SimpleStringProperty();
+    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
     private final DoubleProperty powProgress = new SimpleDoubleProperty();
-    private final StringProperty nickName = new SimpleStringProperty();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
 }

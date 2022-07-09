@@ -15,18 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.userProfile.create;
 
+import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsModel extends TabModel {
+@Slf4j
+@Getter
+public class CreateUserProfileModel extends NavigationModel {
 
-    public SettingsModel() {
+    public CreateUserProfileModel() {
     }
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+        return NavigationTarget.CREATE_PROFILE_STEP1;
     }
 }

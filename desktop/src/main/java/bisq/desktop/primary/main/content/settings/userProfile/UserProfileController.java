@@ -22,6 +22,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
@@ -35,12 +36,11 @@ public class UserProfileController implements Controller {
     @Getter
     private final UserProfileView view;
     private final ChatUserService chatUserService;
-    private final UserProfileSelection userProfileSelection;
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getSocialService().getChatUserService();
-        userProfileSelection = new UserProfileSelection(chatUserService);
+        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this, userProfileSelection.getRoot());
@@ -63,6 +63,11 @@ public class UserProfileController implements Controller {
     }
 
     public void onDeleteChatUser() {
-        chatUserService.deleteChatUser(chatUserService.getSelectedChatUserIdentity().get());
+        chatUserService.deleteChatUser(chatUserService.getSelectedChatUserIdentity().get())
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        new Popup().warning(throwable.getMessage()).show();
+                    }
+                });
     }
 }
