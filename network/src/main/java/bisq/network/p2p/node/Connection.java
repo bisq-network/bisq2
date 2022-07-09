@@ -81,7 +81,7 @@ public abstract class Connection {
 
     @Getter
     private volatile boolean isStopped;
-    private boolean listeningStopped;
+    private volatile boolean listeningStopped;
     private final Object writeLock = new Object();
 
     protected Connection(Socket socket,
@@ -150,21 +150,34 @@ public abstract class Connection {
         }
         try {
             NetworkEnvelope networkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, authorizationToken, networkMessage);
+            boolean sent = false;
             synchronized (writeLock) {
-                bisq.network.protobuf.NetworkEnvelope proto = networkEnvelope.toProto();
-                if (!isStopped && proto == null) {
-                    throw new NullPointerException("Proto from networkEnvelope.toProto() must not be null");
+                try {
+                    bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
+                            "networkEnvelope.toProto() must not be null");
+                    proto.writeDelimitedTo(outputStream);
+                    outputStream.flush();
+                    sent = true;
+                } catch (Throwable throwable) {
+                    if (!isStopped) {
+                        throw throwable;
+                    }
                 }
-                proto.writeDelimitedTo(outputStream);
-                outputStream.flush();
             }
-            metrics.onSent(networkEnvelope);
-            log.debug("Sent {} from {}",
-                    StringUtils.truncate(networkMessage.toString(), 300), this);
+            if (sent) {
+                metrics.onSent(networkEnvelope);
+                if (networkMessage instanceof CloseConnectionMessage) {
+                    log.info("Sent {} from {}",
+                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                } else {
+                    log.debug("Sent {} from {}",
+                            StringUtils.truncate(networkMessage.toString(), 300), this);
+                }
+            }
             return this;
         } catch (IOException exception) {
             if (!isStopped) {
-                log.debug("Call shutdown from send {} due exception={}", this, exception.toString());
+                log.error("Call shutdown from send {} due exception={}", this, exception.toString());
                 close(CloseReason.EXCEPTION.exception(exception));
             }
             // We wrap any exception (also expected EOFException in case of connection close), to inform the caller 
@@ -175,13 +188,6 @@ public abstract class Connection {
 
     void stopListening() {
         listeningStopped = true;
-        try {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     void close(CloseReason closeReason) {
@@ -189,7 +195,7 @@ public abstract class Connection {
             log.debug("Shut down already in progress {}", this);
             return;
         }
-        log.debug("Shut down {}", this);
+        log.info("Close {}", this);
         isStopped = true;
         if (future != null) {
             future.cancel(true);

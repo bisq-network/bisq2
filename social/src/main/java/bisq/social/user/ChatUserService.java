@@ -124,40 +124,60 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nymId,
+    public ChatUserIdentity createAndPublishNewChatUserIdentity(String domainId,
+                                                                Identity pooledIdentity,
+                                                                String nickName) {
+        Identity identity = identityService.swapPooledIdentity(domainId, pooledIdentity);
+        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, identity.getProofOfWork(), "", "", identity);
+        maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
+        publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        return chatUserIdentity;
+
+    }
+
+    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String profileId,
                                                                                    String nickName,
                                                                                    String keyId,
                                                                                    KeyPair keyPair,
                                                                                    ProofOfWork proofOfWork) {
-        return createAndPublishNewChatUserIdentity(nymId, nickName, keyId, keyPair, proofOfWork, "", "");
+        return createAndPublishNewChatUserIdentity(profileId, nickName, keyId, keyPair, proofOfWork, "", "");
     }
 
-    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nymId,
+    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String profileId,
                                                                                    String nickName,
                                                                                    String keyId,
                                                                                    KeyPair keyPair,
                                                                                    ProofOfWork proofOfWork,
                                                                                    String terms,
                                                                                    String bio) {
-        return identityService.createNewIdentity(nymId, keyId, keyPair, proofOfWork)
-                .thenApply(identity -> {
-                    ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
-                    ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
-                    synchronized (lock) {
-                        persistableStore.getChatUserIdentities().add(chatUserIdentity);
-                        persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
-                    }
-                    persist();
 
-                    // We don't wait for OTS is completed as it will become usable only after the tx is 
-                    // published and confirmed which can take half a day or more.
-                    ByteArray pubKeyHash = new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash());
-                    openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
-                    
-                    publishChatUser(chatUser, chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        return identityService.createNewIdentity(profileId, keyId, keyPair, proofOfWork)
+                .thenApply(identity -> createChatUserIdentity(nickName, proofOfWork, terms, bio, identity))
+                .thenApply(chatUserIdentity -> {
+                    maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
+
+                    publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
 
                     return chatUserIdentity;
                 });
+    }
+
+    public void maybeCreateOrUpgradeTimestampAsync(ChatUserIdentity chatUserIdentity) {
+        // We don't wait for OTS is completed as it will become usable only after the tx is 
+        // published and confirmed which can take half a day or more.
+        ByteArray pubKeyHash = new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash());
+        openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
+    }
+
+    public ChatUserIdentity createChatUserIdentity(String nickName, ProofOfWork proofOfWork, String terms, String bio, Identity identity) {
+        ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
+        ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
+        synchronized (lock) {
+            persistableStore.getChatUserIdentities().add(chatUserIdentity);
+            persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
+        }
+        persist();
+        return chatUserIdentity;
     }
 
     public void selectChatUserIdentity(ChatUserIdentity chatUserIdentity) {

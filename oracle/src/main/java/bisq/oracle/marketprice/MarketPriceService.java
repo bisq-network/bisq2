@@ -50,6 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class MarketPriceService {
     public static final ExecutorService POOL = ExecutorFactory.newFixedThreadPool("MarketPriceService.pool", 3);
     private static final long REQUEST_INTERVAL_SEC = 180;
+    private volatile boolean shutdownStarted;
 
     @Getter
     @ToString
@@ -142,6 +143,7 @@ public class MarketPriceService {
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        shutdownStarted = true;
         httpClient.ifPresent(BaseHttpClient::shutdown);
         return CompletableFuture.completedFuture(true);
     }
@@ -189,7 +191,9 @@ public class MarketPriceService {
                 }
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
-                e.printStackTrace();
+                if (!shutdownStarted) {
+                    e.printStackTrace();
+                }
                 throw new RuntimeException(e);
             }
         }, POOL);

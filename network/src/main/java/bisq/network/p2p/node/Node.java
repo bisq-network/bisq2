@@ -440,6 +440,9 @@ public class Node implements Connection.Handler {
         try {
             connection.stopListening();
             send(new CloseConnectionMessage(closeReason), connection);
+
+            // Give a bit of delay before we close the connection.
+            Thread.sleep(100);
         } catch (Throwable ignore) {
         }
         connection.close(CloseReason.CLOSE_MSG_SENT.details(closeReason.name()));
@@ -454,11 +457,10 @@ public class Node implements Connection.Handler {
 
         server.ifPresent(Server::shutdown);
         connectionHandshakes.values().forEach(ConnectionHandshake::shutdown);
-
         Stream<CompletableFuture<Void>> futures = getAllConnections()
                 .map(connection -> closeConnectionGracefullyAsync(connection, CloseReason.SHUTDOWN));
         return CompletableFutureUtils.allOf(futures)
-                .orTimeout(1, SECONDS)
+                .orTimeout(10, SECONDS)
                 .whenComplete((list, throwable) -> {
                     if (throwable != null) {
                         log.warn("Exception at node shutdown", throwable);

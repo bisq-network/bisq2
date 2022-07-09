@@ -18,15 +18,22 @@
 package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.Model;
+import bisq.identity.Identity;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Optional;
 
 @Getter
 public class GenerateProfileModel implements Model {
-    private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
+    @Setter
+    private Optional<TempIdentity> tempIdentity = Optional.empty();
+    @Setter
+    private Optional<Identity> pooledIdentity = Optional.empty();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
-    private final StringProperty nymId = new SimpleStringProperty();
+    private final StringProperty profileId = new SimpleStringProperty();
     private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();
     private final DoubleProperty powProgress = new SimpleDoubleProperty();

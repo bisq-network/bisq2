@@ -155,7 +155,7 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> securityService.shutdown())
                         .thenCompose(result -> liquidWalletService.shutdown())
                         .thenCompose(result -> bitcoinWalletService.shutdown())
-                        .orTimeout(5, TimeUnit.MINUTES)
+                        .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
                         .join(),
                 ExecutorFactory.newSingleThreadExecutor("Shutdown"));

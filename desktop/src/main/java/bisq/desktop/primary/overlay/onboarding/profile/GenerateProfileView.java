@@ -134,7 +134,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
 
-        nymId.textProperty().bind(model.getNymId());
+        nymId.textProperty().bind(model.getProfileId());
         nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
         regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
         roboIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());

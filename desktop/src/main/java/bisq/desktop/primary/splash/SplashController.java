@@ -117,7 +117,7 @@ public class SplashController implements Controller {
             case STARTING:
                 return "50";
             case RUNNING:
-                return "100";
+                return "75";
             default:
                 return "";
         }
