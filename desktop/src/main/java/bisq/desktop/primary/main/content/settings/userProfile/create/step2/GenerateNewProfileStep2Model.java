@@ -35,6 +35,8 @@ public class GenerateNewProfileStep2Model implements Model {
     private Optional<Identity> pooledIdentity = Optional.empty();
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty profileId = new SimpleStringProperty();
+    private final StringProperty terms = new SimpleStringProperty();
+    private final StringProperty bio = new SimpleStringProperty();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
     private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();

@@ -92,7 +92,7 @@ public class EditUserProfile {
         }
 
         public void onEdit() {
-            Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
+            Navigation.navigateTo(NavigationTarget.EDIT_PROFILE);
         }
 
         public void onCancelEdit() {

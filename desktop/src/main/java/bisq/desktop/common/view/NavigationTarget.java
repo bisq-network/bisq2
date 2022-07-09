@@ -52,6 +52,7 @@ public enum NavigationTarget {
     CREATE_PROFILE(OVERLAY, false),
     CREATE_PROFILE_STEP1(CREATE_PROFILE, false),
     CREATE_PROFILE_STEP2(CREATE_PROFILE, false),
+    EDIT_PROFILE(OVERLAY, false),
 
     BURN_BSQ(OVERLAY, false),
     BURN_BSQ_TAB_1(BURN_BSQ, false),

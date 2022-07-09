@@ -44,16 +44,13 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         private final Optional<TempIdentity> tempIdentity;
         private final Optional<Identity> pooledIdentity;
         private final String nickName;
-        private final String profileId;
 
         public InitData(Optional<TempIdentity> tempIdentity,
                         Optional<Identity> pooledIdentity,
-                        String nickName,
-                        String profileId) {
+                        String nickName) {
             this.tempIdentity = tempIdentity;
             this.pooledIdentity = pooledIdentity;
             this.nickName = nickName;
-            this.profileId = profileId;
         }
     }
 
@@ -65,8 +62,16 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getSocialService().getChatUserService();
 
-        model = new GenerateNewProfileStep2Model();
-        view = new GenerateNewProfileStep2View(model, this);
+        model = createModel();
+        view = createView();
+    }
+
+    protected GenerateNewProfileStep2View createView() {
+        return new GenerateNewProfileStep2View(model, this);
+    }
+
+    protected GenerateNewProfileStep2Model createModel() {
+        return new GenerateNewProfileStep2Model();
     }
 
     @Override
@@ -74,7 +79,6 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         model.setTempIdentity(data.getTempIdentity());
         model.setPooledIdentity(data.getPooledIdentity());
         model.getNickName().set(data.getNickName());
-        model.getProfileId().set(data.getProfileId());
         if (data.getTempIdentity().isPresent()) {
             TempIdentity tempIdentity = data.getTempIdentity().get();
             model.getProfileId().set(tempIdentity.getProfileId());
@@ -90,6 +94,8 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
 
     @Override
     public void onActivate() {
+        model.getTerms().set("");
+        model.getBio().set("");
     }
 
     @Override
@@ -100,7 +106,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         OverlayController.hide();
     }
 
-    void onSave(String terms, String bio) {
+   protected void onSave() {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
 
@@ -111,8 +117,8 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
                             tempIdentity.getTempKeyId(),
                             tempIdentity.getTempKeyPair(),
                             tempIdentity.getProofOfWork(),
-                            terms,
-                            bio)
+                            model.getTerms().get(),
+                            model.getBio().get())
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
                         if (throwable == null) {
                             model.getCreateProfileProgress().set(0);
@@ -126,14 +132,14 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
             chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
                     pooledIdentity,
                     model.getNickName().get(),
-                    terms,
-                    bio);
+                    model.getTerms().get(),
+                    model.getBio().get());
             model.getCreateProfileProgress().set(0);
             close();
         }
     }
 
-    private void close() {
+    protected void close() {
         OverlayController.hide();
     }
 }

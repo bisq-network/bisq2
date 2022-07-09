@@ -45,8 +45,7 @@ public class GenerateNewProfileStep1Controller extends GenerateProfileController
         GenerateNewProfileStep2Controller.InitData initData = new GenerateNewProfileStep2Controller.InitData(
                 model.getTempIdentity(),
                 model.getPooledIdentity(),
-                model.getNickName().get(),
-                model.getProfileId().get());
+                model.getNickName().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
     }
 }

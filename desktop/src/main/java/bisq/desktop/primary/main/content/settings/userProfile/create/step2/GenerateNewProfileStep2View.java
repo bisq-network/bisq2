@@ -34,9 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
     private final ImageView roboIconView;
-    private final TextInputBox tacInputBox, credoInputBox;
+    private final TextInputBox terms, bio;
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
+    protected final Label headLineLabel;
 
     public GenerateNewProfileStep2View(GenerateNewProfileStep2Model model, GenerateNewProfileStep2Controller controller) {
         super(new VBox(), model, controller);
@@ -47,10 +48,10 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headLineLabel = new Label(Res.get("userProfile.edit.headline"));
+         headLineLabel = new Label(Res.get("userProfile.step2.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("userProfile.edit.subTitle"));
+        Label subtitleLabel = new Label(Res.get("userProfile.step2.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
         subtitleLabel.setMinHeight(40); // does not wrap without that...
@@ -74,14 +75,14 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        tacInputBox = new TextInputBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
-        tacInputBox.setPrefWidth(width);
+        terms = new TextInputBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
+        terms.setPrefWidth(width);
 
-        credoInputBox = new TextInputBox(Res.get("userProfile.credo"), Res.get("userProfile.credo.prompt"));
-        credoInputBox.setPrefWidth(width);
+        bio = new TextInputBox(Res.get("userProfile.credo"), Res.get("userProfile.credo.prompt"));
+        bio.setPrefWidth(width);
 
-        HBox.setMargin(credoInputBox, new Insets(-10, 0, 0, 0));
-        VBox fieldsAndButtonsVBox = new VBox(20, credoInputBox, tacInputBox);
+        HBox.setMargin(bio, new Insets(-10, 0, 0, 0));
+        VBox fieldsAndButtonsVBox = new VBox(20, bio, terms);
         fieldsAndButtonsVBox.setPadding(new Insets(50, 0, 0, 0));
         fieldsAndButtonsVBox.setPrefWidth(width);
         fieldsAndButtonsVBox.setPrefHeight(200);
@@ -112,10 +113,9 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         roboIconView.imageProperty().bind(model.getRoboHashImage());
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getProfileId());
-        saveButton.setOnAction((event) -> {
-            controller.onSave(tacInputBox.getText(), credoInputBox.getText());
-
-        });
+        terms.textProperty().bindBidirectional(model.getTerms());
+        bio.textProperty().bindBidirectional(model.getBio());
+        saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> {
             controller.onCancel();
         });
@@ -126,6 +126,7 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         roboIconView.imageProperty().unbind();
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
-
+        terms.textProperty().unbindBidirectional(model.getTerms());
+        bio.textProperty().unbindBidirectional(model.getBio());
     }
 }
