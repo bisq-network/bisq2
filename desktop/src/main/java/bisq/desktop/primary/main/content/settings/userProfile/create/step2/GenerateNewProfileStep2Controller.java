@@ -19,32 +19,71 @@ package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class GenerateNewProfileStep2Controller implements Controller {
+    protected final GenerateNewProfileStep2Model model;
     @Getter
-    private final GenerateNewProfileStep2View view;
+    protected final GenerateNewProfileStep2View view;
+    protected final ChatUserService chatUserService;
+    protected final ProofOfWorkService proofOfWorkService;
+
+    protected Subscription nickNameSubscription;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        ChatUserService chatUserService = applicationService.getSocialService().getChatUserService();
 
-        GenerateNewProfileStep2Model model = new GenerateNewProfileStep2Model();
-        view = new GenerateNewProfileStep2View(model, this);
+        chatUserService = applicationService.getSocialService().getChatUserService();
+        proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
+
+        model = getGenerateNewProfileStep2Model();
+        view = getGenerateNewProfileStep2View();
+    }
+
+    protected GenerateNewProfileStep2View getGenerateNewProfileStep2View() {
+        return new GenerateNewProfileStep2View(model, this);
+    }
+
+    protected GenerateNewProfileStep2Model getGenerateNewProfileStep2Model() {
+        return new GenerateNewProfileStep2Model();
     }
 
     @Override
     public void onActivate() {
+        model.getNickName().set(chatUserService.getSelectedChatUserIdentity().get().getNickName());
+        model.getNymId().set(chatUserService.getSelectedChatUserIdentity().get().getChatUser().getNym());
+        model.getRoboHashImage().set(RoboHash.getImage(chatUserService.getSelectedChatUserIdentity().get()
+                .getChatUser().getProofOfWork().getPayload()));
     }
 
     @Override
     public void onDeactivate() {
+        if (nickNameSubscription != null) {
+            nickNameSubscription.unsubscribe();
+        }
     }
 
-    private void onSave() {
+    public void onCancel() {
         OverlayController.hide();
+    }
+
+    public void onSave(String tac, String credo) {
+        String credoFromTemp;
+        OverlayController.hide();
+        System.out.println("this are the rules__" + tac + "__and this is credo__" + credo);
+//        MockChatUser existing = chatUserService.getSelectedChatUserIdentity();
+//        MockChatUser newUser = new MockChatUser(existing.getNickName(), tac, credo);
+//        model.getSelectedChatUser().set(newUser);
+//        model.getChatUsers().remove(existing);
+//        model.getChatUsers().add(newUser);
+//        model.getIsEditable().set(false);
+        credoFromTemp = chatUserService.getSelectedChatUserIdentity().get().getNickName();
+        System.out.println("nickname from temp" + credoFromTemp);
     }
 }

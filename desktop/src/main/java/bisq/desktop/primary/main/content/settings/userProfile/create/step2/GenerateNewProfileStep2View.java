@@ -18,52 +18,114 @@
 package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
+    private final ImageView roboIconView;
+    private final TextInputBox tacInputBox, credoInputBox;
+    private final Button saveButton, cancelButton;
+    private final Label nickName, nym;
 
     public GenerateNewProfileStep2View(GenerateNewProfileStep2Model model, GenerateNewProfileStep2Controller controller) {
         super(new VBox(), model, controller);
 
-        root.setAlignment(Pos.TOP_CENTER);
+        root.setAlignment(Pos.CENTER);
         root.setSpacing(8);
         root.setPadding(new Insets(10, 0, 10, 0));
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
-        Label headLineLabel = new Label(Res.get("generateNym.headline"));
+        Label headLineLabel = new Label(Res.get("userProfile.edit.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("generateNym.subTitle"));
+        Label subtitleLabel = new Label(Res.get("userProfile.edit.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setMaxWidth(400);
+        subtitleLabel.setMinHeight(40); // does not wrap without that...
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
+        nickName = new Label();
+        nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
+        nickName.setAlignment(Pos.TOP_CENTER);
 
-       /* nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"),
-                Res.get("addNickName.nickName.prompt"));
-        nicknameTextInputBox.setPrefWidth(300);*/
+        roboIconView = new ImageView();
+        roboIconView.setFitWidth(128);
+        roboIconView.setFitHeight(128);
 
+        nym = new Label();
+        nym.getStyleClass().addAll("bisq-text-7");
+        nym.setAlignment(Pos.TOP_CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 50, 0));
+        int width = 250;
+        VBox roboVBox = new VBox(8, nickName, roboIconView, nym);
+        roboVBox.setAlignment(Pos.TOP_CENTER);
+        roboVBox.setPrefWidth(width);
+        roboVBox.setPrefHeight(200);
+
+        tacInputBox = new TextInputBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
+        tacInputBox.setPrefWidth(width);
+
+        credoInputBox = new TextInputBox(Res.get("userProfile.credo"), Res.get("userProfile.credo.prompt"));
+        credoInputBox.setPrefWidth(width);
+
+        HBox.setMargin(credoInputBox, new Insets(-10, 0, 0, 0));
+        VBox fieldsAndButtonsVBox = new VBox(20, credoInputBox, tacInputBox);
+        fieldsAndButtonsVBox.setPadding(new Insets(50, 0, 0, 0));
+        fieldsAndButtonsVBox.setPrefWidth(width);
+        fieldsAndButtonsVBox.setPrefHeight(200);
+
+        HBox centerHBox = new HBox(10, roboVBox, fieldsAndButtonsVBox);
+        centerHBox.setAlignment(Pos.TOP_CENTER);
+
+        cancelButton = new Button("Cancel");
+        saveButton = new Button("Save");
+        saveButton.setDefaultButton(true);
+
+        HBox buttons = new HBox(20, cancelButton, saveButton);
+        buttons.setAlignment(Pos.CENTER);
+
+        VBox.setMargin(headLineLabel, new Insets(0, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 40, 0));
+        VBox.setMargin(buttons, new Insets(60, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
-                subtitleLabel
+                subtitleLabel,
+                centerHBox,
+                buttons
         );
     }
 
     @Override
     protected void onViewAttached() {
-       // nicknameTextInputBox.textProperty().bindBidirectional(model.getNickName());
+        roboIconView.imageProperty().bind(model.getRoboHashImage());
+        nickName.textProperty().bind(model.getNickName());
+        nym.textProperty().bind(model.getNymId());
+        saveButton.setOnAction((event) -> {
+            controller.onSave(tacInputBox.getText(), credoInputBox.getText());
+
+        });
+        cancelButton.setOnAction((event) -> {
+            controller.onCancel();
+        });
     }
 
     @Override
     protected void onViewDetached() {
+        roboIconView.imageProperty().unbind();
+        nickName.textProperty().unbind();
+        nym.textProperty().unbind();
+
     }
 }

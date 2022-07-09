@@ -18,8 +18,18 @@
 package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import javafx.beans.property.*;
+import javafx.scene.image.Image;
 import lombok.Getter;
 
 @Getter
 public class GenerateNewProfileStep2Model implements Model {
+    private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
+    private final StringProperty nickName = new SimpleStringProperty();
+    private final ObjectProperty<TempIdentity> tempIdentity = new SimpleObjectProperty<>();
+    private final StringProperty nymId = new SimpleStringProperty();
+    private final BooleanProperty createProfileButtonDisabled = new SimpleBooleanProperty();
+    private final DoubleProperty createProfileProgress = new SimpleDoubleProperty();
+    private final BooleanProperty isEditable = new SimpleBooleanProperty();
 }

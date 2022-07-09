@@ -23,7 +23,6 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.social.chat.ChatService;
 import bisq.social.user.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,11 +35,12 @@ public class UserProfileController implements Controller {
     @Getter
     private final UserProfileView view;
     private final ChatUserService chatUserService;
+    private final UserProfileSelection userProfileSelection;
+    private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         chatUserService = applicationService.getSocialService().getChatUserService();
-        ChatService chatService = applicationService.getSocialService().getChatService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
+        userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this, userProfileSelection.getRoot());
@@ -48,16 +48,21 @@ public class UserProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        Pin selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                 chatUserIdentity -> model.getEditUserProfile().set(new EditUserProfile(chatUserService, chatUserIdentity))
         );
     }
 
     @Override
     public void onDeactivate() {
+        selectedUserProfilePin.unbind();
     }
 
     public void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
+    }
+
+    public void onDeleteChatUser() {
+        chatUserService.deleteChatUser(chatUserService.getSelectedChatUserIdentity().get());
     }
 }
