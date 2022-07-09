@@ -20,13 +20,14 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 import bisq.desktop.common.view.Model;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class UserProfileModel implements Model {
-    private final ObjectProperty<UserProfileDisplay> editUserProfile = new SimpleObjectProperty<>();
+    private final ObjectProperty<Pane> userProfileDisplayPane = new SimpleObjectProperty<>();
 
     public UserProfileModel() {
     }

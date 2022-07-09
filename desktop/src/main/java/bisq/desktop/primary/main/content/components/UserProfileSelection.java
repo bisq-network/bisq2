@@ -100,6 +100,11 @@ public class UserProfileSelection {
             userProfilesPin.unbind();
         }
 
+        @Override
+        public boolean useCaching() {
+            return false;
+        }
+
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
                 chatUserService.selectChatUserIdentity(selectedItem.chatUserIdentity);

@@ -63,12 +63,11 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
 
     @Override
     protected void onViewAttached() {
-        chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
-            Pane editUserProfileRoot = editUserProfile.getRoot();
-            editUserProfileRoot.setMaxWidth(300);
-            VBox.setMargin(editUserProfileRoot, new Insets(-40, 0, 0, 0));
-            VBox.setVgrow(editUserProfileRoot, Priority.ALWAYS);
-            root.getChildren().set(1, editUserProfileRoot);
+        chatUserDetailsPin = EasyBind.subscribe(model.getUserProfileDisplayPane(), editUserProfilePane -> {
+            editUserProfilePane.setMaxWidth(300);
+            VBox.setMargin(editUserProfilePane, new Insets(-40, 0, 0, 0));
+            VBox.setVgrow(editUserProfilePane, Priority.ALWAYS);
+            root.getChildren().set(1, editUserProfilePane);
         });
 
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());

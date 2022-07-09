@@ -72,9 +72,6 @@ public class UserProfileDisplay {
         @Override
         public void onActivate() {
             ChatUser chatUser = model.chatUserIdentity.getChatUser();
-            if (chatUser == null) {
-                return;
-            }
 
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
@@ -91,6 +88,11 @@ public class UserProfileDisplay {
         public void onDeactivate() {
         }
 
+        @Override
+        public boolean useCaching() {
+            return false;
+        }
+
         public void onEdit() {
             Navigation.navigateTo(NavigationTarget.EDIT_PROFILE);
         }
@@ -104,7 +106,6 @@ public class UserProfileDisplay {
             model.progress.set(-1);
             chatUserService.editChatUser(model.chatUserIdentity, terms, bio)
                     .whenComplete((r, t) -> {
-                        log.error("{}", r.toString());
                         model.progress.set(0);
                         model.isPublishing.set(false);
                         model.isEditMode.set(false);
