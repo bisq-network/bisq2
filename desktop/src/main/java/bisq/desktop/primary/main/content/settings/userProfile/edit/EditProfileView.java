@@ -15,18 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.userProfile.edit;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2View;
+import bisq.i18n.Res;
+import lombok.extern.slf4j.Slf4j;
 
-public class SettingsModel extends TabModel {
+@Slf4j
+public class EditProfileView extends GenerateNewProfileStep2View {
 
-    public SettingsModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+    public EditProfileView(EditProfileModel model, EditProfileController controller) {
+        super(model, controller);
+        
+        headLineLabel.setText(Res.get("userProfile.edit.headline"));
+        root.requestFocus();
     }
 }

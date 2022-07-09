@@ -126,21 +126,15 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public ChatUserIdentity createAndPublishNewChatUserIdentity(String domainId,
                                                                 Identity pooledIdentity,
-                                                                String nickName) {
+                                                                String nickName,
+                                                                String terms,
+                                                                String bio) {
         Identity identity = identityService.swapPooledIdentity(domainId, pooledIdentity);
-        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, identity.getProofOfWork(), "", "", identity);
+        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, identity.getProofOfWork(), terms, bio, identity);
         maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
         publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
         return chatUserIdentity;
 
-    }
-
-    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String profileId,
-                                                                                   String nickName,
-                                                                                   String keyId,
-                                                                                   KeyPair keyPair,
-                                                                                   ProofOfWork proofOfWork) {
-        return createAndPublishNewChatUserIdentity(profileId, nickName, keyId, keyPair, proofOfWork, "", "");
     }
 
     public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String profileId,
@@ -203,6 +197,10 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteChatUser(ChatUserIdentity chatUserIdentity) {
+        //todo add more checks if deleting profile is permitted (e.g. not used in trades, PM,...)
+        if (persistableStore.getChatUserIdentities().size() <= 1) {
+            return CompletableFuture.failedFuture(new RuntimeException("Deleting chat user is not permitted if we only have one left."));
+        }
         synchronized (lock) {
             persistableStore.getChatUserIdentities().remove(chatUserIdentity);
             persistableStore.getChatUserIdentities().stream().findAny()
@@ -210,6 +208,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                             () -> persistableStore.getSelectedChatUserIdentity().set(null));
         }
         persist();
+        identityService.retireIdentity(chatUserIdentity.getIdentity().getDomainId());
         return networkService.removeAuthenticatedData(chatUserIdentity.getChatUser(),
                 chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
     }

@@ -32,7 +32,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class UserProfileView extends View<VBox, UserProfileModel, UserProfileController> {
-    private final Button createNewProfileButton;
+    private final Button createNewProfileButton, deleteProfileButton;
     private Subscription chatUserDetailsPin;
 
     public UserProfileView(UserProfileModel model,
@@ -53,26 +53,31 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         createNewProfileButton.setDefaultButton(true);
         createNewProfileButton.setMinWidth(300);
 
-        VBox.setMargin(createNewProfileButton, new Insets(-15, 0, 0, 0));
-        root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, Spacer.fillVBox());
+        deleteProfileButton = new Button(Res.get("settings.userProfile.deleteProfile"));    //todo
+        deleteProfileButton.setDefaultButton(false);
+        deleteProfileButton.setMinWidth(300);
+
+        VBox.setMargin(createNewProfileButton, new Insets(-15,0,0,0));
+        root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, deleteProfileButton, Spacer.fillVBox());
     }
 
     @Override
     protected void onViewAttached() {
-        chatUserDetailsPin = EasyBind.subscribe(model.getEditUserProfile(), editUserProfile -> {
-            Pane editUserProfileRoot = editUserProfile.getRoot();
-            editUserProfileRoot.setMaxWidth(300);
-            VBox.setMargin(editUserProfileRoot, new Insets(-40, 0, 0, 0));
-            VBox.setVgrow(editUserProfileRoot, Priority.ALWAYS);
-            root.getChildren().set(1, editUserProfileRoot);
+        chatUserDetailsPin = EasyBind.subscribe(model.getUserProfileDisplayPane(), editUserProfilePane -> {
+            editUserProfilePane.setMaxWidth(300);
+            VBox.setMargin(editUserProfilePane, new Insets(-40, 0, 0, 0));
+            VBox.setVgrow(editUserProfilePane, Priority.ALWAYS);
+            root.getChildren().set(1, editUserProfilePane);
         });
 
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
+        deleteProfileButton.setOnAction(e -> controller.onDeleteChatUser());
     }
 
     @Override
     protected void onViewDetached() {
         chatUserDetailsPin.unsubscribe();
         createNewProfileButton.setOnAction(null);
+        deleteProfileButton.setOnAction(null);
     }
 }

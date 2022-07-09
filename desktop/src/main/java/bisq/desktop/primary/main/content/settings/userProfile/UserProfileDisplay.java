@@ -45,10 +45,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class EditUserProfile {
+public class UserProfileDisplay {
     private final Controller controller;
 
-    public EditUserProfile(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
+    public UserProfileDisplay(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
         controller = new Controller(chatUserService, chatUserIdentity);
     }
 
@@ -72,9 +72,6 @@ public class EditUserProfile {
         @Override
         public void onActivate() {
             ChatUser chatUser = model.chatUserIdentity.getChatUser();
-            if (chatUser == null) {
-                return;
-            }
 
             model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
             model.bio.set(chatUser.getBio());
@@ -91,11 +88,13 @@ public class EditUserProfile {
         public void onDeactivate() {
         }
 
+        @Override
+        public boolean useCaching() {
+            return false;
+        }
+
         public void onEdit() {
-            //todo
-            Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP1);
-           
-           // model.isEditMode.set(true);
+            Navigation.navigateTo(NavigationTarget.EDIT_PROFILE);
         }
 
         public void onCancelEdit() {
@@ -107,7 +106,6 @@ public class EditUserProfile {
             model.progress.set(-1);
             chatUserService.editChatUser(model.chatUserIdentity, terms, bio)
                     .whenComplete((r, t) -> {
-                        log.error("{}", r.toString());
                         model.progress.set(0);
                         model.isPublishing.set(false);
                         model.isEditMode.set(false);

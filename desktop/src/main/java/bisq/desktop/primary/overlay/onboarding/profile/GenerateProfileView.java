@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -50,6 +51,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         root.setAlignment(Pos.TOP_CENTER);
         root.setSpacing(8);
         root.setPadding(new Insets(10, 0, 10, 0));
+        root.setPrefWidth(OverlayModel.WIDTH);
+        root.setPrefHeight(OverlayModel.HEIGHT);
 
         Label headLineLabel = new Label(Res.get("generateNym.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
@@ -72,10 +75,10 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
         powProgressIndicator.setOpacity(0.5);
 
-        int paneWidth = 250;
+        int width = 250;
         StackPane roboIconPane = new StackPane();
-        roboIconPane.setMinSize(paneWidth, size);
-        roboIconPane.setMaxSize(paneWidth, size);
+        roboIconPane.setMinSize(width, size);
+        roboIconPane.setMaxSize(width, size);
         roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
 
         Label titleLabel = new Label(Res.get("generateNym.nymId").toUpperCase());
@@ -87,15 +90,18 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         VBox nymIdBox = new VBox(titleLabel, nymId);
         nymIdBox.setAlignment(Pos.CENTER);
 
-        nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"),
-                Res.get("addNickName.nickName.prompt"));
-        nicknameTextInputBox.setPrefWidth(300);
+        nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"), Res.get("addNickName.nickName.prompt"));
+        nicknameTextInputBox.setMinWidth(width);
+        nicknameTextInputBox.setMaxWidth(width);
 
         VBox roboVBox = new VBox(8, roboIconPane, nymIdBox);
         roboVBox.setAlignment(Pos.CENTER);
+        roboVBox.setPrefWidth(width);
+        roboVBox.setPrefHeight(200);
 
-        HBox centerHhBox = new HBox(30, roboVBox, nicknameTextInputBox);
-        centerHhBox.setAlignment(Pos.CENTER);
+        HBox.setMargin(nicknameTextInputBox, new Insets(-20, 0, 0, 0));
+        HBox centerHBox = new HBox(10, roboVBox, nicknameTextInputBox);
+        centerHBox.setAlignment(Pos.CENTER);
 
         regenerateButton = new Button(Res.get("generateNym.regenerate"));
 
@@ -115,12 +121,12 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 50, 0));
-        VBox.setMargin(buttons, new Insets(70, 0, 0, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 40, 0));
+        VBox.setMargin(buttons, new Insets(60, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
-                centerHhBox,
+                centerHBox,
                 buttons
         );
     }

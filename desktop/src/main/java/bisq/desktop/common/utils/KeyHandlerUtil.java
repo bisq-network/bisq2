@@ -51,13 +51,13 @@ public class KeyHandlerUtil {
         if (DevMode.isDevMode()) {
 
             if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT0, keyEvent)) {
-                Navigation.navigateTo(NavigationTarget.SPLASH);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_2_INTRO);
-            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT1, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
+            } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT2, keyEvent)) {
+                Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP1);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT3, keyEvent)) {
-                // Navigation.navigateTo(NavigationTarget.ONBOARDING_ADD_NICKNAME);
+                 Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT4, keyEvent)) {
                 Navigation.navigateTo(NavigationTarget.BISQ_EASY_INTRO);
             } else if (KeyCodeUtils.isCtrlPressed(KeyCode.DIGIT5, keyEvent)) {

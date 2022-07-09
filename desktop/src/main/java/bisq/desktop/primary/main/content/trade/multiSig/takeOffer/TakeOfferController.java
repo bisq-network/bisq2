@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.trade.multiSig.takeOffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -40,7 +39,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData>, Controller {
+public class TakeOfferController implements InitWithDataController<TakeOfferController.InitData> {
     @Getter
     @ToString
     @EqualsAndHashCode

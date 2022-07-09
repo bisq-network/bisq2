@@ -64,12 +64,6 @@ public class Navigation {
         });
     }
 
-    static void persistNavigationTarget(NavigationTarget navigationTarget) {
-        if (navigationTarget.isAllowPersistence()) {
-            settingsService.setCookie(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
-        }
-    }
-
     // If data is passed we don't add it to the history as we would need to store the data as well, and it could be 
     // stale anyway at a later moment.  
     public static void navigateTo(NavigationTarget navigationTarget, Object data) {
@@ -78,6 +72,12 @@ public class Navigation {
                 value.forEach(l -> l.processNavigationTarget(navigationTarget, Optional.of(data)));
             }
         });
+    }
+
+    static void persistNavigationTarget(NavigationTarget navigationTarget) {
+        if (navigationTarget.isAllowPersistence()) {
+            settingsService.setCookie(CookieKey.NAVIGATION_TARGET, navigationTarget.name());
+        }
     }
 
     public static void back() {

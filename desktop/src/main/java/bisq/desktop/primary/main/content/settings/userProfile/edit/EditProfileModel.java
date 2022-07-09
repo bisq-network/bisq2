@@ -15,18 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings;
+package bisq.desktop.primary.main.content.settings.userProfile.edit;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Model;
+import lombok.Getter;
 
-public class SettingsModel extends TabModel {
-
-    public SettingsModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
-    }
+@Getter
+public class EditProfileModel extends GenerateNewProfileStep2Model {
 }
