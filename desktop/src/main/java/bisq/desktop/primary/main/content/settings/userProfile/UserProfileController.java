@@ -49,7 +49,7 @@ public class UserProfileController implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
-                chatUserIdentity -> model.getEditUserProfile().set(new EditUserProfile(chatUserService, chatUserIdentity))
+                chatUserIdentity -> model.getEditUserProfile().set(new UserProfileDisplay(chatUserService, chatUserIdentity))
         );
     }
 

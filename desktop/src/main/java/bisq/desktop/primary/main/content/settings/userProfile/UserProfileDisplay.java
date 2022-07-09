@@ -45,10 +45,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class EditUserProfile {
+public class UserProfileDisplay {
     private final Controller controller;
 
-    public EditUserProfile(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
+    public UserProfileDisplay(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
         controller = new Controller(chatUserService, chatUserIdentity);
     }
 

@@ -15,19 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.create.edit;
+package bisq.desktop.primary.main.content.settings.userProfile.edit;
 
-import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2View;
-import bisq.i18n.Res;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Model;
+import lombok.Getter;
 
-@Slf4j
-public class EditProfileView extends GenerateNewProfileStep2View {
-
-    public EditProfileView(EditProfileModel model, EditProfileController controller) {
-        super(model, controller);
-        
-        headLineLabel.setText(Res.get("userProfile.edit.headline"));
-        root.requestFocus();
-    }
+@Getter
+public class EditProfileModel extends GenerateNewProfileStep2Model {
 }

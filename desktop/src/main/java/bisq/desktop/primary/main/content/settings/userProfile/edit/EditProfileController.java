@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.create.edit;
+package bisq.desktop.primary.main.content.settings.userProfile.edit;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.components.robohash.RoboHash;

@@ -24,7 +24,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
-import bisq.desktop.primary.main.content.settings.userProfile.create.edit.EditProfileController;
+import bisq.desktop.primary.main.content.settings.userProfile.edit.EditProfileController;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import javafx.application.Platform;

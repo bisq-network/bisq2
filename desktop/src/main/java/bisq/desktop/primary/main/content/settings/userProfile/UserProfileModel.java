@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class UserProfileModel implements Model {
-    private final ObjectProperty<EditUserProfile> editUserProfile = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserProfileDisplay> editUserProfile = new SimpleObjectProperty<>();
 
     public UserProfileModel() {
     }
