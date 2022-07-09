@@ -21,7 +21,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -78,7 +79,8 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         }
     }
 
-    private transient Set<Observer<T, ?>> observers = new CopyOnWriteArraySet<>();
+    // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
+    private transient List<Observer<T, ?>> observers = new CopyOnWriteArrayList<>();
 
     public ObservableSet() {
     }
@@ -87,9 +89,9 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         addAll(values);
     }
 
-    private Set<Observer<T, ?>> getObservers() {
+    private List<Observer<T, ?>> getObservers() {
         if (observers == null) {
-            observers = new CopyOnWriteArraySet<>();
+            observers = new CopyOnWriteArrayList<>();
         }
         return observers;
     }
