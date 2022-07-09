@@ -34,7 +34,7 @@ glassfish-jaxb-runtime-lib = { strictly = '3.0.2' }
 google-gson-lib = { strictly = '2.9.0' }
 google-guava-lib = { strictly = '31.1-jre' }
 
-i2p-lib = { strictly = '1.7.0' }
+i2p-lib = { strictly = '1.8.0' }
 jackson-lib = { strictly = '2.13.3' }
 jeasy-easy-states-lib = { strictly = '2.0.0' }
 jeromq-lib = { strictly = '0.5.2' }

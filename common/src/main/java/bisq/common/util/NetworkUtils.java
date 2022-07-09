@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -49,4 +50,18 @@ public class NetworkUtils {
             return new Random().nextInt(10000) + 50000;
         }
     }
+
+    public static boolean isPortInUse(String host, int port) {
+
+        try (var tmp = new Socket(host, port)) {
+            // Successful connection means the port is taken
+            tmp.close();
+            return true;
+        } catch (IOException e) {
+            // Could not connect
+            return false;
+        }
+
+    }
+
 }

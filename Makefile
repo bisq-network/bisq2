@@ -119,26 +119,24 @@ clean:
 .start-clearnet-seeds:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed1-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.appName=${seed1-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+		-Dapplication.network.supportedTransportTypes.0=CLEAR \
+		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed2-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.appName=${seed2-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+		-Dapplication.network.supportedTransportTypes.0=CLEAR \
+		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000
 
 .start-clearnet-clients:
 	for i in $$(seq 1 $n); do \
 		screen -S localtests -X screen -t client-$${i}-clear ./gradlew --console=plain desktopapp:run \
-			-Dbisq.application.appName=bisq_client$${i}_test \
-			-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-			-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001; \
+			-Dapplication.appName=bisq_client$${i}_test \
+			-Dapplication.network.supportedTransportTypes.0=CLEAR \
+			-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+			-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001; \
 	done
 
 start-clearnet-seeds: .init-screen-session .start-clearnet-seeds .reconnect-screen-session
@@ -152,11 +150,15 @@ start-clearnet-full-env: .init-screen-session .start-clearnet-seeds .start-clear
 # Copy seed 1 hostname to a local file, which is read when starting the clients
 seed1-tor-hostname: seed-type=tor
 seed1-tor-hostname:
+	@echo "Waiting for hiddenservice creation - ${seed1-appName}"
+	@while [ ! -f ~/.local/share/${seed1-appName}/tor/hiddenservice/default/hostname ]; do sleep 1; done
 	@cp -v ~/.local/share/${seed1-appName}/tor/hiddenservice/default/hostname seed1-tor-hostname
 
 # Copy seed 2 hostname to a local file, which is read when starting the clients
 seed2-tor-hostname: seed-type=tor
 seed2-tor-hostname:
+	@echo "Waiting for hiddenservice creation - ${seed2-appName}"
+	@while [ ! -f ~/.local/share/${seed2-appName}/tor/hiddenservice/default/hostname ]; do sleep 1; done
 	@cp -v ~/.local/share/${seed2-appName}/tor/hiddenservice/default/hostname seed2-tor-hostname
 
 # Requires both seed hostnames to be known
@@ -164,32 +166,32 @@ seed2-tor-hostname:
 .start-tor-clients: seed1-tor-hostname seed2-tor-hostname
 	for i in $$(seq 1 $n); do \
 		screen -S localtests -X screen -t client-$${i}-tor ./gradlew --console=plain desktopapp:run \
-			-Dbisq.application.appName=bisq_client$${i}_tor_test \
-			-Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR \
-			-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=$(file < seed1-tor-hostname):1000 \
-			-Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=$(file < seed2-tor-hostname):1001; \
+			-Dapplication.appName=bisq_client$${i}_tor_test \
+			-Dapplication.network.supportedTransportTypes.0=TOR \
+			-Dapplication.network.seedAddressByTransportType.tor.0=$(file < seed1-tor-hostname):1000 \
+			-Dapplication.network.seedAddressByTransportType.tor.1=$(file < seed2-tor-hostname):1001; \
 	done
 
 .start-tor-seeds: seed-type=tor
 .start-tor-seeds:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed1-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.appName=${seed1-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+		-Dapplication.network.defaultNodePortByTransportType.tor=1000 \
+		-Dapplication.network.supportedTransportTypes.0=CLEAR \
+		-Dapplication.network.supportedTransportTypes.1=TOR \
+		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed2-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.appName=${seed2-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+		-Dapplication.network.defaultNodePortByTransportType.tor=1001 \
+		-Dapplication.network.supportedTransportTypes.0=CLEAR \
+		-Dapplication.network.supportedTransportTypes.1=TOR \
+		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
 start-tor-seeds: .init-screen-session .start-tor-seeds .reconnect-screen-session
 
@@ -203,33 +205,37 @@ start-tor-full-env: .init-screen-session .start-tor-seeds .start-tor-clients .re
 # Copy seed 1 destination to a local file, which is read when starting the clients
 seed1-i2p-destination: seed-type=i2p
 seed1-i2p-destination:
+	@echo "Waiting for destination creation - ${seed1-appName}"
+	@while [ ! -f ~/.local/share/${seed1-appName}/i2p/default*.destination ]; do sleep 1; done
 	@cp -v ~/.local/share/${seed1-appName}/i2p/default*.destination seed1-i2p-destination
 
 # Copy seed 2 destination to a local file, which is read when starting the clients
 seed2-i2p-destination: seed-type=i2p
 seed2-i2p-destination:
+	@echo "Waiting for destination creation - ${seed2-appName}"
+	@while [ ! -f ~/.local/share/${seed2-appName}/i2p/default*.destination ]; do sleep 1; done
 	@cp -v ~/.local/share/${seed2-appName}/i2p/default*.destination seed2-i2p-destination
 
 .start-i2p-seeds: seed-type=i2p
 .start-i2p-seeds:
 	# Seed 1
 	screen -S localtests -X screen -t ${seed1-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed1-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.application.appName=${seed1-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.i2p=5000 \
+		-Dapplication.network.supportedTransportTypes.0=I2P \
+		-Dapplication.network.supportedTransportTypes.1=CLEAR \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 	# Seed 2
 	screen -S localtests -X screen -t ${seed2-title} ./gradlew --console=plain seed:run \
-		-Dbisq.application.appName=${seed2-appName} \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
-		-Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5001 \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-		-Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-		-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+		-Dapplication.appName=${seed2-appName} \
+		-Dapplication.network.defaultNodePortByTransportType.i2p=5001 \
+		-Dapplication.network.supportedTransportTypes.0=I2P \
+		-Dapplication.network.supportedTransportTypes.1=CLEAR \
+		-Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+		-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+		-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
 # Requires both seed destinations to be known
 # If any is not known, this will fail
@@ -240,10 +246,13 @@ seed2-i2p-destination:
   		# See .demo-send-large-command-to-screen for details ;\
   		screen -S localtests -X screen -t client-$${i}-i2p ;\
   		screen -S localtests -X stuff './gradlew --console=plain desktopapp:run ' ;\
-		screen -S localtests -X stuff "-Dbisq.application.appName=bisq_client$${i}_i2p_test " ;\
-		screen -S localtests -X stuff '-Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P ' ;\
-		screen -S localtests -X stuff '-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=$(file < seed1-i2p-destination):5000 ' ;\
-		screen -S localtests -X stuff '-Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=$(file < seed2-i2p-destination):5001 ' ;\
+		screen -S localtests -X stuff "-Dapplication.appName=bisq_client$${i}_i2p_test " ;\
+		screen -S localtests -X stuff '-Dapplication.network.supportedTransportTypes.0=CLEAR ' ;\
+		screen -S localtests -X stuff '-Dapplication.network.supportedTransportTypes.1=I2P ' ;\
+		screen -S localtests -X stuff '-Dapplication.network.seedAddressByTransportType.i2p.0=$(file < seed1-i2p-destination):5000 ' ;\
+		screen -S localtests -X stuff '-Dapplication.network.seedAddressByTransportType.i2p.1=$(file < seed2-i2p-destination):5001 ' ;\
+		screen -S localtests -X stuff '-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 ' ;\
+		screen -S localtests -X stuff '-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001 ' ;\
 		screen -S localtests -X stuff '\n' ;\
 	done
 
