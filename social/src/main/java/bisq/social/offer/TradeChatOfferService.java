@@ -27,7 +27,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
-import bisq.user.profile.UserProfile;
+import bisq.user.identity.UserIdentity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +66,7 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
                                                                                     Set<String> selectedPaymentMethods,
                                                                                     String makersTradeTerms,
                                                                                     long requiredTotalReputationScore) {
-        UserProfile userProfile = chatService.getChatUserService().getSelectedChatUserIdentity().get();
+        UserIdentity userIdentity = chatService.getUserIdentityService().getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(direction,
                 market,
                 baseSideAmount,
@@ -75,6 +75,6 @@ public class TradeChatOfferService implements PersistenceClient<TradeChatOfferSt
                 makersTradeTerms,
                 requiredTotalReputationScore);
         PublicTradeChannel publicTradeChannel = chatService.findPublicTradeChannel(market.toString()).orElseThrow();
-        return chatService.publishTradeChatOffer(tradeChatOffer, publicTradeChannel, userProfile);
+        return chatService.publishTradeChatOffer(tradeChatOffer, publicTradeChannel, userIdentity);
     }
 }

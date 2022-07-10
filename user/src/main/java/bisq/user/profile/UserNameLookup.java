@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.user.profile;
 
-import bisq.user.profile.UserProfile;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-public interface PrivateChannel {
-    String CHANNEL_DELIMITER = "@PC@";
+/**
+ * Convenience access
+ */
+@Slf4j
+public class UserNameLookup {
+    @Setter
+    private static UserProfileService userProfileService;
 
-    UserProfile getPeer();
-
-    static String createChannelId(String peersProfileId, String myProfileId) {
-        if (peersProfileId.compareTo(myProfileId) < 0) {
-            return peersProfileId + CHANNEL_DELIMITER + myProfileId;
-        } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
-            return myProfileId + CHANNEL_DELIMITER + peersProfileId;
-        }
+    public static String getUserName(String nym, String nickName) {
+        return userProfileService.getUserName(nym, nickName);
     }
 }

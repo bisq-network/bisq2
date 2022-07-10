@@ -32,7 +32,7 @@ import bisq.offer.Offer;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
@@ -138,7 +138,7 @@ public abstract class ApplicationService {
 
         // Register resolvers for distributedData 
         DistributedDataResolver.addResolver("social.ChatMessage", ChatMessage.getDistributedDataResolver());
-        DistributedDataResolver.addResolver("social.ChatUser", PublicUserProfile.getResolver());
+        DistributedDataResolver.addResolver("social.ChatUser", UserProfile.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());

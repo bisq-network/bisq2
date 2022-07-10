@@ -17,18 +17,14 @@
 
 package bisq.user.proof;
 
-import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -36,47 +32,34 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public final class ProofOfBurnVerificationStore implements PersistableStore<ProofOfBurnVerificationStore> {
-    private final Observable<UserProfile> selectedChatUserIdentity = new Observable<>();
-    private final ObservableSet<UserProfile> chatUserIdentities;
     private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public ProofOfBurnVerificationStore() {
-        chatUserIdentities = new ObservableSet<>();
     }
 
-    private ProofOfBurnVerificationStore(UserProfile selectedUserProfile,
-                                         Set<UserProfile> chatUserIdentities,
-                                         Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs) {
-        this.selectedChatUserIdentity.set(selectedUserProfile);
-        this.chatUserIdentities = new ObservableSet<>(chatUserIdentities);
+    private ProofOfBurnVerificationStore(Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs) {
         this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
     }
 
     @Override
-    public bisq.user.protobuf.ChatUserStore toProto() {
-        return bisq.user.protobuf.ChatUserStore.newBuilder()
-                .setSelectedChatUserIdentity(selectedChatUserIdentity.get().toProto())
-                .addAllChatUserIdentities(chatUserIdentities.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
+    public bisq.user.protobuf.ProofOfBurnVerificationStore toProto() {
+        return bisq.user.protobuf.ProofOfBurnVerificationStore.newBuilder()
                 .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .build();
     }
 
-    public static ProofOfBurnVerificationStore fromProto(bisq.user.protobuf.ChatUserStore proto) {
-        return new ProofOfBurnVerificationStore(UserProfile.fromProto(proto.getSelectedChatUserIdentity()),
-                proto.getChatUserIdentitiesList().stream()
-                        .map(UserProfile::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> (ProofOfBurnProof) Proof.fromProto(e.getValue()))));
+    public static ProofOfBurnVerificationStore fromProto(bisq.user.protobuf.ProofOfBurnVerificationStore proto) {
+        return new ProofOfBurnVerificationStore(proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> (ProofOfBurnProof) Proof.fromProto(e.getValue()))));
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.ChatUserStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.ProofOfBurnVerificationStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -85,22 +68,12 @@ public final class ProofOfBurnVerificationStore implements PersistableStore<Proo
 
     @Override
     public ProofOfBurnVerificationStore getClone() {
-        return new ProofOfBurnVerificationStore(selectedChatUserIdentity.get(), chatUserIdentities, verifiedProofOfBurnProofs);
+        return new ProofOfBurnVerificationStore(verifiedProofOfBurnProofs);
     }
 
     @Override
     public void applyPersisted(ProofOfBurnVerificationStore persisted) {
-        selectedChatUserIdentity.set(persisted.getSelectedChatUserIdentity().get());
-        chatUserIdentities.addAll(persisted.getChatUserIdentities());
         verifiedProofOfBurnProofs.putAll(persisted.getVerifiedProofOfBurnProofs());
-    }
-
-    Observable<UserProfile> getSelectedChatUserIdentity() {
-        return selectedChatUserIdentity;
-    }
-
-    ObservableSet<UserProfile> getChatUserIdentities() {
-        return chatUserIdentities;
     }
 
     Map<String, ProofOfBurnProof> getVerifiedProofOfBurnProofs() {

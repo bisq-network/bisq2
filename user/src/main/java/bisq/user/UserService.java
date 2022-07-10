@@ -22,7 +22,9 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
+import bisq.user.proof.ProofOfBurnVerificationService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,23 +35,29 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements ModuleService {
+
+
     @Getter
     @ToString
     public static final class Config {
+        private final UserIdentityService.Config userIdentityConfig;
+        private final ProofOfBurnVerificationService.Config proofOfBurnVerificationConfig;
 
-        private final ChatUserService.Config profileConfig;
-
-        public Config(ChatUserService.Config profileConfig) {
-            this.profileConfig = profileConfig;
+        public Config(UserIdentityService.Config userIdentityConfig,
+                      ProofOfBurnVerificationService.Config proofOfBurnVerificationConfig) {
+            this.userIdentityConfig = userIdentityConfig;
+            this.proofOfBurnVerificationConfig = proofOfBurnVerificationConfig;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(ChatUserService.Config.from(config.getConfig("profile")));
+            return new Config(UserIdentityService.Config.from(config.getConfig("userIdentity")),
+                    ProofOfBurnVerificationService.Config.from(config.getConfig("proofOfBurnVerification")));
         }
     }
 
-    private final UserService.Config config;
-    private final ChatUserService chatUserService;
+    private final UserProfileService userProfileService;
+    private final UserIdentityService userIdentityService;
+    private final ProofOfBurnVerificationService proofOfBurnVerificationService;
     private final ReputationService reputationService;
 
     public UserService(UserService.Config config,
@@ -57,13 +65,16 @@ public class UserService implements ModuleService {
                        IdentityService identityService,
                        OpenTimestampService openTimestampService,
                        NetworkService networkService) {
-        this.config = config;
-        chatUserService = new ChatUserService(config.getProfileConfig(),
-                 persistenceService,
-                 identityService,
-                 openTimestampService,
-                 networkService);
-        reputationService = new ReputationService(persistenceService, networkService, chatUserService);
+        userProfileService = new UserProfileService(persistenceService, networkService);
+        userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
+                persistenceService,
+                identityService,
+                openTimestampService,
+                networkService);
+        proofOfBurnVerificationService = new ProofOfBurnVerificationService(config.getProofOfBurnVerificationConfig(),
+                persistenceService,
+                networkService);
+        reputationService = new ReputationService(persistenceService, networkService, userIdentityService, proofOfBurnVerificationService);
     }
 
 
@@ -73,7 +84,8 @@ public class UserService implements ModuleService {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return chatUserService.initialize()
+        return userProfileService.initialize()
+                .thenCompose(result -> userIdentityService.initialize())
                 .thenCompose(result -> reputationService.initialize());
     }
 

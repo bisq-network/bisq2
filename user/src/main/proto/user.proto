@@ -25,7 +25,43 @@ import "network.proto";
 import "security.proto";
 import "identity.proto";
 
-    
+message UserProfile {
+  string nickName = 1;
+  network.NetworkId networkId = 2;
+  security.ProofOfWork proofOfWork = 3;
+  string terms = 4;
+  string bio = 5;
+}
+
+message UserIdentity {
+  identity.Identity identity = 1;
+  UserProfile userProfile = 2;
+}
+
+// Stores
+message UserIdentityStore {
+  repeated UserIdentity userIdentities = 1;
+  UserIdentity selectedUserIdentity = 2;
+}
+
+message NymList {
+  repeated string nyms = 1;
+}
+
+message UserProfileStore {
+  map<string, NymList> nymListByNickName = 1;
+}
+
+message ProofOfBurnVerificationStore {
+  map<string, Proof> verifiedProofOfBurnProofs = 1;
+}
+
+message TradeChatOfferStore {
+}
+
+
+
+
 message ProofOfBurnProof {
   string txId = 1;
   uint64 burntAmount = 2;
@@ -74,27 +110,4 @@ message Reputation {
 
   string type = 1;
   Proof proof = 2;
-}
-
-message PublicUserProfile {
-  string nickName = 1;
-  network.NetworkId networkId = 2;
-  security.ProofOfWork proofOfWork = 3;
-  string terms  = 4;
-  string bio   = 5;
-}
-
-message UserProfile {
-  identity.Identity identity = 1;
-  PublicUserProfile chatUser = 2;
-}
-
-// Stores
-message ChatUserStore {
-  repeated UserProfile chatUserIdentities = 1;
-  UserProfile selectedChatUserIdentity = 2;
-  map<string, Proof> verifiedProofOfBurnProofs = 3;
-}
-
-message TradeChatOfferStore {
 }

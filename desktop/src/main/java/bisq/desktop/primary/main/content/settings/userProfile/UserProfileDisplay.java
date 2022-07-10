@@ -25,9 +25,9 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.user.profile.PublicUserProfile;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -48,8 +48,8 @@ import org.fxmisc.easybind.Subscription;
 public class UserProfileDisplay {
     private final Controller controller;
 
-    public UserProfileDisplay(ChatUserService chatUserService, UserProfile userProfile) {
-        controller = new Controller(chatUserService, userProfile);
+    public UserProfileDisplay(UserIdentityService userIdentityService, UserIdentity userIdentity) {
+        controller = new Controller(userIdentityService, userIdentity);
     }
 
     public Pane getRoot() {
@@ -57,31 +57,31 @@ public class UserProfileDisplay {
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
-        private final ChatUserService chatUserService;
+        private final UserIdentityService userIdentityService;
         private final Model model;
         @Getter
         private final View view;
 
 
-        private Controller(ChatUserService chatUserService, UserProfile userProfile) {
-            this.chatUserService = chatUserService;
-            model = new Model(userProfile);
+        private Controller(UserIdentityService userIdentityService, UserIdentity userIdentity) {
+            this.userIdentityService = userIdentityService;
+            model = new Model(userIdentity);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            PublicUserProfile publicUserProfile = model.userProfile.getPublicUserProfile();
+            UserProfile userProfile = model.userIdentity.getUserProfile();
 
-            model.id.set(Res.get("social.createUserProfile.id", publicUserProfile.getId()));
-            model.bio.set(publicUserProfile.getBio());
-            model.terms.set(publicUserProfile.getTerms());
-            model.reputationScore.set(publicUserProfile.getBurnScoreAsString());
-            model.profileAge.set(publicUserProfile.getAccountAgeAsString());
+            model.id.set(Res.get("social.createUserProfile.id", userProfile.getId()));
+            model.bio.set(userProfile.getBio());
+            model.terms.set(userProfile.getTerms());
+            model.reputationScore.set(userProfile.getBurnScoreAsString());
+            model.profileAge.set(userProfile.getAccountAgeAsString());
 
-            model.nym.set(publicUserProfile.getNym());
-            model.nickName.set(publicUserProfile.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(publicUserProfile.getPubKeyHash()));
+            model.nym.set(userProfile.getNym());
+            model.nickName.set(userProfile.getNickName());
+            model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
         }
 
         @Override
@@ -104,7 +104,7 @@ public class UserProfileDisplay {
         public void onSave(String terms, String bio) {
             model.isPublishing.set(true);
             model.progress.set(-1);
-            chatUserService.editChatUser(model.userProfile, terms, bio)
+            userIdentityService.editUserProfile(model.userIdentity, terms, bio)
                     .whenComplete((r, t) -> {
                         model.progress.set(0);
                         model.isPublishing.set(false);
@@ -114,7 +114,7 @@ public class UserProfileDisplay {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final UserProfile userProfile;
+        private final UserIdentity userIdentity;
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
@@ -127,8 +127,8 @@ public class UserProfileDisplay {
         private final BooleanProperty isPublishing = new SimpleBooleanProperty();
         private final IntegerProperty progress = new SimpleIntegerProperty();
 
-        private Model(UserProfile userProfile) {
-            this.userProfile = userProfile;
+        private Model(UserIdentity userIdentity) {
+            this.userIdentity = userIdentity;
         }
     }
 

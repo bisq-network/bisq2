@@ -38,9 +38,9 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
-import bisq.user.profile.PublicUserProfile;
 import bisq.user.profile.UserProfile;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -80,7 +80,7 @@ public class ChatMessagesListView {
     private final Controller controller;
 
     public ChatMessagesListView(DefaultApplicationService applicationService,
-                                Consumer<PublicUserProfile> mentionUserHandler,
+                                Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
                                 boolean isDiscussionsChat,
@@ -134,15 +134,15 @@ public class ChatMessagesListView {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final ChatUserService chatUserService;
-        private final Consumer<PublicUserProfile> mentionUserHandler;
+        private final UserIdentityService userIdentityService;
+        private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
         private final ReputationService reputationService;
         private Pin selectedChannelPin, chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
-                           Consumer<PublicUserProfile> mentionUserHandler,
+                           Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
                            boolean isDiscussionsChat,
@@ -150,14 +150,14 @@ public class ChatMessagesListView {
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
             this.chatService = applicationService.getSocialService().getChatService();
-            this.chatUserService = applicationService.getUserService().getChatUserService();
+            this.userIdentityService = applicationService.getUserService().getUserIdentityService();
             this.reputationService = applicationService.getUserService().getReputationService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
 
             model = new Model(chatService,
-                    chatUserService,
+                    userIdentityService,
                     isDiscussionsChat,
                     isCreateOfferMode,
                     isCreateOfferTakerListMode,
@@ -249,8 +249,8 @@ public class ChatMessagesListView {
         // UI - delegate to client
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void onMention(PublicUserProfile publicUserProfile) {
-            mentionUserHandler.accept(publicUserProfile);
+        private void onMention(UserProfile userProfile) {
+            mentionUserHandler.accept(userProfile);
         }
 
         private void onShowChatUserDetails(ChatMessage chatMessage) {
@@ -292,23 +292,23 @@ public class ChatMessagesListView {
 
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
                 if (chatMessage instanceof PublicTradeChatMessage) {
-                    chatService.deletePublicTradeChatMessage((PublicTradeChatMessage) chatMessage, userProfile)
+                    chatService.deletePublicTradeChatMessage((PublicTradeChatMessage) chatMessage, userIdentity)
                             .whenComplete((result, throwable) -> {
                                 log.error("onDeleteMessage result {}", result);
                                 log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, userProfile);
+                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
                 }
                 //todo delete private message
             }
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            UserProfile userProfile = chatService.getChatUserService().getSelectedChatUserIdentity().get();
-            chatService.publishPublicTradeChatMessage(chatMessage, userProfile)
+            UserIdentity userIdentity = chatService.getUserIdentityService().getSelectedUserProfile().get();
+            chatService.publishPublicTradeChatMessage(chatMessage, userIdentity)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
 
@@ -324,11 +324,11 @@ public class ChatMessagesListView {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage) {
-                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, userProfile);
+                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userProfile);
+                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userIdentity);
             }
             //todo editing private message not supported yet
         }
@@ -360,7 +360,7 @@ public class ChatMessagesListView {
         private void onOpenEmojiSelector(ChatMessage chatMessage) {
         }
 
-        private void createAndSelectPrivateChannel(PublicUserProfile peer) {
+        private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
             } else {
@@ -368,7 +368,7 @@ public class ChatMessagesListView {
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(PublicUserProfile peer) {
+        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
@@ -378,7 +378,7 @@ public class ChatMessagesListView {
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private final ChatUserService chatUserService;
+        private final UserIdentityService userIdentityService;
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
@@ -394,13 +394,13 @@ public class ChatMessagesListView {
         private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
 
         private Model(ChatService chatService,
-                      ChatUserService chatUserService,
+                      UserIdentityService userIdentityService,
                       boolean isDiscussionsChat,
                       boolean isCreateOfferMode,
                       boolean isCreateOfferTakerListMode,
                       boolean isCreateOfferPublishedMode) {
             this.chatService = chatService;
-            this.chatUserService = chatUserService;
+            this.userIdentityService = userIdentityService;
             this.isDiscussionsChat = isDiscussionsChat;
             this.isCreateOfferMode = isCreateOfferMode;
             this.isCreateOfferTakerListMode = isCreateOfferTakerListMode;
@@ -597,7 +597,7 @@ public class ChatMessagesListView {
                                     userName.setText(author.getUserName());
                                     userName.setOnMouseClicked(e -> controller.onMention(author));
 
-                                    chatUserIcon.setChatUser(author, model.getChatUserService());
+                                    chatUserIcon.setChatUser(author, model.getUserIdentityService());
                                     chatUserIcon.setCursor(Cursor.HAND);
                                     Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
                                     chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
@@ -861,7 +861,7 @@ public class ChatMessagesListView {
         private final String message;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final Optional<PublicUserProfile> author;
+        private final Optional<UserProfile> author;
         private final String nym;
         private final String nickName;
         @EqualsAndHashCode.Exclude
@@ -882,8 +882,8 @@ public class ChatMessagesListView {
             quotedMessage = chatMessage.getQuotation();
             date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
 
-            nym = author.map(PublicUserProfile::getNym).orElse("");
-            nickName = author.map(PublicUserProfile::getNickName).orElse("");
+            nym = author.map(UserProfile::getNym).orElse("");
+            nickName = author.map(UserProfile::getNickName).orElse("");
 
             reputationScore = author.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         }

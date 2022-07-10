@@ -35,11 +35,11 @@ message Quotation {
 
 message PrivateTradeChatMessage {
   string receiversNym = 1;
-  user.PublicUserProfile author = 2;
+  user.UserProfile author = 2;
 }
 message PrivateDiscussionChatMessage {
   string receiversNym = 1;
-  user.PublicUserProfile author = 2;
+  user.UserProfile author = 2;
 }
 message PublicDiscussionChatMessage {
 }
@@ -79,13 +79,13 @@ enum NotificationSetting {
 
 // Channels
 message PrivateDiscussionChannel {
-  user.PublicUserProfile peer = 1;
-  user.UserProfile myChatUserIdentity = 2;
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTradeChannel {
-  user.PublicUserProfile peer = 1;
-  user.UserProfile myChatUserIdentity = 2;
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 

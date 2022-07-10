@@ -25,8 +25,9 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.user.profile.PublicUserProfile;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.proof.ProofOfBurnVerificationService;
 import com.google.common.base.Charsets;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +41,20 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ReputationService implements DataService.Listener {
     private final PersistenceService persistenceService;
     private final NetworkService networkService;
-    private final ChatUserService chatUserService;
+    private final UserIdentityService userIdentityService;
+    private final ProofOfBurnVerificationService proofOfBurnVerificationService;
     private final Map<ByteArray, Set<AuthorizedProofOfBurnData>> authorizedProofOfBurnDataSetByHash = new ConcurrentHashMap<>();
     private final Observable<Integer> reputationChanged = new Observable<>(0);
     private boolean isBatchProcessing;
 
-    public ReputationService(PersistenceService persistenceService, NetworkService networkService, ChatUserService chatUserService) {
+    public ReputationService(PersistenceService persistenceService, 
+                             NetworkService networkService, 
+                             UserIdentityService userIdentityService, 
+                             ProofOfBurnVerificationService proofOfBurnVerificationService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
-        this.chatUserService = chatUserService;
+        this.userIdentityService = userIdentityService;
+        this.proofOfBurnVerificationService = proofOfBurnVerificationService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -88,9 +94,9 @@ public class ReputationService implements DataService.Listener {
         return Optional.ofNullable(authorizedProofOfBurnDataSetByHash.get(hash));
     }
 
-    public Optional<ReputationScore> findReputationScore(PublicUserProfile publicUserProfile) {
+    public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
         // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
-        byte[] preImage = publicUserProfile.getId().getBytes(Charsets.UTF_8);
+        byte[] preImage = userProfile.getId().getBytes(Charsets.UTF_8);
         byte[] hashOfPreImage = DigestUtil.hash(preImage);
         ByteArray hash = new ByteArray(hashOfPreImage);
         Optional<ReputationScore> optionalReputationScore = findAuthorizedProofOfBurnDataSet(hash)

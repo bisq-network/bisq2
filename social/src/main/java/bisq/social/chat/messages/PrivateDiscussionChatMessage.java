@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -38,10 +38,10 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
     private final String receiversNym;
-    private final PublicUserProfile author;
+    private final UserProfile author;
 
     public PrivateDiscussionChatMessage(String channelId,
-                                        PublicUserProfile author,
+                                        UserProfile author,
                                         String receiversNym,
                                         String text,
                                         Optional<Quotation> quotedMessage,
@@ -58,7 +58,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         PublicUserProfile author,
+                                         UserProfile author,
                                          String receiversNym,
                                          String text,
                                          Optional<Quotation> quotedMessage,
@@ -98,7 +98,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
         bisq.social.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
-                PublicUserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
+                UserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
                 privateDiscussionChatMessage.getReceiversNym(),
                 baseProto.getText(),
                 quotedMessage,

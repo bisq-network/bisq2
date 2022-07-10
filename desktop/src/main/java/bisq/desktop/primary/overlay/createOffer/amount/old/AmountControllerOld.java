@@ -55,7 +55,7 @@ public class AmountControllerOld implements Controller {
     public AmountControllerOld(DefaultApplicationService applicationService) {
         TradeChatOfferService tradeChatOfferService = applicationService.getSocialService().getTradeChatOfferService();
         chatService = applicationService.getSocialService().getChatService();
-        model = new AmountModelOld(applicationService.getUserService().getChatUserService().getSelectedChatUserIdentity().get().getProfileId());
+        model = new AmountModelOld(applicationService.getUserService().getUserIdentityService().getSelectedUserProfile().get().getNym());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());
         btcFiatAmountGroup = new BtcFiatAmountGroup(applicationService.getOracleService().getMarketPriceService());

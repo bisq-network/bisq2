@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,11 +39,11 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
-    private final PublicUserProfile author;
+    private final UserProfile author;
     private final String receiversNym;
 
     public PrivateTradeChatMessage(String channelId,
-                                   PublicUserProfile author,
+                                   UserProfile author,
                                    String receiversNym,
                                    String text,
                                    Optional<Quotation> quotedMessage,
@@ -60,7 +60,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
     }
 
     private PrivateTradeChatMessage(String channelId,
-                                    PublicUserProfile author,
+                                    UserProfile author,
                                     String receiversNym,
                                     String text,
                                     Optional<Quotation> quotedMessage,
@@ -100,7 +100,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
         bisq.social.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
-                PublicUserProfile.fromProto(privateTradeChatMessage.getAuthor()),
+                UserProfile.fromProto(privateTradeChatMessage.getAuthor()),
                 privateTradeChatMessage.getReceiversNym(),
                 baseProto.getText(),
                 quotedMessage,

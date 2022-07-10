@@ -25,7 +25,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.Reputation;
 import lombok.Getter;
 
@@ -37,12 +37,12 @@ public class BsqBondController implements Controller {
     private final BsqBondModel model;
     @Getter
     private final BsqBondView view;
-    private final ChatUserService chatUserService;
+    private final UserIdentityService userIdentityService;
     private Pin selectedUserProfilePin;
 
     public BsqBondController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getUserService().getChatUserService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new BsqBondModel();
         view = new BsqBondView(model, this, userProfileSelection.getRoot());
@@ -54,7 +54,7 @@ public class BsqBondController implements Controller {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
                 chatUserIdentity -> model.getSelectedChatUserIdentity().set(chatUserIdentity)
         );
     }

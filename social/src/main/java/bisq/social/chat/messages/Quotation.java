@@ -1,7 +1,7 @@
 package bisq.social.chat.messages;
 
 import bisq.common.proto.Proto;
-import bisq.user.profile.NymLookup;
+import bisq.user.profile.UserNameLookup;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +40,7 @@ public final class Quotation implements Proto {
     }
 
     public String getUserName() {
-        return NymLookup.getUserName(nym, nickName);
+        return UserNameLookup.getUserName(nym, nickName);
     }
 
     public boolean isValid() {

@@ -27,12 +27,12 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.user.profile.NymIdGenerator;
+import bisq.user.NymIdGenerator;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -52,7 +52,7 @@ public class GenerateProfileController implements Controller {
     protected final GenerateProfileModel model;
     @Getter
     protected final GenerateProfileView view;
-    protected final ChatUserService chatUserService;
+    protected final UserIdentityService userIdentityService;
     protected final KeyPairService keyPairService;
     protected final ProofOfWorkService proofOfWorkService;
     protected final IdentityService identityService;
@@ -64,7 +64,7 @@ public class GenerateProfileController implements Controller {
     public GenerateProfileController(DefaultApplicationService applicationService) {
         keyPairService = applicationService.getKeyPairService();
         proofOfWorkService = applicationService.getSecurityService().getProofOfWorkService();
-        chatUserService = applicationService.getUserService().getChatUserService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
         identityService = applicationService.getIdentityService();
 
         model = getGenerateProfileModel();
@@ -111,7 +111,7 @@ public class GenerateProfileController implements Controller {
 
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
-            chatUserService.createAndPublishNewChatUserIdentity(
+            userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
@@ -128,7 +128,7 @@ public class GenerateProfileController implements Controller {
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(
+            userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get(),
                     model.getProofOfWork().orElseThrow(),

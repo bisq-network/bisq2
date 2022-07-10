@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,12 +37,12 @@ public class BurnBsqTab3Controller implements Controller {
     private final BurnBsqTab3Model model;
     @Getter
     private final BurnBsqTab3View view;
-    private final ChatUserService chatUserService;
+    private final UserIdentityService userIdentityService;
     private Pin selectedUserProfilePin;
 
     public BurnBsqTab3Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getUserService().getChatUserService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new BurnBsqTab3Model();
         view = new BurnBsqTab3View(model, this, userProfileSelection.getRoot());
@@ -50,10 +50,10 @@ public class BurnBsqTab3Controller implements Controller {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
                 chatUserIdentity -> {
                     model.getSelectedChatUserIdentity().set(chatUserIdentity);
-                    model.getPubKeyHash().set(chatUserIdentity.getPublicUserProfile().getId());
+                    model.getPubKeyHash().set(chatUserIdentity.getId());
                 }
         );
     }

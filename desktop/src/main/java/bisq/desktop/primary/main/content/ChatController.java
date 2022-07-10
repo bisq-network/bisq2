@@ -28,7 +28,7 @@ import bisq.settings.DontShowAgainService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.Channel;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final M model;
     @Getter
     protected V view;
-    protected final ChatUserService chatUserService;
+    protected final UserIdentityService userIdentityService;
     protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
@@ -59,7 +59,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
         chatService = applicationService.getSocialService().getChatService();
-        chatUserService = applicationService.getUserService().getChatUserService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
         ReputationService reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);

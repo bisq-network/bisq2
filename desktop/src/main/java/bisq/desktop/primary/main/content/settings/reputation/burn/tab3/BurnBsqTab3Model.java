@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.desktop.common.view.Model;
-import bisq.user.profile.UserProfile;
+import bisq.user.identity.UserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,6 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class BurnBsqTab3Model implements Model {
-    private final ObjectProperty<UserProfile> selectedChatUserIdentity = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
     private final StringProperty pubKeyHash = new SimpleStringProperty();
 }

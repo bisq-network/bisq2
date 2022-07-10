@@ -20,7 +20,6 @@ package bisq.user.proof;
 import bisq.common.data.Pair;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CollectionUtil;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.http.common.HttpException;
@@ -29,10 +28,8 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.security.KeyPairService;
 import bisq.user.role.Role;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+//todo
 @Slf4j
 public class ProofOfBurnVerificationService implements PersistenceClient<ProofOfBurnVerificationStore> {
     // For dev testing we use hard coded txId and a pubKeyHash to get real data from Bisq explorer
@@ -74,14 +71,10 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
     @Getter
     private final Persistence<ProofOfBurnVerificationStore> persistence;
     private final NetworkService networkService;
-    private final Object lock = new Object();
     private final Config config;
-    private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
 
-    public ProofOfBurnVerificationService(PersistenceService persistenceService,
-                                          Config config,
-                                          KeyPairService keyPairService,
-                                          IdentityService identityService,
+    public ProofOfBurnVerificationService(Config config,
+                                          PersistenceService persistenceService,
                                           NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.config = config;
@@ -120,7 +113,7 @@ public class ProofOfBurnVerificationService implements PersistenceClient<ProofOf
                 try {
                     BaseHttpClient httpClient = getApiHttpClient(config.getBsqMemPoolProviders());
                     String jsonBsqTx = httpClient.get("tx/" + txId, Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                    Preconditions.checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
+                    checkArgument(BsqTxValidator.initialSanityChecks(txId, jsonBsqTx), txId + "Bsq tx sanity check failed");
                     checkArgument(BsqTxValidator.isBsqTx(httpClient.getBaseUrl()), txId + " is Nnt a valid Bsq tx");
                     checkArgument(BsqTxValidator.isProofOfBurn(jsonBsqTx), txId + " is not a proof of burn transaction");
                     long burntAmount = BsqTxValidator.getBurntAmount(jsonBsqTx);

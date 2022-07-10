@@ -23,8 +23,8 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.user.profile.UserProfile;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -52,8 +52,8 @@ import java.lang.ref.WeakReference;
 public class UserProfileSelection {
     private final Controller controller;
 
-    public UserProfileSelection(ChatUserService chatUserService) {
-        controller = new Controller(chatUserService);
+    public UserProfileSelection(UserIdentityService userIdentityService) {
+        controller = new Controller(userIdentityService);
     }
 
     public Pane getRoot() {
@@ -72,12 +72,12 @@ public class UserProfileSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatUserService chatUserService;
+        private final UserIdentityService userIdentityService;
         private Pin selectedUserProfilePin;
         private Pin userProfilesPin;
 
-        private Controller(ChatUserService chatUserService) {
-            this.chatUserService = chatUserService;
+        private Controller(UserIdentityService userIdentityService) {
+            this.userIdentityService = userIdentityService;
 
             model = new Model();
             view = new View(model, this);
@@ -85,11 +85,11 @@ public class UserProfileSelection {
 
         @Override
         public void onActivate() {
-            selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+            selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
-            userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
+            userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
-                    .to(chatUserService.getChatUserIdentities());
+                    .to(userIdentityService.getUserIdentities());
         }
 
         @Override
@@ -107,7 +107,7 @@ public class UserProfileSelection {
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                chatUserService.selectChatUserIdentity(selectedItem.userProfile);
+                userIdentityService.selectChatUserIdentity(selectedItem.userIdentity);
             }
         }
     }
@@ -158,15 +158,15 @@ public class UserProfileSelection {
 
     @EqualsAndHashCode
     public static class ListItem {
-        private final UserProfile userProfile;
+        private final UserIdentity userIdentity;
 
-        private ListItem(UserProfile userProfile) {
-            this.userProfile = userProfile;
+        private ListItem(UserIdentity userIdentity) {
+            this.userIdentity = userIdentity;
         }
 
         @Override
         public String toString() {
-            return userProfile.getNickName();
+            return userIdentity.getNickName();
         }
     }
 
@@ -213,8 +213,8 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.userProfile.getPubKeyHash()));
-                        label.setText(item.userProfile.getNickName());
+                        imageView.setImage(RoboHash.getImage(item.userIdentity.getPubKeyHash()));
+                        label.setText(item.userIdentity.getNickName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
                             if (newValue.doubleValue() > 0) {
@@ -299,10 +299,10 @@ public class UserProfileSelection {
 
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>((ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                 if (newValue != null) {
-                    UserProfile userProfile = newValue.userProfile;
-                    if (userProfile != null) {
-                        imageView.setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
-                        userNameLabel.setText(userProfile.getNickName());
+                    UserIdentity userIdentity = newValue.userIdentity;
+                    if (userIdentity != null) {
+                        imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
+                        userNameLabel.setText(userIdentity.getNickName());
                         buttonPane.layout();
                     }
                 }

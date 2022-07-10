@@ -25,7 +25,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -62,10 +62,10 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     protected final GenerateNewProfileStep2Model model;
     @Getter
     protected final GenerateNewProfileStep2View view;
-    protected final ChatUserService chatUserService;
+    protected final UserIdentityService userIdentityService;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getUserService().getChatUserService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
 
         model = createModel();
         view = createView();
@@ -114,7 +114,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
 
         if (model.getTempIdentity().isPresent()) {
             KeyPairAndId keyPairAndId = model.getTempIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(
+            userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
@@ -131,7 +131,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(
+            userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get(),
                     model.getProofOfWork().orElseThrow(),

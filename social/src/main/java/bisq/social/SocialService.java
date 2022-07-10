@@ -24,7 +24,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.social.chat.ChatService;
 import bisq.social.offer.TradeChatOfferService;
-import bisq.user.profile.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -54,9 +54,9 @@ public class SocialService implements ModuleService {
                          IdentityService identityService,
                          SecurityService securityService,
                          NetworkService networkService,
-                         ChatUserService chatUserService) {
+                         UserIdentityService userIdentityService) {
         this.config = config;
-        chatService = new ChatService(persistenceService, identityService, securityService.getProofOfWorkService(), networkService, chatUserService);
+        chatService = new ChatService(persistenceService, identityService, securityService.getProofOfWorkService(), networkService, userIdentityService);
         tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
     }
 

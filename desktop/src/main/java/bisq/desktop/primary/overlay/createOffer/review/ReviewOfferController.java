@@ -32,8 +32,8 @@ import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
-import bisq.user.profile.PublicUserProfile;
 import bisq.user.profile.UserProfile;
+import bisq.user.identity.UserIdentity;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -135,13 +135,13 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
-        UserProfile userProfile = chatService.getChatUserService().getSelectedChatUserIdentity().get();
+        UserIdentity userIdentity = chatService.getUserIdentityService().getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
                 model.getQuoteSideAmount().getValue(),
                 new HashSet<>(model.getPaymentMethods()),
-                userProfile.getPublicUserProfile().getTerms(),
+                userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
         PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
@@ -152,7 +152,7 @@ public class ReviewOfferController implements Controller {
         chatService.selectTradeChannel(channelForMarket);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
-                userProfile.getPublicUserProfile().getId(),
+                userIdentity.getUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
@@ -200,7 +200,7 @@ public class ReviewOfferController implements Controller {
             if (item.getAuthor().isEmpty()) {
                 return false;
             }
-            PublicUserProfile peer = item.getAuthor().get();
+            UserProfile peer = item.getAuthor().get();
             if (chatService.isChatUserIgnored(peer)) {
                 return false;
             }
