@@ -19,7 +19,7 @@ package bisq.desktop.components.controls;
 
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.identity.ChatUserIdentity;
+import bisq.identity.profile.ChatUserIdentity;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;

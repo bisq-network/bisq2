@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.identity.ChatUserIdentity;
+import bisq.identity.profile.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;

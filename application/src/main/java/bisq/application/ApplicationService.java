@@ -32,7 +32,7 @@ import bisq.offer.Offer;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.identity.PublicUserProfile;
+import bisq.identity.profile.PublicUserProfile;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;

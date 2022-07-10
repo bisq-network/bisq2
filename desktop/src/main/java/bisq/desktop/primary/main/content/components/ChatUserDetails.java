@@ -21,7 +21,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.identity.PublicUserProfile;
+import bisq.identity.profile.PublicUserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

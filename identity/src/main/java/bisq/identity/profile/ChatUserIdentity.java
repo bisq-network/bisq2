@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity;
+package bisq.identity.profile;
 
 import bisq.common.proto.Proto;
+import bisq.identity.Identity;
 import bisq.network.NetworkIdWithKeyPair;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

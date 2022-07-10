@@ -15,13 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity;
+package bisq.identity.profile;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
-import bisq.identity.profile.NymIdGenerator;
-import bisq.identity.profile.NymLookup;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -73,21 +71,6 @@ public final class PublicUserProfile implements DistributedData {
         this.bio = bio;
     }
 
-    public byte[] getPubKeyHash() {
-        return networkId.getPubKey().getHash();
-    }
-
-    public String getId() {
-        return networkId.getPubKey().getId();
-    }
-
-    public String getNym() {
-        if (nym == null) {
-            nym = NymIdGenerator.fromHash(getPubKeyHash());
-        }
-        return nym;
-    }
-
     @Override
     public bisq.identity.protobuf.ChatUser toProto() {
         return bisq.identity.protobuf.ChatUser.newBuilder()
@@ -125,6 +108,21 @@ public final class PublicUserProfile implements DistributedData {
     @Override
     public boolean isDataInvalid() {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
+    }
+
+    public byte[] getPubKeyHash() {
+        return networkId.getPubKey().getHash();
+    }
+
+    public String getId() {
+        return networkId.getPubKey().getId();
+    }
+
+    public String getNym() {
+        if (nym == null) {
+            nym = NymIdGenerator.fromHash(getPubKeyHash());
+        }
+        return nym;
     }
 
     public String getTooltipString() {
