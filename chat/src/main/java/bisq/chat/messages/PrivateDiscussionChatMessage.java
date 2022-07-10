@@ -37,19 +37,19 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
-    private final String receiversNym;
+    private final String peersId;
     private final UserProfile author;
 
     public PrivateDiscussionChatMessage(String channelId,
                                         UserProfile author,
-                                        String receiversNym,
+                                        String peersId,
                                         String text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
         this(channelId,
                 author,
-                receiversNym,
+                peersId,
                 text,
                 quotedMessage,
                 date,
@@ -59,7 +59,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
 
     private PrivateDiscussionChatMessage(String channelId,
                                          UserProfile author,
-                                         String receiversNym,
+                                         String peersId,
                                          String text,
                                          Optional<Quotation> quotedMessage,
                                          long date,
@@ -72,7 +72,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
                 date,
                 wasEdited,
                 metaData);
-        this.receiversNym = receiversNym;
+        this.peersId = peersId;
         this.author = author;
     }
 
@@ -86,7 +86,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateDiscussionChatMessage(bisq.chat.protobuf.PrivateDiscussionChatMessage.newBuilder()
-                        .setReceiversNym(receiversNym)
+                        .setPeersId(peersId)
                         .setAuthor(author.toProto()))
                 .build();
     }
@@ -99,7 +99,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
-                privateDiscussionChatMessage.getReceiversNym(),
+                privateDiscussionChatMessage.getPeersId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

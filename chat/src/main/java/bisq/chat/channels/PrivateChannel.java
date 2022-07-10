@@ -20,15 +20,15 @@ package bisq.chat.channels;
 import bisq.user.profile.UserProfile;
 
 public interface PrivateChannel {
-    String CHANNEL_DELIMITER = "@PC@";
+    String CHANNEL_DELIMITER = "-";
 
     UserProfile getPeer();
 
-    static String createChannelId(String peersProfileId, String myProfileId) {
-        if (peersProfileId.compareTo(myProfileId) < 0) {
-            return peersProfileId + CHANNEL_DELIMITER + myProfileId;
+    static String createChannelId(String peersId, String myId) {
+        if (peersId.compareTo(myId) < 0) {
+            return peersId + CHANNEL_DELIMITER + myId;
         } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
-            return myProfileId + CHANNEL_DELIMITER + peersProfileId;
+            return myId + CHANNEL_DELIMITER + peersId;
         }
     }
 }

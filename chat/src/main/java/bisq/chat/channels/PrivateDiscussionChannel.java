@@ -40,7 +40,7 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
     private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateDiscussionChannel(UserProfile peer, UserIdentity myProfile) {
-        this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getNym()),
+        this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,
                 myProfile,
                 NotificationSetting.ALL,

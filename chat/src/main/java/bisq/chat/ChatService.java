@@ -324,7 +324,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         UserProfile peer = privateTradeChannel.getPeer();
         PrivateTradeChatMessage chatMessage = new PrivateTradeChatMessage(channelId,
                 userIdentity.getUserProfile(),
-                peer.getNym(),
+                peer.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
@@ -337,16 +337,16 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<PrivateTradeChannel> getOrCreatePrivateTradeChannel(PrivateTradeChatMessage privateTradeChatMessage) {
         return findPrivateTradeChannel(privateTradeChatMessage.getChannelId())
-                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getReceiversNym()));
+                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getPeersId()));
     }
 
     public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer) {
         return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
-                .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getNym()));
+                .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getId()));
     }
 
-    public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer, String receiversProfileId) {
-        return userIdentityService.findUserIdentity(receiversProfileId)
+    public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer, String peersId) {
+        return userIdentityService.findUserIdentity(peersId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -501,7 +501,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         UserProfile peer = privateDiscussionChannel.getPeer();
         PrivateDiscussionChatMessage chatMessage = new PrivateDiscussionChatMessage(channelId,
                 userIdentity.getUserProfile(),
-                peer.getNym(),
+                peer.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
@@ -514,12 +514,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public Optional<PrivateDiscussionChannel> getOrCreatePrivateDiscussionChannel(PrivateDiscussionChatMessage message) {
         return findPrivateDiscussionChannel(message.getChannelId())
-                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getReceiversNym()));
+                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getPeersId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer) {
         return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
-                .flatMap(e -> createPrivateDiscussionChannel(peer, e.getNym()));
+                .flatMap(e -> createPrivateDiscussionChannel(peer, e.getId()));
     }
 
     public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer, String receiversProfileId) {

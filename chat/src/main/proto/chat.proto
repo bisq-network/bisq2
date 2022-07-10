@@ -34,11 +34,11 @@ message Quotation {
 }
 
 message PrivateTradeChatMessage {
-  string receiversNym = 1;
+  string peersId = 1;
   user.UserProfile author = 2;
 }
 message PrivateDiscussionChatMessage {
-  string receiversNym = 1;
+  string peersId = 1;
   user.UserProfile author = 2;
 }
 message PublicDiscussionChatMessage {

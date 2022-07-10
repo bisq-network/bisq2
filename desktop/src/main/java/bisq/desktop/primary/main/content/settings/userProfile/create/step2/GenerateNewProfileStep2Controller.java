@@ -85,7 +85,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         model.setPooledIdentity(data.getPooledIdentity());
         model.setProofOfWork(Optional.of(data.getProofOfWork()));
         model.getNickName().set(data.getNickName());
-        model.getProfileId().set(data.getProfileId());
+        model.getNym().set(data.getProfileId());
         if (data.getTempIdentity().isPresent()) {
             model.getRoboHashImage().set(RoboHash.getImage(data.getProofOfWork().getPayload()));
         } else if (data.getPooledIdentity().isPresent()) {

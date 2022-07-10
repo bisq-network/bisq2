@@ -51,7 +51,7 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
     public void onActivate() {
         UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
         model.getNickName().set(userIdentity.getNickName());
-        model.getProfileId().set(userIdentity.getNym());
+        model.getNym().set(userIdentity.getNym());
         model.getRoboHashImage().set(RoboHash.getImage(userIdentity.getPubKeyHash()));
         String terms = userIdentity.getUserProfile().getTerms();
         if (terms == null) {

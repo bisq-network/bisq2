@@ -38,7 +38,7 @@ public class GenerateNewProfileStep2Model implements Model {
     private Optional<ProofOfWork> proofOfWork = Optional.empty();
 
     private final StringProperty nickName = new SimpleStringProperty();
-    private final StringProperty profileId = new SimpleStringProperty();
+    private final StringProperty nym = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();
     private final StringProperty bio = new SimpleStringProperty();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();

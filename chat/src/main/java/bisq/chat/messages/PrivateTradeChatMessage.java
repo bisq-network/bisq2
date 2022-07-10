@@ -40,18 +40,18 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
     private final UserProfile author;
-    private final String receiversNym;
+    private final String peersId;
 
     public PrivateTradeChatMessage(String channelId,
                                    UserProfile author,
-                                   String receiversNym,
+                                   String peersId,
                                    String text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited) {
         this(channelId,
                 author,
-                receiversNym,
+                peersId,
                 text,
                 quotedMessage,
                 date,
@@ -61,7 +61,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
 
     private PrivateTradeChatMessage(String channelId,
                                     UserProfile author,
-                                    String receiversNym,
+                                    String peersId,
                                     String text,
                                     Optional<Quotation> quotedMessage,
                                     long date,
@@ -75,7 +75,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
                 wasEdited,
                 metaData);
         this.author = author;
-        this.receiversNym = receiversNym;
+        this.peersId = peersId;
     }
 
     @Override
@@ -88,7 +88,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateTradeChatMessage(bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
-                        .setReceiversNym(receiversNym)
+                        .setPeersId(peersId)
                         .setAuthor(author.toProto()))
                 .build();
     }
@@ -101,7 +101,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateTradeChatMessage.getAuthor()),
-                privateTradeChatMessage.getReceiversNym(),
+                privateTradeChatMessage.getPeersId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

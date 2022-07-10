@@ -65,7 +65,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
     @Override
     public int compareTo(ChatUserOverview o) {
-        return controller.model.userProfile.getNym().compareTo(o.controller.model.userProfile.getNym());
+        return controller.model.userProfile.getUserName().compareTo(o.controller.model.userProfile.getUserName());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
