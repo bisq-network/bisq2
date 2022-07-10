@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.account.AccountService;
+import bisq.chat.ChatService;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
@@ -29,7 +30,7 @@ import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
-import bisq.social.SocialService;
+import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
@@ -69,10 +70,11 @@ public class DefaultApplicationService extends ApplicationService {
     private final OracleService oracleService;
     private final AccountService accountService;
     private final OfferService offerService;
-    private final SocialService socialService;
+    private final UserService userService;
+    private final ChatService chatService;
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
-    
+
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public DefaultApplicationService(String[] args) {
@@ -97,16 +99,23 @@ public class DefaultApplicationService extends ApplicationService {
                 networkService,
                 identityService,
                 persistenceService);
+
         accountService = new AccountService(networkService, persistenceService, identityService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
 
-        socialService = new SocialService(SocialService.Config.from(getConfig("social")),
+        userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
                 identityService,
-                securityService,
                 oracleService.getOpenTimestampService(),
                 networkService);
+
+        chatService = new ChatService(persistenceService,
+                identityService,
+                securityService.getProofOfWorkService(),
+                networkService,
+                userService.getUserIdentityService());
+        
         settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
@@ -126,7 +135,8 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> offerService.initialize())
-                .thenCompose(result -> socialService.initialize())
+                .thenCompose(result -> userService.initialize())
+                .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -146,7 +156,8 @@ public class DefaultApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> protocolService.shutdown()
                         .thenCompose(result -> settingsService.shutdown())
-                        .thenCompose(result -> socialService.shutdown())
+                        .thenCompose(result -> chatService.shutdown())
+                        .thenCompose(result -> userService.shutdown())
                         .thenCompose(result -> offerService.shutdown())
                         .thenCompose(result -> accountService.shutdown())
                         .thenCompose(result -> oracleService.shutdown())

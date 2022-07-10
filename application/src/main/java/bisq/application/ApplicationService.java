@@ -31,8 +31,8 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.user.ChatUser;
+import bisq.chat.messages.ChatMessage;
+import bisq.user.profile.UserProfile;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;
 import lombok.EqualsAndHashCode;
@@ -137,14 +137,14 @@ public abstract class ApplicationService {
         Res.setLocale(locale);
 
         // Register resolvers for distributedData 
-        DistributedDataResolver.addResolver("social.ChatMessage", ChatMessage.getDistributedDataResolver());
-        DistributedDataResolver.addResolver("social.ChatUser", ChatUser.getResolver());
+        DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
+        DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());
 
         // Register resolvers for networkMessages 
-        NetworkMessageResolver.addResolver("social.ChatMessage", ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

@@ -21,11 +21,11 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.PrivateChannel;
-import bisq.social.chat.channels.PrivateDiscussionChannel;
-import bisq.social.chat.channels.PrivateTradeChannel;
-import bisq.social.user.ChatUser;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PrivateChannel;
+import bisq.chat.channels.PrivateDiscussionChannel;
+import bisq.chat.channels.PrivateTradeChannel;
+import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -45,7 +45,7 @@ public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PrivateChannelSelection(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
-        controller = new Controller(applicationService.getSocialService().getChatService(), isDiscussionsChat);
+        controller = new Controller(applicationService.getChatService(), isDiscussionsChat);
     }
 
     public Pane getRoot() {
@@ -164,8 +164,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
-                        ChatUser peer = ((PrivateChannel) item.getChannel()).getPeer();
-                        roboIcon.setImage(RoboHash.getImage(peer.getProofOfWork().getPayload()));
+                        UserProfile peer = ((PrivateChannel) item.getChannel()).getPeer();
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                         tooltip.setText(peer.getTooltipString());
                         label.setText(item.getChannel().getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

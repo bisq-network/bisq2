@@ -21,10 +21,10 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.PublicTradeChannel;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.PublicTradeChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.PublicTradeChatMessage;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class MarketController implements Controller {
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
-        chatService = applicationService.getSocialService().getChatService();
+        chatService = applicationService.getChatService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }

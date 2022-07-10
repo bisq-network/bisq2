@@ -14,7 +14,8 @@ dependencies {
     implementation project(':protocol')
     implementation project(':oracle')
     implementation project(':settings')
-    implementation project(':social')
+    implementation project(':user')
+    implementation project(':chat')
     implementation project(':support')
     implementation project(':presentation')
 

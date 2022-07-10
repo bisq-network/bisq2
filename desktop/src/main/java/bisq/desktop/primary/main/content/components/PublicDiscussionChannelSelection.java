@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.PublicDiscussionChannel;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PublicDiscussionChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -39,7 +39,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
-        controller = new Controller(applicationService.getSocialService().getChatService());
+        controller = new Controller(applicationService.getChatService());
     }
 
     public Pane getRoot() {

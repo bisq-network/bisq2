@@ -17,6 +17,7 @@
 
 package bisq.security;
 
+import bisq.common.encoding.Hex;
 import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
@@ -34,7 +35,9 @@ public final class PubKey implements Proto {
     private final PublicKey publicKey;
     @Getter
     private final String keyId;
+
     private transient byte[] hash;
+    private transient String id;
 
     public PubKey(PublicKey publicKey, String keyId) {
         this.publicKey = publicKey;
@@ -62,5 +65,12 @@ public final class PubKey implements Proto {
             hash = DigestUtil.hash(publicKey.getEncoded());
         }
         return hash;
+    }
+
+    public String getId() {
+        if (id == null) {
+            id = Hex.encode(getHash());
+        }
+        return id;
     }
 }

@@ -40,12 +40,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-/**
- * todo
- * add identity selection strategy. E.g. one identity per domain ID or one identity per context
- * type (e.g. fiat trades) or one global identity...
- * Add support for userName mapping with identity (not sure if should be done here or in social module)
- */
 @Slf4j
 public class OpenTimestampService implements PersistenceClient<OpenTimestampStore> {
 
@@ -92,7 +86,6 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
                 ExecutorFactory.newSingleThreadExecutor("Manage-timestamps"));
         return CompletableFuture.completedFuture(true);
     }
-
 
     /**
      * @return Creation date of identity. If we have a verified OTS date we use that, otherwise we return current time.
@@ -144,7 +137,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeCreateOrUpgradeTimestampsOfActiveIdentities() {
-        identityService.getActiveIdentityByDomainId().values().stream()
+        identityService.getActiveIdentityByTag().values().stream()
                 .map(identity -> new ByteArray(identity.getPubKey().getHash()))
                 .forEach(this::maybeCreateOrUpgradeTimestamp);
     }

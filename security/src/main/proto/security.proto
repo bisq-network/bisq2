@@ -48,9 +48,7 @@ message ProofOfWorkStore {
 
 message ProofOfWork {
   bytes payload = 1;
-  int64 counter = 2;
-  optional bytes challenge = 3;
-  double difficulty = 4;
-  int64 duration = 5;
-  bytes solution = 6;
+  optional bytes challenge = 2;
+  double difficulty = 3;
+  bytes solution = 4;
 }

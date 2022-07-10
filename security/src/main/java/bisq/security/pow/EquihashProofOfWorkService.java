@@ -41,7 +41,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(byte[] payload,  @Nullable byte[] challenge, double difficulty) {
+    public CompletableFuture<ProofOfWork> mint(byte[] payload, @Nullable byte[] challenge, double difficulty) {
         double scaledDifficulty = scaledDifficulty(difficulty);
         log.debug("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
@@ -49,10 +49,10 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
             long ts = System.currentTimeMillis();
             byte[] seed = getSeed(payload, challenge);
             byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
+            var proofOfWork = new ProofOfWork(payload, challenge, difficulty, solution);
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
-            var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty,
-                    System.currentTimeMillis() - ts, solution);
-            log.info("Completed minting proofOfWork: {}", proofOfWork);
+            long duration = System.currentTimeMillis() - ts;
+            log.info("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
             return proofOfWork;
         });
     }

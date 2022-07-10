@@ -22,9 +22,9 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateTradeChannel;
-import bisq.social.chat.messages.ChatMessage;
+import bisq.chat.channels.Channel;
+import bisq.chat.channels.PrivateTradeChannel;
+import bisq.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
@@ -80,7 +80,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateTradeChannel) channel).getPeer().getProofOfWork().getPayload()));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateTradeChannel) channel).getPeer().getPubKeyHash()));
             model.getPeersRoboIconVisible().set(true);
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();

@@ -1,0 +1,27 @@
+plugins {
+    id 'bisq.gradle.plugin.BisqPlugin'
+    id 'bisq.protobuf'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation project(':i18n')
+    implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':network')
+    implementation project(':identity')
+    implementation project(':user')
+    implementation project(':offer')
+    implementation project(':settings')
+    implementation project(':oracle')
+    implementation project(':presentation')
+
+    implementation libs.chimp.jsocks
+    implementation libs.google.gson
+    implementation libs.google.guava
+    implementation libs.typesafe.config
+}

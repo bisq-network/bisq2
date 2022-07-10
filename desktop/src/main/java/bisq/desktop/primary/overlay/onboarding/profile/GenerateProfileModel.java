@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.Model;
 import bisq.identity.Identity;
+import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -29,11 +30,16 @@ import java.util.Optional;
 @Getter
 public class GenerateProfileModel implements Model {
     @Setter
-    private Optional<TempIdentity> tempIdentity = Optional.empty();
+    private Optional<KeyPairAndId> keyPairAndId = Optional.empty();
     @Setter
     private Optional<Identity> pooledIdentity = Optional.empty();
+    @Setter
+    private Optional<ProofOfWork> proofOfWork = Optional.empty();
+    @Setter
+    private Optional<byte[]> pubKeyHash = Optional.empty();
+
     private final StringProperty nickName = new SimpleStringProperty();
-    private final StringProperty profileId = new SimpleStringProperty();
+    private final StringProperty nym = new SimpleStringProperty();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();

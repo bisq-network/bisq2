@@ -22,8 +22,8 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
-import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.ChatUserService;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -44,15 +44,15 @@ public class ChatUserIdentityComboBox {
 
     private final Controller controller;
 
-    public ChatUserIdentityComboBox(ChatUserService chatUserService) {
-        controller = new Controller(chatUserService);
+    public ChatUserIdentityComboBox(UserIdentityService userIdentityService) {
+        controller = new Controller(userIdentityService);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    public ReadOnlyObjectProperty<ChatUserIdentity> getSelectedUserProfile() {
+    public ReadOnlyObjectProperty<UserIdentity> getSelectedUserProfile() {
         return controller.model.selectedUserProfile;
     }
 
@@ -60,11 +60,11 @@ public class ChatUserIdentityComboBox {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatUserService chatUserService;
+        private final UserIdentityService userIdentityService;
         private Pin userProfilesPin, selectedUserProfilePin;
 
-        private Controller(ChatUserService chatUserService) {
-            this.chatUserService = chatUserService;
+        private Controller(UserIdentityService userIdentityService) {
+            this.userIdentityService = userIdentityService;
 
             model = new Model();
             view = new View(model, this);
@@ -72,8 +72,8 @@ public class ChatUserIdentityComboBox {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getChatUserIdentities());
-            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedChatUserIdentity());
+            userProfilesPin = FxBindings.<UserIdentity, UserIdentity>bind(model.chatUserIdentities).to(userIdentityService.getUserIdentities());
+            selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(userIdentityService.getSelectedUserProfile());
         }
 
         @Override
@@ -82,16 +82,16 @@ public class ChatUserIdentityComboBox {
             selectedUserProfilePin.unbind();
         }
 
-        public void onSelected(ChatUserIdentity value) {
+        public void onSelected(UserIdentity value) {
             if (value != null) {
-                chatUserService.selectChatUserIdentity(value);
+                userIdentityService.selectChatUserIdentity(value);
             }
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<ChatUserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
-        ObservableList<ChatUserIdentity> chatUserIdentities = FXCollections.observableArrayList();
+        ObjectProperty<UserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
+        ObservableList<UserIdentity> chatUserIdentities = FXCollections.observableArrayList();
 
         private Model() {
         }
@@ -99,7 +99,7 @@ public class ChatUserIdentityComboBox {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final AutoCompleteComboBox<ChatUserIdentity> comboBox;
+        private final AutoCompleteComboBox<UserIdentity> comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
@@ -112,12 +112,12 @@ public class ChatUserIdentityComboBox {
             comboBox = new AutoCompleteComboBox<>(model.chatUserIdentities);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(ChatUserIdentity chatUserIdentity) {
-                    return chatUserIdentity != null ? chatUserIdentity.getChatUser().getUserName() : "";
+                public String toString(UserIdentity userIdentity) {
+                    return userIdentity != null ? userIdentity.getUserName() : "";
                 }
 
                 @Override
-                public ChatUserIdentity fromString(String string) {
+                public UserIdentity fromString(String string) {
                     return null;
                 }
             });

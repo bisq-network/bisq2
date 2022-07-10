@@ -22,7 +22,6 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
-import bisq.security.pow.ProofOfWork;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,39 +33,33 @@ import java.security.KeyPair;
 @EqualsAndHashCode
 public final class Identity implements Proto {
     public static Identity from(String domainId, Identity identity) {
-        return new Identity(domainId,
-                identity.getNetworkId(),
-                identity.getKeyPair(),
-                identity.getProofOfWork());
+        return new Identity(domainId, identity.getNetworkId(), identity.getKeyPair());
     }
 
-    private final String domainId;
+    // Reference to usage (e.g. offerId)
+    private final String tag;
     private final NetworkId networkId;
     private final KeyPair keyPair;
-    private final ProofOfWork proofOfWork;
 
-    public Identity(String domainId, NetworkId networkId, KeyPair keyPair, ProofOfWork proofOfWork) {
-        this.domainId = domainId;
+    public Identity(String tag, NetworkId networkId, KeyPair keyPair) {
+        this.tag = tag;
         this.networkId = networkId;
         this.keyPair = keyPair;
-        this.proofOfWork = proofOfWork;
     }
 
     @Override
     public bisq.identity.protobuf.Identity toProto() {
         return bisq.identity.protobuf.Identity.newBuilder()
-                .setDomainId(domainId)
+                .setDomainId(tag)
                 .setNetworkId(networkId.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
-                .setProofOfWork(proofOfWork.toProto())
                 .build();
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair()),
-                ProofOfWork.fromProto(proto.getProofOfWork()));
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {
@@ -77,7 +70,15 @@ public final class Identity implements Proto {
         return networkId.getNodeId();
     }
 
+    public String getId() {
+        return networkId.getPubKey().getId();
+    }
+
     public PubKey getPubKey() {
         return networkId.getPubKey();
+    }
+
+    public byte[] getPubKeyHash() {
+        return networkId.getPubKey().getHash();
     }
 }

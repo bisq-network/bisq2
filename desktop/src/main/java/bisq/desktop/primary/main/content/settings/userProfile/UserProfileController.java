@@ -24,7 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.social.user.ChatUserService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,12 +35,12 @@ public class UserProfileController implements Controller {
     private final UserProfileModel model;
     @Getter
     private final UserProfileView view;
-    private final ChatUserService chatUserService;
+    private final UserIdentityService userIdentityService;
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this, userProfileSelection.getRoot());
@@ -48,9 +48,9 @@ public class UserProfileController implements Controller {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
                 chatUserIdentity -> model.getUserProfileDisplayPane().set(
-                        new UserProfileDisplay(chatUserService, chatUserIdentity).getRoot())
+                        new UserProfileDisplay(userIdentityService, chatUserIdentity).getRoot())
         );
     }
 
@@ -64,7 +64,7 @@ public class UserProfileController implements Controller {
     }
 
     public void onDeleteChatUser() {
-        chatUserService.deleteChatUser(chatUserService.getSelectedChatUserIdentity().get())
+        userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         new Popup().warning(throwable.getMessage()).show();

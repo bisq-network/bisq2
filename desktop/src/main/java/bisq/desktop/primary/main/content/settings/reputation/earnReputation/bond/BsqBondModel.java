@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bon
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
-import bisq.social.user.ChatUserIdentity;
+import bisq.user.identity.UserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -28,7 +28,7 @@ import lombok.Getter;
 
 @Getter
 public class BsqBondModel implements Model {
-    private final ObjectProperty<ChatUserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
+    private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
     private final ObservableList<ReputationSourceListItem> sources = FXCollections.observableArrayList();
     private final ObjectProperty<ReputationSourceListItem> selectedSource = new SimpleObjectProperty<>();
 }

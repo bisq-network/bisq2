@@ -43,9 +43,11 @@ public class GenerateNewProfileStep1Controller extends GenerateProfileController
     @Override
     protected void onCreateUserProfile() {
         GenerateNewProfileStep2Controller.InitData initData = new GenerateNewProfileStep2Controller.InitData(
-                model.getTempIdentity(),
+                model.getKeyPairAndId(),
                 model.getPooledIdentity(),
-                model.getNickName().get());
+                model.getProofOfWork().orElseThrow(),
+                model.getNickName().get(),
+                model.getNym().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
     }
 }

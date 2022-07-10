@@ -22,7 +22,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Model;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2View;
-import bisq.social.user.ChatUserIdentity;
+import bisq.user.identity.UserIdentity;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -49,16 +49,16 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
 
     @Override
     public void onActivate() {
-        ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-        model.getNickName().set(chatUserIdentity.getNickName());
-        model.getProfileId().set(chatUserIdentity.getProfileId());
-        model.getRoboHashImage().set(RoboHash.getImage(chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
-        String terms = chatUserIdentity.getChatUser().getTerms();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        model.getNickName().set(userIdentity.getNickName());
+        model.getNym().set(userIdentity.getNym());
+        model.getRoboHashImage().set(RoboHash.getImage(userIdentity.getPubKeyHash()));
+        String terms = userIdentity.getUserProfile().getTerms();
         if (terms == null) {
             terms = "";
         }
         model.getTerms().set(terms);
-        String bio = chatUserIdentity.getChatUser().getBio();
+        String bio = userIdentity.getUserProfile().getBio();
         if (bio == null) {
             bio = "";
         }
@@ -69,8 +69,8 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
     protected void onSave() {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
-        ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-        chatUserService.editChatUser(chatUserIdentity, model.getTerms().get(), model.getBio().get())
+        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        userIdentityService.editUserProfile(userIdentity, model.getTerms().get(), model.getBio().get())
                 .whenComplete((result, throwable) -> {
                     model.getCreateProfileProgress().set(0);
                     close();

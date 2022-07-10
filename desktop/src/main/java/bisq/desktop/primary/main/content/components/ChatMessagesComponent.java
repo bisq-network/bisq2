@@ -18,19 +18,20 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.*;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.*;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.Quotation;
-import bisq.social.user.ChatUser;
-import bisq.social.user.ChatUserIdentity;
-import bisq.social.user.ChatUserService;
+import bisq.chat.ChatService;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.Quotation;
+import bisq.user.profile.UserProfile;
+import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -62,19 +63,19 @@ public class ChatMessagesComponent {
         return controller.view.getRoot();
     }
 
-    public void mentionUser(ChatUser chatUser) {
-        controller.mentionUser(chatUser);
+    public void mentionUser(UserProfile userProfile) {
+        controller.mentionUser(userProfile);
     }
 
     public FilteredList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.chatMessagesListView.getFilteredChatMessages();
     }
 
-    public void setOnShowChatUserDetails(Consumer<ChatUser> handler) {
+    public void setOnShowChatUserDetails(Consumer<UserProfile> handler) {
         controller.model.showChatUserDetailsHandler = Optional.of(handler);
     }
 
-    public void openPrivateChannel(ChatUser peer) {
+    public void openPrivateChannel(UserProfile peer) {
         controller.createAndSelectPrivateChannel(peer);
     }
 
@@ -87,15 +88,17 @@ public class ChatMessagesComponent {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final ChatUserService chatUserService;
+        private final UserIdentityService userIdentityService;
         private final QuotedMessageBlock quotedMessageBlock;
         private final ChatMessagesListView chatMessagesListView;
+        private final UserProfileService userProfileService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
-            this.chatService = applicationService.getSocialService().getChatService();
-            this.chatUserService = applicationService.getSocialService().getChatUserService();
+            chatService = applicationService.getChatService();
+           userIdentityService = applicationService.getUserService().getUserIdentityService();
+            userProfileService= applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
@@ -112,7 +115,7 @@ public class ChatMessagesComponent {
 
         @Override
         public void onActivate() {
-            model.mentionableUsers.setAll(chatUserService.getMentionableChatUsers());
+            model.mentionableUsers.setAll(userProfileService.getUserProfiles());
             model.mentionableChannels.setAll(chatService.getMentionableChannels());
 
             if (model.isDiscussionsChat) {
@@ -147,13 +150,13 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
+                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, chatUserIdentity);
+                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, chatUserIdentity);
+                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {
                     chatService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else if (channel instanceof PrivateDiscussionChannel) {
@@ -169,7 +172,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        private void createAndSelectPrivateChannel(ChatUser peer) {
+        private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer)
                         .ifPresent(chatService::selectTradeChannel);
@@ -178,7 +181,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(ChatUser peer) {
+        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
@@ -189,15 +192,15 @@ public class ChatMessagesComponent {
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 
-        private void mentionUser(ChatUser chatUser) {
+        private void mentionUser(UserProfile userProfile) {
             String existingText = model.getTextInput().get();
             if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
                 existingText += " ";
             }
-            model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
+            model.getTextInput().set(existingText + "@" + userProfile.getUserName() + " ");
         }
 
-        public void fillUserMention(ChatUser user) {
+        public void fillUserMention(UserProfile user) {
             String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
             model.getTextInput().set(content);
             //todo
@@ -223,9 +226,9 @@ public class ChatMessagesComponent {
         private final StringProperty textInput = new SimpleStringProperty("");
         private final boolean isDiscussionsChat;
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
-        private final ObservableList<ChatUser> mentionableUsers = FXCollections.observableArrayList();
+        private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
-        private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
+        private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
         private final BooleanProperty isTradeGuideBoxVisible = new SimpleBooleanProperty();
 
         private Model(boolean isDiscussionsChat) {
@@ -239,7 +242,7 @@ public class ChatMessagesComponent {
 
         private final BisqTextArea inputField;
         private final Button sendButton;
-        private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
+        private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
         private final TradeGuideBox tradeGuideBox;
         private final Button closeTradeGuideBoxButton;
@@ -278,7 +281,7 @@ public class ChatMessagesComponent {
             root.getChildren().addAll(tradeGuideBox, messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
+            userMentionPopup.setItemDisplayConverter(UserProfile::getNickName);
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);

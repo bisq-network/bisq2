@@ -29,25 +29,21 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 public final class ProofOfWork implements Proto {
+    // payload is usually the pubKeyHash
     private final byte[] payload;
-    private final long counter;
+    // If challenge does not make sense we set it null
     @Nullable
     private final byte[] challenge;
     private final double difficulty;
-    private final long duration;
     private final byte[] solution;
 
     public ProofOfWork(byte[] payload,
-                       long counter,
                        byte[] challenge,
                        @Nullable double difficulty,
-                       long duration,
                        byte[] solution) {
         this.payload = payload;
-        this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
-        this.duration = duration;
         this.solution = solution;
     }
 
@@ -60,9 +56,7 @@ public final class ProofOfWork implements Proto {
     public bisq.security.protobuf.ProofOfWork toProto() {
         bisq.security.protobuf.ProofOfWork.Builder builder = bisq.security.protobuf.ProofOfWork.newBuilder()
                 .setPayload(ByteString.copyFrom(payload))
-                .setCounter(counter)
                 .setDifficulty(difficulty)
-                .setDuration(duration)
                 .setSolution(ByteString.copyFrom(solution));
 
         Optional.ofNullable(challenge).ifPresent(challenge -> builder.setChallenge(ByteString.copyFrom(challenge)));
@@ -72,10 +66,8 @@ public final class ProofOfWork implements Proto {
     public static ProofOfWork fromProto(bisq.security.protobuf.ProofOfWork proto) {
         return new ProofOfWork(
                 proto.getPayload().toByteArray(),
-                proto.getCounter(),
                 proto.getChallenge().isEmpty() ? null : proto.getChallenge().toByteArray(),
                 proto.getDifficulty(),
-                proto.getDuration(),
                 proto.getSolution().toByteArray()
         );
     }
@@ -83,9 +75,7 @@ public final class ProofOfWork implements Proto {
     @Override
     public String toString() {
         return "ProofOfWork{" +
-                ",\r\n     counter=" + counter +
                 ",\r\n     difficulty=" + difficulty +
-                ",\r\n     duration=" + duration +
                 "\r\n}";
     }
 }

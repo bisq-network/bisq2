@@ -22,10 +22,10 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.Quotation;
-import bisq.social.user.ChatUser;
+import bisq.chat.ChatService;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.Quotation;
+import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -67,11 +67,11 @@ public class QuotedMessageBlock {
 
     public Optional<Quotation> getQuotation() {
         String text = controller.model.quotation.get();
-        ChatUser chatUser = controller.model.author;
-        if (text == null || text.isEmpty() || chatUser == null) {
+        UserProfile userProfile = controller.model.author;
+        if (text == null || text.isEmpty() || userProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
+        return Optional.of(new Quotation(userProfile.getNym(), userProfile.getNickName(), userProfile.getPubKeyHash(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -91,7 +91,7 @@ public class QuotedMessageBlock {
             chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getNym());
-                model.roboHashNode.set(RoboHash.getImage(author.getProofOfWork().getPayload()));
+                model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));
                 model.quotation.set(chatMessage.getText());
                 model.visible.set(true);
             });
@@ -116,7 +116,7 @@ public class QuotedMessageBlock {
         private final StringProperty quotation = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
-        private ChatUser author;
+        private UserProfile author;
 
         private Model() {
         }

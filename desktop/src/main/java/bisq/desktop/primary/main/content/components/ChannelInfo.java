@@ -19,12 +19,12 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PublicDiscussionChannel;
-import bisq.social.chat.channels.PublicTradeChannel;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.user.ChatUser;
+import bisq.chat.ChatService;
+import bisq.chat.channels.Channel;
+import bisq.chat.channels.PublicDiscussionChannel;
+import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.messages.ChatMessage;
+import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -90,8 +90,8 @@ public class ChannelInfo {
         public void onDeactivate() {
         }
 
-        public void onUndoIgnoreUser(ChatUser chatUser) {
-            chatService.undoIgnoreChatUser(chatUser);
+        public void onUndoIgnoreUser(UserProfile userProfile) {
+            chatService.undoIgnoreChatUser(userProfile);
             model.undoIgnoreChatUserHandler.ifPresent(Runnable::run);
         }
 

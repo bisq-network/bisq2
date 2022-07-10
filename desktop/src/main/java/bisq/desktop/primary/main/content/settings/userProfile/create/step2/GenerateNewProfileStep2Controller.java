@@ -22,11 +22,10 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.InitWithDataController;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import bisq.desktop.primary.overlay.onboarding.profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.user.ChatUserService;
-import bisq.social.user.NymIdGenerator;
+import bisq.user.identity.UserIdentityService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -41,26 +40,32 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     @ToString
     @EqualsAndHashCode
     public static final class InitData {
-        private final Optional<TempIdentity> tempIdentity;
+        private final Optional<KeyPairAndId> tempIdentity;
         private final Optional<Identity> pooledIdentity;
+        private final ProofOfWork proofOfWork;
         private final String nickName;
+        private final String nym;
 
-        public InitData(Optional<TempIdentity> tempIdentity,
+        public InitData(Optional<KeyPairAndId> tempIdentity,
                         Optional<Identity> pooledIdentity,
-                        String nickName) {
+                        ProofOfWork proofOfWork,
+                        String nickName,
+                        String nym) {
             this.tempIdentity = tempIdentity;
             this.pooledIdentity = pooledIdentity;
+            this.proofOfWork = proofOfWork;
             this.nickName = nickName;
+            this.nym = nym;
         }
     }
 
     protected final GenerateNewProfileStep2Model model;
     @Getter
     protected final GenerateNewProfileStep2View view;
-    protected final ChatUserService chatUserService;
+    protected final UserIdentityService userIdentityService;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
 
         model = createModel();
         view = createView();
@@ -78,17 +83,14 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     public void initWithData(InitData data) {
         model.setTempIdentity(data.getTempIdentity());
         model.setPooledIdentity(data.getPooledIdentity());
+        model.setProofOfWork(Optional.of(data.getProofOfWork()));
         model.getNickName().set(data.getNickName());
+        model.getNym().set(data.getNym());
         if (data.getTempIdentity().isPresent()) {
-            TempIdentity tempIdentity = data.getTempIdentity().get();
-            model.getProfileId().set(tempIdentity.getProfileId());
-            model.getRoboHashImage().set(RoboHash.getImage(tempIdentity.getProofOfWork().getPayload()));
+            model.getRoboHashImage().set(RoboHash.getImage(data.getProofOfWork().getPayload()));
         } else if (data.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = data.getPooledIdentity().get();
-            ProofOfWork proofOfWork = pooledIdentity.getProofOfWork();
-            String profileId = NymIdGenerator.fromHash(proofOfWork.getPayload());
-            model.getProfileId().set(profileId);
-            model.getRoboHashImage().set(RoboHash.getImage(proofOfWork.getPayload()));
+            model.getRoboHashImage().set(RoboHash.getImage(pooledIdentity.getPubKeyHash()));
         }
     }
 
@@ -106,17 +108,17 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         OverlayController.hide();
     }
 
-   protected void onSave() {
+    protected void onSave() {
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
 
         if (model.getTempIdentity().isPresent()) {
-            TempIdentity tempIdentity = model.getTempIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(tempIdentity.getProfileId(),
+            KeyPairAndId keyPairAndId = model.getTempIdentity().get();
+            userIdentityService.createAndPublishNewUserProfile(
                             model.getNickName().get(),
-                            tempIdentity.getTempKeyId(),
-                            tempIdentity.getTempKeyPair(),
-                            tempIdentity.getProofOfWork(),
+                            keyPairAndId.getKeyId(),
+                            keyPairAndId.getKeyPair(),
+                            model.getProofOfWork().orElseThrow(),
                             model.getTerms().get(),
                             model.getBio().get())
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
@@ -129,9 +131,10 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+            userIdentityService.createAndPublishNewUserProfile(
                     pooledIdentity,
                     model.getNickName().get(),
+                    model.getProofOfWork().orElseThrow(),
                     model.getTerms().get(),
                     model.getBio().get());
             model.getCreateProfileProgress().set(0);

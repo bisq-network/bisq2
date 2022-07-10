@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GenerateProfileView extends View<VBox, GenerateProfileModel, GenerateProfileController> {
     protected final Button regenerateButton;
     protected final Button createProfileButton;
-    protected final Label nymId;
+    protected final Label nym;
     protected final ImageView roboIconView;
     protected final ProgressIndicator powProgressIndicator;
     protected final TextInputBox nicknameTextInputBox;
@@ -81,20 +81,20 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         roboIconPane.setMaxSize(width, size);
         roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
 
-        Label titleLabel = new Label(Res.get("generateNym.nymId").toUpperCase());
+        Label titleLabel = new Label(Res.get("generateNym.nym").toUpperCase());
         titleLabel.getStyleClass().add("bisq-text-4");
 
-        nymId = new Label();
-        nymId.getStyleClass().add("bisq-text-8");
+        nym = new Label();
+        nym.getStyleClass().add("bisq-text-8");
 
-        VBox nymIdBox = new VBox(titleLabel, nymId);
-        nymIdBox.setAlignment(Pos.CENTER);
+        VBox nymBox = new VBox(titleLabel, nym);
+        nymBox.setAlignment(Pos.CENTER);
 
         nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"), Res.get("addNickName.nickName.prompt"));
         nicknameTextInputBox.setMinWidth(width);
         nicknameTextInputBox.setMaxWidth(width);
 
-        VBox roboVBox = new VBox(8, roboIconPane, nymIdBox);
+        VBox roboVBox = new VBox(8, roboIconPane, nymBox);
         roboVBox.setAlignment(Pos.CENTER);
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
@@ -140,8 +140,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.visibleProperty().bind(model.getRoboHashIconVisible().not());
         powProgressIndicator.progressProperty().bind(model.getPowProgress());
 
-        nymId.textProperty().bind(model.getProfileId());
-        nymId.disableProperty().bind(model.getRoboHashIconVisible().not());
+        nym.textProperty().bind(model.getNym());
+        nym.disableProperty().bind(model.getRoboHashIconVisible().not());
         regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
         roboIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
         nicknameTextInputBox.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
@@ -173,8 +173,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
 
-        nymId.textProperty().unbind();
-        nymId.disableProperty().unbind();
+        nym.textProperty().unbind();
+        nym.disableProperty().unbind();
         regenerateButton.disableProperty().unbind();
         roboIconView.mouseTransparentProperty().unbind();
         nicknameTextInputBox.mouseTransparentProperty().unbind();

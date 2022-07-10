@@ -25,11 +25,11 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
 import bisq.settings.DontShowAgainService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.user.ChatUserService;
-import bisq.social.user.reputation.ReputationService;
+import bisq.chat.ChatService;
+import bisq.chat.channels.Channel;
+import bisq.chat.messages.ChatMessage;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
@@ -45,7 +45,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final M model;
     @Getter
     protected V view;
-    protected final ChatUserService chatUserService;
+    protected final UserIdentityService userIdentityService;
     protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
@@ -58,9 +58,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
-        chatService = applicationService.getSocialService().getChatService();
-        chatUserService = applicationService.getSocialService().getChatUserService();
-        ReputationService reputationService = applicationService.getSocialService().getReputationService();
+        chatService = applicationService.getChatService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
+        ReputationService reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(chatService);

@@ -14,6 +14,7 @@ include 'platforms:test-platform'
 
 include 'account'
 include 'application'
+include 'chat'
 include 'common'
 include 'bisq1Bridge'
 include 'desktop'
@@ -32,8 +33,8 @@ include 'restApi'
 include 'security'
 include 'seed'
 include 'settings'
-include 'social'
 include 'support'
 include 'tor'
+include 'user'
 
 includeBuild('wallets')
