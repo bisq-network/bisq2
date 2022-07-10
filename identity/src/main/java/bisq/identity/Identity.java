@@ -36,12 +36,13 @@ public final class Identity implements Proto {
         return new Identity(domainId, identity.getNetworkId(), identity.getKeyPair());
     }
 
-    private final String domainId;
+    // Reference to usage (e.g. offerId)
+    private final String tag;
     private final NetworkId networkId;
     private final KeyPair keyPair;
 
-    public Identity(String domainId, NetworkId networkId, KeyPair keyPair) {
-        this.domainId = domainId;
+    public Identity(String tag, NetworkId networkId, KeyPair keyPair) {
+        this.tag = tag;
         this.networkId = networkId;
         this.keyPair = keyPair;
     }
@@ -49,7 +50,7 @@ public final class Identity implements Proto {
     @Override
     public bisq.identity.protobuf.Identity toProto() {
         return bisq.identity.protobuf.Identity.newBuilder()
-                .setDomainId(domainId)
+                .setDomainId(tag)
                 .setNetworkId(networkId.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
                 .build();
@@ -67,6 +68,10 @@ public final class Identity implements Proto {
 
     public String getNodeId() {
         return networkId.getNodeId();
+    }
+
+    public String getId() {
+        return networkId.getPubKey().getId();
     }
 
     public PubKey getPubKey() {

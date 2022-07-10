@@ -114,7 +114,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
 
         if (model.getTempIdentity().isPresent()) {
             KeyPairAndId keyPairAndId = model.getTempIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+            chatUserService.createAndPublishNewChatUserIdentity(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
@@ -131,7 +131,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+            chatUserService.createAndPublishNewChatUserIdentity(
                     pooledIdentity,
                     model.getNickName().get(),
                     model.getProofOfWork().orElseThrow(),

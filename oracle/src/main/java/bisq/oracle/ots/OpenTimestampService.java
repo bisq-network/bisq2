@@ -144,7 +144,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeCreateOrUpgradeTimestampsOfActiveIdentities() {
-        identityService.getActiveIdentityByDomainId().values().stream()
+        identityService.getActiveIdentityByTag().values().stream()
                 .map(identity -> new ByteArray(identity.getPubKey().getHash()))
                 .forEach(this::maybeCreateOrUpgradeTimestamp);
     }

@@ -31,17 +31,17 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class IdentityStore implements PersistableStore<IdentityStore> {
-    private final Map<String, Identity> activeIdentityByDomainId = new ConcurrentHashMap<>();
+    private final Map<String, Identity> activeIdentityByTag = new ConcurrentHashMap<>();
     private final Set<Identity> pool = new CopyOnWriteArraySet<>();
     private final Set<Identity> retired = new CopyOnWriteArraySet<>();
 
     public IdentityStore() {
     }
 
-    private IdentityStore(Map<String, Identity> activeIdentityByDomainId,
+    private IdentityStore(Map<String, Identity> activeIdentityByTag,
                           Set<Identity> pool,
                           Set<Identity> retired) {
-        this.activeIdentityByDomainId.putAll(activeIdentityByDomainId);
+        this.activeIdentityByTag.putAll(activeIdentityByTag);
         this.pool.addAll(pool);
         this.retired.addAll(retired);
     }
@@ -49,7 +49,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     @Override
     public bisq.identity.protobuf.IdentityStore toProto() {
         return bisq.identity.protobuf.IdentityStore.newBuilder()
-                .putAllActiveIdentityByDomainId(activeIdentityByDomainId.entrySet().stream()
+                .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .addAllPool(pool.stream().map(Identity::toProto).collect(Collectors.toSet()))
                 .addAllRetired(retired.stream().map(Identity::toProto).collect(Collectors.toSet()))
@@ -76,13 +76,13 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
 
     @Override
     public IdentityStore getClone() {
-        return new IdentityStore(activeIdentityByDomainId, pool, retired);
+        return new IdentityStore(activeIdentityByTag, pool, retired);
     }
 
     @Override
     public void applyPersisted(IdentityStore persisted) {
-        activeIdentityByDomainId.clear();
-        activeIdentityByDomainId.putAll(persisted.getActiveIdentityByDomainId());
+        activeIdentityByTag.clear();
+        activeIdentityByTag.putAll(persisted.getActiveIdentityByTag());
 
         pool.clear();
         pool.addAll(persisted.getPool());
@@ -91,8 +91,8 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
         retired.addAll(persisted.getRetired());
     }
 
-    Map<String, Identity> getActiveIdentityByDomainId() {
-        return activeIdentityByDomainId;
+    Map<String, Identity> getActiveIdentityByTag() {
+        return activeIdentityByTag;
     }
 
     Set<Identity> getPool() {

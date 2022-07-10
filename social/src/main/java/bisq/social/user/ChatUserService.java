@@ -23,10 +23,10 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
-import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.PublicUserProfile;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.http.common.BaseHttpClient;
@@ -126,29 +126,27 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public ChatUserIdentity createAndPublishNewChatUserIdentity(String domainId,
-                                                                Identity pooledIdentity,
+    public ChatUserIdentity createAndPublishNewChatUserIdentity(Identity pooledIdentity,
                                                                 String nickName,
                                                                 ProofOfWork proofOfWork,
                                                                 String terms,
                                                                 String bio) {
-        Identity identity = identityService.swapPooledIdentity(domainId, pooledIdentity);
+        String tag = nickName + "-" + Hex.encode(proofOfWork.getPayload());
+        Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
         ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, proofOfWork, terms, bio, identity);
         maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
         publishChatUser(chatUserIdentity.getPublicUserProfile(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
         return chatUserIdentity;
-
     }
 
-    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String profileId,
-                                                                                   String nickName,
+    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nickName,
                                                                                    String keyId,
                                                                                    KeyPair keyPair,
                                                                                    ProofOfWork proofOfWork,
                                                                                    String terms,
                                                                                    String bio) {
-
-        return identityService.createNewActiveIdentity(profileId, keyId, keyPair)
+        String tag = nickName + "-" + Hex.encode(proofOfWork.getPayload());
+        return identityService.createNewActiveIdentity(tag, keyId, keyPair)
                 .thenApply(identity -> createChatUserIdentity(nickName, proofOfWork, terms, bio, identity))
                 .thenApply(chatUserIdentity -> {
                     maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
@@ -215,7 +213,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                             () -> persistableStore.getSelectedChatUserIdentity().set(null));
         }
         persist();
-        identityService.retireActiveIdentity(chatUserIdentity.getIdentity().getDomainId());
+        identityService.retireActiveIdentity(chatUserIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(chatUserIdentity.getPublicUserProfile(),
                 chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
     }

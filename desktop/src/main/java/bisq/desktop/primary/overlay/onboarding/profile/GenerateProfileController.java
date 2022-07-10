@@ -111,7 +111,7 @@ public class GenerateProfileController implements Controller {
 
         if (model.getKeyPairAndId().isPresent()) {
             KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
-            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+            chatUserService.createAndPublishNewChatUserIdentity(
                             model.getNickName().get(),
                             keyPairAndId.getKeyId(),
                             keyPairAndId.getKeyPair(),
@@ -128,7 +128,7 @@ public class GenerateProfileController implements Controller {
                     }));
         } else if (model.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = model.getPooledIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
+            chatUserService.createAndPublishNewChatUserIdentity(
                     pooledIdentity,
                     model.getNickName().get(),
                     model.getProofOfWork().orElseThrow(),
