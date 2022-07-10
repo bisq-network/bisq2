@@ -27,7 +27,6 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWorkService;
 import com.google.common.collect.Streams;
 import lombok.Getter;
 import lombok.ToString;
@@ -46,8 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
     public final static String POOL_PREFIX = "pool-";
     public final static String DEFAULT = "default";
-    private final int minPoolSize;
-
+  
     @Getter
     @ToString
     public static final class Config {
@@ -67,9 +65,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     @Getter
     private final Persistence<IdentityStore> persistence;
     private final KeyPairService keyPairService;
-    private final ProofOfWorkService proofOfWorkService;
     private final NetworkService networkService;
     private final Object lock = new Object();
+    private final int minPoolSize;
 
     public IdentityService(Config config,
                            PersistenceService persistenceService,
@@ -77,7 +75,6 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
                            NetworkService networkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         keyPairService = securityService.getKeyPairService();
-        proofOfWorkService = securityService.getProofOfWorkService();
         this.networkService = networkService;
         minPoolSize = config.minPoolSize;
     }
@@ -124,7 +121,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     /**
      * Takes a pooled identity and swaps it with the given tag
      *
-     * @param tag       The new domain ID for the active identity
+     * @param tag            The new domain ID for the active identity
      * @param pooledIdentity The pooled identity we want to swap.
      * @return The new active identity which is a clone of the pooled identity with the new domain ID.
      */

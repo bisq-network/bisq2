@@ -93,7 +93,6 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
         return CompletableFuture.completedFuture(true);
     }
 
-
     /**
      * @return Creation date of identity. If we have a verified OTS date we use that, otherwise we return current time.
      */

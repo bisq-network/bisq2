@@ -72,7 +72,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final SocialService socialService;
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
-    
+
     private final Observable<State> state = new Observable<>(State.NEW);
 
     public DefaultApplicationService(String[] args) {
@@ -97,6 +97,7 @@ public class DefaultApplicationService extends ApplicationService {
                 networkService,
                 identityService,
                 persistenceService);
+        
         accountService = new AccountService(networkService, persistenceService, identityService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);

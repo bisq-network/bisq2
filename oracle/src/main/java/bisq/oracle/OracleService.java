@@ -49,7 +49,10 @@ public class OracleService implements ModuleService {
     private final OpenTimestampService openTimestampService;
     private final MarketPriceService marketPriceService;
 
-    public OracleService(Config config, String applicationVersion, NetworkService networkService, IdentityService identityService, PersistenceService persistenceService) {
+    public OracleService(Config config, String applicationVersion, 
+                         NetworkService networkService,
+                         IdentityService identityService,
+                         PersistenceService persistenceService) {
         openTimestampService = new OpenTimestampService(OpenTimestampService.Config.from(config.getOpenTimestamp()),
                 identityService,
                 persistenceService);
