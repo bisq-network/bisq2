@@ -25,7 +25,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PrivateChannel;
 import bisq.social.chat.channels.PrivateDiscussionChannel;
 import bisq.social.chat.channels.PrivateTradeChannel;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -164,7 +164,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
-                        ChatUser peer = ((PrivateChannel) item.getChannel()).getPeer();
+                        PublicUserProfile peer = ((PrivateChannel) item.getChannel()).getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                         tooltip.setText(peer.getTooltipString());
                         label.setText(item.getChannel().getDisplayString());

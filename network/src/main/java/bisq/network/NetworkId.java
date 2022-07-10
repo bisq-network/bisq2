@@ -91,6 +91,5 @@ public final class NetworkId implements Proto {
             Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
             return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
         }
-
     }
 }

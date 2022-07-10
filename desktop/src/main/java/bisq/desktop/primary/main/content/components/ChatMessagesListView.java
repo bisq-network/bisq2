@@ -38,7 +38,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
@@ -80,7 +80,7 @@ public class ChatMessagesListView {
     private final Controller controller;
 
     public ChatMessagesListView(DefaultApplicationService applicationService,
-                                Consumer<ChatUser> mentionUserHandler,
+                                Consumer<PublicUserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
                                 boolean isDiscussionsChat,
@@ -135,14 +135,14 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final ChatUserService chatUserService;
-        private final Consumer<ChatUser> mentionUserHandler;
+        private final Consumer<PublicUserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
         private final ReputationService reputationService;
         private Pin selectedChannelPin, chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
-                           Consumer<ChatUser> mentionUserHandler,
+                           Consumer<PublicUserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
                            boolean isDiscussionsChat,
@@ -249,8 +249,8 @@ public class ChatMessagesListView {
         // UI - delegate to client
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void onMention(ChatUser chatUser) {
-            mentionUserHandler.accept(chatUser);
+        private void onMention(PublicUserProfile publicUserProfile) {
+            mentionUserHandler.accept(publicUserProfile);
         }
 
         private void onShowChatUserDetails(ChatMessage chatMessage) {
@@ -360,7 +360,7 @@ public class ChatMessagesListView {
         private void onOpenEmojiSelector(ChatMessage chatMessage) {
         }
 
-        private void createAndSelectPrivateChannel(ChatUser peer) {
+        private void createAndSelectPrivateChannel(PublicUserProfile peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
             } else {
@@ -368,7 +368,7 @@ public class ChatMessagesListView {
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(ChatUser peer) {
+        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(PublicUserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
@@ -861,7 +861,7 @@ public class ChatMessagesListView {
         private final String message;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final Optional<ChatUser> author;
+        private final Optional<PublicUserProfile> author;
         private final String nym;
         private final String nickName;
         @EqualsAndHashCode.Exclude
@@ -882,8 +882,8 @@ public class ChatMessagesListView {
             quotedMessage = chatMessage.getQuotation();
             date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
 
-            nym = author.map(ChatUser::getNym).orElse("");
-            nickName = author.map(ChatUser::getNickName).orElse("");
+            nym = author.map(PublicUserProfile::getNym).orElse("");
+            nickName = author.map(PublicUserProfile::getNickName).orElse("");
 
             reputationScore = author.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         }

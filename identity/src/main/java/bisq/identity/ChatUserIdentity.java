@@ -29,40 +29,40 @@ import lombok.Getter;
 @Getter
 public final class ChatUserIdentity implements Proto {
     private final Identity identity;
-    private final ChatUser chatUser;
+    private final PublicUserProfile publicUserProfile;
 
-    public ChatUserIdentity(Identity identity, ChatUser chatUser) {
+    public ChatUserIdentity(Identity identity, PublicUserProfile publicUserProfile) {
         this.identity = identity;
-        this.chatUser = chatUser;
+        this.publicUserProfile = publicUserProfile;
     }
 
     public bisq.identity.protobuf.ChatUserIdentity toProto() {
         return bisq.identity.protobuf.ChatUserIdentity.newBuilder()
                 .setIdentity(identity.toProto())
-                .setChatUser(chatUser.toProto())
+                .setChatUser(publicUserProfile.toProto())
                 .build();
     }
 
     public static ChatUserIdentity fromProto(bisq.identity.protobuf.ChatUserIdentity proto) {
         return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
-                ChatUser.fromProto(proto.getChatUser()));
+                PublicUserProfile.fromProto(proto.getChatUser()));
     }
 
     // Delegates
     public byte[] getPubKeyHash() {
-        return chatUser.getPubKeyHash();
+        return publicUserProfile.getPubKeyHash();
     }
 
     public String getId() {
-        return chatUser.getId();
+        return publicUserProfile.getId();
     }
 
     public String getProfileId() {
-        return chatUser.getNym();
+        return publicUserProfile.getNym();
     }
 
     public String getNickName() {
-        return chatUser.getNickName();
+        return publicUserProfile.getNickName();
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {

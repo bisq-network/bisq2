@@ -23,7 +23,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
@@ -117,7 +117,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        getChatUserIdentities().forEach(i -> maybePublishChatUser(i.getChatUser(), i.getNodeIdAndKeyPair()));
+        getChatUserIdentities().forEach(i -> maybePublishChatUser(i.getPublicUserProfile(), i.getNodeIdAndKeyPair()));
         return CompletableFuture.completedFuture(true);
     }
 
@@ -135,7 +135,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         Identity identity = identityService.swapPooledIdentity(domainId, pooledIdentity);
         ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, proofOfWork, terms, bio, identity);
         maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
-        publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        publishChatUser(chatUserIdentity.getPublicUserProfile(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
         return chatUserIdentity;
 
     }
@@ -153,7 +153,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 .thenApply(chatUserIdentity -> {
                     maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
 
-                    publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+                    publishChatUser(chatUserIdentity.getPublicUserProfile(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
 
                     return chatUserIdentity;
                 });
@@ -171,8 +171,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                    String terms,
                                                    String bio,
                                                    Identity identity) {
-        ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
-        ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
+        PublicUserProfile publicUserProfile = new PublicUserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
+        ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, publicUserProfile);
         synchronized (lock) {
             persistableStore.getChatUserIdentities().add(chatUserIdentity);
             persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
@@ -188,9 +188,9 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
 
     public CompletableFuture<DataService.BroadCastDataResult> editChatUser(ChatUserIdentity chatUserIdentity, String terms, String bio) {
         Identity identity = chatUserIdentity.getIdentity();
-        ChatUser oldChatUser = chatUserIdentity.getChatUser();
-        ChatUser newChatUser = ChatUser.from(oldChatUser, terms, bio);
-        ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newChatUser);
+        PublicUserProfile oldPublicUserProfile = chatUserIdentity.getPublicUserProfile();
+        PublicUserProfile newPublicUserProfile = PublicUserProfile.from(oldPublicUserProfile, terms, bio);
+        ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newPublicUserProfile);
 
         synchronized (lock) {
             persistableStore.getChatUserIdentities().remove(chatUserIdentity);
@@ -199,8 +199,8 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         }
         persist();
 
-        return networkService.removeAuthenticatedData(oldChatUser, identity.getNodeIdAndKeyPair())
-                .thenCompose(result -> networkService.publishAuthenticatedData(newChatUser, identity.getNodeIdAndKeyPair()));
+        return networkService.removeAuthenticatedData(oldPublicUserProfile, identity.getNodeIdAndKeyPair())
+                .thenCompose(result -> networkService.publishAuthenticatedData(newPublicUserProfile, identity.getNodeIdAndKeyPair()));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> deleteChatUser(ChatUserIdentity chatUserIdentity) {
@@ -216,15 +216,15 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         }
         persist();
         identityService.retireActiveIdentity(chatUserIdentity.getIdentity().getDomainId());
-        return networkService.removeAuthenticatedData(chatUserIdentity.getChatUser(),
+        return networkService.removeAuthenticatedData(chatUserIdentity.getPublicUserProfile(),
                 chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
     }
 
-    public void replaceChatUser(ChatUser newChatUser) {
-        findChatUserIdentity(newChatUser.getNym())
+    public void replaceChatUser(PublicUserProfile newPublicUserProfile) {
+        findChatUserIdentity(newPublicUserProfile.getNym())
                 .ifPresent(chatUserIdentity -> {
                     Identity identity = chatUserIdentity.getIdentity();
-                    ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newChatUser);
+                    ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newPublicUserProfile);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().remove(chatUserIdentity);
                         persistableStore.getChatUserIdentities().add(newChatUserIdentity);
@@ -234,19 +234,19 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 });
     }
 
-    public CompletableFuture<Boolean> maybePublishChatUser(ChatUser chatUser, NetworkIdWithKeyPair nodeIdAndKeyPair) {
-        long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(chatUser.getId())).orElse(0L);
+    public CompletableFuture<Boolean> maybePublishChatUser(PublicUserProfile publicUserProfile, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+        long lastPublished = Optional.ofNullable(publishTimeByChatUserId.get(publicUserProfile.getId())).orElse(0L);
         long passed = System.currentTimeMillis() - lastPublished;
         if (passed > config.getChatUserRepublishAge()) {
-            return publishChatUser(chatUser, nodeIdAndKeyPair).thenApply(r -> true);
+            return publishChatUser(publicUserProfile, nodeIdAndKeyPair).thenApply(r -> true);
         } else {
             return CompletableFuture.completedFuture(false);
         }
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(ChatUser chatUser, NetworkIdWithKeyPair nodeIdAndKeyPair) {
-        publishTimeByChatUserId.put(chatUser.getId(), System.currentTimeMillis());
-        return networkService.publishAuthenticatedData(chatUser, nodeIdAndKeyPair);
+    public CompletableFuture<DataService.BroadCastDataResult> publishChatUser(PublicUserProfile publicUserProfile, NetworkIdWithKeyPair nodeIdAndKeyPair) {
+        publishTimeByChatUserId.put(publicUserProfile.getId(), System.currentTimeMillis());
+        return networkService.publishAuthenticatedData(publicUserProfile, nodeIdAndKeyPair);
     }
 
     public boolean isDefaultUserProfileMissing() {
@@ -418,10 +418,10 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         return persistableStore.getChatUserIdentities();
     }
 
-    public Collection<ChatUser> getMentionableChatUsers() {
+    public Collection<PublicUserProfile> getMentionableChatUsers() {
         // TODO: implement logic
         return getChatUserIdentities().stream()
-                .map(ChatUserIdentity::getChatUser)
+                .map(ChatUserIdentity::getPublicUserProfile)
                 .collect(Collectors.toList());
     }
 

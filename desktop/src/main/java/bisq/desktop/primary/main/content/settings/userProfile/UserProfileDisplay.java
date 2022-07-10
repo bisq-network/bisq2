@@ -25,7 +25,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
@@ -71,17 +71,17 @@ public class UserProfileDisplay {
 
         @Override
         public void onActivate() {
-            ChatUser chatUser = model.chatUserIdentity.getChatUser();
+            PublicUserProfile publicUserProfile = model.chatUserIdentity.getPublicUserProfile();
 
-            model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
-            model.bio.set(chatUser.getBio());
-            model.terms.set(chatUser.getTerms());
-            model.reputationScore.set(chatUser.getBurnScoreAsString());
-            model.profileAge.set(chatUser.getAccountAgeAsString());
+            model.id.set(Res.get("social.createUserProfile.id", publicUserProfile.getId()));
+            model.bio.set(publicUserProfile.getBio());
+            model.terms.set(publicUserProfile.getTerms());
+            model.reputationScore.set(publicUserProfile.getBurnScoreAsString());
+            model.profileAge.set(publicUserProfile.getAccountAgeAsString());
 
-            model.nym.set(chatUser.getNym());
-            model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
+            model.nym.set(publicUserProfile.getNym());
+            model.nickName.set(publicUserProfile.getNickName());
+            model.roboHashNode.set(RoboHash.getImage(publicUserProfile.getPubKeyHash()));
         }
 
         @Override

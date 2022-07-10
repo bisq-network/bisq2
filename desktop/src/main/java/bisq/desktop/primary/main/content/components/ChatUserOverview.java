@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -42,12 +42,12 @@ import org.fxmisc.easybind.Subscription;
 public class ChatUserOverview implements Comparable<ChatUserOverview> {
     private final Controller controller;
 
-    public ChatUserOverview(ChatUser chatUser) {
-        this(chatUser, false);
+    public ChatUserOverview(PublicUserProfile publicUserProfile) {
+        this(publicUserProfile, false);
     }
 
-    public ChatUserOverview(ChatUser chatUser, boolean ignored) {
-        controller = new Controller(chatUser);
+    public ChatUserOverview(PublicUserProfile publicUserProfile, boolean ignored) {
+        controller = new Controller(publicUserProfile);
         controller.model.ignored = ignored;
     }
 
@@ -59,13 +59,13 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         return controller.model.ignored;
     }
 
-    public ChatUser getChatUser() {
-        return controller.model.chatUser;
+    public PublicUserProfile getChatUser() {
+        return controller.model.publicUserProfile;
     }
 
     @Override
     public int compareTo(ChatUserOverview o) {
-        return controller.model.chatUser.getNym().compareTo(o.controller.model.chatUser.getNym());
+        return controller.model.publicUserProfile.getNym().compareTo(o.controller.model.publicUserProfile.getNym());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -73,21 +73,21 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
         @Getter
         private final View view;
 
-        private Controller(ChatUser chatUser) {
-            model = new Model(chatUser);
+        private Controller(PublicUserProfile publicUserProfile) {
+            model = new Model(publicUserProfile);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            ChatUser chatUser = model.chatUser;
-            if (chatUser == null) {
+            PublicUserProfile publicUserProfile = model.publicUserProfile;
+            if (publicUserProfile == null) {
                 return;
             }
 
-            model.id.set(chatUser.getId());
-            model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
+            model.id.set(publicUserProfile.getId());
+            model.userName.set(publicUserProfile.getUserName());
+            model.roboHashNode.set(RoboHash.getImage(publicUserProfile.getPubKeyHash()));
         }
 
         @Override
@@ -96,14 +96,14 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ChatUser chatUser;
+        private final PublicUserProfile publicUserProfile;
         private boolean ignored;
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
 
-        private Model(ChatUser chatUser) {
-            this.chatUser = chatUser;
+        private Model(PublicUserProfile publicUserProfile) {
+            this.publicUserProfile = publicUserProfile;
         }
     }
 
@@ -121,12 +121,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             userName = new Label();
             userName.setMaxWidth(100);
-            Tooltip.install(userName, new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(userName, new Tooltip(model.publicUserProfile.getTooltipString()));
 
             roboIcon = new ImageView();
             roboIcon.setFitWidth(37.5);
             roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon, new Tooltip(model.chatUser.getTooltipString()));
+            Tooltip.install(roboIcon, new Tooltip(model.publicUserProfile.getTooltipString()));
 
             HBox hBox = Layout.hBoxWith(roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);

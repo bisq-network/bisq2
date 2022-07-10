@@ -21,7 +21,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -44,19 +44,19 @@ import java.util.function.Consumer;
 public class ChatUserDetails implements Comparable<ChatUserDetails> {
     private final Controller controller;
 
-    public ChatUserDetails(ChatService chatService, ChatUser chatUser) {
-        controller = new Controller(chatService, chatUser);
+    public ChatUserDetails(ChatService chatService, PublicUserProfile publicUserProfile) {
+        controller = new Controller(chatService, publicUserProfile);
     }
 
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
-    public void setOnMentionUserHandler(Consumer<ChatUser> handler) {
+    public void setOnMentionUserHandler(Consumer<PublicUserProfile> handler) {
         controller.model.mentionUserHandler = Optional.ofNullable(handler);
     }
 
-    public void setOnSendPrivateMessageHandler(Consumer<ChatUser> handler) {
+    public void setOnSendPrivateMessageHandler(Consumer<PublicUserProfile> handler) {
         controller.model.sendPrivateMessageHandler = Optional.ofNullable(handler);
     }
 
@@ -66,7 +66,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
     @Override
     public int compareTo(ChatUserDetails o) {
-        return controller.model.chatUser.getNym().compareTo(o.controller.model.chatUser.getNym());
+        return controller.model.publicUserProfile.getNym().compareTo(o.controller.model.publicUserProfile.getNym());
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -75,28 +75,28 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final View view;
 
 
-        private Controller(ChatService chatService, ChatUser chatUser) {
-            model = new Model(chatService, chatUser);
+        private Controller(ChatService chatService, PublicUserProfile publicUserProfile) {
+            model = new Model(chatService, publicUserProfile);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            ChatUser chatUser = model.chatUser;
-            if (chatUser == null) {
+            PublicUserProfile publicUserProfile = model.publicUserProfile;
+            if (publicUserProfile == null) {
                 return;
             }
 
             model.ignoreButtonText.set(Res.get("social.ignore"));
-            model.id.set(Res.get("social.createUserProfile.id", chatUser.getId()));
-            model.bio.set(chatUser.getBio());
-            model.terms.set(chatUser.getTerms());
-            model.reputationScore.set(chatUser.getBurnScoreAsString());
-            model.profileAge.set(chatUser.getAccountAgeAsString());
+            model.id.set(Res.get("social.createUserProfile.id", publicUserProfile.getId()));
+            model.bio.set(publicUserProfile.getBio());
+            model.terms.set(publicUserProfile.getTerms());
+            model.reputationScore.set(publicUserProfile.getBurnScoreAsString());
+            model.profileAge.set(publicUserProfile.getAccountAgeAsString());
 
-            model.nym.set(chatUser.getNym());
-            model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
+            model.nym.set(publicUserProfile.getNym());
+            model.nickName.set(publicUserProfile.getNickName());
+            model.roboHashNode.set(RoboHash.getImage(publicUserProfile.getPubKeyHash()));
         }
 
         @Override
@@ -104,20 +104,20 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         }
 
         public void onSendPrivateMessage() {
-            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.chatUser));
+            model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.publicUserProfile));
         }
 
         public void onMentionUser() {
-            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.chatUser));
+            model.mentionUserHandler.ifPresent(handler -> handler.accept(model.publicUserProfile));
         }
 
         public void onToggleIgnoreUser() {
             model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
             if (model.ignoreUserSelected.get()) {
-                model.chatService.ignoreChatUser(model.chatUser);
+                model.chatService.ignoreChatUser(model.publicUserProfile);
                 model.ignoreButtonText.set(Res.get("social.undoIgnore"));
             } else {
-                model.chatService.undoIgnoreChatUser(model.chatUser);
+                model.chatService.undoIgnoreChatUser(model.publicUserProfile);
                 model.ignoreButtonText.set(Res.get("social.ignore"));
             }
             model.ignoreUserStateHandler.ifPresent(Runnable::run);
@@ -125,15 +125,15 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
         public void onReportUser() {
             // todo open popup for editing reason
-            model.chatService.reportChatUser(model.chatUser, "");
+            model.chatService.reportChatUser(model.publicUserProfile, "");
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
-        private final ChatUser chatUser;
-        private Optional<Consumer<ChatUser>> mentionUserHandler = Optional.empty();
-        private Optional<Consumer<ChatUser>> sendPrivateMessageHandler = Optional.empty();
+        private final PublicUserProfile publicUserProfile;
+        private Optional<Consumer<PublicUserProfile>> mentionUserHandler = Optional.empty();
+        private Optional<Consumer<PublicUserProfile>> sendPrivateMessageHandler = Optional.empty();
         private Optional<Runnable> ignoreUserStateHandler = Optional.empty();
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nym = new SimpleStringProperty();
@@ -146,9 +146,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
 
-        private Model(ChatService chatService, ChatUser chatUser) {
+        private Model(ChatService chatService, PublicUserProfile publicUserProfile) {
             this.chatService = chatService;
-            this.chatUser = chatUser;
+            this.publicUserProfile = publicUserProfile;
         }
     }
 

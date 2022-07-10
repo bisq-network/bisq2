@@ -25,7 +25,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.social.user.ChatUserService;
 import com.google.common.base.Charsets;
 import lombok.Getter;
@@ -88,9 +88,9 @@ public class ReputationService implements DataService.Listener {
         return Optional.ofNullable(authorizedProofOfBurnDataSetByHash.get(hash));
     }
 
-    public Optional<ReputationScore> findReputationScore(ChatUser chatUser) {
+    public Optional<ReputationScore> findReputationScore(PublicUserProfile publicUserProfile) {
         // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
-        byte[] preImage = chatUser.getId().getBytes(Charsets.UTF_8);
+        byte[] preImage = publicUserProfile.getId().getBytes(Charsets.UTF_8);
         byte[] hashOfPreImage = DigestUtil.hash(preImage);
         ByteArray hash = new ByteArray(hashOfPreImage);
         Optional<ReputationScore> optionalReputationScore = findAuthorizedProofOfBurnDataSet(hash)

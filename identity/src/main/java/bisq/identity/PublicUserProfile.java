@@ -17,7 +17,6 @@
 
 package bisq.identity;
 
-import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
@@ -43,14 +42,14 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public final class ChatUser implements DistributedData {
+public final class PublicUserProfile implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
     private final static long TTL = TimeUnit.HOURS.toMillis(30);
     // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
-    private final static MetaData META_DATA = new MetaData(TTL, 100000, ChatUser.class.getSimpleName());
+    private final static MetaData META_DATA = new MetaData(TTL, 100000, PublicUserProfile.class.getSimpleName());
 
-    public static ChatUser from(ChatUser chatUser, String terms, String bio) {
-        return new ChatUser(chatUser.getNickName(), chatUser.getProofOfWork(), chatUser.getNetworkId(), terms, bio);
+    public static PublicUserProfile from(PublicUserProfile publicUserProfile, String terms, String bio) {
+        return new PublicUserProfile(publicUserProfile.getNickName(), publicUserProfile.getProofOfWork(), publicUserProfile.getNetworkId(), terms, bio);
     }
 
     private final String nickName;
@@ -60,14 +59,13 @@ public final class ChatUser implements DistributedData {
     private final String terms;
     private final String bio;
 
-    private transient String id;
     private transient String nym;
 
-    public ChatUser(String nickName,
-                    ProofOfWork proofOfWork,
-                    NetworkId networkId,
-                    String terms,
-                    String bio) {
+    public PublicUserProfile(String nickName,
+                             ProofOfWork proofOfWork,
+                             NetworkId networkId,
+                             String terms,
+                             String bio) {
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
@@ -80,15 +78,12 @@ public final class ChatUser implements DistributedData {
     }
 
     public String getId() {
-        if (id == null) {
-            id = Hex.encode(getPubKeyHash());
-        }
-        return id;
+        return networkId.getPubKey().getId();
     }
 
     public String getNym() {
         if (nym == null) {
-            nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
+            nym = NymIdGenerator.fromHash(getPubKeyHash());
         }
         return nym;
     }
@@ -104,8 +99,8 @@ public final class ChatUser implements DistributedData {
                 .build();
     }
 
-    public static ChatUser fromProto(bisq.identity.protobuf.ChatUser proto) {
-        return new ChatUser(proto.getNickName(),
+    public static PublicUserProfile fromProto(bisq.identity.protobuf.ChatUser proto) {
+        return new PublicUserProfile(proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getTerms(),

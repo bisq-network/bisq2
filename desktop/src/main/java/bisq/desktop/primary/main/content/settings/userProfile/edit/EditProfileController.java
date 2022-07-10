@@ -53,12 +53,12 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
         model.getNickName().set(chatUserIdentity.getNickName());
         model.getProfileId().set(chatUserIdentity.getProfileId());
         model.getRoboHashImage().set(RoboHash.getImage(chatUserIdentity.getPubKeyHash()));
-        String terms = chatUserIdentity.getChatUser().getTerms();
+        String terms = chatUserIdentity.getPublicUserProfile().getTerms();
         if (terms == null) {
             terms = "";
         }
         model.getTerms().set(terms);
-        String bio = chatUserIdentity.getChatUser().getBio();
+        String bio = chatUserIdentity.getPublicUserProfile().getBio();
         if (bio == null) {
             bio = "";
         }

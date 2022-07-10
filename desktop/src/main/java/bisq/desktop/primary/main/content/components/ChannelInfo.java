@@ -24,7 +24,7 @@ import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -90,8 +90,8 @@ public class ChannelInfo {
         public void onDeactivate() {
         }
 
-        public void onUndoIgnoreUser(ChatUser chatUser) {
-            chatService.undoIgnoreChatUser(chatUser);
+        public void onUndoIgnoreUser(PublicUserProfile publicUserProfile) {
+            chatService.undoIgnoreChatUser(publicUserProfile);
             model.undoIgnoreChatUserHandler.ifPresent(Runnable::run);
         }
 

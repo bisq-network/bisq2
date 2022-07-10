@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
@@ -49,8 +49,8 @@ public class ChatUserIcon extends Pane {
         getChildren().addAll(roboIcon, entitlement);
     }
 
-    public void setChatUser(ChatUser chatUser, ChatUserService chatUserService) {
-        roboIcon.setImage(RoboHash.getImage(chatUser.getPubKeyHash()));
+    public void setChatUser(PublicUserProfile publicUserProfile, ChatUserService chatUserService) {
+        roboIcon.setImage(RoboHash.getImage(publicUserProfile.getPubKeyHash()));
 
        /* if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
             entitlement.setId("chat-trust");

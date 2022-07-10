@@ -28,7 +28,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.binding.Bindings;
@@ -62,19 +62,19 @@ public class ChatMessagesComponent {
         return controller.view.getRoot();
     }
 
-    public void mentionUser(ChatUser chatUser) {
-        controller.mentionUser(chatUser);
+    public void mentionUser(PublicUserProfile publicUserProfile) {
+        controller.mentionUser(publicUserProfile);
     }
 
     public FilteredList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.chatMessagesListView.getFilteredChatMessages();
     }
 
-    public void setOnShowChatUserDetails(Consumer<ChatUser> handler) {
+    public void setOnShowChatUserDetails(Consumer<PublicUserProfile> handler) {
         controller.model.showChatUserDetailsHandler = Optional.of(handler);
     }
 
-    public void openPrivateChannel(ChatUser peer) {
+    public void openPrivateChannel(PublicUserProfile peer) {
         controller.createAndSelectPrivateChannel(peer);
     }
 
@@ -169,7 +169,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        private void createAndSelectPrivateChannel(ChatUser peer) {
+        private void createAndSelectPrivateChannel(PublicUserProfile peer) {
             if (model.isDiscussionsChat) {
                 chatService.createPrivateDiscussionChannel(peer)
                         .ifPresent(chatService::selectTradeChannel);
@@ -178,7 +178,7 @@ public class ChatMessagesComponent {
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(ChatUser peer) {
+        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(PublicUserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
@@ -189,15 +189,15 @@ public class ChatMessagesComponent {
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 
-        private void mentionUser(ChatUser chatUser) {
+        private void mentionUser(PublicUserProfile publicUserProfile) {
             String existingText = model.getTextInput().get();
             if (!existingText.isEmpty() && !existingText.endsWith(" ")) {
                 existingText += " ";
             }
-            model.getTextInput().set(existingText + "@" + chatUser.getUserName() + " ");
+            model.getTextInput().set(existingText + "@" + publicUserProfile.getUserName() + " ");
         }
 
-        public void fillUserMention(ChatUser user) {
+        public void fillUserMention(PublicUserProfile user) {
             String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
             model.getTextInput().set(content);
             //todo
@@ -223,9 +223,9 @@ public class ChatMessagesComponent {
         private final StringProperty textInput = new SimpleStringProperty("");
         private final boolean isDiscussionsChat;
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
-        private final ObservableList<ChatUser> mentionableUsers = FXCollections.observableArrayList();
+        private final ObservableList<PublicUserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
-        private Optional<Consumer<ChatUser>> showChatUserDetailsHandler = Optional.empty();
+        private Optional<Consumer<PublicUserProfile>> showChatUserDetailsHandler = Optional.empty();
         private final BooleanProperty isTradeGuideBoxVisible = new SimpleBooleanProperty();
 
         private Model(boolean isDiscussionsChat) {
@@ -239,7 +239,7 @@ public class ChatMessagesComponent {
 
         private final BisqTextArea inputField;
         private final Button sendButton;
-        private final ChatMentionPopupMenu<ChatUser> userMentionPopup;
+        private final ChatMentionPopupMenu<PublicUserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
         private final TradeGuideBox tradeGuideBox;
         private final Button closeTradeGuideBoxButton;
@@ -278,7 +278,7 @@ public class ChatMessagesComponent {
             root.getChildren().addAll(tradeGuideBox, messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            userMentionPopup.setItemDisplayConverter(ChatUser::getNickName);
+            userMentionPopup.setItemDisplayConverter(PublicUserProfile::getNickName);
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);

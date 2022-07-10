@@ -20,7 +20,7 @@ package bisq.social.chat.channels;
 import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PrivateTradeChatMessage;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,13 +33,13 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> implements PrivateChannel {
-    private final ChatUser peer;
+    private final PublicUserProfile peer;
     private final ChatUserIdentity myProfile;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
     private final ObservableSet<PrivateTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    public PrivateTradeChannel(ChatUser peer, ChatUserIdentity myProfile) {
+    public PrivateTradeChannel(PublicUserProfile peer, ChatUserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getProfileId()),
                 peer,
                 myProfile,
@@ -47,12 +47,12 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
                 new HashSet<>());
     }
 
-    public PrivateTradeChannel(String id, ChatUser peer, ChatUserIdentity myProfile) {
+    public PrivateTradeChannel(String id, PublicUserProfile peer, ChatUserIdentity myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
     }
 
     private PrivateTradeChannel(String id,
-                                ChatUser peer,
+                                PublicUserProfile peer,
                                 ChatUserIdentity myProfile,
                                 NotificationSetting notificationSetting,
                                 Set<PrivateTradeChatMessage> chatMessages) {
@@ -74,7 +74,7 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
                                                 bisq.social.protobuf.PrivateTradeChannel proto) {
         return new PrivateTradeChannel(
                 baseProto.getId(),
-                ChatUser.fromProto(proto.getPeer()),
+                PublicUserProfile.fromProto(proto.getPeer()),
                 ChatUserIdentity.fromProto(proto.getMyChatUserIdentity()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()

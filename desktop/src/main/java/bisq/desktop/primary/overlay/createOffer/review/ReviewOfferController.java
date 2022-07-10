@@ -32,7 +32,7 @@ import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import bisq.identity.ChatUserIdentity;
 import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
@@ -141,7 +141,7 @@ public class ReviewOfferController implements Controller {
                 model.getBaseSideAmount().getValue(),
                 model.getQuoteSideAmount().getValue(),
                 new HashSet<>(model.getPaymentMethods()),
-                chatUserIdentity.getChatUser().getTerms(),
+                chatUserIdentity.getPublicUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
         PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
@@ -152,7 +152,7 @@ public class ReviewOfferController implements Controller {
         chatService.selectTradeChannel(channelForMarket);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
-                chatUserIdentity.getChatUser().getId(),
+                chatUserIdentity.getPublicUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
@@ -200,7 +200,7 @@ public class ReviewOfferController implements Controller {
             if (item.getAuthor().isEmpty()) {
                 return false;
             }
-            ChatUser peer = item.getAuthor().get();
+            PublicUserProfile peer = item.getAuthor().get();
             if (chatService.isChatUserIgnored(peer)) {
                 return false;
             }

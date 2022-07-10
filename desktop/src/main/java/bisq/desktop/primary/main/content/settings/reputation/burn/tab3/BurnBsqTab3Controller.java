@@ -53,7 +53,7 @@ public class BurnBsqTab3Controller implements Controller {
         selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                 chatUserIdentity -> {
                     model.getSelectedChatUserIdentity().set(chatUserIdentity);
-                    model.getPubKeyHash().set(chatUserIdentity.getChatUser().getId());
+                    model.getPubKeyHash().set(chatUserIdentity.getPublicUserProfile().getId());
                 }
         );
     }

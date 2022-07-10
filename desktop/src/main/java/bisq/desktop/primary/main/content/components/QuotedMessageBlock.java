@@ -25,7 +25,7 @@ import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.identity.ChatUser;
+import bisq.identity.PublicUserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -67,11 +67,11 @@ public class QuotedMessageBlock {
 
     public Optional<Quotation> getQuotation() {
         String text = controller.model.quotation.get();
-        ChatUser chatUser = controller.model.author;
-        if (text == null || text.isEmpty() || chatUser == null) {
+        PublicUserProfile publicUserProfile = controller.model.author;
+        if (text == null || text.isEmpty() || publicUserProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getPubKeyHash(), text));
+        return Optional.of(new Quotation(publicUserProfile.getNym(), publicUserProfile.getNickName(), publicUserProfile.getPubKeyHash(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -116,7 +116,7 @@ public class QuotedMessageBlock {
         private final StringProperty quotation = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
-        private ChatUser author;
+        private PublicUserProfile author;
 
         private Model() {
         }
