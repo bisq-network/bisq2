@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.reputation;
+package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
@@ -25,8 +25,8 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.user.PublicUserProfile;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.ChatUserService;
 import com.google.common.base.Charsets;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

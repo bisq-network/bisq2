@@ -25,7 +25,7 @@ import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;

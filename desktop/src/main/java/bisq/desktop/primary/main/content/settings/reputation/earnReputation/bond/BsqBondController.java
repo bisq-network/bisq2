@@ -25,8 +25,8 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.social.user.ChatUserService;
-import bisq.social.user.reputation.Reputation;
+import bisq.user.profile.ChatUserService;
+import bisq.user.reputation.Reputation;
 import lombok.Getter;
 
 import java.util.stream.Collectors;
@@ -41,7 +41,7 @@ public class BsqBondController implements Controller {
     private Pin selectedUserProfilePin;
 
     public BsqBondController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
+        chatUserService = applicationService.getUserService().getChatUserService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BsqBondModel();

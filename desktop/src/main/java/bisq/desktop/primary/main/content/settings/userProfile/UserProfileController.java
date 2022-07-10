@@ -24,7 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +39,7 @@ public class UserProfileController implements Controller {
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
+        chatUserService = applicationService.getUserService().getChatUserService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new UserProfileModel();

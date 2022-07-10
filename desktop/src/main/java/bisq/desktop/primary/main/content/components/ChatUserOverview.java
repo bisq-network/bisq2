@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

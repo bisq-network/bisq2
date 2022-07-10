@@ -25,7 +25,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.ChatUserService;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -65,7 +65,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     protected final ChatUserService chatUserService;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
+        chatUserService = applicationService.getUserService().getChatUserService();
 
         model = createModel();
         view = createView();

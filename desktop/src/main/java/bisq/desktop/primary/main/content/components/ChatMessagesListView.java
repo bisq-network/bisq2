@@ -38,11 +38,11 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
-import bisq.user.PublicUserProfile;
-import bisq.user.UserProfile;
-import bisq.social.user.ChatUserService;
-import bisq.social.user.reputation.ReputationScore;
-import bisq.social.user.reputation.ReputationService;
+import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.ChatUserService;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -150,8 +150,8 @@ public class ChatMessagesListView {
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
             this.chatService = applicationService.getSocialService().getChatService();
-            this.chatUserService = applicationService.getSocialService().getChatUserService();
-            this.reputationService = applicationService.getSocialService().getReputationService();
+            this.chatUserService = applicationService.getUserService().getChatUserService();
+            this.reputationService = applicationService.getUserService().getReputationService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;

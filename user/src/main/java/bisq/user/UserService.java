@@ -15,16 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social;
+package bisq.user;
 
 import bisq.common.application.ModuleService;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
-import bisq.security.SecurityService;
-import bisq.social.chat.ChatService;
-import bisq.social.offer.TradeChatOfferService;
 import bisq.user.profile.ChatUserService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -33,31 +32,38 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class SocialService implements ModuleService {
+public class UserService implements ModuleService {
     @Getter
     @ToString
     public static final class Config {
-        public Config() {
+
+        private final ChatUserService.Config profileConfig;
+
+        public Config(ChatUserService.Config profileConfig) {
+            this.profileConfig = profileConfig;
         }
 
-        public static Config from(com.typesafe.config.Config socialConfig) {
-            return null;
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(ChatUserService.Config.from(config.getConfig("profile")));
         }
     }
 
-    private final SocialService.Config config;
-    private final ChatService chatService;
-    private final TradeChatOfferService tradeChatOfferService;
+    private final UserService.Config config;
+    private final ChatUserService chatUserService;
+    private final ReputationService reputationService;
 
-    public SocialService(SocialService.Config config,
-                         PersistenceService persistenceService,
-                         IdentityService identityService,
-                         SecurityService securityService,
-                         NetworkService networkService,
-                         ChatUserService chatUserService) {
+    public UserService(UserService.Config config,
+                       PersistenceService persistenceService,
+                       IdentityService identityService,
+                       OpenTimestampService openTimestampService,
+                       NetworkService networkService) {
         this.config = config;
-        chatService = new ChatService(persistenceService, identityService, securityService.getProofOfWorkService(), networkService, chatUserService);
-        tradeChatOfferService = new TradeChatOfferService(networkService, identityService, chatService, persistenceService);
+        chatUserService = new ChatUserService(config.getProfileConfig(),
+                 persistenceService,
+                 identityService,
+                 openTimestampService,
+                 networkService);
+        reputationService = new ReputationService(persistenceService, networkService, chatUserService);
     }
 
 
@@ -67,8 +73,8 @@ public class SocialService implements ModuleService {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return chatService.initialize()
-                .thenCompose(result -> tradeChatOfferService.initialize());
+        return chatUserService.initialize()
+                .thenCompose(result -> reputationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {

@@ -27,7 +27,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,7 @@ public class BurnBsqTab3Controller implements Controller {
     private Pin selectedUserProfilePin;
 
     public BurnBsqTab3Controller(DefaultApplicationService applicationService) {
-        chatUserService = applicationService.getSocialService().getChatUserService();
+        chatUserService = applicationService.getUserService().getChatUserService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(chatUserService);
 
         model = new BurnBsqTab3Model();

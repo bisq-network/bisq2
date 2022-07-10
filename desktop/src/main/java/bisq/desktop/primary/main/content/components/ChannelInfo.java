@@ -24,7 +24,7 @@ import bisq.social.chat.channels.Channel;
 import bisq.social.chat.channels.PublicDiscussionChannel;
 import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

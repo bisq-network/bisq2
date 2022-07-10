@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.user;
+package bisq.user.profile;
 
 import bisq.common.proto.Proto;
 import bisq.identity.Identity;

@@ -28,9 +28,9 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.user.PublicUserProfile;
-import bisq.user.UserProfile;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.ChatUserService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -95,7 +95,7 @@ public class ChatMessagesComponent {
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
             this.chatService = applicationService.getSocialService().getChatService();
-            this.chatUserService = applicationService.getSocialService().getChatUserService();
+            this.chatUserService = applicationService.getUserService().getChatUserService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,

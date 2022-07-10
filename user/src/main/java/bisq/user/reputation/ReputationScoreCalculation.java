@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.reputation;
+package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;

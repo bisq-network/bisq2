@@ -25,7 +25,7 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PrivateChannel;
 import bisq.social.chat.channels.PrivateDiscussionChannel;
 import bisq.social.chat.channels.PrivateTradeChannel;
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;

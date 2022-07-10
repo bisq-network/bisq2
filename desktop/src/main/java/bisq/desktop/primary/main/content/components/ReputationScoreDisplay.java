@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.i18n.Res;
-import bisq.social.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationScore;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;

@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.role;
+package bisq.user.role;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
-import bisq.social.user.proof.Proof;
+import bisq.user.proof.Proof;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.reputation;
+package bisq.user.reputation;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

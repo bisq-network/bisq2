@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.proof;
+package bisq.user.proof;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -24,22 +24,25 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class InvitationProof implements Proof {
-    private final String invitationCode;
+public final class BondedRoleProof implements Proof {
+    private final String txId;
+    private final String signature;
 
-    public InvitationProof(String invitationCode) {
-        this.invitationCode = invitationCode;
+    public BondedRoleProof(String txId, String signature) {
+        this.txId = txId;
+        this.signature = signature;
     }
 
     @Override
     public bisq.user.protobuf.Proof toProto() {
-        return getProofBuilder().setInvitationProof(
-                        bisq.user.protobuf.InvitationProof.newBuilder()
-                                .setInvitationCode(invitationCode))
+        return getProofBuilder().setBondedRoleProof(
+                        bisq.user.protobuf.BondedRoleProof.newBuilder()
+                                .setTxId(txId)
+                                .setSignature(signature))
                 .build();
     }
 
-    public static InvitationProof fromProto(bisq.user.protobuf.InvitationProof proto) {
-        return new InvitationProof(proto.getInvitationCode());
+    public static BondedRoleProof fromProto(bisq.user.protobuf.BondedRoleProof proto) {
+        return new BondedRoleProof(proto.getTxId(), proto.getSignature());
     }
 }

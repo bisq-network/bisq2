@@ -21,7 +21,7 @@ import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

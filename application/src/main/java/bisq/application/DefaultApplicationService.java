@@ -30,6 +30,7 @@ import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.social.SocialService;
+import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
@@ -69,6 +70,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final OracleService oracleService;
     private final AccountService accountService;
     private final OfferService offerService;
+    private final UserService userService;
     private final SocialService socialService;
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
@@ -97,17 +99,24 @@ public class DefaultApplicationService extends ApplicationService {
                 networkService,
                 identityService,
                 persistenceService);
-        
+
         accountService = new AccountService(networkService, persistenceService, identityService);
 
         offerService = new OfferService(networkService, identityService, persistenceService);
+
+        userService = new UserService(UserService.Config.from(getConfig("user")),
+                persistenceService,
+                identityService,
+                oracleService.getOpenTimestampService(),
+                networkService);
 
         socialService = new SocialService(SocialService.Config.from(getConfig("social")),
                 persistenceService,
                 identityService,
                 securityService,
-                oracleService.getOpenTimestampService(),
-                networkService);
+                networkService,
+                userService.getChatUserService());
+        
         settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
@@ -127,6 +136,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> offerService.initialize())
+                .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> socialService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
@@ -148,6 +158,7 @@ public class DefaultApplicationService extends ApplicationService {
         return supplyAsync(() -> protocolService.shutdown()
                         .thenCompose(result -> settingsService.shutdown())
                         .thenCompose(result -> socialService.shutdown())
+                        .thenCompose(result -> userService.shutdown())
                         .thenCompose(result -> offerService.shutdown())
                         .thenCompose(result -> accountService.shutdown())
                         .thenCompose(result -> oracleService.shutdown())

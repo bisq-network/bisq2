@@ -22,7 +22,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Model;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2View;
-import bisq.user.UserProfile;
+import bisq.user.profile.UserProfile;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

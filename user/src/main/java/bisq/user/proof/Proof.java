@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user.proof;
+package bisq.user.proof;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoEnum;

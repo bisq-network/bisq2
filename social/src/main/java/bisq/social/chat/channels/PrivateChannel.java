@@ -17,7 +17,7 @@
 
 package bisq.social.chat.channels;
 
-import bisq.user.PublicUserProfile;
+import bisq.user.profile.PublicUserProfile;
 
 public interface PrivateChannel {
     String CHANNEL_DELIMITER = "@PC@";

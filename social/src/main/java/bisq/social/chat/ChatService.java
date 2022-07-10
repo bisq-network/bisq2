@@ -38,9 +38,9 @@ import bisq.security.pow.ProofOfWorkService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
-import bisq.user.PublicUserProfile;
-import bisq.user.UserProfile;
-import bisq.social.user.ChatUserService;
+import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
+import bisq.user.profile.ChatUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

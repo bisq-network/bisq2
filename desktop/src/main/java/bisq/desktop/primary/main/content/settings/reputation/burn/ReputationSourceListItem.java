@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.reputation.burn;
 
-import bisq.social.user.reputation.Reputation;
+import bisq.user.reputation.Reputation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

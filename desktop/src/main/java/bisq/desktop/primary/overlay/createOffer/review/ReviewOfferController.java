@@ -32,9 +32,9 @@ import bisq.social.chat.channels.PublicTradeChannel;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
-import bisq.user.PublicUserProfile;
-import bisq.user.UserProfile;
-import bisq.social.user.reputation.ReputationService;
+import bisq.user.profile.PublicUserProfile;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +59,7 @@ public class ReviewOfferController implements Controller {
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable closeHandler) {
         chatService = applicationService.getSocialService().getChatService();
-        reputationService = applicationService.getSocialService().getReputationService();
+        reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
 
         myOfferListView = new ChatMessagesListView(applicationService,

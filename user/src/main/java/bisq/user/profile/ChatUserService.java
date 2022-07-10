@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.user.profile;
 
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
@@ -39,10 +39,8 @@ import bisq.security.DigestUtil;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.user.proof.*;
-import bisq.social.user.role.Role;
-import bisq.user.PublicUserProfile;
-import bisq.user.UserProfile;
+import bisq.user.proof.*;
+import bisq.user.role.Role;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonSyntaxException;
@@ -90,6 +88,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
             return new Config(btcMemPoolProviders, bsqMemPoolProviders);
         }
     }
+
 
     @Getter
     private final ChatUserStore persistableStore = new ChatUserStore();
