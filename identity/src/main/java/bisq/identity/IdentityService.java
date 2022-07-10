@@ -129,12 +129,11 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
      * @return The new active identity which is a clone of the pooled identity with the new domain ID.
      */
     public Identity swapPooledIdentity(String domainId, Identity pooledIdentity) {
-        Identity newIdentity;
         checkArgument(!getActiveIdentityByDomainId().containsKey(domainId),
                 "We got already an active identity with the newDomainId");
         checkArgument(!getActiveIdentityByDomainId().containsKey(pooledIdentity.getDomainId()),
                 "We got already an active identity with the domainId of the pooledIdentity");
-        newIdentity = Identity.from(domainId, pooledIdentity);
+        Identity newIdentity = Identity.from(domainId, pooledIdentity);
         synchronized (lock) {
             boolean existed = persistableStore.getPool().remove(pooledIdentity);
             checkArgument(existed, "The pooledIdentity did not exist in our pool");
@@ -152,9 +151,9 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     /**
      * Creates new identity based on given parameters.
      */
-    public CompletableFuture<Identity> createNewIdentity(String domainId,
-                                                         String keyId,
-                                                         KeyPair keyPair) {
+    public CompletableFuture<Identity> createNewActiveIdentity(String domainId,
+                                                               String keyId,
+                                                               KeyPair keyPair) {
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
@@ -169,7 +168,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
                 });
     }
 
-    public void retireIdentity(String domainId) {
+    public boolean retireActiveIdentity(String domainId) {
         boolean wasRemoved;
         synchronized (lock) {
             Identity identity = getActiveIdentityByDomainId().remove(domainId);
@@ -181,6 +180,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         if (wasRemoved) {
             persist();
         }
+        return wasRemoved;
     }
 
     public Optional<Identity> findActiveIdentity(String domainId) {
@@ -282,7 +282,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     private void initializePooledIdentities() {
         persistableStore.getPool().forEach(identity ->
                 networkService.initializeNode(identity.getNodeId(), identity.getPubKey()).values()
-                        .forEach(value -> value.whenComplete((__, throwable) -> {
+                        .forEach(future -> future.whenComplete((__, throwable) -> {
                                     if (throwable == null) {
                                         log.info("Network node for pooled identity {} initialized. NetworkId={}",
                                                 identity.getDomainId(), identity.getNetworkId());
@@ -295,15 +295,18 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
     }
 
     private CompletableFuture<Identity> createAndInitializeNewPooledIdentity() {
-        return createAndInitializeNewIdentity(POOL_PREFIX + StringUtils.createUid())
-                .whenComplete((identity, throwable) -> {
+        String domainId = POOL_PREFIX + StringUtils.createUid();
+        return createAndInitializeNewIdentity(domainId)
+                .thenApply(identity -> {
+                    synchronized (lock) {
+                        persistableStore.getPool().add(identity);
+                    }
+                    persist();
+                    return identity;
+                }).whenComplete((identity, throwable) -> {
                     if (throwable == null) {
                         log.info("Network node for pooled identity {} created and initialized. NetworkId={}",
                                 identity.getDomainId(), identity.getNetworkId());
-                        synchronized (lock) {
-                            persistableStore.getPool().add(identity);
-                        }
-                        persist();
                     } else {
                         log.error("Creation and initializing network node for pooled identity {} failed. NetworkId={}",
                                 identity.getDomainId(), identity.getNetworkId());

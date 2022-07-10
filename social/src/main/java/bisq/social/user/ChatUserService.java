@@ -148,7 +148,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                    String terms,
                                                                                    String bio) {
 
-        return identityService.createNewIdentity(profileId, keyId, keyPair)
+        return identityService.createNewActiveIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> createChatUserIdentity(nickName, proofOfWork, terms, bio, identity))
                 .thenApply(chatUserIdentity -> {
                     maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
@@ -215,7 +215,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                             () -> persistableStore.getSelectedChatUserIdentity().set(null));
         }
         persist();
-        identityService.retireIdentity(chatUserIdentity.getIdentity().getDomainId());
+        identityService.retireActiveIdentity(chatUserIdentity.getIdentity().getDomainId());
         return networkService.removeAuthenticatedData(chatUserIdentity.getChatUser(),
                 chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
     }
