@@ -23,6 +23,8 @@ import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
+import bisq.identity.ChatUser;
+import bisq.identity.ChatUserIdentity;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkIdWithKeyPair;

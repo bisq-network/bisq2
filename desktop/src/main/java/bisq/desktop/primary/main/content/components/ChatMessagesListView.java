@@ -38,8 +38,8 @@ import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
-import bisq.social.user.ChatUser;
-import bisq.social.user.ChatUserIdentity;
+import bisq.identity.ChatUser;
+import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
@@ -278,7 +278,10 @@ public class ChatMessagesListView {
                                     String dirString = tradeChatOffer.getDirection().mirror().displayString();
                                     String baseCurrencyCode = tradeChatOffer.getMarket().getBaseCurrencyCode();
                                     String text = chatMessage.getText();
-                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), chatUser.getNickName(), chatUser.getProofOfWork(), text));
+                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), 
+                                            chatUser.getNickName(), 
+                                            chatUser.getProofOfWork(), 
+                                            text));
                                     chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
                                                     quotation,
                                                     privateTradeChannel)

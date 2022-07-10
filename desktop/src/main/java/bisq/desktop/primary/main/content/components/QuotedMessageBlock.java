@@ -25,7 +25,7 @@ import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
-import bisq.social.user.ChatUser;
+import bisq.identity.ChatUser;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -91,7 +91,7 @@ public class QuotedMessageBlock {
             chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getNym());
-                model.roboHashNode.set(RoboHash.getImage(author.getProofOfWork().getPayload()));
+                model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));
                 model.quotation.set(chatMessage.getText());
                 model.visible.set(true);
             });

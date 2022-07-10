@@ -77,19 +77,6 @@ message Reputation {
   Proof proof = 2;
 }
 
-message ChatUser {
-  string nickName = 1;
-  network.NetworkId networkId = 2;
-  security.ProofOfWork proofOfWork = 3;
-  string terms  = 4;
-  string bio   = 5;
-}
-
-message ChatUserIdentity {
-  identity.Identity identity = 1;
-  ChatUser chatUser = 2;
-}
-
 message Quotation {
   string nym = 1;
   string nickName = 2;
@@ -99,11 +86,11 @@ message Quotation {
 
 message PrivateTradeChatMessage {
   string receiversNym = 1;
-  ChatUser author = 2;
+  identity.ChatUser author = 2;
 }
 message PrivateDiscussionChatMessage {
   string receiversNym = 1;
-  ChatUser author = 2;
+  identity.ChatUser author = 2;
 }
 message PublicDiscussionChatMessage {
 }
@@ -143,13 +130,13 @@ enum NotificationSetting {
 
 // Channels
 message PrivateDiscussionChannel {
-  ChatUser peer = 1;
-  ChatUserIdentity myChatUserIdentity = 2;
+  identity.ChatUser peer = 1;
+  identity.ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTradeChannel {
-  ChatUser peer = 1;
-  ChatUserIdentity myChatUserIdentity = 2;
+  identity.ChatUser peer = 1;
+  identity.ChatUserIdentity myChatUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
 }
 
@@ -177,8 +164,8 @@ message Channel {
 
 // Stores
 message ChatUserStore {
-  repeated ChatUserIdentity chatUserIdentities = 1;
-  ChatUserIdentity selectedChatUserIdentity = 2;
+  repeated identity.ChatUserIdentity chatUserIdentities = 1;
+  identity.ChatUserIdentity selectedChatUserIdentity = 2;
   map<string, Proof> verifiedProofOfBurnProofs = 3;
 }
 

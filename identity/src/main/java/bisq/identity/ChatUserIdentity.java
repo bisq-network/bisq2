@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.identity;
 
 import bisq.common.proto.Proto;
-import bisq.identity.Identity;
 import bisq.network.NetworkIdWithKeyPair;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,14 +36,14 @@ public final class ChatUserIdentity implements Proto {
         this.chatUser = chatUser;
     }
 
-    public bisq.social.protobuf.ChatUserIdentity toProto() {
-        return bisq.social.protobuf.ChatUserIdentity.newBuilder()
+    public bisq.identity.protobuf.ChatUserIdentity toProto() {
+        return bisq.identity.protobuf.ChatUserIdentity.newBuilder()
                 .setIdentity(identity.toProto())
                 .setChatUser(chatUser.toProto())
                 .build();
     }
 
-    public static ChatUserIdentity fromProto(bisq.social.protobuf.ChatUserIdentity proto) {
+    public static ChatUserIdentity fromProto(bisq.identity.protobuf.ChatUserIdentity proto) {
         return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
                 ChatUser.fromProto(proto.getChatUser()));
     }

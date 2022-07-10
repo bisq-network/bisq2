@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.social.user.ChatUser;
+import bisq.identity.ChatUser;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -87,7 +87,7 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             model.id.set(chatUser.getId());
             model.userName.set(chatUser.getUserName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
         }
 
         @Override

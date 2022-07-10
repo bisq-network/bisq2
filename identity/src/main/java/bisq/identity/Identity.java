@@ -80,4 +80,8 @@ public final class Identity implements Proto {
     public PubKey getPubKey() {
         return networkId.getPubKey();
     }
+
+    public byte[] getPubKeyHash() {
+        return proofOfWork.getPayload();
+    }
 }

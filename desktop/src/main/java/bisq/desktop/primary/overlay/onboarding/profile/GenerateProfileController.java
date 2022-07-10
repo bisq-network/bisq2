@@ -33,7 +33,7 @@ import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.NymIdGenerator;
+import bisq.identity.profile.NymIdGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -148,7 +148,7 @@ public class GenerateProfileController implements Controller {
                     .whenComplete((__, t) ->
                             UIThread.run(() -> {
                                 model.setPooledIdentity(Optional.of(pooledIdentity));
-                                String profileId = NymIdGenerator.fromHash(pooledIdentity.getProofOfWork().getPayload());
+                                String profileId = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
                                 applyIdentityData(pooledIdentity.getProofOfWork(), profileId);
                             }));
         } else {

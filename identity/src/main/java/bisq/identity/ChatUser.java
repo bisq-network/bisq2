@@ -15,23 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.identity;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
+import bisq.identity.profile.NymIdGenerator;
+import bisq.identity.profile.NymLookup;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.chat.messages.ChatMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Publicly shared chat user profile.
@@ -42,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public final class ChatUser implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final static long TTL = Math.round(ChatMessage.TTL * 1.2);
+    private final static long TTL = TimeUnit.HOURS.toMillis(30);
     // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
     private final static MetaData META_DATA = new MetaData(TTL, 100000, ChatUser.class.getSimpleName());
 
@@ -51,7 +54,7 @@ public final class ChatUser implements DistributedData {
     }
 
     private final String nickName;
-    private final ProofOfWork proofOfWork;
+    private final ProofOfWork proofOfWork; // used for verification
     private final NetworkId networkId;
     private final String terms;
     private final String bio;
@@ -77,8 +80,8 @@ public final class ChatUser implements DistributedData {
     }
 
     @Override
-    public bisq.social.protobuf.ChatUser toProto() {
-        return bisq.social.protobuf.ChatUser.newBuilder()
+    public bisq.identity.protobuf.ChatUser toProto() {
+        return bisq.identity.protobuf.ChatUser.newBuilder()
                 .setNickName(nickName)
                 .setTerms(terms)
                 .setBio(bio)
@@ -87,7 +90,7 @@ public final class ChatUser implements DistributedData {
                 .build();
     }
 
-    public static ChatUser fromProto(bisq.social.protobuf.ChatUser proto) {
+    public static ChatUser fromProto(bisq.identity.protobuf.ChatUser proto) {
         return new ChatUser(proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
@@ -98,7 +101,7 @@ public final class ChatUser implements DistributedData {
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.ChatUser.class));
+                return fromProto(any.unpack(bisq.identity.protobuf.ChatUser.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

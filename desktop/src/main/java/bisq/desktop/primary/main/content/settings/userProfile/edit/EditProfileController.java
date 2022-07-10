@@ -22,7 +22,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Model;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2View;
-import bisq.social.user.ChatUserIdentity;
+import bisq.identity.ChatUserIdentity;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -52,7 +52,7 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
         ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
         model.getNickName().set(chatUserIdentity.getNickName());
         model.getProfileId().set(chatUserIdentity.getProfileId());
-        model.getRoboHashImage().set(RoboHash.getImage(chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
+        model.getRoboHashImage().set(RoboHash.getImage(chatUserIdentity.getPubKeyHash()));
         String terms = chatUserIdentity.getChatUser().getTerms();
         if (terms == null) {
             terms = "";

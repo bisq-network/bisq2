@@ -80,7 +80,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateTradeChannel) channel).getPeer().getProofOfWork().getPayload()));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateTradeChannel) channel).getPeer().getPubKeyHash()));
             model.getPeersRoboIconVisible().set(true);
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();

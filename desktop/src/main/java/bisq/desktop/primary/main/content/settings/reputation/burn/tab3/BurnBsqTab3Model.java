@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.desktop.common.view.Model;
-import bisq.social.user.ChatUserIdentity;
+import bisq.identity.ChatUserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

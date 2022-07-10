@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.ChatUserIdentity;
+import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -213,7 +213,7 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
+                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getPubKeyHash()));
                         label.setText(item.chatUserIdentity.getNickName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
@@ -301,7 +301,7 @@ public class UserProfileSelection {
                 if (newValue != null) {
                     ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
                     if (chatUserIdentity != null) {
-                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getIdentity().getProofOfWork().getPayload()));
+                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getPubKeyHash()));
                         userNameLabel.setText(chatUserIdentity.getNickName());
                         buttonPane.layout();
                     }

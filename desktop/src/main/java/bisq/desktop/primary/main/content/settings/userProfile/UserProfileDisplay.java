@@ -25,8 +25,8 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.user.ChatUser;
-import bisq.social.user.ChatUserIdentity;
+import bisq.identity.ChatUser;
+import bisq.identity.ChatUserIdentity;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -81,7 +81,7 @@ public class UserProfileDisplay {
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
         }
 
         @Override

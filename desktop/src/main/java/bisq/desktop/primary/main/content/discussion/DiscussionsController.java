@@ -79,7 +79,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateDiscussionChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateDiscussionChannel) channel).getPeer().getProofOfWork().getPayload()));
+            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateDiscussionChannel) channel).getPeer().getPubKeyHash()));
             model.getPeersRoboIconVisible().set(true);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.user;
+package bisq.identity.profile;
 
 import bisq.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;

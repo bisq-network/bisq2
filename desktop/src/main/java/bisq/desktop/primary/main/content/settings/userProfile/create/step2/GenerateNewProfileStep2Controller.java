@@ -26,7 +26,7 @@ import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.social.user.ChatUserService;
-import bisq.social.user.NymIdGenerator;
+import bisq.identity.profile.NymIdGenerator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -86,9 +86,9 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         } else if (data.getPooledIdentity().isPresent()) {
             Identity pooledIdentity = data.getPooledIdentity().get();
             ProofOfWork proofOfWork = pooledIdentity.getProofOfWork();
-            String profileId = NymIdGenerator.fromHash(proofOfWork.getPayload());
+            String profileId = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
             model.getProfileId().set(profileId);
-            model.getRoboHashImage().set(RoboHash.getImage(proofOfWork.getPayload()));
+            model.getRoboHashImage().set(RoboHash.getImage(pooledIdentity.getPubKeyHash()));
         }
     }
 

@@ -21,7 +21,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.social.chat.ChatService;
-import bisq.social.user.ChatUser;
+import bisq.identity.ChatUser;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -96,7 +96,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.nym.set(chatUser.getNym());
             model.nickName.set(chatUser.getNickName());
-            model.roboHashNode.set(RoboHash.getImage(chatUser.getProofOfWork().getPayload()));
+            model.roboHashNode.set(RoboHash.getImage(chatUser.getPubKeyHash()));
         }
 
         @Override

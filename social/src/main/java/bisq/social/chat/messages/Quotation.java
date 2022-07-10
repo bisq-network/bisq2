@@ -2,7 +2,7 @@ package bisq.social.chat.messages;
 
 import bisq.common.proto.Proto;
 import bisq.security.pow.ProofOfWork;
-import bisq.social.user.NymLookup;
+import bisq.identity.profile.NymLookup;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
