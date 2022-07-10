@@ -21,7 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
@@ -40,18 +40,18 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class ChatUserStore implements PersistableStore<ChatUserStore> {
-    private final Observable<ChatUserIdentity> selectedChatUserIdentity = new Observable<>();
-    private final ObservableSet<ChatUserIdentity> chatUserIdentities;
+    private final Observable<UserProfile> selectedChatUserIdentity = new Observable<>();
+    private final ObservableSet<UserProfile> chatUserIdentities;
     private final Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs = new HashMap<>();
 
     public ChatUserStore() {
         chatUserIdentities = new ObservableSet<>();
     }
 
-    private ChatUserStore(ChatUserIdentity selectedChatUserIdentity,
-                          Set<ChatUserIdentity> chatUserIdentities,
+    private ChatUserStore(UserProfile selectedUserProfile,
+                          Set<UserProfile> chatUserIdentities,
                           Map<String, ProofOfBurnProof> verifiedProofOfBurnProofs) {
-        this.selectedChatUserIdentity.set(selectedChatUserIdentity);
+        this.selectedChatUserIdentity.set(selectedUserProfile);
         this.chatUserIdentities = new ObservableSet<>(chatUserIdentities);
         this.verifiedProofOfBurnProofs.putAll(verifiedProofOfBurnProofs);
     }
@@ -60,16 +60,16 @@ public final class ChatUserStore implements PersistableStore<ChatUserStore> {
     public bisq.social.protobuf.ChatUserStore toProto() {
         return bisq.social.protobuf.ChatUserStore.newBuilder()
                 .setSelectedChatUserIdentity(selectedChatUserIdentity.get().toProto())
-                .addAllChatUserIdentities(chatUserIdentities.stream().map(ChatUserIdentity::toProto).collect(Collectors.toSet()))
+                .addAllChatUserIdentities(chatUserIdentities.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
                 .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .build();
     }
 
     public static ChatUserStore fromProto(bisq.social.protobuf.ChatUserStore proto) {
-        return new ChatUserStore(ChatUserIdentity.fromProto(proto.getSelectedChatUserIdentity()),
+        return new ChatUserStore(UserProfile.fromProto(proto.getSelectedChatUserIdentity()),
                 proto.getChatUserIdentitiesList().stream()
-                        .map(ChatUserIdentity::fromProto)
+                        .map(UserProfile::fromProto)
                         .collect(Collectors.toSet()),
                 proto.getVerifiedProofOfBurnProofsMap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey,

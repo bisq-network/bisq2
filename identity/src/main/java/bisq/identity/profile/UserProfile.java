@@ -28,11 +28,11 @@ import lombok.Getter;
  */
 @EqualsAndHashCode
 @Getter
-public final class ChatUserIdentity implements Proto {
+public final class UserProfile implements Proto {
     private final Identity identity;
     private final PublicUserProfile publicUserProfile;
 
-    public ChatUserIdentity(Identity identity, PublicUserProfile publicUserProfile) {
+    public UserProfile(Identity identity, PublicUserProfile publicUserProfile) {
         this.identity = identity;
         this.publicUserProfile = publicUserProfile;
     }
@@ -44,8 +44,8 @@ public final class ChatUserIdentity implements Proto {
                 .build();
     }
 
-    public static ChatUserIdentity fromProto(bisq.identity.protobuf.ChatUserIdentity proto) {
-        return new ChatUserIdentity(Identity.fromProto(proto.getIdentity()),
+    public static UserProfile fromProto(bisq.identity.protobuf.ChatUserIdentity proto) {
+        return new UserProfile(Identity.fromProto(proto.getIdentity()),
                 PublicUserProfile.fromProto(proto.getChatUser()));
     }
 

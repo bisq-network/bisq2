@@ -33,7 +33,7 @@ import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.PublicTradeChatMessage;
 import bisq.social.offer.TradeChatOffer;
 import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -135,13 +135,13 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
-        ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedChatUserIdentity().get();
+        UserProfile userProfile = chatService.getChatUserService().getSelectedChatUserIdentity().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
                 model.getQuoteSideAmount().getValue(),
                 new HashSet<>(model.getPaymentMethods()),
-                chatUserIdentity.getPublicUserProfile().getTerms(),
+                userProfile.getPublicUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
         PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
@@ -152,7 +152,7 @@ public class ReviewOfferController implements Controller {
         chatService.selectTradeChannel(channelForMarket);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
-                chatUserIdentity.getPublicUserProfile().getId(),
+                userProfile.getPublicUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),

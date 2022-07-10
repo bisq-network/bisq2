@@ -39,7 +39,7 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.*;
 import bisq.social.offer.TradeChatOffer;
 import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.ChatUserService;
 import bisq.social.user.reputation.ReputationScore;
 import bisq.social.user.reputation.ReputationService;
@@ -292,23 +292,23 @@ public class ChatMessagesListView {
 
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (chatService.isMyMessage(chatMessage)) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
+                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
                 if (chatMessage instanceof PublicTradeChatMessage) {
-                    chatService.deletePublicTradeChatMessage((PublicTradeChatMessage) chatMessage, chatUserIdentity)
+                    chatService.deletePublicTradeChatMessage((PublicTradeChatMessage) chatMessage, userProfile)
                             .whenComplete((result, throwable) -> {
                                 log.error("onDeleteMessage result {}", result);
                                 log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, chatUserIdentity);
+                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, userProfile);
                 }
                 //todo delete private message
             }
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            ChatUserIdentity chatUserIdentity = chatService.getChatUserService().getSelectedChatUserIdentity().get();
-            chatService.publishPublicTradeChatMessage(chatMessage, chatUserIdentity)
+            UserProfile userProfile = chatService.getChatUserService().getSelectedChatUserIdentity().get();
+            chatService.publishPublicTradeChatMessage(chatMessage, userProfile)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
 
@@ -324,11 +324,11 @@ public class ChatMessagesListView {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, chatUserIdentity);
+                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
+                chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, userProfile);
             } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, chatUserIdentity);
+                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
+                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userProfile);
             }
             //todo editing private message not supported yet
         }

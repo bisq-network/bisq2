@@ -25,7 +25,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.util.CollectionUtil;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.identity.profile.PublicUserProfile;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -126,25 +126,25 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public ChatUserIdentity createAndPublishNewChatUserIdentity(Identity pooledIdentity,
-                                                                String nickName,
-                                                                ProofOfWork proofOfWork,
-                                                                String terms,
-                                                                String bio) {
+    public UserProfile createAndPublishNewChatUserIdentity(Identity pooledIdentity,
+                                                           String nickName,
+                                                           ProofOfWork proofOfWork,
+                                                           String terms,
+                                                           String bio) {
         String tag = nickName + "-" + Hex.encode(proofOfWork.getPayload());
         Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
-        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, proofOfWork, terms, bio, identity);
-        maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
-        publishChatUser(chatUserIdentity.getPublicUserProfile(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
-        return chatUserIdentity;
+        UserProfile userProfile = createChatUserIdentity(nickName, proofOfWork, terms, bio, identity);
+        maybeCreateOrUpgradeTimestampAsync(userProfile);
+        publishChatUser(userProfile.getPublicUserProfile(), userProfile.getIdentity().getNodeIdAndKeyPair());
+        return userProfile;
     }
 
-    public CompletableFuture<ChatUserIdentity> createAndPublishNewChatUserIdentity(String nickName,
-                                                                                   String keyId,
-                                                                                   KeyPair keyPair,
-                                                                                   ProofOfWork proofOfWork,
-                                                                                   String terms,
-                                                                                   String bio) {
+    public CompletableFuture<UserProfile> createAndPublishNewChatUserIdentity(String nickName,
+                                                                              String keyId,
+                                                                              KeyPair keyPair,
+                                                                              ProofOfWork proofOfWork,
+                                                                              String terms,
+                                                                              String bio) {
         String tag = nickName + "-" + Hex.encode(proofOfWork.getPayload());
         return identityService.createNewActiveIdentity(tag, keyId, keyPair)
                 .thenApply(identity -> createChatUserIdentity(nickName, proofOfWork, terms, bio, identity))
@@ -157,43 +157,43 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 });
     }
 
-    public void maybeCreateOrUpgradeTimestampAsync(ChatUserIdentity chatUserIdentity) {
+    public void maybeCreateOrUpgradeTimestampAsync(UserProfile userProfile) {
         // We don't wait for OTS is completed as it will become usable only after the tx is 
         // published and confirmed which can take half a day or more.
-        ByteArray pubKeyHash = new ByteArray(chatUserIdentity.getIdentity().getPubKey().getHash());
+        ByteArray pubKeyHash = new ByteArray(userProfile.getIdentity().getPubKey().getHash());
         openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
     }
 
-    public ChatUserIdentity createChatUserIdentity(String nickName,
-                                                   ProofOfWork proofOfWork,
-                                                   String terms,
-                                                   String bio,
-                                                   Identity identity) {
+    public UserProfile createChatUserIdentity(String nickName,
+                                              ProofOfWork proofOfWork,
+                                              String terms,
+                                              String bio,
+                                              Identity identity) {
         PublicUserProfile publicUserProfile = new PublicUserProfile(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
-        ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, publicUserProfile);
+        UserProfile userProfile = new UserProfile(identity, publicUserProfile);
         synchronized (lock) {
-            persistableStore.getChatUserIdentities().add(chatUserIdentity);
-            persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
+            persistableStore.getChatUserIdentities().add(userProfile);
+            persistableStore.getSelectedChatUserIdentity().set(userProfile);
         }
         persist();
-        return chatUserIdentity;
+        return userProfile;
     }
 
-    public void selectChatUserIdentity(ChatUserIdentity chatUserIdentity) {
-        persistableStore.getSelectedChatUserIdentity().set(chatUserIdentity);
+    public void selectChatUserIdentity(UserProfile userProfile) {
+        persistableStore.getSelectedChatUserIdentity().set(userProfile);
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> editChatUser(ChatUserIdentity chatUserIdentity, String terms, String bio) {
-        Identity identity = chatUserIdentity.getIdentity();
-        PublicUserProfile oldPublicUserProfile = chatUserIdentity.getPublicUserProfile();
+    public CompletableFuture<DataService.BroadCastDataResult> editChatUser(UserProfile userProfile, String terms, String bio) {
+        Identity identity = userProfile.getIdentity();
+        PublicUserProfile oldPublicUserProfile = userProfile.getPublicUserProfile();
         PublicUserProfile newPublicUserProfile = PublicUserProfile.from(oldPublicUserProfile, terms, bio);
-        ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newPublicUserProfile);
+        UserProfile newUserProfile = new UserProfile(identity, newPublicUserProfile);
 
         synchronized (lock) {
-            persistableStore.getChatUserIdentities().remove(chatUserIdentity);
-            persistableStore.getChatUserIdentities().add(newChatUserIdentity);
-            persistableStore.getSelectedChatUserIdentity().set(newChatUserIdentity);
+            persistableStore.getChatUserIdentities().remove(userProfile);
+            persistableStore.getChatUserIdentities().add(newUserProfile);
+            persistableStore.getSelectedChatUserIdentity().set(newUserProfile);
         }
         persist();
 
@@ -201,32 +201,32 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                 .thenCompose(result -> networkService.publishAuthenticatedData(newPublicUserProfile, identity.getNodeIdAndKeyPair()));
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deleteChatUser(ChatUserIdentity chatUserIdentity) {
+    public CompletableFuture<DataService.BroadCastDataResult> deleteChatUser(UserProfile userProfile) {
         //todo add more checks if deleting profile is permitted (e.g. not used in trades, PM,...)
         if (persistableStore.getChatUserIdentities().size() <= 1) {
             return CompletableFuture.failedFuture(new RuntimeException("Deleting chat user is not permitted if we only have one left."));
         }
         synchronized (lock) {
-            persistableStore.getChatUserIdentities().remove(chatUserIdentity);
+            persistableStore.getChatUserIdentities().remove(userProfile);
             persistableStore.getChatUserIdentities().stream().findAny()
                     .ifPresentOrElse(e -> persistableStore.getSelectedChatUserIdentity().set(e),
                             () -> persistableStore.getSelectedChatUserIdentity().set(null));
         }
         persist();
-        identityService.retireActiveIdentity(chatUserIdentity.getIdentity().getTag());
-        return networkService.removeAuthenticatedData(chatUserIdentity.getPublicUserProfile(),
-                chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
+        identityService.retireActiveIdentity(userProfile.getIdentity().getTag());
+        return networkService.removeAuthenticatedData(userProfile.getPublicUserProfile(),
+                userProfile.getIdentity().getNodeIdAndKeyPair());
     }
 
     public void replaceChatUser(PublicUserProfile newPublicUserProfile) {
         findChatUserIdentity(newPublicUserProfile.getNym())
                 .ifPresent(chatUserIdentity -> {
                     Identity identity = chatUserIdentity.getIdentity();
-                    ChatUserIdentity newChatUserIdentity = new ChatUserIdentity(identity, newPublicUserProfile);
+                    UserProfile newUserProfile = new UserProfile(identity, newPublicUserProfile);
                     synchronized (lock) {
                         persistableStore.getChatUserIdentities().remove(chatUserIdentity);
-                        persistableStore.getChatUserIdentities().add(newChatUserIdentity);
-                        persistableStore.getSelectedChatUserIdentity().set(newChatUserIdentity);
+                        persistableStore.getChatUserIdentities().add(newUserProfile);
+                        persistableStore.getSelectedChatUserIdentity().set(newUserProfile);
                     }
                     persist();
                 });
@@ -408,22 +408,22 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     }
 
 
-    public Observable<ChatUserIdentity> getSelectedChatUserIdentity() {
+    public Observable<UserProfile> getSelectedChatUserIdentity() {
         return persistableStore.getSelectedChatUserIdentity();
     }
 
-    public ObservableSet<ChatUserIdentity> getChatUserIdentities() {
+    public ObservableSet<UserProfile> getChatUserIdentities() {
         return persistableStore.getChatUserIdentities();
     }
 
     public Collection<PublicUserProfile> getMentionableChatUsers() {
         // TODO: implement logic
         return getChatUserIdentities().stream()
-                .map(ChatUserIdentity::getPublicUserProfile)
+                .map(UserProfile::getPublicUserProfile)
                 .collect(Collectors.toList());
     }
 
-    public Optional<ChatUserIdentity> findChatUserIdentity(String profileId) {
+    public Optional<UserProfile> findChatUserIdentity(String profileId) {
         return getChatUserIdentities().stream().filter(userProfile -> userProfile.getProfileId().equals(profileId)).findAny();
     }
 

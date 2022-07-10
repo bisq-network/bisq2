@@ -22,7 +22,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -52,7 +52,7 @@ public class ChatUserIdentityComboBox {
         return controller.view.getRoot();
     }
 
-    public ReadOnlyObjectProperty<ChatUserIdentity> getSelectedUserProfile() {
+    public ReadOnlyObjectProperty<UserProfile> getSelectedUserProfile() {
         return controller.model.selectedUserProfile;
     }
 
@@ -72,7 +72,7 @@ public class ChatUserIdentityComboBox {
 
         @Override
         public void onActivate() {
-            userProfilesPin = FxBindings.<ChatUserIdentity, ChatUserIdentity>bind(model.chatUserIdentities).to(chatUserService.getChatUserIdentities());
+            userProfilesPin = FxBindings.<UserProfile, UserProfile>bind(model.chatUserIdentities).to(chatUserService.getChatUserIdentities());
             selectedUserProfilePin = FxBindings.bind(model.selectedUserProfile).to(chatUserService.getSelectedChatUserIdentity());
         }
 
@@ -82,7 +82,7 @@ public class ChatUserIdentityComboBox {
             selectedUserProfilePin.unbind();
         }
 
-        public void onSelected(ChatUserIdentity value) {
+        public void onSelected(UserProfile value) {
             if (value != null) {
                 chatUserService.selectChatUserIdentity(value);
             }
@@ -90,8 +90,8 @@ public class ChatUserIdentityComboBox {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<ChatUserIdentity> selectedUserProfile = new SimpleObjectProperty<>();
-        ObservableList<ChatUserIdentity> chatUserIdentities = FXCollections.observableArrayList();
+        ObjectProperty<UserProfile> selectedUserProfile = new SimpleObjectProperty<>();
+        ObservableList<UserProfile> chatUserIdentities = FXCollections.observableArrayList();
 
         private Model() {
         }
@@ -99,7 +99,7 @@ public class ChatUserIdentityComboBox {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final AutoCompleteComboBox<ChatUserIdentity> comboBox;
+        private final AutoCompleteComboBox<UserProfile> comboBox;
         private Subscription subscription;
 
         private View(Model model, Controller controller) {
@@ -112,12 +112,12 @@ public class ChatUserIdentityComboBox {
             comboBox = new AutoCompleteComboBox<>(model.chatUserIdentities);
             comboBox.setConverter(new StringConverter<>() {
                 @Override
-                public String toString(ChatUserIdentity chatUserIdentity) {
-                    return chatUserIdentity != null ? chatUserIdentity.getPublicUserProfile().getUserName() : "";
+                public String toString(UserProfile userProfile) {
+                    return userProfile != null ? userProfile.getPublicUserProfile().getUserName() : "";
                 }
 
                 @Override
-                public ChatUserIdentity fromString(String string) {
+                public UserProfile fromString(String string) {
                     return null;
                 }
             });

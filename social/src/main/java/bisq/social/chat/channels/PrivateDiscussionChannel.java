@@ -21,7 +21,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PrivateDiscussionChatMessage;
 import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,12 +34,12 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
     private final PublicUserProfile peer;
-    private final ChatUserIdentity myProfile;
+    private final UserProfile myProfile;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
     private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
-    public PrivateDiscussionChannel(PublicUserProfile peer, ChatUserIdentity myProfile) {
+    public PrivateDiscussionChannel(PublicUserProfile peer, UserProfile myProfile) {
         this(PrivateChannel.createChannelId(peer.getNym(), myProfile.getProfileId()),
                 peer,
                 myProfile,
@@ -47,13 +47,13 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
                 new HashSet<>());
     }
 
-    public PrivateDiscussionChannel(String id, PublicUserProfile peer, ChatUserIdentity myProfile) {
+    public PrivateDiscussionChannel(String id, PublicUserProfile peer, UserProfile myProfile) {
         this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
     }
 
     private PrivateDiscussionChannel(String id,
                                      PublicUserProfile peer,
-                                     ChatUserIdentity myProfile,
+                                     UserProfile myProfile,
                                      NotificationSetting notificationSetting,
                                      Set<PrivateDiscussionChatMessage> chatMessages) {
         super(id, notificationSetting);
@@ -75,7 +75,7 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
         return new PrivateDiscussionChannel(
                 baseProto.getId(),
                 PublicUserProfile.fromProto(proto.getPeer()),
-                ChatUserIdentity.fromProto(proto.getMyChatUserIdentity()),
+                UserProfile.fromProto(proto.getMyChatUserIdentity()),
                 NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateDiscussionChatMessage::fromProto)

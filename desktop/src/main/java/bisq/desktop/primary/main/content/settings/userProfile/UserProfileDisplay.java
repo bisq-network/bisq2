@@ -26,7 +26,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -48,8 +48,8 @@ import org.fxmisc.easybind.Subscription;
 public class UserProfileDisplay {
     private final Controller controller;
 
-    public UserProfileDisplay(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
-        controller = new Controller(chatUserService, chatUserIdentity);
+    public UserProfileDisplay(ChatUserService chatUserService, UserProfile userProfile) {
+        controller = new Controller(chatUserService, userProfile);
     }
 
     public Pane getRoot() {
@@ -63,15 +63,15 @@ public class UserProfileDisplay {
         private final View view;
 
 
-        private Controller(ChatUserService chatUserService, ChatUserIdentity chatUserIdentity) {
+        private Controller(ChatUserService chatUserService, UserProfile userProfile) {
             this.chatUserService = chatUserService;
-            model = new Model(chatUserIdentity);
+            model = new Model(userProfile);
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            PublicUserProfile publicUserProfile = model.chatUserIdentity.getPublicUserProfile();
+            PublicUserProfile publicUserProfile = model.userProfile.getPublicUserProfile();
 
             model.id.set(Res.get("social.createUserProfile.id", publicUserProfile.getId()));
             model.bio.set(publicUserProfile.getBio());
@@ -104,7 +104,7 @@ public class UserProfileDisplay {
         public void onSave(String terms, String bio) {
             model.isPublishing.set(true);
             model.progress.set(-1);
-            chatUserService.editChatUser(model.chatUserIdentity, terms, bio)
+            chatUserService.editChatUser(model.userProfile, terms, bio)
                     .whenComplete((r, t) -> {
                         model.progress.set(0);
                         model.isPublishing.set(false);
@@ -114,7 +114,7 @@ public class UserProfileDisplay {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ChatUserIdentity chatUserIdentity;
+        private final UserProfile userProfile;
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
@@ -127,8 +127,8 @@ public class UserProfileDisplay {
         private final BooleanProperty isPublishing = new SimpleBooleanProperty();
         private final IntegerProperty progress = new SimpleIntegerProperty();
 
-        private Model(ChatUserIdentity chatUserIdentity) {
-            this.chatUserIdentity = chatUserIdentity;
+        private Model(UserProfile userProfile) {
+            this.userProfile = userProfile;
         }
     }
 

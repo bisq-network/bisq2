@@ -29,7 +29,7 @@ import bisq.social.chat.channels.*;
 import bisq.social.chat.messages.ChatMessage;
 import bisq.social.chat.messages.Quotation;
 import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
@@ -147,13 +147,13 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                ChatUserIdentity chatUserIdentity = chatUserService.getSelectedChatUserIdentity().get();
-                checkNotNull(chatUserIdentity, "chatUserIdentity must not be null at onSendMessage");
+                UserProfile userProfile = chatUserService.getSelectedChatUserIdentity().get();
+                checkNotNull(userProfile, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, chatUserIdentity);
+                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userProfile);
                 } else if (channel instanceof PublicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, chatUserIdentity);
+                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userProfile);
                 } else if (channel instanceof PrivateTradeChannel) {
                     chatService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else if (channel instanceof PrivateDiscussionChannel) {

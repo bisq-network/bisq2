@@ -23,7 +23,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.identity.profile.ChatUserIdentity;
+import bisq.identity.profile.UserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -87,7 +87,7 @@ public class UserProfileSelection {
         public void onActivate() {
             selectedUserProfilePin = FxBindings.subscribe(chatUserService.getSelectedChatUserIdentity(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
-            userProfilesPin = FxBindings.<ChatUserIdentity, ListItem>bind(model.userProfiles)
+            userProfilesPin = FxBindings.<UserProfile, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)
                     .to(chatUserService.getChatUserIdentities());
         }
@@ -107,7 +107,7 @@ public class UserProfileSelection {
 
         private void onSelected(ListItem selectedItem) {
             if (selectedItem != null) {
-                chatUserService.selectChatUserIdentity(selectedItem.chatUserIdentity);
+                chatUserService.selectChatUserIdentity(selectedItem.userProfile);
             }
         }
     }
@@ -158,15 +158,15 @@ public class UserProfileSelection {
 
     @EqualsAndHashCode
     public static class ListItem {
-        private final ChatUserIdentity chatUserIdentity;
+        private final UserProfile userProfile;
 
-        private ListItem(ChatUserIdentity chatUserIdentity) {
-            this.chatUserIdentity = chatUserIdentity;
+        private ListItem(UserProfile userProfile) {
+            this.userProfile = userProfile;
         }
 
         @Override
         public String toString() {
-            return chatUserIdentity.getNickName();
+            return userProfile.getNickName();
         }
     }
 
@@ -213,8 +213,8 @@ public class UserProfileSelection {
                     super.updateItem(item, empty);
 
                     if (item != null && !empty) {
-                        imageView.setImage(RoboHash.getImage(item.chatUserIdentity.getPubKeyHash()));
-                        label.setText(item.chatUserIdentity.getNickName());
+                        imageView.setImage(RoboHash.getImage(item.userProfile.getPubKeyHash()));
+                        label.setText(item.userProfile.getNickName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
                             if (newValue.doubleValue() > 0) {
@@ -299,10 +299,10 @@ public class UserProfileSelection {
 
             control.getSelectionModel().selectedItemProperty().addListener(new WeakReference<>((ChangeListener<ListItem>) (observable, oldValue, newValue) -> {
                 if (newValue != null) {
-                    ChatUserIdentity chatUserIdentity = newValue.chatUserIdentity;
-                    if (chatUserIdentity != null) {
-                        imageView.setImage(RoboHash.getImage(chatUserIdentity.getPubKeyHash()));
-                        userNameLabel.setText(chatUserIdentity.getNickName());
+                    UserProfile userProfile = newValue.userProfile;
+                    if (userProfile != null) {
+                        imageView.setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
+                        userNameLabel.setText(userProfile.getNickName());
                         buttonPane.layout();
                     }
                 }
