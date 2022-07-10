@@ -1,8 +1,8 @@
 package bisq.social.chat.messages;
 
 import bisq.common.proto.Proto;
-import bisq.security.pow.ProofOfWork;
 import bisq.identity.profile.NymLookup;
+import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,13 +13,13 @@ import lombok.ToString;
 public final class Quotation implements Proto {
     private final String nym;
     private final String nickName;
-    private final ProofOfWork proofOfWork;
+    private final byte[] pubKeyHash;
     private final String message;
 
-    public Quotation(String nym, String nickName, ProofOfWork proofOfWork, String message) {
+    public Quotation(String nym, String nickName, byte[] pubKeyHash, String message) {
         this.nym = nym;
         this.nickName = nickName;
-        this.proofOfWork = proofOfWork;
+        this.pubKeyHash = pubKeyHash;
         this.message = message;
     }
 
@@ -27,7 +27,7 @@ public final class Quotation implements Proto {
         return bisq.social.protobuf.Quotation.newBuilder()
                 .setNym(nym)
                 .setNickName(nickName)
-                .setProofOfWork(proofOfWork.toProto())
+                .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
                 .setMessage(message)
                 .build();
     }
@@ -35,7 +35,7 @@ public final class Quotation implements Proto {
     public static Quotation fromProto(bisq.social.protobuf.Quotation proto) {
         return new Quotation(proto.getNym(),
                 proto.getNickName(),
-                ProofOfWork.fromProto(proto.getProofOfWork()),
+                proto.getPubKeyHash().toByteArray(),
                 proto.getMessage());
     }
 
@@ -46,7 +46,7 @@ public final class Quotation implements Proto {
     public boolean isValid() {
         return nym != null && !nym.isEmpty() &&
                 nickName != null && !nickName.isEmpty() &&
-                proofOfWork != null && proofOfWork.getSolution().length > 0 &&
+                pubKeyHash != null && pubKeyHash.length > 0 &&
                 message != null && !message.isEmpty();
     }
 }

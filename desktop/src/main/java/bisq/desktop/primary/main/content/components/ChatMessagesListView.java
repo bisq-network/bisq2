@@ -280,7 +280,7 @@ public class ChatMessagesListView {
                                     String text = chatMessage.getText();
                                     Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), 
                                             chatUser.getNickName(), 
-                                            chatUser.getProofOfWork(), 
+                                            chatUser.getPubKeyHash(), 
                                             text));
                                     chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
                                                     quotation,
@@ -787,7 +787,7 @@ public class ChatMessagesListView {
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
                                     roboIconImageView.setFitHeight(25);
-                                    Image image = RoboHash.getImage(quotation.getProofOfWork().getPayload());
+                                    Image image = RoboHash.getImage(quotation.getPubKeyHash());
                                     roboIconImageView.setImage(image);
 
                                     Label userName = new Label(quotation.getUserName());

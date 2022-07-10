@@ -82,6 +82,6 @@ public final class Identity implements Proto {
     }
 
     public byte[] getPubKeyHash() {
-        return proofOfWork.getPayload();
+        return networkId.getPubKey().getHash();
     }
 }

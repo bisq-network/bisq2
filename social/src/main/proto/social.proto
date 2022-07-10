@@ -80,7 +80,7 @@ message Reputation {
 message Quotation {
   string nym = 1;
   string nickName = 2;
-  security.ProofOfWork proofOfWork = 3;
+  bytes pubKeyHash = 3;
   string message = 4;
 }
 

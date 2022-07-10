@@ -26,7 +26,6 @@ import bisq.identity.profile.NymLookup;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -34,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,14 +54,14 @@ public final class ChatUser implements DistributedData {
     }
 
     private final String nickName;
-    private final ProofOfWork proofOfWork; // used for verification
+    // We need the proofOfWork for verification of the nym and robohash icon
+    private final ProofOfWork proofOfWork;
     private final NetworkId networkId;
     private final String terms;
     private final String bio;
 
-    private transient final byte[] pubKeyHash;
-    private transient final String id;
-    private transient final String nym;
+    private transient String id;
+    private transient String nym;
 
     public ChatUser(String nickName,
                     ProofOfWork proofOfWork,
@@ -73,10 +73,24 @@ public final class ChatUser implements DistributedData {
         this.networkId = networkId;
         this.terms = terms;
         this.bio = bio;
+    }
 
-        pubKeyHash = DigestUtil.hash(networkId.getPubKey().getPublicKey().getEncoded());
-        id = Hex.encode(pubKeyHash);
-        nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
+    public byte[] getPubKeyHash() {
+        return networkId.getPubKey().getHash();
+    }
+
+    public String getId() {
+        if (id == null) {
+            id = Hex.encode(getPubKeyHash());
+        }
+        return id;
+    }
+
+    public String getNym() {
+        if (nym == null) {
+            nym = NymIdGenerator.fromHash(proofOfWork.getPayload());
+        }
+        return nym;
     }
 
     @Override
@@ -115,8 +129,7 @@ public final class ChatUser implements DistributedData {
 
     @Override
     public boolean isDataInvalid() {
-        //todo
-        return false;
+        return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }
 
     public String getTooltipString() {

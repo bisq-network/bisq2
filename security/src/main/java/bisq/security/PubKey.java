@@ -34,6 +34,7 @@ public final class PubKey implements Proto {
     private final PublicKey publicKey;
     @Getter
     private final String keyId;
+    
     private transient byte[] hash;
 
     public PubKey(PublicKey publicKey, String keyId) {
