@@ -22,7 +22,6 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
-import bisq.security.pow.ProofOfWork;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,20 +35,17 @@ public final class Identity implements Proto {
     public static Identity from(String domainId, Identity identity) {
         return new Identity(domainId,
                 identity.getNetworkId(),
-                identity.getKeyPair(),
-                identity.getProofOfWork());
+                identity.getKeyPair());
     }
 
     private final String domainId;
     private final NetworkId networkId;
     private final KeyPair keyPair;
-    private final ProofOfWork proofOfWork;
 
-    public Identity(String domainId, NetworkId networkId, KeyPair keyPair, ProofOfWork proofOfWork) {
+    public Identity(String domainId, NetworkId networkId, KeyPair keyPair) {
         this.domainId = domainId;
         this.networkId = networkId;
         this.keyPair = keyPair;
-        this.proofOfWork = proofOfWork;
     }
 
     @Override
@@ -58,15 +54,13 @@ public final class Identity implements Proto {
                 .setDomainId(domainId)
                 .setNetworkId(networkId.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
-                .setProofOfWork(proofOfWork.toProto())
                 .build();
     }
 
     public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair()),
-                ProofOfWork.fromProto(proto.getProofOfWork()));
+                KeyPairProtoUtil.fromProto(proto.getKeyPair()));
     }
 
     public NetworkIdWithKeyPair getNodeIdAndKeyPair() {

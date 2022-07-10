@@ -148,7 +148,7 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
                                                                                    String terms,
                                                                                    String bio) {
 
-        return identityService.createNewIdentity(profileId, keyId, keyPair, proofOfWork)
+        return identityService.createNewIdentity(profileId, keyId, keyPair)
                 .thenApply(identity -> createChatUserIdentity(nickName, proofOfWork, terms, bio, identity))
                 .thenApply(chatUserIdentity -> {
                     maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
@@ -166,7 +166,11 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
         openTimestampService.maybeCreateOrUpgradeTimestampAsync(pubKeyHash);
     }
 
-    public ChatUserIdentity createChatUserIdentity(String nickName, ProofOfWork proofOfWork, String terms, String bio, Identity identity) {
+    public ChatUserIdentity createChatUserIdentity(String nickName,
+                                                   ProofOfWork proofOfWork,
+                                                   String terms,
+                                                   String bio,
+                                                   Identity identity) {
         ChatUser chatUser = new ChatUser(nickName, proofOfWork, identity.getNodeIdAndKeyPair().getNetworkId(), terms, bio);
         ChatUserIdentity chatUserIdentity = new ChatUserIdentity(identity, chatUser);
         synchronized (lock) {

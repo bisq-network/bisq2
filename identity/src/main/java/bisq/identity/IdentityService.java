@@ -24,11 +24,9 @@ import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import bisq.security.SecurityService;
-import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import com.google.common.collect.Streams;
 import lombok.Getter;
@@ -156,14 +154,13 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
      */
     public CompletableFuture<Identity> createNewIdentity(String domainId,
                                                          String keyId,
-                                                         KeyPair keyPair,
-                                                         ProofOfWork proofOfWork) {
+                                                         KeyPair keyPair) {
         keyPairService.persistKeyPair(keyId, keyPair);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
         return networkService.getInitializedNetworkId(nodeId, pubKey)
                 .thenApply(networkId -> {
-                    Identity identity = new Identity(domainId, networkId, keyPair, proofOfWork);
+                    Identity identity = new Identity(domainId, networkId, keyPair);
                     synchronized (lock) {
                         getActiveIdentityByDomainId().put(domainId, identity);
                     }
@@ -338,9 +335,7 @@ public class IdentityService implements PersistenceClient<IdentityStore>, Module
         KeyPair keyPair = keyPairService.getOrCreateKeyPair(keyId);
         PubKey pubKey = new PubKey(keyPair.getPublic(), keyId);
         String nodeId = StringUtils.createUid();
-        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-        return proofOfWorkService.mintNymProofOfWork(pubKeyHash)
-                .thenCompose(proofOfWork -> networkService.getInitializedNetworkId(nodeId, pubKey)
-                        .thenApply(networkId -> new Identity(domainId, networkId, keyPair, proofOfWork)));
+        return networkService.getInitializedNetworkId(nodeId, pubKey)
+                .thenApply(networkId -> new Identity(domainId, networkId, keyPair));
     }
 }
