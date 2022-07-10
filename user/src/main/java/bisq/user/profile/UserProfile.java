@@ -134,7 +134,6 @@ public final class UserProfile implements DistributedData {
         return UserNameLookup.getUserName(nym, nickName);
     }
 
-
     //todo
     public String getBurnScoreAsString() {
         return "301"; //todo implement instead of hardcode

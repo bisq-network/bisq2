@@ -20,7 +20,6 @@ syntax = "proto3";
 package user;
 option java_package = "bisq.user.protobuf";
 option java_multiple_files = true;
-import "common.proto";
 import "network.proto";
 import "security.proto";
 import "identity.proto";
@@ -56,8 +55,6 @@ message ProofOfBurnVerificationStore {
   map<string, Proof> verifiedProofOfBurnProofs = 1;
 }
 
-message TradeChatOfferStore {
-}
 
 
 

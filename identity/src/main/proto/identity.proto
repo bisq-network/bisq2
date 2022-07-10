@@ -18,7 +18,7 @@
 syntax = "proto3";
 
 package identity;
-option java_package = "bisq.user.protobuf";
+option java_package = "bisq.identity.protobuf";
 option java_multiple_files = true;
 import "network.proto";
 import "security.proto";
