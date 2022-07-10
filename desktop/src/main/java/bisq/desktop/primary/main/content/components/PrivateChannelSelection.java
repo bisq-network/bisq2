@@ -21,10 +21,10 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.PrivateChannel;
-import bisq.social.chat.channels.PrivateDiscussionChannel;
-import bisq.social.chat.channels.PrivateTradeChannel;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PrivateChannel;
+import bisq.chat.channels.PrivateDiscussionChannel;
+import bisq.chat.channels.PrivateTradeChannel;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,7 +45,7 @@ public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PrivateChannelSelection(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
-        controller = new Controller(applicationService.getSocialService().getChatService(), isDiscussionsChat);
+        controller = new Controller(applicationService.getChatService(), isDiscussionsChat);
     }
 
     public Pane getRoot() {

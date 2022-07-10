@@ -4,7 +4,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.restApi.RestApiApplication;
 import bisq.restApi.dto.PublicDiscussionChannelDto;
 import bisq.restApi.dto.PublicTradeChannelDto;
-import bisq.social.chat.ChatService;
+import bisq.chat.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,7 +31,7 @@ public class ChatApi {
 
     public ChatApi(@Context Application application) {
         DefaultApplicationService appService = ((RestApiApplication) application).getApplicationService();
-        chatService = appService.getSocialService().getChatService();
+        chatService = appService.getChatService();
     }
 
     @GET

@@ -22,9 +22,9 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.channels.PrivateDiscussionChannel;
-import bisq.social.chat.messages.ChatMessage;
+import bisq.chat.channels.Channel;
+import bisq.chat.channels.PrivateDiscussionChannel;
+import bisq.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 

@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.chat;
 
+import bisq.chat.channels.*;
+import bisq.chat.messages.*;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
@@ -35,12 +37,9 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
-import bisq.social.chat.channels.*;
-import bisq.social.chat.messages.*;
-import bisq.social.offer.TradeChatOffer;
-import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -89,6 +88,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return CompletableFuture.completedFuture(true);
     }
 
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener

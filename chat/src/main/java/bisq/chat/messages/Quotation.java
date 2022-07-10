@@ -1,4 +1,4 @@
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.common.proto.Proto;
 import bisq.user.profile.UserNameLookup;
@@ -23,8 +23,8 @@ public final class Quotation implements Proto {
         this.message = message;
     }
 
-    public bisq.social.protobuf.Quotation toProto() {
-        return bisq.social.protobuf.Quotation.newBuilder()
+    public bisq.chat.protobuf.Quotation toProto() {
+        return bisq.chat.protobuf.Quotation.newBuilder()
                 .setNym(nym)
                 .setNickName(nickName)
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
@@ -32,7 +32,7 @@ public final class Quotation implements Proto {
                 .build();
     }
 
-    public static Quotation fromProto(bisq.social.protobuf.Quotation proto) {
+    public static Quotation fromProto(bisq.chat.protobuf.Quotation proto) {
         return new Quotation(proto.getNym(),
                 proto.getNickName(),
                 proto.getPubKeyHash().toByteArray(),

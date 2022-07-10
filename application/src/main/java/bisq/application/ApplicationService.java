@@ -31,7 +31,7 @@ import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
-import bisq.social.chat.messages.ChatMessage;
+import bisq.chat.messages.ChatMessage;
 import bisq.user.profile.UserProfile;
 import ch.qos.logback.classic.Level;
 import com.typesafe.config.ConfigFactory;

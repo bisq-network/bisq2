@@ -1,4 +1,4 @@
-package bisq.social.offer;
+package bisq.chat.messages;
 
 
 import bisq.common.currency.Market;
@@ -54,8 +54,8 @@ public final class TradeChatOffer implements Proto {
     }
 
     @Override
-    public bisq.social.protobuf.TradeChatOffer toProto() {
-        return bisq.social.protobuf.TradeChatOffer.newBuilder()
+    public bisq.chat.protobuf.TradeChatOffer toProto() {
+        return bisq.chat.protobuf.TradeChatOffer.newBuilder()
                 .setDirection(direction.toProto())
                 .setMarket(market.toProto())
                 .setBaseSideAmount(baseSideAmount)
@@ -66,7 +66,7 @@ public final class TradeChatOffer implements Proto {
                 .build();
     }
 
-    public static TradeChatOffer fromProto(bisq.social.protobuf.TradeChatOffer proto) {
+    public static TradeChatOffer fromProto(bisq.chat.protobuf.TradeChatOffer proto) {
         return new TradeChatOffer(Direction.fromProto(proto.getDirection()),
                 Market.fromProto(proto.getMarket()),
                 proto.getBaseSideAmount(),

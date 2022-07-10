@@ -29,7 +29,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
-import bisq.social.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -75,7 +75,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
-            super(applicationService.getSocialService().getChatService());
+            super(applicationService.getChatService());
 
             model = new Model();
             view = new View(model, this);

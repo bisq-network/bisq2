@@ -18,6 +18,7 @@
 package bisq.application;
 
 import bisq.account.AccountService;
+import bisq.chat.ChatService;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
@@ -29,7 +30,6 @@ import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
-import bisq.social.SocialService;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.elementsd.LiquidWalletService;
@@ -71,7 +71,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final AccountService accountService;
     private final OfferService offerService;
     private final UserService userService;
-    private final SocialService socialService;
+    private final ChatService chatService;
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
 
@@ -110,10 +110,9 @@ public class DefaultApplicationService extends ApplicationService {
                 oracleService.getOpenTimestampService(),
                 networkService);
 
-        socialService = new SocialService(SocialService.Config.from(getConfig("social")),
-                persistenceService,
+        chatService = new ChatService(persistenceService,
                 identityService,
-                securityService,
+                securityService.getProofOfWorkService(),
                 networkService,
                 userService.getUserIdentityService());
         
@@ -137,7 +136,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> accountService.initialize())
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> userService.initialize())
-                .thenCompose(result -> socialService.initialize())
+                .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -157,7 +156,7 @@ public class DefaultApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> protocolService.shutdown()
                         .thenCompose(result -> settingsService.shutdown())
-                        .thenCompose(result -> socialService.shutdown())
+                        .thenCompose(result -> chatService.shutdown())
                         .thenCompose(result -> userService.shutdown())
                         .thenCompose(result -> offerService.shutdown())
                         .thenCompose(result -> accountService.shutdown())

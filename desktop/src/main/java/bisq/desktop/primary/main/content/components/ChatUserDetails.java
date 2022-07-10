@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.social.chat.ChatService;
+import bisq.chat.ChatService;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;

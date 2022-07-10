@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -63,11 +63,11 @@ public final class PublicDiscussionChatMessage extends ChatMessage implements Di
                 metaData);
     }
 
-    public bisq.social.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicDiscussionChatMessage(bisq.social.protobuf.PublicDiscussionChatMessage.newBuilder()).build();
+    public bisq.chat.protobuf.ChatMessage toProto() {
+        return getChatMessageBuilder().setPublicDiscussionChatMessage(bisq.chat.protobuf.PublicDiscussionChatMessage.newBuilder()).build();
     }
 
-    public static PublicDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+    public static PublicDiscussionChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();

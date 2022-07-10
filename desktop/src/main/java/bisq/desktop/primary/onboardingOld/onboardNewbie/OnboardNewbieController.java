@@ -27,8 +27,7 @@ import bisq.desktop.components.controls.MarketSelection;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
-import bisq.social.chat.ChatService;
-import bisq.social.offer.TradeChatOfferService;
+import bisq.chat.ChatService;
 import com.google.common.base.Joiner;
 import javafx.beans.InvalidationListener;
 import lombok.Getter;
@@ -51,8 +50,7 @@ public class OnboardNewbieController implements Controller {
     private Subscription termsDisabledSubscription;
 
     public OnboardNewbieController(DefaultApplicationService applicationService) {
-        TradeChatOfferService tradeChatOfferService = applicationService.getSocialService().getTradeChatOfferService();
-        chatService = applicationService.getSocialService().getChatService();
+        chatService = applicationService.getChatService();
         model = new OnboardNewbieModel(applicationService.getUserService().getUserIdentityService().getSelectedUserProfile().get().getNym());
 
         marketSelection = new MarketSelection(applicationService.getSettingsService());

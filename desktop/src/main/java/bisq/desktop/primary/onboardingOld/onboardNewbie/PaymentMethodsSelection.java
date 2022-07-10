@@ -24,7 +24,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
-import bisq.social.chat.ChatService;
+import bisq.chat.ChatService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;

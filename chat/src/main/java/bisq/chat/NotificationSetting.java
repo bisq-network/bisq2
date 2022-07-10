@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.chat;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
@@ -26,11 +26,11 @@ public enum NotificationSetting implements ProtoEnum {
     NEVER;
 
     @Override
-    public bisq.social.protobuf.NotificationSetting toProto() {
-        return bisq.social.protobuf.NotificationSetting.valueOf(name());
+    public bisq.chat.protobuf.NotificationSetting toProto() {
+        return bisq.chat.protobuf.NotificationSetting.valueOf(name());
     }
 
-    public static NotificationSetting fromProto(bisq.social.protobuf.NotificationSetting proto) {
+    public static NotificationSetting fromProto(bisq.chat.protobuf.NotificationSetting proto) {
         return ProtobufUtils.enumFromProto(NotificationSetting.class, proto.name());
     }
 }

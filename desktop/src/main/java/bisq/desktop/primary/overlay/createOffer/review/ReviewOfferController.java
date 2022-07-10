@@ -27,11 +27,11 @@ import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
 import bisq.settings.SettingsService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.PublicTradeChannel;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.PublicTradeChatMessage;
-import bisq.social.offer.TradeChatOffer;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.PublicTradeChatMessage;
+import bisq.chat.messages.TradeChatOffer;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.reputation.ReputationService;
@@ -58,7 +58,7 @@ public class ReviewOfferController implements Controller {
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable closeHandler) {
-        chatService = applicationService.getSocialService().getChatService();
+        chatService = applicationService.getChatService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
 

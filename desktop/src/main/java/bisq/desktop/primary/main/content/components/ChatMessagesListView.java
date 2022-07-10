@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.*;
+import bisq.chat.messages.*;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -34,10 +36,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.*;
-import bisq.social.chat.messages.*;
-import bisq.social.offer.TradeChatOffer;
+import bisq.chat.ChatService;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -149,7 +148,7 @@ public class ChatMessagesListView {
                            boolean isCreateOfferMode,
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
-            this.chatService = applicationService.getSocialService().getChatService();
+            this.chatService = applicationService.getChatService();
             this.userIdentityService = applicationService.getUserService().getUserIdentityService();
             this.reputationService = applicationService.getUserService().getReputationService();
             this.mentionUserHandler = mentionUserHandler;

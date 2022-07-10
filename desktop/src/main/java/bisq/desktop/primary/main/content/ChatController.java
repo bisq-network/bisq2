@@ -25,9 +25,9 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
 import bisq.settings.DontShowAgainService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.Channel;
-import bisq.social.chat.messages.ChatMessage;
+import bisq.chat.ChatService;
+import bisq.chat.channels.Channel;
+import bisq.chat.messages.ChatMessage;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
 
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
         this.applicationService = applicationService;
-        chatService = applicationService.getSocialService().getChatService();
+        chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         ReputationService reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);

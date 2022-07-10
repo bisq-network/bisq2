@@ -18,16 +18,16 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.*;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
-import bisq.social.chat.ChatService;
-import bisq.social.chat.channels.*;
-import bisq.social.chat.messages.ChatMessage;
-import bisq.social.chat.messages.Quotation;
+import bisq.chat.ChatService;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.Quotation;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -96,7 +96,7 @@ public class ChatMessagesComponent {
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
-            chatService = applicationService.getSocialService().getChatService();
+            chatService = applicationService.getChatService();
            userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService= applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);

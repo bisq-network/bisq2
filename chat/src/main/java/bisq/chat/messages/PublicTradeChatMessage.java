@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.social.offer.TradeChatOffer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -69,13 +68,13 @@ public final class PublicTradeChatMessage extends ChatMessage implements Distrib
         this.tradeChatOffer = tradeChatOffer;
     }
 
-    public bisq.social.protobuf.ChatMessage toProto() {
-        bisq.social.protobuf.PublicTradeChatMessage.Builder builder = bisq.social.protobuf.PublicTradeChatMessage.newBuilder();
+    public bisq.chat.protobuf.ChatMessage toProto() {
+        bisq.chat.protobuf.PublicTradeChatMessage.Builder builder = bisq.chat.protobuf.PublicTradeChatMessage.newBuilder();
         tradeChatOffer.ifPresent(tradeChatOffer -> builder.setTradeChatOffer(tradeChatOffer.toProto()));
         return getChatMessageBuilder().setPublicTradeChatMessage(builder).build();
     }
 
-    public static PublicTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+    public static PublicTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();

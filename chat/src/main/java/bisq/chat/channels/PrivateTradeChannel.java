@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.chat.channels;
 
 import bisq.common.observable.ObservableSet;
-import bisq.social.chat.NotificationSetting;
-import bisq.social.chat.messages.PrivateTradeChatMessage;
+import bisq.chat.NotificationSetting;
+import bisq.chat.messages.PrivateTradeChatMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
@@ -62,16 +62,16 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
         this.chatMessages.addAll(chatMessages);
     }
 
-    public bisq.social.protobuf.Channel toProto() {
-        return getChannelBuilder().setPrivateTradeChannel(bisq.social.protobuf.PrivateTradeChannel.newBuilder()
+    public bisq.chat.protobuf.Channel toProto() {
+        return getChannelBuilder().setPrivateTradeChannel(bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myProfile.toProto())
                         .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PrivateTradeChannel fromProto(bisq.social.protobuf.Channel baseProto,
-                                                bisq.social.protobuf.PrivateTradeChannel proto) {
+    public static PrivateTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                bisq.chat.protobuf.PrivateTradeChannel proto) {
         return new PrivateTradeChannel(
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
@@ -83,7 +83,7 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
     }
 
     @Override
-    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PrivateTradeChatMessage chatMessage) {
+    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PrivateTradeChatMessage chatMessage) {
         return chatMessage.toChatMessageProto();
     }
 

@@ -15,15 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat;
+package bisq.chat;
 
+import bisq.chat.channels.*;
+import bisq.chat.messages.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.social.chat.channels.*;
-import bisq.social.chat.messages.ChatMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +66,8 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     }
 
     @Override
-    public bisq.social.protobuf.ChatStore toProto() {
-        return bisq.social.protobuf.ChatStore.newBuilder()
+    public bisq.chat.protobuf.ChatStore toProto() {
+        return bisq.chat.protobuf.ChatStore.newBuilder()
                 .addAllPrivateTradeChannels(privateTradeChannels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toSet()))
                 .addAllPrivateDiscussionChannels(privateDiscussionChannels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toSet()))
                 .addAllPublicDiscussionChannels(publicDiscussionChannels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toSet()))
@@ -79,7 +79,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
                 .build();
     }
 
-    public static ChatStore fromProto(bisq.social.protobuf.ChatStore proto) {
+    public static ChatStore fromProto(bisq.chat.protobuf.ChatStore proto) {
         Set<PrivateTradeChannel> privateTradeChannels = proto.getPrivateTradeChannelsList().stream()
                 .map(e -> (PrivateTradeChannel) PrivateTradeChannel.fromProto(e))
                 .collect(Collectors.toSet());
@@ -107,7 +107,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.ChatStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.ChatStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

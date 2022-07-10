@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -85,19 +85,19 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
                 .build();
     }
 
-    public bisq.social.protobuf.ChatMessage toChatMessageProto() {
+    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
-                .setPrivateTradeChatMessage(bisq.social.protobuf.PrivateTradeChatMessage.newBuilder()
+                .setPrivateTradeChatMessage(bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
                         .setReceiversNym(receiversNym)
                         .setAuthor(author.toProto()))
                 .build();
     }
 
-    public static PrivateTradeChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+    public static PrivateTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        bisq.social.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
+        bisq.chat.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
         return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateTradeChatMessage.getAuthor()),

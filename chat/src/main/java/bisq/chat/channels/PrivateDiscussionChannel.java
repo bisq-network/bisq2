@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.chat.channels;
 
+import bisq.chat.messages.PrivateDiscussionChatMessage;
 import bisq.common.observable.ObservableSet;
-import bisq.social.chat.NotificationSetting;
-import bisq.social.chat.messages.PrivateDiscussionChatMessage;
+import bisq.chat.NotificationSetting;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
@@ -62,16 +62,16 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
         this.chatMessages.addAll(chatMessages);
     }
 
-    public bisq.social.protobuf.Channel toProto() {
-        return getChannelBuilder().setPrivateDiscussionChannel(bisq.social.protobuf.PrivateDiscussionChannel.newBuilder()
+    public bisq.chat.protobuf.Channel toProto() {
+        return getChannelBuilder().setPrivateDiscussionChannel(bisq.chat.protobuf.PrivateDiscussionChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myProfile.toProto())
                         .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PrivateDiscussionChannel fromProto(bisq.social.protobuf.Channel baseProto,
-                                                     bisq.social.protobuf.PrivateDiscussionChannel proto) {
+    public static PrivateDiscussionChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                     bisq.chat.protobuf.PrivateDiscussionChannel proto) {
         return new PrivateDiscussionChannel(
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
@@ -83,7 +83,7 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
     }
 
     @Override
-    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PrivateDiscussionChatMessage chatMessage) {
+    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PrivateDiscussionChatMessage chatMessage) {
         return chatMessage.toChatMessageProto();
     }
 

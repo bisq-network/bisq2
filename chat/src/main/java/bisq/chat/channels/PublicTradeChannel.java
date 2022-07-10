@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.chat.channels;
 
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
-import bisq.social.chat.NotificationSetting;
-import bisq.social.chat.messages.PublicTradeChatMessage;
+import bisq.chat.NotificationSetting;
+import bisq.chat.messages.PublicTradeChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -65,21 +65,21 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
     }
 
     @Override
-    public bisq.social.protobuf.Channel toProto() {
-        bisq.social.protobuf.PublicTradeChannel.Builder builder = bisq.social.protobuf.PublicTradeChannel.newBuilder()
+    public bisq.chat.protobuf.Channel toProto() {
+        bisq.chat.protobuf.PublicTradeChannel.Builder builder = bisq.chat.protobuf.PublicTradeChannel.newBuilder()
                 .setIsVisible(isVisible);
         market.ifPresent(market -> builder.setMarket(market.toProto()));
         return getChannelBuilder().setPublicTradeChannel(builder).build();
     }
 
-    public static PublicTradeChannel fromProto(bisq.social.protobuf.Channel baseProto,
-                                               bisq.social.protobuf.PublicTradeChannel proto) {
+    public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                               bisq.chat.protobuf.PublicTradeChannel proto) {
         Optional<Market> market = proto.hasMarket() ? Optional.of(Market.fromProto(proto.getMarket())) : Optional.empty();
         return new PublicTradeChannel(baseProto.getId(), market, baseProto.getPublicTradeChannel().getIsVisible());
     }
 
     @Override
-    protected bisq.social.protobuf.ChatMessage getChatMessageProto(PublicTradeChatMessage chatMessage) {
+    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PublicTradeChatMessage chatMessage) {
         return chatMessage.toProto();
     }
 

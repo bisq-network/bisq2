@@ -18,7 +18,7 @@
 syntax = "proto3";
 
 package social;
-option java_package = "bisq.social.protobuf";
+option java_package = "bisq.chat.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 import "network.proto";

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -71,8 +71,8 @@ public abstract class ChatMessage {
         return optionalText.orElse(Res.get("na"));
     }
 
-    public bisq.social.protobuf.ChatMessage.Builder getChatMessageBuilder() {
-        bisq.social.protobuf.ChatMessage.Builder builder = bisq.social.protobuf.ChatMessage.newBuilder()
+    public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
+        bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setChannelId(channelId)
                 .setAuthorId(authorId)
                 .setDate(date)
@@ -83,7 +83,7 @@ public abstract class ChatMessage {
         return builder;
     }
 
-    public static ChatMessage fromProto(bisq.social.protobuf.ChatMessage proto) {
+    public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
             case PRIVATETRADECHATMESSAGE: {
                 return PrivateTradeChatMessage.fromProto(proto);
@@ -107,7 +107,7 @@ public abstract class ChatMessage {
     public static ProtoResolver<DistributedData> getDistributedDataResolver() {
         return any -> {
             try {
-                bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
                     case PUBLICTRADECHATMESSAGE: {
                         return PublicTradeChatMessage.fromProto(proto);
@@ -129,7 +129,7 @@ public abstract class ChatMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.social.protobuf.ChatMessage proto = any.unpack(bisq.social.protobuf.ChatMessage.class);
+                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
                     case PRIVATETRADECHATMESSAGE: {
                         return PrivateTradeChatMessage.fromProto(proto);

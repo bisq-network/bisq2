@@ -15,7 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.chat.channels;
 
-public interface PublicChannel {
+import bisq.user.profile.UserProfile;
+
+public interface PrivateChannel {
+    String CHANNEL_DELIMITER = "@PC@";
+
+    UserProfile getPeer();
+
+    static String createChannelId(String peersProfileId, String myProfileId) {
+        if (peersProfileId.compareTo(myProfileId) < 0) {
+            return peersProfileId + CHANNEL_DELIMITER + myProfileId;
+        } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
+            return myProfileId + CHANNEL_DELIMITER + peersProfileId;
+        }
+    }
 }

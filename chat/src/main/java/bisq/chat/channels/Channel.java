@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.channels;
+package bisq.chat.channels;
 
+import bisq.chat.NotificationSetting;
+import bisq.chat.messages.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.social.chat.NotificationSetting;
-import bisq.social.chat.messages.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -40,19 +40,19 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
         this.notificationSetting.set(notificationSetting);
     }
 
-    public bisq.social.protobuf.Channel.Builder getChannelBuilder() {
-        return bisq.social.protobuf.Channel.newBuilder()
+    public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
+        return bisq.chat.protobuf.Channel.newBuilder()
                 .setId(id)
                 .setNotificationSetting(notificationSetting.get().toProto());
     }
 
     // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
     // concrete implementation for the ChatMessage.
-    protected abstract bisq.social.protobuf.ChatMessage getChatMessageProto(T e);
+    protected abstract bisq.chat.protobuf.ChatMessage getChatMessageProto(T e);
 
-    abstract public bisq.social.protobuf.Channel toProto();
+    abstract public bisq.chat.protobuf.Channel toProto();
 
-    public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Channel proto) {
+    public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
             case PRIVATETRADECHANNEL: {
                 return PrivateTradeChannel.fromProto(proto, proto.getPrivateTradeChannel());

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.social.chat.messages;
+package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -83,19 +83,19 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
                 .build();
     }
 
-    public bisq.social.protobuf.ChatMessage toChatMessageProto() {
+    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
-                .setPrivateDiscussionChatMessage(bisq.social.protobuf.PrivateDiscussionChatMessage.newBuilder()
+                .setPrivateDiscussionChatMessage(bisq.chat.protobuf.PrivateDiscussionChatMessage.newBuilder()
                         .setReceiversNym(receiversNym)
                         .setAuthor(author.toProto()))
                 .build();
     }
 
-    public static PrivateDiscussionChatMessage fromProto(bisq.social.protobuf.ChatMessage baseProto) {
+    public static PrivateDiscussionChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        bisq.social.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
+        bisq.chat.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
