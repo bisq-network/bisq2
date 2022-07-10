@@ -40,12 +40,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-/**
- * todo
- * add identity selection strategy. E.g. one identity per domain ID or one identity per context
- * type (e.g. fiat trades) or one global identity...
- * Add support for userName mapping with identity (not sure if should be done here or in social module)
- */
 @Slf4j
 public class OpenTimestampService implements PersistenceClient<OpenTimestampStore> {
 
