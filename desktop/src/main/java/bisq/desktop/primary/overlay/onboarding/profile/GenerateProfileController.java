@@ -18,7 +18,6 @@
 package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -28,12 +27,12 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.identity.profile.NymIdGenerator;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.social.user.ChatUserService;
-import bisq.identity.profile.NymIdGenerator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -57,7 +56,7 @@ public class GenerateProfileController implements Controller {
     protected final KeyPairService keyPairService;
     protected final ProofOfWorkService proofOfWorkService;
     protected final IdentityService identityService;
-    protected Optional<CompletableFuture<Void>> mintNymProofOfWorkFuture = Optional.empty();
+    protected Optional<CompletableFuture<ProofOfWork>> mintNymProofOfWorkFuture = Optional.empty();
     protected Subscription nickNameSubscription;
     protected final List<Identity> pooledIdentities = new ArrayList<>();
     protected boolean pooledIdentitiesInitialized;
@@ -110,13 +109,13 @@ public class GenerateProfileController implements Controller {
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);
 
-        if (model.getTempIdentity().isPresent()) {
-            TempIdentity tempIdentity = model.getTempIdentity().get();
-            chatUserService.createAndPublishNewChatUserIdentity(tempIdentity.getProfileId(),
+        if (model.getKeyPairAndId().isPresent()) {
+            KeyPairAndId keyPairAndId = model.getKeyPairAndId().get();
+            chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
                             model.getNickName().get(),
-                            tempIdentity.getTempKeyId(),
-                            tempIdentity.getTempKeyPair(),
-                            tempIdentity.getProofOfWork(),
+                            keyPairAndId.getKeyId(),
+                            keyPairAndId.getKeyPair(),
+                            model.getProofOfWork().orElseThrow(),
                             "",
                             "")
                     .whenComplete((chatUserIdentity, throwable) -> UIThread.run(() -> {
@@ -132,6 +131,7 @@ public class GenerateProfileController implements Controller {
             chatUserService.createAndPublishNewChatUserIdentity(model.getProfileId().get(),
                     pooledIdentity,
                     model.getNickName().get(),
+                    model.getProofOfWork().orElseThrow(),
                     "",
                     "");
             model.getCreateProfileProgress().set(0);
@@ -144,12 +144,19 @@ public class GenerateProfileController implements Controller {
         if (!pooledIdentities.isEmpty()) {
             Identity pooledIdentity = pooledIdentities.remove(0);
             setPreGenerateState();
+
+            byte[] pubKeyHash = pooledIdentity.getPubKeyHash();
+            model.setPubKeyHash(Optional.of(pubKeyHash));
+            mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
+                    .whenComplete((proofOfWork, t) ->
+                            UIThread.run(() -> model.setPooledIdentity(Optional.of(pooledIdentity)))));
+
             runAsync(() -> createSimulatedDelay(0))
                     .whenComplete((__, t) ->
                             UIThread.run(() -> {
                                 model.setPooledIdentity(Optional.of(pooledIdentity));
                                 String profileId = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
-                                applyIdentityData(pooledIdentity.getProofOfWork(), profileId);
+                                applyIdentityData(pooledIdentity.getPubKeyHash(), profileId);
                             }));
         } else {
             generateNewKeyPair();
@@ -158,29 +165,32 @@ public class GenerateProfileController implements Controller {
 
     void generateNewKeyPair() {
         setPreGenerateState();
-        long ts = System.currentTimeMillis();
-        KeyPair tempKeyPair = keyPairService.generateKeyPair();
-        byte[] pubKeyHash = DigestUtil.hash(tempKeyPair.getPublic().getEncoded());
+        KeyPair keyPair = keyPairService.generateKeyPair();
+        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
+        model.setPubKeyHash(Optional.of(pubKeyHash));
         // mintNymProofOfWork is executed on a ForkJoinPool thread
-        mintNymProofOfWorkFuture = Optional.of(proofOfWorkService.mintNymProofOfWork(pubKeyHash)
+        mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
+                .whenComplete((proofOfWork, t) ->
+                        UIThread.run(() -> {
+                            KeyPairAndId keyPairAndId = new KeyPairAndId(model.getProfileId().get(), keyPair);
+                            model.setKeyPairAndId(Optional.of(keyPairAndId));
+                        })));
+    }
+
+    private CompletableFuture<ProofOfWork> createProofOfWork(byte[] pubKeyHash) {
+        long ts = System.currentTimeMillis();
+        return proofOfWorkService.mintNymProofOfWork(pubKeyHash)
                 .thenApply(proofOfWork -> {
                     long powDuration = System.currentTimeMillis() - ts;
                     log.info("Proof of work creation completed after {} ms", powDuration);
                     createSimulatedDelay(powDuration);
-                    return proofOfWork;
-                })
-                .thenAccept(proofOfWork -> {
                     UIThread.run(() -> {
-                        String profileId = NymIdGenerator.fromHash(proofOfWork.getPayload());
-                        TempIdentity tempIdentity = new TempIdentity(profileId,
-                                StringUtils.createUid(),
-                                tempKeyPair,
-                                proofOfWork);
-
-                        model.setTempIdentity(Optional.of(tempIdentity));
-                        applyIdentityData(tempIdentity.getProofOfWork(), tempIdentity.getProfileId());
+                        model.setProofOfWork(Optional.of(proofOfWork));
+                        String profileId = NymIdGenerator.fromHash(pubKeyHash);
+                        applyIdentityData(pubKeyHash, profileId);
                     });
-                }));
+                    return proofOfWork;
+                });
     }
 
     private void close() {
@@ -215,9 +225,9 @@ public class GenerateProfileController implements Controller {
         model.getProfileId().set(Res.get("generateNym.nymId.generating"));
     }
 
-    private void applyIdentityData(ProofOfWork proofOfWork, String profileId) {
+    private void applyIdentityData(byte[] pubKeyHash, String profileId) {
         model.getProfileId().set(profileId);
-        model.getRoboHashImage().set(RoboHash.getImage(proofOfWork.getPayload()));
+        model.getRoboHashImage().set(RoboHash.getImage(pubKeyHash));
         model.getPowProgress().set(0);
         model.getRoboHashIconVisible().set(true);
         model.getReGenerateButtonDisabled().set(false);

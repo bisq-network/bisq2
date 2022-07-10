@@ -18,8 +18,9 @@
 package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.overlay.onboarding.profile.TempIdentity;
+import bisq.desktop.primary.overlay.onboarding.profile.KeyPairAndId;
 import bisq.identity.Identity;
+import bisq.security.pow.ProofOfWork;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import lombok.Getter;
@@ -30,9 +31,12 @@ import java.util.Optional;
 @Getter
 public class GenerateNewProfileStep2Model implements Model {
     @Setter
-    private Optional<TempIdentity> tempIdentity = Optional.empty();
+    private Optional<KeyPairAndId> tempIdentity = Optional.empty();
     @Setter
     private Optional<Identity> pooledIdentity = Optional.empty();
+    @Setter
+    private Optional<ProofOfWork> proofOfWork = Optional.empty();
+
     private final StringProperty nickName = new SimpleStringProperty();
     private final StringProperty profileId = new SimpleStringProperty();
     private final StringProperty terms = new SimpleStringProperty();

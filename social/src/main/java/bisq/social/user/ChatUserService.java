@@ -129,10 +129,11 @@ public class ChatUserService implements PersistenceClient<ChatUserStore> {
     public ChatUserIdentity createAndPublishNewChatUserIdentity(String domainId,
                                                                 Identity pooledIdentity,
                                                                 String nickName,
+                                                                ProofOfWork proofOfWork,
                                                                 String terms,
                                                                 String bio) {
         Identity identity = identityService.swapPooledIdentity(domainId, pooledIdentity);
-        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, identity.getProofOfWork(), terms, bio, identity);
+        ChatUserIdentity chatUserIdentity = createChatUserIdentity(nickName, proofOfWork, terms, bio, identity);
         maybeCreateOrUpgradeTimestampAsync(chatUserIdentity);
         publishChatUser(chatUserIdentity.getChatUser(), chatUserIdentity.getIdentity().getNodeIdAndKeyPair());
         return chatUserIdentity;
