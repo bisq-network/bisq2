@@ -155,8 +155,8 @@ public class GenerateProfileController implements Controller {
                     .whenComplete((__, t) ->
                             UIThread.run(() -> {
                                 model.setPooledIdentity(Optional.of(pooledIdentity));
-                                String profileId = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
-                                applyIdentityData(pooledIdentity.getPubKeyHash(), profileId);
+                                String nym = NymIdGenerator.fromHash(pooledIdentity.getPubKeyHash());
+                                applyIdentityData(pooledIdentity.getPubKeyHash(), nym);
                             }));
         } else {
             generateNewKeyPair();
@@ -172,7 +172,7 @@ public class GenerateProfileController implements Controller {
         mintNymProofOfWorkFuture = Optional.of(createProofOfWork(pubKeyHash)
                 .whenComplete((proofOfWork, t) ->
                         UIThread.run(() -> {
-                            KeyPairAndId keyPairAndId = new KeyPairAndId(model.getProfileId().get(), keyPair);
+                            KeyPairAndId keyPairAndId = new KeyPairAndId(model.getNym().get(), keyPair);
                             model.setKeyPairAndId(Optional.of(keyPairAndId));
                         })));
     }
@@ -186,8 +186,8 @@ public class GenerateProfileController implements Controller {
                     createSimulatedDelay(powDuration);
                     UIThread.run(() -> {
                         model.setProofOfWork(Optional.of(proofOfWork));
-                        String profileId = NymIdGenerator.fromHash(pubKeyHash);
-                        applyIdentityData(pubKeyHash, profileId);
+                        String nym = NymIdGenerator.fromHash(pubKeyHash);
+                        applyIdentityData(pubKeyHash, nym);
                     });
                     return proofOfWork;
                 });
@@ -222,11 +222,11 @@ public class GenerateProfileController implements Controller {
         model.getRoboHashIconVisible().set(false);
         model.getReGenerateButtonDisabled().set(true);
         model.getPowProgress().set(-1);
-        model.getProfileId().set(Res.get("generateNym.nymId.generating"));
+        model.getNym().set(Res.get("generateNym.nym.generating"));
     }
 
-    private void applyIdentityData(byte[] pubKeyHash, String profileId) {
-        model.getProfileId().set(profileId);
+    private void applyIdentityData(byte[] pubKeyHash, String nym) {
+        model.getNym().set(nym);
         model.getRoboHashImage().set(RoboHash.getImage(pubKeyHash));
         model.getPowProgress().set(0);
         model.getRoboHashIconVisible().set(true);

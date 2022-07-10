@@ -44,18 +44,18 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         private final Optional<Identity> pooledIdentity;
         private final ProofOfWork proofOfWork;
         private final String nickName;
-        private final String profileId;
+        private final String nym;
 
         public InitData(Optional<KeyPairAndId> tempIdentity,
                         Optional<Identity> pooledIdentity,
                         ProofOfWork proofOfWork,
                         String nickName,
-                        String profileId) {
+                        String nym) {
             this.tempIdentity = tempIdentity;
             this.pooledIdentity = pooledIdentity;
             this.proofOfWork = proofOfWork;
             this.nickName = nickName;
-            this.profileId = profileId;
+            this.nym = nym;
         }
     }
 
@@ -85,7 +85,7 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
         model.setPooledIdentity(data.getPooledIdentity());
         model.setProofOfWork(Optional.of(data.getProofOfWork()));
         model.getNickName().set(data.getNickName());
-        model.getNym().set(data.getProfileId());
+        model.getNym().set(data.getNym());
         if (data.getTempIdentity().isPresent()) {
             model.getRoboHashImage().set(RoboHash.getImage(data.getProofOfWork().getPayload()));
         } else if (data.getPooledIdentity().isPresent()) {

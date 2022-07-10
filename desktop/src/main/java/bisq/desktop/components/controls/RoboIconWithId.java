@@ -32,7 +32,7 @@ import org.fxmisc.easybind.EasyBind;
 
 public class RoboIconWithId extends VBox {
     private final ImageView imageView;
-    private final Label profileId;
+    private final Label nym;
     private final StringProperty textProperty = new SimpleStringProperty();
 
     public RoboIconWithId(double size) {
@@ -41,16 +41,16 @@ public class RoboIconWithId extends VBox {
         imageView.setFitWidth(size);
         imageView.setFitHeight(size);
         setAlignment(Pos.CENTER);
-        profileId = new Label();
-        profileId.setMaxWidth(size);
-        profileId.setMinWidth(size);
-        profileId.setTextAlignment(TextAlignment.CENTER);
-        profileId.setPadding(new Insets(7, 7, 7, 7));
-        profileId.getStyleClass().add("bisq-large-profile-id-label");
+        nym = new Label();
+        nym.setMaxWidth(size);
+        nym.setMinWidth(size);
+        nym.setTextAlignment(TextAlignment.CENTER);
+        nym.setPadding(new Insets(7, 7, 7, 7));
+        nym.getStyleClass().add("bisq-large-profile-id-label");
 
-        getChildren().addAll(imageView, profileId);
+        getChildren().addAll(imageView, nym);
 
-        EasyBind.subscribe(textProperty, this::setProfileId);
+        EasyBind.subscribe(textProperty, this::setNym);
     }
 
     public void setOnAction(Runnable handler) {
@@ -65,7 +65,7 @@ public class RoboIconWithId extends VBox {
         return textProperty;
     }
 
-    public void setProfileId(String id) {
-        profileId.setText(Res.get("roboIconWithId.id", id));
+    public void setNym(String id) {
+        nym.setText(Res.get("roboIconWithId.id", id));
     }
 }

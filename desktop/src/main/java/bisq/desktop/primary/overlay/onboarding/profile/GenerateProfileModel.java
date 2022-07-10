@@ -39,7 +39,7 @@ public class GenerateProfileModel implements Model {
     private Optional<byte[]> pubKeyHash = Optional.empty();
 
     private final StringProperty nickName = new SimpleStringProperty();
-    private final StringProperty profileId = new SimpleStringProperty();
+    private final StringProperty nym = new SimpleStringProperty();
     private final ObjectProperty<Image> roboHashImage = new SimpleObjectProperty<>();
     private final BooleanProperty reGenerateButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty roboHashIconVisible = new SimpleBooleanProperty();

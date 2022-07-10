@@ -47,7 +47,7 @@ public class GenerateNewProfileStep1Controller extends GenerateProfileController
                 model.getPooledIdentity(),
                 model.getProofOfWork().orElseThrow(),
                 model.getNickName().get(),
-                model.getProfileId().get());
+                model.getNym().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
     }
 }
