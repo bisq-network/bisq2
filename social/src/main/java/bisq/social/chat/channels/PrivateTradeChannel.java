@@ -20,8 +20,8 @@ package bisq.social.chat.channels;
 import bisq.common.observable.ObservableSet;
 import bisq.social.chat.NotificationSetting;
 import bisq.social.chat.messages.PrivateTradeChatMessage;
-import bisq.identity.profile.PublicUserProfile;
-import bisq.identity.profile.UserProfile;
+import bisq.user.PublicUserProfile;
+import bisq.user.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

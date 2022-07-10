@@ -48,15 +48,15 @@ public final class Identity implements Proto {
     }
 
     @Override
-    public bisq.identity.protobuf.Identity toProto() {
-        return bisq.identity.protobuf.Identity.newBuilder()
+    public bisq.user.protobuf.Identity toProto() {
+        return bisq.user.protobuf.Identity.newBuilder()
                 .setDomainId(tag)
                 .setNetworkId(networkId.toProto())
                 .setKeyPair(KeyPairProtoUtil.toProto(keyPair))
                 .build();
     }
 
-    public static Identity fromProto(bisq.identity.protobuf.Identity proto) {
+    public static Identity fromProto(bisq.user.protobuf.Identity proto) {
         return new Identity(proto.getDomainId(),
                 NetworkId.fromProto(proto.getNetworkId()),
                 KeyPairProtoUtil.fromProto(proto.getKeyPair()));

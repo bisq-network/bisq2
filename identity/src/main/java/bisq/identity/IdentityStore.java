@@ -47,8 +47,8 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     }
 
     @Override
-    public bisq.identity.protobuf.IdentityStore toProto() {
-        return bisq.identity.protobuf.IdentityStore.newBuilder()
+    public bisq.user.protobuf.IdentityStore toProto() {
+        return bisq.user.protobuf.IdentityStore.newBuilder()
                 .putAllActiveIdentityByDomainId(activeIdentityByTag.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto())))
                 .addAllPool(pool.stream().map(Identity::toProto).collect(Collectors.toSet()))
@@ -56,7 +56,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
                 .build();
     }
 
-    public static IdentityStore fromProto(bisq.identity.protobuf.IdentityStore proto) {
+    public static IdentityStore fromProto(bisq.user.protobuf.IdentityStore proto) {
         return new IdentityStore(proto.getActiveIdentityByDomainIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Identity.fromProto(e.getValue()))),
                 proto.getPoolList().stream().map(Identity::fromProto).collect(Collectors.toSet()),
@@ -67,7 +67,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.identity.protobuf.IdentityStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.IdentityStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

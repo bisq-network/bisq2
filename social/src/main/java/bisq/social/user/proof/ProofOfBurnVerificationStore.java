@@ -22,7 +22,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.identity.profile.UserProfile;
+import bisq.user.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,8 +53,8 @@ public final class ProofOfBurnVerificationStore implements PersistableStore<Proo
     }
 
     @Override
-    public bisq.social.protobuf.ChatUserStore toProto() {
-        return bisq.social.protobuf.ChatUserStore.newBuilder()
+    public bisq.user.protobuf.ChatUserStore toProto() {
+        return bisq.user.protobuf.ChatUserStore.newBuilder()
                 .setSelectedChatUserIdentity(selectedChatUserIdentity.get().toProto())
                 .addAllChatUserIdentities(chatUserIdentities.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
                 .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
@@ -62,7 +62,7 @@ public final class ProofOfBurnVerificationStore implements PersistableStore<Proo
                 .build();
     }
 
-    public static ProofOfBurnVerificationStore fromProto(bisq.social.protobuf.ChatUserStore proto) {
+    public static ProofOfBurnVerificationStore fromProto(bisq.user.protobuf.ChatUserStore proto) {
         return new ProofOfBurnVerificationStore(UserProfile.fromProto(proto.getSelectedChatUserIdentity()),
                 proto.getChatUserIdentitiesList().stream()
                         .map(UserProfile::fromProto)
@@ -76,7 +76,7 @@ public final class ProofOfBurnVerificationStore implements PersistableStore<Proo
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.ChatUserStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.ChatUserStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

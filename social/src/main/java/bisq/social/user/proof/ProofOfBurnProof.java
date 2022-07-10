@@ -36,16 +36,16 @@ public final class ProofOfBurnProof implements Proof {
     }
 
     @Override
-    public bisq.social.protobuf.Proof toProto() {
+    public bisq.user.protobuf.Proof toProto() {
         return getProofBuilder().setProofOfBurnProof(
-                        bisq.social.protobuf.ProofOfBurnProof.newBuilder()
+                        bisq.user.protobuf.ProofOfBurnProof.newBuilder()
                                 .setTxId(txId)
                                 .setBurntAmount(burntAmount)
                                 .setDate(date))
                 .build();
     }
 
-    public static ProofOfBurnProof fromProto(bisq.social.protobuf.ProofOfBurnProof proto) {
+    public static ProofOfBurnProof fromProto(bisq.user.protobuf.ProofOfBurnProof proto) {
         return new ProofOfBurnProof(proto.getTxId(), proto.getBurntAmount(), proto.getDate());
     }
 }

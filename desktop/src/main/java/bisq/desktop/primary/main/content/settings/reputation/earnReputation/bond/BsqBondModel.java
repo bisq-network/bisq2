@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bon
 
 import bisq.desktop.common.view.Model;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
-import bisq.identity.profile.UserProfile;
+import bisq.user.UserProfile;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

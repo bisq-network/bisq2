@@ -51,11 +51,11 @@ public final class Role implements Proto, Comparable<Role> {
         }
 
         @Override
-        public bisq.social.protobuf.Role.Type toProto() {
-            return bisq.social.protobuf.Role.Type.valueOf(name());
+        public bisq.user.protobuf.Role.Type toProto() {
+            return bisq.user.protobuf.Role.Type.valueOf(name());
         }
 
-        public static Type fromProto(bisq.social.protobuf.Role.Type proto) {
+        public static Type fromProto(bisq.user.protobuf.Role.Type proto) {
             return ProtobufUtils.enumFromProto(Type.class, proto.name());
         }
     }
@@ -69,14 +69,14 @@ public final class Role implements Proto, Comparable<Role> {
     }
 
     @Override
-    public bisq.social.protobuf.Role toProto() {
-        return bisq.social.protobuf.Role.newBuilder()
+    public bisq.user.protobuf.Role toProto() {
+        return bisq.user.protobuf.Role.newBuilder()
                 .setType(type.name())
                 .setProof(proof.toProto())
                 .build();
     }
 
-    public static Role fromProto(bisq.social.protobuf.Role proto) {
+    public static Role fromProto(bisq.user.protobuf.Role proto) {
         return new Role(ProtobufUtils.enumFromProto(Type.class, proto.getType()),
                 Proof.fromProto(proto.getProof()));
     }

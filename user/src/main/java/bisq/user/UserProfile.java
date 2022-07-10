@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity.profile;
+package bisq.user;
 
 import bisq.common.proto.Proto;
 import bisq.identity.Identity;
@@ -37,14 +37,14 @@ public final class UserProfile implements Proto {
         this.publicUserProfile = publicUserProfile;
     }
 
-    public bisq.identity.protobuf.ChatUserIdentity toProto() {
-        return bisq.identity.protobuf.ChatUserIdentity.newBuilder()
+    public bisq.user.protobuf.UserProfile toProto() {
+        return bisq.user.protobuf.UserProfile.newBuilder()
                 .setIdentity(identity.toProto())
                 .setChatUser(publicUserProfile.toProto())
                 .build();
     }
 
-    public static UserProfile fromProto(bisq.identity.protobuf.ChatUserIdentity proto) {
+    public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {
         return new UserProfile(Identity.fromProto(proto.getIdentity()),
                 PublicUserProfile.fromProto(proto.getChatUser()));
     }

@@ -21,7 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.identity.profile.UserProfile;
+import bisq.user.UserProfile;
 import bisq.persistence.PersistableStore;
 import bisq.social.user.proof.Proof;
 import bisq.social.user.proof.ProofOfBurnProof;
@@ -57,8 +57,8 @@ public final class ChatUserStore implements PersistableStore<ChatUserStore> {
     }
 
     @Override
-    public bisq.social.protobuf.ChatUserStore toProto() {
-        return bisq.social.protobuf.ChatUserStore.newBuilder()
+    public bisq.user.protobuf.ChatUserStore toProto() {
+        return bisq.user.protobuf.ChatUserStore.newBuilder()
                 .setSelectedChatUserIdentity(selectedChatUserIdentity.get().toProto())
                 .addAllChatUserIdentities(chatUserIdentities.stream().map(UserProfile::toProto).collect(Collectors.toSet()))
                 .putAllVerifiedProofOfBurnProofs(verifiedProofOfBurnProofs.entrySet().stream()
@@ -66,7 +66,7 @@ public final class ChatUserStore implements PersistableStore<ChatUserStore> {
                 .build();
     }
 
-    public static ChatUserStore fromProto(bisq.social.protobuf.ChatUserStore proto) {
+    public static ChatUserStore fromProto(bisq.user.protobuf.ChatUserStore proto) {
         return new ChatUserStore(UserProfile.fromProto(proto.getSelectedChatUserIdentity()),
                 proto.getChatUserIdentitiesList().stream()
                         .map(UserProfile::fromProto)
@@ -80,7 +80,7 @@ public final class ChatUserStore implements PersistableStore<ChatUserStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.social.protobuf.ChatUserStore.class));
+                return fromProto(any.unpack(bisq.user.protobuf.ChatUserStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -18,7 +18,7 @@
 syntax = "proto3";
 
 package identity;
-option java_package = "bisq.identity.protobuf";
+option java_package = "bisq.user.protobuf";
 option java_multiple_files = true;
 import "network.proto";
 import "security.proto";
@@ -33,17 +33,4 @@ message IdentityStore {
   map<string, Identity> activeIdentityByDomainId = 1;
   repeated Identity pool = 2;
   repeated Identity retired = 3;
-}
-
-message ChatUser {
-  string nickName = 1;
-  network.NetworkId networkId = 2;
-  security.ProofOfWork proofOfWork = 3;
-  string terms  = 4;
-  string bio   = 5;
-}
-
-message ChatUserIdentity {
-  Identity identity = 1;
-  ChatUser chatUser = 2;
 }

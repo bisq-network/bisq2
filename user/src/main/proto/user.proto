@@ -1,0 +1,100 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package user;
+option java_package = "bisq.user.protobuf";
+option java_multiple_files = true;
+import "common.proto";
+import "network.proto";
+import "security.proto";
+import "identity.proto";
+
+    
+message ProofOfBurnProof {
+  string txId = 1;
+  uint64 burntAmount = 2;
+  uint64 date = 3;
+}
+message BondedRoleProof {
+  string txId = 1;
+  string signature = 2;
+}
+message InvitationProof {
+  string invitationCode = 1;
+}
+message Proof {
+  enum Type {
+    PROOF_OF_BURN = 0;
+    BONDED_ROLE = 1;
+    CHANNEL_ADMIN_INVITATION = 2;
+  }
+  oneof message {
+    ProofOfBurnProof proofOfBurnProof = 1;
+    BondedRoleProof bondedRoleProof = 2;
+    InvitationProof invitationProof = 3;
+  }
+}
+
+message Role {
+  enum Type {
+    CHANNEL_ADMIN = 0;
+    CHANNEL_MODERATOR = 1;
+    MEDIATOR = 2;
+  }
+
+  string type = 1;
+  Proof proof = 2;
+}
+
+
+message Reputation {
+  enum Type {
+    BURNED_BSQ = 0;
+    BURNED_BSQ_AGE = 1;
+    IDENTITY_AGE = 2;
+    BISQ1_ACCOUNT_AGE = 3;
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 4;
+  }
+
+  string type = 1;
+  Proof proof = 2;
+}
+
+message PublicUserProfile {
+  string nickName = 1;
+  network.NetworkId networkId = 2;
+  security.ProofOfWork proofOfWork = 3;
+  string terms  = 4;
+  string bio   = 5;
+}
+
+message UserProfile {
+  identity.Identity identity = 1;
+  PublicUserProfile chatUser = 2;
+}
+
+// Stores
+message ChatUserStore {
+  repeated UserProfile chatUserIdentities = 1;
+  UserProfile selectedChatUserIdentity = 2;
+  map<string, Proof> verifiedProofOfBurnProofs = 3;
+}
+
+message TradeChatOfferStore {
+}

@@ -32,14 +32,14 @@ public final class InvitationProof implements Proof {
     }
 
     @Override
-    public bisq.social.protobuf.Proof toProto() {
+    public bisq.user.protobuf.Proof toProto() {
         return getProofBuilder().setInvitationProof(
-                        bisq.social.protobuf.InvitationProof.newBuilder()
+                        bisq.user.protobuf.InvitationProof.newBuilder()
                                 .setInvitationCode(invitationCode))
                 .build();
     }
 
-    public static InvitationProof fromProto(bisq.social.protobuf.InvitationProof proto) {
+    public static InvitationProof fromProto(bisq.user.protobuf.InvitationProof proto) {
         return new InvitationProof(proto.getInvitationCode());
     }
 }

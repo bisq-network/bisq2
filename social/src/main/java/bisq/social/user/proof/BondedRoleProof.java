@@ -34,15 +34,15 @@ public final class BondedRoleProof implements Proof {
     }
 
     @Override
-    public bisq.social.protobuf.Proof toProto() {
+    public bisq.user.protobuf.Proof toProto() {
         return getProofBuilder().setBondedRoleProof(
-                        bisq.social.protobuf.BondedRoleProof.newBuilder()
+                        bisq.user.protobuf.BondedRoleProof.newBuilder()
                                 .setTxId(txId)
                                 .setSignature(signature))
                 .build();
     }
 
-    public static BondedRoleProof fromProto(bisq.social.protobuf.BondedRoleProof proto) {
+    public static BondedRoleProof fromProto(bisq.user.protobuf.BondedRoleProof proto) {
         return new BondedRoleProof(proto.getTxId(), proto.getSignature());
     }
 }

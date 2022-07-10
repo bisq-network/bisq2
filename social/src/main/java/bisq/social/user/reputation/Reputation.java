@@ -53,14 +53,14 @@ public final class Reputation implements Proto {
     }
 
     @Override
-    public bisq.social.protobuf.Reputation toProto() {
-        return bisq.social.protobuf.Reputation.newBuilder()
+    public bisq.user.protobuf.Reputation toProto() {
+        return bisq.user.protobuf.Reputation.newBuilder()
                 .setType(source.name())
                 .setProof(proof.toProto())
                 .build();
     }
 
-    public static Reputation fromProto(bisq.social.protobuf.Reputation proto) {
+    public static Reputation fromProto(bisq.user.protobuf.Reputation proto) {
         return new Reputation(ProtobufUtils.enumFromProto(Source.class, proto.getType()),
                 Proof.fromProto(proto.getProof()));
     }

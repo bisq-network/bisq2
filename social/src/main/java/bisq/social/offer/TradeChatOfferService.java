@@ -27,7 +27,7 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import bisq.social.chat.ChatService;
 import bisq.social.chat.channels.PublicTradeChannel;
-import bisq.identity.profile.UserProfile;
+import bisq.user.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

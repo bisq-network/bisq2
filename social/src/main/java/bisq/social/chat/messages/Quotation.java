@@ -1,7 +1,7 @@
 package bisq.social.chat.messages;
 
 import bisq.common.proto.Proto;
-import bisq.identity.profile.NymLookup;
+import bisq.user.NymLookup;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

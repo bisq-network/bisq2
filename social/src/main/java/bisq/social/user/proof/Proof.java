@@ -29,22 +29,22 @@ public interface Proof extends Proto {
         CHANNEL_ADMIN_INVITATION;
 
         @Override
-        public bisq.social.protobuf.Proof.Type toProto() {
-            return bisq.social.protobuf.Proof.Type.valueOf(name());
+        public bisq.user.protobuf.Proof.Type toProto() {
+            return bisq.user.protobuf.Proof.Type.valueOf(name());
         }
 
-        public static Type fromProto(bisq.social.protobuf.Proof.Type proto) {
+        public static Type fromProto(bisq.user.protobuf.Proof.Type proto) {
             return ProtobufUtils.enumFromProto(Type.class, proto.name());
         }
     }
 
-    default bisq.social.protobuf.Proof.Builder getProofBuilder() {
-        return bisq.social.protobuf.Proof.newBuilder();
+    default bisq.user.protobuf.Proof.Builder getProofBuilder() {
+        return bisq.user.protobuf.Proof.newBuilder();
     }
 
-    bisq.social.protobuf.Proof toProto();
+    bisq.user.protobuf.Proof toProto();
 
-    static Proof fromProto(bisq.social.protobuf.Proof proto) {
+    static Proof fromProto(bisq.user.protobuf.Proof proto) {
         switch (proto.getMessageCase()) {
             case PROOFOFBURNPROOF: {
                 return ProofOfBurnProof.fromProto(proto.getProofOfBurnProof());

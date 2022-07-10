@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.identity.profile.PublicUserProfile;
+import bisq.user.PublicUserProfile;
 import bisq.social.user.ChatUserService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;

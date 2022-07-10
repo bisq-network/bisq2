@@ -35,5 +35,6 @@ include 'settings'
 include 'social'
 include 'support'
 include 'tor'
+include 'user'
 
 includeBuild('wallets')

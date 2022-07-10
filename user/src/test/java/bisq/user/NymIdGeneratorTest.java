@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity.profile;
+package bisq.user;
 
 import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static bisq.identity.profile.NymIdGenerator.fromHash;
-import static bisq.identity.profile.NymIdGenerator.read;
+import static bisq.user.NymIdGenerator.fromHash;
+import static bisq.user.NymIdGenerator.read;
 
 @Slf4j
 public class NymIdGeneratorTest {

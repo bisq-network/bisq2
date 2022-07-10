@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.identity.profile;
+package bisq.user;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -72,8 +72,8 @@ public final class PublicUserProfile implements DistributedData {
     }
 
     @Override
-    public bisq.identity.protobuf.ChatUser toProto() {
-        return bisq.identity.protobuf.ChatUser.newBuilder()
+    public bisq.user.protobuf.PublicUserProfile toProto() {
+        return bisq.user.protobuf.PublicUserProfile.newBuilder()
                 .setNickName(nickName)
                 .setTerms(terms)
                 .setBio(bio)
@@ -82,7 +82,7 @@ public final class PublicUserProfile implements DistributedData {
                 .build();
     }
 
-    public static PublicUserProfile fromProto(bisq.identity.protobuf.ChatUser proto) {
+    public static PublicUserProfile fromProto(bisq.user.protobuf.PublicUserProfile proto) {
         return new PublicUserProfile(proto.getNickName(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
@@ -93,7 +93,7 @@ public final class PublicUserProfile implements DistributedData {
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.identity.protobuf.ChatUser.class));
+                return fromProto(any.unpack(bisq.user.protobuf.PublicUserProfile.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

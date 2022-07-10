@@ -25,7 +25,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
-import bisq.identity.profile.PublicUserProfile;
+import bisq.user.PublicUserProfile;
 import bisq.social.user.ChatUserService;
 import com.google.common.base.Charsets;
 import lombok.Getter;
