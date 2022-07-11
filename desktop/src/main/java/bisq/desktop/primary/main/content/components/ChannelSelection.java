@@ -34,6 +34,7 @@ import java.util.Comparator;
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
+      
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
 

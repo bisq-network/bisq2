@@ -23,7 +23,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -54,32 +53,36 @@ import java.util.stream.Collectors;
  * be rather part of the identity module.
  */
 @Slf4j
-@Getter
 public class ChatService implements PersistenceClient<ChatStore>, MessageListener, DataService.Listener {
+    @Getter
     private final ChatStore persistableStore = new ChatStore();
+    @Getter
     private final Persistence<ChatStore> persistence;
     private final UserIdentityService userIdentityService;
-    private final PersistenceService persistenceService;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final ProofOfWorkService proofOfWorkService;
     private final Map<String, UserProfile> chatUserById = new ConcurrentHashMap<>();
+    @Getter
+    private final PrivateTradeChannelService privateTradeChannelService;
 
     public ChatService(PersistenceService persistenceService,
-                       IdentityService identityService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
                        UserIdentityService userIdentityService) {
-        this.persistenceService = persistenceService;
-        this.identityService = identityService;
         this.proofOfWorkService = proofOfWorkService;
         this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.userIdentityService = userIdentityService;
+
+        privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
+                networkService,
+                userIdentityService,
+                proofOfWorkService);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        privateTradeChannelService.initialize();
         maybeAddDefaultChannels();
         networkService.addMessageListener(this);
         networkService.addDataServiceListener(this);
@@ -90,6 +93,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        privateTradeChannelService.shutdown();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -99,15 +103,17 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTradeChatMessage) {
+       /* if (networkMessage instanceof PrivateTradeChatMessage) {
             PrivateTradeChatMessage message = (PrivateTradeChatMessage) networkMessage;
-            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
+            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getSender().getProofOfWork())) {
                 getOrCreatePrivateTradeChannel(message)
                         .ifPresent(channel -> addPrivateTradeChatMessage(message, channel));
             }
-        } else if (networkMessage instanceof PrivateDiscussionChatMessage) {
+        } else */
+            
+            if (networkMessage instanceof PrivateDiscussionChatMessage) {
             PrivateDiscussionChatMessage message = (PrivateDiscussionChatMessage) networkMessage;
-            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getAuthor().getProofOfWork())) {
+            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getSender().getProofOfWork())) {
                 getOrCreatePrivateDiscussionChannel(message)
                         .ifPresent(channel -> addPrivateDiscussionChatMessage(message, channel));
             }
@@ -220,6 +226,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
+    public void showPublicTradeChannel(PublicMarketChannel channel) {
+        channel.setVisible(true);
+        persist();
+    }
+
     public void hidePublicTradeChannel(PublicMarketChannel channel) {
         channel.setVisible(false);
         persist();
@@ -316,7 +327,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Private Trade domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateTradeChatMessage(String text,
+   /* public CompletableFuture<NetworkService.SendMessageResult> sendPrivateTradeChatMessage(String text,
                                                                                            Optional<Quotation> quotedMessage,
                                                                                            PrivateTradeChannel privateTradeChannel) {
         String channelId = privateTradeChannel.getId();
@@ -333,20 +344,20 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         NetworkId receiverNetworkId = peer.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userIdentity.getNodeIdAndKeyPair();
         return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
-    }
+    }*/
 
-    public Optional<PrivateTradeChannel> getOrCreatePrivateTradeChannel(PrivateTradeChatMessage privateTradeChatMessage) {
+   /* public Optional<PrivateTradeChannel> getOrCreatePrivateTradeChannel(PrivateTradeChatMessage privateTradeChatMessage) {
         return findPrivateTradeChannel(privateTradeChatMessage.getChannelId())
-                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getAuthor(), privateTradeChatMessage.getPeersId()));
-    }
+                .or(() -> createPrivateTradeChannel(privateTradeChatMessage.getSender(), privateTradeChatMessage.getReceiversId()));
+    }*/
 
-    public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer) {
+  /*  public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer) {
         return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
                 .flatMap(userProfile -> createPrivateTradeChannel(peer, userProfile.getId()));
     }
-
-    public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer, String peersId) {
-        return userIdentityService.findUserIdentity(peersId)
+*/
+   /* public Optional<PrivateTradeChannel> createPrivateTradeChannel(UserProfile peer, String receiversId) {
+        return userIdentityService.findUserIdentity(receiversId)
                 .map(myUserProfile -> {
                             PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(peer, myUserProfile);
                             getPrivateTradeChannels().add(privateTradeChannel);
@@ -354,9 +365,9 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                             return privateTradeChannel;
                         }
                 );
-    }
+    }*/
 
-    public void addPrivateTradeChatMessage(PrivateTradeChatMessage chatMessage, PrivateTradeChannel privateTradeChannel) {
+ /*   public void addPrivateTradeChatMessage(PrivateTradeChatMessage chatMessage, PrivateTradeChannel privateTradeChannel) {
         synchronized (persistableStore) {
             privateTradeChannel.addChatMessage(chatMessage);
         }
@@ -367,11 +378,11 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return getPrivateTradeChannels().stream()
                 .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
-    }
+    }*/
 
-    public ObservableSet<PrivateTradeChannel> getPrivateTradeChannels() {
+   /* public ObservableSet<PrivateTradeChannel> getPrivateTradeChannels() {
         return persistableStore.getPrivateTradeChannels();
-    }
+    }*/
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -382,11 +393,12 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return persistableStore.getSelectedTradeChannel();
     }
 
-    public void selectTradeChannel(Channel<? extends ChatMessage> channel) {
+    public void selectChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateTradeChannel) {
             // remove expired messages
             purgePrivateTradeChannel((PrivateTradeChannel) channel);
         }
+
         getSelectedTradeChannel().set(channel);
         persist();
     }
@@ -512,20 +524,23 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
+    // received from peer
     public Optional<PrivateDiscussionChannel> getOrCreatePrivateDiscussionChannel(PrivateDiscussionChatMessage message) {
         return findPrivateDiscussionChannel(message.getChannelId())
-                .or(() -> createPrivateDiscussionChannel(message.getAuthor(), message.getPeersId()));
+                .or(() -> createPrivateDiscussionChannel(message.getSender(), message.getReceiversId()));
     }
 
-    public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer) {
+    public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile author) {
         return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
-                .flatMap(e -> createPrivateDiscussionChannel(peer, e.getId()));
+                .flatMap(e -> createPrivateDiscussionChannel(author, e.getId()));
     }
 
-    public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer, String receiversProfileId) {
-        return userIdentityService.findUserIdentity(receiversProfileId)
+
+    public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile sender, String receiversId) {
+        // We received the message so the receiversId is out id.
+        return userIdentityService.findUserIdentity(receiversId)
                 .map(myUserProfile -> {
-                            PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
+                            PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(sender, myUserProfile);
                             getPrivateDiscussionChannels().add(privateDiscussionChannel);
                             persist();
                             return privateDiscussionChannel;
@@ -653,7 +668,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         }
 
         PublicMarketChannel defaultChannel = new PublicMarketChannel(MarketRepository.getDefault(), true);
-        selectTradeChannel(defaultChannel);
+        selectChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());

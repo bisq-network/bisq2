@@ -35,8 +35,6 @@ import java.util.Collection;
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
-
-    @Getter
     private final Market market;
 
     // todo move out

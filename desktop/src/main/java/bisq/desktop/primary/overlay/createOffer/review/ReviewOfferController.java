@@ -18,6 +18,11 @@
 package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
+import bisq.chat.channels.PublicMarketChannel;
+import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.PublicTradeChatMessage;
+import bisq.chat.messages.TradeChatOffer;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Controller;
@@ -27,13 +32,9 @@ import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
 import bisq.settings.SettingsService;
-import bisq.chat.ChatService;
-import bisq.chat.channels.PublicMarketChannel;
-import bisq.chat.messages.ChatMessage;
-import bisq.chat.messages.PublicTradeChatMessage;
-import bisq.chat.messages.TradeChatOffer;
-import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +55,7 @@ public class ReviewOfferController implements Controller {
     private final ChatMessagesListView takersListView;
     private final Runnable closeHandler;
     private final SettingsService settingsService;
+    private final UserIdentityService userIdentityService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
@@ -61,6 +63,7 @@ public class ReviewOfferController implements Controller {
         chatService = applicationService.getChatService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
+        userIdentityService = applicationService.getUserService().getUserIdentityService();
 
         myOfferListView = new ChatMessagesListView(applicationService,
                 mentionUser -> {
@@ -135,7 +138,7 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
         myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
-        UserIdentity userIdentity = chatService.getUserIdentityService().getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
@@ -149,7 +152,7 @@ public class ReviewOfferController implements Controller {
                 .findAny()
                 .orElseThrow();
         channelForMarket.setVisible(true);
-        chatService.selectTradeChannel(channelForMarket);
+        chatService.selectChannel(channelForMarket);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
                 userIdentity.getUserProfile().getId(),
@@ -197,10 +200,10 @@ public class ReviewOfferController implements Controller {
     private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
         return item ->
         {
-            if (item.getAuthor().isEmpty()) {
+            if (item.getSender().isEmpty()) {
                 return false;
             }
-            UserProfile peer = item.getAuthor().get();
+            UserProfile peer = item.getSender().get();
             if (chatService.isChatUserIgnored(peer)) {
                 return false;
             }

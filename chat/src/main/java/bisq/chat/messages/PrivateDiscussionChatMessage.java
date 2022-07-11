@@ -37,19 +37,19 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
-    private final String peersId;
-    private final UserProfile author;
+    private final String receiversId;
+    private final UserProfile sender;
 
     public PrivateDiscussionChatMessage(String channelId,
-                                        UserProfile author,
-                                        String peersId,
+                                        UserProfile sender,
+                                        String receiversId,
                                         String text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
         this(channelId,
-                author,
-                peersId,
+                sender,
+                receiversId,
                 text,
                 quotedMessage,
                 date,
@@ -58,22 +58,22 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         UserProfile author,
-                                         String peersId,
+                                         UserProfile sender,
+                                         String receiversId,
                                          String text,
                                          Optional<Quotation> quotedMessage,
                                          long date,
                                          boolean wasEdited,
                                          MetaData metaData) {
         super(channelId,
-                author.getId(),
+                sender.getId(),
                 Optional.of(text),
                 quotedMessage,
                 date,
                 wasEdited,
                 metaData);
-        this.peersId = peersId;
-        this.author = author;
+        this.receiversId = receiversId;
+        this.sender = sender;
     }
 
     @Override
@@ -86,8 +86,8 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateDiscussionChatMessage(bisq.chat.protobuf.PrivateDiscussionChatMessage.newBuilder()
-                        .setPeersId(peersId)
-                        .setAuthor(author.toProto()))
+                        .setReceiversId(receiversId)
+                        .setSender(sender.toProto()))
                 .build();
     }
 
@@ -98,8 +98,8 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
         bisq.chat.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
-                UserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
-                privateDiscussionChatMessage.getPeersId(),
+                UserProfile.fromProto(privateDiscussionChatMessage.getSender()),
+                privateDiscussionChatMessage.getReceiversId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

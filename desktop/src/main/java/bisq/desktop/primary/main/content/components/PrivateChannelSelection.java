@@ -18,13 +18,14 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.chat.ChatService;
 import bisq.chat.channels.PrivateChannel;
 import bisq.chat.channels.PrivateDiscussionChannel;
 import bisq.chat.channels.PrivateTradeChannel;
+import bisq.chat.channels.PrivateTradeChannelService;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -60,10 +61,12 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final PrivateTradeChannelService privateTradeChannelService;
 
         protected Controller(ChatService chatService, boolean isDiscussionsChat) {
             super(chatService);
-
+            
+            privateTradeChannelService = chatService.getPrivateTradeChannelService();
             model = new Model(isDiscussionsChat);
             view = new View(model, this);
         }
@@ -91,7 +94,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else {
                 channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(ChannelSelection.View.ChannelItem::new)
-                        .to(chatService.getPrivateTradeChannels());
+                        .to(privateTradeChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
                         channel -> {
@@ -110,7 +113,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (model.isDiscussionsChat) {
                 chatService.selectDiscussionChannel(channelItem.getChannel());
             } else {
-                chatService.selectTradeChannel(channelItem.getChannel());
+                chatService.selectChannel(channelItem.getChannel());
             }
         }
 

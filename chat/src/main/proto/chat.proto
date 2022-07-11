@@ -34,12 +34,12 @@ message Quotation {
 }
 
 message PrivateTradeChatMessage {
-  string peersId = 1;
-  user.UserProfile author = 2;
+  string receiversId = 1;
+  user.UserProfile sender = 2;
 }
 message PrivateDiscussionChatMessage {
-  string peersId = 1;
-  user.UserProfile author = 2;
+  string receiversId = 1;
+  user.UserProfile sender = 2;
 }
 message PublicDiscussionChatMessage {
 }
@@ -121,6 +121,11 @@ message ChatStore {
   Channel selectedDiscussionChannel = 6;
   repeated string customTags = 7;
   repeated string ignoredChatUserProfileIds = 8;
+}
+
+message PrivateTradeChannelStore {
+  repeated Channel channels = 1;
+  optional Channel selected = 2;
 }
 
 message TradeChatOfferStore {

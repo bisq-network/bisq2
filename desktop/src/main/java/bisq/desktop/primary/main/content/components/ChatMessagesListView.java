@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
 import bisq.chat.channels.*;
 import bisq.chat.messages.*;
 import bisq.common.observable.Pin;
@@ -36,10 +37,9 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.chat.ChatService;
-import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -133,7 +133,8 @@ public class ChatMessagesListView {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final UserIdentityService userIdentityService;
+        private final PrivateTradeChannelService privateTradeChannelService;
+        private UserIdentityService userIdentityService;
         private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
@@ -148,9 +149,11 @@ public class ChatMessagesListView {
                            boolean isCreateOfferMode,
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
-            this.chatService = applicationService.getChatService();
-            this.userIdentityService = applicationService.getUserService().getUserIdentityService();
-            this.reputationService = applicationService.getUserService().getReputationService();
+            chatService = applicationService.getChatService();
+            privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
+            reputationService = applicationService.getUserService().getReputationService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -163,7 +166,7 @@ public class ChatMessagesListView {
                     isCreateOfferPublishedMode);
             view = new View(model, this);
 
-            Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate = item -> item.getAuthor().isPresent() && !chatService.getIgnoredChatUserIds().contains(item.getAuthor().get().getId());
+            Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate = item -> item.getSender().isPresent() && !chatService.getIgnoredChatUserIds().contains(item.getSender().get().getId());
             model.filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
@@ -277,11 +280,11 @@ public class ChatMessagesListView {
                                     String dirString = tradeChatOffer.getDirection().mirror().displayString();
                                     String baseCurrencyCode = tradeChatOffer.getMarket().getBaseCurrencyCode();
                                     String text = chatMessage.getText();
-                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(), 
-                                            chatUser.getNickName(), 
-                                            chatUser.getPubKeyHash(), 
+                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(),
+                                            chatUser.getNickName(),
+                                            chatUser.getPubKeyHash(),
                                             text));
-                                    chatService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
+                                    privateTradeChannelService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
                                                     quotation,
                                                     privateTradeChannel)
                                             .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
@@ -306,7 +309,7 @@ public class ChatMessagesListView {
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            UserIdentity userIdentity = chatService.getUserIdentityService().getSelectedUserProfile().get();
+            UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
             chatService.publishPublicTradeChatMessage(chatMessage, userIdentity)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
@@ -361,15 +364,15 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
+                chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
         }
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-            Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
+            Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createPrivateTradeChannel(peer);
+            privateTradeChannel.ifPresent(chatService::selectChannel);
             return privateTradeChannel;
         }
     }
@@ -592,7 +595,7 @@ public class ChatMessagesListView {
                                 message.setText(item.getMessage());
                                 dateTime.setText(item.getDate());
 
-                                item.getAuthor().ifPresent(author -> {
+                                item.getSender().ifPresent(author -> {
                                     userName.setText(author.getUserName());
                                     userName.setOnMouseClicked(e -> controller.onMention(author));
 
@@ -860,7 +863,7 @@ public class ChatMessagesListView {
         private final String message;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final Optional<UserProfile> author;
+        private final Optional<UserProfile> sender;
         private final String nym;
         private final String nickName;
         @EqualsAndHashCode.Exclude
@@ -870,21 +873,21 @@ public class ChatMessagesListView {
             this.chatMessage = chatMessage;
 
             if (chatMessage instanceof PrivateTradeChatMessage) {
-                author = Optional.of(((PrivateTradeChatMessage) chatMessage).getAuthor());
+                sender = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
             } else if (chatMessage instanceof PrivateDiscussionChatMessage) {
-                author = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getAuthor());
+                sender = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getSender());
             } else {
-                author = chatService.findChatUser(chatMessage.getAuthorId());
+                sender = chatService.findChatUser(chatMessage.getAuthorId());
             }
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotation();
             date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
 
-            nym = author.map(UserProfile::getNym).orElse("");
-            nickName = author.map(UserProfile::getNickName).orElse("");
+            nym = sender.map(UserProfile::getNym).orElse("");
+            nickName = sender.map(UserProfile::getNickName).orElse("");
 
-            reputationScore = author.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
+            reputationScore = sender.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         }
 
         @Override

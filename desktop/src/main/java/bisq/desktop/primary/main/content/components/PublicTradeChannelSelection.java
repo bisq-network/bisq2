@@ -129,7 +129,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
 
             channelItemsPin.unbind();
-            chatService.selectTradeChannel(channelItem.getChannel());
+            chatService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {
@@ -139,7 +139,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                Optional<PublicMarketChannel> tradeChannel = chatService.showPublicTradeChannel(marketListItem.market);
+                chatService.findPublicTradeChannel(PublicMarketChannel.getId(marketListItem.market))
+                        .map(channel -> {
+                            chatService.showPublicTradeChannel(channel);
+                            return channel;
+                        });
+                Optional<PublicMarketChannel> marketChannel = chatService.showPublicTradeChannel(marketListItem.market);
 
                 //todo somehow the predicate does not trigger an update, no idea why...
                 // re-applying the list works
@@ -148,7 +153,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
 
-                tradeChannel.ifPresent(chatService::selectTradeChannel);
+                marketChannel.ifPresent(chatService::selectChannel);
             }
         }
 
@@ -165,7 +170,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
             if (!model.sortedList.isEmpty()) {
-                chatService.selectTradeChannel(model.sortedList.get(0).getChannel());
+                chatService.selectChannel(model.sortedList.get(0).getChannel());
             }
         }
 
