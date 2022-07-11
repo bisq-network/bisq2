@@ -57,7 +57,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         deleteProfileButton.setDefaultButton(false);
         deleteProfileButton.setMinWidth(300);
 
-        VBox.setMargin(createNewProfileButton, new Insets(-15,0,0,0));
+        VBox.setMargin(createNewProfileButton, new Insets(-15,0,-20,0));
         root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, deleteProfileButton, Spacer.fillVBox());
     }
 

@@ -62,8 +62,8 @@ public class TextAreaBox extends Pane {
         textArea.setLayoutX(0.5);
         textArea.getStyleClass().add("bisq-input-box-text-input");
 
-        setMinHeight(50);
-        setMaxHeight(50);
+       /* setMinHeight(50);
+        setMaxHeight(50);*/
         getChildren().addAll(descriptionLabel, textArea);
         EasyBind.subscribe(prefWidthProperty(), w -> {
             double width = w.doubleValue();

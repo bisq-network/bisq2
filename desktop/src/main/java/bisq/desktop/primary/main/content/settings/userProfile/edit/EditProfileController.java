@@ -44,7 +44,6 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
 
     @Override
     public void initWithData(InitData data) {
-        log.error("initWithData");
     }
 
     @Override
