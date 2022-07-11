@@ -20,7 +20,7 @@ package bisq.chat.channels;
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
-import bisq.chat.NotificationSetting;
+import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.PublicTradeChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
     }
 
     private PublicTradeChannel(String id, Optional<Market> market, boolean isVisible) {
-        super(id, NotificationSetting.MENTION);
+        super(id, ChannelNotificationType.MENTION);
 
         this.market = market;
         this.isVisible = isVisible;

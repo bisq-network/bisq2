@@ -71,7 +71,7 @@ message ChatMessage {
   }
 }
 
-enum NotificationSetting {
+enum ChannelNotificationType {
   ALL = 0;
   MENTION = 1;
   NEVER = 2;
@@ -102,7 +102,7 @@ message PublicDiscussionChannel {
 }
 message Channel {
   string id = 1;
-  NotificationSetting notificationSetting = 2;
+  ChannelNotificationType channelNotificationType = 2;
   oneof message{
     PrivateTradeChannel privateTradeChannel = 10;
     PrivateDiscussionChannel privateDiscussionChannel = 11;

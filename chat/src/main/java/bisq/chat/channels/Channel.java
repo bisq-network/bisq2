@@ -17,7 +17,7 @@
 
 package bisq.chat.channels;
 
-import bisq.chat.NotificationSetting;
+import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
@@ -33,17 +33,17 @@ import java.util.Collection;
 public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     protected final String id;
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
+    protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(String id, NotificationSetting notificationSetting) {
+    public Channel(String id, ChannelNotificationType channelNotificationType) {
         this.id = id;
-        this.notificationSetting.set(notificationSetting);
+        this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
                 .setId(id)
-                .setNotificationSetting(notificationSetting.get().toProto());
+                .setChannelNotificationType(channelNotificationType.get().toProto());
     }
 
     // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the

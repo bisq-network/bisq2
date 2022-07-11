@@ -18,7 +18,7 @@
 package bisq.chat.channels;
 
 import bisq.common.observable.ObservableSet;
-import bisq.chat.NotificationSetting;
+import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.PrivateTradeChatMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
@@ -43,20 +43,20 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,
                 myProfile,
-                NotificationSetting.ALL,
+                ChannelNotificationType.ALL,
                 new HashSet<>());
     }
 
     public PrivateTradeChannel(String id, UserProfile peer, UserIdentity myProfile) {
-        this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
+        this(id, peer, myProfile, ChannelNotificationType.ALL, new HashSet<>());
     }
 
     private PrivateTradeChannel(String id,
                                 UserProfile peer,
                                 UserIdentity myProfile,
-                                NotificationSetting notificationSetting,
+                                ChannelNotificationType channelNotificationType,
                                 Set<PrivateTradeChatMessage> chatMessages) {
-        super(id, notificationSetting);
+        super(id, channelNotificationType);
         this.peer = peer;
         this.myProfile = myProfile;
         this.chatMessages.addAll(chatMessages);
@@ -76,7 +76,7 @@ public final class PrivateTradeChannel extends Channel<PrivateTradeChatMessage> 
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
-                NotificationSetting.fromProto(baseProto.getNotificationSetting()),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toSet()));

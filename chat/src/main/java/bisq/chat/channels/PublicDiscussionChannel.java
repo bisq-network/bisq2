@@ -18,7 +18,7 @@
 package bisq.chat.channels;
 
 import bisq.common.observable.ObservableSet;
-import bisq.chat.NotificationSetting;
+import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.PublicDiscussionChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,7 +63,7 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                 description,
                 channelAdminId,
                 channelModeratorIds,
-                NotificationSetting.MENTION
+                ChannelNotificationType.MENTION
         );
     }
 
@@ -72,8 +72,8 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                                     String description,
                                     String channelAdminId,
                                     Set<String> channelModeratorIds,
-                                    NotificationSetting notificationSetting) {
-        super(id, notificationSetting);
+                                    ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
 
         this.channelName = channelName;
         this.description = description;
@@ -99,7 +99,7 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new HashSet<>(proto.getChannelModeratorIdsList()),
-                NotificationSetting.fromProto(baseProto.getNotificationSetting()));
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 
     @Override

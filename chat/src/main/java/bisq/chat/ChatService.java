@@ -599,8 +599,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setNotificationSetting(Channel<? extends ChatMessage> channel, NotificationSetting notificationSetting) {
-        channel.getNotificationSetting().set(notificationSetting);
+    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
+        channel.getChannelNotificationType().set(channelNotificationType);
         persist();
     }
 

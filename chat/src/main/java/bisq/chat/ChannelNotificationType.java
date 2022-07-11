@@ -20,17 +20,17 @@ package bisq.chat;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum NotificationSetting implements ProtoEnum {
+public enum ChannelNotificationType implements ProtoEnum {
     ALL,
     MENTION,
     NEVER;
 
     @Override
-    public bisq.chat.protobuf.NotificationSetting toProto() {
-        return bisq.chat.protobuf.NotificationSetting.valueOf(name());
+    public bisq.chat.protobuf.ChannelNotificationType toProto() {
+        return bisq.chat.protobuf.ChannelNotificationType.valueOf(name());
     }
 
-    public static NotificationSetting fromProto(bisq.chat.protobuf.NotificationSetting proto) {
-        return ProtobufUtils.enumFromProto(NotificationSetting.class, proto.name());
+    public static ChannelNotificationType fromProto(bisq.chat.protobuf.ChannelNotificationType proto) {
+        return ProtobufUtils.enumFromProto(ChannelNotificationType.class, proto.name());
     }
 }

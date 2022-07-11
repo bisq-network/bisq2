@@ -119,7 +119,7 @@ public class OverlayController extends NavigationController {
         resetSelectedChildTarget();
     }
 
-    public void onQuit() {
+    void onQuit() {
         applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 }
