@@ -211,8 +211,8 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Trade domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<PublicTradeChannel> showPublicTradeChannel(Optional<Market> market) {
-        return findPublicTradeChannel(PublicTradeChannel.getId(market))
+    public Optional<PublicMarketChannel> showPublicTradeChannel(Optional<Market> market) {
+        return findPublicTradeChannel(PublicMarketChannel.getId(market))
                 .map(channel -> {
                     channel.setVisible(true);
                     persist();
@@ -220,17 +220,17 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
                 });
     }
 
-    public void hidePublicTradeChannel(PublicTradeChannel channel) {
+    public void hidePublicTradeChannel(PublicMarketChannel channel) {
         channel.setVisible(false);
         persist();
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatTextMessage(String text,
                                                                                           Optional<Quotation> quotedMessage,
-                                                                                          PublicTradeChannel publicTradeChannel,
+                                                                                          PublicMarketChannel publicMarketChannel,
                                                                                           UserIdentity userIdentity) {
         UserProfile userProfile = userIdentity.getUserProfile();
-        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
+        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicMarketChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -241,10 +241,10 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatOffer(TradeChatOffer tradeChatOffer,
-                                                                                    PublicTradeChannel publicTradeChannel,
+                                                                                    PublicMarketChannel publicMarketChannel,
                                                                                     UserIdentity userIdentity) {
         UserProfile userProfile = userIdentity.getUserProfile();
-        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
+        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicMarketChannel.getId(),
                 userProfile.getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
@@ -285,27 +285,27 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
-    public Optional<PublicTradeChannel> findPublicTradeChannel(String channelId) {
+    public Optional<PublicMarketChannel> findPublicTradeChannel(String channelId) {
         return getPublicTradeChannels().stream()
                 .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
     }
 
-    private void addPublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
+    private void addPublicTradeChatMessage(PublicTradeChatMessage message, PublicMarketChannel channel) {
         channel.addChatMessage(message);
         persist();
     }
 
-    private void removePublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
+    private void removePublicTradeChatMessage(PublicTradeChatMessage message, PublicMarketChannel channel) {
         channel.removeChatMessage(message);
         persist();
     }
 
-    public ObservableSet<PublicTradeChannel> getPublicTradeChannels() {
-        return persistableStore.getPublicTradeChannels();
+    public ObservableSet<PublicMarketChannel> getPublicTradeChannels() {
+        return persistableStore.getPublicMarketChannels();
     }
 
-    public void maybeAddPublicTradeChannel(PublicTradeChannel channel) {
+    public void maybeAddPublicTradeChannel(PublicMarketChannel channel) {
         if (!getPublicTradeChannels().contains(channel)) {
             getPublicTradeChannels().add(channel);
         }
@@ -652,13 +652,13 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
             return;
         }
 
-        PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
+        PublicMarketChannel defaultChannel = new PublicMarketChannel(MarketRepository.getDefault(), true);
         selectTradeChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
         allMarkets.forEach(market ->
-                maybeAddPublicTradeChannel(new PublicTradeChannel(market, false)));
+                maybeAddPublicTradeChannel(new PublicMarketChannel(market, false)));
 
         // todo channelAdmin not supported atm
         String channelAdminId = "";

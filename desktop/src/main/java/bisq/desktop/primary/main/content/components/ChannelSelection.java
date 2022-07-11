@@ -8,7 +8,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.chat.ChatService;
 import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicMarketChannel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -70,8 +70,8 @@ public abstract class ChannelSelection {
 
         public Model() {
             filteredList.setPredicate(item -> {
-                if (item.getChannel() instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) item.getChannel()).isVisible();
+                if (item.getChannel() instanceof PublicMarketChannel) {
+                    return ((PublicMarketChannel) item.getChannel()).isVisible();
                 } else {
                     return true;
                 }
@@ -161,8 +161,8 @@ public abstract class ChannelSelection {
             }
 
             public String getDisplayString() {
-                if (channel instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) channel).getMarket()
+                if (channel instanceof PublicMarketChannel) {
+                    return ((PublicMarketChannel) channel).getMarket()
                             .map(Market::getMarketCodes)
                             .orElse(Res.get("tradeChat.addMarketChannel.any"));
                 } else {

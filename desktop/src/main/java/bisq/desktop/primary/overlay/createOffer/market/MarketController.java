@@ -22,7 +22,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
 import bisq.chat.ChatService;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicMarketChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -73,9 +73,9 @@ public class MarketController implements Controller {
 
         // We pre-select the market from the selected channel, or if not available we use the default market.
         Optional.ofNullable(chatService.getSelectedTradeChannel().get())
-                .filter(channel -> channel instanceof PublicTradeChannel)
-                .map(channel -> (PublicTradeChannel) channel)
-                .map(PublicTradeChannel::getMarket)
+                .filter(channel -> channel instanceof PublicMarketChannel)
+                .map(channel -> (PublicMarketChannel) channel)
+                .map(PublicMarketChannel::getMarket)
                 .orElse(Optional.of(MarketRepository.getDefault()))
                 .flatMap(this::findMarketListItem)
                 .ifPresent(marketListItem -> {

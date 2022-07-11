@@ -28,7 +28,7 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
 import bisq.settings.SettingsService;
 import bisq.chat.ChatService;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicMarketChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.TradeChatOffer;
@@ -144,7 +144,7 @@ public class ReviewOfferController implements Controller {
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
-        PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
+        PublicMarketChannel channelForMarket = chatService.getPublicTradeChannels().stream()
                 .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket().orElse(null)))
                 .findAny()
                 .orElseThrow();

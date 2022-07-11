@@ -35,7 +35,7 @@ import java.util.Optional;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
+public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
 
     @Getter
     private final Optional<Market> market;
@@ -47,15 +47,15 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
     // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    public PublicTradeChannel(Market market, boolean isVisible) {
+    public PublicMarketChannel(Market market, boolean isVisible) {
         this(Optional.of(market), isVisible);
     }
 
-    public PublicTradeChannel(Optional<Market> market, boolean isVisible) {
+    public PublicMarketChannel(Optional<Market> market, boolean isVisible) {
         this(getId(market), market, isVisible);
     }
 
-    private PublicTradeChannel(String id, Optional<Market> market, boolean isVisible) {
+    private PublicMarketChannel(String id, Optional<Market> market, boolean isVisible) {
         super(id, ChannelNotificationType.MENTION);
 
         this.market = market;
@@ -64,16 +64,16 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
-        bisq.chat.protobuf.PublicTradeChannel.Builder builder = bisq.chat.protobuf.PublicTradeChannel.newBuilder()
+        bisq.chat.protobuf.PublicMarketChannel.Builder builder = bisq.chat.protobuf.PublicMarketChannel.newBuilder()
                 .setIsVisible(isVisible);
         market.ifPresent(market -> builder.setMarket(market.toProto()));
-        return getChannelBuilder().setPublicTradeChannel(builder).build();
+        return getChannelBuilder().setPublicMarketChannel(builder).build();
     }
 
-    public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                               bisq.chat.protobuf.PublicTradeChannel proto) {
+    public static PublicMarketChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                bisq.chat.protobuf.PublicMarketChannel proto) {
         Optional<Market> market = proto.hasMarket() ? Optional.of(Market.fromProto(proto.getMarket())) : Optional.empty();
-        return new PublicTradeChannel(baseProto.getId(), market, baseProto.getPublicTradeChannel().getIsVisible());
+        return new PublicMarketChannel(baseProto.getId(), market, baseProto.getPublicMarketChannel().getIsVisible());
     }
 
     @Override

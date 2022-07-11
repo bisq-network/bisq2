@@ -89,7 +89,7 @@ message PrivateTradeChannel {
   repeated ChatMessage chatMessages = 3;
 }
 
-message PublicTradeChannel {
+message PublicMarketChannel {
   optional common.Market market = 1;
   bool isVisible = 2;
 }
@@ -106,7 +106,7 @@ message Channel {
   oneof message{
     PrivateTradeChannel privateTradeChannel = 10;
     PrivateDiscussionChannel privateDiscussionChannel = 11;
-    PublicTradeChannel publicTradeChannel = 12;
+    PublicMarketChannel publicMarketChannel = 12;
     PublicDiscussionChannel publicDiscussionChannel = 13;
   }
 }

@@ -204,13 +204,13 @@ public class ChatMessagesListView {
             } else {
                 selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicTradeChannel) {
+                    if (channel instanceof PublicMarketChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(((PublicTradeChannel) channel).getChatMessages());
+                                .to(((PublicMarketChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel) {
                         if (chatMessagesPin != null) {

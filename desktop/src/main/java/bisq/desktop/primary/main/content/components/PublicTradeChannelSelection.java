@@ -29,7 +29,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicMarketChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -95,14 +95,14 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .collect(Collectors.toList()));*/
 
             //todo do not use the visible flag but create a separate list for the chosen channels
-            channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelItemsPin = FxBindings.<PublicMarketChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     /* .map(ChannelSelection.View.ChannelItem::new)*/
                     .to(chatService.getPublicTradeChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
                     channel -> {
-                        if (channel instanceof PublicTradeChannel) {
+                        if (channel instanceof PublicMarketChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
@@ -110,7 +110,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             List<Market> markets = MarketRepository.getAllFiatMarkets();
 
             Set<Market> visibleMarkets = model.filteredList.stream()
-                    .map(e -> ((PublicTradeChannel) e.getChannel()))
+                    .map(e -> ((PublicMarketChannel) e.getChannel()))
                     .filter(c -> c.getMarket().isPresent())
                     .map(c -> c.getMarket().get())
                     .collect(Collectors.toSet());
@@ -148,7 +148,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                Optional<PublicTradeChannel> tradeChannel = chatService.showPublicTradeChannel(marketListItem.market);
+                Optional<PublicMarketChannel> tradeChannel = chatService.showPublicTradeChannel(marketListItem.market);
 
                 //todo somehow the predicate does not trigger an update, no idea why...
                 // re-applying the list works
@@ -161,7 +161,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
         }
 
-        public void onHideTradeChannel(PublicTradeChannel channel) {
+        public void onHideTradeChannel(PublicMarketChannel channel) {
             chatService.hidePublicTradeChannel(channel);
             channel.setVisible(false);
 
@@ -179,7 +179,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Optional<Market> market) {
-            return chatService.findPublicTradeChannel(PublicTradeChannel.getId(market))
+            return chatService.findPublicTradeChannel(PublicMarketChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }
@@ -285,9 +285,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
-                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
-                        Pair<String, String> pair = publicTradeChannel.getMarket()
+                    if (item != null && !empty && item.getChannel() instanceof PublicMarketChannel) {
+                        PublicMarketChannel publicMarketChannel = (PublicMarketChannel) item.getChannel();
+                        Pair<String, String> pair = publicMarketChannel.getMarket()
                                 .map(market -> new Pair<>(market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()))
                                 .orElse(new Pair<>("any-base", "any-quote"));
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
@@ -302,7 +302,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         });
 
                         removeIcon.setOpacity(0);
-                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicTradeChannel));
+                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicMarketChannel));
                         setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseEntered(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseExited(e -> Transitions.fadeOut(removeIcon));

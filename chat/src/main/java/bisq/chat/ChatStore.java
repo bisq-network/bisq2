@@ -38,7 +38,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     private final ObservableSet<PrivateTradeChannel> privateTradeChannels = new ObservableSet<>();
     private final ObservableSet<PrivateDiscussionChannel> privateDiscussionChannels = new ObservableSet<>();
     private final ObservableSet<PublicDiscussionChannel> publicDiscussionChannels = new ObservableSet<>();
-    private final ObservableSet<PublicTradeChannel> publicTradeChannels = new ObservableSet<>();
+    private final ObservableSet<PublicMarketChannel> publicMarketChannels = new ObservableSet<>();
     private final Observable<Channel<? extends ChatMessage>> selectedTradeChannel = new Observable<>();
     private final Observable<Channel<? extends ChatMessage>> selectedDiscussionChannel = new Observable<>();
     private final ObservableSet<String> customTags = new ObservableSet<>();
@@ -50,7 +50,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     private ChatStore(Set<PrivateTradeChannel> privateTradeChannels,
                       Set<PrivateDiscussionChannel> privateDiscussionChannels,
                       Set<PublicDiscussionChannel> publicDiscussionChannels,
-                      Set<PublicTradeChannel> publicTradeChannels,
+                      Set<PublicMarketChannel> publicMarketChannels,
                       Channel<? extends ChatMessage> selectedTradeChannel,
                       Channel<? extends ChatMessage> selectedDiscussionChannel,
                       Set<String> customTags,
@@ -58,7 +58,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
         setAll(privateTradeChannels,
                 privateDiscussionChannels,
                 publicDiscussionChannels,
-                publicTradeChannels,
+                publicMarketChannels,
                 selectedTradeChannel,
                 selectedDiscussionChannel,
                 customTags,
@@ -71,7 +71,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
                 .addAllPrivateTradeChannels(privateTradeChannels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toSet()))
                 .addAllPrivateDiscussionChannels(privateDiscussionChannels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toSet()))
                 .addAllPublicDiscussionChannels(publicDiscussionChannels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toSet()))
-                .addAllPublicTradeChannels(publicTradeChannels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()))
+                .addAllPublicTradeChannels(publicMarketChannels.stream().map(PublicMarketChannel::toProto).collect(Collectors.toSet()))
                 .setSelectedTradeChannel(selectedTradeChannel.get().toProto())
                 .setSelectedDiscussionChannel(selectedDiscussionChannel.get().toProto())
                 .addAllCustomTags(customTags)
@@ -89,13 +89,13 @@ public final class ChatStore implements PersistableStore<ChatStore> {
         Set<PublicDiscussionChannel> publicDiscussionChannels = proto.getPublicDiscussionChannelsList().stream()
                 .map(e -> (PublicDiscussionChannel) PublicDiscussionChannel.fromProto(e))
                 .collect(Collectors.toSet());
-        Set<PublicTradeChannel> publicTradeChannels = proto.getPublicTradeChannelsList().stream()
-                .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
+        Set<PublicMarketChannel> publicMarketChannels = proto.getPublicTradeChannelsList().stream()
+                .map(e -> (PublicMarketChannel) PublicMarketChannel.fromProto(e))
                 .collect(Collectors.toSet());
         return new ChatStore(privateTradeChannels,
                 privateDiscussionChannels,
                 publicDiscussionChannels,
-                publicTradeChannels,
+                publicMarketChannels,
                 Channel.fromProto(proto.getSelectedTradeChannel()),
                 Channel.fromProto(proto.getSelectedDiscussionChannel()),
                 new HashSet<>(proto.getCustomTagsCount()),
@@ -119,7 +119,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
         setAll(chatStore.privateTradeChannels,
                 chatStore.privateDiscussionChannels,
                 chatStore.publicDiscussionChannels,
-                chatStore.publicTradeChannels,
+                chatStore.publicMarketChannels,
                 chatStore.selectedTradeChannel.get(),
                 chatStore.selectedDiscussionChannel.get(),
                 chatStore.getCustomTags(),
@@ -131,7 +131,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
         return new ChatStore(privateTradeChannels,
                 privateDiscussionChannels,
                 publicDiscussionChannels,
-                publicTradeChannels,
+                publicMarketChannels,
                 selectedTradeChannel.get(),
                 selectedDiscussionChannel.get(),
                 customTags,
@@ -141,7 +141,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     public void setAll(Set<PrivateTradeChannel> privateTradeChannels,
                        Set<PrivateDiscussionChannel> privateDiscussionChannels,
                        Set<PublicDiscussionChannel> publicDiscussionChannels,
-                       Set<PublicTradeChannel> publicTradeChannels,
+                       Set<PublicMarketChannel> publicMarketChannels,
                        Channel<? extends ChatMessage> selectedTradeChannel,
                        Channel<? extends ChatMessage> selectedDiscussionChannel,
                        Set<String> customTags,
@@ -152,8 +152,8 @@ public final class ChatStore implements PersistableStore<ChatStore> {
         this.privateDiscussionChannels.addAll(privateDiscussionChannels);
         this.publicDiscussionChannels.clear();
         this.publicDiscussionChannels.addAll(publicDiscussionChannels);
-        this.publicTradeChannels.clear();
-        this.publicTradeChannels.addAll(publicTradeChannels);
+        this.publicMarketChannels.clear();
+        this.publicMarketChannels.addAll(publicMarketChannels);
         this.selectedTradeChannel.set(selectedTradeChannel);
         this.selectedDiscussionChannel.set(selectedDiscussionChannel);
         this.customTags.clear();

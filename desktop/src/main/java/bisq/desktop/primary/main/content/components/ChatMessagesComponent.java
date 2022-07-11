@@ -153,8 +153,8 @@ public class ChatMessagesComponent {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
-                if (channel instanceof PublicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
+                if (channel instanceof PublicMarketChannel) {
+                    chatService.publishTradeChatTextMessage(text, quotation, (PublicMarketChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
                     chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {

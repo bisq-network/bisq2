@@ -22,7 +22,7 @@ import bisq.i18n.Res;
 import bisq.chat.ChatService;
 import bisq.chat.channels.Channel;
 import bisq.chat.channels.PublicDiscussionChannel;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicMarketChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.*;
@@ -105,8 +105,8 @@ public class ChannelInfo {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            if (channel instanceof PublicTradeChannel) {
-                model.description.set(((PublicTradeChannel) channel).getDescription());
+            if (channel instanceof PublicMarketChannel) {
+                model.description.set(((PublicMarketChannel) channel).getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
