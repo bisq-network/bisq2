@@ -125,7 +125,10 @@ message ChatStore {
 
 message PrivateTradeChannelStore {
   repeated Channel channels = 1;
-  optional Channel selected = 2;
+}
+
+message PrivateDiscussionChannelStore {
+  repeated Channel channels = 1;
 }
 
 message TradeChatOfferStore {

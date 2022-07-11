@@ -25,7 +25,7 @@ public final class PublicTradeChannelDto {
         dto.id = publicMarketChannel.getId();
         dto.description = publicMarketChannel.getDescription();
         dto.displayString = publicMarketChannel.getDisplayString();
-        dto.marketDto = publicMarketChannel.getMarket().map(MarketDto::from).orElse(null);
+        dto.marketDto = MarketDto.from(publicMarketChannel.getMarket());
         return dto;
     }
 }

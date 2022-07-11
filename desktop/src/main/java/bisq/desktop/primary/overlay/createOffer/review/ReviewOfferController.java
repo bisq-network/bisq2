@@ -152,7 +152,7 @@ public class ReviewOfferController implements Controller {
                 .findAny()
                 .orElseThrow();
         channelForMarket.setVisible(true);
-        chatService.selectChannel(channelForMarket);
+        chatService.selectTradeChannel(channelForMarket);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
                 userIdentity.getUserProfile().getId(),

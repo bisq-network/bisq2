@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class ChatStore implements PersistableStore<ChatStore> {
-    private final ObservableSet<PrivateDiscussionChannel> privateDiscussionChannels = new ObservableSet<>();
     private final ObservableSet<PublicDiscussionChannel> publicDiscussionChannels = new ObservableSet<>();
     private final ObservableSet<PublicMarketChannel> publicMarketChannels = new ObservableSet<>();
     private final Observable<Channel<? extends ChatMessage>> selectedTradeChannel = new Observable<>();
@@ -46,7 +45,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     public ChatStore() {
     }
 
-    private ChatStore(Set<PrivateDiscussionChannel> privateDiscussionChannels,
+    private ChatStore(
                       Set<PublicDiscussionChannel> publicDiscussionChannels,
                       Set<PublicMarketChannel> publicMarketChannels,
                       Channel<? extends ChatMessage> selectedTradeChannel,
@@ -54,7 +53,6 @@ public final class ChatStore implements PersistableStore<ChatStore> {
                       Set<String> customTags,
                       Set<String> ignoredChatUserIds) {
         setAll(
-                privateDiscussionChannels,
                 publicDiscussionChannels,
                 publicMarketChannels,
                 selectedTradeChannel,
@@ -66,7 +64,6 @@ public final class ChatStore implements PersistableStore<ChatStore> {
     @Override
     public bisq.chat.protobuf.ChatStore toProto() {
         return bisq.chat.protobuf.ChatStore.newBuilder()
-                .addAllPrivateDiscussionChannels(privateDiscussionChannels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toSet()))
                 .addAllPublicDiscussionChannels(publicDiscussionChannels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toSet()))
                 .addAllPublicTradeChannels(publicMarketChannels.stream().map(PublicMarketChannel::toProto).collect(Collectors.toSet()))
                 .setSelectedTradeChannel(selectedTradeChannel.get().toProto())
@@ -87,7 +84,6 @@ public final class ChatStore implements PersistableStore<ChatStore> {
                 .map(e -> (PublicMarketChannel) PublicMarketChannel.fromProto(e))
                 .collect(Collectors.toSet());
         return new ChatStore(
-                privateDiscussionChannels,
                 publicDiscussionChannels,
                 publicMarketChannels,
                 Channel.fromProto(proto.getSelectedTradeChannel()),
@@ -110,8 +106,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
 
     @Override
     public void applyPersisted(ChatStore chatStore) {
-        setAll(chatStore.privateDiscussionChannels,
-                chatStore.publicDiscussionChannels,
+        setAll(chatStore.publicDiscussionChannels,
                 chatStore.publicMarketChannels,
                 chatStore.selectedTradeChannel.get(),
                 chatStore.selectedDiscussionChannel.get(),
@@ -121,7 +116,7 @@ public final class ChatStore implements PersistableStore<ChatStore> {
 
     @Override
     public ChatStore getClone() {
-        return new ChatStore( privateDiscussionChannels,
+        return new ChatStore(
                 publicDiscussionChannels,
                 publicMarketChannels,
                 selectedTradeChannel.get(),
@@ -130,15 +125,13 @@ public final class ChatStore implements PersistableStore<ChatStore> {
                 ignoredChatUserIds);
     }
 
-    public void setAll(Set<PrivateDiscussionChannel> privateDiscussionChannels,
+    public void setAll(
                        Set<PublicDiscussionChannel> publicDiscussionChannels,
                        Set<PublicMarketChannel> publicMarketChannels,
                        Channel<? extends ChatMessage> selectedTradeChannel,
                        Channel<? extends ChatMessage> selectedDiscussionChannel,
                        Set<String> customTags,
                        Set<String> ignoredChatUserIds) {
-        this.privateDiscussionChannels.clear();
-        this.privateDiscussionChannels.addAll(privateDiscussionChannels);
         this.publicDiscussionChannels.clear();
         this.publicDiscussionChannels.addAll(publicDiscussionChannels);
         this.publicMarketChannels.clear();

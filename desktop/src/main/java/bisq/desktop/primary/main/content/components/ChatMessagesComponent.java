@@ -93,12 +93,14 @@ public class ChatMessagesComponent {
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
+        private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
             chatService = applicationService.getChatService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);
@@ -162,7 +164,7 @@ public class ChatMessagesComponent {
                 } else if (channel instanceof PrivateTradeChannel) {
                     privateTradeChannelService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else if (channel instanceof PrivateDiscussionChannel) {
-                    chatService.sendPrivateDiscussionChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
+                    privateDiscussionChannelService.sendPrivateDiscussionChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
                 }
                 quotedMessageBlock.close();
             }
@@ -176,8 +178,8 @@ public class ChatMessagesComponent {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                chatService.createPrivateDiscussionChannel(peer)
-                        .ifPresent(chatService::selectChannel);
+                privateDiscussionChannelService.createPrivateDiscussionChannel(peer)
+                        .ifPresent(chatService::selectTradeChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
@@ -185,7 +187,7 @@ public class ChatMessagesComponent {
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createPrivateTradeChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectChannel);
+            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
         }
 

@@ -134,6 +134,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final PrivateTradeChannelService privateTradeChannelService;
+        private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private UserIdentityService userIdentityService;
         private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
@@ -151,6 +152,7 @@ public class ChatMessagesListView {
                            boolean isCreateOfferPublishedMode) {
             chatService = applicationService.getChatService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             reputationService = applicationService.getUserService().getReputationService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -364,7 +366,7 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                chatService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectChannel);
+                privateDiscussionChannelService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
@@ -372,7 +374,7 @@ public class ChatMessagesListView {
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createPrivateTradeChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectChannel);
+            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
         }
     }

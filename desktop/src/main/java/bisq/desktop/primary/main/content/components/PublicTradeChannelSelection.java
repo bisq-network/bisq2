@@ -129,7 +129,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
 
             channelItemsPin.unbind();
-            chatService.selectChannel(channelItem.getChannel());
+            chatService.selectTradeChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {
@@ -153,7 +153,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
 
-                marketChannel.ifPresent(chatService::selectChannel);
+                marketChannel.ifPresent(chatService::selectTradeChannel);
             }
         }
 
@@ -170,7 +170,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
             if (!model.sortedList.isEmpty()) {
-                chatService.selectChannel(model.sortedList.get(0).getChannel());
+                chatService.selectTradeChannel(model.sortedList.get(0).getChannel());
             }
         }
 
