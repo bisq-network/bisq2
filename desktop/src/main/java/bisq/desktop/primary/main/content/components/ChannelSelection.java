@@ -1,14 +1,12 @@
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.currency.Market;
+import bisq.chat.ChatService;
+import bisq.chat.channels.Channel;
+import bisq.chat.channels.PublicMarketChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.i18n.Res;
-import bisq.chat.ChatService;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicMarketChannel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -162,9 +160,7 @@ public abstract class ChannelSelection {
 
             public String getDisplayString() {
                 if (channel instanceof PublicMarketChannel) {
-                    return ((PublicMarketChannel) channel).getMarket()
-                            .map(Market::getMarketCodes)
-                            .orElse(Res.get("tradeChat.addMarketChannel.any"));
+                    return ((PublicMarketChannel) channel).getMarket().getMarketCodes();
                 } else {
                     return channel.getDisplayString();
                 }

@@ -18,13 +18,13 @@
 package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
-import bisq.desktop.common.view.Controller;
 import bisq.chat.ChatService;
 import bisq.chat.channels.PublicMarketChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
+import bisq.desktop.common.view.Controller;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -58,8 +58,7 @@ public class MarketController implements Controller {
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
                     Set<PublicTradeChatMessage> offerMessages = chatService.getPublicTradeChannels().stream()
-                            .filter(channel -> channel.getMarket().isPresent())
-                            .filter(channel -> channel.getMarket().get().equals(market))
+                            .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(message -> message.getTradeChatOffer().isPresent())
                             .collect(Collectors.toSet());
@@ -76,7 +75,6 @@ public class MarketController implements Controller {
                 .filter(channel -> channel instanceof PublicMarketChannel)
                 .map(channel -> (PublicMarketChannel) channel)
                 .map(PublicMarketChannel::getMarket)
-                .orElse(Optional.of(MarketRepository.getDefault()))
                 .flatMap(this::findMarketListItem)
                 .ifPresent(marketListItem -> {
                     marketListItem.getSelected().set(true);

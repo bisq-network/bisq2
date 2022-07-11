@@ -17,11 +17,11 @@
 
 package bisq.chat.channels;
 
+import bisq.chat.ChannelNotificationType;
+import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
-import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.PublicTradeChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +29,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @Slf4j
 @Getter
@@ -38,8 +37,8 @@ import java.util.Optional;
 public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
 
     @Getter
-    private final Optional<Market> market;
-    
+    private final Market market;
+
     // todo move out
     @Setter
     private boolean isVisible;
@@ -47,15 +46,12 @@ public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> i
     // We do not persist the messages as they are persisted in the P2P data store.
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
 
-    public PublicMarketChannel(Market market, boolean isVisible) {
-        this(Optional.of(market), isVisible);
-    }
 
-    public PublicMarketChannel(Optional<Market> market, boolean isVisible) {
+    public PublicMarketChannel(Market market, boolean isVisible) {
         this(getId(market), market, isVisible);
     }
 
-    private PublicMarketChannel(String id, Optional<Market> market, boolean isVisible) {
+    private PublicMarketChannel(String id, Market market, boolean isVisible) {
         super(id, ChannelNotificationType.MENTION);
 
         this.market = market;
@@ -64,16 +60,17 @@ public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> i
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
-        bisq.chat.protobuf.PublicMarketChannel.Builder builder = bisq.chat.protobuf.PublicMarketChannel.newBuilder()
-                .setIsVisible(isVisible);
-        market.ifPresent(market -> builder.setMarket(market.toProto()));
-        return getChannelBuilder().setPublicMarketChannel(builder).build();
+        return getChannelBuilder().setPublicMarketChannel(bisq.chat.protobuf.PublicMarketChannel.newBuilder()
+                        .setIsVisible(isVisible)
+                        .setMarket(market.toProto()))
+                .build();
     }
 
     public static PublicMarketChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                 bisq.chat.protobuf.PublicMarketChannel proto) {
-        Optional<Market> market = proto.hasMarket() ? Optional.of(Market.fromProto(proto.getMarket())) : Optional.empty();
-        return new PublicMarketChannel(baseProto.getId(), market, baseProto.getPublicMarketChannel().getIsVisible());
+        return new PublicMarketChannel(baseProto.getId(),
+                Market.fromProto(proto.getMarket()),
+                baseProto.getPublicMarketChannel().getIsVisible());
     }
 
     @Override
@@ -92,16 +89,14 @@ public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> i
     }
 
     public String getDescription() {
-        return market.map(market -> Res.get("social.marketChannel.description", market.toString()))
-                .orElse(Res.get("social.marketChannel.description.any"));
+        return Res.get("social.marketChannel.description", market.toString());
     }
 
     public String getDisplayString() {
-        return market.map(Market::getMarketCodes).orElseThrow();
+        return market.getMarketCodes();
     }
 
-    //todo make market non-optional
-    public static String getId(Optional<Market> market) {
-        return market.map(Market::toString).orElseThrow();
+    public static String getId(Market market) {
+        return market.toString();
     }
 }

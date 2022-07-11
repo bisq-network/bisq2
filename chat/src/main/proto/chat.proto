@@ -90,7 +90,7 @@ message PrivateTradeChannel {
 }
 
 message PublicMarketChannel {
-  optional common.Market market = 1;
+  common.Market market = 1;
   bool isVisible = 2;
 }
 message PublicDiscussionChannel {

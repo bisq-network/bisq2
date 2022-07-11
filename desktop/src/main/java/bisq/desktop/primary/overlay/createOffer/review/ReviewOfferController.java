@@ -145,7 +145,7 @@ public class ReviewOfferController implements Controller {
                 settingsService.getRequiredTotalReputationScore());
 
         PublicMarketChannel channelForMarket = chatService.getPublicTradeChannels().stream()
-                .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket().orElse(null)))
+                .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket()))
                 .findAny()
                 .orElseThrow();
         channelForMarket.setVisible(true);

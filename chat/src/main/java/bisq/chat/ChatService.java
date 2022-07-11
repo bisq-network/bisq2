@@ -211,7 +211,7 @@ public class ChatService implements PersistenceClient<ChatStore>, MessageListene
     // Public Trade domain
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<PublicMarketChannel> showPublicTradeChannel(Optional<Market> market) {
+    public Optional<PublicMarketChannel> showPublicTradeChannel(Market market) {
         return findPublicTradeChannel(PublicMarketChannel.getId(market))
                 .map(channel -> {
                     channel.setVisible(true);

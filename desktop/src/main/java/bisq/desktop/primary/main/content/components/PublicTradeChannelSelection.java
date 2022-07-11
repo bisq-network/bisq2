@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.PublicMarketChannel;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
@@ -29,7 +30,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
-import bisq.chat.channels.PublicMarketChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -111,21 +111,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             Set<Market> visibleMarkets = model.filteredList.stream()
                     .map(e -> ((PublicMarketChannel) e.getChannel()))
-                    .filter(c -> c.getMarket().isPresent())
-                    .map(c -> c.getMarket().get())
+                    .map(PublicMarketChannel::getMarket)
                     .collect(Collectors.toSet());
             markets.removeAll(visibleMarkets);
             List<View.MarketListItem> marketListItems = markets.stream()
-                    .map(e -> new View.MarketListItem(Optional.of(e)))
+                    .map(View.MarketListItem::new)
                     .collect(Collectors.toList());
-
-           /* Optional<PublicTradeChannel> anyMarketInVisible = model.filteredList.stream()
-                    .map(e -> ((PublicTradeChannel) e.getChannel()))
-                    .filter(c -> c.getMarket().isEmpty())
-                    .findAny();
-            if (anyMarketInVisible.isEmpty()) {
-                marketListItems.add(View.MarketListItem.ANY);
-            }*/
 
             model.allMarkets.setAll(marketListItems);
             model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
@@ -178,7 +169,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
         }
 
-        private int getNumMessages(Optional<Market> market) {
+        private int getNumMessages(Market market) {
             return chatService.findPublicTradeChannel(PublicMarketChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
@@ -287,9 +278,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicMarketChannel) {
                         PublicMarketChannel publicMarketChannel = (PublicMarketChannel) item.getChannel();
-                        Pair<String, String> pair = publicMarketChannel.getMarket()
-                                .map(market -> new Pair<>(market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()))
-                                .orElse(new Pair<>("any-base", "any-quote"));
+                        Market market = publicMarketChannel.getMarket();
+                        Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
+                                market.getQuoteCurrencyCode());
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
                                 pair.getSecond().toLowerCase()));
@@ -325,16 +316,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         @EqualsAndHashCode
         private static class MarketListItem {
-            public static final MarketListItem ANY = new MarketListItem(Optional.empty());
-            private final Optional<Market> market;
+            private final Market market;
 
-            public MarketListItem(Optional<Market> market) {
+            public MarketListItem(Market market) {
                 this.market = market;
             }
 
             @Override
             public String toString() {
-                return market.map(Market::toString).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                return market.toString();
             }
         }
     }
