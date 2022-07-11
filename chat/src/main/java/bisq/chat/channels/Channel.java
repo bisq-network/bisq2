@@ -46,9 +46,6 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
 
-    // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
-    // concrete implementation for the ChatMessage.
-    protected abstract bisq.chat.protobuf.ChatMessage getChatMessageProto(T e);
 
     abstract public bisq.chat.protobuf.Channel toProto();
 

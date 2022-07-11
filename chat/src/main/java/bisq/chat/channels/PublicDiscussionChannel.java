@@ -17,9 +17,9 @@
 
 package bisq.chat.channels;
 
-import bisq.common.observable.ObservableSet;
 import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.PublicDiscussionChatMessage;
+import bisq.common.observable.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +42,6 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
         PRICE_ID,
         ECONOMY_ID,
         OFF_TOPIC_ID
-
     }
 
     private final String channelName;
@@ -57,14 +56,13 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                                    String channelName,
                                    String description,
                                    String channelAdminId,
-                                   Set<String> channelModeratorIds
-    ) {
-        this(id, channelName,
+                                   Set<String> channelModeratorIds) {
+        this(id,
+                channelName,
                 description,
                 channelAdminId,
                 channelModeratorIds,
-                ChannelNotificationType.MENTION
-        );
+                ChannelNotificationType.MENTION);
     }
 
     private PublicDiscussionChannel(String id,
@@ -100,11 +98,6 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                 proto.getChannelAdminId(),
                 new HashSet<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-    }
-
-    @Override
-    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PublicDiscussionChatMessage chatMessage) {
-        return chatMessage.toProto();
     }
 
     @Override

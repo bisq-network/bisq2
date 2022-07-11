@@ -17,17 +17,40 @@
 
 package bisq.chat.channels;
 
+import bisq.chat.ChannelNotificationType;
+import bisq.chat.messages.ChatMessage;
+import bisq.common.observable.ObservableSet;
+import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import lombok.Getter;
 
-public interface PrivateChannel {
-    String CHANNEL_DELIMITER = "-";
+import java.util.Set;
 
-    UserProfile getPeer();
+@Getter
+public abstract class PrivateChannel<T extends ChatMessage> extends Channel<T> {
+    private static final String CHANNEL_DELIMITER = "-";
+    protected final UserProfile peer;
+    protected final UserIdentity myProfile;
 
-    static String createChannelId(String peersId, String myId) {
+    // We persist the messages as they are NOT persisted in the P2P data store.
+    protected final ObservableSet<T> chatMessages = new ObservableSet<>();
+
+    public PrivateChannel(String id,
+                          UserProfile peer,
+                          UserIdentity myProfile,
+                          Set<T> chatMessages,
+                          ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
+        this.peer = peer;
+        this.myProfile = myProfile;
+        this.chatMessages.addAll(chatMessages);
+    }
+
+    public static String createChannelId(String peersId, String myId) {
+        // Need to have an ordering here, otherwise there would be 2 channelIds for the same participants
         if (peersId.compareTo(myId) < 0) {
             return peersId + CHANNEL_DELIMITER + myId;
-        } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
+        } else {
             return myId + CHANNEL_DELIMITER + peersId;
         }
     }

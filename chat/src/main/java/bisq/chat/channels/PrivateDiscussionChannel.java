@@ -17,11 +17,10 @@
 
 package bisq.chat.channels;
 
-import bisq.chat.messages.PrivateDiscussionChatMessage;
-import bisq.common.observable.ObservableSet;
 import bisq.chat.ChannelNotificationType;
-import bisq.user.profile.UserProfile;
+import bisq.chat.messages.PrivateDiscussionChatMessage;
 import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -32,41 +31,33 @@ import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
-    private final UserProfile peer;
-    private final UserIdentity myProfile;
+public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscussionChatMessage> {
 
-    // We persist the messages as they are NOT persisted in the P2P data store.
-    private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PrivateDiscussionChannel(UserProfile peer, UserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,
                 myProfile,
-                ChannelNotificationType.ALL,
-                new HashSet<>());
-    }
-
-    public PrivateDiscussionChannel(String id, UserProfile peer, UserIdentity myProfile) {
-        this(id, peer, myProfile, ChannelNotificationType.ALL, new HashSet<>());
+                new HashSet<>(),
+                ChannelNotificationType.ALL);
     }
 
     private PrivateDiscussionChannel(String id,
                                      UserProfile peer,
                                      UserIdentity myProfile,
-                                     ChannelNotificationType channelNotificationType,
-                                     Set<PrivateDiscussionChatMessage> chatMessages) {
-        super(id, channelNotificationType);
-        this.peer = peer;
-        this.myProfile = myProfile;
-        this.chatMessages.addAll(chatMessages);
+                                     Set<PrivateDiscussionChatMessage> chatMessages,
+                                     ChannelNotificationType channelNotificationType) {
+        super(id, peer, myProfile, chatMessages, channelNotificationType);
     }
 
+    @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateDiscussionChannel(bisq.chat.protobuf.PrivateDiscussionChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myProfile.toProto())
-                        .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
+                        .addAllChatMessages(chatMessages.stream()
+                                .map(PrivateDiscussionChatMessage::toChatMessageProto)
+                                .collect(Collectors.toList())))
                 .build();
     }
 
@@ -76,15 +67,10 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateDiscussionChatMessage::fromProto)
-                        .collect(Collectors.toSet()));
-    }
-
-    @Override
-    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PrivateDiscussionChatMessage chatMessage) {
-        return chatMessage.toChatMessageProto();
+                        .collect(Collectors.toSet()),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 
     @Override
@@ -104,6 +90,6 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
 
     @Override
     public String getDisplayString() {
-        return peer.getUserName();
+        return peer.getUserName() + "-" + myProfile.getUserName();
     }
 }

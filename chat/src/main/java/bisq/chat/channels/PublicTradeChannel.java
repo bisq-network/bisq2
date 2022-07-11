@@ -36,13 +36,11 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
-    private static final String ID_ANY = "anyPublicTradeChannel";
 
-    public Optional<Market> getMarket() {
-        return market;
-    }
-
+    @Getter
     private final Optional<Market> market;
+    
+    // todo move out
     @Setter
     private boolean isVisible;
 
@@ -79,11 +77,6 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
     }
 
     @Override
-    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PublicTradeChatMessage chatMessage) {
-        return chatMessage.toProto();
-    }
-
-    @Override
     public void addChatMessage(PublicTradeChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
@@ -104,10 +97,11 @@ public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> im
     }
 
     public String getDisplayString() {
-        return market.map(Market::getMarketCodes).orElse(Res.get("tradeChat.addMarketChannel.any"));
+        return market.map(Market::getMarketCodes).orElseThrow();
     }
 
+    //todo make market non-optional
     public static String getId(Optional<Market> market) {
-        return market.map(Market::toString).orElse(ID_ANY);
+        return market.map(Market::toString).orElseThrow();
     }
 }
