@@ -127,11 +127,11 @@ public final class UserProfile implements DistributedData {
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, nym);
+        return Res.get("social.chatUser.tooltip", nickName, getNym());
     }
 
     public String getUserName() {
-        return UserNameLookup.getUserName(nym, nickName);
+        return UserNameLookup.getUserName(getNym(), nickName);
     }
 
     //todo
