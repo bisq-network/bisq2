@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channels.PublicMarketChannel;
+import bisq.chat.channels.PublicTradeChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.TradeChatOffer;
@@ -147,7 +147,7 @@ public class ReviewOfferController implements Controller {
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
-        PublicMarketChannel channelForMarket = chatService.getPublicTradeChannels().stream()
+        PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
                 .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket()))
                 .findAny()
                 .orElseThrow();

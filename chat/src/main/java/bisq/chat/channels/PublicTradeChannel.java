@@ -34,7 +34,7 @@ import java.util.Collection;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
+public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel {
     private final Market market;
 
     // todo move out
@@ -45,11 +45,11 @@ public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> i
     private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
 
 
-    public PublicMarketChannel(Market market, boolean isVisible) {
+    public PublicTradeChannel(Market market, boolean isVisible) {
         this(getId(market), market, isVisible);
     }
 
-    private PublicMarketChannel(String id, Market market, boolean isVisible) {
+    private PublicTradeChannel(String id, Market market, boolean isVisible) {
         super(id, ChannelNotificationType.MENTION);
 
         this.market = market;
@@ -58,17 +58,17 @@ public final class PublicMarketChannel extends Channel<PublicTradeChatMessage> i
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
-        return getChannelBuilder().setPublicMarketChannel(bisq.chat.protobuf.PublicMarketChannel.newBuilder()
+        return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
                         .setIsVisible(isVisible)
                         .setMarket(market.toProto()))
                 .build();
     }
 
-    public static PublicMarketChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                bisq.chat.protobuf.PublicMarketChannel proto) {
-        return new PublicMarketChannel(baseProto.getId(),
+    public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                               bisq.chat.protobuf.PublicTradeChannel proto) {
+        return new PublicTradeChannel(baseProto.getId(),
                 Market.fromProto(proto.getMarket()),
-                baseProto.getPublicMarketChannel().getIsVisible());
+                baseProto.getPublicTradeChannel().getIsVisible());
     }
 
     @Override

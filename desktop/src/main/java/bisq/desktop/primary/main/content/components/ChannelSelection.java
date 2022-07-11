@@ -2,7 +2,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.chat.ChatService;
 import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicMarketChannel;
+import bisq.chat.channels.PublicTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
@@ -69,8 +69,8 @@ public abstract class ChannelSelection {
 
         public Model() {
             filteredList.setPredicate(item -> {
-                if (item.getChannel() instanceof PublicMarketChannel) {
-                    return ((PublicMarketChannel) item.getChannel()).isVisible();
+                if (item.getChannel() instanceof PublicTradeChannel) {
+                    return ((PublicTradeChannel) item.getChannel()).isVisible();
                 } else {
                     return true;
                 }
@@ -160,8 +160,8 @@ public abstract class ChannelSelection {
             }
 
             public String getDisplayString() {
-                if (channel instanceof PublicMarketChannel) {
-                    return ((PublicMarketChannel) channel).getMarket().getMarketCodes();
+                if (channel instanceof PublicTradeChannel) {
+                    return ((PublicTradeChannel) channel).getMarket().getMarketCodes();
                 } else {
                     return channel.getDisplayString();
                 }

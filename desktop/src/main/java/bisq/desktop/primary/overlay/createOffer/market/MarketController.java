@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channels.PublicMarketChannel;
+import bisq.chat.channels.PublicTradeChannel;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.common.currency.Market;
@@ -72,9 +72,9 @@ public class MarketController implements Controller {
 
         // We pre-select the market from the selected channel, or if not available we use the default market.
         Optional.ofNullable(chatService.getSelectedTradeChannel().get())
-                .filter(channel -> channel instanceof PublicMarketChannel)
-                .map(channel -> (PublicMarketChannel) channel)
-                .map(PublicMarketChannel::getMarket)
+                .filter(channel -> channel instanceof PublicTradeChannel)
+                .map(channel -> (PublicTradeChannel) channel)
+                .map(PublicTradeChannel::getMarket)
                 .flatMap(this::findMarketListItem)
                 .ifPresent(marketListItem -> {
                     marketListItem.getSelected().set(true);

@@ -57,8 +57,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
             case PRIVATEDISCUSSIONCHANNEL: {
                 return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
             }
-            case PUBLICMARKETCHANNEL: {
-                return PublicMarketChannel.fromProto(proto, proto.getPublicMarketChannel());
+            case PUBLICTRADECHANNEL: {
+                return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
             }
             case PUBLICDISCUSSIONCHANNEL: {
                 return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());

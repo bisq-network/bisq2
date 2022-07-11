@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.PublicDiscussionChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.chat.ChatService;
@@ -54,10 +55,13 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final PublicDiscussionChannelService publicDiscussionChannelService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            
             model = new Model();
             view = new View(model, this);
         }
@@ -73,7 +77,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
 
             channelsPin = FxBindings.<PublicDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    .to(chatService.getPublicDiscussionChannels());
+                    .to(publicDiscussionChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatService.getSelectedDiscussionChannel(),
                     channel -> {

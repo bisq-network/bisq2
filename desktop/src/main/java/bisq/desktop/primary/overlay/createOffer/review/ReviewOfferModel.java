@@ -24,7 +24,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;
-import bisq.chat.channels.PublicMarketChannel;
+import bisq.chat.channels.PublicTradeChannel;
 import bisq.chat.messages.PublicTradeChatMessage;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -38,7 +38,7 @@ import java.util.List;
 @Getter
 class ReviewOfferModel implements Model {
     @Setter
-    private PublicMarketChannel selectedChannel;
+    private PublicTradeChannel selectedChannel;
     @Setter
     private Direction direction = Direction.BUY;
     @Setter

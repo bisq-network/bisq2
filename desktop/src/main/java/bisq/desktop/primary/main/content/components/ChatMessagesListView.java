@@ -135,6 +135,7 @@ public class ChatMessagesListView {
         private final ChatService chatService;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateDiscussionChannelService privateDiscussionChannelService;
+        private final PublicDiscussionChannelService publicDiscussionChannelService;
         private UserIdentityService userIdentityService;
         private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
@@ -153,6 +154,7 @@ public class ChatMessagesListView {
             chatService = applicationService.getChatService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             reputationService = applicationService.getUserService().getReputationService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -209,13 +211,13 @@ public class ChatMessagesListView {
             } else {
                 selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicMarketChannel) {
+                    if (channel instanceof PublicTradeChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, chatService, reputationService))
-                                .to(((PublicMarketChannel) channel).getChatMessages());
+                                .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel) {
                         if (chatMessagesPin != null) {
@@ -304,7 +306,7 @@ public class ChatMessagesListView {
                                 log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                    chatService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
+                    publicDiscussionChannelService.deletePublicDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
                 }
                 //todo delete private message
             }
@@ -332,7 +334,7 @@ public class ChatMessagesListView {
                 chatService.publishEditedTradeChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
-                chatService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userIdentity);
+                publicDiscussionChannelService.publishEditedDiscussionChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userIdentity);
             }
             //todo editing private message not supported yet
         }

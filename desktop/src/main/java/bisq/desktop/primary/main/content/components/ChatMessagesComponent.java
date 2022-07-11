@@ -94,6 +94,7 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateDiscussionChannelService privateDiscussionChannelService;
+        private final PublicDiscussionChannelService publicDiscussionChannelService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -101,6 +102,7 @@ public class ChatMessagesComponent {
             chatService = applicationService.getChatService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(chatService);
@@ -120,7 +122,7 @@ public class ChatMessagesComponent {
         @Override
         public void onActivate() {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
-            model.mentionableChannels.setAll(chatService.getMentionableChannels());
+            model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.isDiscussionsChat) {
                 selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(model.selectedChannel::set);
@@ -157,10 +159,10 @@ public class ChatMessagesComponent {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
-                if (channel instanceof PublicMarketChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicMarketChannel) channel, userIdentity);
+                if (channel instanceof PublicTradeChannel) {
+                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
+                    publicDiscussionChannelService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {
                     privateTradeChannelService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else if (channel instanceof PrivateDiscussionChannel) {
