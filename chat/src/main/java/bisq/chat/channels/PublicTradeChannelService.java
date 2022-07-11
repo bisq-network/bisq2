@@ -19,8 +19,10 @@ package bisq.chat.channels;
 
 import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.ChatMessage;
-import bisq.chat.messages.PublicDiscussionChatMessage;
+import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.Quotation;
+import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -36,23 +38,22 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PublicDiscussionChannelService extends ChannelService<PublicDiscussionChannel>
-        implements PersistenceClient<PublicDiscussionChannelStore>, DataService.Listener {
+public class PublicTradeChannelService extends ChannelService<PublicTradeChannel>
+        implements PersistenceClient<PublicTradeChannelStore>, DataService.Listener {
     @Getter
-    private final PublicDiscussionChannelStore persistableStore = new PublicDiscussionChannelStore();
+    private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
-    private final Persistence<PublicDiscussionChannelStore> persistence;
+    private final Persistence<PublicTradeChannelStore> persistence;
 
-    public PublicDiscussionChannelService(PersistenceService persistenceService,
-                                          NetworkService networkService,
-                                          UserIdentityService userIdentityService) {
+    public PublicTradeChannelService(PersistenceService persistenceService,
+                                     NetworkService networkService,
+                                     UserIdentityService userIdentityService) {
         super(networkService, userIdentityService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -79,20 +80,20 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicDiscussionChatMessage) {
-            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
-            findPublicDiscussionChannel(message.getChannelId())
-                    .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
+        if (distributedData instanceof PublicTradeChatMessage) {
+            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
+            findPublicTradeChannel(message.getChannelId())
+                    .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicDiscussionChatMessage) {
-            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
-            findPublicDiscussionChannel(message.getChannelId())
-                    .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel));
+        if (distributedData instanceof PublicTradeChatMessage) {
+            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
+            findPublicTradeChannel(message.getChannelId())
+                    .ifPresent(channel -> removePublicTradeChatMessage(message, channel));
         }
     }
 
@@ -100,30 +101,59 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishDiscussionChatMessage(String text,
-                                                                                           Optional<Quotation> quotedMessage,
-                                                                                           PublicDiscussionChannel publicDiscussionChannel,
-                                                                                           UserIdentity userIdentity) {
+
+    public Optional<PublicTradeChannel> showPublicTradeChannel(Market market) {
+        return findPublicTradeChannel(PublicTradeChannel.getId(market))
+                .map(channel -> {
+                    channel.setVisible(true);
+                    persist();
+                    return channel;
+                });
+    }
+
+    public void showPublicTradeChannel(PublicTradeChannel channel) {
+        channel.setVisible(true);
+        persist();
+    }
+
+    public void hidePublicTradeChannel(PublicTradeChannel channel) {
+        channel.setVisible(false);
+        persist();
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatTextMessage(String text,
+                                                                                          Optional<Quotation> quotedMessage,
+                                                                                          PublicTradeChannel publicTradeChannel,
+                                                                                          UserIdentity userIdentity) {
         UserProfile userProfile = userIdentity.getUserProfile();
-        PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(publicDiscussionChannel.getId(),
+        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
                 userProfile.getId(),
-                text,
+                Optional.empty(),
+                Optional.of(text),
                 quotedMessage,
                 new Date().getTime(),
                 false);
         return publish(userIdentity, userProfile, chatMessage);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishEditedDiscussionChatMessage(PublicDiscussionChatMessage originalChatMessage,
-                                                                                                 String editedText,
-                                                                                                 UserIdentity userIdentity) {
+    public CompletableFuture<DataService.BroadCastDataResult> publishPublicTradeChatMessage(PublicTradeChatMessage chatMessage,
+                                                                                            UserIdentity userIdentity) {
+        return publish(userIdentity, userIdentity.getUserProfile(), chatMessage);
+    }
+
+    public CompletableFuture<DataService.BroadCastDataResult> publishEditedTradeChatMessage(PublicTradeChatMessage originalChatMessage,
+                                                                                            String editedText,
+                                                                                            UserIdentity userIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .thenCompose(result -> {
+                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                    // the edited text.
                     UserProfile userProfile = userIdentity.getUserProfile();
-                    PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
+                    PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
                             userProfile.getId(),
-                            editedText,
+                            Optional.empty(),
+                            Optional.of(editedText),
                             originalChatMessage.getQuotation(),
                             originalChatMessage.getDate(),
                             true);
@@ -131,35 +161,30 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
                 });
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deletePublicDiscussionChatMessage(PublicDiscussionChatMessage chatMessage,
-                                                                                                UserIdentity userIdentity) {
+    public CompletableFuture<DataService.BroadCastDataResult> deletePublicTradeChatMessage(PublicTradeChatMessage chatMessage,
+                                                                                           UserIdentity userIdentity) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
     }
 
-    private void addPublicDiscussionChatMessage(PublicDiscussionChatMessage message, PublicDiscussionChannel channel) {
-        channel.addChatMessage(message);
-        persist();
-    }
-
-    private void removePublicDiscussionChatMessage(PublicDiscussionChatMessage message, PublicDiscussionChannel channel) {
-        channel.removeChatMessage(message);
-        persist();
-    }
-
-    public Optional<PublicDiscussionChannel> findPublicDiscussionChannel(String channelId) {
+    public Optional<PublicTradeChannel> findPublicTradeChannel(String channelId) {
         return getChannels().stream()
                 .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
     }
 
-    public ObservableSet<PublicDiscussionChannel> getChannels() {
-        return persistableStore.getChannels();
+    private void addPublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
+        channel.addChatMessage(message);
+        persist();
     }
 
-    public Collection<? extends Channel<?>> getMentionableChannels() {
-        // TODO: implement logic
-        return getChannels();
+    private void removePublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
+        channel.removeChatMessage(message);
+        persist();
+    }
+
+    public ObservableSet<PublicTradeChannel> getChannels() {
+        return persistableStore.getChannels();
     }
 
 
@@ -185,50 +210,31 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
                 .thenCompose(result -> networkService.publishAuthenticatedData(distributedData, nodeIdAndKeyPair));
     }
 
+
+   /* private boolean isValidProofOfWorkOrChatUserNotFound(ChatMessage message) {
+        // In case we don't find the chat user we still return true as it might be that the chat user gets added later.
+        // In that case we check again if the chat user has a valid proof of work.
+        return findChatUser(message.getAuthorId())
+                .map(chatUser -> hasAuthorValidProofOfWork(chatUser.getProofOfWork()))
+                .orElse(true);
+    }*/
+
     private void maybeAddDefaultChannels() {
         if (!getChannels().isEmpty()) {
             return;
         }
-        // todo channelAdmin not supported atm
-        String channelAdminId = "";
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
-                "Discussions Bisq",
-                "Channel for discussions about Bisq",
-                channelAdminId,
-                new HashSet<>()
-        );
-        ObservableSet<PublicDiscussionChannel> channels = getChannels();
-        channels.add(defaultDiscussionChannel);
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN_ID.name(),
-                "Discussions Bitcoin",
-                "Channel for discussions about Bitcoin",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO_ID.name(),
-                "Discussions Monero",
-                "Channel for discussions about Monero",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.PRICE_ID.name(),
-                "Price",
-                "Channel for discussions about market price",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY_ID.name(),
-                "Economy",
-                "Channel for discussions about economy",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC_ID.name(),
-                "Off-topic",
-                "Channel for anything else",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        persist();
+
+        PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
+        maybeAddPublicTradeChannel(defaultChannel);
+        List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
+        allMarkets.remove(MarketRepository.getDefault());
+        allMarkets.forEach(market ->
+                maybeAddPublicTradeChannel(new PublicTradeChannel(market, false)));
+    }
+
+    private void maybeAddPublicTradeChannel(PublicTradeChannel channel) {
+        if (!getChannels().contains(channel)) {
+            getChannels().add(channel);
+        }
     }
 }

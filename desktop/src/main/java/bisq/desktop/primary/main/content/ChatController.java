@@ -29,6 +29,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channels.Channel;
 import bisq.chat.messages.ChatMessage;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected final ChatService chatService;
     protected final FilterBox filterBox;
     protected final M model;
+    private final UserProfileService userProfileService;
     @Getter
     protected V view;
     protected final UserIdentityService userIdentityService;
@@ -60,13 +62,14 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
+        userProfileService = applicationService.getUserService().getUserProfileService();
         ReputationService reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
-        channelInfo = new ChannelInfo(chatService);
+        channelInfo = new ChannelInfo(applicationService);
         notificationsSettings = new NotificationsSettings();
         helpPane = new HelpPane();
-        quotedMessageBlock = new QuotedMessageBlock(chatService);
+        quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         //todo
         filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
@@ -88,7 +91,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
             model.getSideBarVisible().set(true);
             model.getSideBarWidth().set(240);
 
-            ChatUserDetails chatUserDetails = new ChatUserDetails(chatService, chatUser);
+            ChatUserDetails chatUserDetails = new ChatUserDetails(userProfileService, chatService, chatUser);
             chatUserDetails.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
             chatUserDetails.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
             chatUserDetails.setOnMentionUserHandler(chatMessagesComponent::mentionUser);

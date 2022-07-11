@@ -17,10 +17,9 @@
 
 package bisq.chat;
 
-import bisq.chat.channels.*;
+import bisq.chat.channels.Channel;
 import bisq.chat.messages.ChatMessage;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -28,69 +27,31 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Slf4j
 @Getter
 public final class ChatStore implements PersistableStore<ChatStore> {
-    private final ObservableSet<PublicDiscussionChannel> publicDiscussionChannels = new ObservableSet<>();
-    private final ObservableSet<PublicTradeChannel> publicTradeChannels = new ObservableSet<>();
     private final Observable<Channel<? extends ChatMessage>> selectedTradeChannel = new Observable<>();
     private final Observable<Channel<? extends ChatMessage>> selectedDiscussionChannel = new Observable<>();
-    private final ObservableSet<String> customTags = new ObservableSet<>();
-    private final ObservableSet<String> ignoredChatUserIds = new ObservableSet<>();
 
     public ChatStore() {
     }
 
-    private ChatStore(
-                      Set<PublicDiscussionChannel> publicDiscussionChannels,
-                      Set<PublicTradeChannel> publicTradeChannels,
-                      Channel<? extends ChatMessage> selectedTradeChannel,
-                      Channel<? extends ChatMessage> selectedDiscussionChannel,
-                      Set<String> customTags,
-                      Set<String> ignoredChatUserIds) {
-        setAll(
-                publicDiscussionChannels,
-                publicTradeChannels,
-                selectedTradeChannel,
-                selectedDiscussionChannel,
-                customTags,
-                ignoredChatUserIds);
+    private ChatStore(Channel<? extends ChatMessage> selectedTradeChannel,
+                      Channel<? extends ChatMessage> selectedDiscussionChannel) {
+        setAll(selectedTradeChannel, selectedDiscussionChannel);
     }
 
     @Override
     public bisq.chat.protobuf.ChatStore toProto() {
         return bisq.chat.protobuf.ChatStore.newBuilder()
-                .addAllPublicDiscussionChannels(publicDiscussionChannels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toSet()))
-                .addAllPublicTradeChannels(publicTradeChannels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()))
                 .setSelectedTradeChannel(selectedTradeChannel.get().toProto())
                 .setSelectedDiscussionChannel(selectedDiscussionChannel.get().toProto())
-                .addAllCustomTags(customTags)
-                .addAllIgnoredChatUserProfileIds(ignoredChatUserIds)
                 .build();
     }
 
     public static ChatStore fromProto(bisq.chat.protobuf.ChatStore proto) {
-        Set<PrivateDiscussionChannel> privateDiscussionChannels = proto.getPrivateDiscussionChannelsList().stream()
-                .map(e -> (PrivateDiscussionChannel) PrivateDiscussionChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        Set<PublicDiscussionChannel> publicDiscussionChannels = proto.getPublicDiscussionChannelsList().stream()
-                .map(e -> (PublicDiscussionChannel) PublicDiscussionChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        Set<PublicTradeChannel> publicTradeChannels = proto.getPublicTradeChannelsList().stream()
-                .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new ChatStore(
-                publicDiscussionChannels,
-                publicTradeChannels,
-                Channel.fromProto(proto.getSelectedTradeChannel()),
-                Channel.fromProto(proto.getSelectedDiscussionChannel()),
-                new HashSet<>(proto.getCustomTagsCount()),
-                new HashSet<>(proto.getIgnoredChatUserProfileIdsList())
-        );
+        return new ChatStore(Channel.fromProto(proto.getSelectedTradeChannel()),
+                Channel.fromProto(proto.getSelectedDiscussionChannel()));
     }
 
     @Override
@@ -106,41 +67,17 @@ public final class ChatStore implements PersistableStore<ChatStore> {
 
     @Override
     public void applyPersisted(ChatStore chatStore) {
-        setAll(chatStore.publicDiscussionChannels,
-                chatStore.publicTradeChannels,
-                chatStore.selectedTradeChannel.get(),
-                chatStore.selectedDiscussionChannel.get(),
-                chatStore.getCustomTags(),
-                chatStore.ignoredChatUserIds);
+        setAll(chatStore.selectedTradeChannel.get(), chatStore.selectedDiscussionChannel.get());
     }
 
     @Override
     public ChatStore getClone() {
-        return new ChatStore(
-                publicDiscussionChannels,
-                publicTradeChannels,
-                selectedTradeChannel.get(),
-                selectedDiscussionChannel.get(),
-                customTags,
-                ignoredChatUserIds);
+        return new ChatStore(selectedTradeChannel.get(), selectedDiscussionChannel.get());
     }
 
-    public void setAll(
-                       Set<PublicDiscussionChannel> publicDiscussionChannels,
-                       Set<PublicTradeChannel> publicTradeChannels,
-                       Channel<? extends ChatMessage> selectedTradeChannel,
-                       Channel<? extends ChatMessage> selectedDiscussionChannel,
-                       Set<String> customTags,
-                       Set<String> ignoredChatUserIds) {
-        this.publicDiscussionChannels.clear();
-        this.publicDiscussionChannels.addAll(publicDiscussionChannels);
-        this.publicTradeChannels.clear();
-        this.publicTradeChannels.addAll(publicTradeChannels);
+    public void setAll(Channel<? extends ChatMessage> selectedTradeChannel,
+                       Channel<? extends ChatMessage> selectedDiscussionChannel) {
         this.selectedTradeChannel.set(selectedTradeChannel);
         this.selectedDiscussionChannel.set(selectedDiscussionChannel);
-        this.customTags.clear();
-        this.customTags.addAll(customTags);
-        this.ignoredChatUserIds.clear();
-        this.ignoredChatUserIds.addAll(ignoredChatUserIds);
     }
 }

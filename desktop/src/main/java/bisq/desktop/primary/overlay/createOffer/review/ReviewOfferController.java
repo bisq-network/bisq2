@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.review;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicTradeChannelService;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.TradeChatOffer;
@@ -35,6 +36,7 @@ import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,15 +58,18 @@ public class ReviewOfferController implements Controller {
     private final Runnable closeHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
+    private final PublicTradeChannelService publicTradeChannelService;
+    private final UserProfileService userProfileService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable closeHandler) {
         chatService = applicationService.getChatService();
+        publicTradeChannelService = chatService.getPublicTradeChannelService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
-
+        userProfileService = applicationService.getUserService().getUserProfileService();
         myOfferListView = new ChatMessagesListView(applicationService,
                 mentionUser -> {
                 },
@@ -147,7 +152,7 @@ public class ReviewOfferController implements Controller {
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
-        PublicTradeChannel channelForMarket = chatService.getPublicTradeChannels().stream()
+        PublicTradeChannel channelForMarket = publicTradeChannelService.getChannels().stream()
                 .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket()))
                 .findAny()
                 .orElseThrow();
@@ -163,7 +168,7 @@ public class ReviewOfferController implements Controller {
                 false);
         model.getMyOfferMessage().set(myOfferMessage);
         myOfferListView.getChatMessages().clear();
-        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(myOfferMessage, chatService, reputationService));
+        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(myOfferMessage, userProfileService, reputationService));
 
         takersListView.getChatMessages().setAll(takersListView.getFilteredChatMessages().stream()
                 .limit(3)
@@ -204,10 +209,10 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
             UserProfile peer = item.getSender().get();
-            if (chatService.isChatUserIgnored(peer)) {
+            if (userProfileService.isChatUserIgnored(peer)) {
                 return false;
             }
-            if (chatService.isMyMessage(item.getChatMessage())) {
+            if (userIdentityService.isUserIdentityPresent(item.getChatMessage().getAuthorId())) {
                 return false;
             }
             if (!(item.getChatMessage() instanceof PublicTradeChatMessage)) {

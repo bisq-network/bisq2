@@ -49,6 +49,8 @@ message NymList {
 
 message UserProfileStore {
   map<string, NymList> nymListByNickName = 1;
+  repeated string ignoredUserProfileIds = 2;
+  map<string, UserProfile> userProfileById = 3;
 }
 
 message ProofOfBurnVerificationStore {

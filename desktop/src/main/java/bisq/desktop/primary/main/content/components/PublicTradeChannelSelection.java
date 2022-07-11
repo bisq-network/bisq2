@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
@@ -72,10 +73,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final PublicTradeChannelService publicTradeChannelService;
         private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
+
+            publicTradeChannelService= applicationService.getChatService().getPublicTradeChannelService();
 
             model = new Model();
             view = new View(model, this);
@@ -97,8 +101,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             //todo do not use the visible flag but create a separate list for the chosen channels
             channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    /* .map(ChannelSelection.View.ChannelItem::new)*/
-                    .to(chatService.getPublicTradeChannels());
+                    .to(publicTradeChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
                     channel -> {
@@ -139,17 +142,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                chatService.findPublicTradeChannel(PublicTradeChannel.getId(marketListItem.market))
-                        .map(channel -> {
-                            chatService.showPublicTradeChannel(channel);
-                            return channel;
-                        });
-                Optional<PublicTradeChannel> marketChannel = chatService.showPublicTradeChannel(marketListItem.market);
+                Optional<PublicTradeChannel> marketChannel = publicTradeChannelService.showPublicTradeChannel(marketListItem.market);
 
                 //todo somehow the predicate does not trigger an update, no idea why...
                 // re-applying the list works
                 model.channelItems.clear();
-                model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
+                model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
 
@@ -158,13 +156,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
-            chatService.hidePublicTradeChannel(channel);
+            publicTradeChannelService.hidePublicTradeChannel(channel);
             channel.setVisible(false);
 
             //todo somehow the predicate does not trigger an update, no idea why...
             // re-applying the list works
             model.channelItems.clear();
-            model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
+            model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
                     .map(ChannelSelection.View.ChannelItem::new)
                     .collect(Collectors.toList()));
 
@@ -175,7 +173,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return chatService.findPublicTradeChannel(PublicTradeChannel.getId(market))
+            return publicTradeChannelService.findPublicTradeChannel(PublicTradeChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }

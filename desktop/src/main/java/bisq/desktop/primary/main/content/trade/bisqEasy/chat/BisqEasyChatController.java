@@ -18,22 +18,26 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.Channel;
+import bisq.chat.channels.PrivateTradeChannel;
+import bisq.chat.channels.PublicTradeChannelService;
+import bisq.chat.messages.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PrivateTradeChannel;
-import bisq.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> implements Controller {
+    private final PublicTradeChannelService publicTradeChannelService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, false);
+
+        publicTradeChannelService = chatService.getPublicTradeChannelService();
     }
 
     @Override
@@ -45,7 +49,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 value -> {
                     Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
                     if (channel != null) {
-                        chatService.setNotificationSetting(channel, value);
+                        publicTradeChannelService.setNotificationSetting(channel, value);
                     }
                 });
 

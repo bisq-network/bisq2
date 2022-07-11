@@ -61,7 +61,7 @@ public class ChatApi {
                     )}
     )
     public List<PublicTradeChannelDto> getPublicTradeChannels() {
-        return chatService.getPublicTradeChannels().stream()
+        return chatService.getPublicTradeChannelService().getChannels().stream()
                 .map(PublicTradeChannelDto::from)
                 .collect(Collectors.toList());
     }

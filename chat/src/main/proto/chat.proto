@@ -113,14 +113,8 @@ message Channel {
 
 // Stores
 message ChatStore {
-  repeated Channel privateTradeChannels = 1;
-  repeated Channel privateDiscussionChannels = 2;
-  repeated Channel publicTradeChannels = 3;
-  repeated Channel publicDiscussionChannels = 4;
-  Channel selectedTradeChannel = 5;
-  Channel selectedDiscussionChannel = 6;
-  repeated string customTags = 7;
-  repeated string ignoredChatUserProfileIds = 8;
+  Channel selectedTradeChannel = 1;
+  Channel selectedDiscussionChannel = 2;
 }
 
 message PrivateTradeChannelStore {

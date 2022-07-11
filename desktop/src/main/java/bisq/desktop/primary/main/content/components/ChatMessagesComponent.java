@@ -95,6 +95,7 @@ public class ChatMessagesComponent {
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final PublicTradeChannelService publicTradeChannelService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -103,9 +104,10 @@ public class ChatMessagesComponent {
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            publicTradeChannelService= chatService.getPublicTradeChannelService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
-            quotedMessageBlock = new QuotedMessageBlock(chatService);
+            quotedMessageBlock = new QuotedMessageBlock(applicationService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
                     this::showChatUserDetails,
@@ -160,7 +162,7 @@ public class ChatMessagesComponent {
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
+                    publicTradeChannelService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
                     publicDiscussionChannelService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {
@@ -173,7 +175,7 @@ public class ChatMessagesComponent {
         }
 
         public void onReply(ChatMessage chatMessage) {
-            if (!chatService.isMyMessage(chatMessage)) {
+            if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
                 quotedMessageBlock.reply(chatMessage);
             }
         }
@@ -194,7 +196,7 @@ public class ChatMessagesComponent {
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {
-            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author ->
+            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 

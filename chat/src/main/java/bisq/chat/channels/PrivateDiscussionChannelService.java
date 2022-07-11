@@ -68,6 +68,7 @@ public class PrivateDiscussionChannelService extends ChannelService<PrivateDiscu
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        networkService.removeMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }
 

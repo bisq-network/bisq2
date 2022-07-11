@@ -22,6 +22,7 @@ import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
+import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.proof.ProofOfBurnVerificationService;
@@ -35,8 +36,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class UserService implements ModuleService {
-
-
     @Getter
     @ToString
     public static final class Config {
@@ -63,9 +62,10 @@ public class UserService implements ModuleService {
     public UserService(UserService.Config config,
                        PersistenceService persistenceService,
                        IdentityService identityService,
+                       NetworkService networkService,
                        OpenTimestampService openTimestampService,
-                       NetworkService networkService) {
-        userProfileService = new UserProfileService(persistenceService, networkService);
+                       ProofOfWorkService proofOfWorkService) {
+        userProfileService = new UserProfileService(persistenceService, networkService,proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
                 identityService,

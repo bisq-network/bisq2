@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -26,6 +27,7 @@ import bisq.chat.ChatService;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.Quotation;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
@@ -49,8 +51,8 @@ import java.util.Optional;
 public class QuotedMessageBlock {
     private final Controller controller;
 
-    public QuotedMessageBlock(ChatService chatService) {
-        controller = new Controller(chatService);
+    public QuotedMessageBlock(DefaultApplicationService applicationService) {
+        controller = new Controller(applicationService);
     }
 
     public Pane getRoot() {
@@ -79,16 +81,18 @@ public class QuotedMessageBlock {
         @Getter
         private final View view;
         private final ChatService chatService;
+        private final UserProfileService userProfileService;
 
 
-        private Controller(ChatService chatService) {
-            this.chatService = chatService;
+        private Controller(DefaultApplicationService applicationService) {
+            this.chatService = applicationService.getChatService();
+            userProfileService = applicationService.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
         }
 
         private void reply(ChatMessage chatMessage) {
-            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author -> {
+            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getNym());
                 model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));

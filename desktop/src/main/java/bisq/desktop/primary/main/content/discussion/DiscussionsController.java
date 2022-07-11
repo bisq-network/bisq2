@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channels.PublicDiscussionChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
@@ -30,10 +31,13 @@ import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
+    private final PublicDiscussionChannelService publicDiscussionChannelService;
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService, true);
+
+        publicDiscussionChannelService= chatService.getPublicDiscussionChannelService();
     }
 
     @Override
@@ -44,7 +48,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
                 value -> {
                     Channel<? extends ChatMessage> channel = chatService.getSelectedDiscussionChannel().get();
                     if (channel != null) {
-                        chatService.setNotificationSetting(channel, value);
+                        publicDiscussionChannelService.setNotificationSetting(channel, value);
                     }
                 });
 

@@ -20,6 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channels.PublicTradeChannelService;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.common.currency.Market;
@@ -41,10 +42,12 @@ public class MarketController implements Controller {
     @Getter
     private final MarketView view;
     private final ChatService chatService;
+    private final PublicTradeChannelService publicTradeChannelService;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
+        publicTradeChannelService = chatService.getPublicTradeChannelService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }
@@ -57,7 +60,7 @@ public class MarketController implements Controller {
     public void onActivate() {
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<PublicTradeChatMessage> offerMessages = chatService.getPublicTradeChannels().stream()
+                    Set<PublicTradeChatMessage> offerMessages = publicTradeChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(message -> message.getTradeChatOffer().isPresent())
