@@ -17,11 +17,10 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChannelNotificationType;
-import bisq.chat.channel.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.channel.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.channel.trade.priv.PrivateTradeChannel;
-import bisq.chat.channel.trade.pub.PublicTradeChannel;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;

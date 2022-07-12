@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.discuss.priv;
+package bisq.chat.discuss.priv;
 
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;

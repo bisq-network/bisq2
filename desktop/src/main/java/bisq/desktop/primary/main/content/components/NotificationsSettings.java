@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.i18n.Res;
-import bisq.chat.ChannelNotificationType;
+import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
 import javafx.beans.property.ObjectProperty;

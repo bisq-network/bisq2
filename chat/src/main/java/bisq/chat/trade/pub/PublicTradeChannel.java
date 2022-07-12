@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.trade.pub;
+package bisq.chat.trade.pub;
 
-import bisq.chat.ChannelNotificationType;
+import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
-import bisq.chat.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;

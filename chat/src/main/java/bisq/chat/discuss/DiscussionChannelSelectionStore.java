@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.discuss;
+package bisq.chat.discuss;
 
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;

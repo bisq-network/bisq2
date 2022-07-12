@@ -15,8 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.message;
+package bisq.chat.trade.pub;
 
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

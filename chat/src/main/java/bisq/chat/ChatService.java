@@ -17,12 +17,12 @@
 
 package bisq.chat;
 
-import bisq.chat.channel.discuss.DiscussionChannelSelectionService;
-import bisq.chat.channel.trade.TradeChannelSelectionService;
-import bisq.chat.channel.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.channel.trade.priv.PrivateTradeChannelService;
-import bisq.chat.channel.discuss.pub.PublicDiscussionChannelService;
-import bisq.chat.channel.trade.pub.PublicTradeChannelService;
+import bisq.chat.discuss.DiscussionChannelSelectionService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;

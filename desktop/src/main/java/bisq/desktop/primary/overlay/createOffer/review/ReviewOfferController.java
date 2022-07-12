@@ -19,12 +19,12 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.trade.TradeChannelSelectionService;
-import bisq.chat.channel.trade.pub.PublicTradeChannel;
-import bisq.chat.channel.trade.pub.PublicTradeChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.PublicTradeChatMessage;
-import bisq.chat.message.TradeChatOffer;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.trade.pub.TradeChatOffer;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Controller;

@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.discuss.DiscussionChannelSelectionService;
-import bisq.chat.channel.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.channel.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.discuss.DiscussionChannelSelectionService;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;

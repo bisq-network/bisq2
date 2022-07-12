@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.trade.priv;
+package bisq.chat.trade.priv;
 
 import bisq.chat.channel.PrivateChannelService;
-import bisq.chat.message.PrivateTradeChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;

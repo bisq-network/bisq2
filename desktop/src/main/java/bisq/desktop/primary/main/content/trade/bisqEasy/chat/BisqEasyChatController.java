@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.trade.TradeChannelSelectionService;
-import bisq.chat.channel.trade.priv.PrivateTradeChannel;
-import bisq.chat.channel.trade.pub.PublicTradeChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;

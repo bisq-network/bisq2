@@ -15,8 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.message;
+package bisq.chat.trade.priv;
 
+import bisq.chat.message.PrivateChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -31,32 +33,32 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
-    public PrivateDiscussionChatMessage(String channelId,
-                                        UserProfile sender,
-                                        String receiversId,
-                                        String text,
-                                        Optional<Quotation> quotedMessage,
-                                        long date,
-                                        boolean wasEdited) {
-        super(channelId,
+public final class PrivateTradeChatMessage extends PrivateChatMessage {
+    public PrivateTradeChatMessage(String channelId,
+                                   UserProfile sender,
+                                   String receiversId,
+                                   String text,
+                                   Optional<Quotation> quotedMessage,
+                                   long date,
+                                   boolean wasEdited) {
+        this(channelId,
                 sender,
                 receiversId,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
-                new MetaData(ChatMessage.TTL, 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
-    private PrivateDiscussionChatMessage(String channelId,
-                                        UserProfile sender,
-                                        String receiversId,
-                                        String text,
-                                        Optional<Quotation> quotedMessage,
-                                        long date,
-                                        boolean wasEdited,
-                                        MetaData metaData) {
+    private PrivateTradeChatMessage(String channelId,
+                                    UserProfile sender,
+                                    String receiversId,
+                                    String text,
+                                    Optional<Quotation> quotedMessage,
+                                    long date,
+                                    boolean wasEdited,
+                                    MetaData metaData) {
         super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
@@ -69,21 +71,21 @@ public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
-                .setPrivateDiscussionChatMessage(bisq.chat.protobuf.PrivateDiscussionChatMessage.newBuilder()
+                .setPrivateTradeChatMessage(bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
                         .setReceiversId(receiversId)
                         .setSender(sender.toProto()))
                 .build();
     }
 
-    public static PrivateDiscussionChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static PrivateTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        bisq.chat.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
-        return new PrivateDiscussionChatMessage(
+        bisq.chat.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
+        return new PrivateTradeChatMessage(
                 baseProto.getChannelId(),
-                UserProfile.fromProto(privateDiscussionChatMessage.getSender()),
-                privateDiscussionChatMessage.getReceiversId(),
+                UserProfile.fromProto(privateTradeChatMessage.getSender()),
+                privateTradeChatMessage.getReceiversId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat;
+package bisq.chat.channel;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;

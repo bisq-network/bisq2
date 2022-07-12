@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChannelNotificationType;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;

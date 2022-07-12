@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.trade;
+package bisq.chat.discuss;
 
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.trade.priv.PrivateTradeChannel;
-import bisq.chat.channel.trade.priv.PrivateTradeChannelService;
-import bisq.chat.channel.trade.pub.PublicTradeChannelService;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;
@@ -34,18 +34,18 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class TradeChannelSelectionService implements PersistenceClient<TradeChannelSelectionStore> {
-    private final TradeChannelSelectionStore persistableStore = new TradeChannelSelectionStore();
-    private final Persistence<TradeChannelSelectionStore> persistence;
-    private final PrivateTradeChannelService privateTradeChannelService;
-    private final PublicTradeChannelService publicTradeChannelService;
+public class DiscussionChannelSelectionService implements PersistenceClient<DiscussionChannelSelectionStore> {
+    private final DiscussionChannelSelectionStore persistableStore = new DiscussionChannelSelectionStore();
+    private final Persistence<DiscussionChannelSelectionStore> persistence;
+    private final PrivateDiscussionChannelService privateChannelService;
+    private final PublicDiscussionChannelService publicChannelService;
 
-    public TradeChannelSelectionService(PersistenceService persistenceService,
-                                        PrivateTradeChannelService privateTradeChannelService,
-                                        PublicTradeChannelService publicTradeChannelService) {
+    public DiscussionChannelSelectionService(PersistenceService persistenceService,
+                                             PrivateDiscussionChannelService privateChannelService,
+                                             PublicDiscussionChannelService publicChannelService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.privateTradeChannelService = privateTradeChannelService;
-        this.publicTradeChannelService = publicTradeChannelService;
+        this.privateChannelService = privateChannelService;
+        this.publicChannelService = publicChannelService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -60,8 +60,8 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateTradeChannel) {
-            privateTradeChannelService.removeExpiredMessages((PrivateTradeChannel) channel);
+        if (channel instanceof PrivateDiscussionChannel) {
+            privateChannelService.removeExpiredMessages((PrivateDiscussionChannel) channel);
         }
 
         getSelectedChannel().set(channel);
@@ -72,18 +72,6 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
         return persistableStore.getSelectedChannel();
     }
 
-   /* public void selectDiscussionChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateDiscussionChannel) {
-            privateDiscussionChannelService.removeExpiredMessages((PrivateDiscussionChannel) channel);
-        }
-        getSelectedDiscussionChannel().set(channel);
-        persist();
-    }
-
-    public Observable<Channel<? extends ChatMessage>> getSelectedDiscussionChannel() {
-        return persistableStore.getSelectedDiscussionChannel();
-    }*/
-
     public void reportUserProfile(UserProfile userProfile, String reason) {
         //todo report user to admin and moderators, add reason
         log.info("called reportChatUser {} {}", userProfile, reason);
@@ -91,12 +79,8 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
 
     private void maybeSelectChannels() {
         if (getSelectedChannel().get() == null) {
-            publicTradeChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
+            publicChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
         }
         persist();
     }
-
- 
-
-    
 }
