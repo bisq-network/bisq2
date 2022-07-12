@@ -25,16 +25,10 @@ import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-/**
- * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
- * mailbox message.
- */
 @Getter
-@Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateTradeChatMessage extends PrivateChatMessage {

@@ -20,38 +20,22 @@ package bisq.chat.channel.pub.discuss;
 import bisq.chat.ChannelNotificationType;
 import bisq.chat.channel.pub.PublicChannel;
 import bisq.chat.message.PublicDiscussionChatMessage;
-import bisq.common.observable.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-@Slf4j
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussionChatMessage> {
-
-    public enum ChannelId {
-        BISQ,
-        BITCOIN,
-        MONERO,
-        MARKETS,
-        ECONOMY,
-        OFF_TOPIC
-    }
-
     private final String channelName;
     private final String description;
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
-
-    // We do not persist the messages as they are persisted in the P2P data store.
-    private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
 
     public PublicDiscussionChannel(String id,
                                    String channelName,

@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.ChannelNotificationType;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;
@@ -39,6 +40,11 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
 
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
+    }
+
+    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
+        channel.getChannelNotificationType().set(channelNotificationType);
+        persist();
     }
 
     public Optional<C> findChannel(String channelId) {

@@ -24,9 +24,6 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-/**
- * PublicChatMessage is added as public data to the distributed network storage.
- */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -47,12 +44,12 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
     }
 
     private PublicDiscussionChatMessage(String channelId,
-                                          String authorId,
-                                          Optional<String> text,
-                                          Optional<Quotation> quotedMessage,
-                                          long date,
-                                          boolean wasEdited,
-                                          MetaData metaData) {
+                                        String authorId,
+                                        Optional<String> text,
+                                        Optional<Quotation> quotedMessage,
+                                        long date,
+                                        boolean wasEdited,
+                                        MetaData metaData) {
         super(channelId,
                 authorId,
                 text,

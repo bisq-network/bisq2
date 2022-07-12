@@ -52,53 +52,6 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     }
 
     //todo
-  
-
-  /*  public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(String text,
-                                                                                 Optional<Quotation> quotedMessage,
-                                                                                 PublicTradeChannel publicTradeChannel,
-                                                                                 UserIdentity userIdentity) {
-        UserProfile userProfile = userIdentity.getUserProfile();
-        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
-                userProfile.getId(),
-                Optional.empty(),
-                Optional.of(text),
-                quotedMessage,
-                new Date().getTime(),
-                false);
-        return publish(userIdentity, userProfile, chatMessage);
-    }*/
-    
-  /*  public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(PublicTradeChatMessage originalChatMessage,
-                                                                                       String editedText,
-                                                                                       UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .thenCompose(result -> {
-                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
-                    // the edited text.
-                    UserProfile userProfile = userIdentity.getUserProfile();
-                    PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
-                            userProfile.getId(),
-                            Optional.empty(),
-                            Optional.of(editedText),
-                            originalChatMessage.getQuotation(),
-                            originalChatMessage.getDate(),
-                            true);
-                    return publish(userIdentity, userProfile, chatMessage);
-                });
-    }*/
-
-   /* public CompletableFuture<DataService.BroadCastDataResult> publishPublicChatMessage(PublicTradeChatMessage chatMessage,
-                                                                                       UserIdentity userIdentity) {
-        return publish(userIdentity, userIdentity.getUserProfile(), chatMessage);
-    }*/
-  /*  public CompletableFuture<DataService.BroadCastDataResult> deletePublicChatMessage(PublicTradeChatMessage chatMessage,
-                                                                                      UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
-    }*/
-
     public Optional<PublicTradeChannel> showPublicTradeChannel(Market market) {
         return findChannel(PublicTradeChannel.getId(market))
                 .map(channel -> {

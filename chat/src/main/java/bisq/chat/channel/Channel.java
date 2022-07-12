@@ -29,9 +29,11 @@ import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Collection;
 
+@ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {

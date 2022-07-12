@@ -23,14 +23,16 @@ import bisq.chat.message.PrivateChatMessage;
 import bisq.common.observable.ObservableSet;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Set;
 
 @Getter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
-    private static final String CHANNEL_DELIMITER = "-";
-    
     protected final UserProfile peer;
     protected final UserIdentity myProfile;
 
@@ -51,9 +53,9 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
     public static String createChannelId(String peersId, String myId) {
         // Need to have an ordering here, otherwise there would be 2 channelIds for the same participants
         if (peersId.compareTo(myId) < 0) {
-            return peersId + CHANNEL_DELIMITER + myId;
+            return peersId + "-" + myId;
         } else {
-            return myId + CHANNEL_DELIMITER + peersId;
+            return myId + "-" + peersId;
         }
     }
 }

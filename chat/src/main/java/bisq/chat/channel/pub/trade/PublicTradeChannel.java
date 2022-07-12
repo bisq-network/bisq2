@@ -21,19 +21,16 @@ import bisq.chat.ChannelNotificationType;
 import bisq.chat.channel.pub.PublicChannel;
 import bisq.chat.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
-import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 
-@Slf4j
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
     private final Market market;
@@ -41,10 +38,6 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
     // todo move out
     @Setter
     private boolean isVisible;
-
-    // We do not persist the messages as they are persisted in the P2P data store.
-    private transient final ObservableSet<PublicTradeChatMessage> chatMessages = new ObservableSet<>();
-
 
     public PublicTradeChannel(Market market, boolean isVisible) {
         this(getId(market), market, isVisible);

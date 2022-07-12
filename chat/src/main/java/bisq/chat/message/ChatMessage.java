@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 @ToString
 @EqualsAndHashCode
 public abstract class ChatMessage implements Proto {
+    //todo for dev testing we keep it short.
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
     @Getter

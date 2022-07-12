@@ -56,7 +56,6 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
         this.sender = sender;
     }
 
-    // Required for MailboxMessage use case
     @Override
     public MetaData getMetaData() {
         return metaData;

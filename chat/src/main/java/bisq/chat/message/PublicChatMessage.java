@@ -19,9 +19,16 @@ package bisq.chat.message;
 
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Optional;
 
+/**
+ * PublicChatMessage is added as public data to the distributed network storage.
+ */
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     protected PublicChatMessage(String channelId,
                                 String authorId,

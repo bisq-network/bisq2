@@ -19,7 +19,9 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.Channel;
+import bisq.chat.channel.DiscussionChannelSelectionService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
 import bisq.chat.channel.priv.discuss.PrivateDiscussionChannelService;
 import bisq.chat.channel.priv.trade.PrivateTradeChannel;
@@ -152,6 +154,8 @@ public class ChatMessagesListView {
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
         private final ReputationService reputationService;
         private final UserProfileService userProfileService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private Pin selectedChannelPin, chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -167,6 +171,8 @@ public class ChatMessagesListView {
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
@@ -202,7 +208,7 @@ public class ChatMessagesListView {
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             if (model.isDiscussionsChat) {
-                selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(channel -> {
+                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel) {
                         if (chatMessagesPin != null) {
@@ -223,7 +229,7 @@ public class ChatMessagesListView {
                     }
                 });
             } else {
-                selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicTradeChannel) {
                         if (chatMessagesPin != null) {
@@ -388,7 +394,7 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(chatService::selectTradeChannel);
+                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(tradeChannelSelectionService::selectChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
@@ -396,7 +402,7 @@ public class ChatMessagesListView {
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
+            privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             return privateTradeChannel;
         }
     }

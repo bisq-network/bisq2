@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.pub.trade.PublicTradeChannel;
 import bisq.chat.channel.pub.trade.PublicTradeChannelService;
 import bisq.common.currency.Market;
@@ -74,13 +75,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PublicTradeChannelService publicTradeChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
         private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
 
             publicTradeChannelService= applicationService.getChatService().getPublicTradeChannelService();
-
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            
             model = new Model();
             view = new View(model, this);
         }
@@ -103,7 +106,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
+            selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -132,7 +135,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
 
             channelItemsPin.unbind();
-            chatService.selectTradeChannel(channelItem.getChannel());
+            tradeChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {
@@ -151,7 +154,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
 
-                marketChannel.ifPresent(chatService::selectTradeChannel);
+                marketChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             }
         }
 
@@ -168,7 +171,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
             if (!model.sortedList.isEmpty()) {
-                chatService.selectTradeChannel(model.sortedList.get(0).getChannel());
+                tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
             }
         }
 

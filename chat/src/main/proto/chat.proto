@@ -112,9 +112,11 @@ message Channel {
 }
 
 // Stores
-message ChatStore {
-  Channel selectedTradeChannel = 1;
-  Channel selectedDiscussionChannel = 2;
+message TradeChannelSelectionStore {
+  Channel selectedChannel = 1;
+}
+message DiscussionChannelSelectionStore {
+  Channel selectedChannel = 1;
 }
 
 message PrivateTradeChannelStore {

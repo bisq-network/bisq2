@@ -24,6 +24,7 @@ import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
 import bisq.chat.channel.priv.discuss.PrivateDiscussionChannelService;
 import bisq.chat.channel.priv.trade.PrivateTradeChannel;
 import bisq.chat.channel.priv.trade.PrivateTradeChannelService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.pub.discuss.PublicDiscussionChannel;
 import bisq.chat.channel.pub.discuss.PublicDiscussionChannelService;
 import bisq.chat.channel.pub.trade.PublicTradeChannel;
@@ -104,6 +105,8 @@ public class ChatMessagesComponent {
         private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private final PublicDiscussionChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -113,6 +116,8 @@ public class ChatMessagesComponent {
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(applicationService);
@@ -135,9 +140,9 @@ public class ChatMessagesComponent {
             model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.isDiscussionsChat) {
-                selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
             } else {
-                selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     model.isTradeGuideBoxVisible.set(displayTradeGuileBox());
                 });
@@ -191,7 +196,7 @@ public class ChatMessagesComponent {
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
                 privateDiscussionChannelService.createAndAddChannel(peer)
-                        .ifPresent(chatService::selectTradeChannel);
+                        .ifPresent(tradeChannelSelectionService::selectChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
@@ -199,7 +204,7 @@ public class ChatMessagesComponent {
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
             Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
+            privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             return privateTradeChannel;
         }
 

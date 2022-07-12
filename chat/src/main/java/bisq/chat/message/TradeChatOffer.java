@@ -10,13 +10,14 @@ import bisq.presentation.formatters.AmountFormatter;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+@ToString
 @EqualsAndHashCode
 @Slf4j
 @Getter
@@ -28,7 +29,7 @@ public final class TradeChatOffer implements Proto {
     private final Set<String> paymentMethods;
     private final String makersTradeTerms;
     private final long requiredTotalReputationScore;
-    @Nullable
+    
     private transient final String chatMessageText;
 
     public TradeChatOffer(Direction direction,

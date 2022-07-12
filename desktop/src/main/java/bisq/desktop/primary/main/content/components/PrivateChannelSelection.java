@@ -19,6 +19,8 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.channel.DiscussionChannelSelectionService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.priv.*;
 import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
 import bisq.chat.channel.priv.discuss.PrivateDiscussionChannelService;
@@ -64,13 +66,17 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final View view;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateDiscussionChannelService privateDiscussionChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
 
         protected Controller(ChatService chatService, boolean isDiscussionsChat) {
             super(chatService);
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            
             model = new Model(isDiscussionsChat);
             view = new View(model, this);
         }
@@ -89,7 +95,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(ChannelSelection.View.ChannelItem::new)
                         .to(privateDiscussionChannelService.getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedDiscussionChannel(),
+                selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateDiscussionChannel) {
                                 model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -100,7 +106,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(ChannelSelection.View.ChannelItem::new)
                         .to(privateTradeChannelService.getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
+                selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTradeChannel) {
                                 model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -115,9 +121,9 @@ public class PrivateChannelSelection extends ChannelSelection {
                 return;
             }
             if (model.isDiscussionsChat) {
-                chatService.selectDiscussionChannel(channelItem.getChannel());
+                discussionChannelSelectionService.selectChannel(channelItem.getChannel());
             } else {
-                chatService.selectTradeChannel(channelItem.getChannel());
+                tradeChannelSelectionService.selectChannel(channelItem.getChannel());
             }
         }
 

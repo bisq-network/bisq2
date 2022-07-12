@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.pub.trade.PublicTradeChannel;
 import bisq.chat.channel.pub.trade.PublicTradeChannelService;
 import bisq.chat.message.ChatMessage;
@@ -43,11 +44,13 @@ public class MarketController implements Controller {
     private final MarketView view;
     private final ChatService chatService;
     private final PublicTradeChannelService publicTradeChannelService;
+    private final TradeChannelSelectionService tradeChannelSelectionService;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
+        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }
@@ -74,7 +77,7 @@ public class MarketController implements Controller {
                 .collect(Collectors.toList()));
 
         // We pre-select the market from the selected channel, or if not available we use the default market.
-        Optional.ofNullable(chatService.getSelectedTradeChannel().get())
+        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
                 .filter(channel -> channel instanceof PublicTradeChannel)
                 .map(channel -> (PublicTradeChannel) channel)
                 .map(PublicTradeChannel::getMarket)

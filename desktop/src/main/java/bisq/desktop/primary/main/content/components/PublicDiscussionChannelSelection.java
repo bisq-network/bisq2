@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.DiscussionChannelSelectionService;
+import bisq.chat.channel.TradeChannelSelectionService;
 import bisq.chat.channel.pub.discuss.PublicDiscussionChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
@@ -56,11 +58,15 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
             
             model = new Model();
             view = new View(model, this);
@@ -79,7 +85,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicDiscussionChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedDiscussionChannel(),
+            selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicDiscussionChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -93,7 +99,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 return;
             }
 
-            chatService.selectDiscussionChannel(channelItem.getChannel());
+            discussionChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {

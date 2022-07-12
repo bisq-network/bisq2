@@ -17,10 +17,7 @@
 
 package bisq.chat.channel.pub;
 
-import bisq.chat.ChannelNotificationType;
-import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelService;
-import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
@@ -100,11 +97,6 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
     public CompletableFuture<DataService.BroadCastDataResult> deleteChatMessage(M chatMessage,
                                                                                 UserIdentity userIdentity) {
         return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
-    }
-
-    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
-        channel.getChannelNotificationType().set(channelNotificationType);
-        persist();
     }
 
     public Collection<C> getMentionableChannels() {
