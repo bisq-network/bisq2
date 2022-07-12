@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.TradeChannelSelectionService;
-import bisq.chat.channel.pub.trade.PublicTradeChannel;
-import bisq.chat.channel.pub.trade.PublicTradeChannelService;
+import bisq.chat.channel.trade.TradeChannelSelectionService;
+import bisq.chat.channel.trade.pub.PublicTradeChannel;
+import bisq.chat.channel.trade.pub.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;

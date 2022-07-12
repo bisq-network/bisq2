@@ -24,7 +24,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;
-import bisq.chat.channel.pub.trade.PublicTradeChannel;
+import bisq.chat.channel.trade.pub.PublicTradeChannel;
 import bisq.chat.message.PublicTradeChatMessage;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;

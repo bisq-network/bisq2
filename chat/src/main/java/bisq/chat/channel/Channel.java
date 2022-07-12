@@ -18,10 +18,10 @@
 package bisq.chat.channel;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
-import bisq.chat.channel.priv.trade.PrivateTradeChannel;
-import bisq.chat.channel.pub.discuss.PublicDiscussionChannel;
-import bisq.chat.channel.pub.trade.PublicTradeChannel;
+import bisq.chat.channel.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.channel.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.channel.trade.priv.PrivateTradeChannel;
+import bisq.chat.channel.trade.pub.PublicTradeChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
@@ -51,7 +51,6 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .setId(id)
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
-
 
     abstract public bisq.chat.protobuf.Channel toProto();
 

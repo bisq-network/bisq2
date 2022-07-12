@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.pub;
+package bisq.chat.channel;
 
-import bisq.chat.channel.ChannelService;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;

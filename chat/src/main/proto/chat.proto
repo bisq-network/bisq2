@@ -33,28 +33,6 @@ message Quotation {
   string message = 4;
 }
 
-message PrivateTradeChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PrivateDiscussionChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PublicDiscussionChatMessage {
-}
-message TradeChatOffer {
-  offer.Direction direction = 1;
-  common.Market market = 2;
-  uint64 baseSideAmount = 3;
-  uint64 quoteSideAmount = 4;
-  repeated string paymentMethods = 5;
-  string makersTradeTerms = 6;
-  uint64 requiredTotalReputationScore = 7;
-}
-message PublicTradeChatMessage {
-  optional TradeChatOffer tradeChatOffer = 1;
-}
 message ChatMessage {
   string channelId = 1;
   optional string text = 2;
@@ -77,29 +55,6 @@ enum ChannelNotificationType {
   NEVER = 2;
 }
 
-// Channels
-message PrivateDiscussionChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
-message PrivateTradeChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
-
-message PublicTradeChannel {
-  common.Market market = 1;
-  bool isVisible = 2;
-}
-message PublicDiscussionChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
 message Channel {
   string id = 1;
   ChannelNotificationType channelNotificationType = 2;
@@ -111,16 +66,71 @@ message Channel {
   }
 }
 
-// Stores
-message TradeChannelSelectionStore {
-  Channel selectedChannel = 1;
+// Trade
+message PrivateTradeChatMessage {
+  string receiversId = 1;
+  user.UserProfile sender = 2;
 }
-message DiscussionChannelSelectionStore {
+message TradeChatOffer {
+  offer.Direction direction = 1;
+  common.Market market = 2;
+  uint64 baseSideAmount = 3;
+  uint64 quoteSideAmount = 4;
+  repeated string paymentMethods = 5;
+  string makersTradeTerms = 6;
+  uint64 requiredTotalReputationScore = 7;
+}
+
+message PublicTradeChatMessage {
+  optional TradeChatOffer tradeChatOffer = 1;
+}
+
+message PrivateTradeChannel {
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+
+message PublicTradeChannel {
+  common.Market market = 1;
+  bool isVisible = 2;
+}
+
+message TradeChannelSelectionStore {
   Channel selectedChannel = 1;
 }
 
 message PrivateTradeChannelStore {
   repeated Channel channels = 1;
+}
+
+message PublicTradeChannelStore {
+  repeated Channel channels = 1;
+}
+
+// Discussion
+message PrivateDiscussionChatMessage {
+  string receiversId = 1;
+  user.UserProfile sender = 2;
+}
+message PublicDiscussionChatMessage {
+}
+message PrivateDiscussionChannel {
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+
+message PublicDiscussionChannel {
+  string channelName = 1;
+  string description = 2;
+  string channelAdminId = 3;
+  repeated string channelModeratorIds = 4;
+  bool isVisible = 5;
+}
+
+message DiscussionChannelSelectionStore {
+  Channel selectedChannel = 1;
 }
 
 message PrivateDiscussionChannelStore {
@@ -129,11 +139,4 @@ message PrivateDiscussionChannelStore {
 
 message PublicDiscussionChannelStore {
   repeated Channel channels = 1;
-}
-
-message PublicTradeChannelStore {
-  repeated Channel channels = 1;
-}
-
-message TradeChatOfferStore {
 }

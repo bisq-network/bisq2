@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.pub.discuss;
+package bisq.chat.channel.discuss.pub;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.channel.pub.PublicChannel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.PublicDiscussionChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

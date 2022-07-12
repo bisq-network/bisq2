@@ -1,6 +1,6 @@
 package bisq.restApi.dto;
 
-import bisq.chat.channel.pub.trade.PublicTradeChannel;
+import bisq.chat.channel.trade.pub.PublicTradeChannel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;

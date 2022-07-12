@@ -19,9 +19,9 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.TradeChannelSelectionService;
-import bisq.chat.channel.pub.trade.PublicTradeChannel;
-import bisq.chat.channel.pub.trade.PublicTradeChannelService;
+import bisq.chat.channel.trade.TradeChannelSelectionService;
+import bisq.chat.channel.trade.pub.PublicTradeChannel;
+import bisq.chat.channel.trade.pub.PublicTradeChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;

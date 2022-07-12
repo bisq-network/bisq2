@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.priv.discuss;
+package bisq.chat.channel.discuss.priv;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.channel.priv.PrivateChannel;
+import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.PrivateDiscussionChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
