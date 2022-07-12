@@ -23,7 +23,6 @@ import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Collection;
@@ -34,25 +33,19 @@ import java.util.Collection;
 public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
     private final Market market;
 
-    // todo move out
-    @Setter
-    private boolean isVisible;
-
-    public PublicTradeChannel(Market market, boolean isVisible) {
-        this(getId(market), market, isVisible);
+    public PublicTradeChannel(Market market) {
+        this(getId(market), market);
     }
 
-    private PublicTradeChannel(String id, Market market, boolean isVisible) {
+    private PublicTradeChannel(String id, Market market) {
         super(id, ChannelNotificationType.MENTION);
 
         this.market = market;
-        this.isVisible = isVisible;
     }
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
-                        .setIsVisible(isVisible)
                         .setMarket(market.toProto()))
                 .build();
     }
@@ -60,8 +53,7 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
     public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
         return new PublicTradeChannel(baseProto.getId(),
-                Market.fromProto(proto.getMarket()),
-                baseProto.getPublicTradeChannel().getIsVisible());
+                Market.fromProto(proto.getMarket()));
     }
 
     @Override

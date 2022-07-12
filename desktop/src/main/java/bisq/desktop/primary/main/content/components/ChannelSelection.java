@@ -34,7 +34,7 @@ import java.util.Comparator;
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
-      
+
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
 
@@ -68,13 +68,6 @@ public abstract class ChannelSelection {
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
 
         public Model() {
-            filteredList.setPredicate(item -> {
-                if (item.getChannel() instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) item.getChannel()).isVisible();
-                } else {
-                    return true;
-                }
-            });
         }
     }
 

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public final class TradeChannelSelectionStore implements PersistableStore<TradeChannelSelectionStore> {
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
-
+   
     public TradeChannelSelectionStore() {
     }
 

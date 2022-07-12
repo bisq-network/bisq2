@@ -155,14 +155,14 @@ public class ReviewOfferController implements Controller {
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore());
 
-        PublicTradeChannel channelForMarket = publicTradeChannelService.getChannels().stream()
-                .filter(publicTradeChannel -> model.getMarket().equals(publicTradeChannel.getMarket()))
+        PublicTradeChannel publicTradeChannel = publicTradeChannelService.getChannels().stream()
+                .filter(channel -> model.getMarket().equals(channel.getMarket()))
                 .findAny()
                 .orElseThrow();
-        channelForMarket.setVisible(true);
-        tradeChannelSelectionService.selectChannel(channelForMarket);
+        publicTradeChannelService.showChannel(publicTradeChannel);
+        tradeChannelSelectionService.selectChannel(publicTradeChannel);
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channelForMarket.getId(),
+        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),

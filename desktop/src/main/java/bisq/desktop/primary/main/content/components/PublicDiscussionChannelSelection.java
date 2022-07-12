@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
-import bisq.chat.ChatService;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -70,6 +70,8 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
             
             model = new Model();
             view = new View(model, this);
+
+            model.filteredList.setPredicate(item -> true);
         }
 
         @Override

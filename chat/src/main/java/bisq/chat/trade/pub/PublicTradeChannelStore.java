@@ -24,24 +24,28 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class PublicTradeChannelStore implements PersistableStore<PublicTradeChannelStore> {
     private final ObservableSet<PublicTradeChannel> channels = new ObservableSet<>();
+    private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
 
     public PublicTradeChannelStore() {
     }
 
-    private PublicTradeChannelStore(Set<PublicTradeChannel> privateTradeChannels) {
-        setAll(privateTradeChannels);
+    private PublicTradeChannelStore(Set<PublicTradeChannel> privateTradeChannels,
+                                    Set<String> visibleChannelIds) {
+        setAll(privateTradeChannels, visibleChannelIds);
     }
 
     @Override
     public bisq.chat.protobuf.PublicTradeChannelStore toProto() {
         bisq.chat.protobuf.PublicTradeChannelStore.Builder builder = bisq.chat.protobuf.PublicTradeChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()));
+                .addAllChannels(channels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()))
+                .addAllVisibleChannelIds(visibleChannelIds);
         return builder.build();
     }
 
@@ -49,7 +53,7 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
         Set<PublicTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
                 .collect(Collectors.toSet());
-        return new PublicTradeChannelStore(privateTradeChannels);
+        return new PublicTradeChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
     }
 
     @Override
@@ -65,16 +69,18 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
 
     @Override
     public void applyPersisted(PublicTradeChannelStore chatStore) {
-        setAll(chatStore.getChannels());
+        setAll(chatStore.getChannels(), chatStore.getVisibleChannelIds());
     }
 
     @Override
     public PublicTradeChannelStore getClone() {
-        return new PublicTradeChannelStore(channels);
+        return new PublicTradeChannelStore(channels, visibleChannelIds);
     }
 
-    public void setAll(Set<PublicTradeChannel> privateTradeChannels) {
+    public void setAll(Set<PublicTradeChannel> privateTradeChannels, Set<String> visibleChannelIds) {
         this.channels.clear();
         this.channels.addAll(privateTradeChannels);
+        this.visibleChannelIds.clear();
+        this.visibleChannelIds.addAll(visibleChannelIds);
     }
 }

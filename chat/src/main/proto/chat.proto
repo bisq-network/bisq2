@@ -93,7 +93,6 @@ message PrivateTradeChannel {
 
 message PublicTradeChannel {
   common.Market market = 1;
-  bool isVisible = 2;
 }
 
 message TradeChannelSelectionStore {
@@ -106,6 +105,7 @@ message PrivateTradeChannelStore {
 
 message PublicTradeChannelStore {
   repeated Channel channels = 1;
+  repeated string visibleChannelIds = 2;
 }
 
 // Discussion

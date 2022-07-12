@@ -50,9 +50,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class PublicTradeChannelSelection extends ChannelSelection {
@@ -81,11 +82,18 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
 
-            publicTradeChannelService= applicationService.getChatService().getPublicTradeChannelService();
+            publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-            
+
             model = new Model();
             view = new View(model, this);
+
+            model.filteredList.setPredicate(item -> {
+                checkArgument(item.getChannel() instanceof PublicTradeChannel,
+                        "Channel must be type of PublicTradeChannel");
+                PublicTradeChannel channel = (PublicTradeChannel) item.getChannel();
+                return publicTradeChannelService.isVisible(channel);
+            });
         }
 
         @Override
@@ -145,7 +153,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                Optional<PublicTradeChannel> marketChannel = publicTradeChannelService.showPublicTradeChannel(marketListItem.market);
+                publicTradeChannelService.findChannel(PublicTradeChannel.getId(marketListItem.market))
+                        .ifPresent(channel -> {
+                            publicTradeChannelService.showChannel(channel);
+                            tradeChannelSelectionService.selectChannel(channel);
+                        });
 
                 //todo somehow the predicate does not trigger an update, no idea why...
                 // re-applying the list works
@@ -153,14 +165,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
-
-                marketChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             }
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
             publicTradeChannelService.hidePublicTradeChannel(channel);
-            channel.setVisible(false);
 
             //todo somehow the predicate does not trigger an update, no idea why...
             // re-applying the list works

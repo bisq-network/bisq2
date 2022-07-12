@@ -50,26 +50,24 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
-    //todo
-    public Optional<PublicTradeChannel> showPublicTradeChannel(Market market) {
-        return findChannel(PublicTradeChannel.getId(market))
-                .map(channel -> {
-                    channel.setVisible(true);
-                    persist();
-                    return channel;
-                });
-    }
 
-    public void showPublicTradeChannel(PublicTradeChannel channel) {
-        channel.setVisible(true);
+    public void showChannel(PublicTradeChannel channel) {
+        getVisibleChannelIds().add(channel.getId());
         persist();
     }
 
     public void hidePublicTradeChannel(PublicTradeChannel channel) {
-        channel.setVisible(false);
+        getVisibleChannelIds().remove(channel.getId());
         persist();
     }
 
+    public boolean isVisible(PublicTradeChannel channel) {
+        return getVisibleChannelIds().contains(channel.getId());
+    }
+
+    public ObservableSet<String> getVisibleChannelIds() {
+        return persistableStore.getVisibleChannelIds();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // DataService.Listener
@@ -134,12 +132,12 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
             return;
         }
 
-        PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault(), true);
+        PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault());
+        showChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
-        allMarkets.forEach(market ->
-                maybeAddPublicTradeChannel(new PublicTradeChannel(market, false)));
+        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new PublicTradeChannel(market)));
     }
 
     private void maybeAddPublicTradeChannel(PublicTradeChannel channel) {

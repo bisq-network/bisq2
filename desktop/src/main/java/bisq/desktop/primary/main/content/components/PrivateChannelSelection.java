@@ -21,9 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.desktop.common.observable.FxBindings;
@@ -76,9 +76,11 @@ public class PrivateChannelSelection extends ChannelSelection {
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
-            
+
             model = new Model(isDiscussionsChat);
             view = new View(model, this);
+
+            model.filteredList.setPredicate(item -> true);
         }
 
         @Override
