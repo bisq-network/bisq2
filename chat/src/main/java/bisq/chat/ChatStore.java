@@ -17,8 +17,8 @@
 
 package bisq.chat;
 
-import bisq.chat.channels.Channel;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;

@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channels.PublicDiscussionChannelService;
+import bisq.chat.channel.pub.discuss.PublicDiscussionChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.chat.ChatService;
-import bisq.chat.channels.PublicDiscussionChannel;
+import bisq.chat.channel.pub.discuss.PublicDiscussionChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;

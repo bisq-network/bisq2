@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.message;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -30,7 +30,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicDiscussionChatMessage extends ChatMessage implements PublicChatMessage  {
+public final class PublicDiscussionChatMessage extends PublicChatMessage {
     public PublicDiscussionChatMessage(String channelId,
                                        String authorId,
                                        String text,
@@ -46,7 +46,7 @@ public final class PublicDiscussionChatMessage extends ChatMessage implements Pu
                 new MetaData(ChatMessage.TTL, 100000, PublicDiscussionChatMessage.class.getSimpleName()));
     }
 
-    protected PublicDiscussionChatMessage(String channelId,
+    private PublicDiscussionChatMessage(String channelId,
                                           String authorId,
                                           Optional<String> text,
                                           Optional<Quotation> quotedMessage,

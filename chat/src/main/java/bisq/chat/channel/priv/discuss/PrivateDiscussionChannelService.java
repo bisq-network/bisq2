@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.priv.discuss;
 
-import bisq.chat.messages.PrivateTradeChatMessage;
-import bisq.chat.messages.Quotation;
+import bisq.chat.channel.priv.PrivateChannelService;
+import bisq.chat.message.PrivateDiscussionChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
@@ -35,36 +36,36 @@ import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
+public class PrivateDiscussionChannelService extends PrivateChannelService<PrivateDiscussionChatMessage, PrivateDiscussionChannel, PrivateDiscussionChannelStore> {
     @Getter
-    private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
+    private final PrivateDiscussionChannelStore persistableStore = new PrivateDiscussionChannelStore();
     @Getter
-    private final Persistence<PrivateTradeChannelStore> persistence;
+    private final Persistence<PrivateDiscussionChannelStore> persistence;
 
-    public PrivateTradeChannelService(PersistenceService persistenceService,
-                                      NetworkService networkService,
-                                      UserIdentityService userIdentityService,
-                                      ProofOfWorkService proofOfWorkService) {
+    public PrivateDiscussionChannelService(PersistenceService persistenceService,
+                                           NetworkService networkService,
+                                           UserIdentityService userIdentityService,
+                                           ProofOfWorkService proofOfWorkService) {
         super(networkService, userIdentityService, proofOfWorkService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTradeChatMessage) {
-            processMessage((PrivateTradeChatMessage) networkMessage);
+        if (networkMessage instanceof PrivateDiscussionChatMessage) {
+            processMessage((PrivateDiscussionChatMessage) networkMessage);
         }
     }
 
     @Override
-    protected PrivateTradeChatMessage createNewPrivateChatMessage(String channelId,
+    protected PrivateDiscussionChatMessage createNewPrivateChatMessage(String channelId,
                                                                        UserProfile sender,
                                                                        String receiversId,
                                                                        String text,
                                                                        Optional<Quotation> quotedMessage,
                                                                        long time,
                                                                        boolean wasEdited) {
-        return  new PrivateTradeChatMessage(channelId,
+        return new PrivateDiscussionChatMessage(channelId,
                 sender,
                 receiversId,
                 text,
@@ -74,12 +75,12 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     @Override
-    protected PrivateTradeChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        return new PrivateTradeChannel(peer, myUserIdentity);
+    protected PrivateDiscussionChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        return new PrivateDiscussionChannel(peer, myUserIdentity);
     }
 
     @Override
-    public ObservableSet<PrivateTradeChannel> getChannels() {
+    public ObservableSet<PrivateDiscussionChannel> getChannels() {
         return persistableStore.getChannels();
     }
 }

@@ -15,9 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.channel.pub;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
-public interface PublicChatMessage extends  DistributedData {
-    String getChannelId();
+import bisq.chat.ChannelNotificationType;
+import bisq.chat.channel.Channel;
+import bisq.chat.message.PublicChatMessage;
+
+public abstract class PublicChannel<M extends PublicChatMessage> extends Channel<M> {
+    public PublicChannel(String id, ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
+    }
 }

@@ -17,8 +17,14 @@
 
 package bisq.chat;
 
-import bisq.chat.channels.*;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.*;
+import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
+import bisq.chat.channel.priv.discuss.PrivateDiscussionChannelService;
+import bisq.chat.channel.priv.trade.PrivateTradeChannel;
+import bisq.chat.channel.priv.trade.PrivateTradeChannelService;
+import bisq.chat.channel.pub.discuss.PublicDiscussionChannelService;
+import bisq.chat.channel.pub.trade.PublicTradeChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
@@ -33,11 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Manages chatChannels and persistence of the chatModel.
- * ChatUser and ChatIdentity management is not implemented yet. Not 100% clear yet if ChatIdentity management should
- * be rather part of the identity module.
- */
 @Slf4j
 @Getter
 public class ChatService implements PersistenceClient<ChatStore> {
@@ -108,7 +109,6 @@ public class ChatService implements PersistenceClient<ChatStore> {
     public Observable<Channel<? extends ChatMessage>> getSelectedTradeChannel() {
         return persistableStore.getSelectedTradeChannel();
     }
-
 
     public void selectDiscussionChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateDiscussionChannel) {

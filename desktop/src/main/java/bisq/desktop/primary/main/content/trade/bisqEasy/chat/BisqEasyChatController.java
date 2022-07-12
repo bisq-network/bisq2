@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PrivateTradeChannel;
-import bisq.chat.channels.PublicTradeChannelService;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.Channel;
+import bisq.chat.channel.priv.trade.PrivateTradeChannel;
+import bisq.chat.channel.pub.trade.PublicTradeChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;

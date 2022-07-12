@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.pub.discuss;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.PublicDiscussionChatMessage;
+import bisq.chat.channel.pub.PublicChannel;
+import bisq.chat.message.PublicDiscussionChatMessage;
 import bisq.common.observable.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,8 +34,7 @@ import java.util.Set;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage>
-        implements PublicChannel<PublicDiscussionChatMessage> {
+public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussionChatMessage> {
 
     public enum ChannelId {
         BISQ,

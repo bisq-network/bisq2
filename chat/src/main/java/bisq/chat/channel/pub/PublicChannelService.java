@@ -15,20 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.pub;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.ChatMessage;
-import bisq.chat.messages.PublicChatMessage;
-import bisq.chat.messages.Quotation;
-import bisq.common.application.Service;
-import bisq.common.observable.ObservableSet;
+import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelService;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.persistence.PersistableStore;
-import bisq.persistence.PersistenceClient;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -40,14 +39,11 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class PublicChannelService<M extends PublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
-        implements DataService.Listener, Service, PersistenceClient<S> {
-    protected final NetworkService networkService;
-    protected final UserIdentityService userIdentityService;
+        extends ChannelService<M, C, S> implements DataService.Listener {
 
     public PublicChannelService(NetworkService networkService,
                                 UserIdentityService userIdentityService) {
-        this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
+        super(networkService, userIdentityService);
     }
 
 
@@ -106,14 +102,6 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
         return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
     }
 
-    public Optional<C> findChannel(String channelId) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
-                .findAny();
-    }
-
-    public abstract ObservableSet<C> getChannels();
-
     public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
         channel.getChannelNotificationType().set(channelNotificationType);
         persist();
@@ -139,13 +127,10 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
                 .ifPresent(channel -> removeMessage(message, channel));
     }
 
-    protected void addMessage(M message, C channel) {
-        channel.addChatMessage(message);
-        persist();
-    }
-
     protected void removeMessage(M message, C channel) {
-        channel.removeChatMessage(message);
+        synchronized (getPersistableStore()) {
+            channel.removeChatMessage(message);
+        }
         persist();
     }
 

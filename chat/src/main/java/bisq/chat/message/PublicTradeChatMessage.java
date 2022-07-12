@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.message;
 
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -29,7 +29,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends ChatMessage implements PublicChatMessage {
+public final class PublicTradeChatMessage extends PublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
@@ -49,14 +49,14 @@ public final class PublicTradeChatMessage extends ChatMessage implements PublicC
                 new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
-    public PublicTradeChatMessage(String channelId,
-                                  String authorId,
-                                  Optional<TradeChatOffer> tradeChatOffer,
-                                  Optional<String> text,
-                                  Optional<Quotation> quotedMessage,
-                                  long date,
-                                  boolean wasEdited,
-                                  MetaData metaData) {
+    private PublicTradeChatMessage(String channelId,
+                                   String authorId,
+                                   Optional<TradeChatOffer> tradeChatOffer,
+                                   Optional<String> text,
+                                   Optional<Quotation> quotedMessage,
+                                   long date,
+                                   boolean wasEdited,
+                                   MetaData metaData) {
         super(channelId,
                 authorId,
                 text,

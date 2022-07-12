@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.pub.trade;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.PublicTradeChatMessage;
+import bisq.chat.channel.pub.PublicChannel;
+import bisq.chat.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.i18n.Res;
@@ -34,7 +35,7 @@ import java.util.Collection;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends Channel<PublicTradeChatMessage> implements PublicChannel<PublicTradeChatMessage> {
+public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
     private final Market market;
 
     // todo move out

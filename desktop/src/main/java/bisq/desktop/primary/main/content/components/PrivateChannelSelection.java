@@ -19,7 +19,11 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channels.*;
+import bisq.chat.channel.priv.*;
+import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
+import bisq.chat.channel.priv.discuss.PrivateDiscussionChannelService;
+import bisq.chat.channel.priv.trade.PrivateTradeChannel;
+import bisq.chat.channel.priv.trade.PrivateTradeChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;

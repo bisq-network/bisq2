@@ -18,14 +18,14 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channels.PublicDiscussionChannelService;
+import bisq.chat.channel.pub.discuss.PublicDiscussionChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PrivateDiscussionChannel;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.Channel;
+import bisq.chat.channel.priv.discuss.PrivateDiscussionChannel;
+import bisq.chat.message.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 

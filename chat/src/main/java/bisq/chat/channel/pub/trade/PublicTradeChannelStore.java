@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.pub.trade;
 
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;

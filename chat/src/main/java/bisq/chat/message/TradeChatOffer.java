@@ -1,4 +1,4 @@
-package bisq.chat.messages;
+package bisq.chat.message;
 
 
 import bisq.common.currency.Market;

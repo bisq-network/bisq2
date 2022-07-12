@@ -15,18 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.priv;
 
-import bisq.chat.messages.PrivateChatMessage;
-import bisq.chat.messages.Quotation;
-import bisq.common.application.Service;
-import bisq.common.observable.ObservableSet;
+import bisq.chat.channel.ChannelService;
+import bisq.chat.message.PrivateChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.PersistableStore;
-import bisq.persistence.PersistenceClient;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -41,17 +39,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class PrivateChannelService<M extends PrivateChatMessage, C extends PrivateChannel<M>, S extends PersistableStore<S>>
-        implements MessageListener, Service, PersistenceClient<S> {
-    protected final NetworkService networkService;
-    protected final UserIdentityService userIdentityService;
+        extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChannelService(NetworkService networkService,
                                  UserIdentityService userIdentityService,
                                  ProofOfWorkService proofOfWorkService) {
-
-        this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
+        super(networkService, userIdentityService);
         this.proofOfWorkService = proofOfWorkService;
     }
 
@@ -79,6 +73,11 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public Optional<C> createAndAddChannel(UserProfile peer) {
+        return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
+                .flatMap(myUserIdentity -> createAndAddChannel(peer, myUserIdentity.getId()));
+    }
+
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       C channel) {
@@ -96,19 +95,6 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
         NetworkId receiverNetworkId = peer.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
         return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
-    }
-
-    protected abstract M createNewPrivateChatMessage(String channelId,
-                                                     UserProfile sender,
-                                                     String receiversId,
-                                                     String text,
-                                                     Optional<Quotation> quotedMessage,
-                                                     long time,
-                                                     boolean wasEdited);
-
-    public Optional<C> createAndAddChannel(UserProfile peer) {
-        return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
-                .flatMap(myUserIdentity -> createAndAddChannel(peer, myUserIdentity.getId()));
     }
 
     public void removeExpiredMessages(C channel) {
@@ -141,13 +127,13 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
 
     protected abstract C createNewChannel(UserProfile peer, UserIdentity myUserIdentity);
 
-    protected Optional<C> findChannel(String channelId) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
-                .findAny();
-    }
-
-    protected abstract ObservableSet<C> getChannels();
+    protected abstract M createNewPrivateChatMessage(String channelId,
+                                                     UserProfile sender,
+                                                     String receiversId,
+                                                     String text,
+                                                     Optional<Quotation> quotedMessage,
+                                                     long time,
+                                                     boolean wasEdited);
 
     protected void processMessage(M message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
@@ -156,12 +142,5 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
                     .or(() -> createAndAddChannel(message.getSender(), message.getReceiversId()))
                     .ifPresent(channel -> addMessage(message, channel));
         }
-    }
-
-    protected void addMessage(M chatMessage, C channel) {
-        synchronized (getPersistableStore()) {
-            channel.addChatMessage(chatMessage);
-        }
-        persist();
     }
 }

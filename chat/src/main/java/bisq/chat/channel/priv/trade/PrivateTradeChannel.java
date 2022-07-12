@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel.priv.trade;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.PrivateTradeChatMessage;
+import bisq.chat.channel.priv.PrivateChannel;
+import bisq.chat.message.PrivateTradeChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;

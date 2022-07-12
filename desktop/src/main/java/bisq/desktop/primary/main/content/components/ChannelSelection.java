@@ -1,8 +1,8 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.chat.ChatService;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.channel.Channel;
+import bisq.chat.channel.pub.trade.PublicTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
