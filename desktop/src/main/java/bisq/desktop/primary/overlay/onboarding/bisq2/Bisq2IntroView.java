@@ -39,7 +39,6 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
 
         root.setSpacing(23);
         root.setAlignment(Pos.CENTER);
-        root.setFillWidth(true);
 
         ImageView logo = ImageUtil.getImageViewById("logo-mark-midsize");
 
@@ -72,28 +71,30 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
 
     @Override
     protected void onViewAttached() {
-        nextButton.setOnAction(e -> controller.onNext());
+        nextButton.setOnMouseClicked(e -> controller.onNext());
     }
 
     @Override
     protected void onViewDetached() {
-        nextButton.setOnAction(null);
+        nextButton.setOnMouseClicked(null);
     }
 
     private VBox getWidgetBox(String headline, String content, String imageId) {
         ImageView icon = ImageUtil.getImageViewById(imageId);
 
         Label headlineLabel = new Label(headline);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
 
         Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        contentLabel.getStyleClass().addAll("bisq-text-3");
+        contentLabel.setWrapText(true);
         contentLabel.setTextAlignment(TextAlignment.CENTER);
+        contentLabel.setAlignment(Pos.CENTER);
+        contentLabel.setPrefWidth(350);
 
         VBox vBox = new VBox(16, icon, headlineLabel, contentLabel);
         vBox.setAlignment(Pos.CENTER);
-        vBox.setPrefWidth(350);
-        vBox.setFillWidth(true);
+
         return vBox;
     }
 }
