@@ -17,23 +17,16 @@
 
 package bisq.chat.channels;
 
-import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.Quotation;
-import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.ObservableSet;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
@@ -42,78 +35,71 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PublicTradeChannelService implements PersistenceClient<PublicTradeChannelStore>,
-        DataService.Listener, Service {
+public class PublicTradeChannelService extends PublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
     @Getter
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
     private final Persistence<PublicTradeChannelStore> persistence;
-    private final NetworkService networkService;
-    private final UserIdentityService userIdentityService;
 
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
                                      UserIdentityService userIdentityService) {
+        super(networkService, userIdentityService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
     }
 
+    //todo
+  
+
+  /*  public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(String text,
+                                                                                 Optional<Quotation> quotedMessage,
+                                                                                 PublicTradeChannel publicTradeChannel,
+                                                                                 UserIdentity userIdentity) {
+        UserProfile userProfile = userIdentity.getUserProfile();
+        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
+                userProfile.getId(),
+                Optional.empty(),
+                Optional.of(text),
+                quotedMessage,
+                new Date().getTime(),
+                false);
+        return publish(userIdentity, userProfile, chatMessage);
+    }*/
     
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+  /*  public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(PublicTradeChatMessage originalChatMessage,
+                                                                                       String editedText,
+                                                                                       UserIdentity userIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
+        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
+                .thenCompose(result -> {
+                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
+                    // the edited text.
+                    UserProfile userProfile = userIdentity.getUserProfile();
+                    PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+                            userProfile.getId(),
+                            Optional.empty(),
+                            Optional.of(editedText),
+                            originalChatMessage.getQuotation(),
+                            originalChatMessage.getDate(),
+                            true);
+                    return publish(userIdentity, userProfile, chatMessage);
+                });
+    }*/
 
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
-        maybeAddDefaultChannels();
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        networkService.removeDataServiceListener(this);
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // DataService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage) {
-            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
-            findPublicTradeChannel(message.getChannelId())
-                    .ifPresent(channel -> addPublicTradeChatMessage(message, channel));
-        }
-    }
-
-    @Override
-    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
-        DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage) {
-            PublicTradeChatMessage message = (PublicTradeChatMessage) distributedData;
-            findPublicTradeChannel(message.getChannelId())
-                    .ifPresent(channel -> removePublicTradeChatMessage(message, channel));
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
+   /* public CompletableFuture<DataService.BroadCastDataResult> publishPublicChatMessage(PublicTradeChatMessage chatMessage,
+                                                                                       UserIdentity userIdentity) {
+        return publish(userIdentity, userIdentity.getUserProfile(), chatMessage);
+    }*/
+  /*  public CompletableFuture<DataService.BroadCastDataResult> deletePublicChatMessage(PublicTradeChatMessage chatMessage,
+                                                                                      UserIdentity userIdentity) {
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
+        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
+    }*/
 
     public Optional<PublicTradeChannel> showPublicTradeChannel(Market market) {
-        return findPublicTradeChannel(PublicTradeChannel.getId(market))
+        return findChannel(PublicTradeChannel.getId(market))
                 .map(channel -> {
                     channel.setVisible(true);
                     persist();
@@ -131,105 +117,66 @@ public class PublicTradeChannelService implements PersistenceClient<PublicTradeC
         persist();
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishTradeChatTextMessage(String text,
-                                                                                          Optional<Quotation> quotedMessage,
-                                                                                          PublicTradeChannel publicTradeChannel,
-                                                                                          UserIdentity userIdentity) {
-        UserProfile userProfile = userIdentity.getUserProfile();
-        PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof PublicTradeChatMessage) {
+            processAddedMessage((PublicTradeChatMessage) distributedData);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof PublicTradeChatMessage) {
+            processRemovedMessage((PublicTradeChatMessage) distributedData);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PublicChannelService 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public ObservableSet<PublicTradeChannel> getChannels() {
+        return persistableStore.getChannels();
+    }
+
+    @Override
+    protected PublicTradeChatMessage createNewChatMessage(String text,
+                                                          Optional<Quotation> quotedMessage,
+                                                          PublicTradeChannel publicChannel,
+                                                          UserProfile userProfile) {
+        return new PublicTradeChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return publish(userIdentity, userProfile, chatMessage);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishPublicTradeChatMessage(PublicTradeChatMessage chatMessage,
-                                                                                            UserIdentity userIdentity) {
-        return publish(userIdentity, userIdentity.getUserProfile(), chatMessage);
+    @Override
+    protected PublicTradeChatMessage createNewChatMessage(PublicTradeChatMessage originalChatMessage,
+                                                          String editedText,
+                                                          UserProfile userProfile) {
+        return new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+                userProfile.getId(),
+                Optional.empty(),
+                Optional.of(editedText),
+                originalChatMessage.getQuotation(),
+                originalChatMessage.getDate(),
+                true);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishEditedTradeChatMessage(PublicTradeChatMessage originalChatMessage,
-                                                                                            String editedText,
-                                                                                            UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .thenCompose(result -> {
-                    // We do not support editing the MarketChatOffer directly but remove it and replace it with 
-                    // the edited text.
-                    UserProfile userProfile = userIdentity.getUserProfile();
-                    PublicTradeChatMessage chatMessage = new PublicTradeChatMessage(originalChatMessage.getChannelId(),
-                            userProfile.getId(),
-                            Optional.empty(),
-                            Optional.of(editedText),
-                            originalChatMessage.getQuotation(),
-                            originalChatMessage.getDate(),
-                            true);
-                    return publish(userIdentity, userProfile, chatMessage);
-                });
-    }
-
-    public CompletableFuture<DataService.BroadCastDataResult> deletePublicTradeChatMessage(PublicTradeChatMessage chatMessage,
-                                                                                           UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
-    }
-
-    public Optional<PublicTradeChannel> findPublicTradeChannel(String channelId) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
-                .findAny();
-    }
-
-    private void addPublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
-        channel.addChatMessage(message);
-        persist();
-    }
-
-    private void removePublicTradeChatMessage(PublicTradeChatMessage message, PublicTradeChannel channel) {
-        channel.removeChatMessage(message);
-        persist();
-    }
-
-    public ObservableSet<PublicTradeChannel> getChannels() {
-        return persistableStore.getChannels();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Misc
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
-        channel.getChannelNotificationType().set(channelNotificationType);
-        persist();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private CompletableFuture<DataService.BroadCastDataResult> publish(UserIdentity userIdentity,
-                                                                       UserProfile userProfile,
-                                                                       DistributedData distributedData) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userProfile, nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(distributedData, nodeIdAndKeyPair));
-    }
-
-
-   /* private boolean isValidProofOfWorkOrChatUserNotFound(ChatMessage message) {
-        // In case we don't find the chat user we still return true as it might be that the chat user gets added later.
-        // In that case we check again if the chat user has a valid proof of work.
-        return findChatUser(message.getAuthorId())
-                .map(chatUser -> hasAuthorValidProofOfWork(chatUser.getProofOfWork()))
-                .orElse(true);
-    }*/
-
-    private void maybeAddDefaultChannels() {
+    @Override
+    protected void maybeAddDefaultChannels() {
         if (!getChannels().isEmpty()) {
             return;
         }

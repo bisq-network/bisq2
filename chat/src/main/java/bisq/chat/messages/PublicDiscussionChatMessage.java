@@ -17,7 +17,6 @@
 
 package bisq.chat.messages;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,7 +30,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
+public final class PublicDiscussionChatMessage extends ChatMessage implements PublicChatMessage  {
     public PublicDiscussionChatMessage(String channelId,
                                        String authorId,
                                        String text,
@@ -79,11 +78,6 @@ public final class PublicDiscussionChatMessage extends ChatMessage implements Di
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
     }
 
     @Override

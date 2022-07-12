@@ -17,68 +17,36 @@
 
 package bisq.chat.channels;
 
-import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicDiscussionChatMessage;
 import bisq.chat.messages.Quotation;
-import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PublicDiscussionChannelService implements PersistenceClient<PublicDiscussionChannelStore>, 
-        DataService.Listener, Service {
+public class PublicDiscussionChannelService extends PublicChannelService<PublicDiscussionChatMessage, PublicDiscussionChannel, PublicDiscussionChannelStore> {
     @Getter
     private final PublicDiscussionChannelStore persistableStore = new PublicDiscussionChannelStore();
     @Getter
     private final Persistence<PublicDiscussionChannelStore> persistence;
-    private final NetworkService networkService;
-    private final UserIdentityService userIdentityService;
 
     public PublicDiscussionChannelService(PersistenceService persistenceService,
                                           NetworkService networkService,
                                           UserIdentityService userIdentityService) {
+        super(networkService, userIdentityService);
+
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
-    }
-    
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Service
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
-        maybeAddDefaultChannels();
-        return CompletableFuture.completedFuture(true);
-    }
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        networkService.removeDataServiceListener(this);
-        return CompletableFuture.completedFuture(true);
     }
 
 
@@ -90,9 +58,7 @@ public class PublicDiscussionChannelService implements PersistenceClient<PublicD
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof PublicDiscussionChatMessage) {
-            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
-            findPublicDiscussionChannel(message.getChannelId())
-                    .ifPresent(channel -> addPublicDiscussionChatMessage(message, channel));
+            processAddedMessage((PublicDiscussionChatMessage) distributedData);
         }
     }
 
@@ -100,102 +66,47 @@ public class PublicDiscussionChannelService implements PersistenceClient<PublicD
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
         if (distributedData instanceof PublicDiscussionChatMessage) {
-            PublicDiscussionChatMessage message = (PublicDiscussionChatMessage) distributedData;
-            findPublicDiscussionChannel(message.getChannelId())
-                    .ifPresent(channel -> removePublicDiscussionChatMessage(message, channel));
+            processRemovedMessage((PublicDiscussionChatMessage) distributedData);
         }
     }
 
+    
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // PublicChannelService 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishDiscussionChatMessage(String text,
-                                                                                           Optional<Quotation> quotedMessage,
-                                                                                           PublicDiscussionChannel publicDiscussionChannel,
-                                                                                           UserIdentity userIdentity) {
-        UserProfile userProfile = userIdentity.getUserProfile();
-        PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(publicDiscussionChannel.getId(),
+    @Override
+    public ObservableSet<PublicDiscussionChannel> getChannels() {
+        return persistableStore.getChannels();
+    }
+
+    @Override
+    protected PublicDiscussionChatMessage createNewChatMessage(String text,
+                                                               Optional<Quotation> quotedMessage,
+                                                               PublicDiscussionChannel publicChannel,
+                                                               UserProfile userProfile) {
+        return new PublicDiscussionChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
-        return publish(userIdentity, userProfile, chatMessage);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> publishEditedDiscussionChatMessage(PublicDiscussionChatMessage originalChatMessage,
-                                                                                                 String editedText,
-                                                                                                 UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .thenCompose(result -> {
-                    UserProfile userProfile = userIdentity.getUserProfile();
-                    PublicDiscussionChatMessage chatMessage = new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
-                            userProfile.getId(),
-                            editedText,
-                            originalChatMessage.getQuotation(),
-                            originalChatMessage.getDate(),
-                            true);
-                    return publish(userIdentity, userProfile, chatMessage);
-                });
+    @Override
+    protected PublicDiscussionChatMessage createNewChatMessage(PublicDiscussionChatMessage originalChatMessage,
+                                                               String editedText,
+                                                               UserProfile userProfile) {
+        return new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
+                userProfile.getId(),
+                editedText,
+                originalChatMessage.getQuotation(),
+                originalChatMessage.getDate(),
+                true);
     }
 
-    public CompletableFuture<DataService.BroadCastDataResult> deletePublicDiscussionChatMessage(PublicDiscussionChatMessage chatMessage,
-                                                                                                UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(chatMessage, nodeIdAndKeyPair);
-    }
-
-    private void addPublicDiscussionChatMessage(PublicDiscussionChatMessage message, PublicDiscussionChannel channel) {
-        channel.addChatMessage(message);
-        persist();
-    }
-
-    private void removePublicDiscussionChatMessage(PublicDiscussionChatMessage message, PublicDiscussionChannel channel) {
-        channel.removeChatMessage(message);
-        persist();
-    }
-
-    public Optional<PublicDiscussionChannel> findPublicDiscussionChannel(String channelId) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
-                .findAny();
-    }
-
-    public ObservableSet<PublicDiscussionChannel> getChannels() {
-        return persistableStore.getChannels();
-    }
-
-    public Collection<? extends Channel<?>> getMentionableChannels() {
-        // TODO: implement logic
-        return getChannels();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Misc
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
-        channel.getChannelNotificationType().set(channelNotificationType);
-        persist();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private CompletableFuture<DataService.BroadCastDataResult> publish(UserIdentity userIdentity,
-                                                                       UserProfile userProfile,
-                                                                       DistributedData distributedData) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userProfile, nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(distributedData, nodeIdAndKeyPair));
-    }
-
-    private void maybeAddDefaultChannels() {
+    @Override
+    protected void maybeAddDefaultChannels() {
         if (!getChannels().isEmpty()) {
             return;
         }

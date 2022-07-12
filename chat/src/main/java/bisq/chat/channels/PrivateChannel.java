@@ -18,7 +18,7 @@
 package bisq.chat.channels;
 
 import bisq.chat.ChannelNotificationType;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.messages.PrivateChatMessage;
 import bisq.common.observable.ObservableSet;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -27,7 +27,7 @@ import lombok.Getter;
 import java.util.Set;
 
 @Getter
-public abstract class PrivateChannel<T extends ChatMessage> extends Channel<T> {
+public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
     private static final String CHANNEL_DELIMITER = "-";
     
     protected final UserProfile peer;

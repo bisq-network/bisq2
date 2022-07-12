@@ -33,7 +33,8 @@ import java.util.Set;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
+public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage>
+        implements PublicChannel<PublicDiscussionChatMessage> {
 
     public enum ChannelId {
         BISQ,

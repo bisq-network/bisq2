@@ -17,7 +17,6 @@
 
 package bisq.chat.messages;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +29,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends ChatMessage implements DistributedData {
+public final class PublicTradeChatMessage extends ChatMessage implements PublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,

@@ -173,7 +173,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return publicTradeChannelService.findPublicTradeChannel(PublicTradeChannel.getId(market))
+            return publicTradeChannelService.findChannel(PublicTradeChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }
