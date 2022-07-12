@@ -30,12 +30,11 @@ import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
-import bisq.settings.CookieKey;
-import bisq.settings.DisplaySettings;
-import bisq.settings.DontShowAgainService;
-import bisq.settings.SettingsService;
+import bisq.settings.*;
 import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Screen;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +62,8 @@ public class PrimaryStageController extends NavigationController {
         settingsService = applicationService.getSettingsService();
         this.onStageReadyHandler = onStageReadyHandler;
 
-        model = new PrimaryStageModel(applicationService);
+        model = new PrimaryStageModel(applicationService.getConfig().getAppName());
+        setInitialScreenSize(applicationService);
         view = new PrimaryStageView(model, this, applicationJavaFxApplicationData.getStage());
 
         splashController = new SplashController(applicationService);
@@ -83,6 +83,19 @@ public class PrimaryStageController extends NavigationController {
         view.showStage();
 
         new OverlayController(applicationService, viewRoot);
+    }
+
+    private void setInitialScreenSize(DefaultApplicationService applicationService) {
+        Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        model.setStageWidth(cookie.getAsOptionalDouble(CookieKey.STAGE_W)
+                .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
+        model.setStageHeight(cookie.getAsOptionalDouble(CookieKey.STAGE_H)
+                .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
+        model.setStageX(cookie.getAsOptionalDouble(CookieKey.STAGE_X)
+                .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
+        model.setStageY(cookie.getAsOptionalDouble(CookieKey.STAGE_Y)
+                .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
     }
 
     @Override

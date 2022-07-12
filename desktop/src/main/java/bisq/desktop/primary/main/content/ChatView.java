@@ -132,9 +132,9 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
         filterBoxRoot = filterBox.getRoot();
 
-        chatMessagesComponent.setMinWidth(500);
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
         VBox center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+        chatMessagesComponent.setMinWidth(700);
         root.getItems().addAll(left, center, sideBar);
     }
 
@@ -176,7 +176,6 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                         chatUserOverviewRoot = pane;
                     }
                 });
-        var parent = root.getParent();
 
         sideBarWidthSubscription = EasyBind.subscribe(model.getSideBarWidth(), w -> updateDividerPositions());
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> updateDividerPositions());
