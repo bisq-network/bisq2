@@ -145,6 +145,9 @@ public class SmallAmountInput {
             root.setAlignment(Pos.CENTER);
             root.setSpacing(3);
 
+            // textInput would be black without setting a style on root. Not clear why...
+            root.setStyle("-fx-fill: -bisq-white;");
+
             textInput = new TextField();
             textInput.setPrefWidth(100);
             textInput.setId("quote-amount-text-field");
@@ -170,12 +173,12 @@ public class SmallAmountInput {
             focusListener = (o, oldValue, newValue) -> {
                 controller.onFocusChange(newValue);
                 if (oldValue) {
-                    controller.onAmount(textInput.getText());
+                    controller.onAmount(getText());
                 }
             };
             textInputListener = (o, old, newValue) -> {
                 if (textInput.isFocused()) {
-                    controller.onAmount(textInput.getText().replace(PREFIX, ""));
+                    controller.onAmount(getText());
                 }
             };
 
@@ -204,6 +207,10 @@ public class SmallAmountInput {
         private void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" :
                     PREFIX + AmountFormatter.formatAmount(newValue, true));
+        }
+
+        private String getText() {
+            return textInput.getText().replace(PREFIX, "");
         }
     }
 }
