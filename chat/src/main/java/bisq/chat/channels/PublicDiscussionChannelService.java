@@ -21,6 +21,7 @@ import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicDiscussionChatMessage;
 import bisq.chat.messages.Quotation;
+import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -43,20 +44,29 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PublicDiscussionChannelService extends ChannelService<PublicDiscussionChannel>
-        implements PersistenceClient<PublicDiscussionChannelStore>, DataService.Listener {
+public class PublicDiscussionChannelService implements PersistenceClient<PublicDiscussionChannelStore>, 
+        DataService.Listener, Service {
     @Getter
     private final PublicDiscussionChannelStore persistableStore = new PublicDiscussionChannelStore();
     @Getter
     private final Persistence<PublicDiscussionChannelStore> persistence;
+    private final NetworkService networkService;
+    private final UserIdentityService userIdentityService;
 
     public PublicDiscussionChannelService(PersistenceService persistenceService,
                                           NetworkService networkService,
                                           UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.networkService = networkService;
+        this.userIdentityService = userIdentityService;
     }
+    
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
@@ -64,7 +74,7 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
         maybeAddDefaultChannels();
         return CompletableFuture.completedFuture(true);
     }
-
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         networkService.removeDataServiceListener(this);
@@ -191,7 +201,7 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
         }
         // todo channelAdmin not supported atm
         String channelAdminId = "";
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ_ID.name(),
+        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BISQ.name(),
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 channelAdminId,
@@ -199,31 +209,31 @@ public class PublicDiscussionChannelService extends ChannelService<PublicDiscuss
         );
         ObservableSet<PublicDiscussionChannel> channels = getChannels();
         channels.add(defaultDiscussionChannel);
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN_ID.name(),
+        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.BITCOIN.name(),
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO_ID.name(),
+        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MONERO.name(),
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.PRICE_ID.name(),
+        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.MARKETS.name(),
                 "Price",
                 "Channel for discussions about market price",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY_ID.name(),
+        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.ECONOMY.name(),
                 "Economy",
                 "Channel for discussions about economy",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC_ID.name(),
+        channels.add(new PublicDiscussionChannel(PublicDiscussionChannel.ChannelId.OFF_TOPIC.name(),
                 "Off-topic",
                 "Channel for anything else",
                 channelAdminId,

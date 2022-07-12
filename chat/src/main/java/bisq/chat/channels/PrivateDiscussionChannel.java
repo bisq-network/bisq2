@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscussionChatMessage> {
 
-
     public PrivateDiscussionChannel(UserProfile peer, UserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,

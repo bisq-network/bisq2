@@ -17,7 +17,7 @@
 
 package bisq.user;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.ots.OpenTimestampService;
@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class UserService implements ModuleService {
+public class UserService implements Service {
     @Getter
     @ToString
     public static final class Config {

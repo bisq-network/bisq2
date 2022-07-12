@@ -39,32 +39,20 @@ import java.util.concurrent.CompletableFuture;
  * be rather part of the identity module.
  */
 @Slf4j
+@Getter
 public class ChatService implements PersistenceClient<ChatStore> {
-    @Getter
     private final ChatStore persistableStore = new ChatStore();
-    @Getter
     private final Persistence<ChatStore> persistence;
-    private final UserIdentityService userIdentityService;
-    private final NetworkService networkService;
-    private final ProofOfWorkService proofOfWorkService;
-    // private final Map<String, UserProfile> chatUserById = new ConcurrentHashMap<>();
-    @Getter
     private final PrivateTradeChannelService privateTradeChannelService;
-    @Getter
     private final PrivateDiscussionChannelService privateDiscussionChannelService;
-    @Getter
     private final PublicDiscussionChannelService publicDiscussionChannelService;
-    @Getter
     private final PublicTradeChannelService publicTradeChannelService;
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
                        UserIdentityService userIdentityService) {
-        this.proofOfWorkService = proofOfWorkService;
-        this.networkService = networkService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.userIdentityService = userIdentityService;
 
         privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
                 networkService,
@@ -80,7 +68,6 @@ public class ChatService implements PersistenceClient<ChatStore> {
         publicTradeChannelService = new PublicTradeChannelService(persistenceService,
                 networkService,
                 userIdentityService);
-
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -91,18 +78,22 @@ public class ChatService implements PersistenceClient<ChatStore> {
                 publicDiscussionChannelService.initialize(),
                 publicTradeChannelService.initialize()
         ).thenApply(list -> {
-            maybeAddDefaultChannels();
+            maybeSelectChannels();
             return true;
         });
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        privateTradeChannelService.shutdown();
-        privateDiscussionChannelService.shutdown();
-        publicDiscussionChannelService.shutdown();
-        publicTradeChannelService.shutdown();
-        return CompletableFuture.completedFuture(true);
+        return CompletableFutureUtils.allOf(
+                privateTradeChannelService.shutdown(),
+                privateDiscussionChannelService.shutdown(),
+                publicDiscussionChannelService.shutdown(),
+                publicTradeChannelService.shutdown()
+        ).thenApply(list -> {
+            maybeSelectChannels();
+            return true;
+        });
     }
 
     public void selectTradeChannel(Channel<? extends ChatMessage> channel) {
@@ -131,13 +122,12 @@ public class ChatService implements PersistenceClient<ChatStore> {
         return persistableStore.getSelectedDiscussionChannel();
     }
 
-
     public void reportUserProfile(UserProfile userProfile, String reason) {
         //todo report user to admin and moderators, add reason
         log.info("called reportChatUser {} {}", userProfile, reason);
     }
 
-    private void maybeAddDefaultChannels() {
+    private void maybeSelectChannels() {
         if (getSelectedTradeChannel().get() == null) {
             publicTradeChannelService.getChannels().stream().findAny().ifPresent(this::selectTradeChannel);
         }

@@ -19,7 +19,7 @@ package bisq.common.application;
 
 import java.util.concurrent.CompletableFuture;
 
-public interface ModuleService {
+public interface Service {
     CompletableFuture<Boolean> initialize();
 
     CompletableFuture<Boolean> shutdown();

@@ -17,7 +17,7 @@
 
 package bisq.oracle.daobridge;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
-public class DaoBridgeService implements ModuleService {
+public class DaoBridgeService implements Service {
 
     @Getter
     @ToString

@@ -36,12 +36,12 @@ import java.util.Set;
 public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
 
     public enum ChannelId {
-        BISQ_ID,
-        BITCOIN_ID,
-        MONERO_ID,
-        PRICE_ID,
-        ECONOMY_ID,
-        OFF_TOPIC_ID
+        BISQ,
+        BITCOIN,
+        MONERO,
+        MARKETS,
+        ECONOMY,
+        OFF_TOPIC
     }
 
     private final String channelName;

@@ -20,15 +20,10 @@ package bisq.chat.channels;
 import bisq.chat.messages.PrivateDiscussionChatMessage;
 import bisq.chat.messages.Quotation;
 import bisq.common.observable.ObservableSet;
-import bisq.network.NetworkId;
-import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
-import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -38,133 +33,53 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Slf4j
-public class PrivateDiscussionChannelService extends ChannelService<PrivateDiscussionChannel>
-        implements PersistenceClient<PrivateDiscussionChannelStore>, MessageListener {
+public class PrivateDiscussionChannelService extends PrivateChannelService<PrivateDiscussionChatMessage, PrivateDiscussionChannel, PrivateDiscussionChannelStore> {
     @Getter
     private final PrivateDiscussionChannelStore persistableStore = new PrivateDiscussionChannelStore();
     @Getter
     private final Persistence<PrivateDiscussionChannelStore> persistence;
-    private final ProofOfWorkService proofOfWorkService;
 
     public PrivateDiscussionChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
                                            UserIdentityService userIdentityService,
                                            ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService);
+        super(networkService, userIdentityService, proofOfWorkService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.proofOfWorkService = proofOfWorkService;
     }
-
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        networkService.addMessageListener(this);
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        networkService.removeMessageListener(this);
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // MessageListener
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof PrivateDiscussionChatMessage) {
-            PrivateDiscussionChatMessage message = (PrivateDiscussionChatMessage) networkMessage;
-            if (!isMyMessage(message) && hasAuthorValidProofOfWork(message.getSender().getProofOfWork())) {
-                processMessage(message);
-            }
+            processMessage((PrivateDiscussionChatMessage) networkMessage);
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateDiscussionChatMessage(String text,
-                                                                                                Optional<Quotation> quotedMessage,
-                                                                                                PrivateDiscussionChannel privateDiscussionChannel) {
-        String channelId = privateDiscussionChannel.getId();
-        UserIdentity userIdentity = privateDiscussionChannel.getMyProfile();
-        UserProfile peer = privateDiscussionChannel.getPeer();
-        PrivateDiscussionChatMessage chatMessage = new PrivateDiscussionChatMessage(channelId,
-                userIdentity.getUserProfile(),
-                peer.getId(),
+    @Override
+    protected PrivateDiscussionChatMessage createNewPrivateChatMessage(String channelId,
+                                                                       UserProfile sender,
+                                                                       String receiversId,
+                                                                       String text,
+                                                                       Optional<Quotation> quotedMessage,
+                                                                       long time,
+                                                                       boolean wasEdited) {
+        return new PrivateDiscussionChatMessage(channelId,
+                sender,
+                receiversId,
                 text,
                 quotedMessage,
                 new Date().getTime(),
-                false);
-        addPrivateDiscussionChatMessage(chatMessage, privateDiscussionChannel);
-        NetworkId receiverNetworkId = peer.getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+                wasEdited);
     }
 
-
-    private void processMessage(PrivateDiscussionChatMessage message) {
-        findChannel(message.getChannelId())
-                .or(() -> createPrivateDiscussionChannel(message.getSender(), message.getReceiversId()))
-                .ifPresent(channel -> addPrivateDiscussionChatMessage(message, channel));
-    }
-
-    public Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer) {
-        return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
-                .flatMap(userProfile -> createPrivateDiscussionChannel(peer, userProfile.getId()));
-    }
-
-    // We received the message so the receiversId is out id.
-    private Optional<PrivateDiscussionChannel> createPrivateDiscussionChannel(UserProfile peer, String peersId) {
-        return userIdentityService.findUserIdentity(peersId)
-                .map(myUserProfile -> {
-                            PrivateDiscussionChannel privateDiscussionChannel = new PrivateDiscussionChannel(peer, myUserProfile);
-                            getChannels().add(privateDiscussionChannel);
-                            persist();
-                            return privateDiscussionChannel;
-                        }
-                );
-    }
-
-    private void addPrivateDiscussionChatMessage(PrivateDiscussionChatMessage chatMessage, PrivateDiscussionChannel privateDiscussionChannel) {
-        synchronized (persistableStore) {
-            privateDiscussionChannel.addChatMessage(chatMessage);
-        }
-        persist();
+    @Override
+    protected PrivateDiscussionChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        return new PrivateDiscussionChannel(peer, myUserIdentity);
     }
 
     @Override
     public ObservableSet<PrivateDiscussionChannel> getChannels() {
         return persistableStore.getChannels();
     }
-
-    public void removeExpiredMessages(PrivateDiscussionChannel channel) {
-        Set<PrivateDiscussionChatMessage> toRemove = channel.getChatMessages().stream()
-                .filter(PrivateDiscussionChatMessage::isExpired)
-                .collect(Collectors.toSet());
-        if (!toRemove.isEmpty()) {
-            synchronized (persistableStore) {
-                channel.removeChatMessages(toRemove);
-            }
-            persist();
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean hasAuthorValidProofOfWork(ProofOfWork proofOfWork) {
-        return proofOfWorkService.verify(proofOfWork);
-    }
-
 }

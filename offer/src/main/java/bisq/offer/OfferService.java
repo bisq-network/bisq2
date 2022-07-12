@@ -17,7 +17,7 @@
 
 package bisq.offer;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class OfferService implements ModuleService {
+public class OfferService implements Service {
     private final OpenOfferService openOfferService;
     private final OfferBookService offerBookService;
 

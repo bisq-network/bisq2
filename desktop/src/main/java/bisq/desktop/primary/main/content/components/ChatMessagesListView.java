@@ -294,7 +294,7 @@ public class ChatMessagesListView {
                                             chatUser.getNickName(),
                                             chatUser.getPubKeyHash(),
                                             text));
-                                    privateTradeChannelService.sendPrivateTradeChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
+                                    privateTradeChannelService.sendPrivateChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
                                                     quotation,
                                                     privateTradeChannel)
                                             .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
@@ -380,14 +380,14 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                privateDiscussionChannelService.createPrivateDiscussionChannel(peer).ifPresent(chatService::selectTradeChannel);
+                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(chatService::selectTradeChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
         }
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-            Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createPrivateTradeChannel(peer);
+            Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
             privateTradeChannel.ifPresent(chatService::selectTradeChannel);
             return privateTradeChannel;
         }

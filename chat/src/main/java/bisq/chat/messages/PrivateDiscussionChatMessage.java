@@ -18,7 +18,6 @@
 package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.user.profile.UserProfile;
@@ -29,17 +28,10 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-/**
- * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
- * mailbox message.
- */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
-    private final String receiversId;
-    private final UserProfile sender;
-
+public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
     public PrivateDiscussionChatMessage(String channelId,
                                         UserProfile sender,
                                         String receiversId,
@@ -47,7 +39,7 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
-        this(channelId,
+        super(channelId,
                 sender,
                 receiversId,
                 text,
@@ -58,22 +50,14 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         UserProfile sender,
-                                         String receiversId,
-                                         String text,
-                                         Optional<Quotation> quotedMessage,
-                                         long date,
-                                         boolean wasEdited,
-                                         MetaData metaData) {
-        super(channelId,
-                sender.getId(),
-                Optional.of(text),
-                quotedMessage,
-                date,
-                wasEdited,
-                metaData);
-        this.receiversId = receiversId;
-        this.sender = sender;
+                                        UserProfile sender,
+                                        String receiversId,
+                                        String text,
+                                        Optional<Quotation> quotedMessage,
+                                        long date,
+                                        boolean wasEdited,
+                                        MetaData metaData) {
+        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -105,15 +89,5 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    // Required for MailboxMessage use case
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

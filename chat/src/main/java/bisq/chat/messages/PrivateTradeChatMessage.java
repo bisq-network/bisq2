@@ -18,7 +18,6 @@
 package bisq.chat.messages;
 
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.user.profile.UserProfile;
@@ -38,10 +37,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTradeChatMessage extends ChatMessage implements MailboxMessage {
-    private final UserProfile sender;
-    private final String receiversId;
-
+public final class PrivateTradeChatMessage extends PrivateChatMessage {
     public PrivateTradeChatMessage(String channelId,
                                    UserProfile sender,
                                    String receiversId,
@@ -67,15 +63,7 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
                                     long date,
                                     boolean wasEdited,
                                     MetaData metaData) {
-        super(channelId,
-                sender.getId(),
-                Optional.of(text),
-                quotedMessage,
-                date,
-                wasEdited,
-                metaData);
-        this.sender = sender;
-        this.receiversId = receiversId;
+        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -107,15 +95,5 @@ public final class PrivateTradeChatMessage extends ChatMessage implements Mailbo
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    // Required for MailboxMessage use case
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

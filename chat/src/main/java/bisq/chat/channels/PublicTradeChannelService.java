@@ -21,6 +21,7 @@ import bisq.chat.ChannelNotificationType;
 import bisq.chat.messages.ChatMessage;
 import bisq.chat.messages.PublicTradeChatMessage;
 import bisq.chat.messages.Quotation;
+import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.ObservableSet;
@@ -44,20 +45,29 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PublicTradeChannelService extends ChannelService<PublicTradeChannel>
-        implements PersistenceClient<PublicTradeChannelStore>, DataService.Listener {
+public class PublicTradeChannelService implements PersistenceClient<PublicTradeChannelStore>,
+        DataService.Listener, Service {
     @Getter
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
     private final Persistence<PublicTradeChannelStore> persistence;
+    private final NetworkService networkService;
+    private final UserIdentityService userIdentityService;
 
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
                                      UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        this.networkService = networkService;
+        this.userIdentityService = userIdentityService;
     }
 
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         networkService.addDataServiceListener(this);
@@ -66,6 +76,7 @@ public class PublicTradeChannelService extends ChannelService<PublicTradeChannel
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         networkService.removeDataServiceListener(this);
@@ -100,7 +111,6 @@ public class PublicTradeChannelService extends ChannelService<PublicTradeChannel
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
     public Optional<PublicTradeChannel> showPublicTradeChannel(Market market) {
         return findPublicTradeChannel(PublicTradeChannel.getId(market))

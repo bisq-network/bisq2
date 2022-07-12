@@ -29,6 +29,7 @@ import java.util.Set;
 @Getter
 public abstract class PrivateChannel<T extends ChatMessage> extends Channel<T> {
     private static final String CHANNEL_DELIMITER = "-";
+    
     protected final UserProfile peer;
     protected final UserIdentity myProfile;
 

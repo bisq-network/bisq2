@@ -18,7 +18,7 @@
 package bisq.identity;
 
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.persistence.Persistence;
@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class IdentityService implements PersistenceClient<IdentityStore>, ModuleService {
+public class IdentityService implements PersistenceClient<IdentityStore>, Service {
     public final static String POOL_PREFIX = "pool-";
     public final static String DEFAULT = "default";
   

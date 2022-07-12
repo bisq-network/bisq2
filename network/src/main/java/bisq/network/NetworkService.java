@@ -18,7 +18,7 @@
 package bisq.network;
 
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
@@ -73,7 +73,7 @@ import static java.util.concurrent.CompletableFuture.*;
  */
 @Slf4j
 @Getter
-public class NetworkService implements PersistenceClient<NetworkServiceStore>, ModuleService {
+public class NetworkService implements PersistenceClient<NetworkServiceStore>, Service {
     public static final ExecutorService NETWORK_IO_POOL = ExecutorFactory.newCachedThreadPool("NetworkService.network-IO-pool");
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("NetworkService.dispatcher");
 
