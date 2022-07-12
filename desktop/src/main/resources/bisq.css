@@ -333,7 +333,7 @@
     -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 1.7em;
-    -fx-line-spacing: -0.16em;
+    /*-fx-line-spacing: -0.16em;*/
 }
 
 .bisq-text-headline-3 {
@@ -352,7 +352,7 @@
     -fx-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 2.5em;
-    -fx-line-spacing: -0.16em;
+    /* -fx-line-spacing: -0.16em;*/
 }
 
 .bisq-text-1 {
@@ -363,13 +363,13 @@
 .bisq-text-2 {
     -fx-text-fill: -bisq-grey-13;
     -fx-font-size: 1.2em;
-    -fx-line-spacing: .2em;
+    /*-fx-line-spacing: .2em;*/
 }
 
 .bisq-text-3 {
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.1em;
-    -fx-line-spacing: -0.12em;
+    /* -fx-line-spacing: -0.12em;*/
     -fx-font-family: "IBM Plex Sans Light";
 }
 
@@ -452,10 +452,18 @@
 }
 
 
+.text-input {
+    -fx-highlight-fill: -bisq-green;
+}
+.text-input:focused {
+    -fx-highlight-fill: -bisq-green;
+}
+
 #base-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
     -fx-text-fill: -bisq-white;
+    -fx-highlight-fill: -bisq-green;
     -fx-font-size: 5.2em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
@@ -466,7 +474,7 @@
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Thin";
-    -fx-line-spacing: -0.12em;
+    /*-fx-line-spacing: -0.12em;*/
 }
 
 
@@ -855,7 +863,7 @@
     -fx-padding: 6 14;
     -fx-text-fill: -bisq-grey-9;
     -fx-font-size: 1.1em;
-    -fx-line-spacing: -0.12em;
+    /*-fx-line-spacing: -0.12em;*/
     -fx-font-family: "IBM Plex Sans Light";
 }
 

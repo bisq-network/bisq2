@@ -96,12 +96,12 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
     }
 
     private void configSizeAndPosition() {
-        root.setPrefWidth(model.getPrefWidth());
-        root.setPrefHeight(model.getPrefHeight());
-        model.getStageX().ifPresent(stage::setX);
-        model.getStageY().ifPresent(stage::setY);
-        model.getStageWidth().ifPresent(stage::setWidth);
-        model.getStageHeight().ifPresent(stage::setHeight);
+        root.setPrefWidth(model.getStageWidth());
+        root.setPrefHeight(model.getStageHeight());
+        stage.setX(model.getStageX());
+        stage.setY(model.getStageY());
+        stage.setWidth(model.getStageWidth());
+        stage.setHeight(model.getStageHeight());
         stage.setMinWidth(PrimaryStageModel.MIN_WIDTH);
         stage.setMinHeight(PrimaryStageModel.MIN_HEIGHT);
         stage.xProperty().addListener((observable, oldValue, newValue) -> controller.onStageXChanged((double) newValue));

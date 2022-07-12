@@ -17,41 +17,31 @@
 
 package bisq.desktop.primary;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.settings.Cookie;
-import bisq.settings.CookieKey;
 import lombok.Getter;
-
-import java.util.Optional;
+import lombok.Setter;
 
 @Getter
 public class PrimaryStageModel extends NavigationModel {
     // Min supported screens: 1024x768
-  /*  public static final double MIN_WIDTH = 1000;
-    public static final double MIN_HEIGHT = 730;*/
-    public static final double MIN_WIDTH = 1200;
-    public static final double MIN_HEIGHT = 1000;
+    public static final double MIN_WIDTH = 1000;
+    public static final double MIN_HEIGHT = 730;
+    public static final double PREF_WIDTH = 1400;
+    public static final double PREF_HEIGHT = 950;
 
     private final String title;
-    private final DefaultApplicationService applicationService;
-    private final Optional<Double> stageX;
-    private final Optional<Double> stageY;
-    private final Optional<Double> stageWidth;
-    private final Optional<Double> stageHeight;
-    private final double prefWidth = MIN_WIDTH;
-    private final double prefHeight = MIN_HEIGHT;
+    @Setter
+    private double stageX;
+    @Setter
+    private double stageY;
+    @Setter
+    private double stageWidth;
+    @Setter
+    private double stageHeight;
 
-    public PrimaryStageModel(DefaultApplicationService applicationService) {
-        this.applicationService = applicationService;
-        title = applicationService.getConfig().getAppName();
-
-        Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
-        stageX = cookie.getAsOptionalDouble(CookieKey.STAGE_X);
-        stageY = cookie.getAsOptionalDouble(CookieKey.STAGE_Y);
-        stageWidth = cookie.getAsOptionalDouble(CookieKey.STAGE_W);
-        stageHeight = cookie.getAsOptionalDouble(CookieKey.STAGE_H);
+    public PrimaryStageModel(String title) {
+        this.title = title;
     }
 
     @Override

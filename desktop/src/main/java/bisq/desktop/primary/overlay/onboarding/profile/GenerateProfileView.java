@@ -154,9 +154,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
         createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
 
-        regenerateButton.setOnAction(e -> controller.onRegenerate());
+        regenerateButton.setOnMouseClicked(e -> controller.onRegenerate());
         roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
-        createProfileButton.setOnAction(e -> {
+        createProfileButton.setOnMouseClicked(e -> {
             controller.onCreateUserProfile();
             root.requestFocus();
         });
@@ -187,8 +187,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.visibleProperty().unbind();
         createProfileIndicator.progressProperty().unbind();
 
-        regenerateButton.setOnAction(null);
+        regenerateButton.setOnMouseClicked(null);
         roboIconView.setOnMouseClicked(null);
-        createProfileButton.setOnAction(null);
+        createProfileButton.setOnMouseClicked(null);
     }
 }
