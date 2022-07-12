@@ -21,13 +21,18 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
+import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileController;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileModel;
 import bisq.desktop.primary.overlay.onboarding.profile.GenerateProfileView;
+import javafx.application.Platform;
 
 public class GenerateNewProfileStep1Controller extends GenerateProfileController {
+    private final DefaultApplicationService applicationService;
+
     public GenerateNewProfileStep1Controller(DefaultApplicationService applicationService) {
         super(applicationService);
+        this.applicationService = applicationService;
     }
 
     @Override
@@ -49,5 +54,13 @@ public class GenerateNewProfileStep1Controller extends GenerateProfileController
                 model.getNickName().get(),
                 model.getNym().get());
         Navigation.navigateTo(NavigationTarget.CREATE_PROFILE_STEP2, initData);
+    }
+
+    void onCancel() {
+        OverlayController.hide();
+    }
+
+    void onQuit() {
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 }

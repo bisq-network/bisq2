@@ -18,7 +18,7 @@
 package bisq.protocol;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
 import bisq.common.observable.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
@@ -44,7 +44,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore>, ModuleService {
+public class ProtocolService implements MessageListener, PersistenceClient<ProtocolStore>, Service {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("ProtocolService.dispatcher");
 
     @Getter

@@ -15,58 +15,50 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.discuss.priv;
 
-import bisq.chat.messages.PrivateDiscussionChatMessage;
-import bisq.common.observable.ObservableSet;
-import bisq.chat.NotificationSetting;
-import bisq.user.profile.UserProfile;
+import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.PrivateChannel;
 import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionChatMessage> implements PrivateChannel {
-    private final UserProfile peer;
-    private final UserIdentity myProfile;
-
-    // We persist the messages as they are NOT persisted in the P2P data store.
-    private final ObservableSet<PrivateDiscussionChatMessage> chatMessages = new ObservableSet<>();
+public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscussionChatMessage> {
 
     public PrivateDiscussionChannel(UserProfile peer, UserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,
                 myProfile,
-                NotificationSetting.ALL,
-                new HashSet<>());
-    }
-
-    public PrivateDiscussionChannel(String id, UserProfile peer, UserIdentity myProfile) {
-        this(id, peer, myProfile, NotificationSetting.ALL, new HashSet<>());
+                new HashSet<>(),
+                ChannelNotificationType.ALL);
     }
 
     private PrivateDiscussionChannel(String id,
                                      UserProfile peer,
                                      UserIdentity myProfile,
-                                     NotificationSetting notificationSetting,
-                                     Set<PrivateDiscussionChatMessage> chatMessages) {
-        super(id, notificationSetting);
-        this.peer = peer;
-        this.myProfile = myProfile;
-        this.chatMessages.addAll(chatMessages);
+                                     Set<PrivateDiscussionChatMessage> chatMessages,
+                                     ChannelNotificationType channelNotificationType) {
+        super(id, peer, myProfile, chatMessages, channelNotificationType);
     }
 
+    @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateDiscussionChannel(bisq.chat.protobuf.PrivateDiscussionChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myProfile.toProto())
-                        .addAllChatMessages(chatMessages.stream().map(this::getChatMessageProto).collect(Collectors.toList())))
+                        .addAllChatMessages(chatMessages.stream()
+                                .map(PrivateDiscussionChatMessage::toChatMessageProto)
+                                .collect(Collectors.toList())))
                 .build();
     }
 
@@ -76,15 +68,10 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
-                NotificationSetting.fromProto(baseProto.getNotificationSetting()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateDiscussionChatMessage::fromProto)
-                        .collect(Collectors.toSet()));
-    }
-
-    @Override
-    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PrivateDiscussionChatMessage chatMessage) {
-        return chatMessage.toChatMessageProto();
+                        .collect(Collectors.toSet()),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 
     @Override
@@ -104,6 +91,6 @@ public final class PrivateDiscussionChannel extends Channel<PrivateDiscussionCha
 
     @Override
     public String getDisplayString() {
-        return peer.getUserName();
+        return peer.getUserName() + "-" + myProfile.getUserName();
     }
 }

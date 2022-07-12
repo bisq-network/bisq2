@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.i18n.Res;
-import bisq.chat.NotificationSetting;
-import bisq.chat.channels.Channel;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -48,7 +48,7 @@ public class NotificationsSettings {
         controller.model.setChannel(channel);
     }
 
-    public ReadOnlyObjectProperty<NotificationSetting> getNotificationSetting() {
+    public ReadOnlyObjectProperty<ChannelNotificationType> getNotificationSetting() {
         return controller.model.notificationSetting;
     }
 
@@ -74,20 +74,20 @@ public class NotificationsSettings {
         public void onDeactivate() {
         }
 
-        public void onSelected(NotificationSetting notificationSetting) {
-            model.notificationSetting.set(notificationSetting);
+        public void onSelected(ChannelNotificationType channelNotificationType) {
+            model.notificationSetting.set(channelNotificationType);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
-        private final ObjectProperty<NotificationSetting> notificationSetting = new SimpleObjectProperty<>(NotificationSetting.MENTION);
+        private final ObjectProperty<ChannelNotificationType> notificationSetting = new SimpleObjectProperty<>(ChannelNotificationType.MENTION);
 
         private Model() {
         }
 
         private void setChannel(Channel<? extends ChatMessage> channel) {
-            this.notificationSetting.set(channel.getNotificationSetting().get());
+            this.notificationSetting.set(channel.getChannelNotificationType().get());
 
             this.channel.set(channel);
         }
@@ -119,13 +119,13 @@ public class NotificationsSettings {
             mention.setToggleGroup(toggleGroup);
             none.setToggleGroup(toggleGroup);
 
-            all.setUserData(NotificationSetting.ALL);
-            mention.setUserData(NotificationSetting.MENTION);
-            none.setUserData(NotificationSetting.NEVER);
+            all.setUserData(ChannelNotificationType.ALL);
+            mention.setUserData(ChannelNotificationType.MENTION);
+            none.setUserData(ChannelNotificationType.NEVER);
 
             root.getChildren().addAll(headline, all, mention, none);
 
-            toggleListener = (observable, oldValue, newValue) -> controller.onSelected((NotificationSetting) newValue.getUserData());
+            toggleListener = (observable, oldValue, newValue) -> controller.onSelected((ChannelNotificationType) newValue.getUserData());
             channelChangeListener = (observable, oldValue, newValue) -> update();
 
             update();

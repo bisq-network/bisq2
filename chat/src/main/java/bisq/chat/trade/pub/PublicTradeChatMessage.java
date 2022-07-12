@@ -15,22 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.trade.pub;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends ChatMessage implements DistributedData {
+public final class PublicTradeChatMessage extends PublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,
@@ -50,14 +50,14 @@ public final class PublicTradeChatMessage extends ChatMessage implements Distrib
                 new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
-    public PublicTradeChatMessage(String channelId,
-                                  String authorId,
-                                  Optional<TradeChatOffer> tradeChatOffer,
-                                  Optional<String> text,
-                                  Optional<Quotation> quotedMessage,
-                                  long date,
-                                  boolean wasEdited,
-                                  MetaData metaData) {
+    private PublicTradeChatMessage(String channelId,
+                                   String authorId,
+                                   Optional<TradeChatOffer> tradeChatOffer,
+                                   Optional<String> text,
+                                   Optional<Quotation> quotedMessage,
+                                   long date,
+                                   boolean wasEdited,
+                                   MetaData metaData) {
         super(channelId,
                 authorId,
                 text,

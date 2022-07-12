@@ -18,19 +18,29 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channels.*;
+import bisq.chat.ChatService;
+import bisq.chat.channel.*;
+import bisq.chat.discuss.DiscussionChannelSelectionService;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
-import bisq.chat.ChatService;
-import bisq.chat.messages.ChatMessage;
-import bisq.chat.messages.Quotation;
-import bisq.user.profile.UserProfile;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
@@ -92,14 +102,26 @@ public class ChatMessagesComponent {
         private final QuotedMessageBlock quotedMessageBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
+        private final PrivateTradeChannelService privateTradeChannelService;
+        private final PrivateDiscussionChannelService privateDiscussionChannelService;
+        private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final PublicTradeChannelService publicTradeChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
             chatService = applicationService.getChatService();
-           userIdentityService = applicationService.getUserService().getUserIdentityService();
-            userProfileService= applicationService.getUserService().getUserProfileService();
-            quotedMessageBlock = new QuotedMessageBlock(chatService);
+            privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            publicTradeChannelService = chatService.getPublicTradeChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
+            userProfileService = applicationService.getUserService().getUserProfileService();
+            quotedMessageBlock = new QuotedMessageBlock(applicationService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
                     this::showChatUserDetails,
@@ -116,12 +138,12 @@ public class ChatMessagesComponent {
         @Override
         public void onActivate() {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
-            model.mentionableChannels.setAll(chatService.getMentionableChannels());
+            model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.isDiscussionsChat) {
-                selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
             } else {
-                selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(channel -> {
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     model.isTradeGuideBoxVisible.set(displayTradeGuileBox());
                 });
@@ -154,41 +176,41 @@ public class ChatMessagesComponent {
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
-                    chatService.publishTradeChatTextMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
+                    publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
-                    chatService.publishDiscussionChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
+                    publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {
-                    chatService.sendPrivateTradeChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                    privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else if (channel instanceof PrivateDiscussionChannel) {
-                    chatService.sendPrivateDiscussionChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
+                    privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
                 }
                 quotedMessageBlock.close();
             }
         }
 
         public void onReply(ChatMessage chatMessage) {
-            if (!chatService.isMyMessage(chatMessage)) {
+            if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
                 quotedMessageBlock.reply(chatMessage);
             }
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.isDiscussionsChat) {
-                chatService.createPrivateDiscussionChannel(peer)
-                        .ifPresent(chatService::selectTradeChannel);
+                privateDiscussionChannelService.createAndAddChannel(peer)
+                        .ifPresent(tradeChannelSelectionService::selectChannel);
             } else {
                 createAndSelectPrivateTradeChannel(peer);
             }
         }
 
         private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-            Optional<PrivateTradeChannel> privateTradeChannel = chatService.createPrivateTradeChannel(peer);
-            privateTradeChannel.ifPresent(chatService::selectTradeChannel);
+            Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
+            privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             return privateTradeChannel;
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {
-            chatService.findChatUser(chatMessage.getAuthorId()).ifPresent(author ->
+            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 

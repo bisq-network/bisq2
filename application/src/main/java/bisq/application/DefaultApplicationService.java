@@ -107,15 +107,15 @@ public class DefaultApplicationService extends ApplicationService {
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
                 identityService,
+                networkService,
                 oracleService.getOpenTimestampService(),
-                networkService);
+                securityService.getProofOfWorkService());
 
         chatService = new ChatService(persistenceService,
-                identityService,
                 securityService.getProofOfWorkService(),
                 networkService,
                 userService.getUserIdentityService());
-        
+
         settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());

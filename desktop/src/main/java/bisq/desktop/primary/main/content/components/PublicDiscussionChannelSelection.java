@@ -18,10 +18,13 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
+import bisq.chat.discuss.DiscussionChannelSelectionService;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
-import bisq.chat.ChatService;
-import bisq.chat.channels.PublicDiscussionChannel;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -54,12 +57,21 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final DiscussionChannelSelectionService discussionChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            
             model = new Model();
             view = new View(model, this);
+
+            model.filteredList.setPredicate(item -> true);
         }
 
         @Override
@@ -73,9 +85,9 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
 
             channelsPin = FxBindings.<PublicDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    .to(chatService.getPublicDiscussionChannels());
+                    .to(publicDiscussionChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedDiscussionChannel(),
+            selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicDiscussionChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -89,7 +101,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 return;
             }
 
-            chatService.selectDiscussionChannel(channelItem.getChannel());
+            discussionChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {

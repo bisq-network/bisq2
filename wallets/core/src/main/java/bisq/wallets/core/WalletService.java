@@ -17,7 +17,7 @@
 
 package bisq.wallets.core;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public interface WalletService extends ModuleService {
+public interface WalletService extends Service {
 
     CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase);
 

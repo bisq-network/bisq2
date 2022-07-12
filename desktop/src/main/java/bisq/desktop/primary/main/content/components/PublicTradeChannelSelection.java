@@ -18,6 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
@@ -29,7 +32,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.i18n.Res;
-import bisq.chat.channels.PublicTradeChannel;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,9 +50,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class PublicTradeChannelSelection extends ChannelSelection {
@@ -72,13 +75,25 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
+        private final PublicTradeChannelService publicTradeChannelService;
+        private final TradeChannelSelectionService tradeChannelSelectionService;
         private Pin channelItemsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
 
+            publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
+            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+
             model = new Model();
             view = new View(model, this);
+
+            model.filteredList.setPredicate(item -> {
+                checkArgument(item.getChannel() instanceof PublicTradeChannel,
+                        "Channel must be type of PublicTradeChannel");
+                PublicTradeChannel channel = (PublicTradeChannel) item.getChannel();
+                return publicTradeChannelService.isVisible(channel);
+            });
         }
 
         @Override
@@ -97,10 +112,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             //todo do not use the visible flag but create a separate list for the chosen channels
             channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    /* .map(ChannelSelection.View.ChannelItem::new)*/
-                    .to(chatService.getPublicTradeChannels());
+                    .to(publicTradeChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(chatService.getSelectedTradeChannel(),
+            selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
@@ -111,21 +125,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             Set<Market> visibleMarkets = model.filteredList.stream()
                     .map(e -> ((PublicTradeChannel) e.getChannel()))
-                    .filter(c -> c.getMarket().isPresent())
-                    .map(c -> c.getMarket().get())
+                    .map(PublicTradeChannel::getMarket)
                     .collect(Collectors.toSet());
             markets.removeAll(visibleMarkets);
             List<View.MarketListItem> marketListItems = markets.stream()
-                    .map(e -> new View.MarketListItem(Optional.of(e)))
+                    .map(View.MarketListItem::new)
                     .collect(Collectors.toList());
-
-           /* Optional<PublicTradeChannel> anyMarketInVisible = model.filteredList.stream()
-                    .map(e -> ((PublicTradeChannel) e.getChannel()))
-                    .filter(c -> c.getMarket().isEmpty())
-                    .findAny();
-            if (anyMarketInVisible.isEmpty()) {
-                marketListItems.add(View.MarketListItem.ANY);
-            }*/
 
             model.allMarkets.setAll(marketListItems);
             model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
@@ -138,7 +143,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
 
             channelItemsPin.unbind();
-            chatService.selectTradeChannel(channelItem.getChannel());
+            tradeChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {
@@ -148,38 +153,39 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                Optional<PublicTradeChannel> tradeChannel = chatService.showPublicTradeChannel(marketListItem.market);
+                publicTradeChannelService.findChannel(PublicTradeChannel.getId(marketListItem.market))
+                        .ifPresent(channel -> {
+                            publicTradeChannelService.showChannel(channel);
+                            tradeChannelSelectionService.selectChannel(channel);
+                        });
 
                 //todo somehow the predicate does not trigger an update, no idea why...
                 // re-applying the list works
                 model.channelItems.clear();
-                model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
+                model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
                         .map(ChannelSelection.View.ChannelItem::new)
                         .collect(Collectors.toList()));
-
-                tradeChannel.ifPresent(chatService::selectTradeChannel);
             }
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
-            chatService.hidePublicTradeChannel(channel);
-            channel.setVisible(false);
+            publicTradeChannelService.hidePublicTradeChannel(channel);
 
             //todo somehow the predicate does not trigger an update, no idea why...
             // re-applying the list works
             model.channelItems.clear();
-            model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
+            model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
                     .map(ChannelSelection.View.ChannelItem::new)
                     .collect(Collectors.toList()));
 
             model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
             if (!model.sortedList.isEmpty()) {
-                chatService.selectTradeChannel(model.sortedList.get(0).getChannel());
+                tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
             }
         }
 
-        private int getNumMessages(Optional<Market> market) {
-            return chatService.findPublicTradeChannel(PublicTradeChannel.getId(market))
+        private int getNumMessages(Market market) {
+            return publicTradeChannelService.findChannel(PublicTradeChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }
@@ -287,9 +293,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
                         PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
-                        Pair<String, String> pair = publicTradeChannel.getMarket()
-                                .map(market -> new Pair<>(market.getBaseCurrencyCode(), market.getQuoteCurrencyCode()))
-                                .orElse(new Pair<>("any-base", "any-quote"));
+                        Market market = publicTradeChannel.getMarket();
+                        Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
+                                market.getQuoteCurrencyCode());
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
                                 pair.getSecond().toLowerCase()));
@@ -325,16 +331,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         @EqualsAndHashCode
         private static class MarketListItem {
-            public static final MarketListItem ANY = new MarketListItem(Optional.empty());
-            private final Optional<Market> market;
+            private final Market market;
 
-            public MarketListItem(Optional<Market> market) {
+            public MarketListItem(Market market) {
                 this.market = market;
             }
 
             @Override
             public String toString() {
-                return market.map(Market::toString).orElse(Res.get("tradeChat.addMarketChannel.any"));
+                return market.toString();
             }
         }
     }

@@ -15,8 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.message;
 
+import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
+import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
+import bisq.chat.trade.priv.PrivateTradeChatMessage;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
@@ -34,7 +39,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @ToString
 @EqualsAndHashCode
-public abstract class ChatMessage {
+public abstract class ChatMessage implements Proto {
+    //todo for dev testing we keep it short.
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
     @Getter

@@ -1,6 +1,6 @@
 package bisq.restApi.dto;
 
-import bisq.chat.channels.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
@@ -25,7 +25,7 @@ public final class PublicTradeChannelDto {
         dto.id = publicTradeChannel.getId();
         dto.description = publicTradeChannel.getDescription();
         dto.displayString = publicTradeChannel.getDisplayString();
-        dto.marketDto = publicTradeChannel.getMarket().map(MarketDto::from).orElse(null);
+        dto.marketDto = MarketDto.from(publicTradeChannel.getMarket());
         return dto;
     }
 }

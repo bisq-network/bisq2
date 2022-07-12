@@ -17,10 +17,15 @@
 
 package bisq.user.profile;
 
+import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.security.pow.ProofOfWorkService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +33,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore> {
+public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
 
@@ -37,17 +42,42 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     @Getter
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
+    private final ProofOfWorkService proofOfWorkService;
 
     public UserProfileService(PersistenceService persistenceService,
-                              NetworkService networkService) {
+                              NetworkService networkService,
+                              ProofOfWorkService proofOfWorkService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.networkService = networkService;
+        this.proofOfWorkService = proofOfWorkService;
         UserNameLookup.setUserProfileService(this);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        networkService.addDataServiceListener(this);
+        networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
         return CompletableFuture.completedFuture(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof UserProfile) {
+            processUserProfileAdded((UserProfile) distributedData);
+        }
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof UserProfile) {
+            processUserProfileRemoved((UserProfile) distributedData);
+        }
     }
 
 
@@ -55,9 +85,32 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // todo: 
-    // - needs support to update previous nicknames when a new one comes which conflicts
-    // - add weak references and use bindings
+    public Optional<UserProfile> findUserProfile(String id) {
+        return Optional.ofNullable(getUserProfileById().get(id));
+    }
+
+    public List<UserProfile> getUserProfiles() {
+        return new ArrayList<>(getUserProfileById().values());
+    }
+
+    public boolean isChatUserIgnored(UserProfile userProfile) {
+        return getIgnoredUserProfileIds().contains(userProfile.getId());
+    }
+
+    public void ignoreUserProfile(UserProfile userProfile) {
+        getIgnoredUserProfileIds().add(userProfile.getId());
+        persist();
+    }
+
+    public void undoIgnoreUserProfile(UserProfile userProfile) {
+        getIgnoredUserProfileIds().remove(userProfile.getId());
+        persist();
+    }
+
+    public ObservableSet<String> getIgnoredUserProfileIds() {
+        return persistableStore.getIgnoredUserProfileIds();
+    }
+
     public String getUserName(String nym, String nickName) {
         Map<String, Set<String>> nymsByNickName = getNymsByNickName();
         if (!nymsByNickName.containsKey(nickName)) {
@@ -66,6 +119,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
 
         Set<String> nyms = nymsByNickName.get(nickName);
         nyms.add(nym);
+        persist();
         if (nyms.size() == 1) {
             return nickName;
         } else {
@@ -73,12 +127,29 @@ public class UserProfileService implements PersistenceClient<UserProfileStore> {
         }
     }
 
-    public List<UserProfile> getUserProfiles() {
-        // todo
-        return new ArrayList<>();
+
+    private Map<String, Set<String>> getNymsByNickName() {
+        return persistableStore.getNymsByNickName();
     }
 
-    public Map<String, Set<String>> getNymsByNickName() {
-        return persistableStore.getNymsByNickName();
+    private Map<String, UserProfile> getUserProfileById() {
+        return persistableStore.getUserProfileById();
+    }
+
+    private void processUserProfileAdded(UserProfile userProfile) {
+        if (proofOfWorkService.verify(userProfile.getProofOfWork())) {
+            Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
+            if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
+                log.info("We got a new or edited userProfile {}", userProfile);
+                getUserProfileById().put(userProfile.getId(), userProfile);
+                persist();
+            }
+        }
+    }
+
+    private void processUserProfileRemoved(UserProfile userProfile) {
+        log.info("Remove userProfile {}", userProfile);
+        getUserProfileById().remove(userProfile.getId());
+        persist();
     }
 }

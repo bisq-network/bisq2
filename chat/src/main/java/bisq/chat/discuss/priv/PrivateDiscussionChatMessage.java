@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.discuss.priv;
 
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PrivateChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
 import bisq.user.profile.UserProfile;
@@ -29,27 +31,20 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-/**
- * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
- * mailbox message.
- */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateDiscussionChatMessage extends ChatMessage implements MailboxMessage {
-    private final String peersId;
-    private final UserProfile author;
-
+public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
     public PrivateDiscussionChatMessage(String channelId,
-                                        UserProfile author,
-                                        String peersId,
+                                        UserProfile sender,
+                                        String receiversId,
                                         String text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
-        this(channelId,
-                author,
-                peersId,
+        super(channelId,
+                sender,
+                receiversId,
                 text,
                 quotedMessage,
                 date,
@@ -58,22 +53,14 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     }
 
     private PrivateDiscussionChatMessage(String channelId,
-                                         UserProfile author,
-                                         String peersId,
-                                         String text,
-                                         Optional<Quotation> quotedMessage,
-                                         long date,
-                                         boolean wasEdited,
-                                         MetaData metaData) {
-        super(channelId,
-                author.getId(),
-                Optional.of(text),
-                quotedMessage,
-                date,
-                wasEdited,
-                metaData);
-        this.peersId = peersId;
-        this.author = author;
+                                        UserProfile sender,
+                                        String receiversId,
+                                        String text,
+                                        Optional<Quotation> quotedMessage,
+                                        long date,
+                                        boolean wasEdited,
+                                        MetaData metaData) {
+        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -86,8 +73,8 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setPrivateDiscussionChatMessage(bisq.chat.protobuf.PrivateDiscussionChatMessage.newBuilder()
-                        .setPeersId(peersId)
-                        .setAuthor(author.toProto()))
+                        .setReceiversId(receiversId)
+                        .setSender(sender.toProto()))
                 .build();
     }
 
@@ -98,22 +85,12 @@ public final class PrivateDiscussionChatMessage extends ChatMessage implements M
         bisq.chat.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
                 baseProto.getChannelId(),
-                UserProfile.fromProto(privateDiscussionChatMessage.getAuthor()),
-                privateDiscussionChatMessage.getPeersId(),
+                UserProfile.fromProto(privateDiscussionChatMessage.getSender()),
+                privateDiscussionChatMessage.getReceiversId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    // Required for MailboxMessage use case
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
-    }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

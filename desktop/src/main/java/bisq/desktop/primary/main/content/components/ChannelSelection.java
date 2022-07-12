@@ -1,14 +1,12 @@
 package bisq.desktop.primary.main.content.components;
 
-import bisq.common.currency.Market;
+import bisq.chat.ChatService;
+import bisq.chat.channel.Channel;
+import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
-import bisq.i18n.Res;
-import bisq.chat.ChatService;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicTradeChannel;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -36,6 +34,7 @@ import java.util.Comparator;
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
+
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
 
@@ -69,13 +68,6 @@ public abstract class ChannelSelection {
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
 
         public Model() {
-            filteredList.setPredicate(item -> {
-                if (item.getChannel() instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) item.getChannel()).isVisible();
-                } else {
-                    return true;
-                }
-            });
         }
     }
 
@@ -162,9 +154,7 @@ public abstract class ChannelSelection {
 
             public String getDisplayString() {
                 if (channel instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) channel).getMarket()
-                            .map(Market::getMarketCodes)
-                            .orElse(Res.get("tradeChat.addMarketChannel.any"));
+                    return ((PublicTradeChannel) channel).getMarket().getMarketCodes();
                 } else {
                     return channel.getDisplayString();
                 }

@@ -24,7 +24,7 @@ import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.account.settlement.SettlementMethod;
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.locale.CountryRepository;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -40,7 +40,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AccountService implements PersistenceClient<AccountStore>, ModuleService {
+public class AccountService implements PersistenceClient<AccountStore>, Service {
     @Getter
     private final AccountStore persistableStore = new AccountStore();
     @Getter

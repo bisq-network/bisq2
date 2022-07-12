@@ -26,6 +26,7 @@ import bisq.desktop.primary.overlay.onboarding.profile.KeyPairAndId;
 import bisq.identity.Identity;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.UserIdentityService;
+import javafx.application.Platform;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -63,9 +64,11 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
     @Getter
     protected final GenerateNewProfileStep2View view;
     protected final UserIdentityService userIdentityService;
+    private final DefaultApplicationService applicationService;
 
     public GenerateNewProfileStep2Controller(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
+        this.applicationService = applicationService;
 
         model = createModel();
         view = createView();
@@ -106,6 +109,10 @@ public class GenerateNewProfileStep2Controller implements InitWithDataController
 
     void onCancel() {
         OverlayController.hide();
+    }
+
+    void onQuit() {
+        applicationService.shutdown().thenAccept(result -> Platform.exit());
     }
 
     protected void onSave() {

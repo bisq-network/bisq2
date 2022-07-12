@@ -17,12 +17,15 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.TextAreaBox;
 import bisq.desktop.components.controls.TextInputBox;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
@@ -34,10 +37,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
     private final ImageView roboIconView;
-    private final TextInputBox terms, bio;
+    private final TextInputBox statement;
+    private final TextAreaBox terms;
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
     protected final Label headLineLabel;
+    private Scene rootScene;
 
     public GenerateNewProfileStep2View(GenerateNewProfileStep2Model model, GenerateNewProfileStep2Controller controller) {
         super(new VBox(), model, controller);
@@ -48,7 +53,7 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
 
-         headLineLabel = new Label(Res.get("userProfile.step2.headline"));
+        headLineLabel = new Label(Res.get("userProfile.step2.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
         Label subtitleLabel = new Label(Res.get("userProfile.step2.subTitle"));
@@ -75,18 +80,20 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        terms = new TextInputBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
+        statement = new TextInputBox(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
+        statement.setPrefWidth(width);
+
+        terms = new TextAreaBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
         terms.setPrefWidth(width);
+        terms.setBoxHeight(100);
 
-        bio = new TextInputBox(Res.get("userProfile.credo"), Res.get("userProfile.credo.prompt"));
-        bio.setPrefWidth(width);
-
-        HBox.setMargin(bio, new Insets(-10, 0, 0, 0));
-        VBox fieldsAndButtonsVBox = new VBox(20, bio, terms);
+        VBox fieldsAndButtonsVBox = new VBox(20, statement, terms);
         fieldsAndButtonsVBox.setPadding(new Insets(50, 0, 0, 0));
         fieldsAndButtonsVBox.setPrefWidth(width);
         fieldsAndButtonsVBox.setPrefHeight(200);
+        fieldsAndButtonsVBox.setAlignment(Pos.CENTER);
 
+        HBox.setMargin(fieldsAndButtonsVBox, new Insets(-55, 0, 0, 0));
         HBox centerHBox = new HBox(10, roboVBox, fieldsAndButtonsVBox);
         centerHBox.setAlignment(Pos.TOP_CENTER);
 
@@ -114,10 +121,15 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         nickName.textProperty().bind(model.getNickName());
         nym.textProperty().bind(model.getNym());
         terms.textProperty().bindBidirectional(model.getTerms());
-        bio.textProperty().bindBidirectional(model.getBio());
+        statement.textProperty().bindBidirectional(model.getBio());
         saveButton.setOnAction((event) -> controller.onSave());
-        cancelButton.setOnAction((event) -> {
-            controller.onCancel();
+        cancelButton.setOnAction((event) -> controller.onCancel());
+
+        rootScene = root.getScene();
+        rootScene.setOnKeyReleased(keyEvent -> {
+            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, controller::onCancel);
+            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
         });
     }
 
@@ -127,6 +139,9 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         nickName.textProperty().unbind();
         nym.textProperty().unbind();
         terms.textProperty().unbindBidirectional(model.getTerms());
-        bio.textProperty().unbindBidirectional(model.getBio());
+        statement.textProperty().unbindBidirectional(model.getBio());
+        if (rootScene != null) {
+            rootScene.setOnKeyReleased(null);
+        }
     }
 }

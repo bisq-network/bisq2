@@ -18,13 +18,15 @@
 package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
-import bisq.chat.ChatService;
-import bisq.chat.channels.PublicTradeChannel;
-import bisq.chat.messages.ChatMessage;
-import bisq.chat.messages.PublicTradeChatMessage;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +43,14 @@ public class MarketController implements Controller {
     @Getter
     private final MarketView view;
     private final ChatService chatService;
+    private final PublicTradeChannelService publicTradeChannelService;
+    private final TradeChannelSelectionService tradeChannelSelectionService;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
+        publicTradeChannelService = chatService.getPublicTradeChannelService();
+        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }
@@ -57,9 +63,8 @@ public class MarketController implements Controller {
     public void onActivate() {
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<PublicTradeChatMessage> offerMessages = chatService.getPublicTradeChannels().stream()
-                            .filter(channel -> channel.getMarket().isPresent())
-                            .filter(channel -> channel.getMarket().get().equals(market))
+                    Set<PublicTradeChatMessage> offerMessages = publicTradeChannelService.getChannels().stream()
+                            .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .filter(message -> message.getTradeChatOffer().isPresent())
                             .collect(Collectors.toSet());
@@ -72,11 +77,10 @@ public class MarketController implements Controller {
                 .collect(Collectors.toList()));
 
         // We pre-select the market from the selected channel, or if not available we use the default market.
-        Optional.ofNullable(chatService.getSelectedTradeChannel().get())
+        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
                 .filter(channel -> channel instanceof PublicTradeChannel)
                 .map(channel -> (PublicTradeChannel) channel)
                 .map(PublicTradeChannel::getMarket)
-                .orElse(Optional.of(MarketRepository.getDefault()))
                 .flatMap(this::findMarketListItem)
                 .ifPresent(marketListItem -> {
                     marketListItem.getSelected().set(true);

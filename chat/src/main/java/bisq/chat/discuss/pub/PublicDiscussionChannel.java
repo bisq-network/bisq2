@@ -15,56 +15,38 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.discuss.pub;
 
-import bisq.common.observable.ObservableSet;
-import bisq.chat.NotificationSetting;
-import bisq.chat.messages.PublicDiscussionChatMessage;
+import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.PublicChannel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-@Slf4j
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatMessage> implements PublicChannel {
-
-    public enum ChannelId {
-        BISQ_ID,
-        BITCOIN_ID,
-        MONERO_ID,
-        PRICE_ID,
-        ECONOMY_ID,
-        OFF_TOPIC_ID
-
-    }
-
+public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussionChatMessage> {
     private final String channelName;
     private final String description;
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
 
-    // We do not persist the messages as they are persisted in the P2P data store.
-    private transient final ObservableSet<PublicDiscussionChatMessage> chatMessages = new ObservableSet<>();
-
     public PublicDiscussionChannel(String id,
                                    String channelName,
                                    String description,
                                    String channelAdminId,
-                                   Set<String> channelModeratorIds
-    ) {
-        this(id, channelName,
+                                   Set<String> channelModeratorIds) {
+        this(id,
+                channelName,
                 description,
                 channelAdminId,
                 channelModeratorIds,
-                NotificationSetting.MENTION
-        );
+                ChannelNotificationType.MENTION);
     }
 
     private PublicDiscussionChannel(String id,
@@ -72,8 +54,8 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                                     String description,
                                     String channelAdminId,
                                     Set<String> channelModeratorIds,
-                                    NotificationSetting notificationSetting) {
-        super(id, notificationSetting);
+                                    ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
 
         this.channelName = channelName;
         this.description = description;
@@ -99,12 +81,7 @@ public final class PublicDiscussionChannel extends Channel<PublicDiscussionChatM
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new HashSet<>(proto.getChannelModeratorIdsList()),
-                NotificationSetting.fromProto(baseProto.getNotificationSetting()));
-    }
-
-    @Override
-    protected bisq.chat.protobuf.ChatMessage getChatMessageProto(PublicDiscussionChatMessage chatMessage) {
-        return chatMessage.toProto();
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 
     @Override

@@ -17,14 +17,16 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.application.DefaultApplicationService;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import bisq.chat.ChatService;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PublicDiscussionChannel;
-import bisq.chat.channels.PublicTradeChannel;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.Channel;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.message.ChatMessage;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -54,8 +56,8 @@ import java.util.stream.Collectors;
 public class ChannelInfo {
     private final Controller controller;
 
-    public ChannelInfo(ChatService chatService) {
-        controller = new Controller(chatService);
+    public ChannelInfo(DefaultApplicationService applicationService) {
+        controller = new Controller(applicationService);
     }
 
     public Pane getRoot() {
@@ -75,9 +77,11 @@ public class ChannelInfo {
         private final ChatService chatService;
         @Getter
         private final View view;
+        private final UserProfileService userProfileService;
 
-        private Controller(ChatService chatService) {
-            this.chatService = chatService;
+        private Controller(DefaultApplicationService applicationService) {
+            this.chatService = applicationService.getChatService();
+            userProfileService = applicationService.getUserService().getUserProfileService();
             model = new Model();
             view = new View(model, this);
         }
@@ -91,15 +95,15 @@ public class ChannelInfo {
         }
 
         public void onUndoIgnoreUser(UserProfile userProfile) {
-            chatService.undoIgnoreChatUser(userProfile);
+            userProfileService.undoIgnoreUserProfile(userProfile);
             model.undoIgnoreChatUserHandler.ifPresent(Runnable::run);
         }
 
         public void setChannel(Channel<? extends ChatMessage> channel) {
-            Set<String> ignoredChatUserIds = new HashSet<>(chatService.getIgnoredChatUserIds());
+            Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
             model.channelName.set(channel.getDisplayString());
             model.members.setAll(channel.getChatMessages().stream()
-                    .flatMap(chatMessage -> chatService.findChatUser(chatMessage.getAuthorId()).stream())
+                    .flatMap(chatMessage -> userProfileService.findUserProfile(chatMessage.getAuthorId()).stream())
                     .distinct()
                     .map((chatUser -> new ChatUserOverview(chatUser, ignoredChatUserIds.contains(chatUser.getId()))))
                     .sorted()
@@ -114,9 +118,9 @@ public class ChannelInfo {
                 PublicDiscussionChannel publicDiscussionChannel = (PublicDiscussionChannel) channel;
                 model.description.set(publicDiscussionChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = chatService.findChatUser(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.adminProfile = userProfileService.findUserProfile(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);
                 model.moderators.setAll(publicDiscussionChannel.getChannelModeratorIds().stream()
-                        .flatMap(id -> chatService.findChatUser(id).stream())
+                        .flatMap(id -> userProfileService.findUserProfile(id).stream())
                         .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));

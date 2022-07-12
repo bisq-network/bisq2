@@ -15,20 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel;
 
-import bisq.user.profile.UserProfile;
+import bisq.chat.message.PublicChatMessage;
+import bisq.common.observable.ObservableSet;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public interface PrivateChannel {
-    String CHANNEL_DELIMITER = "-";
+@Getter
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+public abstract class PublicChannel<M extends PublicChatMessage> extends Channel<M> {
+    // We do not persist the messages as they are persisted in the P2P data store.
+    protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    UserProfile getPeer();
-
-    static String createChannelId(String peersId, String myId) {
-        if (peersId.compareTo(myId) < 0) {
-            return peersId + CHANNEL_DELIMITER + myId;
-        } else { // need to have an ordering here, otherwise there would be 2 channelIDs for the same participants
-            return myId + CHANNEL_DELIMITER + peersId;
-        }
+    public PublicChannel(String id, ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
     }
 }

@@ -18,22 +18,29 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.Channel;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PrivateTradeChannel;
-import bisq.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> implements Controller {
+    private final PublicTradeChannelService publicTradeChannelService;
+    private final TradeChannelSelectionService tradeChannelSelectionService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, false);
+
+        publicTradeChannelService = chatService.getPublicTradeChannelService();
+        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
     }
 
     @Override
@@ -43,13 +50,13 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         model.getOfferOnly().set(true);
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
-                    Channel<? extends ChatMessage> channel = chatService.getSelectedTradeChannel().get();
+                    Channel<? extends ChatMessage> channel = tradeChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
-                        chatService.setNotificationSetting(channel, value);
+                        publicTradeChannelService.setNotificationSetting(channel, value);
                     }
                 });
 
-        selectedChannelPin = chatService.getSelectedTradeChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }
 
     @Override

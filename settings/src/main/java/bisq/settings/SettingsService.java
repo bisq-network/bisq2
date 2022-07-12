@@ -17,7 +17,7 @@
 
 package bisq.settings;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.Persistence;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class SettingsService implements PersistenceClient<SettingsStore>, ModuleService {
+public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Getter
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter

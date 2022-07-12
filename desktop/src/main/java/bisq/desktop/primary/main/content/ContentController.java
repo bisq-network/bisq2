@@ -98,7 +98,7 @@ public class ContentController extends NavigationController {
             case WALLETS_ACADEMY: {
                 return Optional.of(new WalletsAcademyController(applicationService));
             }
-            case OPEN_SOURCE_ACADEMY: {
+            case FOSS_ACADEMY: {
                 return Optional.of(new OpenSourceAcademyController(applicationService));
             }
             case EVENTS: {

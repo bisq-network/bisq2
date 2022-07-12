@@ -17,7 +17,7 @@
 
 package bisq.oracle;
 
-import bisq.common.application.ModuleService;
+import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.marketprice.MarketPriceService;
@@ -30,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class OracleService implements ModuleService {
+public class OracleService implements Service {
     @Getter
     public static class Config {
         private final com.typesafe.config.Config openTimestamp;

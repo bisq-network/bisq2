@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.education;
 
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
@@ -54,9 +56,9 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         root.setSpacing(MARGIN);
 
         addHeaderBox();
-        addSmallBox("bisq", "bitcoin");
-        addSmallBox("security", "privacy");
-        addSmallBox("wallets", "foss");
+        addSmallBox("bisq", "bitcoin", NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
+        addSmallBox("security", "privacy", NavigationTarget.SECURITY_ACADEMY, NavigationTarget.PRIVACY_ACADEMY);
+        addSmallBox("wallets", "foss", NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
 
         // As we have scroll pane as parent container our root grows when increasing width but does not shrink anymore.
         // If anyone finds a better solution would be nice to get rid of that hack...
@@ -118,21 +120,30 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         }));
     }
 
-    private void addSmallBox(String leftTopic, String rightTopic) {
-        VBox leftBox = getWidgetBox(Res.get("social.education." + leftTopic + ".headline"),
+    private void addSmallBox(String leftTopic,
+                             String rightTopic,
+                             NavigationTarget leftNavigationTarget,
+                             NavigationTarget rightNavigationTarget) {
+        VBox leftBox = getWidgetBox(
+                Res.get("social.education." + leftTopic + ".headline"),
                 Res.get("social.education." + leftTopic + ".content"),
-                Res.get("social.education." + leftTopic + ".button"));
+                Res.get("social.education." + leftTopic + ".button"),
+                () -> Navigation.navigateTo(leftNavigationTarget)
+        );
 
-        VBox rightBox = getWidgetBox(Res.get("social.education." + rightTopic + ".headline"),
+        VBox rightBox = getWidgetBox(
+                Res.get("social.education." + rightTopic + ".headline"),
                 Res.get("social.education." + rightTopic + ".content"),
-                Res.get("social.education." + rightTopic + ".button"));
+                Res.get("social.education." + rightTopic + ".button"),
+                () -> Navigation.navigateTo(rightNavigationTarget)
+        );
 
         HBox box = Layout.hBoxWith(leftBox, rightBox);
         box.setSpacing(MARGIN);
         root.getChildren().add(box);
     }
 
-    private VBox getWidgetBox(String headline, String content, String buttonLabel) {
+    private VBox getWidgetBox(String headline, String content, String buttonLabel, Runnable buttonHandler) {
         Text headlineLabel = new Text(headline);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
@@ -141,6 +152,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("bisq-border-dark-bg-button");
+        button.setOnAction(e -> buttonHandler.run());
 
         VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
         box.setSpacing(TEXT_SPACE);

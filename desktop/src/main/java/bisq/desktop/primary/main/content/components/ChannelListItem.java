@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.chat.channels.Channel;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 

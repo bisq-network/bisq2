@@ -15,7 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.common.application;
 
-public interface PublicChannel {
+import java.util.concurrent.CompletableFuture;
+
+public interface Service {
+    CompletableFuture<Boolean> initialize();
+
+    CompletableFuture<Boolean> shutdown();
 }

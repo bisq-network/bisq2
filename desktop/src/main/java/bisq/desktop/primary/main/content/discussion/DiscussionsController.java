@@ -18,22 +18,29 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.Channel;
+import bisq.chat.discuss.DiscussionChannelSelectionService;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
-import bisq.chat.channels.Channel;
-import bisq.chat.channels.PrivateDiscussionChannel;
-import bisq.chat.messages.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
+    private final PublicDiscussionChannelService publicDiscussionChannelService;
+    private final DiscussionChannelSelectionService discussionChannelSelectionService;
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService, true);
+
+        publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+        discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
     }
 
     @Override
@@ -42,13 +49,13 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
 
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
-                    Channel<? extends ChatMessage> channel = chatService.getSelectedDiscussionChannel().get();
+                    Channel<? extends ChatMessage> channel = discussionChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
-                        chatService.setNotificationSetting(channel, value);
+                        publicDiscussionChannelService.setNotificationSetting(channel, value);
                     }
                 });
 
-        selectedChannelPin = chatService.getSelectedDiscussionChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }
 
     @Override

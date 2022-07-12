@@ -15,9 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.messages;
+package bisq.chat.discuss.pub;
 
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,13 +27,10 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-/**
- * PublicChatMessage is added as public data to the distributed network storage.
- */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicDiscussionChatMessage extends ChatMessage implements DistributedData {
+public final class PublicDiscussionChatMessage extends PublicChatMessage {
     public PublicDiscussionChatMessage(String channelId,
                                        String authorId,
                                        String text,
@@ -47,13 +46,13 @@ public final class PublicDiscussionChatMessage extends ChatMessage implements Di
                 new MetaData(ChatMessage.TTL, 100000, PublicDiscussionChatMessage.class.getSimpleName()));
     }
 
-    protected PublicDiscussionChatMessage(String channelId,
-                                          String authorId,
-                                          Optional<String> text,
-                                          Optional<Quotation> quotedMessage,
-                                          long date,
-                                          boolean wasEdited,
-                                          MetaData metaData) {
+    private PublicDiscussionChatMessage(String channelId,
+                                        String authorId,
+                                        Optional<String> text,
+                                        Optional<Quotation> quotedMessage,
+                                        long date,
+                                        boolean wasEdited,
+                                        MetaData metaData) {
         super(channelId,
                 authorId,
                 text,
@@ -79,11 +78,6 @@ public final class PublicDiscussionChatMessage extends ChatMessage implements Di
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public MetaData getMetaData() {
-        return metaData;
     }
 
     @Override

@@ -15,40 +15,41 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channels;
+package bisq.chat.channel;
 
-import bisq.chat.NotificationSetting;
-import bisq.chat.messages.ChatMessage;
+import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Collection;
 
+@ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     protected final String id;
-    protected final Observable<NotificationSetting> notificationSetting = new Observable<>();
+    protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(String id, NotificationSetting notificationSetting) {
+    public Channel(String id, ChannelNotificationType channelNotificationType) {
         this.id = id;
-        this.notificationSetting.set(notificationSetting);
+        this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
                 .setId(id)
-                .setNotificationSetting(notificationSetting.get().toProto());
+                .setChannelNotificationType(channelNotificationType.get().toProto());
     }
-
-    // As protobuf classes do not support inheritance we need to delegate it to our subclasses to provide the
-    // concrete implementation for the ChatMessage.
-    protected abstract bisq.chat.protobuf.ChatMessage getChatMessageProto(T e);
 
     abstract public bisq.chat.protobuf.Channel toProto();
 

@@ -17,11 +17,12 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.chat.ChatService;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.chat.ChatService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -44,8 +45,8 @@ import java.util.function.Consumer;
 public class ChatUserDetails implements Comparable<ChatUserDetails> {
     private final Controller controller;
 
-    public ChatUserDetails(ChatService chatService, UserProfile userProfile) {
-        controller = new Controller(chatService, userProfile);
+    public ChatUserDetails(UserProfileService userProfileService, ChatService chatService, UserProfile userProfile) {
+        controller = new Controller(userProfileService, chatService, userProfile);
     }
 
     public Pane getRoot() {
@@ -73,9 +74,13 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final Model model;
         @Getter
         private final View view;
+        private final UserProfileService userProfileService;
 
 
-        private Controller(ChatService chatService, UserProfile userProfile) {
+        private Controller(UserProfileService userProfileService, 
+                           ChatService chatService,
+                           UserProfile userProfile) {
+            this.userProfileService = userProfileService;
             model = new Model(chatService, userProfile);
             view = new View(model, this);
         }
@@ -114,10 +119,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         public void onToggleIgnoreUser() {
             model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
             if (model.ignoreUserSelected.get()) {
-                model.chatService.ignoreChatUser(model.userProfile);
+                userProfileService.ignoreUserProfile(model.userProfile);
                 model.ignoreButtonText.set(Res.get("social.undoIgnore"));
             } else {
-                model.chatService.undoIgnoreChatUser(model.userProfile);
+                userProfileService.undoIgnoreUserProfile(model.userProfile);
                 model.ignoreButtonText.set(Res.get("social.ignore"));
             }
             model.ignoreUserStateHandler.ifPresent(Runnable::run);
@@ -125,7 +130,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
         public void onReportUser() {
             // todo open popup for editing reason
-            model.chatService.reportChatUser(model.userProfile, "");
+            model.chatService.reportUserProfile(model.userProfile, "");
         }
     }
 
