@@ -4,7 +4,7 @@ Bisq v2 (fka Misq) will be the successor to [Bisq v1](https://github.com/bisq-ne
 
 Contents:
 - [Current Development State](#current-development-state)
-- [Running the Prototype](#running-the-prototype)
+- [Running the Prototype](#running-the-desktop-prototype)
 - [Contributing](#contributing)
 - [References](#references)
 
@@ -59,16 +59,18 @@ The social module manages chat use-cases. User management is not implemented yet
 
 ## Running the Desktop prototype
 
-Bisq 2 requires Java 16 and Gradle 7.3.3.
+Bisq 2 requires Java 17 and Gradle 7.3.3.
 
-You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create a `run config` in `Run/Edi Configurations`. 
+You can right-click the `bisq.desktopapp.Main` class in the desktopapp module to create a run config or create
+a `run config` in `Run/Edit Configurations`.
 
-The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you have to use JVM args).
+The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you
+have to use JVM args).
 - For clearnet use
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
+  `-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
 
 - For clearnet, Tor, and I2P use
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
+  `-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
 
 ## Running the Prototype with a local network
 If you want to use the network, you have to start at least one seed node with the appropriate JVM arguments (see instructions below) as there are no public seed nodes available at that stage. You can run clear net, Tor and I2P or any combination of those.
@@ -112,29 +114,32 @@ To add multiple seeds add more lines of the same network type with other index (
 -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 ```
 
-To set up your local tor hidden service addresses and I2P addresses for the seed nodes you need to start once to get them created and then take them from the data directories.
-Start the 'SeedMain' with Tor and I2P enabled (I2P need to be started manually and SAM enabled). 
-Let the nodes start up for about 2 minutes so the hidden service is deployed. Then stop it (no seeds are found at that point).
+To set up your local tor hidden service addresses and I2P addresses for the seed nodes you need to start once to get
+them created and then take them from the data directories.
+Start the 'SeedMain' with Tor and I2P enabled (I2P need to be started manually and SAM enabled).
+Let the nodes start up for about 2 minutes so the hidden service is deployed. Then stop it (no seeds are found at that
+point).
 Pick the onion and I2P addresses from the generated files and put them into the seed node config.
 
 Go to:
-[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname
-[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname
-[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5000.destination
-[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5001.destination
-
+`[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname`
+`[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/tor/hiddenservice/default/hostname`
+`[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5000.destination`
+`[PATH to OS data dir]/[SEED_NODE_DATA_DIR]/i2p/default5001.destination`
 
 PATH to OS data dir is on OSX:
-/Users/[USER]/Library/Application\ Support
+`/Users/[USER]/Library/Application\ Support`
 On Linux:
-[USER]/.local/share
+`[USER]/.local/share`
 
 Copy those addresses and add it to the JVM args as following:
 
+```
 -Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=[onion address for node 1000]:1000
 -Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=[onion address for node 1001]:1001
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=[I2P address for node 5000]:5000
 -Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=[I2P address for node 5001]:5001
+```
 
 If you want to use more seed nodes repeat it and fill in more but 1-2 is usually sufficient for dev testing.
 
