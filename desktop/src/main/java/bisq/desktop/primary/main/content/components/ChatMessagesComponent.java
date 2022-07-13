@@ -93,6 +93,10 @@ public class ChatMessagesComponent {
         controller.chatMessagesListView.refreshMessages();
     }
 
+    public void setOfferOnly(boolean offerOnly) {
+        controller.chatMessagesListView.setOfferOnly(offerOnly);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter

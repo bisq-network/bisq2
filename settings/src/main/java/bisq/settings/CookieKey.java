@@ -17,22 +17,12 @@
 
 package bisq.settings;
 
-import bisq.common.proto.ProtoEnum;
-import bisq.common.util.ProtobufUtils;
-
-// Used for persistence of Cookie. Entries must not be changes or removed. Only adding entries is permitted.
-public enum CookieKey implements ProtoEnum {
+// Used for persistence of Cookie. We use enum name as key.
+public enum CookieKey {
     STAGE_X,
     STAGE_Y,
     STAGE_W,
     STAGE_H,
-    NAVIGATION_TARGET;
-
-    public bisq.settings.protobuf.CookieKey toProto() {
-        return bisq.settings.protobuf.CookieKey.valueOf(name());
-    }
-
-    public static CookieKey fromProto(bisq.settings.protobuf.CookieKey proto) {
-        return ProtobufUtils.enumFromProto(CookieKey.class, proto.name());
-    }
+    NAVIGATION_TARGET,
+    SHOW_OFFERS_ONLY
 }

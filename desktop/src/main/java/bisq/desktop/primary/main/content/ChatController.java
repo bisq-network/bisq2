@@ -18,6 +18,9 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
+import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -25,12 +28,8 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
 import bisq.settings.DontShowAgainService;
-import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
-import bisq.chat.message.ChatMessage;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
@@ -63,7 +62,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        ReputationService reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(applicationService);

@@ -109,4 +109,8 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
     public boolean isDataInvalid() {
         return false;
     }
+
+    public boolean hasTradeChatOffer() {
+        return tradeChatOffer.isPresent();
+    }
 }

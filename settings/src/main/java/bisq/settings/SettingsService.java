@@ -86,7 +86,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, String value) {
-        getCookie().put(key, value);
+        getCookie().putAsString(key, value);
         persist();
     }
 
