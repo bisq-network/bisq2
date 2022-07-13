@@ -55,4 +55,11 @@ public class Observable<T> {
     public T get() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "Observable{" +
+                "\r\n     value=" + value +
+                "\r\n}";
+    }
 }

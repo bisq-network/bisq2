@@ -19,25 +19,27 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.Channel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -108,6 +110,7 @@ public class ChatMessagesComponent {
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final SettingsService settingsService;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -119,6 +122,7 @@ public class ChatMessagesComponent {
             publicTradeChannelService = chatService.getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(applicationService);
@@ -154,11 +158,6 @@ public class ChatMessagesComponent {
             DontShowAgainService.getUpdateFlag().addObserver(e -> model.isTradeGuideBoxVisible.set(displayTradeGuileBox()));
         }
 
-        private boolean displayTradeGuileBox() {
-            return DontShowAgainService.showAgain(TRADE_GUIDE_BOX) &&
-                    model.getSelectedChannel().get() instanceof PrivateTradeChannel;
-        }
-
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
@@ -176,6 +175,15 @@ public class ChatMessagesComponent {
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
+                    String dontShowAgainId = "sendMsgOfferOnlyWarn";
+                    if (settingsService.getOffersOnly().get()) {
+                        new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
+                                .actionButtonText(Res.get("yes"))
+                                .onAction(() -> settingsService.setOffersOnly(false))
+                                .closeButtonText(Res.get("no"))
+                                .dontShowAgainId(dontShowAgainId)
+                                .show();
+                    }
                     publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
                 } else if (channel instanceof PublicDiscussionChannel) {
                     publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
@@ -239,6 +247,11 @@ public class ChatMessagesComponent {
         public void onCloseTradeGuideBox() {
             model.getIsTradeGuideBoxVisible().set(false);
             DontShowAgainService.dontShowAgain(TRADE_GUIDE_BOX);
+        }
+
+        private boolean displayTradeGuileBox() {
+            return DontShowAgainService.showAgain(TRADE_GUIDE_BOX) &&
+                    model.getSelectedChannel().get() instanceof PrivateTradeChannel;
         }
     }
 

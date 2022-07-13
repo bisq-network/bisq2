@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
 
-    private final BisqToggleButton resetDontShowAgain;
+    private final BisqToggleButton resetDontShowAgain, useAnimations;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(20), model, controller);
@@ -40,18 +40,22 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         Label headlineLabel = new Label(Res.get("settings.preferences.displaySettings"));
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
+        useAnimations = new BisqToggleButton(Res.get("settings.preferences.useAnimations"));
         resetDontShowAgain = new BisqToggleButton(Res.get("settings.preferences.resetDontShowAgain"));
         VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 0));
-        root.getChildren().addAll(headlineLabel, resetDontShowAgain);
+        root.getChildren().addAll(headlineLabel, useAnimations, resetDontShowAgain);
     }
 
     @Override
     protected void onViewAttached() {
+        useAnimations.selectedProperty().bindBidirectional(model.getUseAnimations());
         resetDontShowAgain.setSelected(false);
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain(resetDontShowAgain.isSelected()));
     }
 
     @Override
     protected void onViewDetached() {
+        useAnimations.selectedProperty().unbindBidirectional(model.getUseAnimations());
+        resetDontShowAgain.setOnAction(null);
     }
 }

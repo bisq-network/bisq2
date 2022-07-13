@@ -21,21 +21,22 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
-import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.chat.trade.pub.TradeChatOffer;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.Quotation;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.message.*;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.trade.pub.TradeChatOffer;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -52,6 +53,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -161,7 +163,9 @@ public class ChatMessagesListView {
         private final UserProfileService userProfileService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final SettingsService settingsService;
         private Pin selectedChannelPin, chatMessagesPin;
+        private Pin offerOnlySettingsPin;
 
         private Controller(DefaultApplicationService applicationService,
                            Consumer<UserProfile> mentionUserHandler,
@@ -181,6 +185,7 @@ public class ChatMessagesListView {
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
+            settingsService = applicationService.getSettingsService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -192,12 +197,6 @@ public class ChatMessagesListView {
                     isCreateOfferTakerListMode,
                     isCreateOfferPublishedMode);
             view = new View(model, this);
-
-            Predicate<ChatMessageListItem<? extends ChatMessage>> ignoredChatUserPredicate = item ->
-                    item.getSender().isPresent() &&
-                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSender().get().getId()) &&
-                            userProfileService.findUserProfile(item.getSender().get().getId()).isPresent();
-            model.filteredChatMessages.setPredicate(ignoredChatUserPredicate);
         }
 
         public void setCreateOfferCompleteHandler(Runnable createOfferCompleteHandler) {
@@ -210,6 +209,21 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
+            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> {
+                Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
+                    boolean offerOnlyPredicate = true;
+                    if (item.getChatMessage() instanceof PublicTradeChatMessage) {
+                        PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
+                        offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
+                    }
+                    return offerOnlyPredicate &&
+                            item.getSender().isPresent() &&
+                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSender().get().getId()) &&
+                            userProfileService.findUserProfile(item.getSender().get().getId()).isPresent();
+                };
+                model.filteredChatMessages.setPredicate(predicate);
+            });
+
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             if (model.isDiscussionsChat) {
@@ -259,6 +273,7 @@ public class ChatMessagesListView {
 
         @Override
         public void onDeactivate() {
+            offerOnlySettingsPin.unbind();
             selectedChannelPin.unbind();
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
@@ -275,6 +290,9 @@ public class ChatMessagesListView {
             model.chatMessages.setAll(new ArrayList<>(model.chatMessages));
         }
 
+        public void setOfferOnly(boolean offerOnly) {
+            model.offerOnly.set(offerOnly);
+        }
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI - delegate to client
@@ -428,6 +446,7 @@ public class ChatMessagesListView {
         private final boolean isCreateOfferPublishedMode;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
         private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
+        private final BooleanProperty offerOnly = new SimpleBooleanProperty();
 
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
@@ -447,10 +466,9 @@ public class ChatMessagesListView {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         }
 
-
-        public boolean isOfferMessage(ChatMessage chatMessage) {
+        boolean isOfferMessage(ChatMessage chatMessage) {
             return chatMessage instanceof PublicTradeChatMessage &&
-                    ((PublicTradeChatMessage) chatMessage).getTradeChatOffer().isPresent();
+                    ((PublicTradeChatMessage) chatMessage).isOfferMessage();
         }
     }
 

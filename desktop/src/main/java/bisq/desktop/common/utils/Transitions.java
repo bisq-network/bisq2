@@ -23,7 +23,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TransitionedView;
 import bisq.desktop.common.view.View;
-import bisq.settings.DisplaySettings;
+import bisq.settings.SettingsService;
 import javafx.animation.*;
 import javafx.collections.ObservableList;
 import javafx.scene.Camera;
@@ -80,8 +80,7 @@ public class Transitions {
     public static final int CROSS_FADE_OUT_DURATION = 1000;
     private static final Interpolator DEFAULT_INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
     @Setter
-    private static DisplaySettings displaySettings;
-
+    private static SettingsService settingsService;
     private static Timeline removeEffectTimeLine;
 
     public static void fadeIn(Node node) {
@@ -255,7 +254,7 @@ public class Transitions {
     }
 
     private static int getDuration(int duration) {
-        return displaySettings.isUseAnimations() ? duration : 1;
+        return getUseAnimations() ? duration : 1;
     }
 
     public static void crossFade(Node node1, Node node2) {
@@ -265,7 +264,7 @@ public class Transitions {
 
 
     public static void flapOut(Node node, Runnable onFinishedHandler) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
@@ -291,6 +290,7 @@ public class Transitions {
             });
             timeline.play();
         } else {
+            node.setOpacity(0);
             onFinishedHandler.run();
         }
     }
@@ -379,12 +379,12 @@ public class Transitions {
     }
 
     public static void slideInTop(Region node, int duration, Runnable onFinishedHandler) {
-        if (displaySettings.isUseAnimations()) {
+        double end = 0;
+        if (getUseAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = -node.getHeight();
             node.setTranslateY(start);
-            double end = 0;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.translateYProperty(), start, Interpolator.LINEAR)
             ));
@@ -395,6 +395,7 @@ public class Transitions {
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
         } else {
+            node.setTranslateY(end);
             onFinishedHandler.run();
         }
     }
@@ -408,14 +409,15 @@ public class Transitions {
     }
 
     public static void slideInHorizontal(Region node, Runnable onFinishedHandler, boolean slideLeft) {
-        if (displaySettings.isUseAnimations()) {
+        double end = node.getLayoutX();
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double start = slideLeft ?
                     node.getLayoutX() - node.getWidth() :
                     node.getLayoutX() + node.getWidth();
-            double end = node.getLayoutX();
+
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 0, Interpolator.LINEAR),
                     new KeyValue(node.translateXProperty(), start, Interpolator.LINEAR)
@@ -428,18 +430,20 @@ public class Transitions {
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
         } else {
+            node.setTranslateX(end);
+            node.setOpacity(1);
             onFinishedHandler.run();
         }
     }
 
     public static void slideOutBottom(Region node, Runnable onFinishedHandler) {
-        if (displaySettings.isUseAnimations()) {
+        double end = node.getHeight();
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             node.setTranslateY(0);
             double start = node.getLayoutY();
-            double end = node.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
                     new KeyValue(node.translateYProperty(), start, Interpolator.LINEAR)
@@ -452,6 +456,8 @@ public class Transitions {
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
         } else {
+            node.setTranslateY(end);
+            node.setOpacity(0);
             onFinishedHandler.run();
         }
     }
@@ -465,14 +471,16 @@ public class Transitions {
     }
 
     public static void slideOutHorizontal(Region node, Runnable onFinishedHandler, boolean slideOutRight) {
-        if (displaySettings.isUseAnimations()) {
+        double start = node.getTranslateX();
+        double end = slideOutRight ?
+                node.getWidth() :
+                -node.getWidth();
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
-            double start = node.getTranslateX();
-            double end = slideOutRight ?
-                    node.getWidth() :
-                    -node.getWidth();
+
+
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, Interpolator.LINEAR),
                     new KeyValue(node.translateXProperty(), start, Interpolator.LINEAR)
@@ -481,24 +489,25 @@ public class Transitions {
                     new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_OUT),
                     new KeyValue(node.translateXProperty(), end, Interpolator.EASE_OUT)
             ));
-
             timeline.setOnFinished(e -> {
                 onFinishedHandler.run();
                 node.setTranslateX(start);
             });
             timeline.play();
         } else {
+            node.setTranslateX(start);
+            node.setOpacity(0);
             onFinishedHandler.run();
         }
     }
 
     public static void slideDownFromCenterTop(Region node, Runnable onFinishedHandler) {
-        if (displaySettings.isUseAnimations()) {
+        double end = -node.getHeight();
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION);
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             node.setTranslateY(0);
-            double end = -node.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(node.opacityProperty(), 1, DEFAULT_INTERPOLATOR),
                     new KeyValue(node.translateYProperty(), -10, DEFAULT_INTERPOLATOR)
@@ -511,12 +520,14 @@ public class Transitions {
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
         } else {
+            node.setTranslateY(end);
+            node.setOpacity(0);
             onFinishedHandler.run();
         }
     }
 
     public static void moveLeft(Region node, int targetX, int duration) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             double startX = node.getLayoutX();
@@ -533,7 +544,7 @@ public class Transitions {
     }
 
     public static void animateLeftNavigationWidth(Region node, double targetWidth, int duration) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             double startWidth = node.getWidth();
             Interpolator interpolator = startWidth > targetWidth ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
             Timeline timeline = new Timeline();
@@ -552,7 +563,7 @@ public class Transitions {
     }
 
     public static void animateLeftSubNavigation(Region node, double targetX, int duration) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             double startX = node.getLayoutX();
             Interpolator interpolator = startX > targetX ? Interpolator.EASE_IN : Interpolator.EASE_OUT;
             Timeline timeline = new Timeline();
@@ -572,7 +583,7 @@ public class Transitions {
 
     public static void animateNavigationButtonMarks(Region node, double targetHeight, double targetY) {
         double startY = node.getLayoutY();
-        if (displaySettings.isUseAnimations() || startY == 0) {
+        if (getUseAnimations() || startY == 0) {
             double duration = getDuration(DEFAULT_DURATION / 4);
             double startHeight = node.getHeight();
             Timeline timeline = new Timeline();
@@ -609,7 +620,7 @@ public class Transitions {
     }
 
     public static void animateTabButtonMarks(Region node, double targetWidth, double targetX) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             double startWidth = node.getWidth();
             double startX = node.getLayoutX();
             double duration = getDuration(DEFAULT_DURATION / 4);
@@ -653,7 +664,7 @@ public class Transitions {
     }
 
     public static void animateHeight(Region node, double targetHeight) {
-        if (displaySettings.isUseAnimations()) {
+        if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
             double startHeight = node.getHeight();
             Timeline timeline = new Timeline();
@@ -665,6 +676,12 @@ public class Transitions {
                     new KeyValue(node.prefHeightProperty(), targetHeight, Interpolator.EASE_OUT)
             ));
             timeline.play();
+        } else {
+            node.setPrefHeight(targetHeight);
         }
+    }
+
+    private static boolean getUseAnimations() {
+        return settingsService.getUseAnimations().get();
     }
 }

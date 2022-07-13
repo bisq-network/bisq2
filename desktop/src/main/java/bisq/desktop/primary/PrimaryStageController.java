@@ -69,14 +69,13 @@ public class PrimaryStageController extends NavigationController {
         splashController = new SplashController(applicationService);
 
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
-        DisplaySettings displaySettings = settingsService.getDisplaySettings();
-        Transitions.setDisplaySettings(displaySettings);
+        Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        Notification.init(viewRoot, displaySettings);
+        Notification.init(viewRoot, settingsService);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
                 applicationService.getConfig().getBaseDir(),
-                displaySettings,
+                settingsService,
                 this::shutdown);
 
         // Here we start to attach the view hierarchy to the stage.
@@ -86,15 +85,15 @@ public class PrimaryStageController extends NavigationController {
     }
 
     private void setInitialScreenSize(DefaultApplicationService applicationService) {
-        Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
+        Cookie cookie = applicationService.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-        model.setStageWidth(cookie.getAsOptionalDouble(CookieKey.STAGE_W)
+        model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
                 .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));
-        model.setStageHeight(cookie.getAsOptionalDouble(CookieKey.STAGE_H)
+        model.setStageHeight(cookie.asDouble(CookieKey.STAGE_H)
                 .orElse(Math.max(PrimaryStageModel.MIN_HEIGHT, Math.min(PrimaryStageModel.PREF_HEIGHT, screenBounds.getHeight()))));
-        model.setStageX(cookie.getAsOptionalDouble(CookieKey.STAGE_X)
+        model.setStageX(cookie.asDouble(CookieKey.STAGE_X)
                 .orElse((screenBounds.getWidth() - model.getStageWidth()) / 2));
-        model.setStageY(cookie.getAsOptionalDouble(CookieKey.STAGE_Y)
+        model.setStageY(cookie.asDouble(CookieKey.STAGE_Y)
                 .orElse((screenBounds.getHeight() - model.getStageHeight()) / 2));
     }
 
@@ -134,18 +133,17 @@ public class PrimaryStageController extends NavigationController {
             Navigation.navigateTo(NavigationTarget.ONBOARDING_BISQ_EASY_OLD);*/
         } else {
             // After the domain is initialized we show the application content
-            String value = settingsService.getCookie().getValue(CookieKey.NAVIGATION_TARGET);
-            if (value != null && !value.isEmpty()) {
-                try {
-                    NavigationTarget persisted = NavigationTarget.valueOf(value);
-                    Navigation.applyPersisted(persisted);
-                    Navigation.navigateTo(persisted);
-                } catch (Throwable t) {
-                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
-                }
-            } else {
-                Navigation.navigateTo(NavigationTarget.DASHBOARD);
-            }
+            settingsService.getCookie().asString(CookieKey.NAVIGATION_TARGET)
+                    .ifPresentOrElse(target -> {
+                                try {
+                                    NavigationTarget persisted = NavigationTarget.valueOf(target);
+                                    Navigation.applyPersisted(persisted);
+                                    Navigation.navigateTo(persisted);
+                                } catch (Throwable t) {
+                                    Navigation.navigateTo(NavigationTarget.DASHBOARD);
+                                }
+                            },
+                            () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
         }
     }
 

@@ -25,13 +25,11 @@ import lombok.Getter;
  */
 public class DontShowAgainService {
     private static SettingsService settingsService;
-    private static SettingsStore persistableStore;
     @Getter
     private static final Observable<Integer> updateFlag = new Observable<>(0);
 
     static void setSettingsService(SettingsService settingsService) {
         DontShowAgainService.settingsService = settingsService;
-        persistableStore = settingsService.getPersistableStore();
     }
 
     public static boolean showAgain(DontShowAgainKey key) {
@@ -39,8 +37,8 @@ public class DontShowAgainService {
     }
 
     public static boolean showAgain(String key) {
-        return !persistableStore.getDontShowAgainMap().containsKey(key) ||
-                !persistableStore.getDontShowAgainMap().get(key);
+        return !settingsService.getDontShowAgainMap().containsKey(key) ||
+                !settingsService.getDontShowAgainMap().get(key);
     }
 
     public static void dontShowAgain(DontShowAgainKey key) {
@@ -48,12 +46,12 @@ public class DontShowAgainService {
     }
 
     public static void putDontShowAgain(String key, boolean dontShowAgain) {
-        persistableStore.getDontShowAgainMap().put(key, dontShowAgain);
+        settingsService.getDontShowAgainMap().put(key, dontShowAgain);
         persist();
     }
 
     public static void resetDontShowAgain() {
-        persistableStore.getDontShowAgainMap().clear();
+        settingsService.getDontShowAgainMap().clear();
         persist();
     }
 

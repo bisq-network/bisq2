@@ -17,15 +17,17 @@
 
 package bisq.desktop.primary.main.content.settings.preferences;
 
-import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class PreferencesModel implements Model {
+    private final BooleanProperty useAnimations = new SimpleBooleanProperty();
 
-    public PreferencesModel(DefaultApplicationService applicationService) {
+    public PreferencesModel() {
     }
 }

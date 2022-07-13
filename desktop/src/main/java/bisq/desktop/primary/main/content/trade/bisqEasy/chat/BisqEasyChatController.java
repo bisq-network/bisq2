@@ -19,14 +19,17 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.message.ChatMessage;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
+import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
@@ -34,20 +37,21 @@ import org.fxmisc.easybind.EasyBind;
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> implements Controller {
     private final PublicTradeChannelService publicTradeChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final SettingsService settingsService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
+    private Pin offerOnlySettingsPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, false);
 
         publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        settingsService = applicationService.getSettingsService();
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
-
-        model.getOfferOnly().set(true);
         notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = tradeChannelSelectionService.getSelectedChannel().get();
@@ -55,8 +59,15 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                         publicTradeChannelService.setNotificationSetting(channel, value);
                     }
                 });
-
         selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+        offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
+    }
+
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+
+        offerOnlySettingsPin.unbind();
     }
 
     @Override
@@ -96,10 +107,5 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getCreateOfferButtonVisible().set(true);
             privateChannelSelection.deSelectChannel();
         }
-    }
-
-    public void onToggleOffersOnly(boolean selected) {
-        model.getOfferOnly().set(selected);
-        //todo filter messages
     }
 }

@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.settings.DisplaySettings;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,7 +33,7 @@ public class OverlayModel extends NavigationModel {
     public static final double BOTTOM_MARGIN = 50;
     public static final double HORIZONTAL_MARGIN = 90;
 
-    private final DisplaySettings displaySettings;
+    private final SettingsService settingsService;
     @Setter
     private double topMargin = TOP_MARGIN;
     @Setter
@@ -49,10 +49,10 @@ public class OverlayModel extends NavigationModel {
     }
 
     OverlayModel(DefaultApplicationService applicationService) {
-        displaySettings = applicationService.getSettingsService().getDisplaySettings();
+        settingsService = applicationService.getSettingsService();
     }
 
     double getDuration(double duration) {
-        return displaySettings.isUseAnimations() ? duration : 1;
+        return settingsService.getUseAnimations().get() ? duration : 1;
     }
 }

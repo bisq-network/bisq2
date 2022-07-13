@@ -22,30 +22,20 @@ option java_package = "bisq.settings.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 
-enum CookieKey {
-  STAGE_X = 0;
-  STAGE_Y = 1;
-  STAGE_W = 2;
-  STAGE_H = 3;
-  NAVIGATION_TARGET = 4;
-}
-
 message CookieMapEntry {
-  CookieKey cookieKey = 1;
+  string cookieKey = 1;
   string value = 2;
 }
 message Cookie {
   repeated CookieMapEntry cookieMapEntries = 1;
 }
 
-message DisplaySettings {
-  bool useAnimations = 1;
-}
 message SettingsStore {
   Cookie cookie = 1;
-  DisplaySettings displaySettings = 2;
-  map<string, bool> dontShowAgainMap = 3;
+  map<string, bool> dontShowAgainMap = 2;
+  bool useAnimations = 3;
   repeated common.Market markets = 4;
   common.Market selectedMarket = 5;
   uint64 requiredTotalReputationScore = 6;
+  bool offersOnly = 7;
 }

@@ -18,9 +18,9 @@
 package bisq.settings;
 
 import bisq.common.proto.Proto;
+import bisq.common.util.ProtobufUtils;
 import bisq.settings.protobuf.CookieMapEntry;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Serves as flexible container for persisting UI states, layout,...
  * Should not be over-used for domain specific data where type safety and data integrity is important.
+ * Does not support observable properties.
  */
 public final class Cookie implements Proto {
     private final Map<CookieKey, String> map = new HashMap<>();
@@ -45,7 +46,7 @@ public final class Cookie implements Proto {
         return bisq.settings.protobuf.Cookie.newBuilder()
                 .addAllCookieMapEntries(map.entrySet().stream()
                         .map(e -> CookieMapEntry.newBuilder()
-                                .setCookieKey(e.getKey().toProto())
+                                .setCookieKey(e.getKey().name())
                                 .setValue(e.getValue()).build())
                         .collect(Collectors.toList()))
                 .build();
@@ -54,24 +55,18 @@ public final class Cookie implements Proto {
     static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
         return new Cookie(proto.getCookieMapEntriesList().stream()
                 .collect(Collectors.toMap(
-                        e -> CookieKey.fromProto(e.getCookieKey()),
+                        e -> ProtobufUtils.enumFromProto(CookieKey.class, e.getCookieKey()),
                         CookieMapEntry::getValue)));
     }
 
-    void put(CookieKey key, String value) {
-        map.put(key, value);
+  
+    public Optional<String> asString(CookieKey key) {
+        return map.containsKey(key) ?
+                Optional.of(map.get(key)) :
+                Optional.empty();
     }
 
-    void putAll(Map<CookieKey, String> map) {
-        this.map.putAll(map);
-    }
-
-    @Nullable
-    public String getValue(CookieKey key) {
-        return map.get(key);
-    }
-
-    public Optional<Double> getAsOptionalDouble(CookieKey key) {
+    public Optional<Double> asDouble(CookieKey key) {
         try {
             return map.containsKey(key) ?
                     Optional.of(Double.parseDouble(map.get(key))) :
@@ -81,10 +76,17 @@ public final class Cookie implements Proto {
         }
     }
 
-    public Optional<Boolean> getAsOptionalBoolean(CookieKey key) {
+    public Optional<Boolean> asBoolean(CookieKey key) {
         return map.containsKey(key) ?
                 Optional.of(map.get(key).equals("1")) :
                 Optional.empty();
+    }
+    void putAsString(CookieKey key, String value) {
+        map.put(key, value);
+    }
+
+    void putAll(Map<CookieKey, String> map) {
+        this.map.putAll(map);
     }
 
     void putAsBoolean(CookieKey key, boolean value) {

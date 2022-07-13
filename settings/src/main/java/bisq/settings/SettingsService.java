@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -26,6 +27,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -42,11 +44,14 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // ModuleService
+    // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+        // If used with FxBindings.bindBiDir we need to trigger persist call
+        getOffersOnly().addObserver(value -> persist());
+        getUseAnimations().addObserver(value -> persist());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -55,24 +60,33 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return CompletableFuture.completedFuture(true);
     }
 
-    public DisplaySettings getDisplaySettings() {
-        return persistableStore.getDisplaySettings();
-    }
-
     public ObservableSet<Market> getMarkets() {
-        return persistableStore.getMarkets();
+        return persistableStore.markets;
     }
 
     public Market getSelectedMarket() {
-        return persistableStore.getSelectedMarket();
+        return persistableStore.selectedMarket.get();
     }
 
     public Cookie getCookie() {
-        return persistableStore.getCookie();
+        return persistableStore.cookie;
     }
 
-    public long getRequiredTotalReputationScore() {
-        return persistableStore.getRequiredTotalReputationScore();
+    public Map<String, Boolean> getDontShowAgainMap() {
+        return persistableStore.dontShowAgainMap;
+    }
+
+    public Observable<Boolean> getUseAnimations() {
+        return persistableStore.useAnimations;
+    }
+
+    public Observable<Long> getRequiredTotalReputationScore() {
+        return persistableStore.requiredTotalReputationScore;
+    }
+
+
+    public Observable<Boolean> getOffersOnly() {
+        return persistableStore.offersOnly;
     }
 
     public void setCookie(CookieKey key, boolean value) {
@@ -86,12 +100,22 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     }
 
     public void setCookie(CookieKey key, String value) {
-        getCookie().put(key, value);
+        getCookie().putAsString(key, value);
         persist();
     }
 
     public void setRequiredTotalReputationScore(long value) {
-        persistableStore.setRequiredTotalReputationScore(value);
+        persistableStore.requiredTotalReputationScore.set(value);
+        persist();
+    }
+
+    public void setUseAnimations(boolean value) {
+        persistableStore.useAnimations.set(value);
+        persist();
+    }
+
+    public void setOffersOnly(boolean value) {
+        persistableStore.offersOnly.set(value);
         persist();
     }
 }
