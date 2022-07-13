@@ -103,34 +103,32 @@ public abstract class Overlay<T extends Overlay<T>> {
         ScaleYFromCenter
     }
 
-    private enum ChangeBackgroundType {
-        BlurLight,
-        BlurUltraLight,
-        Darken
-    }
-
     protected enum Type {
-        Undefined(AnimationType.ScaleFromCenter, ChangeBackgroundType.BlurLight),
+        Undefined(AnimationType.ScaleFromCenter),
 
-        Notification(AnimationType.SlideFromRightTop, ChangeBackgroundType.BlurLight),
+        Notification(AnimationType.SlideFromRightTop),
 
-        BackgroundInfo(AnimationType.SlideDownFromCenterTop, ChangeBackgroundType.BlurUltraLight),
-        Feedback(AnimationType.SlideDownFromCenterTop, ChangeBackgroundType.Darken),
+        BackgroundInfo(AnimationType.SlideDownFromCenterTop),
+        Feedback(AnimationType.SlideDownFromCenterTop),
 
-        Information(AnimationType.FadeInAtCenter, ChangeBackgroundType.BlurLight),
-        Instruction(AnimationType.ScaleFromCenter, ChangeBackgroundType.BlurLight),
-        Attention(AnimationType.ScaleFromCenter, ChangeBackgroundType.BlurLight),
-        Confirmation(AnimationType.ScaleYFromCenter, ChangeBackgroundType.BlurLight),
+        Information(AnimationType.FadeInAtCenter),
+        Instruction(AnimationType.ScaleFromCenter),
+        Attention(AnimationType.ScaleFromCenter),
+        Confirmation(AnimationType.ScaleYFromCenter),
 
-        Warning(AnimationType.ScaleDownToCenter, ChangeBackgroundType.BlurLight),
-        Error(AnimationType.ScaleDownToCenter, ChangeBackgroundType.BlurLight);
+        Warning(AnimationType.ScaleDownToCenter),
+        Error(AnimationType.ScaleDownToCenter, Transitions.Type.DARK_BLUR_LIGHT);
 
         public final AnimationType animationType;
-        public final ChangeBackgroundType changeBackgroundType;
+        private final Transitions.Type transitionsType;
 
-        Type(AnimationType animationType, ChangeBackgroundType changeBackgroundType) {
+        Type(AnimationType animationType) {
+            this(animationType, Transitions.Type.MEDIUM_BLUR_LIGHT);
+        }
+
+        Type(AnimationType animationType, Transitions.Type transitionsType) {
             this.animationType = animationType;
-            this.changeBackgroundType = changeBackgroundType;
+            this.transitionsType = transitionsType;
         }
     }
 
@@ -496,7 +494,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void blurAgain() {
-        UIScheduler.run(this::ownerBlurLight).after(Transitions.DEFAULT_DURATION);
+        UIScheduler.run(() -> type.transitionsType.apply(owner)).after(Transitions.DEFAULT_DURATION);
     }
 
     public void display() {
@@ -720,21 +718,16 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void addEffectToBackground() {
-        if (type.changeBackgroundType == ChangeBackgroundType.BlurUltraLight)
-            ownerBlurUltraLight();
-        else if (type.changeBackgroundType == ChangeBackgroundType.BlurLight)
-            ownerBlurLight();
-        else
-            ownerDarken();
+        type.transitionsType.apply(owner);
     }
 
     protected void applyStyles() {
         Region rootContainer = getRootContainer();
-       /* if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            rootContainer.getStyleClass().add("popup-bg-top");
+        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+            rootContainer.getStyleClass().add("overlay-bg-top");
         } else {
-            rootContainer.getStyleClass().add("popup-bg");
-        }*/
+            rootContainer.getStyleClass().add("overlay-bg");
+        }
 
         if (headLineLabel != null) {
             switch (type) {
@@ -745,22 +738,22 @@ public abstract class Overlay<T extends Overlay<T>> {
                 case Feedback:
                 case Notification:
                 case Attention:
-                    headLineLabel.getStyleClass().add("popup-headline-information");
-                    headlineIcon.getStyleClass().add("popup-icon-information");
+                    headLineLabel.getStyleClass().add("overlay-headline-information");
+                    headlineIcon.getStyleClass().add("overlay-icon-information");
                     headlineIcon.setManaged(true);
                     headlineIcon.setVisible(true);
                     Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
                     break;
                 case Warning:
                 case Error:
-                    headLineLabel.getStyleClass().add("popup-headline-warning");
-                    headlineIcon.getStyleClass().add("popup-icon-warning");
+                    headLineLabel.getStyleClass().add("overlay-headline-warning");
+                    headlineIcon.getStyleClass().add("overlay-icon-warning");
                     headlineIcon.setManaged(true);
                     headlineIcon.setVisible(true);
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
                     break;
                 default:
-                    headLineLabel.getStyleClass().add("popup-headline");
+                    headLineLabel.getStyleClass().add("overlay-headline");
             }
         }
     }
@@ -789,6 +782,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 headLineLabel.setStyle(headlineStyle);
 
             hBox.getChildren().addAll(headlineIcon, headLineLabel);
+            hBox.setAlignment(Pos.CENTER_LEFT);
 
             GridPane.setHalignment(hBox, HPos.LEFT);
             GridPane.setRowIndex(hBox, gridPane.getRowCount());
@@ -835,7 +829,9 @@ public abstract class Overlay<T extends Overlay<T>> {
                 Label label = new Label(String.format("[%d]", i + 1));
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
                 link.setOnAction(event -> Browser.open(link.getText()));
-                footerBox.getChildren().addAll(new HBox(label, link));
+                HBox hBox = new HBox(label, link);
+                hBox.setAlignment(Pos.CENTER_LEFT);
+                footerBox.getChildren().addAll(hBox);
             }
         }
     }
@@ -1003,18 +999,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public boolean isDisplayed() {
         return isDisplayed;
-    }
-
-    protected void ownerBlurLight() {
-        Transitions.blur(owner, Transitions.DEFAULT_DURATION, -0.6, false, 5);
-    }
-
-    protected void ownerBlurUltraLight() {
-        Transitions.blur(owner, Transitions.DEFAULT_DURATION, -0.6, false, 2);
-    }
-
-    protected void ownerDarken() {
-        Transitions.darken(owner, Transitions.DEFAULT_DURATION, false);
     }
 
     private T cast() {

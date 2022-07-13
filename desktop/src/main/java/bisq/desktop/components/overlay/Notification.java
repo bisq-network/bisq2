@@ -180,11 +180,11 @@ public class Notification extends Overlay<Notification> {
 
     @Override
     protected void applyStyles() {
-        gridPane.getStyleClass().add("notification-popup-bg");
+        gridPane.getStyleClass().add("notification-overlay-bg");
         if (headLineLabel != null)
-            headLineLabel.getStyleClass().add("notification-popup-headline");
+            headLineLabel.getStyleClass().add("notification-overlay-headline");
 
-        headlineIcon.getStyleClass().add("popup-icon-information");
+        headlineIcon.getStyleClass().add("overlay-icon-information");
         headlineIcon.setManaged(true);
         headlineIcon.setVisible(true);
         headlineIcon.setPadding(new Insets(1));

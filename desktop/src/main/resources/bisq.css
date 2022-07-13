@@ -88,6 +88,9 @@
     -fx-accent: -bisq-green;
     -fx-background: -bisq-content-bg;
 
+    -fx-color: -bisq-grey-17;
+    -fx-body-color: -fx-color;
+
     -fx-box-border: transparent;
     -fx-focus-color: -fx-accent;
     -fx-faint-focus-color: -fx-accent;
@@ -596,6 +599,53 @@
     -fx-text-fill: -bisq-green;
 }*/
 
+
+/*******************************************************************************
+ *                                                                             *
+ * Hyperlink                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.hyperlink,
+.hyperlink.force-underline .text,
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited,
+.hyperlink:focused {
+    -fx-border-style: none;
+    -fx-border-width: 0px;
+    -fx-underline: true;
+    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
+}
+
+.hyperlink.no-underline {
+    -fx-underline: false;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -bisq-white;
+    -fx-fill: -bisq-white;
+}
+
+.hyperlink:hover,
+.hyperlink:visited,
+.hyperlink:hover:visited {
+    -fx-underline: false;
+}
+
+.hyperlink.highlight,
+.hyperlink.highlight .text.hyperlink.no-underline {
+    -fx-text-fill: -bisq-green;
+    -fx-fill: -bisq-green;
+}
+
+.hyperlink.error {
+    -fx-text-fill: -bisq-red;
+    -fx-fill: -bisq-red;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Backgrounds                                                                 *
@@ -1013,30 +1063,29 @@
 .check-box {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-   /* -fx-label-padding: 0.0em 0.0em 0.0em 0.416667em;*/ /* 0 0 0 5 */
-    -fx-text-fill: -bisq-white;
+    -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;
 }
-/*
+
 .check-box > .box {
-    -fx-background-radius: 3, 2, 1;
-    -fx-padding: 0.166667em 0.166667em 0.25em 0.25em; !* 2 2 3 3 *!
+    -fx-background-color: -bisq-grey-17, -bisq-grey-17, -bisq-grey-17, -fx-body-color;
+    -fx-background-radius: 0;
+}
+
+.check-box:hover > .box {
+    -fx-color: derive(-bisq-grey-17, 10%);
 }
 
 .check-box > .box > .mark {
     -fx-background-color: null;
-    -fx-padding: 0.416667em 0.416667em 0.5em 0.5em; !* 5 5 6 6 *!
+    -fx-padding: 0.416667em 0.416667em 0.5em 0.5em;
     -fx-shape: "M-0.25,6.083c0.843-0.758,4.583,4.833,5.75,4.833S14.5-1.5,15.917-0.917c1.292,0.532-8.75,17.083-10.5,17.083C3,16.167-1.083,6.833-0.25,6.083z";
 }
 
-.check-box:indeterminate > .box {
-    -fx-padding: 0;
-}
-
+.check-box:selected > .box > .mark,
 .check-box:indeterminate > .box > .mark {
-    -fx-shape: "M0,0H10V2H0Z";
-    -fx-scale-shape: false;
-    -fx-padding: 0.666667em; !* 16x16 = 8+8 *!
-}*/
+    -fx-background-color: -bisq-green;
+    -fx-background-insets: 1 0 -1 0, 0;
+}
 
 
 /*******************************************************************************
@@ -1790,6 +1839,52 @@ tree-table-view:focused {
 .popover > .border {
     /* -fx-stroke: linear-gradient(to bottom, -bisq-white-transparent, -bisq-white-transparent-dark) !important;*/
     -fx-fill: transparent;
+}
+
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Overlay                                                                                                           *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.overlay-headline {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-white;
+}
+
+.overlay-headline-information {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-green;
+}
+
+.overlay-headline-warning {
+    -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-red;
+}
+
+.overlay-icon-information {
+    -fx-text-fill: -bisq-green;
+}
+
+.overlay-icon-warning {
+    -fx-text-fill: -bisq-red;
+}
+
+.overlay-bg {
+    -fx-background-color: -bisq-grey-2;
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -bisq-grey-11;
+    -fx-background-insets: 25;
+    -fx-effect: dropshadow(gaussian, black, 50, 0, 0, 0);
+}
+
+.overlay-bg-top {
+    -fx-background-color: -bisq-grey-2;
+    -fx-font-size: 1.1em;
+    -fx-text-fill: -bisq-grey-11;
+    -fx-background-insets: 25;
+    -fx-effect: dropshadow(gaussian, black, 50, 0, 0, 0);
 }
 
 

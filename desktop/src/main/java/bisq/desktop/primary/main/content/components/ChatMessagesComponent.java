@@ -176,12 +176,10 @@ public class ChatMessagesComponent {
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
                     String dontShowAgainId = "sendMsgOfferOnlyWarn";
-                    if (DontShowAgainService.showAgain(dontShowAgainId) && settingsService.getOffersOnly().get()) {
-                        new Popup().instruction(Res.get("social.chat.sendMsg.offerOnly.popup"))
+                    if (settingsService.getOffersOnly().get()) {
+                        new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
                                 .actionButtonText(Res.get("yes"))
-                                .onAction(() -> {
-                                    settingsService.setOffersOnly(false);
-                                })
+                                .onAction(() -> settingsService.setOffersOnly(false))
                                 .closeButtonText(Res.get("no"))
                                 .dontShowAgainId(dontShowAgainId)
                                 .show();
