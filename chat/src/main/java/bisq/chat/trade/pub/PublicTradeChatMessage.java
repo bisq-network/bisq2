@@ -110,7 +110,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
         return false;
     }
 
-    public boolean hasTradeChatOffer() {
+    public boolean isOfferMessage() {
         return tradeChatOffer.isPresent();
     }
 }

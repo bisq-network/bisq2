@@ -28,8 +28,8 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
-import bisq.settings.DisplaySettings;
 import bisq.settings.DontShowAgainService;
+import bisq.settings.SettingsService;
 import com.google.common.reflect.TypeToken;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
@@ -74,18 +74,18 @@ import java.util.regex.Pattern;
 public abstract class Overlay<T extends Overlay<T>> {
     public static Region owner;
     private static String baseDir;
-    public static DisplaySettings displaySettings;
+    public static SettingsService settingsService;
     private static Runnable shutdownHandler;
 
     protected final static double DEFAULT_WIDTH = 668;
 
     public static void init(Region owner,
                             String baseDir,
-                            DisplaySettings displaySettings,
+                            SettingsService settingsService,
                             Runnable shutdownHandler) {
         Overlay.owner = owner;
         Overlay.baseDir = baseDir;
-        Overlay.displaySettings = displaySettings;
+        Overlay.settingsService = settingsService;
         Overlay.shutdownHandler = shutdownHandler;
     }
 
@@ -875,7 +875,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null) {
-                dontShowAgainText = Res.get("popup.doNotShowAgain");
+                dontShowAgainText = Res.get("dontShowAgain");
             }
 
             CheckBox dontShowAgainCheckBox = new CheckBox(dontShowAgainText);
@@ -895,7 +895,6 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected void addButtons() {
         if (!hideCloseButton) {
             closeButton = new Button(closeButtonText == null ? Res.get("close") : closeButtonText);
-            closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
             closeButton.setMinWidth(70);
             HBox.setHgrow(closeButton, Priority.SOMETIMES);
@@ -999,7 +998,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected double getDuration(double duration) {
-        return useAnimation && displaySettings.isUseAnimations() ? duration : 1;
+        return useAnimation && settingsService.getUseAnimations().get() ? duration : 1;
     }
 
     public boolean isDisplayed() {

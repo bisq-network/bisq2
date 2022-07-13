@@ -18,28 +18,36 @@
 package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PreferencesController implements Controller {
-
     @Getter
     private final PreferencesView view;
+    private final SettingsService settingsService;
+    private final PreferencesModel model;
+    private Pin useAnimationsPin;
 
     public PreferencesController(DefaultApplicationService applicationService) {
-        SettingsService settingsService = applicationService.getSettingsService();
-        PreferencesModel model = new PreferencesModel(applicationService);
+        settingsService = applicationService.getSettingsService();
+        model = new PreferencesModel();
         view = new PreferencesView(model, this);
     }
 
     @Override
     public void onActivate() {
+        useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
     }
 
     @Override
     public void onDeactivate() {
+        useAnimationsPin.unbind();
     }
 
     public void onResetDontShowAgain(boolean isSelected) {

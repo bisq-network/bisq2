@@ -153,7 +153,7 @@ public class ReviewOfferController implements Controller {
                 model.getQuoteSideAmount().getValue(),
                 new HashSet<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
-                settingsService.getRequiredTotalReputationScore());
+                settingsService.getRequiredTotalReputationScore().get());
 
         PublicTradeChannel publicTradeChannel = publicTradeChannelService.getChannels().stream()
                 .filter(channel -> model.getMarket().equals(channel.getMarket()))

@@ -20,7 +20,7 @@ package bisq.desktop.components.overlay;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.utils.Icons;
 import bisq.i18n.Res;
-import bisq.settings.DisplaySettings;
+import bisq.settings.SettingsService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -43,13 +43,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Notification extends Overlay<Notification> {
     private static Region owner;
-    private static DisplaySettings displaySettings;
+    private static SettingsService settingsService;
 
     protected final static double DEFAULT_WIDTH = 668;
 
-    public static void init(Region owner, DisplaySettings displaySettings) {
+    public static void init(Region owner, SettingsService settingsService) {
         Notification.owner = owner;
-        Notification.displaySettings = displaySettings;
+        Notification.settingsService = settingsService;
     }
 
 
@@ -114,7 +114,7 @@ public class Notification extends Overlay<Notification> {
             autoCloseTimer = null;
         }
 
-        if (displaySettings.isUseAnimations()) {
+        if (Overlay.settingsService.getUseAnimations().get()) {
             double duration = getDuration(400);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
@@ -146,7 +146,7 @@ public class Notification extends Overlay<Notification> {
 
     @Override
     protected void animateDisplay() {
-        if (displaySettings.isUseAnimations()) {
+        if (Overlay.settingsService.getUseAnimations().get()) {
             double startX = 320;
             double duration = getDuration(600);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
@@ -189,8 +189,6 @@ public class Notification extends Overlay<Notification> {
         headlineIcon.setVisible(true);
         headlineIcon.setPadding(new Insets(1));
         Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1em");
-        if (actionButton != null)
-            actionButton.getStyleClass().add("compact-button");
     }
 
     @Override

@@ -774,10 +774,14 @@ is being used to size a border should also be in pixels.
  ******************************************************************************/
 
 .check-box {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
     -fx-label-padding: 0.0em 0.0em 0.0em 0.416667em; /* 0 0 0 5 */
     -fx-text-fill: -fx-text-background-color;
 }
 .check-box > .box {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
     -fx-background-radius: 3, 2, 1;
     -fx-padding: 0.166667em 0.166667em 0.25em 0.25em; /* 2 2 3 3 */
 }

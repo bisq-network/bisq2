@@ -22,11 +22,14 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@Slf4j
 public class FxBindings {
     public static <T, R> ObservableListBindings<T, R> bind(ObservableList<R> observer) {
         return new ObservableListBindings<>(observer);
@@ -50,6 +53,10 @@ public class FxBindings {
 
     public static BooleanPropertyBindings bind(BooleanProperty observer) {
         return new BooleanPropertyBindings(observer);
+    }
+
+    public static BooleanBiDirPropertyBindings bindBiDir(BooleanProperty observer) {
+        return new BooleanBiDirPropertyBindings(observer);
     }
 
     public static StringPropertyBindings bind(StringProperty observer) {
@@ -143,6 +150,24 @@ public class FxBindings {
 
         public Pin to(Observable<Boolean> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+        }
+    }
+
+    public static final class BooleanBiDirPropertyBindings {
+        private final BooleanProperty observer;
+
+        public BooleanBiDirPropertyBindings(BooleanProperty observer) {
+            this.observer = observer;
+        }
+
+        public Pin to(Observable<Boolean> observable) {
+            ChangeListener<Boolean> listener = (o, oldValue, newValue) -> observable.set(newValue);
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
         }
     }
 

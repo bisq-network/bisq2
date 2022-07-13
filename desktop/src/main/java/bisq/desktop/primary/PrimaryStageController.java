@@ -69,14 +69,13 @@ public class PrimaryStageController extends NavigationController {
         splashController = new SplashController(applicationService);
 
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
-        DisplaySettings displaySettings = settingsService.getDisplaySettings();
-        Transitions.setDisplaySettings(displaySettings);
+        Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-        Notification.init(viewRoot, displaySettings);
+        Notification.init(viewRoot, settingsService);
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
                 applicationService.getConfig().getBaseDir(),
-                displaySettings,
+                settingsService,
                 this::shutdown);
 
         // Here we start to attach the view hierarchy to the stage.
@@ -86,7 +85,7 @@ public class PrimaryStageController extends NavigationController {
     }
 
     private void setInitialScreenSize(DefaultApplicationService applicationService) {
-        Cookie cookie = applicationService.getSettingsService().getPersistableStore().getCookie();
+        Cookie cookie = applicationService.getSettingsService().getCookie();
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
         model.setStageWidth(cookie.asDouble(CookieKey.STAGE_W)
                 .orElse(Math.max(PrimaryStageModel.MIN_WIDTH, Math.min(PrimaryStageModel.PREF_WIDTH, screenBounds.getWidth()))));

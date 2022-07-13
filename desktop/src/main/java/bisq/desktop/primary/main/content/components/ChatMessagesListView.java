@@ -53,6 +53,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
+import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -145,10 +146,6 @@ public class ChatMessagesListView {
 
     }
 
-    public void setOfferOnly(boolean offerOnly) {
-        controller.setOfferOnly(offerOnly);
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -166,8 +163,9 @@ public class ChatMessagesListView {
         private final UserProfileService userProfileService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final SettingsService settingsService;
         private Pin selectedChannelPin, chatMessagesPin;
-        private Subscription offerOnlyPin;
+        private Pin offerOnlySettingsPin;
 
         private Controller(DefaultApplicationService applicationService,
                            Consumer<UserProfile> mentionUserHandler,
@@ -187,6 +185,7 @@ public class ChatMessagesListView {
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
+            settingsService = applicationService.getSettingsService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -210,13 +209,12 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            offerOnlyPin = EasyBind.subscribe(model.getOfferOnly(), offerOnly -> {
-                Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item ->
-                {
+            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> {
+                Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
                     boolean offerOnlyPredicate = true;
                     if (item.getChatMessage() instanceof PublicTradeChatMessage) {
                         PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
-                        offerOnlyPredicate = !offerOnly || publicTradeChatMessage.hasTradeChatOffer();
+                        offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
                     }
                     return offerOnlyPredicate &&
                             item.getSender().isPresent() &&
@@ -275,7 +273,7 @@ public class ChatMessagesListView {
 
         @Override
         public void onDeactivate() {
-            offerOnlyPin.unsubscribe();
+            offerOnlySettingsPin.unbind();
             selectedChannelPin.unbind();
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
@@ -468,10 +466,9 @@ public class ChatMessagesListView {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         }
 
-
-        public boolean isOfferMessage(ChatMessage chatMessage) {
+        boolean isOfferMessage(ChatMessage chatMessage) {
             return chatMessage instanceof PublicTradeChatMessage &&
-                    ((PublicTradeChatMessage) chatMessage).getTradeChatOffer().isPresent();
+                    ((PublicTradeChatMessage) chatMessage).isOfferMessage();
         }
     }
 

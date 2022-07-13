@@ -61,14 +61,13 @@ public class BisqEasyChatView extends ChatView {
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
-        toggleOffersButton.setSelected(bisqEasyChatModel.getOfferOnly().get());
-        toggleOffersButton.setOnAction(e -> bisqEasyChatController.onToggleOffersOnly(toggleOffersButton.isSelected()));
+        toggleOffersButton.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
-        toggleOffersButton.selectedProperty().unbind();
+        toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
         toggleOffersButton.setOnAction(null);
     }
 }
