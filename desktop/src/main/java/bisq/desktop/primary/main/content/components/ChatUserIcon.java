@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.user.profile.UserProfile;
-import bisq.user.identity.UserIdentityService;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatUserIcon extends Pane {
     private final ImageView roboIcon;
-    private final ImageView entitlement;
     private final Tooltip tooltip;
 
     public ChatUserIcon(double size) {
@@ -38,52 +36,14 @@ public class ChatUserIcon extends Pane {
         roboIcon.setFitWidth(size);
         roboIcon.setFitHeight(size);
 
-        entitlement = new ImageView();
-        entitlement.setFitWidth(size / 2);
-        entitlement.setFitHeight(size / 2);
-        entitlement.setX(size * 2 / 3);
-        entitlement.setY(size * 2 / 3);
-        entitlement.setVisible(false);
-        entitlement.setManaged(false);
-
-        getChildren().addAll(roboIcon, entitlement);
+        getChildren().add(roboIcon);
     }
 
-    public void setChatUser(UserProfile userProfile, UserIdentityService userIdentityService) {
+    public void setChatUser(UserProfile userProfile) {
         roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
-
-       /* if (chatUser.hasEntitlementType(Role.Type.LIQUIDITY_PROVIDER)) {
-            entitlement.setId("chat-trust");
-
-            // We get asynchronous the verified burnInfo results. It is cached in the userProfileService
-            // So we should get fast results in most cases.
-            chatUserService.findBurnInfoAsync(chatUser.getPubKeyHash(), chatUser.getRoles())
-                    .whenComplete((optionalBurnInfo, t) -> {
-                        optionalBurnInfo.ifPresent(burnInfo -> {
-                            UIThread.run(() -> {
-                                entitlement.setVisible(true);
-                                entitlement.setManaged(true);
-                                Tooltip.install(entitlement, tooltip);
-                                tooltip.setText(Res.get("social.chatUser.liquidityProvider.tooltip",
-                                        AmountFormatter.formatAmountWithCode(Monetary.from(burnInfo.totalBsqBurned(), "BSQ")),
-                                        DateFormatter.formatDateTime(burnInfo.firstBurnDate())));
-                            });
-                        });
-                    });
-        } else if (chatUser.hasEntitlementType(Role.Type.CHANNEL_ADMIN)) {
-            //trustIconImageView.setId("chat-trust"); //todo define icon
-            entitlement.setVisible(true);
-            entitlement.setManaged(true);
-        } else if (chatUser.hasEntitlementType(Role.Type.CHANNEL_MODERATOR)) {
-            //entitlement.setId("chat-trust"); //todo define icon
-            entitlement.setVisible(true);
-            entitlement.setManaged(true);
-        }*/
     }
 
     public void releaseResources() {
         roboIcon.setImage(null);
-        entitlement.setOnMouseEntered(null);
-        Tooltip.uninstall(entitlement, tooltip);
     }
 }

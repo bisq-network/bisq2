@@ -17,19 +17,17 @@
 
 package bisq.desktop.primary.overlay.createOffer.review;
 
+import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.currency.Market;
-import bisq.common.currency.MarketRepository;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,19 +38,24 @@ class ReviewOfferModel implements Model {
     @Setter
     private PublicTradeChannel selectedChannel;
     @Setter
-    private Direction direction = Direction.BUY;
+    private Direction direction;
     @Setter
-    private Market market = MarketRepository.getDefault();
+    private Market market;
     @Setter
-    private Monetary baseSideAmount = Coin.asBtc(10000);
+    private Monetary baseSideAmount;
     @Setter
-    private Monetary quoteSideAmount = Fiat.parse("100", "EUR");
+    private Monetary quoteSideAmount;
     @Setter
-    private List<String> paymentMethods = List.of("SEPA");
-    final private ObjectProperty<PublicTradeChatMessage> myOfferMessage = new SimpleObjectProperty<>();
-    final private BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
+    private List<String> paymentMethods;
+    @Setter
+    private String myOfferText;
+    @Setter
+    private PublicTradeChatMessage myOfferMessage;
+    private final BooleanProperty matchingOffersFound = new SimpleBooleanProperty();
     private final BooleanProperty showCreateOfferSuccess = new SimpleBooleanProperty();
     private final BooleanProperty showTakeOfferSuccess = new SimpleBooleanProperty();
+    private final ObservableList<ReviewOfferView.ListItem> matchingOffers = FXCollections.observableArrayList();
+    private final SortedList<ReviewOfferView.ListItem> sortedList = new SortedList<>(matchingOffers);
 
     ReviewOfferModel() {
     }

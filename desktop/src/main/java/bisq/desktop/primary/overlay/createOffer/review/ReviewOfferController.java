@@ -19,26 +19,33 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.chat.trade.pub.TradeChatOffer;
 import bisq.common.currency.Market;
+import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
+import bisq.common.util.StringUtils;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.components.ChatMessagesListView;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,64 +59,32 @@ public class ReviewOfferController implements Controller {
     private final ReviewOfferModel model;
     @Getter
     private final ReviewOfferView view;
-    private final ChatService chatService;
     private final ReputationService reputationService;
-    private final ChatMessagesListView myOfferListView;
-    private final ChatMessagesListView takersListView;
     private final Runnable closeHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final UserProfileService userProfileService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final Consumer<Boolean> buttonsVisibleHandler;
+    private final PrivateTradeChannelService privateTradeChannelService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
                                  Runnable closeHandler) {
-        chatService = applicationService.getChatService();
+        this.buttonsVisibleHandler = buttonsVisibleHandler;
+        ChatService chatService = applicationService.getChatService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        myOfferListView = new ChatMessagesListView(applicationService,
-                mentionUser -> {
-                },
-                showChatUserDetails -> {
-                },
-                onReply -> {
-                },
-                false,
-                true,
-                false,
-                false);
-
-        takersListView = new ChatMessagesListView(applicationService,
-                mentionUser -> {
-                },
-                showChatUserDetails -> {
-                },
-                onReply -> {
-                },
-                false,
-                true,
-                true,
-                false);
+        privateTradeChannelService = chatService.getPrivateTradeChannelService();
         this.closeHandler = closeHandler;
 
         model = new ReviewOfferModel();
-        view = new ReviewOfferView(model, this, myOfferListView.getRoot(), takersListView.getRoot());
-
-        myOfferListView.setCreateOfferCompleteHandler(() -> {
-            model.getShowCreateOfferSuccess().set(true);
-            buttonsVisibleHandler.accept(false);
-        });
-        takersListView.setTakeOfferCompleteHandler(() -> {
-            model.getShowTakeOfferSuccess().set(true);
-            buttonsVisibleHandler.accept(false);
-        });
-        takersListView.getSortedChatMessages().setComparator(Comparator.comparing(ChatMessagesListView.ChatMessageListItem::getReputationScore));
+        view = new ReviewOfferView(model, this);
     }
 
     public void setDirection(Direction direction) {
@@ -142,9 +117,13 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
+        PublicTradeChannel channel = publicTradeChannelService.getChannels().stream()
+                .filter(c -> model.getMarket().equals(c.getMarket()))
+                .findAny()
+                .orElseThrow();
+
         model.getShowCreateOfferSuccess().set(false);
         model.getShowTakeOfferSuccess().set(false);
-        myOfferListView.getFilteredChatMessages().setPredicate(item -> item.getChatMessage().equals(model.getMyOfferMessage().get()));
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
@@ -154,37 +133,69 @@ public class ReviewOfferController implements Controller {
                 new HashSet<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get());
+        model.setMyOfferText(StringUtils.truncate(tradeChatOffer.getChatMessageText(), 100));
 
-        PublicTradeChannel publicTradeChannel = publicTradeChannelService.getChannels().stream()
-                .filter(channel -> model.getMarket().equals(channel.getMarket()))
-                .findAny()
-                .orElseThrow();
-        publicTradeChannelService.showChannel(publicTradeChannel);
-        tradeChannelSelectionService.selectChannel(publicTradeChannel);
+        publicTradeChannelService.showChannel(channel);
+        tradeChannelSelectionService.selectChannel(channel);
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(publicTradeChannel.getId(),
+        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getId(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
                 false);
-        model.getMyOfferMessage().set(myOfferMessage);
-        myOfferListView.getChatMessages().clear();
-        myOfferListView.getChatMessages().add(new ChatMessagesListView.ChatMessageListItem<>(myOfferMessage, userProfileService, reputationService));
+        model.setMyOfferMessage(myOfferMessage);
 
-        takersListView.getChatMessages().setAll(takersListView.getFilteredChatMessages().stream()
+        model.getMatchingOffers().setAll(channel.getChatMessages().stream()
+                .map(chatMessage -> new ReviewOfferView.ListItem(chatMessage, userProfileService, reputationService))
+                .filter(getTakeOfferPredicate())
+                .sorted(Comparator.comparing(ReviewOfferView.ListItem::getReputationScore))
                 .limit(3)
                 .collect(Collectors.toList()));
 
-        takersListView.getFilteredChatMessages().setPredicate(getTakeOfferPredicate());
-        model.getMatchingOffersFound().set(!takersListView.getFilteredChatMessages().isEmpty());
+        model.getMatchingOffersFound().set(!model.getMatchingOffers().isEmpty());
     }
 
     @Override
     public void onDeactivate() {
-        takersListView.getFilteredChatMessages().setPredicate(null);
-        takersListView.getChatMessages().clear();
+    }
+
+    void onTakeOffer(ReviewOfferView.ListItem listItem) {
+        PublicTradeChatMessage chatMessage = listItem.getChatMessage();
+        userProfileService.findUserProfile(chatMessage.getAuthorId())
+                .ifPresent(userProfile -> {
+                    createAndSelectPrivateTradeChannel(userProfile)
+                            .ifPresent(privateTradeChannel -> {
+                                Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
+                                        userProfile.getNickName(),
+                                        userProfile.getPubKeyHash(),
+                                        chatMessage.getText()));
+
+                                TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().orElseThrow();
+                                String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+                                String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
+                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                                String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+                                String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
+                                        direction, amount, methods);
+                                privateTradeChannelService.sendPrivateChatMessage(replyText,
+                                                quotation, privateTradeChannel)
+                                        .thenAccept(result -> UIThread.run(() -> {
+                                            model.getShowTakeOfferSuccess().set(true);
+                                            buttonsVisibleHandler.accept(false);
+                                        }));
+                            });
+                });
+    }
+
+    void onCreateOffer() {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        publicTradeChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
+                .thenAccept(result -> UIThread.run(() -> {
+                    model.getShowCreateOfferSuccess().set(true);
+                    buttonsVisibleHandler.accept(false);
+                }));
     }
 
     void onOpenBisqEasy() {
@@ -204,35 +215,39 @@ public class ReviewOfferController implements Controller {
         Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
+    private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
+        Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
+        privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
+        return privateTradeChannel;
+    }
+
+
     @SuppressWarnings("RedundantIfStatement")
-    private Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getTakeOfferPredicate() {
+    private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
-            if (item.getSender().isEmpty()) {
+            if (item.getSenderUserProfile().isEmpty()) {
                 return false;
             }
-            UserProfile peer = item.getSender().get();
-            if (userProfileService.isChatUserIgnored(peer)) {
+            UserProfile senderUserProfile = item.getSenderUserProfile().get();
+            if (userProfileService.isChatUserIgnored(senderUserProfile)) {
                 return false;
             }
-            if (userIdentityService.isUserIdentityPresent(item.getChatMessage().getAuthorId())) {
+            if (userProfileService.findUserProfile(item.getChatMessage().getAuthorId()).isEmpty()) {
                 return false;
             }
-            if (!(item.getChatMessage() instanceof PublicTradeChatMessage)) {
+            if (item.getChatMessage().getTradeChatOffer().isEmpty()) {
                 return false;
             }
-            if (((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().isEmpty()) {
+            if (model.getMyOfferMessage() == null) {
                 return false;
             }
-            if (model.getMyOfferMessage().get() == null) {
-                return false;
-            }
-            if (model.getMyOfferMessage().get().getTradeChatOffer().isEmpty()) {
+            if (model.getMyOfferMessage().getTradeChatOffer().isEmpty()) {
                 return false;
             }
 
-            TradeChatOffer myChatOffer = model.getMyOfferMessage().get().getTradeChatOffer().get();
-            TradeChatOffer peersOffer = ((PublicTradeChatMessage) item.getChatMessage()).getTradeChatOffer().get();
+            TradeChatOffer myChatOffer = model.getMyOfferMessage().getTradeChatOffer().get();
+            TradeChatOffer peersOffer = item.getChatMessage().getTradeChatOffer().get();
 
             if (peersOffer.getDirection().equals(myChatOffer.getDirection())) {
                 return false;
@@ -242,7 +257,7 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            if (peersOffer.getBaseSideAmount() < myChatOffer.getBaseSideAmount()) {
+            if (peersOffer.getQuoteSideAmount() < myChatOffer.getQuoteSideAmount()) {
                 return false;
             }
 
@@ -251,7 +266,7 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            if (reputationService.findReputationScore(peer)
+            if (reputationService.findReputationScore(senderUserProfile)
                     .map(reputationScore -> reputationScore.getTotalScore() < myChatOffer.getRequiredTotalReputationScore())
                     .orElse(true)) {
                 return false;

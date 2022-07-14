@@ -1898,21 +1898,21 @@ tree-table-view:focused {
  *                                                                             *
  ******************************************************************************/
 
-.table-view.onboarding-market-table-view .column-header {
+.table-view.onboarding-table-view .column-header {
     -fx-pref-height: 40px;
     -fx-font-family: "IBM Plex Sans";
     -fx-font-weight: normal;
 }
 
-.table-view.onboarding-market-table-view .filler {
+.table-view.onboarding-table-view .filler {
     -fx-opacity: 0;
 }
 
-.table-view.onboarding-market-table-view .virtual-flow {
+.table-view.onboarding-table-view .virtual-flow {
     -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-table-view .table-row-cell {
+.table-view.onboarding-table-view .table-row-cell {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
@@ -1920,7 +1920,7 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-table-view .table-row-cell .table-cell {
+.table-view.onboarding-table-view .table-row-cell .table-cell {
     -fx-background-color: -bisq-grey-17;
 }
 

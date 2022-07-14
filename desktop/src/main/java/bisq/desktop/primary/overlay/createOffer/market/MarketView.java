@@ -78,7 +78,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         searchBox.getStyleClass().add("small-search-box");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("onboarding-market-table-view");
+        tableView.getStyleClass().add("onboarding-table-view");
         int tableHeight = 240;
         tableView.setMinHeight(tableHeight);
         int height = 650;
@@ -212,7 +212,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             icon = MarketImageComposition.imageBoxForMarket(
                     market.getBaseCurrencyCode().toLowerCase(),
                     market.getQuoteCurrencyCode().toLowerCase());
-            icon.getStyleClass().add("onboarding-market-table-view");
+            icon.getStyleClass().add("onboarding-table-view");
             this.numUsersAsInteger = numUsersAsInteger;
         }
 
