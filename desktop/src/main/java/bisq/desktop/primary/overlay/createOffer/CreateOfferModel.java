@@ -41,7 +41,7 @@ public class CreateOfferModel extends NavigationModel {
     private final List<NavigationTarget> childTargets = new ArrayList<>();
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     @Setter
-    private boolean animateToRight = true;
+    private boolean animateRightOut = true;
 
     public CreateOfferModel() {
     }

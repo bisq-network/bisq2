@@ -73,7 +73,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         nextButton.setDefaultButton(true);
 
         backButton = new Button(Res.get("back"));
-        buttons = new HBox(7, backButton, nextButton);
+        buttons = new HBox(10, backButton, nextButton);
         buttons.setAlignment(Pos.CENTER);
 
         content = new VBox();
@@ -88,7 +88,7 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 Region childRoot = newValue.getRoot();
                 content.getChildren().add(childRoot);
                 if (oldValue != null) {
-                    if (model.isAnimateToRight()) {
+                    if (model.isAnimateRightOut()) {
                         Transitions.transitRightOut(childRoot, oldValue.getRoot());
                     } else {
                         Transitions.transitLeftOut(childRoot, oldValue.getRoot());

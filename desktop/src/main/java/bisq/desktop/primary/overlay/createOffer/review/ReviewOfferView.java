@@ -66,6 +66,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     private final Button createOfferButton;
     private final Label createOfferText;
     private final HBox createOfferHBox;
+    private final Label subtitleLabel;
     private Subscription matchingOffersFoundPin;
     private final VBox content, createOfferSuccessFeedback, takeOfferSuccessFeedback;
     private final Button viewOfferButton;
@@ -82,35 +83,33 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
+        subtitleLabel = new Label(Res.get("onboarding.completed.noOffersAvailable"));
+        subtitleLabel.setTextAlignment(TextAlignment.CENTER);
+        subtitleLabel.setAlignment(Pos.CENTER);
+        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("onboarding-table-view");
         tableView.setMinWidth(700);
         tableView.setMaxWidth(700);
 
-        configTableView();
-
         headLine2Label = new Label();
         headLine2Label.getStyleClass().add("bisq-text-headline-2");
 
-
         createOfferText = new Label();
-        createOfferText.setId("chat-messages-message");
         createOfferText.setWrapText(true);
+        createOfferText.setId("chat-messages-message");
 
         createOfferButton = new Button(Res.get("createOffer"));
         createOfferButton.setDefaultButton(true);
         createOfferButton.setMinWidth(140);
 
-        HBox.setHgrow(createOfferButton, Priority.ALWAYS);
+        HBox.setHgrow(createOfferText, Priority.ALWAYS);
         createOfferHBox = new HBox(15, createOfferText, Spacer.fillHBox(), createOfferButton);
-        createOfferHBox.setFillHeight(true);
-        createOfferHBox.setPadding(new Insets(15));
+        createOfferHBox.getStyleClass().add("create-offer-message-my-offer");
         createOfferHBox.setAlignment(Pos.CENTER_LEFT);
-        createOfferHBox.getStyleClass().add("chat-offer-box-my-offer");
-        createOfferHBox.setMinWidth(tableView.getMaxWidth());
-        createOfferHBox.setMaxWidth(tableView.getMaxWidth());
 
-        content.getChildren().addAll(headLineLabel, tableView, headLine2Label, createOfferHBox);
+        content.getChildren().addAll(headLineLabel, subtitleLabel, tableView, headLine2Label, createOfferHBox);
 
         createOfferSuccessFeedback = new VBox();
         createOfferSuccessFeedback.setVisible(false);
@@ -129,11 +128,17 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
     @Override
     protected void onViewAttached() {
+        configTableView();
         Transitions.removeEffect(content);
 
         // 44 header height, 67 row height
-        tableView.setMaxHeight(Math.min(178, 44 + model.getMatchingOffers().size() * 67));
-
+        int numEntries = model.getMatchingOffers().size();
+        tableView.setMaxHeight(Math.min(178, 44 + numEntries * 67));
+        if (numEntries == 3) {
+            createOfferHBox.setPadding(new Insets(15, 26.5, 15, 15));
+        } else {
+            createOfferHBox.setPadding(new Insets(12.5));
+        }
         createOfferText.setText(model.getMyOfferText());
 
         viewOfferButton.setOnAction(e -> controller.onOpenBisqEasy());
@@ -144,15 +149,22 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
             tableView.setManaged(matchingOffersFound);
             headLine2Label.setVisible(matchingOffersFound);
             headLine2Label.setManaged(matchingOffersFound);
+            subtitleLabel.setVisible(!matchingOffersFound);
+            subtitleLabel.setManaged(!matchingOffersFound);
+
             if (matchingOffersFound) {
+                createOfferHBox.setMinWidth(tableView.getMaxWidth());
+                createOfferHBox.setMaxWidth(tableView.getMaxWidth());
                 VBox.setMargin(headLineLabel, new Insets(30, 0, 0, 0));
                 VBox.setMargin(tableView, new Insets(10, 0, 30, 0));
-                VBox.setMargin(createOfferHBox, new Insets(20, 0, 0, 0));
+                VBox.setMargin(createOfferHBox, new Insets(20, 0, -15, 0));
                 headLineLabel.setText(Res.get("onboarding.completed.headline.takeOffer"));
                 headLine2Label.setText(Res.get("onboarding.completed.headLine2.createOffer"));
             } else {
-                VBox.setMargin(headLineLabel, new Insets(60, 0, 4, 0));
-                VBox.setMargin(createOfferHBox, new Insets(20, 0, 0, 0));
+                createOfferHBox.setMinWidth(550);
+                createOfferHBox.setMaxWidth(550);
+                VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
+                VBox.setMargin(createOfferHBox, new Insets(50, 0, 0, 0));
                 headLineLabel.setText(Res.get("onboarding.completed.headline.createOffer"));
             }
         });
@@ -189,6 +201,9 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     }
 
     private void configTableView() {
+        if (!tableView.getColumns().isEmpty()) {
+            return;
+        }
         String peer = model.getDirection() == Direction.BUY ?
                 Res.get("seller") :
                 Res.get("buyer");

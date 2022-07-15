@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Controller> {
-    private final TextInputBox pubKeyHash;
+    private final MaterialTextField pubKeyHash;
     private final Button copyButton, closeButton, backButton, learnMoreButton;
 
     public BurnBsqTab3View(BurnBsqTab3Model model,
@@ -55,8 +55,8 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
         userProfileSelectLabel.setAlignment(Pos.TOP_LEFT);
 
-        pubKeyHash = new TextInputBox(Res.get("reputation.pubKeyHash"), "");
-        pubKeyHash.getInputTextField().setEditable(false);
+        pubKeyHash = new MaterialTextField(Res.get("reputation.pubKeyHash"), "");
+        pubKeyHash.setEditable(false);
 
         copyButton = BisqIconButton.createIconButton(AwesomeIcon.COPY);
 

@@ -174,7 +174,7 @@ public class CreateOfferController extends NavigationController {
     public void onNext() {
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
-            model.setAnimateToRight(true);
+            model.setAnimateRightOut(false);
             model.getCurrentIndex().set(nextIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
             model.getSelectedChildTarget().set(nextTarget);
@@ -191,7 +191,7 @@ public class CreateOfferController extends NavigationController {
         } else {*/
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
-            model.setAnimateToRight(false);
+            model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);

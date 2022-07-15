@@ -71,7 +71,7 @@
     -bisq-grey-20: #454545;
     -bisq-grey-21: #343434;
     -bisq-grey-22: #707070;
-    -bisq-grey-23: #222222;
+    -bisq-grey-23: #1e1e1e;
 
     /* Background colors */
     -bisq-bg-darker: -bisq-grey-2;
@@ -594,10 +594,45 @@
     -fx-font-size: 1.25em;
 }
 
-/*
-.bisq-label-white:selected {
+
+/*******************************************************************************
+ *                                                                             *
+ * MaterialTextField                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.material-text-field-description-small {
+    -fx-font-size: 0.95em;
+}
+
+.material-text-field-description-big {
+    -fx-font-size: 1.25em;
+}
+
+.material-text-field-description-selected {
     -fx-text-fill: -bisq-green;
-}*/
+}
+
+.material-text-field-description-deselected {
+    -fx-text-fill: -bisq-grey-9;
+}
+
+.material-text-field-description-read-only {
+    -fx-text-fill: -bisq-white;
+}
+
+.material-text-field-read-only {
+    -fx-text-fill: derive(-bisq-white, -20%) !important;
+}
+
+.material-text-field {
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-14;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 
 /*******************************************************************************
@@ -669,7 +704,7 @@
 
 .bisq-input-box-top-pane {
     -fx-background-color: -bisq-grey-12;
-    -fx-background-radius: 4;
+    -fx-background-radius: 4 4 0 0;
 }
 
 .bisq-input-box-description-label {
@@ -793,25 +828,33 @@
     -fx-font-size: 1em;
     -fx-border-color: -bisq-border-color-grey;
     -fx-border-width: 0.75;
+    -fx-border-insets: 0;
     -fx-border-radius: 4;
     -fx-cursor: hand;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 0, 0, 0, 2);
 }
 
-#bisq-border-icon-toggle-button:hover {
+#bisq-border-icon-toggle-button-hover {
     -fx-background-color: derive(-bisq-content-bg, 10%) !important;
     -fx-border-color: -bisq-border-color-grey-hover;
+    -fx-border-width: 0.75;
+    -fx-border-insets: 0;
 }
 
-#bisq-border-icon-toggle-button:selected {
+#bisq-border-icon-toggle-button-selected {
     -fx-background-color: derive(-bisq-content-bg, -10%) !important;
     -fx-border-color: -bisq-green;
+    -fx-border-width: 0.75 0.75 2 0.75;
+    -fx-border-insets: 0.75 0.75 2 0.75;
 }
 
-#bisq-border-icon-toggle-button:selected:hover {
-    -fx-background-color: derive(-bisq-content-bg, -30%) !important;
-    -fx-border-color: -bisq-green;
+#bisq-border-icon-toggle-button-selected-hover {
+    -fx-background-color: derive(-bisq-content-bg, 10%) !important;
+    -fx-border-color: derive(-bisq-green, 10%);
+    -fx-border-width: 0.75 0.75 2 0.75;
+    -fx-border-insets: 0.75 0.75 2 0.75;
 }
+
 
 .custom-payment-method-label {
     -fx-text-fill: -fx-light-text-color;
@@ -923,6 +966,7 @@
 }
 
 .bisq-transparent-button:disabled {
+    -fx-background-color: transparent;
     -fx-text-fill: derive(-bisq-grey-9, -50%);
 }
 
@@ -1033,6 +1077,7 @@
     -fx-border-width: 0;
     -fx-padding: 5 33 5 33;
     -fx-cursor: hand;
+    -fx-graphic-text-gap: 10;
 }
 
 .toggle-button:hover {
@@ -1045,12 +1090,51 @@
 }
 
 .toggle-button:selected:hover {
-    -fx-background-color: -bisq-green-lighter;
+    -fx-background-color: derive(-bisq-green, 10%) !important;;
     -fx-text-fill: -fx-light-text-color;
 }
 
 .toggle-button:disabled {
     -fx-background-color: -bisq-grey-12;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ChipsButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.chips-button {
+    -fx-background-color: derive(-bisq-content-bg, 30%);
+    -fx-background-radius: 32;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-padding: 5 8 5 8;
+}
+
+.chips-button-hover {
+    -fx-background-color: derive(-bisq-content-bg, 40%);
+}
+
+.chips-button-selected {
+    -fx-background-color: -bisq-green;
+}
+
+.chips-button-selected-hover {
+    -fx-background-color: derive(-bisq-green, 10%);
+}
+
+.chips-button > .toggle-button,
+.chips-button > .toggle-button:hover,
+.chips-button > .toggle-button:armed,
+.chips-button > .toggle-button:selected,
+.chips-button > .toggle-button:selected:hover,
+.chips-button > .toggle-button:disabled,
+.chips-button > .toggle-button:disabled:hover {
+    -fx-background-color: transparent;
 }
 
 
@@ -1063,8 +1147,10 @@
 .check-box {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;
+    /* -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;*/
 }
+
+/*
 
 .check-box > .box {
     -fx-background-color: -bisq-grey-17, -bisq-grey-17, -bisq-grey-17, -fx-body-color;
@@ -1078,7 +1164,13 @@
 .check-box > .box > .mark {
     -fx-background-color: null;
     -fx-padding: 0.416667em 0.416667em 0.5em 0.5em;
-    -fx-shape: "M-0.25,6.083c0.843-0.758,4.583,4.833,5.75,4.833S14.5-1.5,15.917-0.917c1.292,0.532-8.75,17.083-10.5,17.083C3,16.167-1.083,6.833-0.25,6.083z";
+    -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
+}
+
+.check-box:selected > .box,
+.check-box:indeterminate > .box {
+    -fx-background-color: -bisq-green;
+    -fx-background-insets: 1 0 -1 0, 0;
 }
 
 .check-box:selected > .box > .mark,
@@ -1086,6 +1178,7 @@
     -fx-background-color: -bisq-green;
     -fx-background-insets: 1 0 -1 0, 0;
 }
+*/
 
 
 /*******************************************************************************
@@ -2123,6 +2216,15 @@ tree-table-view:focused {
 .chat-offer-box-my-offer {
     -fx-background-color: -bisq-grey-18;
     -fx-background-radius: 8;
+}
+
+.create-offer-message-my-offer {
+    -fx-background-color: -bisq-grey-18;
+    -fx-background-radius: 8;
+}
+
+.create-offer-box-my-offer {
+    -fx-background-color: -bisq-grey-17;
 }
 
 #buy-button {

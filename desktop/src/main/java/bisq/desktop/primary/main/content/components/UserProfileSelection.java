@@ -253,7 +253,7 @@ public class UserProfileSelection {
         protected Skin<?> createDefaultSkin() {
             if (skin == null) {
                 skin = new UserProfileSkin(this, description, prompt);
-                editor = skin.getTextInputBox().getInputTextField();
+                editor = skin.getMaterialTextField().getInputTextField();
             }
             return skin;
         }

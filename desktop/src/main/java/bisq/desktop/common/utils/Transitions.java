@@ -666,7 +666,7 @@ public class Transitions {
     public static void animateHeight(Region node, double targetHeight) {
         if (getUseAnimations()) {
             double duration = getDuration(DEFAULT_DURATION / 2);
-            double startHeight = node.getHeight();
+            double startHeight = node.getPrefHeight();
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -678,6 +678,54 @@ public class Transitions {
             timeline.play();
         } else {
             node.setPrefHeight(targetHeight);
+        }
+    }
+
+    public static void animateWidth(Region node, double targetWidth) {
+        animateWidth(node, targetWidth, getDuration(DEFAULT_DURATION / 2), null);
+    }
+
+    public static void animateWidth(Region node, double targetWidth, double duration, @Nullable Runnable finishedHandler) {
+        if (getUseAnimations()) {
+            double startWidth = node.getPrefWidth();
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.prefWidthProperty(), startWidth, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.prefWidthProperty(), targetWidth, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+            if (finishedHandler != null) {
+                timeline.setOnFinished(actionEvent -> finishedHandler.run());
+            }
+        } else {
+            node.setPrefWidth(targetWidth);
+        }
+    }
+
+    public static void animateLayoutY(Region node, double targetY) {
+        animateLayoutY(node, targetY, getDuration(DEFAULT_DURATION / 2), null);
+    }
+
+    public static void animateLayoutY(Region node, double targetY, double duration, @Nullable Runnable finishedHandler) {
+        if (getUseAnimations()) {
+            double startY = node.getLayoutY();
+            Timeline timeline = new Timeline();
+            ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+            keyFrames.add(new KeyFrame(Duration.millis(0),
+                    new KeyValue(node.layoutYProperty(), startY, Interpolator.LINEAR)
+            ));
+            keyFrames.add(new KeyFrame(Duration.millis(duration),
+                    new KeyValue(node.layoutYProperty(), targetY, Interpolator.EASE_OUT)
+            ));
+            timeline.play();
+            if (finishedHandler != null) {
+                timeline.setOnFinished(actionEvent -> finishedHandler.run());
+            }
+        } else {
+            node.setLayoutY(targetY);
         }
     }
 
