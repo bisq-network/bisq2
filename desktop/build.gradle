@@ -3,8 +3,12 @@ plugins {
     alias(libs.plugins.openjfx)
 }
 
+compileJava {
+    options.release = 17
+}
+
 javafx {
-    version = '11.0.2'
+    version = '17.0.1'
     modules = [ 'javafx.controls' ]
 }
 
