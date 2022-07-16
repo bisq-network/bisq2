@@ -21,6 +21,7 @@ import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -42,6 +43,8 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
     private final Persistence<PublicTradeChannelStore> persistence;
+    @Getter
+    private final Observable<Integer> numVisibleChannels = new Observable<>(0);
 
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
@@ -53,11 +56,13 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
 
     public void showChannel(PublicTradeChannel channel) {
         getVisibleChannelIds().add(channel.getId());
+        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
     public void hidePublicTradeChannel(PublicTradeChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
+        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
@@ -68,6 +73,7 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     public ObservableSet<String> getVisibleChannelIds() {
         return persistableStore.getVisibleChannelIds();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // DataService.Listener

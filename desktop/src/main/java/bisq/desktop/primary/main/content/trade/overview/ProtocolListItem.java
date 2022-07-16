@@ -58,9 +58,7 @@ public class ProtocolListItem implements TableItem {
                      String costInfo,
                      String speedInfo,
                      String releaseDate,
-                     String iconId
-
-    ) {
+                     String iconId) {
         this.swapProtocolType = swapProtocolType;
         this.navigationTarget = navigationTarget;
         this.basicInfo = basicInfo;

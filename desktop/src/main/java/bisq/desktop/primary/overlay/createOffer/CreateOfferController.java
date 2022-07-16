@@ -60,6 +60,7 @@ public class CreateOfferController extends NavigationController {
         super(NavigationTarget.CREATE_OFFER);
 
         this.applicationService = applicationService;
+       
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
 
@@ -82,7 +83,6 @@ public class CreateOfferController extends NavigationController {
             handlePaymentMethodsUpdate();
         };
     }
-
 
     @Override
     public void onActivate() {

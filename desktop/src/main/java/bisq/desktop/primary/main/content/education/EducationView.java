@@ -17,15 +17,17 @@
 
 package bisq.desktop.primary.main.content.education;
 
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -56,9 +58,15 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         root.setSpacing(MARGIN);
 
         addHeaderBox();
-        addSmallBox("bisq", "bitcoin", NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
-        addSmallBox("security", "privacy", NavigationTarget.SECURITY_ACADEMY, NavigationTarget.PRIVACY_ACADEMY);
-        addSmallBox("wallets", "foss", NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
+        addSmallBox("dashboard-bisq", "onboarding-1-fraction",
+                "bisq", "bitcoin",
+                NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
+        addSmallBox("onboarding-1-reputation", "onboarding-2-offer",
+                "security", "privacy",
+                NavigationTarget.SECURITY_ACADEMY, NavigationTarget.PRIVACY_ACADEMY);
+        addSmallBox("onboarding-3-profile", "onboarding-2-chat",
+                "wallets", "foss",
+                NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
 
         // As we have scroll pane as parent container our root grows when increasing width but does not shrink anymore.
         // If anyone finds a better solution would be nice to get rid of that hack...
@@ -97,14 +105,14 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
     private void addHeaderBox() {
         Text headlineLabel = new Text(Res.get("social.education.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-1");
+        headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
         Text contentLabel = new Text(Res.get("social.education.content"));
-        contentLabel.getStyleClass().add("bisq-text-1");
+        contentLabel.getStyleClass().add("bisq-text-16");
 
         VBox box = new VBox();
         box.setSpacing(TEXT_SPACE);
-        box.getStyleClass().add("bisq-box-1");
+        box.getStyleClass().add("bisq-box-2");
         box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
         box.getChildren().addAll(headlineLabel, contentLabel);
         root.getChildren().add(box);
@@ -120,22 +128,26 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         }));
     }
 
-    private void addSmallBox(String leftTopic,
+    private void addSmallBox(String leftIconId,
+                             String rightIconId,
+                             String leftTopic,
                              String rightTopic,
                              NavigationTarget leftNavigationTarget,
                              NavigationTarget rightNavigationTarget) {
         VBox leftBox = getWidgetBox(
+                leftIconId,
                 Res.get("social.education." + leftTopic + ".headline"),
                 Res.get("social.education." + leftTopic + ".content"),
                 Res.get("social.education." + leftTopic + ".button"),
-                () -> Navigation.navigateTo(leftNavigationTarget)
+                leftNavigationTarget
         );
 
         VBox rightBox = getWidgetBox(
+                rightIconId,
                 Res.get("social.education." + rightTopic + ".headline"),
                 Res.get("social.education." + rightTopic + ".content"),
                 Res.get("social.education." + rightTopic + ".button"),
-                () -> Navigation.navigateTo(rightNavigationTarget)
+                rightNavigationTarget
         );
 
         HBox box = Layout.hBoxWith(leftBox, rightBox);
@@ -143,30 +155,35 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         root.getChildren().add(box);
     }
 
-    private VBox getWidgetBox(String headline, String content, String buttonLabel, Runnable buttonHandler) {
-        Text headlineLabel = new Text(headline);
+    private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
+        Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
+        headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
+        headlineLabel.setGraphicTextGap(15);
 
         Text contentLabel = new Text(content);
-        contentLabel.getStyleClass().add("bisq-text-1");
+        contentLabel.getStyleClass().add("bisq-text-3");
 
-        Button button = new Button(buttonLabel);
-        button.getStyleClass().add("outlined-button");
-        button.setOnAction(e -> buttonHandler.run());
+        Button button = new Button(buttonLabel.toUpperCase());
+        button.getStyleClass().addAll("text-button", "no-background");
+        button.setOnAction(e -> controller.onSelect(navigationTarget));
 
-        VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);
-        box.setSpacing(TEXT_SPACE);
-        box.getStyleClass().add("bisq-box-1");
-        box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
+        HBox.setMargin(button, new Insets(0, 15, 0, 0));
+        HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), button);
+
+        VBox vBox = new VBox(hBox, contentLabel);
+        vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
+        vBox.setSpacing(TEXT_SPACE);
+        vBox.getStyleClass().add("bisq-box-1");
+        vBox.setPadding(new Insets(MARGIN - 20, 0, MARGIN - 6, MARGIN));
         subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
             double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;
-            double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            headlineLabel.setWrappingWidth(wrappingWidth - MARGIN);
+            double wrappingWidth = value - vBox.getPadding().getLeft() - vBox.getPadding().getRight();
             contentLabel.setWrappingWidth(wrappingWidth - MARGIN);
-            box.setPrefWidth(value);
-            box.setMinWidth(value);
-            box.setMaxWidth(value);
+            vBox.setPrefWidth(value);
+            vBox.setMinWidth(value);
+            vBox.setMaxWidth(value);
         }));
-        return box;
+        return vBox;
     }
 }

@@ -278,11 +278,9 @@
     -fx-image: url("images/onboarding/onboarding-2-offer.png");
 }
 
-
 #onboarding-2-offer-white {
     -fx-image: url("images/onboarding/onboarding-2-offer-white.png");
 }
-
 
 #onboarding-2-payment {
     -fx-image: url("images/onboarding/onboarding-2-payment.png");

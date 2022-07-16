@@ -41,7 +41,6 @@ import org.fxmisc.easybind.Subscription;
 public class AmountView extends View<VBox, AmountModel, AmountController> {
     private final static int AMOUNT_BOX_WIDTH = 330;
     private final Label minAmountLabel, maxAmountLabel;
-    //   private final Label minAmountLabel, maxAmountLabel, valueLabel, currencyLabel, marketValueLabel;
     private final Slider slider;
     private final Label headLineLabel;
     private final Label subtitleLabel;
@@ -153,8 +152,12 @@ public class AmountView extends View<VBox, AmountModel, AmountController> {
 
     @Override
     protected void onViewDetached() {
-        baseAmountFocusPin.unsubscribe();
-        quoteAmountFocusPin.unsubscribe();
+        if (baseAmountFocusPin != null) {
+            baseAmountFocusPin.unsubscribe();
+        }
+        if (quoteAmountFocusPin != null) {
+            quoteAmountFocusPin.unsubscribe();
+        }
         slider.minProperty().unbind();
         slider.maxProperty().unbind();
         slider.valueProperty().unbindBidirectional(model.getSliderValue());

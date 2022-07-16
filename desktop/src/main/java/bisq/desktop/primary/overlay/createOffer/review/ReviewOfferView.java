@@ -89,7 +89,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("onboarding-table-view");
+        tableView.getStyleClass().add("create-offer-table-view");
         tableView.setMinWidth(700);
         tableView.setMaxWidth(700);
 

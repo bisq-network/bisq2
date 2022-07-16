@@ -78,6 +78,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private Pin channelItemsPin;
+        private Pin numVisibleChannelsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService.getChatService());
@@ -88,12 +89,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             model = new Model();
             view = new View(model, this);
 
-            model.filteredList.setPredicate(item -> {
-                checkArgument(item.getChannel() instanceof PublicTradeChannel,
-                        "Channel must be type of PublicTradeChannel");
-                PublicTradeChannel channel = (PublicTradeChannel) item.getChannel();
-                return publicTradeChannelService.isVisible(channel);
-            });
+            applyPredicate();
         }
 
         @Override
@@ -105,21 +101,17 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-         /*   model.channelItems.setAll(chatService.getPublicTradeChannels().stream()
-                    .map(ChannelSelection.View.ChannelItem::new)
-                    .collect(Collectors.toList()));*/
-
-            //todo do not use the visible flag but create a separate list for the chosen channels
             channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
-
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
+
+            numVisibleChannelsPin = publicTradeChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
             List<Market> markets = MarketRepository.getAllFiatMarkets();
 
@@ -137,12 +129,19 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         @Override
+        public void onDeactivate() {
+            super.onDeactivate();
+
+            channelItemsPin.unbind();
+            numVisibleChannelsPin.unbind();
+        }
+
+        @Override
         protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
             }
 
-            channelItemsPin.unbind();
             tradeChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
@@ -188,6 +187,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return publicTradeChannelService.findChannel(PublicTradeChannel.getId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
+        }
+
+        private void applyPredicate() {
+            model.filteredList.setPredicate(item -> {
+                checkArgument(item.getChannel() instanceof PublicTradeChannel,
+                        "Channel must be type of PublicTradeChannel");
+                PublicTradeChannel channel = (PublicTradeChannel) item.getChannel();
+                return publicTradeChannelService.isVisible(channel);
+            });
         }
     }
 

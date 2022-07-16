@@ -70,7 +70,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         boxes.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 53, 0));
+        VBox.setMargin(subtitleLabel, new Insets(0, 0, 70, 0));
         content.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
 
         reputationInfo = new VBox();

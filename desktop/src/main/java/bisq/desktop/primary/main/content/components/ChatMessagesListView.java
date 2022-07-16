@@ -352,8 +352,6 @@ public class ChatMessagesListView {
                 if (chatMessage instanceof PublicTradeChatMessage) {
                     publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity)
                             .whenComplete((result, throwable) -> {
-                                log.error("onDeleteMessage result {}", result);
-                                log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
                     publicDiscussionChannelService.deleteChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
