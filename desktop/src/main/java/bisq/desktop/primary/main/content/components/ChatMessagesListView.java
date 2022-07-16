@@ -838,12 +838,12 @@ public class ChatMessagesListView {
                                     quotedMessageHBox.setManaged(true);
 
                                     Region verticalLine = new Region();
-                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-9");
+                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-dimmed");
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(25);
 
                                     quotedMessageField.setText(quotation.getMessage());
-                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
+                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
 
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
@@ -853,7 +853,7 @@ public class ChatMessagesListView {
 
                                     Label userName = new Label(quotation.getUserName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
-                                    userName.setStyle("-fx-text-fill: -bisq-grey-9");
+                                    userName.setStyle("-fx-text-fill: -bisq-grey-dimmed");
 
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = new HBox(15, roboIconImageView, userName);

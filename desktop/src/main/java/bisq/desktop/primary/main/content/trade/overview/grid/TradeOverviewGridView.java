@@ -140,10 +140,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         vBox.setOnMouseClicked(e -> controller.onSelect(protocol));
 
         String title = protocol.getSwapProtocolType() == SwapProtocol.Type.SATOSHI_SQUARE ?
-                Res.get("select") :
-                Res.get("learnMore");
+                Res.get("select").toUpperCase() :
+                Res.get("learnMore").toUpperCase() ;
         Button button = new Button(title);
-        button.getStyleClass().setAll("bisq-transparent-button");
+        button.getStyleClass().setAll("text-button","no-background");
         button.setOnAction(e -> controller.onSelect(protocol));
         StackPane.setAlignment(button, Pos.TOP_RIGHT);
         StackPane.setMargin(button, new Insets(20, 14, 0, 0));

@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.method;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.ChipsButton;
+import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -71,15 +71,15 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         custom.setPrefWidth(300);
 
         addButton = new Button(Res.get("onboarding.method.customMethod.addButton").toUpperCase());
-        addButton.setDefaultButton(true);
-        addButton.getStyleClass().add("bisq-border-button");
+        // addButton.setDefaultButton(true);
+        addButton.getStyleClass().add("outlined-button");
 
-        VBox vBox = new VBox(10, custom, addButton);
+        VBox vBox = new VBox(0, custom, addButton);
         vBox.setAlignment(Pos.CENTER_RIGHT);
-        vBox.setMaxWidth(400);
+        vBox.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(80, 65, 33, 65));
+        VBox.setMargin(flowPane, new Insets(80, 65, 50, 65));
         VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, vBox);
 
@@ -93,7 +93,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewAttached() {
         custom.textProperty().bindBidirectional(model.getCustomMethod());
-        addButton.disableProperty().bind(model.getAddCustomMethodIconVisible().not());
+        addButton.visibleProperty().bind(model.getAddCustomMethodIconVisible());
         nonFoundLabel.visibleProperty().bind(model.getPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getPaymentMethodsEmpty());
         flowPane.visibleProperty().bind(model.getPaymentMethodsEmpty().not());
@@ -108,7 +108,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewDetached() {
         custom.textProperty().unbindBidirectional(model.getCustomMethod());
-        addButton.disableProperty().unbind();
+        addButton.visibleProperty().unbind();
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
@@ -124,23 +124,25 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         for (int i = 0; i < model.getAllPaymentMethods().size(); i++) {
             String paymentMethod = model.getAllPaymentMethods().get(i);
             String displayString = Res.has("paymentMethod." + paymentMethod) ? Res.get("paymentMethod." + paymentMethod) : paymentMethod;
-            ChipsButton chipsButton = new ChipsButton(displayString);
+            ChipButton chipButton = new ChipButton(displayString);
+            if(model.getSelectedPaymentMethods().contains(paymentMethod)){
+                chipButton.setSelected(true);
+            }
+            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, chipButton.isSelected()));
             model.getAddedCustomMethods().stream()
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .findAny()
                     .ifPresentOrElse(customMethod -> {
-                        chipsButton.setSelected(true);
-                        Label closeIcon = chipsButton.setRightIcon(AwesomeIcon.REMOVE_SIGN);
+                        Label closeIcon = chipButton.setRightIcon(AwesomeIcon.REMOVE_SIGN);
                         closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
                         if (paymentMethod.length() > 13) {
-                            chipsButton.setTooltip(new Tooltip(displayString));
+                            chipButton.setTooltip(new Tooltip(displayString));
                         }
                     }, () -> {
                         ImageView icon = ImageUtil.getImageViewById(paymentMethod);
-                        chipsButton.setLeftIcon(icon);
+                        chipButton.setLeftIcon(icon);
                     });
-            flowPane.getChildren().add(chipsButton);
+            flowPane.getChildren().add(chipButton);
         }
     }
-
 }

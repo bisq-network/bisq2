@@ -62,6 +62,10 @@ public class SmallAmountInput {
         return controller.view.getRoot();
     }
 
+    public ReadOnlyBooleanProperty focusedProperty() {
+        return controller.view.textInput.focusedProperty();
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter

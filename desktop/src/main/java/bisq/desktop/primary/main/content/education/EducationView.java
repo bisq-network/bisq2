@@ -151,7 +151,7 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         contentLabel.getStyleClass().add("bisq-text-1");
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-border-dark-bg-button");
+        button.getStyleClass().add("outlined-button");
         button.setOnAction(e -> buttonHandler.run());
 
         VBox box = Layout.vBoxWith(headlineLabel, contentLabel, button);

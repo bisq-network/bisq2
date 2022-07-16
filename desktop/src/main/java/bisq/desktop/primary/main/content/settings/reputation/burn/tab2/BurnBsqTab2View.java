@@ -22,6 +22,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -29,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Controller> {
-    private final Button backButton, nextButton, learnMoreButton;
+    private final Button backButton, nextButton;
+    private final Hyperlink learnMore;
 
     public BurnBsqTab2View(BurnBsqTab2Model model,
                            BurnBsqTab2Controller controller) {
@@ -51,25 +53,24 @@ public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Con
 
         HBox buttons = new HBox(20, backButton, nextButton);
 
-        learnMoreButton = new Button(Res.get("reputation.learnMore"));
-        learnMoreButton.getStyleClass().add("bisq-text-button");
+        learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(learnMoreButton, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, info, learnMoreButton, buttons);
+        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
+        root.getChildren().addAll(headline, info, learnMore, buttons);
     }
 
     @Override
     protected void onViewAttached() {
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
-        learnMoreButton.setOnAction(e -> controller.onLearnMore());
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
-        learnMoreButton.setOnAction(null);
+        learnMore.setOnAction(null);
     }
 }

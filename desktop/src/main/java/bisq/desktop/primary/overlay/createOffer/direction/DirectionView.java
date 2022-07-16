@@ -24,10 +24,7 @@ import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -43,7 +40,8 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
     private final VBox reputationInfo;
     private final VBox content;
     private Subscription directionSubscription, showReputationInfoPin;
-    private Button gainReputationButton, withoutReputationButton, backToBuyButton;
+    private Button withoutReputationButton, backToBuyButton;
+    private Hyperlink gainReputationHyperlink;
 
     public DirectionView(DirectionModel model, DirectionController controller) {
         super(new StackPane(), model, controller);
@@ -91,7 +89,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
         buyButton.setOnAction(evt -> controller.onSelectDirection(Direction.BUY));
         sellButton.setOnAction(evt -> controller.onSelectDirection(Direction.SELL));
-        gainReputationButton.setOnAction(evt -> controller.onGainReputation());
+        gainReputationHyperlink.setOnAction(evt -> controller.onGainReputation());
         withoutReputationButton.setOnAction(evt -> controller.onIgnoreReputation());
         backToBuyButton.setOnAction(evt -> controller.onCloseReputationInfo());
 
@@ -124,7 +122,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
         buyButton.setOnAction(null);
         sellButton.setOnAction(null);
-        gainReputationButton.setOnAction(null);
+        gainReputationHyperlink.setOnAction(null);
         withoutReputationButton.setOnAction(null);
         backToBuyButton.setOnAction(null);
 
@@ -135,7 +133,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
     private Pair<VBox, ToggleButton> getBoxPair(String title, String info) {
         ToggleButton button = new ToggleButton(title);
         button.setToggleGroup(toggleGroup);
-        button.getStyleClass().setAll("bisq-button-1");
+        button.getStyleClass().setAll("card-toggle-button");
         button.setAlignment(Pos.CENTER);
         int width = 235;
         button.setMinWidth(width);
@@ -172,8 +170,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         subtitleLabel1.setMaxWidth(width - 60);
         subtitleLabel1.getStyleClass().addAll("bisq-text-1", "wrap-text");
 
-        gainReputationButton = new Button(Res.get("onboarding.direction.feedback.gainReputation"));
-        gainReputationButton.getStyleClass().add("bisq-text-link");
+        gainReputationHyperlink = new Hyperlink(Res.get("onboarding.direction.feedback.gainReputation"));
 
         Label subtitleLabel2 = new Label(Res.get("onboarding.direction.feedback.subTitle2"));
         subtitleLabel2.setMaxWidth(width - 60);
@@ -189,8 +186,8 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
 
         // VBox.setMargin(closeButton, new Insets(3, 0, 0, width - 35));
         VBox.setMargin(headLineLabel, new Insets(0, 0, 20, 0));
-        VBox.setMargin(gainReputationButton, new Insets(10, 0, 30, 0));
+        VBox.setMargin(gainReputationHyperlink, new Insets(10, 0, 30, 0));
         VBox.setMargin(buttons, new Insets(50, 0, 20, 0));
-        reputationInfo.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationButton, subtitleLabel2, buttons);
+        reputationInfo.getChildren().addAll(headLineLabel, subtitleLabel1, gainReputationHyperlink, subtitleLabel2, buttons);
     }
 }

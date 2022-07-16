@@ -64,19 +64,19 @@ public class MaterialTextField extends Pane {
         bg = new Region();
         bg.setMinHeight(56);
         bg.setMaxHeight(56);
-        bg.setStyle("-fx-background-color: #383838; -fx-background-radius: 4 4 0 0;");
-        bg.setOpacity(0.45);
+        bg.setStyle("-fx-background-radius: 4 4 0 0;");
+        bg.getStyleClass().add("material-text-field-bg");
 
         line = new Region();
         line.setLayoutY(55);
         line.setPrefHeight(1);
-        line.setStyle("-fx-background-color: -bisq-grey-9");
+        line.setStyle("-fx-background-color: -bisq-grey-dimmed");
         line.setMouseTransparent(true);
 
         selectionLine = new Region();
         selectionLine.setLayoutY(54);
         selectionLine.setPrefHeight(2);
-        selectionLine.setStyle("-fx-background-color: -bisq-green");
+        selectionLine.getStyleClass().add("bisq-green-line");
         selectionLine.setMouseTransparent(true);
 
         descriptionLabel = new Label();
@@ -98,7 +98,7 @@ public class MaterialTextField extends Pane {
         helpLabel = new Label();
         helpLabel.setLayoutX(16);
         helpLabel.setLayoutY(59.5);
-        helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-9; -fx-font-family: \"IBM Plex Sans Light\";");
+        helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-dimmed; -fx-font-family: \"IBM Plex Sans Light\";");
         helpLabel.setMouseTransparent(true);
         if (help != null) {
             helpLabel.setText(help);
@@ -129,24 +129,43 @@ public class MaterialTextField extends Pane {
         update();
     }
 
+    @Override
+    protected double computeMinHeight(double width) {
+        double h = super.computeMinHeight(width);
+        if (helpLabel.isManaged()) {
+            return helpLabel.getLayoutY() + helpLabel.getHeight();
+        } else {
+            return h;
+        }
+    }
+
     private void onMouseEntered() {
-        bg.setOpacity(inputTextField.isFocused() ? 1 : 0.55);
+        removeBgStyles();
+        if (inputTextField.isFocused()) {
+            bg.getStyleClass().add("material-text-field-bg-selected");
+        } else {
+            bg.getStyleClass().add("material-text-field-bg-hover");
+        }
     }
 
     private void onMouseExited() {
-        bg.setOpacity(inputTextField.isFocused() ? 1 : 0.45);
+        removeBgStyles();
+        if (inputTextField.isFocused()) {
+            bg.getStyleClass().add("material-text-field-bg-selected");
+        } else {
+            bg.getStyleClass().add("material-text-field-bg");
+        }
     }
 
     private void onInputTextFieldFocus(boolean focus) {
         if (focus) {
-            bg.setOpacity(1);
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
             Transitions.animateWidth(selectionLine, getWidth());
         } else {
-            bg.setOpacity(0.45);
             Transitions.fadeOut(selectionLine, 200);
         }
+        onMouseExited();
         update();
     }
 
@@ -202,6 +221,12 @@ public class MaterialTextField extends Pane {
             descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
             inputTextField.getStyleClass().add("material-text-field-read-only");
         }
+    }
+
+    private void removeBgStyles() {
+        bg.getStyleClass().remove("material-text-field-bg-hover");
+        bg.getStyleClass().remove("material-text-field-bg-selected");
+        bg.getStyleClass().remove("material-text-field-bg");
     }
 
     private boolean showInputTextField() {

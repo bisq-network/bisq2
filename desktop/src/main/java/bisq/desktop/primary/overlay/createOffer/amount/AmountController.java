@@ -58,8 +58,8 @@ public class AmountController implements Controller {
 
         model = new AmountModel();
         view = new AmountView(model, this,
-                baseAmount.getRoot(),
-                quoteAmount.getRoot());
+                baseAmount,
+                quoteAmount);
 
         // We delay with runLater to avoid that we get triggered at market change from the component's data changes and
         // apply the conversion before the other component has processed the market change event.
@@ -89,7 +89,7 @@ public class AmountController implements Controller {
             return;
         }
         model.setDirection(direction);
-        model.getDirectionString().set(Res.get(direction.name().toLowerCase()));
+        model.getSpendOrReceiveString().set(direction==Direction.BUY? Res.get("buying"):Res.get("selling"));
     }
 
     public void setMarket(Market market) {

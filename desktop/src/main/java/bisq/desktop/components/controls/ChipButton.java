@@ -31,52 +31,67 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 
 @Slf4j
-public class ChipsButton extends HBox {
+public class ChipButton extends HBox {
     private final ToggleButton toggleButton;
+    @Nullable
+    private Runnable onActionHandler;
 
-    public ChipsButton(String text) {
-        setSpacing(10);
+    public ChipButton(String text) {
         setAlignment(Pos.CENTER_LEFT);
         getStyleClass().add("chips-button");
 
         toggleButton = new ToggleButton();
         toggleButton.setText(text);
         toggleButton.setMouseTransparent(true);
+        toggleButton.setAlignment(Pos.CENTER_LEFT);
         getChildren().add(toggleButton);
 
         toggleButton.selectedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) -> {
-            getStyleClass().remove("chips-button-hover");
-            getStyleClass().remove("chips-button-selected-hover");
+            removeStyles();
             if (newValue) {
                 getStyleClass().add("chips-button-selected");
-            } else {
-                getStyleClass().remove("chips-button-selected");
+            }
+            if (onActionHandler != null) {
+                onActionHandler.run();
             }
         }).get());
 
-        setOnMouseClicked(e -> toggleButton.setSelected(!toggleButton.isSelected()));
-
-        setOnMouseEntered(e -> {
-            getStyleClass().remove("chips-button-selected");
+        setOnMousePressed(e -> {
+            removeStyles();
             if (toggleButton.isSelected()) {
-                getStyleClass().remove("chips-button-hover");
+                getStyleClass().add("chips-button-selected-pressed");
+            } else {
+                getStyleClass().add("chips-button-pressed");
+            }
+        });
+        setOnMouseReleased(e -> toggleButton.setSelected(!toggleButton.isSelected()));
+        setOnMouseEntered(e -> {
+            removeStyles();
+            if (toggleButton.isSelected()) {
                 getStyleClass().add("chips-button-selected-hover");
             } else {
-                getStyleClass().remove("chips-button-selected-hover");
                 getStyleClass().add("chips-button-hover");
             }
         });
         setOnMouseExited(e -> {
-            getStyleClass().remove("chips-button-selected");
-            getStyleClass().remove("chips-button-selected-hover");
+            removeStyles();
             if (toggleButton.isSelected()) {
                 getStyleClass().add("chips-button-selected");
             }
         });
 
+    }
+
+    private void removeStyles() {
+        getStyleClass().remove("chips-button-pressed");
+        getStyleClass().remove("chips-button-selected-pressed");
+        getStyleClass().remove("chips-button-hover");
+        getStyleClass().remove("chips-button-selected");
+        getStyleClass().remove("chips-button-selected-hover");
     }
 
     public void setLeftIcon(Node icon) {
@@ -94,7 +109,7 @@ public class ChipsButton extends HBox {
     public Label setRightIcon(AwesomeIcon awesomeIcon) {
         Label labelIcon = Icons.getIcon(awesomeIcon, "23");
         labelIcon.setCursor(Cursor.HAND);
-        labelIcon.setOpacity(0.35);
+        labelIcon.setOpacity(0.6);
         HBox.setMargin(labelIcon, new Insets(-1, 0, 0, 20));
         getChildren().addAll(Spacer.fillHBox(), labelIcon);
         return labelIcon;
@@ -102,5 +117,14 @@ public class ChipsButton extends HBox {
 
     public void setSelected(boolean value) {
         toggleButton.setSelected(value);
+
+    }
+
+    public boolean isSelected() {
+        return toggleButton.isSelected();
+    }
+
+    public void setOnAction(Runnable onActionHandler) {
+        this.onActionHandler = onActionHandler;
     }
 }
