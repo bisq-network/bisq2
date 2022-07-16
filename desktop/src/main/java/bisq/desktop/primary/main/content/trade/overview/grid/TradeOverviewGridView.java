@@ -44,11 +44,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         root.setHgap(25);
         root.setVgap(25);
         root.setPadding(new Insets(25, 0, 0, 0));
-    }
 
-    @Override
-    protected void onViewAttached() {
-        root.getChildren().clear();
         int index = 0;
         for (ProtocolListItem protocol : model.getSortedItems()) {
             Pane protocolBox = getProtocolBox(protocol);
@@ -59,6 +55,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
             root.add(protocolBox, index % 2, index >> 1);
             index++;
         }
+    }
+
+    @Override
+    protected void onViewAttached() {
     }
 
     @Override
@@ -79,13 +79,13 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
         vBox.getChildren().add(headlineLabel);
 
-        Label basicInfo = new Label(protocol.getBasicInfo());
-        basicInfo.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        basicInfo.setPadding(new Insets(4, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
-        basicInfo.setAlignment(Pos.TOP_LEFT);
-        basicInfo.setMaxWidth(384);
-        basicInfo.setMinHeight(60);
-        vBox.getChildren().addAll(basicInfo, Layout.separator());
+        Label subTitleLabel = new Label(protocol.getBasicInfo());
+        subTitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subTitleLabel.setPadding(new Insets(4, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
+        subTitleLabel.setAlignment(Pos.TOP_LEFT);
+        subTitleLabel.setMaxWidth(384);
+        subTitleLabel.setMinHeight(60);
+        vBox.getChildren().addAll(subTitleLabel, Layout.separator());
 
         GridPane paramsPane = new GridPane();
         paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
@@ -140,10 +140,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         vBox.setOnMouseClicked(e -> controller.onSelect(protocol));
 
         String title = protocol.getSwapProtocolType() == SwapProtocol.Type.SATOSHI_SQUARE ?
-                Res.get("select") :
-                Res.get("learnMore");
+                Res.get("select").toUpperCase() :
+                Res.get("learnMore").toUpperCase() ;
         Button button = new Button(title);
-        button.getStyleClass().setAll("bisq-transparent-button");
+        button.getStyleClass().setAll("text-button","no-background");
         button.setOnAction(e -> controller.onSelect(protocol));
         StackPane.setAlignment(button, Pos.TOP_RIGHT);
         StackPane.setMargin(button, new Insets(20, 14, 0, 0));

@@ -141,7 +141,7 @@ public class QuotedMessageBlock {
             root.setStyle("-fx-background-color: -bisq-bg-dark;");
 
             Label headline = new Label(Res.get("social.reply.headline"));
-            headline.setStyle("-fx-text-fill: -bisq-grey-9");
+            headline.setStyle("-fx-text-fill: -bisq-grey-dimmed");
             closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
             HBox.setMargin(closeButton, new Insets(0, -25, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), closeButton);
@@ -150,14 +150,14 @@ public class QuotedMessageBlock {
 
             userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
-            userName.setStyle("-fx-text-fill: -bisq-grey-9");
+            userName.setStyle("-fx-text-fill: -bisq-grey-dimmed");
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);
             roboIconImageView.setFitHeight(25);
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 20));
             quotedMessage = new Text();
-            quotedMessage.setStyle("-fx-fill: -bisq-grey-9");
+            quotedMessage.setStyle("-fx-fill: -bisq-grey-dimmed");
             VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 20));
             root.getChildren().addAll(topBox, userBox, quotedMessage);
         }

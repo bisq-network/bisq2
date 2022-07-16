@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.onboarding.profile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -42,7 +42,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
     protected final Label nym;
     protected final ImageView roboIconView;
     protected final ProgressIndicator powProgressIndicator;
-    protected final TextInputBox nicknameTextInputBox;
+    protected final MaterialTextField nickname;
     protected final ProgressIndicator createProfileIndicator;
 
     public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
@@ -90,17 +90,17 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         VBox nymBox = new VBox(titleLabel, nym);
         nymBox.setAlignment(Pos.CENTER);
 
-        nicknameTextInputBox = new TextInputBox(Res.get("addNickName.nickName"), Res.get("addNickName.nickName.prompt"));
-        nicknameTextInputBox.setMinWidth(width);
-        nicknameTextInputBox.setMaxWidth(width);
+        nickname = new MaterialTextField(Res.get("addNickName.nickName"), Res.get("addNickName.nickName.prompt"));
+        nickname.setMinWidth(width);
+        nickname.setMaxWidth(width);
 
         VBox roboVBox = new VBox(8, roboIconPane, nymBox);
         roboVBox.setAlignment(Pos.CENTER);
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        HBox.setMargin(nicknameTextInputBox, new Insets(-20, 0, 0, 0));
-        HBox centerHBox = new HBox(10, roboVBox, nicknameTextInputBox);
+        HBox.setMargin(nickname, new Insets(-20, 0, 0, 0));
+        HBox centerHBox = new HBox(10, roboVBox, nickname);
         centerHBox.setAlignment(Pos.CENTER);
 
         regenerateButton = new Button(Res.get("generateNym.regenerate"));
@@ -144,9 +144,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         nym.disableProperty().bind(model.getRoboHashIconVisible().not());
         regenerateButton.disableProperty().bind(model.getReGenerateButtonDisabled());
         roboIconView.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
-        nicknameTextInputBox.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
+        nickname.mouseTransparentProperty().bind(model.getReGenerateButtonDisabled());
 
-        nicknameTextInputBox.textProperty().bindBidirectional(model.getNickName());
+        nickname.textProperty().bindBidirectional(model.getNickName());
 
         createProfileButton.disableProperty().bind(model.getCreateProfileButtonDisabled());
         createProfileButton.mouseTransparentProperty().bind(model.getCreateProfileButtonDisabled());
@@ -161,7 +161,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
             root.requestFocus();
         });
 
-        nicknameTextInputBox.requestFocus();
+        nickname.requestFocus();
     }
 
     @Override
@@ -177,9 +177,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         nym.disableProperty().unbind();
         regenerateButton.disableProperty().unbind();
         roboIconView.mouseTransparentProperty().unbind();
-        nicknameTextInputBox.mouseTransparentProperty().unbind();
+        nickname.mouseTransparentProperty().unbind();
 
-        nicknameTextInputBox.textProperty().unbindBidirectional(model.getNickName());
+        nickname.textProperty().unbindBidirectional(model.getNickName());
 
         createProfileButton.disableProperty().unbind();
         createProfileButton.mouseTransparentProperty().unbind();

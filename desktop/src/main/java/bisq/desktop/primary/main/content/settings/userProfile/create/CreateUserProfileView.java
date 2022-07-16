@@ -37,7 +37,7 @@ public class CreateUserProfileView extends NavigationView<VBox, CreateUserProfil
             childRoot.setPrefHeight(root.getHeight());
             root.getChildren().add(childRoot);
             if (oldValue != null) {
-                Transitions.transitRightOut(childRoot, oldValue.getRoot());
+                Transitions.transitLeftOut(childRoot, oldValue.getRoot());
             } else {
                 Transitions.fadeIn(childRoot);
             }

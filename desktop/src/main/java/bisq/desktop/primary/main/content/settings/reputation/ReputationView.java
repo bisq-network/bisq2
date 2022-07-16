@@ -22,6 +22,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -30,7 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
-    private final Button burnBsqButton, bsqBondButton, learnMoreButton;
+    private final Button burnBsqButton, bsqBondButton;
+    private final Hyperlink learnMore;
 
     public ReputationView(ReputationModel model,
                           ReputationController controller) {
@@ -46,15 +48,14 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         bsqBondButton = new Button(Res.get("reputation.bsqBond"));
 
-        learnMoreButton = new Button(Res.get("reputation.learnMore"));
-        learnMoreButton.getStyleClass().add("bisq-text-button");
+        learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
         HBox buttons = new HBox(20, burnBsqButton, bsqBondButton);
 
         VBox.setVgrow(infoLabel, Priority.ALWAYS);
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
-        VBox.setMargin(learnMoreButton, new Insets(0, 0, 10, 0));
-        VBox vBox = new VBox(16, headlineLabel, infoLabel, learnMoreButton, buttons);
+        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
+        VBox vBox = new VBox(16, headlineLabel, infoLabel, learnMore, buttons);
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(30));
         vBox.setAlignment(Pos.TOP_LEFT);
@@ -67,13 +68,13 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     protected void onViewAttached() {
         burnBsqButton.setOnAction(e -> controller.onBurnBsq());
         bsqBondButton.setOnAction(e -> controller.onBsqBond());
-        learnMoreButton.setOnAction(e -> controller.onLearnMore());
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
         burnBsqButton.setOnAction(null);
         bsqBondButton.setOnAction(null);
-        learnMoreButton.setOnAction(null);
+        learnMore.setOnAction(null);
     }
 }

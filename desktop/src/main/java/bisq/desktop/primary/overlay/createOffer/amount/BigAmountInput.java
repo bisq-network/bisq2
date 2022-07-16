@@ -57,6 +57,16 @@ public class BigAmountInput {
         return controller.view.getRoot();
     }
 
+    public ReadOnlyBooleanProperty focusedProperty() {
+        return controller.view.textInput.focusedProperty();
+    }
+
+    public void requestFocus() {
+        TextField textInput = controller.view.textInput;
+        textInput.requestFocus();
+        textInput.selectRange(textInput.getLength(), textInput.getLength());
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
@@ -193,7 +203,7 @@ public class BigAmountInput {
 
         private void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-            textInput.requestFocus();
+           // textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
         }
     }

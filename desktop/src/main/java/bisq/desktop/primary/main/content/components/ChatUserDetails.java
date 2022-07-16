@@ -27,6 +27,7 @@ import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -77,7 +78,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final UserProfileService userProfileService;
 
 
-        private Controller(UserProfileService userProfileService, 
+        private Controller(UserProfileService userProfileService,
                            ChatService chatService,
                            UserProfile userProfile) {
             this.userProfileService = userProfileService;
@@ -165,8 +166,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final Label bio;
         private final Label reputationScore;
         private final Label profileAge;
-        private final Button privateMsgButton, mentionButton, ignoreButton, reportButton;
+        private final Hyperlink mention, ignore, report;
         private final Label terms;
+        private final Button privateMsgButton;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -210,13 +212,10 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             Label optionsLabel = new Label(Res.get("social.chatUser.options").toUpperCase());
             optionsLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9", "font-semi-bold");
 
-            mentionButton = new Button(Res.get("social.mention"));
-            ignoreButton = new Button();
-            reportButton = new Button(Res.get("social.report"));
-            mentionButton.getStyleClass().add("bisq-text-button");
-            ignoreButton.getStyleClass().add("bisq-text-button");
-            reportButton.getStyleClass().add("bisq-text-button");
-            VBox optionsBox = new VBox(5, optionsLabel, mentionButton, ignoreButton, reportButton);
+            mention = new Hyperlink(Res.get("social.mention"));
+            ignore = new Hyperlink();
+            report = new Hyperlink(Res.get("social.report"));
+            VBox optionsBox = new VBox(5, optionsLabel, mention, ignore, report);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 
@@ -240,7 +239,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             terms.textProperty().bind(model.terms);
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
-            ignoreButton.textProperty().bind(model.ignoreButtonText);
+            ignore.textProperty().bind(model.ignoreButtonText);
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
@@ -248,9 +247,9 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             });
 
             privateMsgButton.setOnAction(e -> controller.onSendPrivateMessage());
-            mentionButton.setOnAction(e -> controller.onMentionUser());
-            ignoreButton.setOnAction(e -> controller.onToggleIgnoreUser());
-            reportButton.setOnAction(e -> controller.onReportUser());
+            mention.setOnAction(e -> controller.onMentionUser());
+            ignore.setOnAction(e -> controller.onToggleIgnoreUser());
+            report.setOnAction(e -> controller.onReportUser());
         }
 
         @Override
@@ -261,14 +260,14 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             terms.textProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
-            ignoreButton.textProperty().unbind();
+            ignore.textProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 
             privateMsgButton.setOnAction(null);
-            mentionButton.setOnAction(null);
-            ignoreButton.setOnAction(null);
-            reportButton.setOnAction(null);
+            mention.setOnAction(null);
+            ignore.setOnAction(null);
+            report.setOnAction(null);
         }
 
         private VBox getInfoBox(String title, boolean smaller) {

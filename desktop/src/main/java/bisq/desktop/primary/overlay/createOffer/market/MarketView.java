@@ -20,14 +20,13 @@ package bisq.desktop.primary.overlay.createOffer.market;
 import bisq.common.currency.Market;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -40,8 +39,6 @@ import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
@@ -49,6 +46,7 @@ import java.util.Comparator;
 public class MarketView extends View<VBox, MarketModel, MarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final TextField searchField;
+    private ToggleGroup toggleGroup = new ToggleGroup();
 
     public MarketView(MarketModel model, MarketController controller) {
         super(new VBox(), model, controller);
@@ -72,37 +70,40 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
         HBox searchBox = new HBox(0, searchIcon, searchField);
         searchBox.setAlignment(Pos.CENTER_LEFT);
-        int searchBoxWidth = 158;
+        int searchBoxWidth = 140;
         searchBox.setMaxWidth(searchBoxWidth);
-        searchBox.setMaxHeight(26);
+        searchBox.setMaxHeight(30);
         searchBox.getStyleClass().add("small-search-box");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        tableView.getStyleClass().add("onboarding-market-table-view");
+        tableView.getStyleClass().add("create-offer-table-view");
         int tableHeight = 240;
         tableView.setMinHeight(tableHeight);
-        int height = 650;
-        tableView.setMaxWidth(height);
+        int width = 650;
+        tableView.setMaxWidth(width);
         configTableView();
 
-        StackPane.setMargin(searchBox, new Insets(0, 0, tableHeight - 3, height - searchBoxWidth));
-
+        StackPane.setMargin(searchBox, new Insets(0, 0, tableHeight - 3, width - searchBoxWidth - 32));
         StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
-        tableViewWithSearchBox.setMaxWidth(height);
+        tableViewWithSearchBox.setMaxWidth(width);
 
         VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 20, 0));
         VBox.setMargin(tableViewWithSearchBox, new Insets(0, 0, 30, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, tableViewWithSearchBox/*, Spacer.fillVBox()*/);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, tableViewWithSearchBox);
     }
 
     @Override
     protected void onViewAttached() {
         searchField.textProperty().bindBidirectional(model.getSearchText());
+
+        tableView.scrollTo(model.getSelectedMarketListItem().get());
+        tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
     }
 
     @Override
     protected void onViewDetached() {
+        searchField.textProperty().unbindBidirectional(model.getSearchText());
     }
 
     private void configTableView() {
@@ -131,34 +132,46 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 .build());
     }
 
+
     private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getSelectionCellFactory() {
         return column -> new TableCell<>() {
-            private Subscription selectionPin;
-            private final BisqToggleButton toggleButton = new BisqToggleButton();
+            private ChangeListener<MarketListItem> listener;
+            private final ToggleButton toggleButton = new ToggleButton();
 
             {
-                toggleButton.getStyleClass().add("onboarding-market-table-toggle-button");
+                toggleButton.setToggleGroup(toggleGroup);
             }
 
             @Override
             public void updateItem(final MarketListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                ReadOnlyObjectProperty<MarketListItem> selectedItemProperty = tableView.getSelectionModel().selectedItemProperty();
                 if (item != null && !empty) {
                     toggleButton.setText(Res.get("select"));
-                    toggleButton.setSelected(item.getSelected().get());
-                    toggleButton.setOnAction(e -> controller.onSelect(item));
-                    selectionPin = EasyBind.subscribe(model.getSelectedMarketListItem(), selectedItem -> {
-                        if (selectedItem != null) {
-                            boolean isSelected = selectedItem.equals(item);
-                            toggleButton.setSelected(isSelected);
+                    toggleButton.setSelected(selectedItemProperty.get() != null &&
+                            selectedItemProperty.get().equals(item) ||
+                            model.getSelectedMarketListItem().get().equals(item));
+                    toggleButton.setOnAction(e -> {
+                        if (toggleButton.isSelected()) {
+                            controller.onSelect(item);
+                        } else {
+                            toggleButton.setSelected(true);
                         }
                     });
+                    listener = (observable, oldValue, newValue) -> {
+                        boolean selected = newValue != null && newValue.equals(item);
+                        toggleButton.setSelected(selected);
+                        if (selected) {
+                            controller.onSelect(item);
+                        }
+                    };
+                    selectedItemProperty.addListener(listener);
                     setGraphic(toggleButton);
                 } else {
+                    selectedItemProperty.removeListener(listener);
                     toggleButton.setSelected(false);
                     toggleButton.setOnAction(null);
-                    selectionPin.unsubscribe();
                     setGraphic(null);
                 }
             }
@@ -201,8 +214,6 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         private final String numUsers;
         @EqualsAndHashCode.Exclude
         private final StackPane icon;
-        @EqualsAndHashCode.Exclude
-        private final BooleanProperty selected = new SimpleBooleanProperty();
 
         MarketListItem(Market market, int numOffersAsInteger, int numUsersAsInteger) {
             this.market = market;
@@ -212,7 +223,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             icon = MarketImageComposition.imageBoxForMarket(
                     market.getBaseCurrencyCode().toLowerCase(),
                     market.getQuoteCurrencyCode().toLowerCase());
-            icon.getStyleClass().add("onboarding-market-table-view");
+            icon.getStyleClass().add("create-offer-table-view");
             this.numUsersAsInteger = numUsersAsInteger;
         }
 

@@ -122,7 +122,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected javafx.scene.control.Skin<?> createDefaultSkin() {
         if (skin == null) {
             skin = new Skin<>(this, description, prompt);
-            editor = skin.getTextInputBox().getInputTextField();
+            editor = skin.getMaterialTextField().getInputTextField();
         }
         return skin;
     }
@@ -214,7 +214,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             }
         }).get();
         if (weakEventFilter2 != null) {
-            skin.textInputBox.addEventFilter(KeyEvent.ANY, weakEventFilter2);
+            skin.materialTextField.addEventFilter(KeyEvent.ANY, weakEventFilter2);
         }
     }
 
@@ -291,7 +291,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected final static double DEFAULT_ARROW_X_L = 22;
         protected final static double DEFAULT_ARROW_X_M = 31.5;
         protected final static double DEFAULT_ARROW_X_R = 41;
-        protected final TextInputBox textInputBox;
+        protected final MaterialTextField materialTextField;
         protected final ImageView arrow;
         protected final Polygon listBackground = new Polygon();
         protected final ObservableList<T> items;
@@ -309,15 +309,15 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             comboBox = control;
             items = comboBox.getItems();
 
-            textInputBox = new TextInputBox(description, prompt);
-            textInputBox.setStyle("-fx-background-color: transparent");
+            materialTextField = new MaterialTextField(description, prompt);
+            materialTextField.setStyle("-fx-background-color: transparent");
 
             arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setLayoutY(22);
             arrow.setMouseTransparent(true);
 
             buttonPane = new Pane();
-            buttonPane.getChildren().setAll(textInputBox, arrow);
+            buttonPane.getChildren().setAll(materialTextField, arrow);
             getChildren().setAll(buttonPane);
             buttonPane.autosize();
 
@@ -345,11 +345,11 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         }
 
         protected void setDescription(String description) {
-            textInputBox.setDescription(description);
+            materialTextField.setDescription(description);
         }
 
         public final StringProperty descriptionProperty() {
-            return textInputBox.descriptionProperty();
+            return materialTextField.descriptionProperty();
         }
 
         @Override
@@ -385,7 +385,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             super.layoutChildren(x, y, w, h);
 
             arrow.setLayoutX(w - 22);
-            textInputBox.setPrefWidth(w);
+            materialTextField.setPrefWidth(w);
             layoutListView();
         }
 
@@ -398,7 +398,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
                 // relative to visible top-left point 
                 double height = Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight() + listOffset;
                 double width = comboBox.getWidth() - 10;
-                double y = textInputBox.getHeight() - 25;
+                double y = materialTextField.getHeight() - 25;
                 double arrowY_m = y - 7.5;
                 listBackground.getPoints().setAll(
                         x, y,

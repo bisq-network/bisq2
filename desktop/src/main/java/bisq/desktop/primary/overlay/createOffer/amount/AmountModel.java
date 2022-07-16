@@ -32,7 +32,7 @@ public class AmountModel implements Model {
     private final ObjectProperty<Monetary> baseSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> quoteSideAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-    private final StringProperty directionString = new SimpleStringProperty();
+    private final StringProperty spendOrReceiveString = new SimpleStringProperty();
     private final ObjectProperty<Monetary> minAmount = new SimpleObjectProperty<>();
     private final ObjectProperty<Monetary> maxAmount = new SimpleObjectProperty<>();
     private final DoubleProperty sliderMin = new SimpleDoubleProperty();

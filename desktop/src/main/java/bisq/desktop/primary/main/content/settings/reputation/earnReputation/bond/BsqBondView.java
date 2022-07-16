@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bond;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
@@ -60,7 +60,7 @@ public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
         Label pubKeyHashLabel = new Label(Res.get("reputation.pubKeyHash"));
         pubKeyHashLabel.getStyleClass().addAll("bisq-text-3");
 
-        TextInputBox txIdInputBox = new TextInputBox(Res.get("reputation.txId"), Res.get("reputation.txId.prompt"));
+        MaterialTextField txIdInputBox = new MaterialTextField(Res.get("reputation.txId"), Res.get("reputation.txId.prompt"));
 
         VBox.setMargin(headLine, new Insets(25, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(30, 0, 0, 30));

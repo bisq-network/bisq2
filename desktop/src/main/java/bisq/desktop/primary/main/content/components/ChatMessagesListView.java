@@ -37,6 +37,7 @@ import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.chat.trade.pub.TradeChatOffer;
+import bisq.common.monetary.Coin;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -52,6 +53,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
@@ -60,6 +62,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -217,9 +220,9 @@ public class ChatMessagesListView {
                         offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
                     }
                     return offerOnlyPredicate &&
-                            item.getSender().isPresent() &&
-                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSender().get().getId()) &&
-                            userProfileService.findUserProfile(item.getSender().get().getId()).isPresent();
+                            item.getSenderUserProfile().isPresent() &&
+                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
+                            userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
                 };
                 model.filteredChatMessages.setPredicate(predicate);
             });
@@ -320,18 +323,22 @@ public class ChatMessagesListView {
                 return;
             }
             userProfileService.findUserProfile(chatMessage.getAuthorId())
-                    .ifPresent(chatUser -> {
-                        createAndSelectPrivateTradeChannel(chatUser)
+                    .ifPresent(userProfile -> {
+                        createAndSelectPrivateTradeChannel(userProfile)
                                 .ifPresent(privateTradeChannel -> {
                                     TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
-                                    String dirString = tradeChatOffer.getDirection().mirror().displayString();
-                                    String baseCurrencyCode = tradeChatOffer.getMarket().getBaseCurrencyCode();
                                     String text = chatMessage.getText();
-                                    Optional<Quotation> quotation = Optional.of(new Quotation(chatUser.getNym(),
-                                            chatUser.getNickName(),
-                                            chatUser.getPubKeyHash(),
+                                    Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
+                                            userProfile.getNickName(),
+                                            userProfile.getPubKeyHash(),
                                             text));
-                                    privateTradeChannelService.sendPrivateChatMessage(Res.get("satoshisquareapp.chat.takeOffer.takerRequest", dirString, baseCurrencyCode),
+                                    String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
+                                    String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
+                                            tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                                    String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+                                    String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
+                                            direction, amount, methods);
+                                    privateTradeChannelService.sendPrivateChatMessage(replyText,
                                                     quotation,
                                                     privateTradeChannel)
                                             .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
@@ -345,8 +352,6 @@ public class ChatMessagesListView {
                 if (chatMessage instanceof PublicTradeChatMessage) {
                     publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity)
                             .whenComplete((result, throwable) -> {
-                                log.error("onDeleteMessage result {}", result);
-                                log.error("onDeleteMessage throwable {}", throwable.toString());
                             });
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
                     publicDiscussionChannelService.deleteChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
@@ -647,11 +652,11 @@ public class ChatMessagesListView {
                                 message.setText(item.getMessage());
                                 dateTime.setText(item.getDate());
 
-                                item.getSender().ifPresent(author -> {
+                                item.getSenderUserProfile().ifPresent(author -> {
                                     userName.setText(author.getUserName());
                                     userName.setOnMouseClicked(e -> controller.onMention(author));
 
-                                    chatUserIcon.setChatUser(author, model.getUserIdentityService());
+                                    chatUserIcon.setChatUser(author);
                                     chatUserIcon.setCursor(Cursor.HAND);
                                     Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
                                     chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
@@ -831,12 +836,12 @@ public class ChatMessagesListView {
                                     quotedMessageHBox.setManaged(true);
 
                                     Region verticalLine = new Region();
-                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-9");
+                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-dimmed");
                                     verticalLine.setMinWidth(3);
                                     verticalLine.setMinHeight(25);
 
                                     quotedMessageField.setText(quotation.getMessage());
-                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-9");
+                                    quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
 
                                     ImageView roboIconImageView = new ImageView();
                                     roboIconImageView.setFitWidth(25);
@@ -846,7 +851,7 @@ public class ChatMessagesListView {
 
                                     Label userName = new Label(quotation.getUserName());
                                     userName.setPadding(new Insets(4, 0, 0, 0));
-                                    userName.setStyle("-fx-text-fill: -bisq-grey-9");
+                                    userName.setStyle("-fx-text-fill: -bisq-grey-dimmed");
 
                                     HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
                                     HBox iconAndUserName = new HBox(15, roboIconImageView, userName);
@@ -915,7 +920,7 @@ public class ChatMessagesListView {
         private final String message;
         private final String date;
         private final Optional<Quotation> quotedMessage;
-        private final Optional<UserProfile> sender;
+        private final Optional<UserProfile> senderUserProfile;
         private final String nym;
         private final String nickName;
         @EqualsAndHashCode.Exclude
@@ -925,21 +930,21 @@ public class ChatMessagesListView {
             this.chatMessage = chatMessage;
 
             if (chatMessage instanceof PrivateTradeChatMessage) {
-                sender = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
+                senderUserProfile = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
             } else if (chatMessage instanceof PrivateDiscussionChatMessage) {
-                sender = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getSender());
+                senderUserProfile = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getSender());
             } else {
-                sender = userProfileService.findUserProfile(chatMessage.getAuthorId());
+                senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             }
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotation();
             date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
 
-            nym = sender.map(UserProfile::getNym).orElse("");
-            nickName = sender.map(UserProfile::getNickName).orElse("");
+            nym = senderUserProfile.map(UserProfile::getNym).orElse("");
+            nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
 
-            reputationScore = sender.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
+            reputationScore = senderUserProfile.flatMap(reputationService::findReputationScore).orElse(ReputationScore.NONE);
         }
 
         @Override

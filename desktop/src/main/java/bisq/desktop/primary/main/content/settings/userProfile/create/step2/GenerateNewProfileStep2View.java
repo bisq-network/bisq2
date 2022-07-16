@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.TextAreaBox;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
     private final ImageView roboIconView;
-    private final TextInputBox statement;
+    private final MaterialTextField statement;
     private final TextAreaBox terms;
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
@@ -80,7 +80,7 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        statement = new TextInputBox(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
+        statement = new MaterialTextField(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
         statement.setPrefWidth(width);
 
         terms = new TextAreaBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));

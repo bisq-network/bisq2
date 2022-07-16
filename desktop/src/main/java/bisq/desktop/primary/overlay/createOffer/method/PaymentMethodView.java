@@ -17,24 +17,20 @@
 
 package bisq.desktop.primary.overlay.createOffer.method;
 
-import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqToggleButton;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.ChipButton;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMethodController> {
 
-    private final TextInputBox customMethodTextInputBox;
+    private final MaterialTextField custom;
     private final ListChangeListener<String> allPaymentMethodsListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
-    private final Button addCustomMethodButton;
+    private final Button addButton;
 
     public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
         super(new VBox(), model, controller);
@@ -70,41 +66,40 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         flowPane.setVgap(20);
         flowPane.setHgap(20);
 
-        customMethodTextInputBox = new TextInputBox(Res.get("onboarding.method.customMethod"),
-                Res.get("onboarding.method.customMethod.prompt"));
-        customMethodTextInputBox.setPrefWidth(300);
+        custom = new MaterialTextField(Res.get("onboarding.method.customMethod"),
+                null, Res.get("onboarding.method.customMethod.prompt"));
+        custom.setPrefWidth(300);
 
-        //  addCustomMethodButton = new Button(Res.get("onboarding.method.customMethod.addButton"), Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "12"));
-        addCustomMethodButton = new Button(Res.get("onboarding.method.customMethod.addButton"));
-        addCustomMethodButton.setDefaultButton(true);
-        addCustomMethodButton.setMinHeight(50);
+        addButton = new Button(Res.get("onboarding.method.customMethod.addButton").toUpperCase());
+        // addButton.setDefaultButton(true);
+        addButton.getStyleClass().add("outlined-button");
 
-        HBox.setMargin(addCustomMethodButton, new Insets(0, 0, 1, 0));
-        HBox hBox = new HBox(10, customMethodTextInputBox, addCustomMethodButton);
-        hBox.setAlignment(Pos.CENTER);
+        VBox vBox = new VBox(0, custom, addButton);
+        vBox.setAlignment(Pos.CENTER_RIGHT);
+        vBox.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(80, 65, 33, 65));
+        VBox.setMargin(flowPane, new Insets(80, 65, 50, 65));
         VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, hBox);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, vBox);
 
         allPaymentMethodsListener = c -> {
             c.next();
             fillPaymentMethods();
         };
+        root.setOnMousePressed(e -> root.requestFocus());
     }
 
     @Override
     protected void onViewAttached() {
-        customMethodTextInputBox.textProperty().bindBidirectional(model.getCustomMethod());
-        addCustomMethodButton.visibleProperty().bind(model.getAddCustomMethodIconVisible());
-        addCustomMethodButton.managedProperty().bind(model.getAddCustomMethodIconVisible());
+        custom.textProperty().bindBidirectional(model.getCustomMethod());
+        addButton.visibleProperty().bind(model.getAddCustomMethodIconVisible());
         nonFoundLabel.visibleProperty().bind(model.getPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getPaymentMethodsEmpty());
         flowPane.visibleProperty().bind(model.getPaymentMethodsEmpty().not());
         flowPane.managedProperty().bind(model.getPaymentMethodsEmpty().not());
 
-        addCustomMethodButton.setOnAction(e -> controller.onAddCustomMethod());
+        addButton.setOnAction(e -> controller.onAddCustomMethod());
 
         model.getAllPaymentMethods().addListener(allPaymentMethodsListener);
         fillPaymentMethods();
@@ -112,15 +107,14 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
 
     @Override
     protected void onViewDetached() {
-        customMethodTextInputBox.textProperty().unbindBidirectional(model.getCustomMethod());
-        addCustomMethodButton.visibleProperty().unbind();
-        addCustomMethodButton.managedProperty().unbind();
+        custom.textProperty().unbindBidirectional(model.getCustomMethod());
+        addButton.visibleProperty().unbind();
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
         flowPane.managedProperty().unbind();
 
-        addCustomMethodButton.setOnAction(null);
+        addButton.setOnAction(null);
 
         model.getAllPaymentMethods().removeListener(allPaymentMethodsListener);
     }
@@ -130,33 +124,25 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         for (int i = 0; i < model.getAllPaymentMethods().size(); i++) {
             String paymentMethod = model.getAllPaymentMethods().get(i);
             String displayString = Res.has("paymentMethod." + paymentMethod) ? Res.get("paymentMethod." + paymentMethod) : paymentMethod;
-            ImageView icon = ImageUtil.getImageViewById(paymentMethod);
-            BisqToggleButton button = new BisqToggleButton(displayString, icon);
-            if (paymentMethod.length() > 13) {
-                button.setTooltip(new Tooltip(displayString));
+            ChipButton chipButton = new ChipButton(displayString);
+            if(model.getSelectedPaymentMethods().contains(paymentMethod)){
+                chipButton.setSelected(true);
             }
-            button.setAlignment(Pos.CENTER_LEFT);
-            button.setId("bisq-border-icon-toggle-button");
-            button.setSelected(model.getSelectedPaymentMethods().contains(paymentMethod));
-            button.setOnAction(e -> controller.onTogglePaymentMethod(paymentMethod, button.isSelected()));
-            button.setMinHeight(35);
-            button.setMaxHeight(35);
-            int width = 180;
-            button.setMinWidth(width);
-            button.setPrefWidth(width);
-            button.setMaxWidth(width);
-            StackPane stackPane = new StackPane(button);
-
+            chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, chipButton.isSelected()));
             model.getAddedCustomMethods().stream()
                     .filter(customMethod -> customMethod.equals(paymentMethod))
-                    .forEach(customMethod -> {
-                        Label closeCustomIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN, "15");
-                        closeCustomIcon.setCursor(Cursor.HAND);
-                        closeCustomIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
-                        StackPane.setMargin(closeCustomIcon, new Insets(-14, 0, 0, 156));
-                        stackPane.getChildren().add(closeCustomIcon);
+                    .findAny()
+                    .ifPresentOrElse(customMethod -> {
+                        Label closeIcon = chipButton.setRightIcon(AwesomeIcon.REMOVE_SIGN);
+                        closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
+                        if (paymentMethod.length() > 13) {
+                            chipButton.setTooltip(new Tooltip(displayString));
+                        }
+                    }, () -> {
+                        ImageView icon = ImageUtil.getImageViewById(paymentMethod);
+                        chipButton.setLeftIcon(icon);
                     });
-            flowPane.getChildren().add(stackPane);
+            flowPane.getChildren().add(chipButton);
         }
     }
 }

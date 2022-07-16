@@ -39,7 +39,7 @@
 
 
     /* Colors */
-    -bisq-green: #56ae48;
+    -bisq-green: #56ae48; /* rgb(86,174,72) */
     -bisq-green-lighter: #53a746;
     -bisq-green-darker: #488e3e;
     -bisq-white: white;
@@ -50,14 +50,15 @@
     -bisq-red: #d02c1f;
 
     /* Greys */
+    -bisq-grey-dimmed: #828282;
+    -bisq-grey-disabled: #4D4D4D;
+
     -bisq-grey-2: #1D1D1D;
     -bisq-grey-3: #212121;
     -bisq-grey-4: #262626;
     -bisq-grey-5: #333333;
     -bisq-grey-6: #474748;
-    -bisq-grey-7: #4D4D4D;
     -bisq-grey-8: #545454;
-    -bisq-grey-9: #828282;
     -bisq-grey-10: #a9a9a9;
     -bisq-grey-11: #C9C9C9;
     -bisq-grey-12: #2E2E2E;
@@ -71,7 +72,7 @@
     -bisq-grey-20: #454545;
     -bisq-grey-21: #343434;
     -bisq-grey-22: #707070;
-    -bisq-grey-23: #222222;
+    -bisq-grey-23: #1e1e1e;
 
     /* Background colors */
     -bisq-bg-darker: -bisq-grey-2;
@@ -80,7 +81,7 @@
     -bisq-background-color-gray: -bisq-grey-5;
 
     /* Border colors */
-    -bisq-border-color-grey: -bisq-grey-7;
+    -bisq-border-color-grey: -bisq-grey-disabled;
     -bisq-border-color-grey-hover: -bisq-grey-11;
 
 
@@ -97,7 +98,7 @@
     -fx-default-button: -bisq-green;
 
     -fx-dark-text-color: -bisq-black;
-    -fx-mid-text-color: -bisq-grey-9;
+    -fx-mid-text-color: -bisq-grey-dimmed;
     -fx-light-text-color: -bisq-white;
 }
 
@@ -150,12 +151,12 @@
 }
 
 .border-top-grey-7 {
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 1 0 0 0;
 }
 
 .border-bottom-grey-7 {
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 0 0 1 0;
 }
 
@@ -212,62 +213,17 @@
 
 /*******************************************************************************
  *                                                                             *
- * Hyperlink                                                                  *
- *                                                                             *
- ******************************************************************************/
-
-.hyperlink,
-.hyperlink.force-underline .text,
-.hyperlink:hover,
-.hyperlink:visited,
-.hyperlink:hover:visited,
-.hyperlink:focused {
-    -fx-border-style: none;
-    -fx-border-width: 0px;
-    -fx-underline: true;
-    /*  -fx-text-fill: -bs-rd-font-dark;
-      -fx-fill: -bs-rd-font-dark;*/
-}
-
-.hyperlink.no-underline {
-    -fx-underline: false;
-}
-
-.hyperlink:hover {
-    -fx-text-fill: -bisq-white;
-    -fx-fill: -bisq-white;
-}
-
-.hyperlink:hover,
-.hyperlink:visited,
-.hyperlink:hover:visited {
-    -fx-underline: false;
-}
-
-.hyperlink.highlight,
-.hyperlink.highlight .text.hyperlink.no-underline {
-    -fx-text-fill: -fx-accent;
-    -fx-fill: -fx-accent;
-}
-
-.hyperlink.error {
-    /*  -fx-text-fill: -bs-rd-error-red;
-      -fx-fill: -bs-rd-error-red;*/
-}
-
-/*******************************************************************************
- *                                                                             *
  * Separator                                                                   *
  *                                                                             *
  ******************************************************************************/
 
 .separator:horizontal .line {
-    -fx-border-color: -bisq-grey-9;
+    -fx-border-color: -bisq-grey-dimmed;
     -fx-border-width: 0.5;
 }
 
 .separator:vertical .line {
-    -fx-border-color: -bisq-grey-9;
+    -fx-border-color: -bisq-grey-dimmed;
     -fx-border-width: 0.5;
 }
 
@@ -278,7 +234,7 @@
  ******************************************************************************/
 
 .radio-button {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .radio-button:selected {
@@ -370,14 +326,15 @@
 }
 
 .bisq-text-3 {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 1.1em;
     /* -fx-line-spacing: -0.12em;*/
     -fx-font-family: "IBM Plex Sans Light";
 }
 
 .bisq-text-4 {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.8em;
 }
 
@@ -400,7 +357,7 @@
 .bisq-text-8 {
     -fx-font-size: 0.92em;
     -fx-font-family: "IBM Plex Sans Medium";
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .bisq-text-9 {
@@ -411,7 +368,7 @@
 }
 
 .bisq-text-10 {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -424,7 +381,7 @@
 }
 
 .bisq-text-12 {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 2.0em;
     -fx-font-family: "IBM Plex Sans Thin";
 }
@@ -444,6 +401,13 @@
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-green;
+}
+
+.bisq-text-16 {
+    -fx-fill: -bisq-grey-dimmed;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .wrap-text {
@@ -475,7 +439,7 @@
 #quote-amount-text-field {
     -fx-background-color: transparent;
     -fx-border-style: none;
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 1.1em;
     -fx-font-family: "IBM Plex Sans Thin";
     /*-fx-line-spacing: -0.12em;*/
@@ -521,7 +485,7 @@
 .bisq-small-light-label-dimmed-2 {
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .bisq-content-headline-label {
@@ -554,7 +518,7 @@
 }
 
 .bisq-small-dimmed-label {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.73em;
 }
 
@@ -571,7 +535,7 @@
 }
 
 .bisq-text-grey-9 {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .bisq-text-grey-10 {
@@ -594,11 +558,57 @@
     -fx-font-size: 1.25em;
 }
 
-/*
-.bisq-label-white:selected {
-    -fx-text-fill: -bisq-green;
-}*/
 
+/*******************************************************************************
+ *                                                                             *
+ * MaterialTextField                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.material-text-field-bg {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+}
+
+.material-text-field-bg-hover {
+    -fx-background-color: rgba(255, 255, 255, 0.075);
+}
+
+.material-text-field-bg-selected {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+.material-text-field-description-small {
+    -fx-font-size: 0.95em;
+}
+
+.material-text-field-description-big {
+    -fx-font-size: 1.25em;
+}
+
+.material-text-field-description-selected {
+    -fx-text-fill: -bisq-green;
+}
+
+.material-text-field-description-deselected {
+    -fx-text-fill: -bisq-grey-dimmed;
+}
+
+.material-text-field-description-read-only {
+    -fx-text-fill: -bisq-white;
+}
+
+.material-text-field-read-only {
+    -fx-text-fill: -bisq-grey-disabled !important;
+}
+
+.material-text-field {
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-disabled;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -669,11 +679,11 @@
 
 .bisq-input-box-top-pane {
     -fx-background-color: -bisq-grey-12;
-    -fx-background-radius: 4;
+    -fx-background-radius: 4 4 0 0;
 }
 
 .bisq-input-box-description-label {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -703,13 +713,29 @@
  ******************************************************************************/
 
 .button {
-    -fx-background-color: -bisq-grey-17;
+    -fx-background-color: rgba(255, 255, 255, 0.1);
     -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
     -fx-text-fill: -fx-light-text-color;
     -fx-font-size: 1em;
-    -fx-border-width: 0px;
-    -fx-padding: 5 33 5 33;
+    -fx-padding: 5 32 5 32;
     -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);
+}
+
+.button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
 .button:default,
@@ -719,21 +745,17 @@
 
 .button:default:hover {
     -fx-background-color: -bisq-green-lighter;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
 }
 
-.button:hover {
-    -fx-background-color: derive(-bisq-grey-17, 10%);
+.button:default:pressed {
+    -fx-background-color: -bisq-green-darker;
+    fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);
 }
 
-.button:disabled {
-    -fx-background-color: -bisq-grey-12;
-}
-
-.button.icon-button {
-    -fx-padding: 0;
-    -fx-background-color: transparent;
-    -fx-focus-traversable: false;
-    -fx-cursor: hand;
+.button:default:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
 .red-button {
@@ -744,261 +766,229 @@
     -fx-background-color: derive(-bisq-red, 10%);
 }
 
+.red-button:pressed {
+    -fx-background-color: derive(-bisq-red, -10%);
+}
+
+.button.icon-button {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
+    -fx-cursor: hand;
+}
 
 /*******************************************************************************
  *                                                                             *
- * Custom Button styles                                                                  *
+ * Outlined-Button                                                                  *
  *                                                                             *
  ******************************************************************************/
 
-/* Dark grey button with light grey border */
-.bisq-border-dark-bg-button {
-    -fx-background-color: -bisq-bg-dark;
-    -fx-background-radius: 2.5;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1em;
-    -fx-border-color: -bisq-border-color-grey;
-    -fx-border-width: 0.75;
-    -fx-border-radius: 2.5;
-    -fx-padding: 5 33 5 33;
-    -fx-cursor: hand;
-}
-
-.bisq-border-dark-bg-button:hover {
-    -fx-border-color: -bisq-border-color-grey-hover;
-    -fx-background-color: -bisq-background-color-gray;
-}
-
-.bisq-border-button {
-    -fx-background-color: -bisq-content-bg;
-    -fx-background-radius: 2.5;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1em;
-    -fx-border-color: -bisq-border-color-grey;
-    -fx-border-width: 0.75;
-    -fx-border-radius: 2.5;
-    -fx-padding: 5 33 5 33;
-    -fx-cursor: hand;
-}
-
-.bisq-border-button:hover {
-    -fx-border-color: -bisq-border-color-grey-hover;
-    -fx-background-color: -bisq-content-bg;
-}
-
-#bisq-border-icon-toggle-button {
-    -fx-background-color: -bisq-content-bg;
-    -fx-background-radius: 4;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1em;
-    -fx-border-color: -bisq-border-color-grey;
-    -fx-border-width: 0.75;
-    -fx-border-radius: 4;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 0, 0, 0, 2);
-}
-
-#bisq-border-icon-toggle-button:hover {
-    -fx-background-color: derive(-bisq-content-bg, 10%) !important;
-    -fx-border-color: -bisq-border-color-grey-hover;
-}
-
-#bisq-border-icon-toggle-button:selected {
-    -fx-background-color: derive(-bisq-content-bg, -10%) !important;
-    -fx-border-color: -bisq-green;
-}
-
-#bisq-border-icon-toggle-button:selected:hover {
-    -fx-background-color: derive(-bisq-content-bg, -30%) !important;
-    -fx-border-color: -bisq-green;
-}
-
-.custom-payment-method-label {
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1em;
-    -fx-font-family: "IBM Plex Sans Medium";
-}
-
-.custom-payment-method-box {
-    -fx-background-color: -bisq-green;
-    -fx-background-radius: 4;
+.outlined-button {
+    -fx-background-color: transparent;
     -fx-border-color: -bisq-green;
     -fx-border-width: 1;
     -fx-border-radius: 4;
-    -fx-cursor: hand;
-}
-
-
-/* Big green button */
-.bisq-big-green-button {
-    -fx-background-color: -bisq-green;
-    -fx-background-radius: 8;
-    -fx-border-width: 0;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-padding: 17;
-    -fx-font-size: 1.7em;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
-}
-
-.bisq-big-green-button:hover {
-    -fx-background-color: -bisq-green-lighter;
-    -fx-background-radius: 8;
-}
-
-/* Big white button */
-.bisq-big-white-button {
-    -fx-background-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
-    -fx-padding: 17;
-    -fx-font-size: 1.54em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
-    -fx-cursor: hand;
-}
-
-.bisq-big-white-button:hover {
-    -fx-background-color: -bisq-green;
-}
-
-/* Big grey button */
-.bisq-big-grey-button {
-    -fx-background-color: -bisq-grey-17;
-    -fx-text-fill: -bisq-white;
-    -fx-padding: 17;
-    -fx-font-size: 1.54em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
-    -fx-cursor: hand;
-}
-
-.bisq-big-grey-button:default {
-    -fx-background-color: -bisq-green;
-    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
-}
-
-.bisq-big-grey-button:default:hover {
-    -fx-background-color: -bisq-green-lighter;
-}
-
-.bisq-big-grey-button:hover {
-    -fx-background-color: derive(-bisq-grey-17, 10%);
-}
-
-/* Big transparent button */
-.bisq-big-transparent-button {
-    -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-8;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-text-fill: -bisq-white;
-    -fx-padding: 17;
-    -fx-font-size: 1.7em;
-    -fx-font-family: "IBM Plex Sans Light";
-    -fx-cursor: hand;
-}
-
-.bisq-big-transparent-button:hover {
-    -fx-background-color: -bisq-white;
-    -fx-background-radius: 8;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-border-color: -bisq-white;
-    -fx-text-fill: -bisq-black;
-}
-
-/* Transparent button */
-.bisq-transparent-button {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-padding: 6 14;
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 1.1em;
-    /*-fx-line-spacing: -0.12em;*/
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.bisq-transparent-button:hover {
-    -fx-text-fill: -bisq-white;
-}
-
-.bisq-transparent-button:disabled {
-    -fx-text-fill: derive(-bisq-grey-9, -50%);
-}
-
-.bisq-transparent-grey-button {
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-    -fx-padding: 6 14;
-    -fx-text-fill: -bisq-grey-9;
-    -fx-font-size: 0.8em;
-}
-
-.bisq-transparent-grey-button:hover {
-    -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
-}
-
-.bisq-transparent-grey-button:disabled {
-    -fx-background-color: transparent;
-    -fx-text-fill: derive(-bisq-grey-9, -50%);
-}
-
-.bisq-text-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
-    -fx-underline: true;
-    -fx-cursor: hand;
-    -fx-padding: 0;
-}
-
-.bisq-text-button:hover {
-    -fx-background-color: transparent;
     -fx-text-fill: -bisq-green;
-}
-
-.bisq-text-button:disabled {
-    -fx-background-color: transparent;
-    -fx-text-fill: -bisq-grey-9;
-}
-
-
-.bisq-text-link {
-    -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.25em;
-    -fx-underline: true;
+    -fx-font-size: 1em;
+    -fx-padding: 5 32 5 32;
     -fx-cursor: hand;
-    -fx-padding: 0;
 }
 
-.bisq-text-link:hover {
+.outlined-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-effect: none;
+}
+
+
+.outlined-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.025);
+    -fx-border-color: -bisq-green-darker;
+    -fx-text-fill: -bisq-green-darker;
+    -fx-effect: none;
+}
+
+.outlined-button:disabled {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-green;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
 
-.bisq-text-link:disabled {
+/*******************************************************************************
+ *                                                                             *
+ * Text-Button                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.text-button {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-grey-9;
-}
-
-.bisq-create-offer-button {
-    -fx-background-color: -bisq-green;
-    -fx-background-radius: 8;
-    -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.3em;
     -fx-border-width: 0px;
-    -fx-padding: 5 33 5 33;
+    -fx-text-fill: -bisq-green;
+    -fx-font-size: 1em;
+    -fx-padding: 5 16 5 16;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);
 }
 
-.bisq-create-offer-button:hover {
+.text-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: none;
+}
+
+.text-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-effect: none;
+    -fx-text-fill: -bisq-green-darker;
+}
+
+.text-button:disabled {
+    -fx-background-color: transparent;
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.no-background {
+    -fx-background-color: transparent;
+}
+
+.no-background:hover {
+    -fx-background-color: transparent;
+}
+
+.no-background:pressed {
+    -fx-background-color: transparent;
+}
+
+.no-background:disabled {
+    -fx-background-color: transparent;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * ChipButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.chips-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 32;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-padding: 5 10 5 6;
+}
+
+.chips-button-hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+}
+
+.chips-button-pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+}
+
+.chips-button-selected {
+    -fx-background-color: -bisq-green;
+}
+
+.chips-button-selected-pressed {
+    -fx-background-color: -bisq-green-darker;
+}
+
+.chips-button-selected-hover {
     -fx-background-color: -bisq-green-lighter;
 }
 
-/* Bisq other buttons */
-.bisq-button-1 {
+.chips-button > .toggle-button,
+.chips-button > .toggle-button:hover,
+.chips-button > .toggle-button:armed,
+.chips-button > .toggle-button:selected,
+.chips-button > .toggle-button:selected:hover,
+.chips-button > .toggle-button:disabled,
+.chips-button > .toggle-button:disabled:hover {
+    -fx-background-color: transparent;
+    -fx-padding: 0 20 0 10;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Large Buttons                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.super-large-button {
+    -fx-background-radius: 8;
+    -fx-padding: 17;
+    -fx-font-size: 1.7em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+.large-button {
+    -fx-background-radius: 8;
+    -fx-padding: 17;
+    -fx-font-size: 1.54em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * ToggleButton                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+
+.toggle-button {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+    -fx-border-radius: 4;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-font-size: 1em;
+    -fx-padding: 5 32 5 32;
+    -fx-cursor: hand;
+}
+
+.toggle-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+}
+
+.toggle-button:pressed {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 1), 20, 0.5, 0, 4);
+}
+
+.toggle-button:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+.toggle-button:selected {
+    -fx-background-color: -bisq-green;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: -bisq-green-lighter;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 10, 0.5, 0, 2);
+}
+
+.toggle-button:selected:pressed {
+    -fx-background-color: -bisq-green-darker;
+    fect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0.5, 0, 4);
+}
+
+.toggle-button:selected:disabled {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-text-fill: derive(-fx-light-text-color, -20%);
+}
+
+
+/*******************************************************************************
+ *                                                                             *
+ * Card toggle button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.card-toggle-button {
     -fx-font-size: 1.46em;
     -fx-background-color: -bisq-grey-3;
     -fx-background-radius: 4;
@@ -1007,50 +997,39 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.bisq-button-1:hover {
+.card-toggle-button:hover {
     -fx-background-color: -bisq-grey-18;
 }
 
-.bisq-button-1:selected {
+.card-toggle-button:selected {
     -fx-background-color: -bisq-green;
 }
 
-.bisq-button-1:selected:hover {
+.card-toggle-button:selected:hover {
     -fx-background-color: -bisq-green-lighter;
 }
+
 
 /*******************************************************************************
  *                                                                             *
- * ToggleButton                                                                  *
+ * Hyperlink                                                                  *
  *                                                                             *
  ******************************************************************************/
 
-.toggle-button {
-    -fx-background-color: -bisq-grey-19;
-    -fx-background-radius: 4;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 1em;
-    -fx-border-width: 0;
-    -fx-padding: 5 33 5 33;
-    -fx-cursor: hand;
+.hyperlink {
+    -fx-text-fill: -bisq-white;
 }
 
-.toggle-button:hover {
-    -fx-background-color: derive(-bisq-grey-19, 10%) !important;
+.hyperlink:hover {
+    -fx-text-fill: -bisq-green;
 }
 
-.toggle-button:selected {
-    -fx-background-color: -bisq-green;
-    -fx-text-fill: -fx-light-text-color;
+.hyperlink:visited {
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
-.toggle-button:selected:hover {
-    -fx-background-color: -bisq-green-lighter;
-    -fx-text-fill: -fx-light-text-color;
-}
-
-.toggle-button:disabled {
-    -fx-background-color: -bisq-grey-12;
+.hyperlink:hover:visited {
+    -fx-text-fill: derive(-bisq-grey-dimmed, 20%);
 }
 
 
@@ -1063,8 +1042,10 @@
 .check-box {
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
-    -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;
+    /* -fx-label-padding: 0.0em 0.0em 0.0em 0.6em;*/
 }
+
+/*
 
 .check-box > .box {
     -fx-background-color: -bisq-grey-17, -bisq-grey-17, -bisq-grey-17, -fx-body-color;
@@ -1078,7 +1059,13 @@
 .check-box > .box > .mark {
     -fx-background-color: null;
     -fx-padding: 0.416667em 0.416667em 0.5em 0.5em;
-    -fx-shape: "M-0.25,6.083c0.843-0.758,4.583,4.833,5.75,4.833S14.5-1.5,15.917-0.917c1.292,0.532-8.75,17.083-10.5,17.083C3,16.167-1.083,6.833-0.25,6.083z";
+    -fx-shape: "M384 690l452-452 60 60-512 512-238-238 60-60z";
+}
+
+.check-box:selected > .box,
+.check-box:indeterminate > .box {
+    -fx-background-color: -bisq-green;
+    -fx-background-insets: 1 0 -1 0, 0;
 }
 
 .check-box:selected > .box > .mark,
@@ -1086,6 +1073,7 @@
     -fx-background-color: -bisq-green;
     -fx-background-insets: 1 0 -1 0, 0;
 }
+*/
 
 
 /*******************************************************************************
@@ -1207,12 +1195,12 @@
     -bisq-toggle-color: -bisq-green;
     -bisq-un-toggle-color: -bisq-white;
     -bisq-toggle-line-color: derive(-bisq-toggle-color, 65%);
-    -bisq-un-toggle-line-color: -bisq-grey-9;
+    -bisq-un-toggle-line-color: -bisq-grey-dimmed;
     -bisq-size: 8;
 }
 
 .bisq-toggle-button {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.9em;
 }
 
@@ -1228,7 +1216,7 @@
 
 .bisq-toggle-button:hover {
     -fx-background-color: transparent !important;
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .bisq-toggle-button Line {
@@ -1358,14 +1346,14 @@
 
 .list-view.chat-messages-list-view {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 1 0 0 0;
 }
 
 .list-view.chat-messages-list-view .list-cell {
     -fx-background-color: transparent;
     -fx-padding: 13 0 13 0;
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1em;
 }
@@ -1377,7 +1365,7 @@
 /* When used for create offer we dont show the border lines */
 .list-view.create-offer-list-view {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 0;
 }
 
@@ -1450,7 +1438,7 @@ tree-table-view:focused {
 
 .table-view .column-header .label {
     -fx-alignment: center;
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.9em;
     -fx-label-padding: 0 10 0 10;
 }
@@ -1641,7 +1629,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .accordion > .titled-pane > .title > .arrow-button > .arrow {
-    -fx-background-color: -bisq-grey-9;
+    -fx-background-color: -bisq-grey-dimmed;
     -fx-background-insets: -1, 0;
 }
 
@@ -1658,7 +1646,7 @@ tree-table-view:focused {
 }
 
 .accordion > .titled-pane {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 
@@ -1749,7 +1737,7 @@ tree-table-view:focused {
 
 .bisq-box-1 {
     -fx-background-color: -bisq-bg-dark;
-    -fx-background-radius: 5;
+    -fx-background-radius: 8;
 }
 
 .bisq-box-2 {
@@ -1757,9 +1745,9 @@ tree-table-view:focused {
     -fx-background-radius: 8;
 }
 
-.bisq-box-3 {
+.bisq-dual-amount-bg {
     -fx-background-color: -bisq-grey-17;
-    -fx-background-radius: 8;
+    -fx-background-radius: 8 8 0 0;
 }
 
 .bisq-darkest-bg {
@@ -1894,35 +1882,25 @@ tree-table-view:focused {
 
 /*******************************************************************************
  *                                                                             *
- * Onboarding domain                                                           *
+ * Create offer                                                         *
  *                                                                             *
  ******************************************************************************/
 
-.table-view.onboarding-market-table-view .column-header {
+.table-view.create-offer-table-view .column-header {
     -fx-pref-height: 40px;
     -fx-font-family: "IBM Plex Sans";
     -fx-font-weight: normal;
 }
 
-.table-view.onboarding-market-table-view .filler {
+.table-view.create-offer-table-view .filler {
     -fx-opacity: 0;
 }
-
-.table-view.onboarding-market-table-view .virtual-flow {
-    -fx-background-color: -bisq-grey-17;
-}
-
-.table-view.onboarding-market-table-view .table-row-cell {
+.table-view.create-offer-table-view .table-row-cell {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
-    -fx-border-color: -bisq-grey-3;
-    -fx-background-color: -bisq-grey-17;
 }
 
-.table-view.onboarding-market-table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-grey-17;
-}
 
 /* the text property from list view need to set to apply the color to the button label */
 .onboarding-market-table-toggle-button .text {
@@ -1941,8 +1919,8 @@ tree-table-view:focused {
     -fx-background-color: transparent;
     -fx-background-radius: 6;
     -fx-border-width: 0;
-    -fx-font-size: 0.92em;
-    -fx-text-fill: -bisq-grey-22;
+    -fx-font-size: 1em;
+    -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -1959,7 +1937,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .bisq-amount-input-code-label {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.9em;
     -fx-font-family: "IBM Plex Sans Light";
 }
@@ -2044,7 +2022,7 @@ tree-table-view:focused {
 }
 
 #chat-filter-box {
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 0 0 1 0;
     -fx-border-insets: 0 0 -1 0;
 }
@@ -2057,7 +2035,7 @@ tree-table-view:focused {
     -fx-border-radius: 8;
     -fx-faint-focus-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-prompt-text-fill: -bisq-grey-9;
+    -fx-prompt-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 1.38em;
     -fx-background-insets: 0;
     -fx-border-insets: 0;
@@ -2092,7 +2070,7 @@ tree-table-view:focused {
 }
 
 #chat-messages-date {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 0.92em;
 }
 
@@ -2123,6 +2101,15 @@ tree-table-view:focused {
 .chat-offer-box-my-offer {
     -fx-background-color: -bisq-grey-18;
     -fx-background-radius: 8;
+}
+
+.create-offer-message-my-offer {
+    -fx-background-color: -bisq-grey-18;
+    -fx-background-radius: 8;
+}
+
+.create-offer-box-my-offer {
+    -fx-background-color: -bisq-grey-17;
 }
 
 #buy-button {
@@ -2202,7 +2189,7 @@ tree-table-view:focused {
 }
 
 #user-name-label {
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans";
 }
@@ -2239,7 +2226,7 @@ tree-table-view:focused {
 
 #bisq-easy-skip-button {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-grey-9;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 #sellBtcWarning {
@@ -2259,6 +2246,6 @@ tree-table-view:focused {
 }
 
 .separator-line {
-    -fx-border-color: -bisq-grey-7;
+    -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 0 0 1 0;
 }

@@ -2,7 +2,7 @@ package bisq.chat.trade.pub;
 
 
 import bisq.common.currency.Market;
-import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.proto.Proto;
 import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
@@ -29,7 +29,7 @@ public final class TradeChatOffer implements Proto {
     private final Set<String> paymentMethods;
     private final String makersTradeTerms;
     private final long requiredTotalReputationScore;
-    
+
     private transient final String chatMessageText;
 
     public TradeChatOffer(Direction direction,
@@ -49,8 +49,7 @@ public final class TradeChatOffer implements Proto {
 
         chatMessageText = Res.get("createOffer.tradeChatOffer.chatMessage",
                 Res.get(direction.name().toLowerCase()).toUpperCase(),
-                AmountFormatter.formatAmountWithCode(Coin.of(baseSideAmount, market.getBaseCurrencyCode()), true),
-                market.getQuoteCurrencyCode(),
+                AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true),
                 Joiner.on(", ").join(this.paymentMethods));
     }
 

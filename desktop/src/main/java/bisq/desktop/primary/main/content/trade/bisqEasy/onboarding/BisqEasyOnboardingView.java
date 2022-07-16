@@ -112,7 +112,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-big-grey-button");
+        button.getStyleClass().add("large-button");
         button.setMaxWidth(Double.MAX_VALUE);
 
         VBox.setMargin(headlineLabel, new Insets(0, 0, 10, 0));

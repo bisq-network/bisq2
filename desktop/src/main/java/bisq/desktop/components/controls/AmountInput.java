@@ -163,15 +163,15 @@ public class AmountInput {
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Monetary> amountListener;
         private final Label rightLabel;
-        private final TextInputBox textInputBox;
+        private final MaterialTextField materialTextField;
 
         private View(Model model, Controller controller, MonetaryValidator validator) {
             super(new Pane(), model, controller);
 
-            textInputBox = new TextInputBox(Res.get("satoshisquareapp.createOffer.maxAmount"),
+            materialTextField = new MaterialTextField(Res.get("satoshisquareapp.createOffer.maxAmount"),
                     Res.get("addNickName.nickName.prompt"));
-            textInputBox.setPrefWidth(WIDTH);
-            textInputBox.setValidator(validator);
+            materialTextField.setPrefWidth(WIDTH);
+            materialTextField.setValidator(validator);
 
             rightLabel = new Label();
             rightLabel.setMinHeight(42);
@@ -182,14 +182,14 @@ public class AmountInput {
             rightLabel.setLayoutY(11);
             rightLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            root.getChildren().addAll(textInputBox, rightLabel);
+            root.getChildren().addAll(materialTextField, rightLabel);
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onAmount(textInputBox.getText());
+                controller.onAmount(materialTextField.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onAmount(textInputBox.getText());
+            textInputListener = (o, old, newValue) -> controller.onAmount(materialTextField.getText());
 
             // Listeners on model change
             amountListener = (o, old, newValue) -> applyAmount(newValue);
@@ -198,14 +198,14 @@ public class AmountInput {
         @Override
         protected void onViewAttached() {
             if (model.isCreateOffer) {
-                textInputBox.textProperty().addListener(textInputListener);
-                textInputBox.inputTextFieldFocusedProperty().addListener(focusListener);
+                materialTextField.textProperty().addListener(textInputListener);
+                materialTextField.inputTextFieldFocusedProperty().addListener(focusListener);
             } else {
                 // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textInputBox.setMouseTransparent(true);
+                materialTextField.setMouseTransparent(true);
             }
-            textInputBox.promptTextProperty().bind(model.prompt);
-            textInputBox.descriptionProperty().bind(model.description);
+            materialTextField.promptTextProperty().bind(model.prompt);
+            materialTextField.descriptionProperty().bind(model.description);
             rightLabel.textProperty().bind(model.code);
             model.amount.addListener(amountListener);
             applyAmount(model.amount.get());
@@ -214,18 +214,18 @@ public class AmountInput {
         @Override
         protected void onViewDetached() {
             if (model.isCreateOffer) {
-                textInputBox.textProperty().removeListener(textInputListener);
-                textInputBox.inputTextFieldFocusedProperty().removeListener(focusListener);
+                materialTextField.textProperty().removeListener(textInputListener);
+                materialTextField.inputTextFieldFocusedProperty().removeListener(focusListener);
             }
-            textInputBox.promptTextProperty().unbind();
-            textInputBox.descriptionProperty().unbind();
+            materialTextField.promptTextProperty().unbind();
+            materialTextField.descriptionProperty().unbind();
 
             rightLabel.textProperty().unbind();
             model.amount.removeListener(amountListener);
         }
 
         private void applyAmount(Monetary newValue) {
-            textInputBox.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
+            materialTextField.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
         }
     }
 }

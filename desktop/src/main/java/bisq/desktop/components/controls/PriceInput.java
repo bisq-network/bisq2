@@ -164,7 +164,7 @@ public class PriceInput {
     public static class View extends bisq.desktop.common.view.View<Pane, Model, Controller> {
         private final static int WIDTH = 250;
         private final static int CODE_LABEL_WIDTH = 60;
-        private final TextInputBox textInputBox;
+        private final MaterialTextField textField;
         private final ChangeListener<String> textInputListener;
         private final ChangeListener<Boolean> focusListener;
         private final ChangeListener<Quote> fixPriceListener;
@@ -173,9 +173,9 @@ public class PriceInput {
         private View(Model model, Controller controller, PriceValidator validator) {
             super(new Pane(), model, controller);
 
-            textInputBox = new TextInputBox(model.description.get(), Res.get("createOffer.price.fix.prompt"));
-            textInputBox.setPrefWidth(WIDTH);
-            textInputBox.setValidator(validator);
+            textField = new MaterialTextField(model.description.get(), Res.get("createOffer.price.fix.prompt"));
+            textField.setPrefWidth(WIDTH);
+            textField.setValidator(validator);
 
             rightLabel = new Label();
             rightLabel.setMinHeight(42);
@@ -186,44 +186,44 @@ public class PriceInput {
             rightLabel.setLayoutY(11);
             rightLabel.getStyleClass().add("bisq-amount-input-code-label");
 
-            root.getChildren().addAll(textInputBox, rightLabel);
+            root.getChildren().addAll(textField, rightLabel);
 
 
             //  Listeners on view component events
             focusListener = (o, old, newValue) -> {
                 controller.onFocusChange(newValue);
-                controller.onFixPriceInput(textInputBox.getText());
+                controller.onFixPriceInput(textField.getText());
             };
-            textInputListener = (o, old, newValue) -> controller.onFixPriceInput(textInputBox.getText());
+            textInputListener = (o, old, newValue) -> controller.onFixPriceInput(textField.getText());
 
             // Listeners on model change
-            fixPriceListener = (o, old, newValue) -> textInputBox.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
+            fixPriceListener = (o, old, newValue) -> textField.setText(newValue == null ? "" : QuoteFormatter.format(newValue));
         }
 
         @Override
         protected void onViewAttached() {
             if (model.isCreateOffer) {
-                textInputBox.textProperty().addListener(textInputListener);
-                textInputBox.focusedProperty().addListener(focusListener);
+                textField.textProperty().addListener(textInputListener);
+                textField.focusedProperty().addListener(focusListener);
             } else {
                 // editable/disable changes style. setMouseTransparent is just for prototyping now
-                textInputBox.setMouseTransparent(true);
+                textField.setMouseTransparent(true);
             }
             rightLabel.textProperty().bind(model.marketString);
 
-            textInputBox.descriptionProperty().bind(model.description);
+            textField.descriptionProperty().bind(model.description);
             model.fixPrice.addListener(fixPriceListener);
-            textInputBox.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
+            textField.setText(model.fixPrice.get() == null ? "" : QuoteFormatter.format(model.fixPrice.get()));
         }
 
         @Override
         protected void onViewDetached() {
             if (model.isCreateOffer) {
-                textInputBox.textProperty().removeListener(textInputListener);
-                textInputBox.focusedProperty().removeListener(focusListener);
+                textField.textProperty().removeListener(textInputListener);
+                textField.focusedProperty().removeListener(focusListener);
             }
             rightLabel.textProperty().unbind();
-            textInputBox.descriptionProperty().unbind();
+            textField.descriptionProperty().unbind();
             model.fixPrice.removeListener(fixPriceListener);
         }
     }

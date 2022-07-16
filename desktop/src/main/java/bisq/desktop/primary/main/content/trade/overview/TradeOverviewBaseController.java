@@ -31,10 +31,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
 
     public TradeOverviewBaseController(M model) {
         this.model = model;
-    }
 
-    @Override
-    public void onActivate() {
         model.getListItems().setAll(
                 new ProtocolListItem(SwapProtocol.Type.SATOSHI_SQUARE,
                         NavigationTarget.BISQ_EASY,
@@ -121,6 +118,14 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "protocol-lightning"
                 )
         );
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
     }
 
     public void onSelect(ProtocolListItem protocolListItem) {

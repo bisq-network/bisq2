@@ -19,12 +19,13 @@ package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.controls.TextInputBox;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -34,8 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Controller> {
-    private final TextInputBox pubKeyHash;
-    private final Button copyButton, closeButton, backButton, learnMoreButton;
+    private final MaterialTextField pubKeyHash;
+    private final Button copyButton, closeButton, backButton;
+    private final Hyperlink learnMore;
 
     public BurnBsqTab3View(BurnBsqTab3Model model,
                            BurnBsqTab3Controller controller,
@@ -55,8 +57,8 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");
         userProfileSelectLabel.setAlignment(Pos.TOP_LEFT);
 
-        pubKeyHash = new TextInputBox(Res.get("reputation.pubKeyHash"), "");
-        pubKeyHash.getInputTextField().setEditable(false);
+        pubKeyHash = new MaterialTextField(Res.get("reputation.pubKeyHash"), "");
+        pubKeyHash.setEditable(false);
 
         copyButton = BisqIconButton.createIconButton(AwesomeIcon.COPY);
 
@@ -65,11 +67,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         pubKeyHashHBox.setAlignment(Pos.CENTER_LEFT);
 
         closeButton = new Button(Res.get("close"));
-        // closeButton.setDefaultButton(true);
-
-        learnMoreButton = new Button(Res.get("reputation.learnMore"));
-        learnMoreButton.getStyleClass().add("bisq-text-button");
-
+        learnMore = new Hyperlink(Res.get("reputation.learnMore"));
         backButton = new Button(Res.get("back"));
 
         HBox buttons = new HBox(20, backButton, closeButton);
@@ -78,7 +76,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         VBox.setMargin(headLine, new Insets(10, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(10, 0, -20, 0));
         VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));
-        root.getChildren().addAll(headLine, info, learnMoreButton,
+        root.getChildren().addAll(headLine, info, learnMore,
                 userProfileSelectLabel, userProfileSelection,
                 pubKeyHashHBox,
                 buttons
@@ -92,7 +90,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         copyButton.setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
-        learnMoreButton.setOnAction(e -> controller.onLearnMore());
+        learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
@@ -102,6 +100,6 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         copyButton.setOnAction(null);
         closeButton.setOnAction(null);
         backButton.setOnAction(null);
-        learnMoreButton.setOnAction(null);
+        learnMore.setOnAction(null);
     }
 }

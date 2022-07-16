@@ -113,12 +113,11 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
 
     private VBox getBigWidgetBox() {
         Label headlineLabel = new Label(Res.get("dashboard.main.headline"));
-        //  Label headlineLabel = new Label(Res.get("dashboard.main.headline"), ImageUtil.getImageViewById("dashboard-community"));
-        //  headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
 
         Button button = new Button(Res.get("dashboard.main.button"));
-        button.getStyleClass().add("bisq-big-green-button");
+        button.setDefaultButton(true);
+        button.getStyleClass().add("super-large-button");
         button.setOnAction(e -> controller.onOpenBisqEasy());
         button.setMaxWidth(Double.MAX_VALUE);
 
@@ -145,7 +144,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         contentLabel.setAlignment(Pos.TOP_LEFT);
 
         Button button = new Button(buttonLabel);
-        button.getStyleClass().add("bisq-big-grey-button");
+        button.getStyleClass().add("large-button");
         button.setOnAction(e -> onAction.run());
         button.setMaxWidth(Double.MAX_VALUE);
 

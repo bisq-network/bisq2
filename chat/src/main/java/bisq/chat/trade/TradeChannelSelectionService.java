@@ -72,18 +72,6 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
         return persistableStore.getSelectedChannel();
     }
 
-   /* public void selectDiscussionChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateDiscussionChannel) {
-            privateDiscussionChannelService.removeExpiredMessages((PrivateDiscussionChannel) channel);
-        }
-        getSelectedDiscussionChannel().set(channel);
-        persist();
-    }
-
-    public Observable<Channel<? extends ChatMessage>> getSelectedDiscussionChannel() {
-        return persistableStore.getSelectedDiscussionChannel();
-    }*/
-
     public void reportUserProfile(UserProfile userProfile, String reason) {
         //todo report user to admin and moderators, add reason
         log.info("called reportChatUser {} {}", userProfile, reason);

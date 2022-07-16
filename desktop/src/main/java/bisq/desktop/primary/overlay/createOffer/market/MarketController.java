@@ -19,10 +19,10 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -61,6 +61,12 @@ public class MarketController implements Controller {
 
     @Override
     public void onActivate() {
+        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
+                .filter(channel -> channel instanceof PublicTradeChannel)
+                .map(channel -> (PublicTradeChannel) channel)
+                .map(PublicTradeChannel::getMarket)
+                .ifPresent(market -> model.getSelectedMarket().set(market));
+
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
                     Set<PublicTradeChatMessage> offerMessages = publicTradeChannelService.getChannels().stream()
@@ -72,20 +78,14 @@ public class MarketController implements Controller {
                     int numUsersInChannel = (int) offerMessages.stream()
                             .map(ChatMessage::getAuthorId)
                             .count();
-                    return new MarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
+                    MarketView.MarketListItem item = new MarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
+                    if (market.equals(model.getSelectedMarket().get())) {
+                        model.getSelectedMarketListItem().set(item);
+                    }
+                    return item;
                 })
                 .collect(Collectors.toList()));
 
-        // We pre-select the market from the selected channel, or if not available we use the default market.
-        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
-                .filter(channel -> channel instanceof PublicTradeChannel)
-                .map(channel -> (PublicTradeChannel) channel)
-                .map(PublicTradeChannel::getMarket)
-                .flatMap(this::findMarketListItem)
-                .ifPresent(marketListItem -> {
-                    marketListItem.getSelected().set(true);
-                    model.getSelectedMarket().set(marketListItem.getMarket());
-                });
 
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
@@ -109,10 +109,9 @@ public class MarketController implements Controller {
     }
 
     public void onSelect(MarketView.MarketListItem item) {
-        //unselect previous
-        Optional.ofNullable(model.getSelectedMarketListItem().get()).ifPresent(selItem -> selItem.getSelected().set(false));
-
-        item.getSelected().set(true);
+        if (item.equals(model.getSelectedMarketListItem().get())) {
+            return;
+        }
         model.getSelectedMarketListItem().set(item);
         model.getSelectedMarket().set(item.getMarket());
     }
