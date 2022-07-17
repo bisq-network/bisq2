@@ -35,8 +35,7 @@ public class UnrestrictedAuthorizationService implements AuthorizationService {
     public boolean isAuthorized(AuthorizationToken authorizationToken) {
         return true;
     }
-
-
+    
     @Override
     public CompletableFuture<AuthorizationToken> createTokenAsync(Class<? extends NetworkMessage> messageClass) {
         return CompletableFuture.completedFuture(new AuthorizationToken());
