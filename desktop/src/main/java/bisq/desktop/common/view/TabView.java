@@ -87,7 +87,6 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
         StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
-
         root.getChildren().addAll(vBox, lineAndMarker);
     }
 

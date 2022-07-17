@@ -723,11 +723,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void applyStyles() {
         Region rootContainer = getRootContainer();
-        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            rootContainer.getStyleClass().add("overlay-bg-top");
-        } else {
             rootContainer.getStyleClass().add("overlay-bg");
-        }
 
         if (headLineLabel != null) {
             switch (type) {

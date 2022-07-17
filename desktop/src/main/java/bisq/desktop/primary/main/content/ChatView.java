@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content;
 
 import bisq.desktop.common.utils.Layout;
-import bisq.desktop.common.view.View;
+import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.table.FilterBox;
@@ -40,12 +40,13 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class ChatView extends View<SplitPane, ChatModel, ChatController<?, ?>> {
+public abstract class ChatView extends NavigationView<SplitPane, ChatModel, ChatController<?, ?>> {
     private final Label selectedChannelLabel;
     private final Button searchButton, notificationsButton, channelInfoButton, helpButton, closeButton;
     private final VBox left;
     private final VBox sideBar;
     private final HBox filterBoxRoot;
+    protected final Pane chatMessagesComponent;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
     private final Pane helpPane;
@@ -53,6 +54,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
 
     protected final HBox centerToolbar;
     private final Button createOfferButton;
+    protected final VBox center;
     private Pane chatUserOverviewRoot;
     private Subscription sideBarWidthSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
 
@@ -66,6 +68,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
                     Pane helpPane,
                     FilterBox filterBox) {
         super(new SplitPane(), model, controller);
+        this.chatMessagesComponent = chatMessagesComponent;
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
@@ -133,7 +136,7 @@ public abstract class ChatView extends View<SplitPane, ChatModel, ChatController
         filterBoxRoot = filterBox.getRoot();
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        VBox center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+         center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         root.getItems().addAll(left, center, sideBar);
     }

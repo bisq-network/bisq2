@@ -138,7 +138,7 @@ public class QuotedMessageBlock {
             super(new VBox(), model, controller);
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
-            root.setStyle("-fx-background-color: -bisq-bg-dark;");
+            root.setStyle("-fx-background-color: -bisq-dark-grey;");
 
             Label headline = new Label(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-dimmed");
