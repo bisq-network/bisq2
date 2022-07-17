@@ -22,17 +22,23 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGuideTab3Controller> {
-    private final Button  closeButton, backButton;
+    private final Button backButton;
     private final Hyperlink learnMore;
+    private final Text content;
+    private final CheckBox confirm;
+    private Subscription widthPin;
 
     public TradeGuideTab3View(TradeGuideTab3Model model,
                               TradeGuideTab3Controller controller) {
@@ -44,32 +50,35 @@ public class TradeGuideTab3View extends View<VBox, TradeGuideTab3Model, TradeGui
         Label headline = new Label(Res.get("tradeGuide.tab3.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label content = new Label(Res.get("tradeGuide.tab3.content"));
-        content.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        content = new Text(Res.get("tradeGuide.tab3.content"));
+        content.getStyleClass().addAll("bisq-text-13");
 
-        closeButton = new Button(Res.get("close"));
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
         backButton = new Button(Res.get("back"));
-
-        HBox buttons = new HBox(20, backButton, closeButton);
+        confirm = new CheckBox(Res.get("tradeGuide.tab3.confirm"));
 
         VBox.setVgrow(content, Priority.ALWAYS);
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, content, learnMore, buttons
-        );
+        root.getChildren().addAll(headline, content, learnMore, confirm, backButton);
     }
 
     @Override
     protected void onViewAttached() {
-        closeButton.setOnAction(e -> controller.onClose());
+        confirm.setManaged(!model.getTradeRulesConfirmed().get());
+        confirm.setVisible(!model.getTradeRulesConfirmed().get());
+
+        confirm.setOnAction(e -> controller.onConfirm(confirm.isSelected()));
         backButton.setOnAction(e -> controller.onBack());
         learnMore.setOnAction(e -> controller.onLearnMore());
+        widthPin = EasyBind.subscribe(root.widthProperty(),
+                w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
-        closeButton.setOnAction(null);
+        confirm.setOnAction(null);
         backButton.setOnAction(null);
         learnMore.setOnAction(null);
+        widthPin.unsubscribe();
     }
 }

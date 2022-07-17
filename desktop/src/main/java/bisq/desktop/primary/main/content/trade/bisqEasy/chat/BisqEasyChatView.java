@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.FilterBox;
@@ -63,13 +64,14 @@ public class BisqEasyChatView extends ChatView {
         centerToolbar.getChildren().add(3, toggleOffersButton);
 
         root.setPadding(new Insets(33, 67, 67, 67));
-        
+
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
+                // chatMessagesComponent is VBox
                 VBox.setMargin(childRoot, new Insets(24, 24, 24, 24));
-                chatMessagesComponent.getChildren().add(0,childRoot);
-                Transitions.transitContentViews(oldValue, newValue);
+                chatMessagesComponent.getChildren().add(0, childRoot);
+               UIThread.runOnNextRenderFrame(()-> Transitions.transitContentViews(oldValue, newValue));
             } else if (oldValue instanceof TradeGuideView) {
                 chatMessagesComponent.getChildren().remove(0);
             }

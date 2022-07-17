@@ -26,12 +26,17 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideTab2View extends View<VBox, TradeGuideTab2Model, TradeGuideTab2Controller> {
     private final Button backButton, nextButton;
     private final Hyperlink learnMore;
+    private final Text content;
+    private Subscription widthPin;
 
     public TradeGuideTab2View(TradeGuideTab2Model model,
                               TradeGuideTab2Controller controller) {
@@ -43,8 +48,8 @@ public class TradeGuideTab2View extends View<VBox, TradeGuideTab2Model, TradeGui
         Label headline = new Label(Res.get("tradeGuide.tab2.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label content = new Label(Res.get("tradeGuide.tab2.content"));
-        content.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        content = new Text(Res.get("tradeGuide.tab2.content"));
+        content.getStyleClass().addAll("bisq-text-13");
 
         backButton = new Button(Res.get("back"));
 
@@ -65,6 +70,8 @@ public class TradeGuideTab2View extends View<VBox, TradeGuideTab2Model, TradeGui
         backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+        widthPin = EasyBind.subscribe(root.widthProperty(),
+                w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
@@ -72,5 +79,6 @@ public class TradeGuideTab2View extends View<VBox, TradeGuideTab2Model, TradeGui
         backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
+        widthPin.unsubscribe();
     }
 }

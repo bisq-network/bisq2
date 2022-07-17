@@ -22,7 +22,7 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.overlay.OverlayController;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,14 +31,17 @@ public class TradeGuideTab3Controller implements Controller {
     private final TradeGuideTab3Model model;
     @Getter
     private final TradeGuideTab3View view;
+    private final SettingsService settingsService;
 
     public TradeGuideTab3Controller(DefaultApplicationService applicationService) {
+        settingsService = applicationService.getSettingsService();
         model = new TradeGuideTab3Model();
         view = new TradeGuideTab3View(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.getTradeRulesConfirmed().set(settingsService.getTradeRulesConfirmed().get());
     }
 
     @Override
@@ -53,7 +56,7 @@ public class TradeGuideTab3Controller implements Controller {
         Browser.open("https://bisq.wiki/bisqeasy");
     }
 
-    void onClose() {
-        OverlayController.hide();
+    void onConfirm(boolean value) {
+        settingsService.setTradeRulesConfirmed(value);
     }
 }

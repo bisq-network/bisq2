@@ -293,7 +293,7 @@ public class ChatMessagesComponent {
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
 
-            VBox.setVgrow(messagesListView, Priority.ALWAYS);
+           // VBox.setVgrow(messagesListView, Priority.ALWAYS);
         //   VBox.setVgrow(tradeGuideBox, Priority.SOMETIMES);
         //    VBox.setMargin(tradeGuideBox, new Insets(0, 24, 24, 24));
             VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));

@@ -45,7 +45,7 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         double height = PrimaryStageModel.MIN_HEIGHT - 40;
         root.setMinHeight(height);
         root.setMaxHeight(height);
-        vBox.setPrefHeight(height);
+       // vBox.setPrefHeight(height);
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
@@ -77,7 +77,7 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         HBox hBox = new HBox(7, headLine, Spacer.fillHBox(), closeButton);
 
         VBox.setMargin(hBox, new Insets(0, 0, 32, 0));
-        vBox.getChildren().add(0, hBox);
+       // vBox.getChildren().add(0, hBox);
 
         line.getStyleClass().remove("bisq-darkest-bg");
         line.getStyleClass().add("bisq-mid-grey");

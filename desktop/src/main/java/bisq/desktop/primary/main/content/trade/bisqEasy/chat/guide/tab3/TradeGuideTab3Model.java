@@ -18,10 +18,13 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab3;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class TradeGuideTab3Model implements Model {
+    private final BooleanProperty tradeRulesConfirmed = new SimpleBooleanProperty();
 }

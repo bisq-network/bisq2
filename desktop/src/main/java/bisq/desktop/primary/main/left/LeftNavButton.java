@@ -96,11 +96,11 @@ class LeftNavButton extends Pane implements Toggle {
         getChildren().add(label);
 
         if (hasSubmenu) {
-            submenuActionIcon = ImageUtil.getImageViewById("expand");
+            submenuActionIcon = ImageUtil.getImageViewById("expand_small");
             submenuActionIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
             submenuActionIcon.setLayoutY(16);
             submenuActionIcon.setMouseTransparent(true);
-            submenuActionIcon.setId("expand");
+           // submenuActionIcon.setId("expand_small");
             getChildren().add(submenuActionIcon);
         }
 

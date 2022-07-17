@@ -72,6 +72,14 @@
     -fx-image: url("images/equals.png");
 }
 
+#expand {
+    -fx-image: url("images/expand.png");
+}
+
+#collapse {
+    -fx-image: url("images/collapse.png");
+}
+
 #search {
     -fx-image: url("images/search.png");
 }
@@ -203,12 +211,12 @@
 
 
 /*Left nav collapse / expand*/
-#expand {
-    -fx-image: url("images/expand.png");
+#expand_small {
+    -fx-image: url("images/navigation/expand_small.png");
 }
 
-#collapse {
-    -fx-image: url("images/collapse.png");
+#collapse_small {
+    -fx-image: url("images/navigation/collapse_small.png");
 }
 
 /*Tabs icons*/

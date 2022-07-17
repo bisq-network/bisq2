@@ -32,14 +32,11 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
-import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
-
-import static bisq.settings.DontShowAgainKey.TRADE_GUIDE_BOX;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
@@ -55,19 +52,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        switch (navigationTarget) {
-            case TRADE_GUIDE: {
-                return Optional.of(new TradeGuideController(applicationService));
-            }
-
-            default: {
-                return Optional.empty();
-            }
-        }
     }
 
     @Override
@@ -90,6 +74,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.onDeactivate();
 
         offerOnlySettingsPin.unbind();
+        resetSelectedChildTarget();
     }
 
     @Override
@@ -125,9 +110,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();
 
-            if (DontShowAgainService.showAgain(TRADE_GUIDE_BOX)) {
-                Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
-            }
+            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
         } else {
             resetSelectedChildTarget();
             model.getPeersRoboIconVisible().set(false);
@@ -135,9 +118,17 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             privateChannelSelection.deSelectChannel();
         }
     }
-/*
-    private boolean displayTradeGuide() {
-        return DontShowAgainService.showAgain(TRADE_GUIDE_BOX) &&
-                model.getSelectedChannel().get() instanceof PrivateTradeChannel;
-    }*/
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        switch (navigationTarget) {
+            case TRADE_GUIDE: {
+                return Optional.of(new TradeGuideController(applicationService));
+            }
+
+            default: {
+                return Optional.empty();
+            }
+        }
+    }
 }

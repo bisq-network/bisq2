@@ -25,25 +25,31 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideTab1View extends View<VBox, TradeGuideTab1Model, TradeGuideTab1Controller> {
     private final Button nextButton;
     private final Hyperlink learnMore;
+    private final Text content;
+    private Subscription widthPin;
 
     public TradeGuideTab1View(TradeGuideTab1Model model,
                               TradeGuideTab1Controller controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
+        root.setFillWidth(true);
         root.setAlignment(Pos.TOP_LEFT);
 
         Label headline = new Label(Res.get("tradeGuide.tab1.headline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label content = new Label(Res.get("tradeGuide.tab1.content"));
-        content.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        content = new Text(Res.get("tradeGuide.tab1.content"));
+        content.getStyleClass().addAll("bisq-text-13");
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
@@ -59,11 +65,14 @@ public class TradeGuideTab1View extends View<VBox, TradeGuideTab1Model, TradeGui
     protected void onViewAttached() {
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
+        widthPin = EasyBind.subscribe(root.widthProperty(),
+                w -> content.setWrappingWidth(w.doubleValue() - 30));
     }
 
     @Override
     protected void onViewDetached() {
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
+        widthPin.unsubscribe();
     }
 }

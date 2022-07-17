@@ -19,12 +19,15 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide;
 
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class TradeGuideModel extends TabModel {
+    private final BooleanProperty isCollapsed=new SimpleBooleanProperty();
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_GUIDE_TAB_1;

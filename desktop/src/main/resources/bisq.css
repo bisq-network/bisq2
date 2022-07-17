@@ -387,6 +387,7 @@
 }
 
 .bisq-text-13 {
+    -fx-fill: -bisq-white;
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.1em;
 }

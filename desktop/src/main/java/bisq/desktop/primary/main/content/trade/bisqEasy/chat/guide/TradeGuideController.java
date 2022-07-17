@@ -24,7 +24,6 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab1.TradeGuideTab1Controller;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab2.TradeGuideTab2Controller;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab3.TradeGuideTab3Controller;
-import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,11 +49,13 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
     @Override
     public void onDeactivate() {
     }
+/*
 
-  /*  @Override
+    @Override
     public boolean useCaching() {
-       return false;
-    }*/
+        return false;
+    }
+*/
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -74,7 +75,11 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
         }
     }
 
-    void onClose() {
-        OverlayController.hide();
+    void onExpand() {
+        model.getIsCollapsed().set(false);
+    }
+
+    public void onCollapse() {
+        model.getIsCollapsed().set(true);
     }
 }

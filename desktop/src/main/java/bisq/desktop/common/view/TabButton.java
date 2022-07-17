@@ -83,7 +83,11 @@ public class TabButton extends Pane implements Toggle {
     }
 
     public final void setOnAction(Runnable handler) {
-        setOnMouseClicked(e -> handler.run());
+        if (handler == null) {
+            setOnMouseClicked(null);
+        } else {
+            setOnMouseClicked(e -> handler.run());
+        }
     }
 
 
