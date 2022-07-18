@@ -23,6 +23,8 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -40,6 +42,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -67,7 +70,8 @@ class LeftNavButton extends Pane implements Toggle {
     private final BooleanProperty isAutoCollapse = new SimpleBooleanProperty();
     @Getter
     @Setter
-    private  boolean wasSelected;
+    private boolean wasSelected;
+    Optional<CookieKey> cookieKey = Optional.empty();
 
     LeftNavButton(String title,
                   @Nullable String iconId,
@@ -78,6 +82,12 @@ class LeftNavButton extends Pane implements Toggle {
         this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
         this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
         this.navigationTarget = navigationTarget;
+
+        if (navigationTarget == NavigationTarget.TRADE_OVERVIEW) {
+            cookieKey = Optional.of(CookieKey.TRADE_OVERVIEW_PIN);
+        } else if (navigationTarget == NavigationTarget.EDUCATION) {
+            cookieKey = Optional.of(CookieKey.EDUCATION_PIN);
+        }
 
         setMinHeight(calculateHeight());
         setMaxHeight(calculateHeight());
@@ -104,6 +114,9 @@ class LeftNavButton extends Pane implements Toggle {
         getChildren().add(label);
 
         if (hasSubmenu) {
+            cookieKey.flatMap(cookieKey -> SettingsService.getInstance().getCookie().asBoolean(cookieKey))
+                    .ifPresent(isAutoCollapse::set);
+
             expandedIcon = BisqIconButton.createIconButton("nav-expand");
             autoCollapseIcon = BisqIconButton.createIconButton("nav-auto-collapse");
 
@@ -114,6 +127,7 @@ class LeftNavButton extends Pane implements Toggle {
             Tooltip.install(expandedIcon, new Tooltip(Res.get("navigation.expandedIcon.tooltip")));
             expandedIcon.setOnMouseClicked(e -> {
                 isAutoCollapse.set(true);
+                cookieKey.ifPresent(cookieKey -> SettingsService.getInstance().setCookie(cookieKey, true));
                 expandedIcon.setVisible(false);
                 expandedIcon.setManaged(false);
                 autoCollapseIcon.setVisible(true);
@@ -127,6 +141,7 @@ class LeftNavButton extends Pane implements Toggle {
             Tooltip.install(autoCollapseIcon, new Tooltip(Res.get("navigation.autoCollapseIcon.tooltip")));
             autoCollapseIcon.setOnMouseClicked(e -> {
                 isAutoCollapse.set(false);
+                cookieKey.ifPresent(cookieKey -> SettingsService.getInstance().setCookie(cookieKey, false));
                 autoCollapseIcon.setVisible(false);
                 autoCollapseIcon.setManaged(false);
                 expandedIcon.setVisible(true);

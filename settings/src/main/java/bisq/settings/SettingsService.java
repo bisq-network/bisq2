@@ -33,13 +33,16 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class SettingsService implements PersistenceClient<SettingsStore>, Service {
     @Getter
+    private static SettingsService instance;
+
+    @Getter
     private final SettingsStore persistableStore = new SettingsStore();
     @Getter
     private final Persistence<SettingsStore> persistence;
 
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        DontShowAgainService.setSettingsService(this);
+        SettingsService.instance = this;
     }
 
 
