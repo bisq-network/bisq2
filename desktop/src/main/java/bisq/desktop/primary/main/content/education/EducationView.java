@@ -18,46 +18,39 @@
 package bisq.desktop.primary.main.content.education;
 
 import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
-import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Set;
 
 @Slf4j
-public class EducationView extends View<VBox, EducationModel, EducationController> {
-    private static final int MARGIN = 44;
-    private static final int TEXT_SPACE = 22;
-    private static final int SCROLLBAR_WIDTH = 12;
+public class EducationView extends View<GridPane, EducationModel, EducationController> {
+    private static final int MARGIN = 40;
+    private static final int TEXT_SPACE = 20;
+    private int rowIndex;
 
-    private final Set<Subscription> subscriptions = new HashSet<>();
-    @Nullable
-    private ChangeListener<Number> widthListener;
-    @Nullable
-    private Parent parent;
-
-    //todo move out content to a academy screen
     public EducationView(EducationModel model, EducationController controller) {
-        super(new VBox(), model, controller);
+        super(new GridPane(), model, controller);
 
-        root.setSpacing(MARGIN);
+        root.setHgap(MARGIN);
+        root.setVgap(MARGIN);
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        root.getColumnConstraints().addAll(col1, col2);
 
         addHeaderBox();
+
         addSmallBox("dashboard-bisq", "onboarding-1-fraction",
                 "bisq", "bitcoin",
                 NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
@@ -67,27 +60,6 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         addSmallBox("onboarding-3-profile", "onboarding-2-chat",
                 "wallets", "foss",
                 NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
-
-        // As we have scroll pane as parent container our root grows when increasing width but does not shrink anymore.
-        // If anyone finds a better solution would be nice to get rid of that hack...
-        parent = root.getParent();
-        if (parent != null) {
-            int maxIterations = 10;
-            int iterations = 0;
-            while (parent != null && !(parent instanceof VBox) && iterations < maxIterations) {
-                parent = parent.getParent();
-                iterations++;
-            }
-            if (iterations < maxIterations) {
-                widthListener = (observable, oldValue, newValue) -> {
-                    double value = newValue.doubleValue() - MARGIN;
-                    root.setMinWidth(value);
-                };
-                if (parent != null) {
-                    ((VBox) parent).widthProperty().addListener(widthListener);
-                }
-            }
-        }
     }
 
     @Override
@@ -96,36 +68,23 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
 
     @Override
     protected void onViewDetached() {
-        subscriptions.forEach(Subscription::unsubscribe);
-
-        if (widthListener != null && parent instanceof VBox) {
-            ((VBox) parent).widthProperty().removeListener(widthListener);
-        }
     }
 
     private void addHeaderBox() {
-        Text headlineLabel = new Text(Res.get("social.education.headline"));
+        Label headlineLabel = new Label(Res.get("social.education.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
-
-        Text contentLabel = new Text(Res.get("social.education.content"));
+        headlineLabel.setWrapText(true);
+        
+        Label contentLabel = new Label(Res.get("social.education.content"));
         contentLabel.getStyleClass().add("bisq-text-16");
+        contentLabel.setWrapText(true);
 
-        VBox box = new VBox();
-        box.setSpacing(TEXT_SPACE);
-        box.getStyleClass().add("bisq-box-2");
-        box.setPadding(new Insets(MARGIN - 16, 0, MARGIN - 6, MARGIN));
-        box.getChildren().addAll(headlineLabel, contentLabel);
-        root.getChildren().add(box);
-        subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
-            double right = root.getPadding().getRight();
-            double value = w.doubleValue() - right + SCROLLBAR_WIDTH;
-            double wrappingWidth = value - box.getPadding().getLeft() - box.getPadding().getRight();
-            contentLabel.setWrappingWidth(wrappingWidth - MARGIN);
-            headlineLabel.setWrappingWidth(wrappingWidth - MARGIN);
-            box.setPrefWidth(value);
-            box.setMinWidth(value);
-            box.setMaxWidth(value);
-        }));
+        VBox vBox = new VBox();
+        vBox.setSpacing(TEXT_SPACE);
+        vBox.getStyleClass().add("bisq-box-2");
+        vBox.setPadding(new Insets(MARGIN - 20, MARGIN, MARGIN - 6, MARGIN));
+        vBox.getChildren().addAll(headlineLabel, contentLabel);
+        root.add(vBox, 0, 0, 2, 1);
     }
 
     private void addSmallBox(String leftIconId,
@@ -150,9 +109,8 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
                 rightNavigationTarget
         );
 
-        HBox box = Layout.hBoxWith(leftBox, rightBox);
-        box.setSpacing(MARGIN);
-        root.getChildren().add(box);
+        root.add(leftBox, 0, ++rowIndex, 1, 1);
+        root.add(rightBox, 1, rowIndex, 1, 1);
     }
 
     private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
@@ -160,30 +118,25 @@ public class EducationView extends View<VBox, EducationModel, EducationControlle
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
         headlineLabel.setGraphicTextGap(15);
+        headlineLabel.setWrapText(true);
 
-        Text contentLabel = new Text(content);
+        Label contentLabel = new Label(content);
         contentLabel.getStyleClass().add("bisq-text-3");
+        contentLabel.setWrapText(true);
 
         Button button = new Button(buttonLabel.toUpperCase());
         button.getStyleClass().addAll("text-button", "no-background");
         button.setOnAction(e -> controller.onSelect(navigationTarget));
 
-        HBox.setMargin(button, new Insets(0, 15, 0, 0));
+        HBox.setMargin(button, new Insets(0, -10, 0, 0));
         HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), button);
 
         VBox vBox = new VBox(hBox, contentLabel);
+        vBox.setFillWidth(true);
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
         vBox.setSpacing(TEXT_SPACE);
         vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(MARGIN - 20, 0, MARGIN - 6, MARGIN));
-        subscriptions.add(EasyBind.subscribe(root.widthProperty(), w -> {
-            double value = (w.doubleValue() - root.getPadding().getRight() - MARGIN + SCROLLBAR_WIDTH) / 2;
-            double wrappingWidth = value - vBox.getPadding().getLeft() - vBox.getPadding().getRight();
-            contentLabel.setWrappingWidth(wrappingWidth - MARGIN);
-            vBox.setPrefWidth(value);
-            vBox.setMinWidth(value);
-            vBox.setMaxWidth(value);
-        }));
+        vBox.setPadding(new Insets(MARGIN - 20, MARGIN, MARGIN - 6, MARGIN));
         return vBox;
     }
 }
