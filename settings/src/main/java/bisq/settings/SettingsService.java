@@ -84,9 +84,12 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.requiredTotalReputationScore;
     }
 
-
     public Observable<Boolean> getOffersOnly() {
         return persistableStore.offersOnly;
+    }
+
+    public Observable<Boolean> getTradeRulesConfirmed() {
+        return persistableStore.tradeRulesConfirmed;
     }
 
     public void setCookie(CookieKey key, boolean value) {
@@ -116,6 +119,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setOffersOnly(boolean value) {
         persistableStore.offersOnly.set(value);
+        persist();
+    }
+
+    public void setTradeRulesConfirmed(boolean value) {
+        persistableStore.tradeRulesConfirmed.set(value);
         persist();
     }
 }

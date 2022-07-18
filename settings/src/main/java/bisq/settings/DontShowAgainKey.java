@@ -23,6 +23,5 @@ package bisq.settings;
  */
 public enum DontShowAgainKey {
     BISQ_2_INTRO,
-    BISQ_EASY_INTRO,
-    TRADE_GUIDE_BOX
+    BISQ_EASY_INTRO
 }

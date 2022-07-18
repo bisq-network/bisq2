@@ -21,12 +21,15 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -34,61 +37,27 @@ import org.fxmisc.easybind.Subscription;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<StackPane, M, C>
+public abstract class TabView<M extends TabModel, C extends TabController<M>> extends NavigationView<VBox, M, C>
         implements TransitionedView {
-    protected final Label headLine;
-    protected final HBox tabs;
-    protected final Region selectionMarker, line;
+    protected Label headLine;
+    protected final HBox tabs = new HBox();
+    protected Region selectionMarker, line;
     private final ToggleGroup toggleGroup = new ToggleGroup();
-    protected final ScrollPane scrollPane;
-    protected final VBox vBox;
-    protected final Pane lineAndMarker;
+    protected final VBox contentPane;
+    protected Pane lineAndMarker;
+    protected Pane topBox;
     private Subscription selectedTabButtonSubscription, rootWidthSubscription, layoutDoneSubscription;
     private boolean transitionStarted;
-    private Subscription viewSubscription;
+    //  private Subscription viewSubscription;
+    private ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewListener;
 
     public TabView(M model, C controller) {
-        super(new StackPane(), model, controller);
+        super(new VBox(), model, controller);
 
-        vBox = new VBox();
-        vBox.setFillWidth(true);
-
-        headLine = new Label();
-        headLine.getStyleClass().add("bisq-content-headline-label");
-        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
-
-        tabs = new HBox();
-        tabs.setFillHeight(true);
-        tabs.setSpacing(46);
-        tabs.getChildren().addAll(headLine, Spacer.fillHBox());
-        tabs.setMinHeight(52);
-
-        scrollPane = new ScrollPane();
-        scrollPane.setFitToHeight(true);
-        scrollPane.setFitToWidth(true);
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-
-        vBox.getChildren().addAll(tabs, scrollPane);
-
-        line = new Region();
-        line.getStyleClass().add("bisq-darkest-bg");
-        double lineHeight = 1;
-        line.setMinHeight(lineHeight);
-
-        selectionMarker = new Region();
-        selectionMarker.getStyleClass().add("bisq-green-line");
-        selectionMarker.setMinHeight(lineHeight);
-
-        lineAndMarker = new Pane();
-        lineAndMarker.getChildren().addAll(line, selectionMarker);
-        lineAndMarker.setMinHeight(lineHeight);
-        lineAndMarker.setMaxHeight(lineHeight);
-        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
-
-        StackPane.setAlignment(lineAndMarker, Pos.TOP_RIGHT);
-        StackPane.setMargin(lineAndMarker, new Insets(52, 0, 0, 0));
-
-        root.getChildren().addAll(vBox, lineAndMarker);
+        setupTopBox();
+        contentPane = new VBox();
+        setupLineAndMarker();
+        root.getChildren().addAll(topBox, lineAndMarker, contentPane);
     }
 
     @Override
@@ -103,7 +72,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
-                selectionMarker.setLayoutX(model.getSelectedTabButton().get().getLayoutX());
+                selectionMarker.setLayoutX(getSelectionMarkerX(model.getSelectedTabButton().get()));
             }
         });
 
@@ -117,13 +86,19 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             }
         });
 
-        viewSubscription = EasyBind.subscribe(model.getView(), view -> {
-            if (view != null) {
-                scrollPane.setContent(view.getRoot());
-            }
-        });
+        viewListener = (observable, oldValue, newValue) -> onChildView(oldValue, newValue);
+        model.getView().addListener(viewListener);
+        onChildView(null, model.getView().get());
 
         super.onViewAttachedInternal();
+    }
+
+    protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
+                               View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
+        contentPane.getChildren().clear();
+        if (newValue != null) {
+            contentPane.getChildren().add(newValue.getRoot());
+        }
     }
 
     @Override
@@ -135,8 +110,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             layoutDoneSubscription.unsubscribe();
         }
         model.getTabButtons().forEach(tabButton -> tabButton.setOnAction(null));
-        viewSubscription.unsubscribe();
-
+        // viewSubscription.unsubscribe();
+        model.getView().removeListener(viewListener);
         super.onViewDetachedInternal();
     }
 
@@ -148,6 +123,35 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     @Override
     public void onTransitionCompleted() {
+    }
+
+    protected void setupTopBox() {
+        headLine = new Label();
+        headLine.getStyleClass().add("bisq-content-headline-label");
+
+        tabs.setFillHeight(true);
+        tabs.setSpacing(46);
+        tabs.setMinHeight(52);
+
+        HBox.setMargin(headLine, new Insets(-5, 0, 0, -2));
+        topBox = new HBox(headLine, Spacer.fillHBox(), tabs);
+    }
+
+    protected void setupLineAndMarker() {
+        line = new Region();
+        line.getStyleClass().add("bisq-darkest-bg");
+        double lineHeight = 1;
+        line.setMinHeight(lineHeight);
+
+        selectionMarker = new Region();
+        selectionMarker.getStyleClass().add("bisq-green-line");
+        selectionMarker.setMinHeight(lineHeight);
+
+        lineAndMarker = new Pane();
+        lineAndMarker.getChildren().addAll(line, selectionMarker);
+        lineAndMarker.setMinHeight(lineHeight);
+        lineAndMarker.setMaxHeight(lineHeight);
+        lineAndMarker.setPadding(new Insets(0, 67, 0, 0));
     }
 
     protected void addTab(String text, NavigationTarget navigationTarget) {
@@ -180,10 +184,9 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
             controller.onTabButtonRemoved(tabButton);
             tabs.getChildren().remove(tabButton);
         });
-
     }
 
-    private void maybeAnimateMark() {
+    protected void maybeAnimateMark() {
         TabButton selectedTabButton = model.getSelectedTabButton().get();
         if (selectedTabButton == null) {
             return;
@@ -194,7 +197,7 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
             Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
-                    selectedTabButton.getBoundsInParent().getMinX());
+                    getSelectionMarkerX(selectedTabButton));
             UIThread.runOnNextRenderFrame(() -> {
                 if (layoutDoneSubscription != null) {
                     layoutDoneSubscription.unsubscribe();
@@ -202,5 +205,9 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
                 }
             });
         });
+    }
+
+    private double getSelectionMarkerX(TabButton selectedTabButton) {
+        return selectedTabButton.getBoundsInParent().getMinX() + tabs.getBoundsInParent().getMinX();
     }
 }

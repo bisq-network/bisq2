@@ -18,15 +18,11 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.ChipButton;
-import bisq.desktop.components.controls.MaterialTextField;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -62,8 +58,8 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
         deleteProfileButton.setMinWidth(300);
 
         VBox.setMargin(createNewProfileButton, new Insets(-15, 0, -20, 0));
-        // root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, deleteProfileButton, Spacer.fillVBox());
-
+        root.getChildren().addAll(selectionVBox, new Pane(), createNewProfileButton, deleteProfileButton, Spacer.fillVBox());
+/*
 
         Button defaultbutton = new Button("Default button".toUpperCase());
         defaultbutton.setDefaultButton(true);
@@ -120,7 +116,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
                 new HBox(10, cb, cb2),
                 new HBox(10, tf, tf2),
                 new HBox(10, hyperlink, hyperlinkVis, hyperlinkDis)
-        );
+        );*/
     }
 
     @Override
@@ -129,7 +125,7 @@ public class UserProfileView extends View<VBox, UserProfileModel, UserProfileCon
             editUserProfilePane.setMaxWidth(300);
             VBox.setMargin(editUserProfilePane, new Insets(-40, 0, 0, 0));
             VBox.setVgrow(editUserProfilePane, Priority.ALWAYS);
-            // root.getChildren().set(1, editUserProfilePane);
+            root.getChildren().set(1, editUserProfilePane);
         });
 
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());

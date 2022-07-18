@@ -22,12 +22,11 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
-import bisq.settings.DontShowAgainService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -36,12 +35,12 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
 
-import static bisq.settings.DontShowAgainKey.TRADE_GUIDE_BOX;
 
 @Slf4j
-public abstract class ChatController<V extends ChatView, M extends ChatModel> implements Controller {
+public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
     protected final ChatService chatService;
     protected final FilterBox filterBox;
+    @Getter
     protected final M model;
     private final UserProfileService userProfileService;
     @Getter
@@ -57,7 +56,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
     protected Pin selectedChannelPin;
     protected Subscription notificationSettingSubscription;
 
-    public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
+    public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat, NavigationTarget host) {
+        super(host);
+
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -153,7 +154,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> im
         // onCloseSideBar();
         model.getHelpVisible().set(visible);
 
-        DontShowAgainService.putDontShowAgain(TRADE_GUIDE_BOX.name(), false);
         
      /*   model.getSideBarVisible().set(visible);
         model.getSideBarWidth().set(visible ? 540 : 0);

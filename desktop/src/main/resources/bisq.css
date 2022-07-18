@@ -75,19 +75,19 @@
     -bisq-grey-23: #1e1e1e;
 
     /* Background colors */
-    -bisq-bg-darker: -bisq-grey-2;
-    -bisq-bg-dark: -bisq-grey-3;
-    -bisq-content-bg: -bisq-grey-4;
-    -bisq-background-color-gray: -bisq-grey-5;
+    -bisq-darker-grey: -bisq-grey-2;
+    -bisq-dark-grey: -bisq-grey-3;
+    -bisq-content-bg-grey: -bisq-grey-4;
+    -bisq-popup-bg-grey: -bisq-grey-5;
 
     /* Border colors */
     -bisq-border-color-grey: -bisq-grey-disabled;
     -bisq-border-color-grey-hover: -bisq-grey-11;
 
 
-    -fx-base: -bisq-content-bg;
+    -fx-base: -bisq-content-bg-grey;
     -fx-accent: -bisq-green;
-    -fx-background: -bisq-content-bg;
+    -fx-background: -bisq-content-bg-grey;
 
     -fx-color: -bisq-grey-17;
     -fx-body-color: -fx-color;
@@ -207,7 +207,7 @@
 }
 
 .text-area:focused .content {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 
@@ -387,6 +387,7 @@
 }
 
 .bisq-text-13 {
+    -fx-fill: -bisq-white;
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.1em;
 }
@@ -408,6 +409,11 @@
     -fx-text-fill: -bisq-grey-dimmed;
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
+}
+.bisq-text-17 {
+    -fx-font-size: 2.15em;
+    -fx-font-family: "IBM Plex Sans Light";
+    -fx-text-fill: -bisq-white;
 }
 
 .wrap-text {
@@ -1291,7 +1297,7 @@
 
 .list-view {
     -fx-background: transparent;
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: -bisq-dark-grey;
     -fx-border-width: 0;
     -fx-border-insets: 0;
     -fx-padding: 0;
@@ -1299,14 +1305,14 @@
 }
 
 .list-view .list-cell {
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: -bisq-dark-grey;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0;
 }
 
 .list-view .list-cell:selected {
-    -fx-background-color: -bisq-bg-darker;
+    -fx-background-color: -bisq-darker-grey;
 }
 
 .list-view .list-cell .label {
@@ -1394,7 +1400,7 @@
 .table-view:focused,
 tree-table-view:focused {
     -fx-background-insets: 0;
-    -fx-border-color: -bisq-bg-dark;
+    -fx-border-color: -bisq-dark-grey;
 }
 
 /* Selected rows */
@@ -1416,7 +1422,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .table-view {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
@@ -1428,7 +1434,7 @@ tree-table-view:focused {
 
 /* column-header */
 .table-view .column-header {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
     -fx-pref-height: 54px;
 }
 
@@ -1471,7 +1477,7 @@ tree-table-view:focused {
 .table-row-cell {
     -fx-border-width: 1 0 0 0;
     -fx-pref-height: 54px;
-    -fx-border-color: -bisq-bg-dark;
+    -fx-border-color: -bisq-dark-grey;
 }
 
 .table-view .table-row-cell .table-cell {
@@ -1489,7 +1495,7 @@ tree-table-view:focused {
 
 /* even */
 .table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 /* odd */
@@ -1510,7 +1516,7 @@ tree-table-view:focused {
 
 .table-view .table-row-cell:hover .table-cell,
 .table-view .table-row-cell:selected .table-cell {
-    -fx-background-color: -bisq-bg-darker;
+    -fx-background-color: -bisq-darker-grey;
     -fx-border-color: transparent;
 }
 
@@ -1635,7 +1641,7 @@ tree-table-view:focused {
 
 
 .accordion > .titled-pane > .title {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
     -fx-background-insets: 0, 1, 2;
     -fx-background-radius: 3 3 0 0, 2 2 0 0, 1 1 0 0;
     -fx-padding: 0.3333em 0.75em 0.3333em 0.75em; /* 4 9 4 9 */
@@ -1736,7 +1742,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .bisq-box-1 {
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: -bisq-dark-grey;
     -fx-background-radius: 8;
 }
 
@@ -1751,7 +1757,7 @@ tree-table-view:focused {
 }
 
 .bisq-darkest-bg {
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: -bisq-dark-grey;
 }
 
 .bisq-dark-bg {
@@ -1771,7 +1777,7 @@ tree-table-view:focused {
 }
 
 .bisq-content-bg {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 
@@ -1860,19 +1866,11 @@ tree-table-view:focused {
 }
 
 .overlay-bg {
-    -fx-background-color: -bisq-grey-2;
+    -fx-background-color: -bisq-popup-bg-grey;
     -fx-font-size: 1.1em;
     -fx-text-fill: -bisq-grey-11;
     -fx-background-insets: 25;
-    -fx-effect: dropshadow(gaussian, black, 50, 0, 0, 0);
-}
-
-.overlay-bg-top {
-    -fx-background-color: -bisq-grey-2;
-    -fx-font-size: 1.1em;
-    -fx-text-fill: -bisq-grey-11;
-    -fx-background-insets: 25;
-    -fx-effect: dropshadow(gaussian, black, 50, 0, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.75), 40, 0.5, 0, 0);
 }
 
 
@@ -1895,6 +1893,7 @@ tree-table-view:focused {
 .table-view.create-offer-table-view .filler {
     -fx-opacity: 0;
 }
+
 .table-view.create-offer-table-view .table-row-cell {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 1 0;
@@ -1945,7 +1944,7 @@ tree-table-view:focused {
 .table-view.trade-overview-table-view .column-header {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 2 0;
-    -fx-border-color: -bisq-bg-dark;
+    -fx-border-color: -bisq-dark-grey;
 }
 
 .table-view.trade-overview-table-view .column-header .label {
@@ -1959,7 +1958,7 @@ tree-table-view:focused {
 }
 
 .table-view.trade-overview-table-view .table-row-cell .table-cell {
-    -fx-background-color: -bisq-content-bg;
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 .table-view.trade-overview-table-view .button {
@@ -2132,7 +2131,7 @@ tree-table-view:focused {
 
 #bisq-combo-box-list-view {
     -fx-background-color: -bisq-grey-16;
-    -fx-border-color: -bisq-bg-dark;;
+    -fx-border-color: -bisq-dark-grey;;
     -fx-border-width: 1;
     -fx-border-insets: 0;
     -fx-padding: 0;
@@ -2140,7 +2139,7 @@ tree-table-view:focused {
 }
 
 #bisq-combo-box-list-view .list-cell:odd, #bisq-combo-box-list-view .list-cell:even {
-    -fx-background-color: -bisq-bg-dark;
+    -fx-background-color: -bisq-dark-grey;
     -fx-font-size: 1.05em;
     -fx-padding: 0 0 0 22;
     -fx-background-insets: 0 0 1 0;

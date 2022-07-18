@@ -21,11 +21,14 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.i18n.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
@@ -33,6 +36,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -57,9 +61,13 @@ class LeftNavButton extends Pane implements Toggle {
     protected final ImageView iconActive;
     @Nullable
     protected final ImageView iconHover;
+    private Node expandedIcon, autoCollapseIcon;
 
-    @Nullable
-    protected ImageView submenuActionIcon;
+    @Getter
+    private final BooleanProperty isAutoCollapse = new SimpleBooleanProperty();
+    @Getter
+    @Setter
+    private  boolean wasSelected;
 
     LeftNavButton(String title,
                   @Nullable String iconId,
@@ -96,12 +104,36 @@ class LeftNavButton extends Pane implements Toggle {
         getChildren().add(label);
 
         if (hasSubmenu) {
-            submenuActionIcon = ImageUtil.getImageViewById("expand");
-            submenuActionIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
-            submenuActionIcon.setLayoutY(16);
-            submenuActionIcon.setMouseTransparent(true);
-            submenuActionIcon.setId("expand");
-            getChildren().add(submenuActionIcon);
+            expandedIcon = BisqIconButton.createIconButton("nav-expand");
+            autoCollapseIcon = BisqIconButton.createIconButton("nav-auto-collapse");
+
+            expandedIcon.setVisible(false);
+            expandedIcon.setManaged(false);
+            expandedIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
+            expandedIcon.setLayoutY(10);
+            Tooltip.install(expandedIcon, new Tooltip(Res.get("navigation.expandedIcon.tooltip")));
+            expandedIcon.setOnMouseClicked(e -> {
+                isAutoCollapse.set(true);
+                expandedIcon.setVisible(false);
+                expandedIcon.setManaged(false);
+                autoCollapseIcon.setVisible(true);
+                autoCollapseIcon.setManaged(true);
+            });
+
+            autoCollapseIcon.setVisible(false);
+            autoCollapseIcon.setManaged(false);
+            autoCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
+            autoCollapseIcon.setLayoutY(12);
+            Tooltip.install(autoCollapseIcon, new Tooltip(Res.get("navigation.autoCollapseIcon.tooltip")));
+            autoCollapseIcon.setOnMouseClicked(e -> {
+                isAutoCollapse.set(false);
+                autoCollapseIcon.setVisible(false);
+                autoCollapseIcon.setManaged(false);
+                expandedIcon.setVisible(true);
+                expandedIcon.setManaged(true);
+            });
+
+            getChildren().addAll(autoCollapseIcon, expandedIcon);
         }
 
         applyStyle();
@@ -124,17 +156,23 @@ class LeftNavButton extends Pane implements Toggle {
         Layout.toggleStyleClass(label, "bisq-text-grey-9", !isHighlighted);
 
         if (icon != null) {
-            getChildren().set(
-                    0,
-                    isSelected()
-                            ? iconActive
-                            : isHighlighted ? iconHover : icon
-            );
+            getChildren().set(0, isSelected() ? iconActive : isHighlighted ? iconHover : icon);
         }
-
-        if (submenuActionIcon != null) {
-            submenuActionIcon.setVisible(!isHighlighted);
-            submenuActionIcon.setManaged(!isHighlighted);
+        if (autoCollapseIcon != null && expandedIcon != null) {
+            if (wasSelected) {
+                boolean value = isAutoCollapse.get();
+                if (value) {
+                    expandedIcon.setVisible(false);
+                    expandedIcon.setManaged(false);
+                    autoCollapseIcon.setVisible(isHighlighted);
+                    autoCollapseIcon.setManaged(isHighlighted);
+                } else {
+                    expandedIcon.setVisible(true);
+                    expandedIcon.setManaged(true);
+                    autoCollapseIcon.setVisible(false);
+                    autoCollapseIcon.setManaged(false);
+                }
+            }
         }
     }
 
@@ -148,13 +186,19 @@ class LeftNavButton extends Pane implements Toggle {
             label.setVisible(true);
             label.setManaged(true);
             Transitions.fadeIn(label, duration);
-            if (submenuActionIcon != null) {
-                Transitions.fadeIn(submenuActionIcon, 2 * duration);
+            if (autoCollapseIcon != null) {
+                Transitions.fadeIn(autoCollapseIcon, 3 * duration);
+            }
+            if (expandedIcon != null) {
+                Transitions.fadeIn(expandedIcon, 3 * duration);
             }
         } else {
             Tooltip.install(this, tooltip);
-            if (submenuActionIcon != null) {
-                Transitions.fadeOut(submenuActionIcon, duration / 2);
+            if (autoCollapseIcon != null) {
+                Transitions.fadeOut(autoCollapseIcon, duration / 2);
+            }
+            if (expandedIcon != null) {
+                Transitions.fadeOut(expandedIcon, duration / 2);
             }
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);

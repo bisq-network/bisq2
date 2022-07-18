@@ -561,7 +561,6 @@ public class ChatMessagesListView {
                             // HBox for message reputation vBox and action button
                             message = new Text();
                             message.setId("chat-messages-message");
-                            //message.setWrapText(true);
 
                             // VBox for  reputation label and score
                             Label reputationLabel = new Label(Res.get("reputation").toUpperCase());

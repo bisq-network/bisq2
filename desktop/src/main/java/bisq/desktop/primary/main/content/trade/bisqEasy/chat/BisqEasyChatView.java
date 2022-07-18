@@ -17,11 +17,17 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.ChatView;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -56,6 +62,20 @@ public class BisqEasyChatView extends ChatView {
         toggleOffersButton.setText(Res.get("satoshisquareapp.chat.filter.offersOnly"));
 
         centerToolbar.getChildren().add(3, toggleOffersButton);
+
+        root.setPadding(new Insets(33, 67, 67, 67));
+
+        model.getView().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                Region childRoot = newValue.getRoot();
+                // chatMessagesComponent is VBox
+                VBox.setMargin(childRoot, new Insets(24, 24, 24, 24));
+                chatMessagesComponent.getChildren().add(0, childRoot);
+               UIThread.runOnNextRenderFrame(()-> Transitions.transitContentViews(oldValue, newValue));
+            } else if (oldValue instanceof TradeGuideView) {
+                chatMessagesComponent.getChildren().remove(0);
+            }
+        });
     }
 
     @Override

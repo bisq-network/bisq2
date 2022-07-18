@@ -72,9 +72,18 @@
     -fx-image: url("images/equals.png");
 }
 
+#expand {
+    -fx-image: url("images/expand.png");
+}
+
+#collapse {
+    -fx-image: url("images/collapse.png");
+}
+
 #search {
     -fx-image: url("images/search.png");
 }
+
 #search-white {
     -fx-image: url("images/search-white.png");
 }
@@ -203,12 +212,12 @@
 
 
 /*Left nav collapse / expand*/
-#expand {
-    -fx-image: url("images/expand.png");
+#nav-expand {
+    -fx-image: url("images/navigation/nav-expand.png");
 }
 
-#collapse {
-    -fx-image: url("images/collapse.png");
+#nav-auto-collapse {
+    -fx-image: url("images/navigation/nav-auto-collapse.png");
 }
 
 /*Tabs icons*/

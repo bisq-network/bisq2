@@ -198,8 +198,11 @@ class TorBootstrap {
 
     private int waitForControlPort(Process torProcess) {
         AtomicInteger controlPort = new AtomicInteger();
+        AtomicInteger scannedLines = new AtomicInteger(0);
         try (Scanner info = new Scanner(torProcess.getInputStream());
              Scanner error = new Scanner(torProcess.getErrorStream())) {
+            // We get a few lines (7) of logs and filter for "Control listener listening on port" to figure  
+            // out the control port and exit the while loop (there would be one more line).
             while (info.hasNextLine() || error.hasNextLine()) {
                 if (info.hasNextLine()) {
                     String line = info.nextLine();
@@ -209,10 +212,15 @@ class TorBootstrap {
                         String portString = split[1].replace(".", "");
                         controlPort.set(Integer.parseInt(portString));
                         log.info("Control connection port: {}", controlPort);
+                        break;
                     }
                 }
                 if (error.hasNextLine()) {
-                    log.error(error.nextLine());
+                    // In case we get an error we log it and exit.
+                    throw new RuntimeException("We got an error log from the tor process: Ï" + error.nextLine());
+                }
+                if (scannedLines.incrementAndGet() >= 10) {
+                    throw new RuntimeException("We scanned already 10 lines but did not find the control port.");
                 }
             }
         }

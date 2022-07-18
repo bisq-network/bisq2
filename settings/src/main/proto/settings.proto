@@ -38,4 +38,5 @@ message SettingsStore {
   common.Market selectedMarket = 5;
   uint64 requiredTotalReputationScore = 6;
   bool offersOnly = 7;
+  bool tradeRulesConfirmed = 8;
 }

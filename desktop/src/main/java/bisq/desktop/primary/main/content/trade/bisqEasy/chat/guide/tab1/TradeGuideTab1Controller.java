@@ -15,25 +15,39 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.discussion;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab1;
 
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.ChatModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
-public class DiscussionsModel extends ChatModel {
-    private final boolean isDiscussionsChat;
+public class TradeGuideTab1Controller implements Controller {
+    @Getter
+    private final TradeGuideTab1View view;
 
-    public DiscussionsModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
+    public TradeGuideTab1Controller(DefaultApplicationService applicationService) {
+        TradeGuideTab1Model model = new TradeGuideTab1Model();
+        view = new TradeGuideTab1View(model, this);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+    public void onActivate() {
     }
 
+    @Override
+    public void onDeactivate() {
+    }
+
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/bisqeasy");
+    }
+
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.TRADE_GUIDE_TAB_2);
+    }
 }

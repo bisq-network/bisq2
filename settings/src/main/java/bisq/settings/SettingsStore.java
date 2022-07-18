@@ -42,6 +42,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Market> selectedMarket = new Observable<>();
     final Observable<Long> requiredTotalReputationScore = new Observable<>(1000L);
     final Observable<Boolean> offersOnly = new Observable<>(true);
+    final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
 
     public SettingsStore() {
         this(new Cookie(),
@@ -50,7 +51,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new ObservableSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
                 1000,
-                true);
+                true,
+                false);
     }
 
     public SettingsStore(Cookie cookie,
@@ -59,7 +61,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          ObservableSet<Market> markets,
                          Market selectedMarket,
                          long requiredTotalReputationScore,
-                         boolean offersOnly) {
+                         boolean offersOnly,
+                         boolean tradeRulesConfirmed) {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -68,6 +71,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.selectedMarket.set(selectedMarket);
         this.requiredTotalReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
+        this.tradeRulesConfirmed.set(tradeRulesConfirmed);
     }
 
     @Override
@@ -80,6 +84,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setSelectedMarket(selectedMarket.get().toProto())
                 .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
                 .setOffersOnly(offersOnly.get())
+                .setTradeRulesConfirmed(tradeRulesConfirmed.get())
                 .build();
     }
 
@@ -91,7 +96,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 new ObservableSet<>(proto.getMarketsList().stream().map(Market::fromProto).collect(Collectors.toList())),
                 Market.fromProto(proto.getSelectedMarket()),
                 proto.getRequiredTotalReputationScore(),
-                proto.getOffersOnly());
+                proto.getOffersOnly(),
+                proto.getTradeRulesConfirmed());
     }
 
     @Override
@@ -113,7 +119,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 markets,
                 selectedMarket.get(),
                 requiredTotalReputationScore.get(),
-                offersOnly.get());
+                offersOnly.get(),
+                tradeRulesConfirmed.get());
     }
 
     @Override
@@ -126,5 +133,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         selectedMarket.set(persisted.selectedMarket.get());
         requiredTotalReputationScore.set(persisted.requiredTotalReputationScore.get());
         offersOnly.set(persisted.offersOnly.get());
+        tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
     }
 }

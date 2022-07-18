@@ -24,11 +24,14 @@ import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.ChatController;
 import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
+
+import java.util.Optional;
 
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
@@ -37,7 +40,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, true);
+        super(applicationService, true, NavigationTarget.NONE);
 
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
         discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
@@ -93,5 +96,10 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
             model.getPeersRoboIconVisible().set(false);
             privateChannelSelection.deSelectChannel();
         }
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        return Optional.empty();
     }
 }

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.desktop.common.view.TabModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
@@ -26,16 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyChatModel extends ChatModel {
-    private final boolean isDiscussionsChat;
-    private final BooleanProperty offerOnly = new SimpleBooleanProperty();
-
-    public BisqEasyChatModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
-    }
-
+public class TradeGuideModel extends TabModel {
+    private final BooleanProperty isCollapsed=new SimpleBooleanProperty();
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+        return NavigationTarget.TRADE_GUIDE_TAB_1;
     }
 }

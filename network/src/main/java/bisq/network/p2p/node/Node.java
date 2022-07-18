@@ -204,7 +204,9 @@ public class Node implements Connection.Handler {
     private void createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), config.getSupportedTransportTypes()));
-        server = Optional.of(new Server(serverSocketResult, socket -> onClientSocket(socket, serverSocketResult, myCapability.get()), exception -> {
+        server = Optional.of(new Server(serverSocketResult, 
+                socket -> onClientSocket(socket, serverSocketResult, myCapability.get()), 
+                exception -> {
             handleException(exception);
             // If server fails we shut down the node
             shutdown();
