@@ -100,7 +100,6 @@ public class ChatMessagesComponent {
         private final Model model;
         @Getter
         private final View view;
-        private final ChatService chatService;
         private final UserIdentityService userIdentityService;
         private final QuotedMessageBlock quotedMessageBlock;
         private final ChatMessagesListView chatMessagesListView;
@@ -116,7 +115,7 @@ public class ChatMessagesComponent {
 
         private Controller(DefaultApplicationService applicationService,
                            boolean isDiscussionsChat) {
-            chatService = applicationService.getChatService();
+            ChatService chatService = applicationService.getChatService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -182,7 +181,11 @@ public class ChatMessagesComponent {
                 } else if (channel instanceof PublicDiscussionChannel) {
                     publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
                 } else if (channel instanceof PrivateTradeChannel) {
-                    privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                    if (settingsService.getTradeRulesConfirmed().get()) {
+                        privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                    }else{
+                        new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
+                    }
                 } else if (channel instanceof PrivateDiscussionChannel) {
                     privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
                 }
@@ -248,7 +251,6 @@ public class ChatMessagesComponent {
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
         private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
-       // private final BooleanProperty isTradeGuideBoxVisible = new SimpleBooleanProperty();
 
         private Model(boolean isDiscussionsChat) {
             this.isDiscussionsChat = isDiscussionsChat;
@@ -263,14 +265,9 @@ public class ChatMessagesComponent {
         private final Button sendButton;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
-      //  private final TradeGuideBox tradeGuideBox;
-       // private final Button closeTradeGuideBoxButton;
 
         private View(Model model, Controller controller, Pane messagesListView, Pane quotedMessageBlock) {
             super(new VBox(), model, controller);
-
-         //   tradeGuideBox = new TradeGuideBox();
-          //  closeTradeGuideBoxButton = tradeGuideBox.getCloseButton();
 
             inputField = new BisqTextArea();
             inputField.setId("chat-input-field");
@@ -293,9 +290,7 @@ public class ChatMessagesComponent {
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));
 
-           // VBox.setVgrow(messagesListView, Priority.ALWAYS);
-        //   VBox.setVgrow(tradeGuideBox, Priority.SOMETIMES);
-        //    VBox.setMargin(tradeGuideBox, new Insets(0, 24, 24, 24));
+            VBox.setVgrow(messagesListView, Priority.ALWAYS);
             VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
             root.getChildren().addAll(/*tradeGuideBox,*/ messagesListView, quotedMessageBlock, bottomBox);
 
@@ -310,8 +305,6 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewAttached() {
-       //     tradeGuideBox.visibleProperty().bind(model.getIsTradeGuideBoxVisible());
-          //  tradeGuideBox.managedProperty().bind(model.getIsTradeGuideBoxVisible());
             inputField.textProperty().bindBidirectional(model.getTextInput());
 
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -338,7 +331,6 @@ public class ChatMessagesComponent {
                 controller.onSendMessage(inputField.getText().trim());
                 inputField.clear();
             });
-          //  closeTradeGuideBoxButton.setOnAction(e -> controller.onCloseTradeGuideBox());
 
             userMentionPopup.setItems(model.mentionableUsers);
             channelMentionPopup.setItems(model.mentionableChannels);
@@ -346,15 +338,12 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewDetached() {
-          ///  tradeGuideBox.visibleProperty().unbind();
-           // tradeGuideBox.managedProperty().unbind();
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
 
             inputField.setOnKeyPressed(null);
             sendButton.setOnAction(null);
-          //  closeTradeGuideBoxButton.setOnAction(null);
         }
     }
 }

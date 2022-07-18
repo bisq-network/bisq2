@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.left;
 
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -34,8 +34,10 @@ import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import lombok.Getter;
@@ -55,7 +57,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
     private final NetworkInfoBox networkInfoBox;
-    private final Label expandIcon, collapseIcon;
+    private final Button expandIcon, collapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
     private final VBox mainMenuItems;
@@ -126,37 +128,28 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
         );
 
-
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
         
-         /*  dashBoard.setOnAction(() -> {
-            controller.onNavigationTargetSelected(NavigationTarget.SOCIAL);
-            if (model.getMenuExpanded().get()) {
-                controller.onToggleExpandMenu();
-            }
-        });*/
-
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
         Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
 
-        // controller.onNavigationButtonCreated(NavigationTarget.NETWORK_INFO);
-
-        expandIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
+        expandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
         expandIcon.setCursor(Cursor.HAND);
         expandIcon.setLayoutY(menuTop - 3);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
+        Tooltip.install(expandIcon, new Tooltip(Res.get("navigation.expandIcon.tooltip")));
 
-        collapseIcon = Icons.getIcon(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
+        collapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
         collapseIcon.setCursor(Cursor.HAND);
         collapseIcon.setLayoutY(menuTop - 3);
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
-
-
+        Tooltip.install(collapseIcon, new Tooltip(Res.get("navigation.collapseIcon.tooltip")));
+        
         logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
         logoExpanded.setLayoutX(28);
@@ -193,10 +186,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-            //   vBox.setPrefWidth(width);
-            // root.setPrefWidth(width + MARKER_WIDTH);
-
-
             AtomicInteger duration = new AtomicInteger(400);
             if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
@@ -259,17 +248,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             if (collapseIcon.isVisible()) {
                 Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
             }
-           /* if (expandIcon.isVisible()) {
-                Transitions.fadeIn(expandIcon, Transitions.DEFAULT_DURATION, 0.3, null);
-            }*/
         });
         root.setOnMouseExited(e -> {
             if (collapseIcon.isVisible()) {
                 Transitions.fadeOut(collapseIcon);
             }
-          /*  if (expandIcon.isVisible()) {
-                Transitions.fadeOut(expandIcon);
-            }*/
         });
 
         maybeAnimateMark();
@@ -320,6 +303,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 maybeAnimateMark();
             }
         });
+        button.getIsAutoCollapse().addListener((observable, oldValue, newValue) -> {
+            if (newValue && !button.isSelected()) {
+                updateSubmenu();
+            }
+        });
         controller.onNavigationButtonCreated(button);
     }
 
@@ -346,18 +334,21 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 for (int i = 0; i < index; i++) {
                     Node item = mainMenuItems.getChildren().get(i);
                     if (item instanceof VBox) {
-                        targetY -= ((VBox) item).getHeight();
+                        VBox submenu = (VBox) item;
+                        LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
+                        if (parentMenuItem.getIsAutoCollapse().get()) {
+                            targetY -= submenu.getHeight();
+                        }
                     }
                 }
             }
             Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
-            maybeHighlightSubmenu();
+            updateSubmenu();
         });
     }
 
-    private void maybeHighlightSubmenu() {
+    private void updateSubmenu() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-
         for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
             Node item = mainMenuItems.getChildren().get(i);
             if (item instanceof VBox) {
@@ -367,17 +358,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                         || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
                 parentMenuItem.setHighlighted(isSubmenuActive);
 
-                Transitions.animateHeight(
-                        submenu,
-                        isSubmenuActive ? (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0
-                );
+                if (isSubmenuActive) {
+                    parentMenuItem.setWasSelected(true);
+                }
+                UIThread.runOnNextRenderFrame(parentMenuItem::applyStyle);
+                int targetHeight = isSubmenuActive || (parentMenuItem.isWasSelected() && !parentMenuItem.getIsAutoCollapse().get()) ?
+                        (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
+                Transitions.animateHeight(submenu, targetHeight);
             }
         }
     }
 
     private static class NetworkInfoBox extends HBox {
         private NetworkInfoBox(LeftNavModel model, Runnable handler) {
-            // getStyleClass().add("border-top-grey-5");
             setMinHeight(53);
             setMaxHeight(53);
             setPadding(new Insets(26, 24, 0, 24));

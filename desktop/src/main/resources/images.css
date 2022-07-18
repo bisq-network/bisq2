@@ -83,6 +83,7 @@
 #search {
     -fx-image: url("images/search.png");
 }
+
 #search-white {
     -fx-image: url("images/search-white.png");
 }
@@ -211,12 +212,12 @@
 
 
 /*Left nav collapse / expand*/
-#expand_small {
-    -fx-image: url("images/navigation/expand_small.png");
+#nav-expand {
+    -fx-image: url("images/navigation/nav-expand.png");
 }
 
-#collapse_small {
-    -fx-image: url("images/navigation/collapse_small.png");
+#nav-auto-collapse {
+    -fx-image: url("images/navigation/nav-auto-collapse.png");
 }
 
 /*Tabs icons*/
