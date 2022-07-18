@@ -34,7 +34,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideController> {
-
     private Button collapseButton, expandButton;
     private HBox hBox;
     private Subscription isCollapsedPin;
@@ -56,37 +55,6 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         addTab(Res.get("tradeGuide.tab3"),
                 NavigationTarget.TRADE_GUIDE_TAB_3,
                 styles);
-    }
-
-    @Override
-    protected void setupTopBox() {
-        headLine = new Label();
-        headLine.setText(Res.get("tradeGuide.headline"));
-        headLine.getStyleClass().add("bisq-text-17");
-
-        collapseButton = BisqIconButton.createIconButton("collapse");
-        expandButton = BisqIconButton.createIconButton("expand");
-
-        HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
-        HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
-        HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        hBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
-
-        tabs.setFillHeight(true);
-        tabs.setSpacing(46);
-        tabs.setMinHeight(35);
-
-        topBox = new VBox();
-        VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
-        topBox.getChildren().addAll(hBox, tabs);
-    }
-
-    @Override
-    protected void setupLineAndMarker() {
-        super.setupLineAndMarker();
-
-        line.getStyleClass().remove("bisq-darkest-bg");
-        line.getStyleClass().add("bisq-mid-grey");
     }
 
     @Override
@@ -124,5 +92,36 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         collapseButton.setOnAction(null);
         expandButton.setOnAction(null);
         isCollapsedPin.unsubscribe();
+    }
+
+    @Override
+    protected void setupTopBox() {
+        headLine = new Label();
+        headLine.setText(Res.get("tradeGuide.headline"));
+        headLine.getStyleClass().add("bisq-text-17");
+
+        collapseButton = BisqIconButton.createIconButton("collapse");
+        expandButton = BisqIconButton.createIconButton("expand");
+
+        HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
+        hBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
+
+        tabs.setFillHeight(true);
+        tabs.setSpacing(46);
+        tabs.setMinHeight(35);
+
+        topBox = new VBox();
+        VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
+        topBox.getChildren().addAll(hBox, tabs);
+    }
+
+    @Override
+    protected void setupLineAndMarker() {
+        super.setupLineAndMarker();
+
+        line.getStyleClass().remove("bisq-darkest-bg");
+        line.getStyleClass().add("bisq-mid-grey");
     }
 }
