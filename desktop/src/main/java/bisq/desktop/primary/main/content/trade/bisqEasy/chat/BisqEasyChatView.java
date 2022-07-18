@@ -63,8 +63,6 @@ public class BisqEasyChatView extends ChatView {
 
         centerToolbar.getChildren().add(3, toggleOffersButton);
 
-        root.setPadding(new Insets(33, 67, 67, 67));
-
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
@@ -88,6 +86,5 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
         toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
-        toggleOffersButton.setOnAction(null);
     }
 }

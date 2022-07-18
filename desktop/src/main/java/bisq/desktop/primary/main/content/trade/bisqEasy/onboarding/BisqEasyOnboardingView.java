@@ -27,26 +27,35 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
+public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingModel, BisqEasyOnboardingController> {
+    private static final int PADDING = 20;
 
     private final Button createOfferButton, openChatButton;
     private final BisqToggleButton dontShowAgain;
 
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
-        super(new VBox(), model, controller);
+        super(new GridPane(), model, controller);
 
-        root.setFillWidth(true);
-        root.setAlignment(Pos.TOP_LEFT);
+        root.setHgap(PADDING);
+        root.setVgap(PADDING);
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        root.getColumnConstraints().addAll(col1, col2);
 
         Label headlineLabel = new Label(Res.get("bisqEasy.onboarding.headline"));
         headlineLabel.getStyleClass().addAll("bisq-text-headline-4");
-
+        headlineLabel.setWrapText(true);
+        root.add(headlineLabel, 0, 0, 2, 1);
 
         Pair<VBox, Button> leftBoxPair = getWidgetBox(
                 Res.get("bisqEasy.onboarding.left.headline"),
@@ -60,6 +69,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
         );
         createOfferButton = leftBoxPair.getSecond();
         createOfferButton.setDefaultButton(true);
+        root.add(leftBoxPair.getFirst(), 0, 1, 1, 1);
 
         Pair<VBox, Button> rightBoxPair = getWidgetBox(
                 Res.get("bisqEasy.onboarding.right.headline"),
@@ -72,18 +82,10 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                 Res.get("bisqEasy.onboarding.right.button")
         );
         openChatButton = rightBoxPair.getSecond();
-
-        VBox leftBox = leftBoxPair.getFirst();
-        VBox rightBox = rightBoxPair.getFirst();
-        HBox.setHgrow(leftBox, Priority.ALWAYS);
-        HBox.setHgrow(rightBox, Priority.ALWAYS);
-        HBox hBox = new HBox(16, leftBox, rightBox);
+        root.add(rightBoxPair.getFirst(), 1, 1, 1, 1);
 
         dontShowAgain = new BisqToggleButton(Res.get("dontShowAgain"));
-        VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 76));
-        VBox.setMargin(hBox, new Insets(20, 30, 15, 30));
-        VBox.setMargin(dontShowAgain, new Insets(0, 30, 30, 30));
-        root.getChildren().addAll(headlineLabel, hBox, dontShowAgain);
+        root.add(dontShowAgain, 0, 2, 2, 1);
     }
 
     @Override
@@ -110,6 +112,7 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                                             String buttonLabel) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headlineLabel.setWrapText(true);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("large-button");
@@ -124,7 +127,6 @@ public class BisqEasyOnboardingView extends View<VBox, BisqEasyOnboardingModel, 
                 getIconAndText(content3, imageId3),
                 button);
         vBox.getStyleClass().add("bisq-box-1");
-        vBox.setFillWidth(true);
         vBox.setPadding(new Insets(36, 48, 52, 48));
         return new Pair<>(vBox, button);
     }

@@ -73,7 +73,10 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.helpPane = helpPane;
-
+        
+        // Undo default padding of ContentView 
+        root.setPadding(new Insets(-34, -67, -67, -68));
+       
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
         createOfferButton.setMinHeight(37);

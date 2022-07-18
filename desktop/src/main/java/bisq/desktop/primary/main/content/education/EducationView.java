@@ -33,15 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EducationView extends View<GridPane, EducationModel, EducationController> {
-    private static final int MARGIN = 40;
-    private static final int TEXT_SPACE = 20;
+    private static final int PADDING = 20;
     private int rowIndex;
 
     public EducationView(EducationModel model, EducationController controller) {
         super(new GridPane(), model, controller);
 
-        root.setHgap(MARGIN);
-        root.setVgap(MARGIN);
+        root.setHgap(PADDING);
+        root.setVgap(PADDING);
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
@@ -74,16 +73,14 @@ public class EducationView extends View<GridPane, EducationModel, EducationContr
         Label headlineLabel = new Label(Res.get("social.education.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
         headlineLabel.setWrapText(true);
-        
+
         Label contentLabel = new Label(Res.get("social.education.content"));
         contentLabel.getStyleClass().add("bisq-text-16");
         contentLabel.setWrapText(true);
 
-        VBox vBox = new VBox();
-        vBox.setSpacing(TEXT_SPACE);
+        VBox vBox = new VBox(20, headlineLabel, contentLabel);
         vBox.getStyleClass().add("bisq-box-2");
-        vBox.setPadding(new Insets(MARGIN - 20, MARGIN, MARGIN - 6, MARGIN));
-        vBox.getChildren().addAll(headlineLabel, contentLabel);
+        vBox.setPadding(new Insets(PADDING));
         root.add(vBox, 0, 0, 2, 1);
     }
 
@@ -131,12 +128,10 @@ public class EducationView extends View<GridPane, EducationModel, EducationContr
         HBox.setMargin(button, new Insets(0, -10, 0, 0));
         HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), button);
 
-        VBox vBox = new VBox(hBox, contentLabel);
-        vBox.setFillWidth(true);
+        VBox vBox = new VBox(20, hBox, contentLabel);
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
-        vBox.setSpacing(TEXT_SPACE);
         vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(MARGIN - 20, MARGIN, MARGIN - 6, MARGIN));
+        vBox.setPadding(new Insets(PADDING));
         return vBox;
     }
 }

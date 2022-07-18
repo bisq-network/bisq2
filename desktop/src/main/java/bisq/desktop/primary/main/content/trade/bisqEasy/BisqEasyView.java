@@ -29,7 +29,8 @@ public class BisqEasyView extends NavigationView<AnchorPane, BisqEasyModel, Bisq
         super(new AnchorPane(), model, controller);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            Layout.pinToAnchorPane(newValue.getRoot(), -34, -68, -68, -68);
+            Layout.pinToAnchorPane(newValue.getRoot(),  0,0,0,0);
+           
             root.getChildren().clear();
             root.getChildren().add(newValue.getRoot());
         });
