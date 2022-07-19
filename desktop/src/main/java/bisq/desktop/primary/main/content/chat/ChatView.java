@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.primary.main.content.chat;
 
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.NavigationView;

@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.primary.main.content.chat;
 
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.primary.main.content.components.ChatUserDetails;
+import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import javafx.beans.property.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
@@ -51,7 +51,7 @@ public abstract class ChatModel extends NavigationModel {
     private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();
 
     @Setter
-    private Optional<ChatUserDetails> chatUserDetails = Optional.empty();
+    private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
 
     public ChatModel() {
     }

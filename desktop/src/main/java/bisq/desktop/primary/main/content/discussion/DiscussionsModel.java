@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.desktop.primary.main.content.chat.ChatModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

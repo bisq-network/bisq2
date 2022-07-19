@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.desktop.primary.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;

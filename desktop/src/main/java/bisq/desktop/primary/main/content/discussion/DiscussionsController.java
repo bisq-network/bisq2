@@ -26,7 +26,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.ChatController;
+import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -50,7 +50,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = discussionChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -78,8 +78,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
                 publicDiscussionChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSettings.getRoot(),
-                channelInfo.getRoot(),
+                notificationsSidebar.getRoot(),
+                channelSidebar.getRoot(),
                 filterBox);
     }
 

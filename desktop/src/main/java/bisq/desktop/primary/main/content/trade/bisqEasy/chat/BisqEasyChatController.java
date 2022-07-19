@@ -29,7 +29,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.ChatController;
+import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.settings.SettingsService;
@@ -58,7 +58,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = tradeChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -94,8 +94,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSettings.getRoot(),
-                channelInfo.getRoot(),
+                notificationsSidebar.getRoot(),
+                channelSidebar.getRoot(),
                 filterBox);
     }
 

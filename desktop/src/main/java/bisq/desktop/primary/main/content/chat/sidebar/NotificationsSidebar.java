@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
@@ -36,11 +36,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class NotificationsSettings {
+public class NotificationsSidebar {
 
     private final Controller controller;
 
-    public NotificationsSettings(Runnable closeHandler) {
+    public NotificationsSidebar(Runnable closeHandler) {
         controller = new Controller(closeHandler);
     }
 
@@ -173,7 +173,6 @@ public class NotificationsSettings {
         protected void onViewDetached() {
             model.channel.removeListener(channelChangeListener);
             toggleGroup.selectedToggleProperty().removeListener(toggleListener);
-            ;
             closeButton.setOnAction(null);
         }
     }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
@@ -26,7 +26,12 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.components.*;
+import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
+import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
+import bisq.desktop.primary.main.content.chat.sidebar.NotificationsSidebar;
+import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
+import bisq.desktop.primary.main.content.components.PrivateChannelSelection;
+import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
@@ -49,8 +54,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final UserIdentityService userIdentityService;
     protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
-    protected final ChannelInfo channelInfo;
-    protected final NotificationsSettings notificationsSettings;
+    protected final ChannelSidebar channelSidebar;
+    protected final NotificationsSidebar notificationsSidebar;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
@@ -65,8 +70,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userProfileService = applicationService.getUserService().getUserProfileService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
-        channelInfo = new ChannelInfo(applicationService, this::onCloseSideBar);
-        notificationsSettings = new NotificationsSettings( this::onCloseSideBar);
+        channelSidebar = new ChannelSidebar(applicationService, this::onCloseSideBar);
+        notificationsSidebar = new NotificationsSidebar(this::onCloseSideBar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         //todo
@@ -88,13 +93,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             onCloseSideBar();
             model.getSideBarVisible().set(true);
 
-            ChatUserDetails chatUserDetails = new ChatUserDetails(userProfileService, chatService, chatUser);
-            model.getSideBarWidth().set(chatUserDetails.getRoot().getMinWidth());
-            chatUserDetails.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
-            chatUserDetails.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
-            chatUserDetails.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
-            model.setChatUserDetails(Optional.of(chatUserDetails));
-            model.getChatUserDetailsRoot().set(chatUserDetails.getRoot());
+            UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService, chatService, chatUser, this::onCloseSideBar);
+            model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
+            userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
+            userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
+            userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
+            model.setChatUserDetails(Optional.of(userProfileSidebar));
+            model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
         });
     }
 
@@ -131,9 +136,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         onCloseSideBar();
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? notificationsSettings.getRoot().getMinWidth() : 0);
+        model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
         if (visible) {
-            notificationsSettings.setChannel(model.getSelectedChannel().get());
+            notificationsSidebar.setChannel(model.getSelectedChannel().get());
         }
     }
 
@@ -142,7 +147,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         onCloseSideBar();
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? notificationsSettings.getRoot().getMinWidth() : 0);
+        model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
         if (visible) {
             showChannelInfo();
         }
@@ -168,10 +173,10 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void showChannelInfo() {
-        channelInfo.setChannel(model.getSelectedChannel().get());
-        channelInfo.setOnUndoIgnoreChatUser(() -> {
+        channelSidebar.setChannel(model.getSelectedChannel().get());
+        channelSidebar.setOnUndoIgnoreChatUser(() -> {
             chatMessagesComponent.refreshMessages();
-            channelInfo.setChannel(model.getSelectedChannel().get());
+            channelSidebar.setChannel(model.getSelectedChannel().get());
         });
     }
 
@@ -184,6 +189,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void cleanupChannelInfo() {
-        channelInfo.setOnUndoIgnoreChatUser(null);
+        channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 }

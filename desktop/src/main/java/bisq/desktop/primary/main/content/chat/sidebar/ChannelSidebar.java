@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
@@ -25,6 +25,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.primary.main.content.components.ChatUserOverview;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -51,10 +52,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ChannelInfo {
+public class ChannelSidebar {
     private final Controller controller;
 
-    public ChannelInfo(DefaultApplicationService applicationService, Runnable closeHandler) {
+    public ChannelSidebar(DefaultApplicationService applicationService, Runnable closeHandler) {
         controller = new Controller(applicationService, closeHandler);
     }
 

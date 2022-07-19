@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -31,6 +33,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -43,11 +46,11 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
-public class ChatUserDetails implements Comparable<ChatUserDetails> {
+public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     private final Controller controller;
 
-    public ChatUserDetails(UserProfileService userProfileService, ChatService chatService, UserProfile userProfile) {
-        controller = new Controller(userProfileService, chatService, userProfile);
+    public UserProfileSidebar(UserProfileService userProfileService, ChatService chatService, UserProfile userProfile, Runnable closeHandler) {
+        controller = new Controller(userProfileService, chatService, userProfile, closeHandler);
     }
 
     public Pane getRoot() {
@@ -67,7 +70,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
     }
 
     @Override
-    public int compareTo(ChatUserDetails o) {
+    public int compareTo(UserProfileSidebar o) {
         return controller.model.userProfile.getUserName().compareTo(o.controller.model.userProfile.getUserName());
     }
 
@@ -76,12 +79,15 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
+        private final Runnable closeHandler;
 
 
         private Controller(UserProfileService userProfileService,
                            ChatService chatService,
-                           UserProfile userProfile) {
+                           UserProfile userProfile,
+                           Runnable closeHandler) {
             this.userProfileService = userProfileService;
+            this.closeHandler = closeHandler;
             model = new Model(chatService, userProfile);
             view = new View(model, this);
         }
@@ -109,15 +115,15 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         public void onDeactivate() {
         }
 
-        public void onSendPrivateMessage() {
+        void onSendPrivateMessage() {
             model.sendPrivateMessageHandler.ifPresent(handler -> handler.accept(model.userProfile));
         }
 
-        public void onMentionUser() {
+        void onMentionUser() {
             model.mentionUserHandler.ifPresent(handler -> handler.accept(model.userProfile));
         }
 
-        public void onToggleIgnoreUser() {
+        void onToggleIgnoreUser() {
             model.ignoreUserSelected.set(!model.ignoreUserSelected.get());
             if (model.ignoreUserSelected.get()) {
                 userProfileService.ignoreUserProfile(model.userProfile);
@@ -129,9 +135,13 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             model.ignoreUserStateHandler.ifPresent(Runnable::run);
         }
 
-        public void onReportUser() {
+        void onReportUser() {
             // todo open popup for editing reason
             model.chatService.reportUserProfile(model.userProfile, "");
+        }
+
+        void onClose() {
+            closeHandler.run();
         }
     }
 
@@ -169,21 +179,32 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final Hyperlink mention, ignore, report;
         private final Label terms;
         private final Button privateMsgButton;
+        private final VBox statementBox;
+        private final VBox termsBox;
         private Subscription roboHashNodeSubscription;
+        private final Button closeButton;
 
         private View(Model model, Controller controller) {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
             root.setMinWidth(240);
-            root.setPadding(new Insets(0, 25, 0, 35));
+            root.setPadding(new Insets(0, 20, 20, 20));
+
+            //root.setPadding(new Insets(0, 25, 0, 35));
             root.setAlignment(Pos.TOP_CENTER);
+
+            Label headline = new Label(Res.get("chat.sidebar.userProfile.headline"));
+            headline.setId("chat-sidebar-headline");
+
+            closeButton = BisqIconButton.createIconButton("close");
+            HBox.setMargin(headline, new Insets(18, 0, 0, 0));
+            HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
+            HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
             nickName = new Label();
             nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
             nickName.setAlignment(Pos.CENTER);
-           // nickName.setMaxWidth(200);
-           // nickName.setMinWidth(200);
             VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
             roboIconImageView = new ImageView();
@@ -193,14 +214,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            //nym.setMaxWidth(200);
-            //nym.setMinWidth(200);
             VBox.setMargin(nym, new Insets(0, 0, 24, 0));
 
             privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
-            VBox statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
+            statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
             statement = (Label) statementBox.getChildren().get(1);
 
             VBox reputationScoreBox = getInfoBox(Res.get("social.chatUser.reputationScore"), false);
@@ -222,12 +241,12 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(24, -45, 15, -55));
 
-            VBox chatRulesBox = getInfoBox(Res.get("social.chat.terms.headline"), true);
-            terms = (Label) chatRulesBox.getChildren().get(1);
-
-            root.getChildren().addAll(nickName, roboIconImageView, nym, privateMsgButton,
+            termsBox = getInfoBox(Res.get("social.chat.terms.headline"), true);
+            terms = (Label) termsBox.getChildren().get(1);
+            VBox.setMargin(topHBox, new Insets(0, -20, 30, 0));
+            root.getChildren().addAll(topHBox, nickName, roboIconImageView, nym, privateMsgButton,
                     statementBox, reputationScoreBox, profileAgeBox,
-                    optionsBox, separator, chatRulesBox);
+                    optionsBox, separator, termsBox);
         }
 
         @Override
@@ -235,7 +254,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
             statement.textProperty().bind(model.statement);
+            statementBox.visibleProperty().bind(model.statement.isEmpty().not());
+            statementBox.managedProperty().bind(model.statement.isEmpty().not());
             terms.textProperty().bind(model.terms);
+            termsBox.visibleProperty().bind(model.terms.isEmpty().not());
+            termsBox.managedProperty().bind(model.terms.isEmpty().not());
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
             ignore.textProperty().bind(model.ignoreButtonText);
@@ -249,6 +272,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             mention.setOnAction(e -> controller.onMentionUser());
             ignore.setOnAction(e -> controller.onToggleIgnoreUser());
             report.setOnAction(e -> controller.onReportUser());
+            closeButton.setOnAction(e -> controller.onClose());
         }
 
         @Override
@@ -256,7 +280,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym.textProperty().unbind();
             nickName.textProperty().unbind();
             statement.textProperty().unbind();
+            statementBox.visibleProperty().unbind();
+            statementBox.managedProperty().unbind();
             terms.textProperty().unbind();
+            terms.visibleProperty().unbind();
+            terms.managedProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
             ignore.textProperty().unbind();
@@ -267,6 +295,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             mention.setOnAction(null);
             ignore.setOnAction(null);
             report.setOnAction(null);
+            closeButton.setOnAction(null);
         }
 
         private VBox getInfoBox(String title, boolean smaller) {

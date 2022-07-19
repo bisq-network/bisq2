@@ -21,7 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.BisqToggleButton;
 import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.ChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
