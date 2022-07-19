@@ -40,8 +40,8 @@ public class DashboardController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onOpenDiscussionChat() {
-        Navigation.navigateTo(NavigationTarget.DISCUSS);
+    public void onLearn() {
+        Navigation.navigateTo(NavigationTarget.ACADEMY);
     }
 
     public void onOpenTradeOverview() {

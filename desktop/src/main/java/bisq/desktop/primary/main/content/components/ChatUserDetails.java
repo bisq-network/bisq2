@@ -95,7 +95,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
 
             model.ignoreButtonText.set(Res.get("social.ignore"));
             model.id.set(Res.get("social.createUserProfile.id", userProfile.getId()));
-            model.bio.set(userProfile.getBio());
+            model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
             model.reputationScore.set(userProfile.getBurnScoreAsString());
             model.profileAge.set(userProfile.getAccountAgeAsString());
@@ -145,7 +145,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final StringProperty nym = new SimpleStringProperty();
         private final StringProperty nickName = new SimpleStringProperty();
         private final StringProperty id = new SimpleStringProperty();
-        private final StringProperty bio = new SimpleStringProperty();
+        private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
         private final StringProperty reputationScore = new SimpleStringProperty();
         private final StringProperty profileAge = new SimpleStringProperty();
@@ -163,7 +163,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         private final ImageView roboIconImageView;
         private final Label nym;
         private final Label nickName;
-        private final Label bio;
+        private final Label statement;
         private final Label reputationScore;
         private final Label profileAge;
         private final Hyperlink mention, ignore, report;
@@ -175,15 +175,15 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            root.setMaxWidth(200);
+            root.setMinWidth(240);
             root.setPadding(new Insets(0, 25, 0, 35));
             root.setAlignment(Pos.TOP_CENTER);
 
             nickName = new Label();
             nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
             nickName.setAlignment(Pos.CENTER);
-            nickName.setMaxWidth(200);
-            nickName.setMinWidth(200);
+           // nickName.setMaxWidth(200);
+           // nickName.setMinWidth(200);
             VBox.setMargin(nickName, new Insets(-20, 0, 5, 0));
 
             roboIconImageView = new ImageView();
@@ -193,15 +193,15 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            nym.setMaxWidth(200);
-            nym.setMinWidth(200);
+            //nym.setMaxWidth(200);
+            //nym.setMinWidth(200);
             VBox.setMargin(nym, new Insets(0, 0, 24, 0));
 
             privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
-            VBox bioBox = getInfoBox(Res.get("social.chatUser.bio"), false);
-            bio = (Label) bioBox.getChildren().get(1);
+            VBox statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);
+            statement = (Label) statementBox.getChildren().get(1);
 
             VBox reputationScoreBox = getInfoBox(Res.get("social.chatUser.reputationScore"), false);
             reputationScore = (Label) reputationScoreBox.getChildren().get(1);
@@ -222,12 +222,11 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
             Region separator = Layout.separator();
             VBox.setMargin(separator, new Insets(24, -45, 15, -55));
 
-            VBox chatRulesBox = getInfoBox(Res.get("social.chat.chatRules.headline"), true);
+            VBox chatRulesBox = getInfoBox(Res.get("social.chat.terms.headline"), true);
             terms = (Label) chatRulesBox.getChildren().get(1);
-            terms.setText(Res.get("social.chat.chatRules.content"));
 
             root.getChildren().addAll(nickName, roboIconImageView, nym, privateMsgButton,
-                    bioBox, reputationScoreBox, profileAgeBox,
+                    statementBox, reputationScoreBox, profileAgeBox,
                     optionsBox, separator, chatRulesBox);
         }
 
@@ -235,7 +234,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         protected void onViewAttached() {
             nym.textProperty().bind(model.nym);
             nickName.textProperty().bind(model.nickName);
-            bio.textProperty().bind(model.bio);
+            statement.textProperty().bind(model.statement);
             terms.textProperty().bind(model.terms);
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
@@ -256,7 +255,7 @@ public class ChatUserDetails implements Comparable<ChatUserDetails> {
         protected void onViewDetached() {
             nym.textProperty().unbind();
             nickName.textProperty().unbind();
-            bio.textProperty().unbind();
+            statement.textProperty().unbind();
             terms.textProperty().unbind();
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();

@@ -92,9 +92,20 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP)
         );
 
+        
+        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
+                "nav-wallet",
+                NavigationTarget.WALLET_BITCOIN, true);
+
+        VBox walletSubMenuItems = createSubmenu(
+                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
+                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
+        );
+
+
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 "nav-learn",
-                NavigationTarget.EDUCATION, true);
+                NavigationTarget.ACADEMY, true);
 
         VBox learnSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
@@ -119,19 +130,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
 
         //todo lower priority menu add design
-        LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
-                "nav-wallet",
-                NavigationTarget.WALLET_BITCOIN, true);
-
-        VBox walletSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
-                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
-        );
 
         LeftNavButton settings = createNavigationButton(Res.get("settings"),
                 "nav-settings",
                 NavigationTarget.SETTINGS, false);
-        
+
         networkInfoBox = new NetworkInfoBox(model,
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
         Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
@@ -149,7 +152,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
         Tooltip.install(collapseIcon, new Tooltip(Res.get("navigation.collapseIcon.tooltip")));
-        
+
         logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
         logoExpanded.setLayoutX(28);
@@ -165,8 +168,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, chat, learn, learnSubMenuItems,
-                events, support, wallet, walletSubMenuItems, settings);
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, wallet, walletSubMenuItems,
+                learn, learnSubMenuItems,
+                chat, events, support,
+                settings);
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }

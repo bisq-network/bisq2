@@ -105,6 +105,7 @@ public class NotificationsSettings {
             super(new VBox(), model, controller);
 
             root.setSpacing(15);
+            root.setMinWidth(240);
 
             Label headline = new Label(Res.get("social.channel.notifications"));
             headline.setId("chat-sidebar-headline");

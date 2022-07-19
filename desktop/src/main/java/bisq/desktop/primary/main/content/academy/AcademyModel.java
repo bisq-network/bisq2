@@ -15,26 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.wallets;
+package bisq.desktop.primary.main.content.academy;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-public class WalletsAcademyController implements Controller {
-    @Getter
-    private final WalletsAcademyView view;
-
-    public WalletsAcademyController(DefaultApplicationService applicationService) {
-        WalletsAcademyModel model = new WalletsAcademyModel();
-        view = new WalletsAcademyView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
+public class AcademyModel implements Model {
 }

@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.security;
+package bisq.desktop.primary.main.content.academy.bitcoin;
 
 import bisq.desktop.common.view.Model;
 
-public class SecurityAcademyModel implements Model {
+public class BitcoinAcademyModel implements Model {
 }

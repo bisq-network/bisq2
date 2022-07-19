@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.security;
+package bisq.desktop.primary.main.content.academy.wallets;
 
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -24,12 +24,12 @@ import javafx.scene.text.Text;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SecurityAcademyView extends View<VBox, SecurityAcademyModel, SecurityAcademyController> {
+public class WalletsAcademyView extends View<VBox, WalletsAcademyModel, WalletsAcademyController> {
 
-    public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
+    public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
         super(new VBox(), model, controller);
 
-        Text headlineLabel = new Text(Res.get("academy.security"));
+        Text headlineLabel = new Text(Res.get("academy.wallets"));
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
 
         root.getChildren().add(headlineLabel);

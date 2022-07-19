@@ -15,32 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.bisq;
+package bisq.desktop.primary.main.content.academy.bisq;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import lombok.extern.slf4j.Slf4j;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-@Slf4j
-public class BisqAcademyView extends View<VBox, BisqAcademyModel, BisqAcademyController> {
+public class BisqAcademyController implements Controller {
+    @Getter
+    private final BisqAcademyView view;
 
-    public BisqAcademyView(BisqAcademyModel model, BisqAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.bisq"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+    public BisqAcademyController(DefaultApplicationService applicationService) {
+        BisqAcademyModel model = new BisqAcademyModel();
+        view = new BisqAcademyView(model, this);
     }
 
     @Override
-    protected void onViewAttached() {
+    public void onActivate() {
     }
 
     @Override
-    protected void onViewDetached() {
-
+    public void onDeactivate() {
     }
 }

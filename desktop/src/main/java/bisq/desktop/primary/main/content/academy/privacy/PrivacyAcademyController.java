@@ -15,9 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.wallets;
+package bisq.desktop.primary.main.content.academy.privacy;
 
-import bisq.desktop.common.view.Model;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class WalletsAcademyModel implements Model {
+public class PrivacyAcademyController implements Controller {
+    @Getter
+    private final PrivacyAcademyView view;
+
+    public PrivacyAcademyController(DefaultApplicationService applicationService) {
+        PrivacyAcademyModel model = new PrivacyAcademyModel();
+        view = new PrivacyAcademyView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

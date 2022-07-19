@@ -160,7 +160,8 @@ public class ChannelInfo {
             super(new VBox(), model, controller);
 
             root.setSpacing(15);
-
+            root.setMinWidth(240);
+            
             channelNameLabel = new Label();
             channelNameLabel.setId("chat-sidebar-headline");
 

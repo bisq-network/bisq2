@@ -41,6 +41,7 @@ public abstract class ChatModel extends NavigationModel {
     private final ObjectProperty<Channel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
+    private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();

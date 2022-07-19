@@ -15,32 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.wallets;
+package bisq.desktop.primary.main.content.academy.wallets;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import lombok.extern.slf4j.Slf4j;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-@Slf4j
-public class WalletsAcademyView extends View<VBox, WalletsAcademyModel, WalletsAcademyController> {
+public class WalletsAcademyController implements Controller {
+    @Getter
+    private final WalletsAcademyView view;
 
-    public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.wallets"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+    public WalletsAcademyController(DefaultApplicationService applicationService) {
+        WalletsAcademyModel model = new WalletsAcademyModel();
+        view = new WalletsAcademyView(model, this);
     }
 
     @Override
-    protected void onViewAttached() {
+    public void onActivate() {
     }
 
     @Override
-    protected void onViewDetached() {
-
+    public void onDeactivate() {
     }
 }

@@ -15,26 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.openSource;
+package bisq.desktop.primary.main.content.academy.privacy;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.View;
+import bisq.i18n.Res;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import lombok.extern.slf4j.Slf4j;
 
-public class OpenSourceAcademyController implements Controller {
-    @Getter
-    private final OpenSourceAcademyView view;
+@Slf4j
+public class PrivacyAcademyView extends View<VBox, PrivacyAcademyModel, PrivacyAcademyController> {
 
-    public OpenSourceAcademyController(DefaultApplicationService applicationService) {
-        OpenSourceAcademyModel model = new OpenSourceAcademyModel();
-        view = new OpenSourceAcademyView(model, this);
+    public PrivacyAcademyView(PrivacyAcademyModel model, PrivacyAcademyController controller) {
+        super(new VBox(), model, controller);
+
+        Text headlineLabel = new Text(Res.get("academy.privacy"));
+        headlineLabel.getStyleClass().add("bisq-text-headline-2");
+
+        root.getChildren().add(headlineLabel);
     }
 
     @Override
-    public void onActivate() {
+    protected void onViewAttached() {
     }
 
     @Override
-    public void onDeactivate() {
+    protected void onViewDetached() {
+
     }
 }

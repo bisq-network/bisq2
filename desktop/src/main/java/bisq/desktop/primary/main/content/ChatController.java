@@ -88,9 +88,9 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
             onCloseSideBar();
             model.getSideBarVisible().set(true);
-            model.getSideBarWidth().set(240);
-
+          
             ChatUserDetails chatUserDetails = new ChatUserDetails(userProfileService, chatService, chatUser);
+            model.getSideBarWidth().set(chatUserDetails.getRoot().getMinWidth());
             chatUserDetails.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
             chatUserDetails.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
             chatUserDetails.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
@@ -132,7 +132,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         onCloseSideBar();
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? 240 : 0);
+        model.getSideBarWidth().set(visible ? notificationsSettings.getRoot().getMinWidth() : 0);
         if (visible) {
             notificationsSettings.setChannel(model.getSelectedChannel().get());
         }
@@ -143,7 +143,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         onCloseSideBar();
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? 240 : 0);
+        model.getSideBarWidth().set(visible ? notificationsSettings.getRoot().getMinWidth() : 0);
         if (visible) {
             showChannelInfo();
         }
@@ -168,6 +168,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
         model.getHelpVisible().set(false);
+        model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
         cleanupChatUserDetails();
         cleanupChannelInfo();

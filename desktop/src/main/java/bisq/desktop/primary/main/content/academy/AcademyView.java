@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education;
+package bisq.desktop.primary.main.content.academy;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,11 +32,11 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EducationView extends View<GridPane, EducationModel, EducationController> {
+public class AcademyView extends View<GridPane, AcademyModel, AcademyController> {
     private static final int PADDING = 20;
     private int rowIndex;
 
-    public EducationView(EducationModel model, EducationController controller) {
+    public AcademyView(AcademyModel model, AcademyController controller) {
         super(new GridPane(), model, controller);
 
         root.setHgap(PADDING);

@@ -15,26 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.education.security;
+package bisq.desktop.primary.main.content.academy.bisq;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-public class SecurityAcademyController implements Controller {
-    @Getter
-    private final SecurityAcademyView view;
-
-    public SecurityAcademyController(DefaultApplicationService applicationService) {
-        SecurityAcademyModel model = new SecurityAcademyModel();
-        view = new SecurityAcademyView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
+public class BisqAcademyModel implements Model {
 }

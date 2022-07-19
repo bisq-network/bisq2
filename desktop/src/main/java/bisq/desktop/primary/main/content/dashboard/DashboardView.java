@@ -69,7 +69,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
                 Res.get("dashboard.third.headline"),
                 Res.get("dashboard.third.content"),
                 Res.get("dashboard.third.button"),
-                controller::onOpenDiscussionChat
+                controller::onLearn
         );
         root.add(thirdBox, 1, 2, 1, 1);
     }

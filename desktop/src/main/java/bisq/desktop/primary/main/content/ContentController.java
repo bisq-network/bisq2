@@ -23,13 +23,13 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.dashboard.DashboardController;
 import bisq.desktop.primary.main.content.discussion.DiscussionsController;
-import bisq.desktop.primary.main.content.education.EducationController;
-import bisq.desktop.primary.main.content.education.bisq.BisqAcademyController;
-import bisq.desktop.primary.main.content.education.bitcoin.BitcoinAcademyController;
-import bisq.desktop.primary.main.content.education.openSource.OpenSourceAcademyController;
-import bisq.desktop.primary.main.content.education.privacy.PrivacyAcademyController;
-import bisq.desktop.primary.main.content.education.security.SecurityAcademyController;
-import bisq.desktop.primary.main.content.education.wallets.WalletsAcademyController;
+import bisq.desktop.primary.main.content.academy.AcademyController;
+import bisq.desktop.primary.main.content.academy.bisq.BisqAcademyController;
+import bisq.desktop.primary.main.content.academy.bitcoin.BitcoinAcademyController;
+import bisq.desktop.primary.main.content.academy.openSource.OpenSourceAcademyController;
+import bisq.desktop.primary.main.content.academy.privacy.PrivacyAcademyController;
+import bisq.desktop.primary.main.content.academy.security.SecurityAcademyController;
+import bisq.desktop.primary.main.content.academy.wallets.WalletsAcademyController;
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.support.SupportController;
@@ -80,8 +80,8 @@ public class ContentController extends NavigationController {
             case DISCUSS: {
                 return Optional.of(new DiscussionsController(applicationService));
             }
-            case EDUCATION: {
-                return Optional.of(new EducationController(applicationService));
+            case ACADEMY: {
+                return Optional.of(new AcademyController(applicationService));
             }
             case BISQ_ACADEMY: {
                 return Optional.of(new BisqAcademyController(applicationService));

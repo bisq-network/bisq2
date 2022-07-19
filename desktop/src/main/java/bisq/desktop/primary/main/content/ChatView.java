@@ -56,7 +56,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
     private final Button createOfferButton;
     protected final VBox center;
     private Pane chatUserOverviewRoot;
-    private Subscription sideBarWidthSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
+    private Subscription sideBarWidthSubscription, sideBarChangedSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
@@ -73,10 +73,10 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
         this.helpPane = helpPane;
-        
+
         // Undo default padding of ContentView 
         root.setPadding(new Insets(-34, -67, -67, -68));
-       
+
         createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
         createOfferButton.setMinHeight(37);
@@ -129,7 +129,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         // sideBar
         closeButton = BisqIconButton.createIconButton("icon-sidebar-close");
         VBox.setMargin(closeButton, new Insets(0, -15, 0, 0));
-        channelInfo.setMinWidth(200);
         sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo, helpPane);
         sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
@@ -139,7 +138,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         filterBoxRoot = filterBox.getRoot();
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-         center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+        center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         root.getItems().addAll(left, center, sideBar);
     }
@@ -184,6 +183,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
                 });
 
         sideBarWidthSubscription = EasyBind.subscribe(model.getSideBarWidth(), w -> updateDividerPositions());
+        sideBarChangedSubscription = EasyBind.subscribe(model.getSideBarChanged(), c -> updateDividerPositions());
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> updateDividerPositions());
     }
 
@@ -216,6 +216,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         chatUserOverviewRootSubscription.unsubscribe();
         rootWidthSubscription.unsubscribe();
         sideBarWidthSubscription.unsubscribe();
+        sideBarChangedSubscription.unsubscribe();
     }
 
     private void updateDividerPositions() {
@@ -223,7 +224,9 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         if (rootWidth > 0) {
             root.setDividerPosition(0, left.getPrefWidth() / rootWidth);
             double sideBarWidth = model.getSideBarWidth().get();
-            root.setDividerPosition(1, (rootWidth - sideBarWidth) / rootWidth);
+            log.error("sideBarWidth " + sideBarWidth);
+            // rootWidth is left+center
+            root.setDividerPosition(1, (rootWidth) / (rootWidth + sideBarWidth));
 
             // Lock to that initial position
             SplitPane.setResizableWithParent(left, false);
