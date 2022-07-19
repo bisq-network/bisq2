@@ -17,19 +17,19 @@
 
 package bisq.desktop.primary.main.content.components;
 
-import bisq.i18n.Res;
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.message.ChatMessage;
+import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.i18n.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Toggle;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
@@ -40,8 +40,8 @@ public class NotificationsSettings {
 
     private final Controller controller;
 
-    public NotificationsSettings() {
-        controller = new Controller();
+    public NotificationsSettings(Runnable closeHandler) {
+        controller = new Controller(closeHandler);
     }
 
     public void setChannel(Channel<? extends ChatMessage> channel) {
@@ -60,8 +60,10 @@ public class NotificationsSettings {
         private final Model model;
         @Getter
         private final View view;
+        private final Runnable closeHandler;
 
-        private Controller() {
+        private Controller(Runnable closeHandler) {
+            this.closeHandler = closeHandler;
             model = new Model();
             view = new View(model, this);
         }
@@ -74,8 +76,12 @@ public class NotificationsSettings {
         public void onDeactivate() {
         }
 
-        public void onSelected(ChannelNotificationType channelNotificationType) {
+        void onSelected(ChannelNotificationType channelNotificationType) {
             model.notificationSetting.set(channelNotificationType);
+        }
+
+        void onClose() {
+            closeHandler.run();
         }
     }
 
@@ -98,6 +104,7 @@ public class NotificationsSettings {
         private final ToggleGroup toggleGroup = new ToggleGroup();
         private final ChangeListener<Toggle> toggleListener;
         private final RadioButton all, mention, none;
+        private final Button closeButton;
 
         private final ChangeListener<Channel<? extends ChatMessage>> channelChangeListener;
 
@@ -106,11 +113,15 @@ public class NotificationsSettings {
 
             root.setSpacing(15);
             root.setMinWidth(240);
+            root.setPadding(new Insets(0, 20, 20, 20));
 
             Label headline = new Label(Res.get("social.channel.notifications"));
             headline.setId("chat-sidebar-headline");
-            headline.setPadding(new Insets(0, 40, 0, 0));
-            VBox.setMargin(headline, new Insets(0, 0, 20, 0));
+
+            closeButton = BisqIconButton.createIconButton("close");
+            HBox.setMargin(headline, new Insets(18, 0, 0, 0));
+            HBox.setMargin(closeButton, new Insets(10, 10, 0, 0));
+            HBox topHBox = new HBox(headline, Spacer.fillHBox(), closeButton);
 
             all = new RadioButton(Res.get("social.channel.notifications.all"));
             mention = new RadioButton(Res.get("social.channel.notifications.mention"));
@@ -123,8 +134,9 @@ public class NotificationsSettings {
             all.setUserData(ChannelNotificationType.ALL);
             mention.setUserData(ChannelNotificationType.MENTION);
             none.setUserData(ChannelNotificationType.NEVER);
-
-            root.getChildren().addAll(headline, all, mention, none);
+           
+            VBox.setMargin(topHBox, new Insets(0, -20, 20, 0));
+            root.getChildren().addAll(topHBox, all, mention, none);
 
             toggleListener = (observable, oldValue, newValue) -> controller.onSelected((ChannelNotificationType) newValue.getUserData());
             channelChangeListener = (observable, oldValue, newValue) -> update();
@@ -154,12 +166,15 @@ public class NotificationsSettings {
         protected void onViewAttached() {
             model.channel.addListener(channelChangeListener);
             toggleGroup.selectedToggleProperty().addListener(toggleListener);
+            closeButton.setOnAction(e -> controller.onClose());
         }
 
         @Override
         protected void onViewDetached() {
             model.channel.removeListener(channelChangeListener);
             toggleGroup.selectedToggleProperty().removeListener(toggleListener);
+            ;
+            closeButton.setOnAction(null);
         }
     }
 }

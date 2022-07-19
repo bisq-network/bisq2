@@ -65,8 +65,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userProfileService = applicationService.getUserService().getUserProfileService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
-        channelInfo = new ChannelInfo(applicationService);
-        notificationsSettings = new NotificationsSettings();
+        channelInfo = new ChannelInfo(applicationService, this::onCloseSideBar);
+        notificationsSettings = new NotificationsSettings( this::onCloseSideBar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         //todo

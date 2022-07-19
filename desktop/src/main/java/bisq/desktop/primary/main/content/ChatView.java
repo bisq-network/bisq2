@@ -42,7 +42,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class ChatView extends NavigationView<SplitPane, ChatModel, ChatController<?, ?>> {
     private final Label selectedChannelLabel;
-    private final Button searchButton, notificationsButton, channelInfoButton, helpButton, closeButton;
+    private final Button searchButton, notificationsButton, channelInfoButton, helpButton;
     private final VBox left;
     private final VBox sideBar;
     private final HBox filterBoxRoot;
@@ -122,14 +122,10 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         centerToolbar.setMinHeight(64);
         centerToolbar.setPadding(new Insets(0, 20, 0, 24));
 
-
         // sideBar
-        closeButton = BisqIconButton.createIconButton("icon-sidebar-close");
-        VBox.setMargin(closeButton, new Insets(0, -15, 0, 0));
-        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
+        sideBar = new VBox(notificationsSettings, channelInfo);
         sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
-        sideBar.setPadding(new Insets(10, 20, 10, 20));
         sideBar.setFillWidth(true);
 
         filterBoxRoot = filterBox.getRoot();
@@ -161,7 +157,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         notificationsButton.setOnAction(e -> controller.onToggleNotifications());
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         helpButton.setOnAction(e -> controller.onToggleHelp());
-        closeButton.setOnAction(e -> controller.onCloseSideBar());
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
@@ -203,7 +198,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         notificationsButton.setOnAction(null);
         channelInfoButton.setOnAction(null);
         helpButton.setOnAction(null);
-        closeButton.setOnAction(null);
         createOfferButton.setOnAction(null);
 
         chatUserOverviewRootSubscription.unsubscribe();
