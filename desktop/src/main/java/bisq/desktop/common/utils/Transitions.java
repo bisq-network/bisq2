@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -25,6 +26,7 @@ import bisq.desktop.common.view.TransitionedView;
 import bisq.desktop.common.view.View;
 import bisq.settings.SettingsService;
 import javafx.animation.*;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Camera;
 import javafx.scene.Node;
@@ -41,10 +43,13 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Slf4j
 public class Transitions {
+
     public enum Type {
         BLACK(node -> darken(node, -1)),
         VERY_DARK(node -> darken(node, -0.9)),
@@ -73,7 +78,7 @@ public class Transitions {
         }
     }
 
-    public static final Type DEFAULT_TYPE = Type.DARK;
+    public static final Type DEFAULT_TYPE = Type.VERY_DARK;
 
     public static final int DEFAULT_DURATION = 600;
     public static final int CROSS_FADE_IN_DURATION = 1500;
@@ -81,7 +86,8 @@ public class Transitions {
     private static final Interpolator DEFAULT_INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
     @Setter
     private static SettingsService settingsService;
-    private static Timeline removeEffectTimeLine;
+    private static Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
+    private static Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
 
     public static void fadeIn(Node node) {
         fadeIn(node, DEFAULT_DURATION);
@@ -173,25 +179,49 @@ public class Transitions {
     }
 
     public static void blur(Node node) {
-        blur(node, DEFAULT_DURATION, -0.1, false, 15);
+        blur(node, DEFAULT_DURATION / 2, -0.1, false, 15);
     }
 
     public static void darken(Node node, double brightness) {
-        blur(node, DEFAULT_DURATION, brightness, false, 0);
+        blur(node, DEFAULT_DURATION / 2, brightness, false, 0);
     }
 
     public static void blurLight(Node node, double brightness) {
-        blur(node, DEFAULT_DURATION, brightness, false, 10);
+        blur(node, DEFAULT_DURATION / 2, brightness, false, 10);
     }
 
     public static void blurStrong(Node node, double brightness) {
-        blur(node, DEFAULT_DURATION, brightness, false, 20);
+        blur(node, DEFAULT_DURATION / 2, brightness, false, 20);
     }
 
     public static void blur(Node node, int duration, double brightness, boolean removeNode, double blurRadius) {
-        if (removeEffectTimeLine != null)
-            removeEffectTimeLine.stop();
+        // If there was a transition already playing we stop it and apply again our blur. 
+        if (node.getEffect() != null) {
+            String nodeId = node.getId();
+            if (nodeId == null) {
+                node.setId(StringUtils.createUid());
+            }
 
+            if (!effectChangeListenerByNodeId.containsKey(nodeId)) {
+                ChangeListener<Effect> effectChangeListener = (observable, oldValue, newValue) -> {
+                    if (oldValue != null && newValue == null) {
+                        blur(node, duration, brightness, removeNode, blurRadius);
+                        node.effectProperty().removeListener(effectChangeListenerByNodeId.get(nodeId));
+                        effectChangeListenerByNodeId.remove(nodeId);
+                    }
+                };
+                node.effectProperty().addListener(effectChangeListener);
+                effectChangeListenerByNodeId.put(nodeId, effectChangeListener);
+            }else{
+                return;
+            }
+            if (removeEffectTimeLineByNodeId.containsKey(nodeId)) {
+                removeEffectTimeLineByNodeId.get(nodeId).stop();
+                removeEffectTimeLineByNodeId.remove(nodeId);
+                node.setEffect(null);
+            }
+        }
+        
         node.setMouseTransparent(true);
         GaussianBlur blur = new GaussianBlur(0.0);
         Timeline timeline = new Timeline();
@@ -229,26 +259,30 @@ public class Transitions {
     private static void removeEffect(Node node, int duration) {
         if (node != null) {
             node.setMouseTransparent(false);
-            removeEffectTimeLine = new Timeline();
             Effect effect = node.getEffect();
             if (effect instanceof GaussianBlur) {
+                if (node.getId() == null) {
+                    node.setId(StringUtils.createUid());
+                }
+                Timeline timeline = new Timeline();
+                removeEffectTimeLineByNodeId.put(node.getId(), timeline);
                 GaussianBlur gaussianBlur = (GaussianBlur) effect;
                 KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
                 KeyFrame kf1 = new KeyFrame(Duration.millis(getDuration(duration)), kv1);
-                removeEffectTimeLine.getKeyFrames().add(kf1);
+                timeline.getKeyFrames().add(kf1);
 
                 ColorAdjust darken = (ColorAdjust) gaussianBlur.getInput();
                 KeyValue kv2 = new KeyValue(darken.brightnessProperty(), 0.0);
                 KeyFrame kf2 = new KeyFrame(Duration.millis(getDuration(duration)), kv2);
-                removeEffectTimeLine.getKeyFrames().add(kf2);
-                removeEffectTimeLine.setOnFinished(actionEvent -> {
+                timeline.getKeyFrames().add(kf2);
+                timeline.setOnFinished(actionEvent -> {
                     node.setEffect(null);
-                    removeEffectTimeLine = null;
+                    removeEffectTimeLineByNodeId.remove(node.getId());
+                    node.setId(null);
                 });
-                removeEffectTimeLine.play();
+                timeline.play();
             } else {
                 node.setEffect(null);
-                removeEffectTimeLine = null;
             }
         }
     }

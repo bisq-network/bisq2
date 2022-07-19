@@ -18,7 +18,6 @@
 package bisq.desktop.primary.overlay.createOffer;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -87,7 +86,6 @@ public class CreateOfferController extends NavigationController {
     @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
-        OverlayController.setTransitionsType(Transitions.Type.VERY_DARK);
 
         directionSubscription = EasyBind.subscribe(directionController.getDirection(), direction -> {
             reviewOfferController.setDirection(direction);

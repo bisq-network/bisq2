@@ -18,13 +18,11 @@
 package bisq.desktop.primary.main.content.settings.userProfile.create;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step1.GenerateNewProfileStep1Controller;
 import bisq.desktop.primary.main.content.settings.userProfile.create.step2.GenerateNewProfileStep2Controller;
-import bisq.desktop.primary.overlay.OverlayController;
 import javafx.application.Platform;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +51,6 @@ public class CreateUserProfileController extends NavigationController {
 
     @Override
     public void onActivate() {
-        OverlayController.setTransitionsType(Transitions.Type.LIGHT);
     }
 
     @Override

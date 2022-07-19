@@ -217,7 +217,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         if (rootWidth > 0) {
             root.setDividerPosition(0, left.getPrefWidth() / rootWidth);
             double sideBarWidth = model.getSideBarWidth().get();
-            log.error("sideBarWidth " + sideBarWidth);
             // rootWidth is left+center
             root.setDividerPosition(1, (rootWidth) / (rootWidth + sideBarWidth));
 
