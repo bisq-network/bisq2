@@ -52,7 +52,9 @@ public enum NavigationTarget {
     CREATE_PROFILE(OVERLAY, false),
     CREATE_PROFILE_STEP1(CREATE_PROFILE, false),
     CREATE_PROFILE_STEP2(CREATE_PROFILE, false),
-   
+
+    BISQ_EASY_HELP(OVERLAY, false),
+    
     EDIT_PROFILE(OVERLAY, false),
 
     BURN_BSQ(OVERLAY, false),

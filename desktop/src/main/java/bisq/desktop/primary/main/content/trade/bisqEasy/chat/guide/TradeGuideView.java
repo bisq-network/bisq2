@@ -22,6 +22,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -34,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideController> {
-    private Button collapseButton, expandButton;
+    private Button collapseButton, expandButton, closeButton;
     private HBox hBox;
     private Subscription isCollapsedPin;
 
@@ -65,11 +66,19 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
 
         collapseButton.setOnAction(e -> controller.onCollapse());
         expandButton.setOnAction(e -> controller.onExpand());
+        closeButton.setOnAction(e -> controller.onClose());
+        closeButton.setManaged(model.isShowAsPopup());
+        closeButton.setVisible(model.isShowAsPopup());
+        if (model.isShowAsPopup()) {
+            root.setPrefWidth(OverlayModel.WIDTH);
+            root.setPrefHeight(OverlayModel.HEIGHT);
+        }
+
         isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
-            collapseButton.setManaged(!isCollapsed);
-            collapseButton.setVisible(!isCollapsed);
-            expandButton.setManaged(isCollapsed);
-            expandButton.setVisible(isCollapsed);
+            collapseButton.setManaged(!isCollapsed && !model.isShowAsPopup());
+            collapseButton.setVisible(!isCollapsed && !model.isShowAsPopup());
+            expandButton.setManaged(isCollapsed && !model.isShowAsPopup());
+            expandButton.setVisible(isCollapsed && !model.isShowAsPopup());
 
             if (isCollapsed) {
                 VBox.setMargin(hBox, new Insets(0, 0, -17, 0));
@@ -91,6 +100,7 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         line.prefWidthProperty().unbind();
         collapseButton.setOnAction(null);
         expandButton.setOnAction(null);
+        closeButton.setOnAction(null);
         isCollapsedPin.unsubscribe();
     }
 
@@ -102,11 +112,13 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
 
         collapseButton = BisqIconButton.createIconButton("collapse");
         expandButton = BisqIconButton.createIconButton("expand");
+        closeButton = BisqIconButton.createIconButton("close");
 
         HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
+        HBox.setMargin(closeButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        hBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
+        hBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton, closeButton);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);

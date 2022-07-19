@@ -45,7 +45,6 @@ public abstract class ChatModel extends NavigationModel {
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
-    private final BooleanProperty helpVisible = new SimpleBooleanProperty();
     private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
     private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();

@@ -19,6 +19,7 @@ package bisq.chat.discuss.pub;
 
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -97,5 +98,10 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
     @Override
     public void removeChatMessages(Collection<PublicDiscussionChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
+    }
+
+    @Override
+    public String getDisplayString() {
+        return Res.get(id).toUpperCase();
     }
 }

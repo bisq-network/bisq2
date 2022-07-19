@@ -27,6 +27,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.components.*;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -50,7 +51,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelInfo channelInfo;
     protected final NotificationsSettings notificationsSettings;
-    protected final HelpPane helpPane;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
@@ -67,7 +67,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
         channelInfo = new ChannelInfo(applicationService);
         notificationsSettings = new NotificationsSettings();
-        helpPane = new HelpPane();
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         //todo
@@ -88,7 +87,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
             onCloseSideBar();
             model.getSideBarVisible().set(true);
-          
+
             ChatUserDetails chatUserDetails = new ChatUserDetails(userProfileService, chatService, chatUser);
             model.getSideBarWidth().set(chatUserDetails.getRoot().getMinWidth());
             chatUserDetails.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
@@ -150,16 +149,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     public void onToggleHelp() {
-        boolean visible = !model.getHelpVisible().get();
-        // onCloseSideBar();
-        model.getHelpVisible().set(visible);
-
-        
-     /*   model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? 540 : 0);
-        if (visible) {
-            //tradeChatHelp.setChannel();
-        }*/
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_HELP, new TradeGuideController.InitData(true));
     }
 
     public void onCloseSideBar() {
@@ -167,7 +157,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         model.getSideBarWidth().set(0);
         model.getChannelInfoVisible().set(false);
         model.getNotificationsVisible().set(false);
-        model.getHelpVisible().set(false);
         model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
         cleanupChatUserDetails();

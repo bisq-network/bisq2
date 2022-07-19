@@ -179,7 +179,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
-                        UserProfile peer = ((PrivateChannel) item.getChannel()).getPeer();
+                        UserProfile peer = ((PrivateChannel<?>) item.getChannel()).getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                         tooltip.setText(peer.getTooltipString());
                         label.setText(item.getChannel().getDisplayString());

@@ -26,6 +26,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.effect.BlurType;
@@ -60,6 +61,7 @@ public class ComboBoxOverlay<T> {
     private final ChangeListener<Number> positionListener;
     private final AutoCompleteComboBox<T> comboBox;
     private final ChangeListener<Number> heightListener;
+    private final Label placeHolder;
     private double width;
     private double height;
     private UIScheduler fixPositionsScheduler;
@@ -107,7 +109,13 @@ public class ComboBoxOverlay<T> {
         });
         UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
 
-        root = new Pane(listBackground, comboBox);
+        placeHolder = new Label(Res.get("noData"));
+        placeHolder.setVisible(false);
+        placeHolder.setManaged(false);
+        placeHolder.getStyleClass().add("bisq-text-3");
+        placeHolder.setLayoutX(25);
+        placeHolder.setLayoutY(80);
+        root = new Pane(listBackground, comboBox, placeHolder);
         root.setPrefWidth(prefWidth + 20);
         root.setStyle("-fx-background-color: transparent;");
 
@@ -206,30 +214,30 @@ public class ComboBoxOverlay<T> {
 
     protected void layoutListView() {
         ObservableList<T> items = comboBox.getItems();
-        if (items.isEmpty()) {
-            listBackground.getPoints().clear();
-        } else {
-            double x = 0;
-            double listOffset = 8;
-            // relative to visible top-left point 
-            double arrowX_l = 22;
-            double arrowX_m = 31.5;
-            double arrowX_r = 41;
-            double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
-            double width = prefWidth;
-            double y = 0;
-            double arrowY_m = y - 7.5;
-            listBackground.getPoints().setAll(
-                    x, y,
-                    x + arrowX_l, y,
-                    x + arrowX_m, arrowY_m,
-                    x + arrowX_r, y,
-                    x + width, y,
-                    x + width, y + height,
-                    x, y + height);
 
-            root.setPrefHeight(height + 25);
-        }
+        double x = 0;
+        double listOffset = 8;
+        // relative to visible top-left point 
+        double arrowX_l = 22;
+        double arrowX_m = 31.5;
+        double arrowX_r = 41;
+        double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
+        double width = prefWidth;
+        double y = 0;
+        double arrowY_m = y - 7.5;
+        listBackground.getPoints().setAll(
+                x, y,
+                x + arrowX_l, y,
+                x + arrowX_m, arrowY_m,
+                x + arrowX_r, y,
+                x + width, y,
+                x + width, y + height,
+                x, y + height);
+
+        root.setPrefHeight(height + 25);
+
+        placeHolder.setManaged(items.isEmpty());
+        placeHolder.setVisible(items.isEmpty());
     }
 
     protected int getRowHeight() {

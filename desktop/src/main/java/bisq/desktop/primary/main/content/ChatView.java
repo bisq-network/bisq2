@@ -49,7 +49,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
     protected final Pane chatMessagesComponent;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
-    private final Pane helpPane;
     private final ImageView peersRoboIconView;
 
     protected final HBox centerToolbar;
@@ -65,14 +64,12 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
                     Pane chatMessagesComponent,
                     Pane notificationsSettings,
                     Pane channelInfo,
-                    Pane helpPane,
                     FilterBox filterBox) {
         super(new SplitPane(), model, controller);
         this.chatMessagesComponent = chatMessagesComponent;
 
         this.notificationsSettings = notificationsSettings;
         this.channelInfo = channelInfo;
-        this.helpPane = helpPane;
 
         // Undo default padding of ContentView 
         root.setPadding(new Insets(-34, -67, -67, -68));
@@ -129,7 +126,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         // sideBar
         closeButton = BisqIconButton.createIconButton("icon-sidebar-close");
         VBox.setMargin(closeButton, new Insets(0, -15, 0, 0));
-        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo, helpPane);
+        sideBar = Layout.vBoxWith(closeButton, notificationsSettings, channelInfo);
         sideBar.getStyleClass().add("bisq-dark-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setPadding(new Insets(10, 20, 10, 20));
@@ -155,8 +152,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
-        helpPane.visibleProperty().bind(model.getHelpVisible());
-        helpPane.managedProperty().bind(model.getHelpVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
         createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
@@ -199,8 +194,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
         channelInfo.managedProperty().unbind();
-        helpPane.visibleProperty().unbind();
-        helpPane.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
         createOfferButton.visibleProperty().unbind();

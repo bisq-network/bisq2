@@ -15,25 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide;
+package bisq.desktop.primary.main.content.trade.bisqEasy.help;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.Model;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
-public class TradeGuideModel extends TabModel {
-    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
-    @Setter
-    private boolean showAsPopup;
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.TRADE_GUIDE_TAB_1;
-    }
+public class BisqEasyHelpModel implements Model {
 }

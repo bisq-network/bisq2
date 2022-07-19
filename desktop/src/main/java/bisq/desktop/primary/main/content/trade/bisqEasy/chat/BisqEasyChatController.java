@@ -96,7 +96,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 chatMessagesComponent.getRoot(),
                 notificationsSettings.getRoot(),
                 channelInfo.getRoot(),
-                helpPane.getRoot(),
                 filterBox);
     }
 
@@ -110,7 +109,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();
 
-            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
+            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE, new TradeGuideController.InitData(false));
         } else {
             resetSelectedChildTarget();
             model.getPeersRoboIconVisible().set(false);

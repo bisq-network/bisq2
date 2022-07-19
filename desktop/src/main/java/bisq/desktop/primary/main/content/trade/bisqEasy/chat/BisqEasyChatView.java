@@ -43,7 +43,6 @@ public class BisqEasyChatView extends ChatView {
                             Pane chatMessagesComponent,
                             Pane notificationsSettings,
                             Pane channelInfo,
-                            Pane helpPane,
                             FilterBox filterBox) {
         super(model,
                 controller,
@@ -52,7 +51,6 @@ public class BisqEasyChatView extends ChatView {
                 chatMessagesComponent,
                 notificationsSettings,
                 channelInfo,
-                helpPane,
                 filterBox);
 
         bisqEasyChatController = controller;

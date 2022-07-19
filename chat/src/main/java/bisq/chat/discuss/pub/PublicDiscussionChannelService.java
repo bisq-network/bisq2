@@ -70,7 +70,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         }
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // PublicChannelService 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         }
         // todo channelAdmin not supported atm
         String channelAdminId = "";
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("Bisq",
+        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("discussion.bisq",
                 "Discussions Bisq",
                 "Channel for discussions about Bisq",
                 channelAdminId,
@@ -120,31 +120,31 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         );
         ObservableSet<PublicDiscussionChannel> channels = getChannels();
         channels.add(defaultDiscussionChannel);
-        channels.add(new PublicDiscussionChannel("Bitcoin",
+        channels.add(new PublicDiscussionChannel("discussion.bitcoin",
                 "Discussions Bitcoin",
                 "Channel for discussions about Bitcoin",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel("Monero",
+        channels.add(new PublicDiscussionChannel("discussion.monero",
                 "Discussions Monero",
                 "Channel for discussions about Monero",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel("Markets",
+        channels.add(new PublicDiscussionChannel("discussion.markets",
                 "Markets",
                 "Channel for discussions about markets and price",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel("Economy",
+        channels.add(new PublicDiscussionChannel("discussion.economy",
                 "Economy",
                 "Channel for discussions about economy",
                 channelAdminId,
                 new HashSet<>()
         ));
-        channels.add(new PublicDiscussionChannel("Off-topic",
+        channels.add(new PublicDiscussionChannel("discussion.offTopic",
                 "Off-topic",
                 "Channel for anything else",
                 channelAdminId,

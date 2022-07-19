@@ -205,32 +205,32 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class View extends ChannelSelection.View<Model, Controller> {
-        protected final Label settingsIcon;
+        protected final Label addChannelIcon;
 
         protected View(Model model, Controller controller) {
             super(model, controller);
 
-            settingsIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "14");
-            settingsIcon.setOpacity(0.5);
-            settingsIcon.setCursor(Cursor.HAND);
-            settingsIcon.setPadding(new Insets(22, 12, 0, 0));
-            headerBox.getChildren().add(settingsIcon);
+            addChannelIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "14");
+            addChannelIcon.setOpacity(0.5);
+            addChannelIcon.setCursor(Cursor.HAND);
+            addChannelIcon.setPadding(new Insets(22, 12, 0, 0));
+            headerBox.getChildren().add(addChannelIcon);
         }
 
         @Override
         protected void onViewAttached() {
             super.onViewAttached();
 
-            settingsIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(settingsIcon,
+            addChannelIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(addChannelIcon,
                     model.allMarketsSortedList,
                     c -> getMarketListCell(),
                     controller::onShowMarket,
-                    350, 5, 0).show());
+                    350, 5, 20).show());
         }
 
         @Override
         protected void onViewDetached() {
-            settingsIcon.setOnMouseClicked(null);
+            addChannelIcon.setOnMouseClicked(null);
         }
 
         @Override
