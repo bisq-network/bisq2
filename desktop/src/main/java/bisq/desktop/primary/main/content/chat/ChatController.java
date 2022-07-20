@@ -98,7 +98,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             model.setChatUserDetails(Optional.of(userProfileSidebar));
             model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
         });
-        
+
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
                 chatMessagesComponent.setSearchPredicate(item -> true);
@@ -118,7 +118,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        model.getSelectedChannelAsString().set(channel.getDisplayString());
+        model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
         model.getSelectedChannel().set(channel);
 
         if (model.getChannelInfoVisible().get()) {

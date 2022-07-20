@@ -245,22 +245,24 @@ public class ChatMessagesListView {
             } else {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
+                    if (chatMessagesPin != null) {
+                        chatMessagesPin.unbind();
+                    }
                     if (channel instanceof PublicTradeChannel) {
-                        if (chatMessagesPin != null) {
-                            chatMessagesPin.unbind();
-                        }
                         chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTradeChannel) {
-                        if (chatMessagesPin != null) {
-                            chatMessagesPin.unbind();
-                        }
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
+                    } else if (channel == null) {
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        model.chatMessages.clear();
                     }
                 });
             }
@@ -390,7 +392,7 @@ public class ChatMessagesListView {
                 return;
             }
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
-            
+
             List<BisqPopupMenuItem> items = new ArrayList<>();
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
@@ -631,7 +633,7 @@ public class ChatMessagesListView {
                             moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                             moreOptionsButton.setCursor(Cursor.HAND);
                             reactionsHBox = new HBox(20, replyButton, pmButton, editButton, deleteButton, moreOptionsButton);
-                            reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
+                            reactionsHBox.setPadding(new Insets(0, 15, 5, 15));
                             reactionsHBox.setVisible(false);
                             reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 

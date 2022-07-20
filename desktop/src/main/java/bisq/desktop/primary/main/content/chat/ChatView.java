@@ -41,7 +41,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class ChatView extends NavigationView<SplitPane, ChatModel, ChatController<?, ?>> {
-    private final Label selectedChannelLabel;
+    private final Label headline;
     private final Button searchButton, notificationsButton, channelInfoButton, helpButton;
     private final VBox left;
     private final VBox sideBar;
@@ -99,10 +99,10 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         peersRoboIconView.setFitHeight(42);
         HBox.setMargin(peersRoboIconView, new Insets(2, 0, 2, 0));
 
-        selectedChannelLabel = new Label();
-        selectedChannelLabel.setId("chat-messages-headline");
-        HBox.setMargin(selectedChannelLabel, new Insets(0, 0, 0, 0));
-        
+        headline = new Label();
+        headline.setId("chat-messages-headline");
+        HBox.setMargin(headline, new Insets(0, 0, 0, 0));
+
         searchBox = new SearchBox();
         //searchBox.setPrefWidth(140);
 
@@ -114,7 +114,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         centerToolbar = new HBox(
                 10,
                 peersRoboIconView,
-                selectedChannelLabel,
+                headline,
                 Spacer.fillHBox(),
                 searchBox,
                 searchButton,
@@ -143,7 +143,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         peersRoboIconView.managedProperty().bind(model.getPeersRoboIconVisible());
         peersRoboIconView.visibleProperty().bind(model.getPeersRoboIconVisible());
         peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
-        selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
+        headline.textProperty().bind(model.getSelectedChannelAsString());
         searchBox.visibleProperty().bind(model.getSearchFieldVisible());
         searchBox.managedProperty().bind(model.getSearchFieldVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
@@ -185,7 +185,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         peersRoboIconView.managedProperty().unbind();
         peersRoboIconView.visibleProperty().unbind();
         peersRoboIconView.imageProperty().unbind();
-        selectedChannelLabel.textProperty().unbind();
+        headline.textProperty().unbind();
         searchBox.visibleProperty().unbind();
         searchBox.managedProperty().unbind();
         notificationsSettings.visibleProperty().unbind();

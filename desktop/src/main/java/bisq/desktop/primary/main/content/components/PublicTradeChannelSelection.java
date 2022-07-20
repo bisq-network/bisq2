@@ -108,6 +108,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                        } else {
+                            model.selectedChannel.set(null);
                         }
                     });
 
@@ -157,29 +159,17 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             publicTradeChannelService.showChannel(channel);
                             tradeChannelSelectionService.selectChannel(channel);
                         });
-
-                //todo somehow the predicate does not trigger an update, no idea why...
-                // re-applying the list works
-                model.channelItems.clear();
-                model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
-                        .map(ChannelSelection.View.ChannelItem::new)
-                        .collect(Collectors.toList()));
             }
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
             publicTradeChannelService.hidePublicTradeChannel(channel);
 
-            //todo somehow the predicate does not trigger an update, no idea why...
-            // re-applying the list works
-            model.channelItems.clear();
-            model.channelItems.setAll(publicTradeChannelService.getChannels().stream()
-                    .map(ChannelSelection.View.ChannelItem::new)
-                    .collect(Collectors.toList()));
-
             model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
             if (!model.sortedList.isEmpty()) {
                 tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
+            } else {
+                tradeChannelSelectionService.selectChannel(null);
             }
         }
 

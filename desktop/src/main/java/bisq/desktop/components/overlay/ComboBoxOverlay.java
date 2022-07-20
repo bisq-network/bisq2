@@ -97,15 +97,18 @@ public class ComboBoxOverlay<T> {
         listBackground.setFill(Paint.valueOf("#212121"));
         listBackground.setEffect(dropShadow);
 
-        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("tradeChat.addMarketChannel.prompt"));
+        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("search"));
         comboBox.setCellFactory(cellFactory);
         comboBox.setPrefWidth(prefWidth - 2 * PADDING);
         comboBox.setLayoutX(PADDING);
         comboBox.setLayoutY(PADDING);
         comboBox.getAutoCompleteComboBoxSkin().setDropShadowColor(Color.rgb(0, 0, 0, 0.2));
         comboBox.setOnChangeConfirmed(e -> {
-            selectionHandler.accept(comboBox.getSelectionModel().getSelectedItem());
-            close();
+            T selectedItem = comboBox.getSelectionModel().getSelectedItem();
+            selectionHandler.accept(selectedItem);
+            if (selectedItem != null) {
+                close();
+            }
         });
         UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
 

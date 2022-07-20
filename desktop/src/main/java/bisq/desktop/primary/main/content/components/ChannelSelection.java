@@ -62,7 +62,6 @@ public abstract class ChannelSelection {
 
 
     protected static class Model implements bisq.desktop.common.view.Model {
-        ObservableList<String> visibleChannels = FXCollections.observableArrayList();
         ObjectProperty<View.ChannelItem> selectedChannel = new SimpleObjectProperty<>();
         ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);

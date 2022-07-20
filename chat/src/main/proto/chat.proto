@@ -96,7 +96,7 @@ message PublicTradeChannel {
 }
 
 message TradeChannelSelectionStore {
-  Channel selectedChannel = 1;
+  optional Channel selectedChannel = 1;
 }
 
 message PrivateTradeChannelStore {
@@ -130,7 +130,7 @@ message PublicDiscussionChannel {
 }
 
 message DiscussionChannelSelectionStore {
-  Channel selectedChannel = 1;
+  optional Channel selectedChannel = 1;
 }
 
 message PrivateDiscussionChannelStore {
