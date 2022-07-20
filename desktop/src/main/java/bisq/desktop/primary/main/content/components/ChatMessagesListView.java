@@ -390,32 +390,33 @@ public class ChatMessagesListView {
                 return;
             }
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
+            
             List<BisqPopupMenuItem> items = new ArrayList<>();
-
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> ClipboardUtil.copyToClipboard(chatMessage.getText())));
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
-                ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
-            }));
-
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
+                    () -> onCopyMessage(chatMessage)));
             if (!isMyMessage(chatMessage)) {
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
-                        () -> userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(userProfileService::ignoreUserProfile)));
+                        () -> onIgnoreUser(chatMessage)));
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"),
-                        () -> userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportUserProfile(author, ""))));
+                        () -> onReportUser(chatMessage)));
             }
 
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
             menu.show(reactionsBox);
         }
 
+        private void onReportUser(ChatMessage chatMessage) {
+            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
+                    chatService.reportUserProfile(author, ""));
+        }
+
+        private void onIgnoreUser(ChatMessage chatMessage) {
+            userProfileService.findUserProfile(chatMessage.getAuthorId())
+                    .ifPresent(userProfileService::ignoreUserProfile);
+        }
+
         private boolean isMyMessage(ChatMessage chatMessage) {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
-        }
-
-        private void onAddEmoji(String emojiId) {
-        }
-
-        private void onOpenEmojiSelector(ChatMessage chatMessage) {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
@@ -447,7 +448,12 @@ public class ChatMessagesListView {
             };
             model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item) && predicate.test(item));
         }
+
+        private void onCopyMessage(ChatMessage chatMessage) {
+            ClipboardUtil.copyToClipboard(chatMessage.getText());
+        }
     }
+
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
@@ -548,7 +554,7 @@ public class ChatMessagesListView {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final Label userName, dateTime, emojiButton1, emojiButton2, openEmojiSelectorButton,
+                        private final Label userName, dateTime,
                                 replyButton, pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Text message, quotedMessageField;
                         private final BisqTextArea editInputField;
@@ -614,14 +620,6 @@ public class ChatMessagesListView {
                             messageHBox.setAlignment(Pos.CENTER_LEFT);
 
                             // Reactions box
-                            emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
-                            emojiButton1.setUserData(":+1:");
-                            emojiButton1.setCursor(Cursor.HAND);
-                            emojiButton2 = Icons.getIcon(AwesomeIcon.THUMBS_DOWN_ALT);
-                            emojiButton2.setUserData(":-1:");
-                            emojiButton2.setCursor(Cursor.HAND);
-                            openEmojiSelectorButton = Icons.getIcon(AwesomeIcon.SMILE);
-                            openEmojiSelectorButton.setCursor(Cursor.HAND);
                             replyButton = Icons.getIcon(AwesomeIcon.REPLY);
                             replyButton.setCursor(Cursor.HAND);
                             pmButton = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
@@ -632,13 +630,7 @@ public class ChatMessagesListView {
                             deleteButton.setCursor(Cursor.HAND);
                             moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                             moreOptionsButton.setCursor(Cursor.HAND);
-                            Label verticalLine = new Label("|");
-                            verticalLine.setId("chat-message-reactions-separator");
-
-                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
-                            reactionsHBox = new HBox(20, emojiButton1, emojiButton2, verticalLine,
-                                    openEmojiSelectorButton, replyButton, pmButton, editButton, deleteButton,
-                                    moreOptionsButton);
+                            reactionsHBox = new HBox(20, replyButton, pmButton, editButton, deleteButton, moreOptionsButton);
                             reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
                             reactionsHBox.setVisible(false);
                             reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
@@ -754,9 +746,6 @@ public class ChatMessagesListView {
 
                                 userName.setOnMouseClicked(null);
                                 chatUserIcon.setOnMouseClicked(null);
-                                emojiButton1.setOnMouseClicked(null);
-                                emojiButton2.setOnMouseClicked(null);
-                                openEmojiSelectorButton.setOnMouseClicked(null);
                                 replyButton.setOnMouseClicked(null);
                                 pmButton.setOnMouseClicked(null);
                                 editButton.setOnMouseClicked(null);
@@ -804,9 +793,6 @@ public class ChatMessagesListView {
 
                         private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage> item) {
                             ChatMessage chatMessage = item.getChatMessage();
-                            emojiButton1.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
-                            emojiButton2.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
-                            openEmojiSelectorButton.setOnMouseClicked(e -> controller.onOpenEmojiSelector(chatMessage));
                             replyButton.setOnMouseClicked(e -> controller.onReply(chatMessage));
                             pmButton.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                             editButton.setOnMouseClicked(e -> onEditMessage(item));

@@ -17,7 +17,8 @@
 
 package bisq.desktop.components.controls;
 
-import javafx.scene.control.Button;
+import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -25,22 +26,19 @@ import java.util.List;
 public class BisqPopupMenu extends BisqPopup {
     public BisqPopupMenu(List<BisqPopupMenuItem> items, Runnable onClose) {
         super();
-        getStyleClass().add("bisq-popup-menu");
 
         VBox box = new VBox();
         box.setSpacing(5);
+        box.setPadding(new Insets(10));
 
         for (BisqPopupMenuItem item : items) {
-            Button button = new Button(item.getTitle());
-            button.getStyleClass().add("bisq-popup-menu-item");
-            button.setMaxWidth(Double.MAX_VALUE);
-
-            button.setOnAction(evt -> {
+            Hyperlink hyperlink = new Hyperlink(item.getTitle());
+            hyperlink.setOnAction(e -> {
                 item.getAction().run();
                 hide();
             });
 
-            box.getChildren().add(button);
+            box.getChildren().add(hyperlink);
         }
 
         setContentNode(box);

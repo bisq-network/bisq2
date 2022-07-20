@@ -22,7 +22,6 @@ import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,10 +30,8 @@ public class BisqEasyHelpTab3Controller implements Controller {
     private final BisqEasyHelpTab3Model model;
     @Getter
     private final BisqEasyHelpTab3View view;
-    private final SettingsService settingsService;
 
     public BisqEasyHelpTab3Controller(DefaultApplicationService applicationService) {
-        settingsService = applicationService.getSettingsService();
         model = new BisqEasyHelpTab3Model();
         view = new BisqEasyHelpTab3View(model, this);
     }
