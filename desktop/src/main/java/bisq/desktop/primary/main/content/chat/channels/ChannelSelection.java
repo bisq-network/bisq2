@@ -1,4 +1,4 @@
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;

@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.support.SupportChannelSelectionService;
+import bisq.chat.support.pub.PublicSupportChannel;
+import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
@@ -38,10 +38,10 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PublicDiscussionChannelSelection extends ChannelSelection {
+public class PublicSupportChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
+    public PublicSupportChannelSelection(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService.getChatService());
     }
 
@@ -57,17 +57,17 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final PublicSupportChannelService publicSupportChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final SupportChannelSelectionService supportChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
-            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            publicSupportChannelService = chatService.getPublicSupportChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
-            
+            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+
             model = new Model();
             view = new View(model, this);
 
@@ -83,13 +83,13 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<PublicSupportChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    .to(publicDiscussionChannelService.getChannels());
+                    .to(publicSupportChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                     channel -> {
-                        if (channel instanceof PublicDiscussionChannel) {
+                        if (channel instanceof PublicSupportChannel) {
                             model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
@@ -101,7 +101,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 return;
             }
 
-            discussionChannelSelectionService.selectChannel(channelItem.getChannel());
+            supportChannelSelectionService.selectChannel(channelItem.getChannel());
         }
 
         public void deSelectChannel() {
@@ -142,7 +142,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicDiscussionChannel) {
+                    if (item != null && !empty && item.getChannel() instanceof PublicSupportChannel) {
                         label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {

@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
@@ -25,11 +26,11 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.chat.channels.PrivateChannelSelection;
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.NotificationsSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
-import bisq.desktop.primary.main.content.components.PrivateChannelSelection;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
@@ -60,27 +61,27 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Subscription notificationSettingSubscription;
     private Subscription searchTextPin;
 
-    public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat, NavigationTarget host) {
+    public ChatController(DefaultApplicationService applicationService, ChannelKind channelKind, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
         chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, isDiscussionsChat);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, isDiscussionsChat);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
         channelSidebar = new ChannelSidebar(applicationService, this::onCloseSideBar);
         notificationsSidebar = new NotificationsSidebar(this::onCloseSideBar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createComponents();
-        model = getChatModel(isDiscussionsChat);
+        model = getChatModel(channelKind);
         view = getChatView();
     }
 
     public abstract void createComponents();
 
-    public abstract M getChatModel(boolean isDiscussionsChat);
+    public abstract M getChatModel(ChannelKind channelKind);
 
     public abstract V getChatView();
 

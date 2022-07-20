@@ -17,7 +17,24 @@
 
 package bisq.desktop.primary.main.content.events;
 
-import bisq.desktop.common.view.Model;
+import bisq.chat.ChannelKind;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.chat.ChatModel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class EventsModel implements Model {
+@Slf4j
+@Getter
+public class EventsModel extends ChatModel {
+    private final ChannelKind channelKind;
+
+    public EventsModel(ChannelKind channelKind) {
+        this.channelKind = channelKind;
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
+    }
+
 }

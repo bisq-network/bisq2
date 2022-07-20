@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
@@ -30,7 +31,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.chat.ChatController;
-import bisq.desktop.primary.main.content.components.PublicTradeChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.PublicTradeChannelSelection;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +48,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private Pin offerOnlySettingsPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
-        super(applicationService, false, NavigationTarget.BISQ_EASY_CHAT);
+        super(applicationService, ChannelKind.TRADE, NavigationTarget.BISQ_EASY_CHAT);
 
         publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
@@ -83,8 +84,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     @Override
-    public BisqEasyChatModel getChatModel(boolean isDiscussionsChat) {
-        return new BisqEasyChatModel(isDiscussionsChat);
+    public BisqEasyChatModel getChatModel(ChannelKind channelKind) {
+        return new BisqEasyChatModel(channelKind);
     }
 
     @Override

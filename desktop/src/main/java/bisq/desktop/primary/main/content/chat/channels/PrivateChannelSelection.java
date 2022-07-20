@@ -15,14 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.events.EventsChannelSelectionService;
+import bisq.chat.events.priv.PrivateEventsChannel;
+import bisq.chat.events.priv.PrivateEventsChannelService;
+import bisq.chat.support.SupportChannelSelectionService;
+import bisq.chat.support.priv.PrivateSupportChannel;
+import bisq.chat.support.priv.PrivateSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -48,8 +55,8 @@ import org.fxmisc.easybind.Subscription;
 public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PrivateChannelSelection(DefaultApplicationService applicationService, boolean isDiscussionsChat) {
-        controller = new Controller(applicationService.getChatService(), isDiscussionsChat);
+    public PrivateChannelSelection(DefaultApplicationService applicationService, ChannelKind channelKind) {
+        controller = new Controller(applicationService.getChatService(), channelKind);
     }
 
     public Pane getRoot() {
@@ -65,19 +72,30 @@ public class PrivateChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final PrivateDiscussionChannelService privateDiscussionChannelService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final PrivateEventsChannelService privateEventsChannelService;
+        private final PrivateSupportChannelService privateSupportChannelService;
+        private final EventsChannelSelectionService eventsChannelSelectionService;
+        private final SupportChannelSelectionService supportChannelSelectionService;
 
-        protected Controller(ChatService chatService, boolean isDiscussionsChat) {
+        protected Controller(ChatService chatService, ChannelKind channelKind) {
             super(chatService);
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
-            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+
+            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
 
-            model = new Model(isDiscussionsChat);
+            privateEventsChannelService = chatService.getPrivateEventsChannelService();
+            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+
+            privateSupportChannelService = chatService.getPrivateSupportChannelService();
+            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+
+            model = new Model(channelKind);
             view = new View(model, this);
 
             model.filteredList.setPredicate(item -> true);
@@ -92,7 +110,18 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            if (model.isDiscussionsChat) {
+            if (model.channelKind == ChannelKind.TRADE) {
+                channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                        .map(ChannelSelection.View.ChannelItem::new)
+                        .to(privateTradeChannelService.getChannels());
+
+                selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
+                        channel -> {
+                            if (channel instanceof PrivateTradeChannel) {
+                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                            }
+                        });
+            } else if (model.channelKind == ChannelKind.DISCUSSION) {
                 channelsPin = FxBindings.<PrivateDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(ChannelSelection.View.ChannelItem::new)
                         .to(privateDiscussionChannelService.getChannels());
@@ -103,14 +132,25 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
-            } else {
-                channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            } else if (model.channelKind == ChannelKind.EVENTS) {
+                channelsPin = FxBindings.<PrivateEventsChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(ChannelSelection.View.ChannelItem::new)
-                        .to(privateTradeChannelService.getChannels());
+                        .to(privateEventsChannelService.getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
+                selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateTradeChannel) {
+                            if (channel instanceof PrivateEventsChannel) {
+                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                            }
+                        });
+            } else if (model.channelKind == ChannelKind.SUPPORT) {
+                channelsPin = FxBindings.<PrivateSupportChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                        .map(ChannelSelection.View.ChannelItem::new)
+                        .to(privateSupportChannelService.getChannels());
+
+                selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
+                        channel -> {
+                            if (channel instanceof PrivateSupportChannel) {
                                 model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
@@ -122,10 +162,14 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (channelItem == null) {
                 return;
             }
-            if (model.isDiscussionsChat) {
-                discussionChannelSelectionService.selectChannel(channelItem.getChannel());
-            } else {
+            if (model.channelKind == ChannelKind.TRADE) {
                 tradeChannelSelectionService.selectChannel(channelItem.getChannel());
+            } else if (model.channelKind == ChannelKind.DISCUSSION) {
+                discussionChannelSelectionService.selectChannel(channelItem.getChannel());
+            } else if (model.channelKind == ChannelKind.EVENTS) {
+                eventsChannelSelectionService.selectChannel(channelItem.getChannel());
+            } else if (model.channelKind == ChannelKind.SUPPORT) {
+                supportChannelSelectionService.selectChannel(channelItem.getChannel());
             }
         }
 
@@ -135,10 +179,10 @@ public class PrivateChannelSelection extends ChannelSelection {
     }
 
     protected static class Model extends ChannelSelection.Model {
-        private final boolean isDiscussionsChat;
+        private final ChannelKind channelKind;
 
-        public Model(boolean isDiscussionsChat) {
-            this.isDiscussionsChat = isDiscussionsChat;
+        public Model(ChannelKind channelKind) {
+            this.channelKind = channelKind;
         }
     }
 

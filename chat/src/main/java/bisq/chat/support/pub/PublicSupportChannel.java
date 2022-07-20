@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss.pub;
+package bisq.chat.support.pub;
 
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
@@ -31,26 +31,26 @@ import java.util.Set;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussionChatMessage> {
+public final class PublicSupportChannel extends PublicChannel<PublicSupportChatMessage> {
     private final String channelName;
     private final String description;
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
 
-    public PublicDiscussionChannel(String id) {
+    public PublicSupportChannel(String id) {
         this(id,
-                Res.get("discussion." + id + ".name").toUpperCase(),
-                Res.get("discussion." + id + ".description").toUpperCase(),
+                Res.get("support." + id + ".name").toUpperCase(),
+                Res.get("support." + id + ".description").toUpperCase(),
                 "",
                 new HashSet<>(),
                 ChannelNotificationType.MENTION);
     }
 
-    public PublicDiscussionChannel(String id,
-                                   String channelName,
-                                   String description,
-                                   String channelAdminId,
-                                   Set<String> channelModeratorIds) {
+    public PublicSupportChannel(String id,
+                                String channelName,
+                                String description,
+                                String channelAdminId,
+                                Set<String> channelModeratorIds) {
         this(id,
                 channelName,
                 description,
@@ -59,12 +59,12 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                 ChannelNotificationType.MENTION);
     }
 
-    private PublicDiscussionChannel(String id,
-                                    String channelName,
-                                    String description,
-                                    String channelAdminId,
-                                    Set<String> channelModeratorIds,
-                                    ChannelNotificationType channelNotificationType) {
+    private PublicSupportChannel(String id,
+                                 String channelName,
+                                 String description,
+                                 String channelAdminId,
+                                 Set<String> channelModeratorIds,
+                                 ChannelNotificationType channelNotificationType) {
         super(id, channelNotificationType);
 
         this.channelName = channelName;
@@ -75,7 +75,7 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
 
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder()
-                .setPublicDiscussionChannel(bisq.chat.protobuf.PublicDiscussionChannel.newBuilder()
+                .setPublicSupportChannel(bisq.chat.protobuf.PublicSupportChannel.newBuilder()
                         .setChannelName(channelName)
                         .setDescription(description)
                         .setChannelAdminId(channelAdminId)
@@ -83,9 +83,9 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                 .build();
     }
 
-    public static PublicDiscussionChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                    bisq.chat.protobuf.PublicDiscussionChannel proto) {
-        return new PublicDiscussionChannel(
+    public static PublicSupportChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                 bisq.chat.protobuf.PublicSupportChannel proto) {
+        return new PublicSupportChannel(
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
@@ -95,22 +95,22 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
     }
 
     @Override
-    public void addChatMessage(PublicDiscussionChatMessage chatMessage) {
+    public void addChatMessage(PublicSupportChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PublicDiscussionChatMessage chatMessage) {
+    public void removeChatMessage(PublicSupportChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicDiscussionChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PublicSupportChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 
     @Override
     public String getDisplayString() {
-        return Res.get("discussion." + id + ".name").toUpperCase();
+        return Res.get("support." + id + ".name").toUpperCase();
     }
 }

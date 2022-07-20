@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.components;
+package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.trade.TradeChannelSelectionService;
@@ -31,6 +31,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
+import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
