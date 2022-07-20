@@ -27,6 +27,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 @Getter
 public final class DiscussionChannelSelectionStore implements PersistableStore<DiscussionChannelSelectionStore> {
@@ -36,19 +38,20 @@ public final class DiscussionChannelSelectionStore implements PersistableStore<D
     }
 
     private DiscussionChannelSelectionStore(Channel<? extends ChatMessage> selectedChannel) {
-        setAll(selectedChannel);
+        this.selectedChannel.set(selectedChannel);
     }
 
     @Override
     public bisq.chat.protobuf.DiscussionChannelSelectionStore toProto() {
-        return bisq.chat.protobuf.DiscussionChannelSelectionStore.newBuilder()
-                .setSelectedChannel(selectedChannel.get().toProto())
-                .build();
+        bisq.chat.protobuf.DiscussionChannelSelectionStore.Builder builder = bisq.chat.protobuf.DiscussionChannelSelectionStore.newBuilder();
+        Optional.ofNullable(selectedChannel.get()).ifPresent(selectedChannel -> builder.setSelectedChannel(selectedChannel.toProto()));
+        return builder.build();
     }
 
     public static DiscussionChannelSelectionStore fromProto(bisq.chat.protobuf.DiscussionChannelSelectionStore proto) {
-        return new DiscussionChannelSelectionStore(Channel.fromProto(proto.getSelectedChannel()));
+        return new DiscussionChannelSelectionStore(proto.hasSelectedChannel() ? Channel.fromProto(proto.getSelectedChannel()) : null);
     }
+
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
@@ -63,15 +66,11 @@ public final class DiscussionChannelSelectionStore implements PersistableStore<D
 
     @Override
     public void applyPersisted(DiscussionChannelSelectionStore persisted) {
-        setAll(persisted.selectedChannel.get());
+        this.selectedChannel.set(persisted.selectedChannel.get());
     }
 
     @Override
     public DiscussionChannelSelectionStore getClone() {
         return new DiscussionChannelSelectionStore(selectedChannel.get());
-    }
-
-    public void setAll(Channel<? extends ChatMessage> selectedChannel) {
-        this.selectedChannel.set(selectedChannel);
     }
 }

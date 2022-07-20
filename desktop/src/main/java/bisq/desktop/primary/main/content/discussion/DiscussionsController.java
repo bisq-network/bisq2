@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
@@ -26,8 +27,8 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.ChatController;
-import bisq.desktop.primary.main.content.components.PublicDiscussionChannelSelection;
+import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.channels.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
@@ -40,7 +41,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, true, NavigationTarget.NONE);
+        super(applicationService, ChannelKind.DISCUSSION, NavigationTarget.NONE);
 
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
         discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
@@ -50,7 +51,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSettings.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
                 value -> {
                     Channel<? extends ChatMessage> channel = discussionChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -67,8 +68,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     }
 
     @Override
-    public DiscussionsModel getChatModel(boolean isDiscussionsChat) {
-        return new DiscussionsModel(isDiscussionsChat);
+    public DiscussionsModel getChatModel(ChannelKind channelKind) {
+        return new DiscussionsModel(channelKind);
     }
 
     @Override
@@ -78,10 +79,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
                 publicDiscussionChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSettings.getRoot(),
-                channelInfo.getRoot(),
-                helpPane.getRoot(),
-                filterBox);
+                notificationsSidebar.getRoot(),
+                channelSidebar.getRoot());
     }
 
     @Override

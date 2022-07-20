@@ -17,18 +17,19 @@
 
 package bisq.desktop.primary.main.content.discussion;
 
+import bisq.chat.ChannelKind;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.ChatModel;
+import bisq.desktop.primary.main.content.chat.ChatModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class DiscussionsModel extends ChatModel {
-    private final boolean isDiscussionsChat;
+    private final ChannelKind channelKind;
 
-    public DiscussionsModel(boolean isDiscussionsChat) {
-        this.isDiscussionsChat = isDiscussionsChat;
+    public DiscussionsModel(ChannelKind channelKind) {
+        this.channelKind = channelKind;
     }
 
     @Override

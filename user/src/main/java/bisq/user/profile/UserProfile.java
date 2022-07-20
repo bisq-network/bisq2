@@ -56,7 +56,7 @@ public final class UserProfile implements DistributedData {
     private final ProofOfWork proofOfWork;
     private final NetworkId networkId;
     private final String terms;
-    private final String bio;
+    private final String statement;
 
     private transient String nym;
 
@@ -64,12 +64,12 @@ public final class UserProfile implements DistributedData {
                        ProofOfWork proofOfWork,
                        NetworkId networkId,
                        String terms,
-                       String bio) {
+                       String statement) {
         this.nickName = nickName;
         this.proofOfWork = proofOfWork;
         this.networkId = networkId;
         this.terms = terms;
-        this.bio = bio;
+        this.statement = statement;
     }
 
     @Override
@@ -77,7 +77,7 @@ public final class UserProfile implements DistributedData {
         return bisq.user.protobuf.UserProfile.newBuilder()
                 .setNickName(nickName)
                 .setTerms(terms)
-                .setBio(bio)
+                .setStatement(statement)
                 .setProofOfWork(proofOfWork.toProto())
                 .setNetworkId(networkId.toProto())
                 .build();
@@ -88,7 +88,7 @@ public final class UserProfile implements DistributedData {
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 NetworkId.fromProto(proto.getNetworkId()),
                 proto.getTerms(),
-                proto.getBio());
+                proto.getStatement());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {

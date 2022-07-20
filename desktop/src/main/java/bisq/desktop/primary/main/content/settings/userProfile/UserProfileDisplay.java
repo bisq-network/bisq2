@@ -74,7 +74,7 @@ public class UserProfileDisplay {
             UserProfile userProfile = model.userIdentity.getUserProfile();
 
             model.id.set(Res.get("social.createUserProfile.id", userProfile.getId()));
-            model.bio.set(userProfile.getBio());
+            model.bio.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
             model.reputationScore.set(userProfile.getBurnScoreAsString());
             model.profileAge.set(userProfile.getAccountAgeAsString());
@@ -166,7 +166,7 @@ public class UserProfileDisplay {
             VBox nameAndIconBox = new VBox(10, nickName, roboIconImageView, nym);
             nameAndIconBox.setAlignment(Pos.TOP_CENTER);
 
-            Triple<VBox, Label, BisqTextArea> bioBox = getEditableInfoBox(Res.get("social.chatUser.bio"));
+            Triple<VBox, Label, BisqTextArea> bioBox = getEditableInfoBox(Res.get("social.chatUser.statement"));
             bio = bioBox.getSecond();
             bioTextArea = bioBox.getThird();
 
@@ -176,9 +176,8 @@ public class UserProfileDisplay {
             Pair<VBox, Label> profileAgeBox = getInfoBox(Res.get("social.chatUser.profileAge"));
             profileAge = profileAgeBox.getSecond();
 
-            Triple<VBox, Label, BisqTextArea> termsBox = getEditableInfoBox(Res.get("social.chat.chatRules.headline"));
+            Triple<VBox, Label, BisqTextArea> termsBox = getEditableInfoBox(Res.get("social.chat.terms.headline"));
             terms = termsBox.getSecond();
-            terms.setText(Res.get("social.chat.chatRules.content")); //todo
             termsTextArea = termsBox.getThird();
 
             editButton = new Button(Res.get("edit"));

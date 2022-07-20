@@ -27,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class TradeGuideModel extends TabModel {
-    private final BooleanProperty isCollapsed=new SimpleBooleanProperty();
+    private final BooleanProperty isCollapsed = new SimpleBooleanProperty();
+
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.TRADE_GUIDE_TAB_1;

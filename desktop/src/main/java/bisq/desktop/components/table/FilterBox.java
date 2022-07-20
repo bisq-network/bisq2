@@ -111,6 +111,7 @@ public class FilterBox {
         @Override
         protected void onViewDetached() {
             textField.textProperty().removeListener(listener);
+            textField.setOnAction(null);
         }
     }
 }

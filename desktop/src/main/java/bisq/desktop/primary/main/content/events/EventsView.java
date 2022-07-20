@@ -17,28 +17,25 @@
 
 package bisq.desktop.primary.main.content.events;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.desktop.primary.main.content.chat.ChatView;
+import javafx.scene.layout.Pane;
+import lombok.extern.slf4j.Slf4j;
 
-public class EventsView extends View<VBox, EventsModel, EventsController> {
-    public EventsView(EventsModel model, EventsController controller) {
-        super(new VBox(), model, controller);
-
-        root.setAlignment(Pos.CENTER);
-        Label label = new Label("WIP");
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
-        Label small = new Label(getClass().getSimpleName());
-        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
-        root.getChildren().addAll(label, small);
-    }
-
-    @Override
-    protected void onViewAttached() {
-    }
-
-    @Override
-    protected void onViewDetached() {
+@Slf4j
+public class EventsView extends ChatView {
+    public EventsView(EventsModel model,
+                      EventsController controller,
+                      Pane marketChannelSelection,
+                      Pane privateChannelSelection,
+                      Pane chatMessagesComponent,
+                      Pane notificationsSettings,
+                      Pane channelInfo) {
+        super(model,
+                controller,
+                marketChannelSelection,
+                privateChannelSelection,
+                chatMessagesComponent,
+                notificationsSettings,
+                channelInfo);
     }
 }

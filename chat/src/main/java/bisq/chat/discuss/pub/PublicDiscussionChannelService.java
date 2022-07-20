@@ -31,7 +31,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Optional;
 
 @Slf4j
@@ -70,7 +69,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         }
     }
 
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // PublicChannelService 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,46 +109,14 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         if (!getChannels().isEmpty()) {
             return;
         }
-        // todo channelAdmin not supported atm
-        String channelAdminId = "";
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("Bisq",
-                "Discussions Bisq",
-                "Channel for discussions about Bisq",
-                channelAdminId,
-                new HashSet<>()
-        );
+        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("bisq");
         ObservableSet<PublicDiscussionChannel> channels = getChannels();
         channels.add(defaultDiscussionChannel);
-        channels.add(new PublicDiscussionChannel("Bitcoin",
-                "Discussions Bitcoin",
-                "Channel for discussions about Bitcoin",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel("Monero",
-                "Discussions Monero",
-                "Channel for discussions about Monero",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel("Markets",
-                "Markets",
-                "Channel for discussions about markets and price",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel("Economy",
-                "Economy",
-                "Channel for discussions about economy",
-                channelAdminId,
-                new HashSet<>()
-        ));
-        channels.add(new PublicDiscussionChannel("Off-topic",
-                "Off-topic",
-                "Channel for anything else",
-                channelAdminId,
-                new HashSet<>()
-        ));
+        channels.add(new PublicDiscussionChannel("bitcoin"));
+        channels.add(new PublicDiscussionChannel("monero"));
+        channels.add(new PublicDiscussionChannel("markets"));
+        channels.add(new PublicDiscussionChannel("economy"));
+        channels.add(new PublicDiscussionChannel("offTopic"));
         persist();
     }
 }

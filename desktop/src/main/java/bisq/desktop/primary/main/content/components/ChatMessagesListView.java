@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
@@ -27,8 +28,22 @@ import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
+import bisq.chat.events.EventsChannelSelectionService;
+import bisq.chat.events.priv.PrivateEventsChannel;
+import bisq.chat.events.priv.PrivateEventsChannelService;
+import bisq.chat.events.priv.PrivateEventsChatMessage;
+import bisq.chat.events.pub.PublicEventsChannel;
+import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.events.pub.PublicEventsChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.chat.support.SupportChannelSelectionService;
+import bisq.chat.support.priv.PrivateSupportChannel;
+import bisq.chat.support.priv.PrivateSupportChannelService;
+import bisq.chat.support.priv.PrivateSupportChatMessage;
+import bisq.chat.support.pub.PublicSupportChannel;
+import bisq.chat.support.pub.PublicSupportChannelService;
+import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -85,6 +100,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -103,7 +119,7 @@ public class ChatMessagesListView {
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
-                                boolean isDiscussionsChat,
+                                ChannelKind channelKind,
                                 boolean isCreateOfferMode,
                                 boolean isCreateOfferTakerListMode,
                                 boolean isCreateOfferPublishedMode) {
@@ -111,7 +127,7 @@ public class ChatMessagesListView {
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
-                isDiscussionsChat,
+                channelKind,
                 isCreateOfferMode,
                 isCreateOfferTakerListMode,
                 isCreateOfferPublishedMode);
@@ -127,6 +143,10 @@ public class ChatMessagesListView {
 
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
+    }
+
+    public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        controller.setSearchPredicate(predicate);
     }
 
     public SortedList<ChatMessageListItem<? extends ChatMessage>> getSortedChatMessages() {
@@ -167,6 +187,12 @@ public class ChatMessagesListView {
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
+        private final PrivateEventsChannelService privateEventsChannelService;
+        private final PublicEventsChannelService publicEventsChannelService;
+        private final EventsChannelSelectionService eventsChannelSelectionService;
+        private final PrivateSupportChannelService privateSupportChannelService;
+        private final PublicSupportChannelService publicSupportChannelService;
+        private final SupportChannelSelectionService supportChannelSelectionService;
         private Pin selectedChannelPin, chatMessagesPin;
         private Pin offerOnlySettingsPin;
 
@@ -174,17 +200,28 @@ public class ChatMessagesListView {
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
-                           boolean isDiscussionsChat,
+                           ChannelKind channelKind,
                            boolean isCreateOfferMode,
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
             chatService = applicationService.getChatService();
+
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
-            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+
+            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
+            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+
+            privateEventsChannelService = chatService.getPrivateEventsChannelService();
+            publicEventsChannelService = chatService.getPublicEventsChannelService();
+            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+
+            privateSupportChannelService = chatService.getPrivateSupportChannelService();
+            publicSupportChannelService = chatService.getPublicSupportChannelService();
+            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
@@ -195,7 +232,7 @@ public class ChatMessagesListView {
 
             model = new Model(chatService,
                     userIdentityService,
-                    isDiscussionsChat,
+                    channelKind,
                     isCreateOfferMode,
                     isCreateOfferTakerListMode,
                     isCreateOfferPublishedMode);
@@ -212,24 +249,34 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> {
-                Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
-                    boolean offerOnlyPredicate = true;
-                    if (item.getChatMessage() instanceof PublicTradeChatMessage) {
-                        PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
-                        offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
-                    }
-                    return offerOnlyPredicate &&
-                            item.getSenderUserProfile().isPresent() &&
-                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
-                            userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
-                };
-                model.filteredChatMessages.setPredicate(predicate);
-            });
+            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> applyPredicate());
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            if (model.isDiscussionsChat) {
+            if (model.getChannelKind() == ChannelKind.TRADE) {
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                    model.selectedChannel.set(channel);
+                    if (chatMessagesPin != null) {
+                        chatMessagesPin.unbind();
+                    }
+                    if (channel instanceof PublicTradeChannel) {
+                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
+                                .to(((PublicTradeChannel) channel).getChatMessages());
+                        model.allowEditing.set(true);
+                    } else if (channel instanceof PrivateTradeChannel) {
+                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
+                                .to(((PrivateTradeChannel) channel).getChatMessages());
+                        model.allowEditing.set(false);
+                    } else if (channel == null) {
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        model.chatMessages.clear();
+                    }
+                });
+            } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
                 selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel) {
@@ -250,24 +297,45 @@ public class ChatMessagesListView {
                         model.allowEditing.set(false);
                     }
                 });
-            } else {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+            } else if (model.getChannelKind() == ChannelKind.EVENTS) {
+                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicTradeChannel) {
+                    if (channel instanceof PublicEventsChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PublicEventsChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PublicTradeChannel) channel).getChatMessages());
+                                .to(((PublicEventsChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateTradeChannel) {
+                    } else if (channel instanceof PrivateEventsChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateEventsChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTradeChannel) channel).getChatMessages());
+                                .to(((PrivateEventsChannel) channel).getChatMessages());
+                        model.allowEditing.set(false);
+                    }
+                });
+            } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
+                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                    model.selectedChannel.set(channel);
+                    if (channel instanceof PublicSupportChannel) {
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PublicSupportChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
+                                .to(((PublicSupportChannel) channel).getChatMessages());
+                        model.allowEditing.set(true);
+                    } else if (channel instanceof PrivateSupportChannel) {
+                        if (chatMessagesPin != null) {
+                            chatMessagesPin.unbind();
+                        }
+                        chatMessagesPin = FxBindings.<PrivateSupportChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                                .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
+                                .to(((PrivateSupportChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -297,6 +365,12 @@ public class ChatMessagesListView {
             model.offerOnly.set(offerOnly);
         }
 
+        void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+            model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
+            applyPredicate();
+        }
+
+
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI - delegate to client
         ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,25 +398,26 @@ public class ChatMessagesListView {
             }
             userProfileService.findUserProfile(chatMessage.getAuthorId())
                     .ifPresent(userProfile -> {
-                        createAndSelectPrivateTradeChannel(userProfile)
-                                .ifPresent(privateTradeChannel -> {
-                                    TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
-                                    String text = chatMessage.getText();
-                                    Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
-                                            userProfile.getNickName(),
-                                            userProfile.getPubKeyHash(),
-                                            text));
-                                    String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
-                                    String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
-                                            tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
-                                    String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-                                    String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
-                                            direction, amount, methods);
-                                    privateTradeChannelService.sendPrivateChatMessage(replyText,
-                                                    quotation,
-                                                    privateTradeChannel)
-                                            .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                                });
+                        Optional<PrivateTradeChannel> channel = privateTradeChannelService.createAndAddChannel(userProfile);
+                        channel.ifPresent(privateTradeChannel -> {
+                            tradeChannelSelectionService.selectChannel(privateTradeChannel);
+                            TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
+                            String text = chatMessage.getText();
+                            Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
+                                    userProfile.getNickName(),
+                                    userProfile.getPubKeyHash(),
+                                    text));
+                            String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
+                            String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
+                                    tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                            String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+                            String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
+                                    direction, amount, methods);
+                            privateTradeChannelService.sendPrivateChatMessage(replyText,
+                                            quotation,
+                                            privateTradeChannel)
+                                    .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
+                        });
                     });
         }
 
@@ -350,11 +425,13 @@ public class ChatMessagesListView {
             if (isMyMessage(chatMessage)) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
                 if (chatMessage instanceof PublicTradeChatMessage) {
-                    publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity)
-                            .whenComplete((result, throwable) -> {
-                            });
+                    publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
                     publicDiscussionChannelService.deleteChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
+                } else if (chatMessage instanceof PublicEventsChatMessage) {
+                    publicEventsChannelService.deleteChatMessage((PublicEventsChatMessage) chatMessage, userIdentity);
+                } else if (chatMessage instanceof PublicSupportChatMessage) {
+                    publicSupportChannelService.deleteChatMessage((PublicSupportChatMessage) chatMessage, userIdentity);
                 }
                 //todo delete private message
             }
@@ -392,48 +469,68 @@ public class ChatMessagesListView {
                 return;
             }
             model.selectedChatMessageForMoreOptionsPopup.set(chatMessage);
+
             List<BisqPopupMenuItem> items = new ArrayList<>();
-
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"), () -> ClipboardUtil.copyToClipboard(chatMessage.getText())));
-            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyLinkToMessage"), () -> {
-                ClipboardUtil.copyToClipboard("???");  //todo implement url in chat message
-            }));
-
+            items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
+                    () -> onCopyMessage(chatMessage)));
             if (!isMyMessage(chatMessage)) {
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
-                        () -> userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(userProfileService::ignoreUserProfile)));
+                        () -> onIgnoreUser(chatMessage)));
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"),
-                        () -> userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author -> chatService.reportUserProfile(author, ""))));
+                        () -> onReportUser(chatMessage)));
             }
 
             BisqPopupMenu menu = new BisqPopupMenu(items, onClose);
             menu.show(reactionsBox);
         }
 
+        private void onReportUser(ChatMessage chatMessage) {
+            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
+                    chatService.reportUserProfile(author, ""));
+        }
+
+        private void onIgnoreUser(ChatMessage chatMessage) {
+            userProfileService.findUserProfile(chatMessage.getAuthorId())
+                    .ifPresent(userProfileService::ignoreUserProfile);
+        }
+
         private boolean isMyMessage(ChatMessage chatMessage) {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         }
 
-        private void onAddEmoji(String emojiId) {
-        }
-
-        private void onOpenEmojiSelector(ChatMessage chatMessage) {
-        }
-
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.isDiscussionsChat) {
-                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(tradeChannelSelectionService::selectChannel);
-            } else {
-                createAndSelectPrivateTradeChannel(peer);
+            if (model.getChannelKind() == ChannelKind.TRADE) {
+                privateTradeChannelService.createAndAddChannel(peer).ifPresent(tradeChannelSelectionService::selectChannel);
+            } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
+                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
+            } else if (model.getChannelKind() == ChannelKind.EVENTS) {
+                privateEventsChannelService.createAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
+            } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
+                privateSupportChannelService.createAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
         }
 
-        private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-            Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
-            privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
-            return privateTradeChannel;
+        private void applyPredicate() {
+            boolean offerOnly = settingsService.getOffersOnly().get();
+            Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
+                boolean offerOnlyPredicate = true;
+                if (item.getChatMessage() instanceof PublicTradeChatMessage) {
+                    PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
+                    offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
+                }
+                return offerOnlyPredicate &&
+                        item.getSenderUserProfile().isPresent() &&
+                        !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
+                        userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
+            };
+            model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item) && predicate.test(item));
+        }
+
+        private void onCopyMessage(ChatMessage chatMessage) {
+            ClipboardUtil.copyToClipboard(chatMessage.getText());
         }
     }
+
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
@@ -443,25 +540,27 @@ public class ChatMessagesListView {
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
-        private final boolean isDiscussionsChat;
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
+        private final ChannelKind channelKind;
         private final boolean isCreateOfferMode;
         private final boolean isCreateOfferTakerListMode;
         private final boolean isCreateOfferPublishedMode;
+        @Setter
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
         private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
         private final BooleanProperty offerOnly = new SimpleBooleanProperty();
 
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
-                      boolean isDiscussionsChat,
+                      ChannelKind channelKind,
                       boolean isCreateOfferMode,
                       boolean isCreateOfferTakerListMode,
                       boolean isCreateOfferPublishedMode) {
             this.chatService = chatService;
             this.userIdentityService = userIdentityService;
-            this.isDiscussionsChat = isDiscussionsChat;
+            this.channelKind = channelKind;
             this.isCreateOfferMode = isCreateOfferMode;
             this.isCreateOfferTakerListMode = isCreateOfferTakerListMode;
             this.isCreateOfferPublishedMode = isCreateOfferPublishedMode;
@@ -532,7 +631,7 @@ public class ChatMessagesListView {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
-                        private final Label userName, dateTime, emojiButton1, emojiButton2, openEmojiSelectorButton,
+                        private final Label userName, dateTime,
                                 replyButton, pmButton, editButton, deleteButton, moreOptionsButton;
                         private final Text message, quotedMessageField;
                         private final BisqTextArea editInputField;
@@ -598,14 +697,6 @@ public class ChatMessagesListView {
                             messageHBox.setAlignment(Pos.CENTER_LEFT);
 
                             // Reactions box
-                            emojiButton1 = Icons.getIcon(AwesomeIcon.THUMBS_UP_ALT);
-                            emojiButton1.setUserData(":+1:");
-                            emojiButton1.setCursor(Cursor.HAND);
-                            emojiButton2 = Icons.getIcon(AwesomeIcon.THUMBS_DOWN_ALT);
-                            emojiButton2.setUserData(":-1:");
-                            emojiButton2.setCursor(Cursor.HAND);
-                            openEmojiSelectorButton = Icons.getIcon(AwesomeIcon.SMILE);
-                            openEmojiSelectorButton.setCursor(Cursor.HAND);
                             replyButton = Icons.getIcon(AwesomeIcon.REPLY);
                             replyButton.setCursor(Cursor.HAND);
                             pmButton = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
@@ -616,14 +707,8 @@ public class ChatMessagesListView {
                             deleteButton.setCursor(Cursor.HAND);
                             moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
                             moreOptionsButton.setCursor(Cursor.HAND);
-                            Label verticalLine = new Label("|");
-                            verticalLine.setId("chat-message-reactions-separator");
-
-                            HBox.setMargin(verticalLine, new Insets(0, -10, 0, -10));
-                            reactionsHBox = new HBox(20, emojiButton1, emojiButton2, verticalLine,
-                                    openEmojiSelectorButton, replyButton, pmButton, editButton, deleteButton,
-                                    moreOptionsButton);
-                            reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
+                            reactionsHBox = new HBox(20, replyButton, pmButton, editButton, deleteButton, moreOptionsButton);
+                            reactionsHBox.setPadding(new Insets(0, 15, 5, 15));
                             reactionsHBox.setVisible(false);
                             reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
 
@@ -738,9 +823,6 @@ public class ChatMessagesListView {
 
                                 userName.setOnMouseClicked(null);
                                 chatUserIcon.setOnMouseClicked(null);
-                                emojiButton1.setOnMouseClicked(null);
-                                emojiButton2.setOnMouseClicked(null);
-                                openEmojiSelectorButton.setOnMouseClicked(null);
                                 replyButton.setOnMouseClicked(null);
                                 pmButton.setOnMouseClicked(null);
                                 editButton.setOnMouseClicked(null);
@@ -788,9 +870,6 @@ public class ChatMessagesListView {
 
                         private void handleReactionsBox(ChatMessageListItem<? extends ChatMessage> item) {
                             ChatMessage chatMessage = item.getChatMessage();
-                            emojiButton1.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton1.getUserData()));
-                            emojiButton2.setOnMouseClicked(e -> controller.onAddEmoji((String) emojiButton2.getUserData()));
-                            openEmojiSelectorButton.setOnMouseClicked(e -> controller.onOpenEmojiSelector(chatMessage));
                             replyButton.setOnMouseClicked(e -> controller.onReply(chatMessage));
                             pmButton.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                             editButton.setOnMouseClicked(e -> onEditMessage(item));

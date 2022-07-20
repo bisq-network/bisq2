@@ -18,10 +18,11 @@
 package bisq.chat.trade;
 
 import bisq.chat.channel.Channel;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.message.ChatMessage;
+import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -50,7 +51,7 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        maybeSelectChannels();
+        maybeSelectDefaultChannel();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -77,14 +78,16 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
         log.info("called reportChatUser {} {}", userProfile, reason);
     }
 
-    private void maybeSelectChannels() {
+    private void maybeSelectDefaultChannel() {
         if (getSelectedChannel().get() == null) {
-            publicTradeChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
+            publicTradeChannelService.getChannels().stream()
+                    .filter(publicTradeChannel -> MarketRepository.getDefault().equals(publicTradeChannel.getMarket()))
+                    .findAny()
+                    .ifPresent(channel -> {
+                        selectChannel(channel);
+                        publicTradeChannelService.showChannel(channel);
+                    });
         }
         persist();
     }
-
- 
-
-    
 }

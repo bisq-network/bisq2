@@ -22,8 +22,11 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
+
+import javax.annotation.Nullable;
 
 public class BisqIconButton extends Button {
     @Getter
@@ -56,11 +59,17 @@ public class BisqIconButton extends Button {
         return button;
     }
 
-
     public static Button createIconButton(String iconId) {
+        return createIconButton(iconId, null);
+    }
+
+    public static Button createIconButton(String iconId, @Nullable String tooltip) {
         Button button = new Button();
         button.setGraphic(ImageUtil.getImageViewById(iconId));
         button.getStyleClass().add("icon-button");
+        if (tooltip != null) {
+            button.setTooltip(new Tooltip(tooltip));
+        }
         return button;
     }
 }

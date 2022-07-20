@@ -17,8 +17,7 @@
 
 package bisq.desktop.primary.main.content.discussion;
 
-import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.ChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +29,13 @@ public class DiscussionsView extends ChatView {
                            Pane privateChannelSelection,
                            Pane chatMessagesComponent,
                            Pane notificationsSettings,
-                           Pane channelInfo,
-                           Pane helpPane,
-                           FilterBox filterBox) {
+                           Pane channelInfo) {
         super(model,
                 controller,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
                 notificationsSettings,
-                channelInfo,
-                helpPane,
-                filterBox);
+                channelInfo);
     }
 }

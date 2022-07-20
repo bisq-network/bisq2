@@ -18,23 +18,87 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChannelKind;
+import bisq.chat.channel.Channel;
+import bisq.chat.events.EventsChannelSelectionService;
+import bisq.chat.events.priv.PrivateEventsChannel;
+import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.robohash.RoboHash;
+import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
+import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
-public class EventsController implements Controller {
-    @Getter
-    private final EventsView view;
+import java.util.Optional;
+
+@Slf4j
+public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
+    private final PublicEventsChannelService publicEventsChannelService;
+    private final EventsChannelSelectionService eventsChannelSelectionService;
+    private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {
-        EventsModel model = new EventsModel();
-        view = new EventsView(model, this);
+        super(applicationService, ChannelKind.EVENTS, NavigationTarget.NONE);
+
+        publicEventsChannelService = chatService.getPublicEventsChannelService();
+        eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
     }
 
     @Override
     public void onActivate() {
+        super.onActivate();
+
+        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
+                value -> {
+                    Channel<? extends ChatMessage> channel = eventsChannelSelectionService.getSelectedChannel().get();
+                    if (channel != null) {
+                        publicEventsChannelService.setNotificationSetting(channel, value);
+                    }
+                });
+
+        selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }
 
     @Override
-    public void onDeactivate() {
+    public void createComponents() {
+        publicEventsChannelSelection = new PublicEventsChannelSelection(applicationService);
+    }
+
+    @Override
+    public EventsModel getChatModel(ChannelKind channelKind) {
+        return new EventsModel(channelKind);
+    }
+
+    @Override
+    public EventsView getChatView() {
+        return new EventsView(model,
+                this,
+                publicEventsChannelSelection.getRoot(),
+                privateChannelSelection.getRoot(),
+                chatMessagesComponent.getRoot(),
+                notificationsSidebar.getRoot(),
+                channelSidebar.getRoot());
+    }
+
+    @Override
+    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
+        super.handleChannelChange(channel);
+
+        if (channel instanceof PrivateEventsChannel) {
+            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateEventsChannel) channel).getPeer().getPubKeyHash()));
+            model.getPeersRoboIconVisible().set(true);
+            publicEventsChannelSelection.deSelectChannel();
+        } else {
+            model.getPeersRoboIconVisible().set(false);
+            privateChannelSelection.deSelectChannel();
+        }
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        return Optional.empty();
     }
 }

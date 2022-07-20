@@ -25,27 +25,35 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DashboardView extends View<VBox, DashboardModel, DashboardController> {
-    public DashboardView(DashboardModel model, DashboardController controller) {
-        super(new VBox(16), model, controller);
+public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
+    private static final int PADDING = 20;
 
-        root.setFillWidth(true);
+    public DashboardView(DashboardModel model, DashboardController controller) {
+        super(new GridPane(), model, controller);
+
+        root.setHgap(PADDING);
+        root.setVgap(PADDING);
+
+        ColumnConstraints col1 = new ColumnConstraints();
+        col1.setPercentWidth(50);
+        ColumnConstraints col2 = new ColumnConstraints();
+        col2.setPercentWidth(50);
+        root.getColumnConstraints().addAll(col1, col2);
 
         VBox marketPrice = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
         VBox offersOnline = getValueBox(Res.get("dashboard.offersOnline"), "231");
         VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
-        root.getChildren().add(new HBox(16, marketPrice, offersOnline, activeUsers));
+        HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
+        root.add(hBox, 0, 0, 2, 1);
 
         VBox firstBox = getBigWidgetBox();
         VBox.setMargin(firstBox, new Insets(0, 0, 0, 0));
         VBox.setVgrow(firstBox, Priority.NEVER);
-        root.getChildren().add(firstBox);
+        root.add(firstBox, 0, 1, 2, 1);
 
         VBox secondBox = getWidgetBox(
                 "dashboard-trade-apps",
@@ -54,22 +62,16 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
                 Res.get("dashboard.second.button"),
                 controller::onOpenTradeOverview
         );
+        root.add(secondBox, 0, 2, 1, 1);
 
         VBox thirdBox = getWidgetBox(
                 "dashboard-chat",
                 Res.get("dashboard.third.headline"),
                 Res.get("dashboard.third.content"),
                 Res.get("dashboard.third.button"),
-                controller::onOpenDiscussionChat
+                controller::onLearn
         );
-
-        HBox.setHgrow(secondBox, Priority.ALWAYS);
-        HBox.setHgrow(thirdBox, Priority.ALWAYS);
-        HBox hBox = new HBox(16, secondBox, thirdBox);
-        hBox.setFillHeight(true);
-
-        VBox.setVgrow(hBox, Priority.NEVER);
-        root.getChildren().add(hBox);
+        root.add(thirdBox, 1, 2, 1, 1);
     }
 
     @Override
@@ -114,6 +116,7 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
     private VBox getBigWidgetBox() {
         Label headlineLabel = new Label(Res.get("dashboard.main.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
+        headlineLabel.setWrapText(true);
 
         Button button = new Button(Res.get("dashboard.main.button"));
         button.setDefaultButton(true);
@@ -134,14 +137,27 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         return vBox;
     }
 
+    private HBox getIconAndText(String text, String imageId) {
+        Label label = new Label(text);
+        label.setId("bisq-easy-onboarding-label");
+        label.setWrapText(true);
+        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
+        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
+        HBox hBox = new HBox(15, bulletPoint, label);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        return hBox;
+    }
+
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(16.0);
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headlineLabel.setWrapText(true);
 
         Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        contentLabel.getStyleClass().addAll("bisq-text-3");
         contentLabel.setAlignment(Pos.TOP_LEFT);
+        contentLabel.setWrapText(true);
 
         Button button = new Button(buttonLabel);
         button.getStyleClass().add("large-button");
@@ -153,22 +169,6 @@ public class DashboardView extends View<VBox, DashboardModel, DashboardControlle
         VBox vBox = new VBox(16, headlineLabel, contentLabel, button);
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(36, 48, 52, 48));
-        vBox.setMinWidth(420);
-        vBox.setFillWidth(true);
         return vBox;
-    }
-
-    private HBox getIconAndText(String text, String imageId) {
-        Label label = new Label(text);
-        label.setId("bisq-easy-onboarding-label");
-        label.setWrapText(true);
-        ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
-        HBox hBox = new HBox(15, bulletPoint, label);
-        hBox.setAlignment(Pos.CENTER_LEFT);
-        int width = 600;
-        hBox.setMinWidth(width);
-        hBox.setMaxWidth(width);
-        return hBox;
     }
 }

@@ -19,9 +19,13 @@ package bisq.chat.channel;
 
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.events.priv.PrivateEventsChannel;
+import bisq.chat.events.pub.PublicEventsChannel;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.support.priv.PrivateSupportChannel;
+import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.Proto;
@@ -58,15 +62,31 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
             case PRIVATETRADECHANNEL: {
                 return PrivateTradeChannel.fromProto(proto, proto.getPrivateTradeChannel());
             }
-            case PRIVATEDISCUSSIONCHANNEL: {
-                return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
-            }
             case PUBLICTRADECHANNEL: {
                 return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
+            }
+
+            case PRIVATEDISCUSSIONCHANNEL: {
+                return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
             }
             case PUBLICDISCUSSIONCHANNEL: {
                 return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());
             }
+
+            case PRIVATEEVENTSCHANNEL: {
+                return PrivateEventsChannel.fromProto(proto, proto.getPrivateEventsChannel());
+            }
+            case PUBLICEVENTSCHANNEL: {
+                return PublicEventsChannel.fromProto(proto, proto.getPublicEventsChannel());
+            }
+
+            case PRIVATESUPPORTCHANNEL: {
+                return PrivateSupportChannel.fromProto(proto, proto.getPrivateSupportChannel());
+            }
+            case PUBLICSUPPORTCHANNEL: {
+                return PublicSupportChannel.fromProto(proto, proto.getPublicSupportChannel());
+            }
+            
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }

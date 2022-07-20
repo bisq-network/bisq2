@@ -49,13 +49,6 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
     @Override
     public void onDeactivate() {
     }
-/*
-
-    @Override
-    public boolean useCaching() {
-        return false;
-    }
-*/
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
@@ -79,7 +72,7 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
         model.getIsCollapsed().set(false);
     }
 
-    public void onCollapse() {
+    void onCollapse() {
         model.getIsCollapsed().set(true);
     }
 }

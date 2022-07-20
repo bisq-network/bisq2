@@ -20,8 +20,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.BisqToggleButton;
-import bisq.desktop.components.table.FilterBox;
-import bisq.desktop.primary.main.content.ChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -42,18 +41,14 @@ public class BisqEasyChatView extends ChatView {
                             Pane privateChannelSelection,
                             Pane chatMessagesComponent,
                             Pane notificationsSettings,
-                            Pane channelInfo,
-                            Pane helpPane,
-                            FilterBox filterBox) {
+                            Pane channelInfo) {
         super(model,
                 controller,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
                 notificationsSettings,
-                channelInfo,
-                helpPane,
-                filterBox);
+                channelInfo);
 
         bisqEasyChatController = controller;
         bisqEasyChatModel = model;
@@ -61,11 +56,10 @@ public class BisqEasyChatView extends ChatView {
         toggleOffersButton = new BisqToggleButton();
         toggleOffersButton.setText(Res.get("satoshisquareapp.chat.filter.offersOnly"));
 
-        centerToolbar.getChildren().add(3, toggleOffersButton);
-
-        root.setPadding(new Insets(33, 67, 67, 67));
+        centerToolbar.getChildren().add(5, toggleOffersButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
+            log.error("newValue {}", newValue);
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 // chatMessagesComponent is VBox
@@ -88,6 +82,5 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
         toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
-        toggleOffersButton.setOnAction(null);
     }
 }

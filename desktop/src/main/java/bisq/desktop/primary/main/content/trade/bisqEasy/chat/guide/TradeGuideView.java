@@ -34,7 +34,6 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideController> {
-
     private Button collapseButton, expandButton;
     private HBox hBox;
     private Subscription isCollapsedPin;
@@ -56,6 +55,44 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         addTab(Res.get("tradeGuide.tab3"),
                 NavigationTarget.TRADE_GUIDE_TAB_3,
                 styles);
+    }
+
+    @Override
+    protected void onViewAttached() {
+        line.prefWidthProperty().unbind();
+        double paddings = root.getPadding().getLeft() + root.getPadding().getRight();
+        line.prefWidthProperty().bind(root.widthProperty().subtract(paddings));
+
+        collapseButton.setOnAction(e -> controller.onCollapse());
+        expandButton.setOnAction(e -> controller.onExpand());
+
+        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
+            collapseButton.setManaged(!isCollapsed);
+            collapseButton.setVisible(!isCollapsed);
+            expandButton.setManaged(isCollapsed);
+            expandButton.setVisible(isCollapsed);
+
+            if (isCollapsed) {
+                VBox.setMargin(hBox, new Insets(0, 0, -17, 0));
+            } else {
+                VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
+            }
+
+            tabs.setManaged(!isCollapsed);
+            tabs.setVisible(!isCollapsed);
+            contentPane.setManaged(!isCollapsed);
+            contentPane.setVisible(!isCollapsed);
+            lineAndMarker.setManaged(!isCollapsed);
+            lineAndMarker.setVisible(!isCollapsed);
+        });
+    }
+
+    @Override
+    protected void onViewDetached() {
+        line.prefWidthProperty().unbind();
+        collapseButton.setOnAction(null);
+        expandButton.setOnAction(null);
+        isCollapsedPin.unsubscribe();
     }
 
     @Override
@@ -87,42 +124,5 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
 
         line.getStyleClass().remove("bisq-darkest-bg");
         line.getStyleClass().add("bisq-mid-grey");
-    }
-
-    @Override
-    protected void onViewAttached() {
-        line.prefWidthProperty().unbind();
-        double paddings = root.getPadding().getLeft() + root.getPadding().getRight();
-        line.prefWidthProperty().bind(root.widthProperty().subtract(paddings));
-
-        collapseButton.setOnAction(e -> controller.onCollapse());
-        expandButton.setOnAction(e -> controller.onExpand());
-        isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
-            collapseButton.setManaged(!isCollapsed);
-            collapseButton.setVisible(!isCollapsed);
-            expandButton.setManaged(isCollapsed);
-            expandButton.setVisible(isCollapsed);
-
-            if (isCollapsed) {
-                VBox.setMargin(hBox, new Insets(0, 0, -17, 0));
-            } else {
-                VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
-            }
-
-            tabs.setManaged(!isCollapsed);
-            tabs.setVisible(!isCollapsed);
-            contentPane.setManaged(!isCollapsed);
-            contentPane.setVisible(!isCollapsed);
-            lineAndMarker.setManaged(!isCollapsed);
-            lineAndMarker.setVisible(!isCollapsed);
-        });
-    }
-
-    @Override
-    protected void onViewDetached() {
-        line.prefWidthProperty().unbind();
-        collapseButton.setOnAction(null);
-        expandButton.setOnAction(null);
-        isCollapsedPin.unsubscribe();
     }
 }

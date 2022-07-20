@@ -19,6 +19,10 @@ package bisq.chat.message;
 
 import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
 import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
+import bisq.chat.events.priv.PrivateEventsChatMessage;
+import bisq.chat.events.pub.PublicEventsChatMessage;
+import bisq.chat.support.priv.PrivateSupportChatMessage;
+import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.proto.Proto;
@@ -91,18 +95,34 @@ public abstract class ChatMessage implements Proto {
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
+            case PUBLICTRADECHATMESSAGE: {
+                return PublicTradeChatMessage.fromProto(proto);
+            }
             case PRIVATETRADECHATMESSAGE: {
                 return PrivateTradeChatMessage.fromProto(proto);
+            }
+
+            case PUBLICDISCUSSIONCHATMESSAGE: {
+                return PublicDiscussionChatMessage.fromProto(proto);
             }
             case PRIVATEDISCUSSIONCHATMESSAGE: {
                 return PrivateDiscussionChatMessage.fromProto(proto);
             }
-            case PUBLICTRADECHATMESSAGE: {
-                return PublicTradeChatMessage.fromProto(proto);
+
+            case PUBLICEVENTSCHATMESSAGE: {
+                return PublicEventsChatMessage.fromProto(proto);
             }
-            case PUBLICDISCUSSIONCHATMESSAGE: {
-                return PublicDiscussionChatMessage.fromProto(proto);
+            case PRIVATEEVENTSCHATMESSAGE: {
+                return PrivateEventsChatMessage.fromProto(proto);
             }
+
+            case PUBLICSUPPORTCHATMESSAGE: {
+                return PublicSupportChatMessage.fromProto(proto);
+            }
+            case PRIVATESUPPORTCHATMESSAGE: {
+                return PrivateSupportChatMessage.fromProto(proto);
+            }
+
             case MESSAGE_NOT_SET: {
                 throw new UnresolvableProtobufMessageException(proto);
             }
@@ -120,6 +140,12 @@ public abstract class ChatMessage implements Proto {
                     }
                     case PUBLICDISCUSSIONCHATMESSAGE: {
                         return PublicDiscussionChatMessage.fromProto(proto);
+                    }
+                    case PUBLICEVENTSCHATMESSAGE: {
+                        return PublicEventsChatMessage.fromProto(proto);
+                    }
+                    case PUBLICSUPPORTCHATMESSAGE: {
+                        return PublicSupportChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
@@ -142,6 +168,12 @@ public abstract class ChatMessage implements Proto {
                     }
                     case PRIVATEDISCUSSIONCHATMESSAGE: {
                         return PrivateDiscussionChatMessage.fromProto(proto);
+                    }
+                    case PRIVATEEVENTSCHATMESSAGE: {
+                        return PrivateEventsChatMessage.fromProto(proto);
+                    }
+                    case PRIVATESUPPORTCHATMESSAGE: {
+                        return PrivateSupportChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

@@ -143,7 +143,7 @@ public class QuotedMessageBlock {
             Label headline = new Label(Res.get("social.reply.headline"));
             headline.setStyle("-fx-text-fill: -bisq-grey-dimmed");
             closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
-            HBox.setMargin(closeButton, new Insets(0, -25, 0, 0));
+            HBox.setMargin(closeButton, new Insets(0, -22, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), closeButton);
             topBox.setAlignment(Pos.CENTER);
             topBox.setPadding(new Insets(5, 30, -5, 10));

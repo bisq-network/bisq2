@@ -24,21 +24,17 @@ import lombok.Getter;
  * Static convenience class for handling "don't show again" flags
  */
 public class DontShowAgainService {
-    private static SettingsService settingsService;
     @Getter
     private static final Observable<Integer> updateFlag = new Observable<>(0);
 
-    static void setSettingsService(SettingsService settingsService) {
-        DontShowAgainService.settingsService = settingsService;
-    }
 
     public static boolean showAgain(DontShowAgainKey key) {
         return showAgain(key.name());
     }
 
     public static boolean showAgain(String key) {
-        return !settingsService.getDontShowAgainMap().containsKey(key) ||
-                !settingsService.getDontShowAgainMap().get(key);
+        return !SettingsService.getInstance().getDontShowAgainMap().containsKey(key) ||
+                !SettingsService.getInstance().getDontShowAgainMap().get(key);
     }
 
     public static void dontShowAgain(DontShowAgainKey key) {
@@ -46,17 +42,17 @@ public class DontShowAgainService {
     }
 
     public static void putDontShowAgain(String key, boolean dontShowAgain) {
-        settingsService.getDontShowAgainMap().put(key, dontShowAgain);
+        SettingsService.getInstance().getDontShowAgainMap().put(key, dontShowAgain);
         persist();
     }
 
     public static void resetDontShowAgain() {
-        settingsService.getDontShowAgainMap().clear();
+        SettingsService.getInstance().getDontShowAgainMap().clear();
         persist();
     }
 
     private static void persist() {
         updateFlag.set(updateFlag.get() + 1);
-        settingsService.persist();
+        SettingsService.getInstance().persist();
     }
 }

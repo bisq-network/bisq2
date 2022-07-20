@@ -57,7 +57,7 @@ public class EditProfileController extends GenerateNewProfileStep2Controller {
             terms = "";
         }
         model.getTerms().set(terms);
-        String bio = userIdentity.getUserProfile().getBio();
+        String bio = userIdentity.getUserProfile().getStatement();
         if (bio == null) {
             bio = "";
         }

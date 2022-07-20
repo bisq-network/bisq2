@@ -117,13 +117,13 @@ public abstract class Overlay<T extends Overlay<T>> {
         Confirmation(AnimationType.ScaleYFromCenter),
 
         Warning(AnimationType.ScaleDownToCenter),
-        Error(AnimationType.ScaleDownToCenter, Transitions.Type.DARK_BLUR_LIGHT);
+        Error(AnimationType.ScaleDownToCenter);
 
         public final AnimationType animationType;
         private final Transitions.Type transitionsType;
 
         Type(AnimationType animationType) {
-            this(animationType, Transitions.Type.MEDIUM_BLUR_LIGHT);
+            this(animationType, Transitions.Type.MEDIUM_BLUR_STRONG);
         }
 
         Type(AnimationType animationType, Transitions.Type transitionsType) {

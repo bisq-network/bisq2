@@ -18,10 +18,16 @@
 package bisq.chat;
 
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.events.EventsChannelSelectionService;
+import bisq.chat.events.priv.PrivateEventsChannelService;
+import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.support.SupportChannelSelectionService;
+import bisq.chat.support.priv.PrivateSupportChannelService;
+import bisq.chat.support.pub.PublicSupportChannelService;
+import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
@@ -44,12 +50,19 @@ public class ChatService implements Service {
     private final PublicDiscussionChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
+    private final PrivateSupportChannelService privateSupportChannelService;
+    private final PublicSupportChannelService publicSupportChannelService;
+    private final SupportChannelSelectionService supportChannelSelectionService;
+    private final PrivateEventsChannelService privateEventsChannelService;
+    private final PublicEventsChannelService publicEventsChannelService;
+    private final EventsChannelSelectionService eventsChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
                        UserIdentityService userIdentityService) {
 
+        // Trade
         privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
                 networkService,
                 userIdentityService,
@@ -61,6 +74,7 @@ public class ChatService implements Service {
                 privateTradeChannelService,
                 publicTradeChannelService);
 
+        // Discussion
         privateDiscussionChannelService = new PrivateDiscussionChannelService(persistenceService,
                 networkService,
                 userIdentityService,
@@ -71,6 +85,30 @@ public class ChatService implements Service {
         discussionChannelSelectionService = new DiscussionChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
                 publicDiscussionChannelService);
+
+        // Events
+        privateEventsChannelService = new PrivateEventsChannelService(persistenceService,
+                networkService,
+                userIdentityService,
+                proofOfWorkService);
+        publicEventsChannelService = new PublicEventsChannelService(persistenceService,
+                networkService,
+                userIdentityService);
+        eventsChannelSelectionService = new EventsChannelSelectionService(persistenceService,
+                privateEventsChannelService,
+                publicEventsChannelService);
+
+        // Support
+        privateSupportChannelService = new PrivateSupportChannelService(persistenceService,
+                networkService,
+                userIdentityService,
+                proofOfWorkService);
+        publicSupportChannelService = new PublicSupportChannelService(persistenceService,
+                networkService,
+                userIdentityService);
+        supportChannelSelectionService = new SupportChannelSelectionService(persistenceService,
+                privateSupportChannelService,
+                publicSupportChannelService);
     }
 
     @Override
@@ -80,9 +118,18 @@ public class ChatService implements Service {
                 privateTradeChannelService.initialize(),
                 publicTradeChannelService.initialize(),
                 tradeChannelSelectionService.initialize(),
+
                 privateDiscussionChannelService.initialize(),
                 publicDiscussionChannelService.initialize(),
-                discussionChannelSelectionService.initialize()
+                discussionChannelSelectionService.initialize(),
+
+                privateEventsChannelService.initialize(),
+                publicEventsChannelService.initialize(),
+                eventsChannelSelectionService.initialize(),
+
+                privateSupportChannelService.initialize(),
+                publicSupportChannelService.initialize(),
+                supportChannelSelectionService.initialize()
         ).thenApply(list -> true);
     }
 
@@ -93,9 +140,19 @@ public class ChatService implements Service {
                 privateTradeChannelService.shutdown(),
                 publicTradeChannelService.shutdown(),
                 tradeChannelSelectionService.shutdown(),
+
                 privateDiscussionChannelService.shutdown(),
                 publicDiscussionChannelService.shutdown(),
-                discussionChannelSelectionService.shutdown()
+                discussionChannelSelectionService.shutdown(),
+
+                privateEventsChannelService.shutdown(),
+                publicEventsChannelService.shutdown(),
+                eventsChannelSelectionService.shutdown(),
+
+                privateSupportChannelService.shutdown(),
+                publicSupportChannelService.shutdown(),
+                supportChannelSelectionService.shutdown()
+
         ).thenApply(list -> true);
     }
 

@@ -67,6 +67,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         pubKeyHashHBox.setAlignment(Pos.CENTER_LEFT);
 
         closeButton = new Button(Res.get("close"));
+        closeButton.setDefaultButton(true);
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
         backButton = new Button(Res.get("back"));
 
