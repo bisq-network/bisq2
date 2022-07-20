@@ -143,7 +143,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicDiscussionChannel) {
-                        label.setText(item.getDisplayString());
+                        label.setText(item.getDisplayString().toUpperCase());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 70);

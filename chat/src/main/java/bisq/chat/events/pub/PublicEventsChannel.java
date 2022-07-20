@@ -39,8 +39,8 @@ public final class PublicEventsChannel extends PublicChannel<PublicEventsChatMes
 
     public PublicEventsChannel(String id) {
         this(id,
-                Res.get("events." + id + ".name").toUpperCase(),
-                Res.get("events." + id + ".description").toUpperCase(),
+                Res.get("events." + id + ".name"),
+                Res.get("events." + id + ".description"),
                 "",
                 new HashSet<>(),
                 ChannelNotificationType.MENTION);
@@ -111,6 +111,6 @@ public final class PublicEventsChannel extends PublicChannel<PublicEventsChatMes
 
     @Override
     public String getDisplayString() {
-        return Res.get("events." + id + ".name").toUpperCase();
+        return channelName;
     }
 }

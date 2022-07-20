@@ -58,6 +58,7 @@ public class OnboardingController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        OverlayController.setTransitionsType(Transitions.DEFAULT_TYPE);
     }
 
     @Override

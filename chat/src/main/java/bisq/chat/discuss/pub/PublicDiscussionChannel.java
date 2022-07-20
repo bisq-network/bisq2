@@ -39,8 +39,8 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
 
     public PublicDiscussionChannel(String id) {
         this(id,
-                Res.get("discussion." + id + ".name").toUpperCase(),
-                Res.get("discussion." + id + ".description").toUpperCase(),
+                Res.get("discussion." + id + ".name"),
+                Res.get("discussion." + id + ".description"),
                 "",
                 new HashSet<>(),
                 ChannelNotificationType.MENTION);
@@ -111,6 +111,6 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
 
     @Override
     public String getDisplayString() {
-        return Res.get("discussion." + id + ".name").toUpperCase();
+        return channelName;
     }
 }

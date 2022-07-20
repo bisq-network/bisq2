@@ -49,6 +49,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     private final Stage stage;
     private final Window window;
     private final ChangeListener<Number> positionListener;
+    private final Scene scene;
     private UIScheduler centerTime;
 
     public OverlayView(OverlayModel model, OverlayController controller, Region owner) {
@@ -57,16 +58,9 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         this.owner = owner;
         ownerScene = owner.getScene();
 
-        Scene scene = new Scene(root);
+        scene = new Scene(root);
         scene.getStylesheets().setAll(ownerScene.getStylesheets());
         scene.setFill(Color.TRANSPARENT);
-
-        scene.setOnKeyReleased(keyEvent -> {
-            KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
-            KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
-            KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
-            KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
-        });
 
         stage = new Stage();
         stage.setScene(scene);
@@ -116,6 +110,15 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void show(double prefWidth, double prefHeight) {
+        if (scene.getOnKeyReleased() == null) {
+            scene.setOnKeyReleased(keyEvent -> {
+                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
+                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
+                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
+            });
+        }
+
         prefWidth = Math.min(prefWidth, owner.getWidth());
         prefHeight = Math.min(prefHeight, owner.getHeight());
 

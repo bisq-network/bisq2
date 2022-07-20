@@ -39,8 +39,8 @@ public final class PublicSupportChannel extends PublicChannel<PublicSupportChatM
 
     public PublicSupportChannel(String id) {
         this(id,
-                Res.get("support." + id + ".name").toUpperCase(),
-                Res.get("support." + id + ".description").toUpperCase(),
+                Res.get("support." + id + ".name"),
+                Res.get("support." + id + ".description"),
                 "",
                 new HashSet<>(),
                 ChannelNotificationType.MENTION);
@@ -111,6 +111,6 @@ public final class PublicSupportChannel extends PublicChannel<PublicSupportChatM
 
     @Override
     public String getDisplayString() {
-        return Res.get("support." + id + ".name").toUpperCase();
+        return channelName;
     }
 }
