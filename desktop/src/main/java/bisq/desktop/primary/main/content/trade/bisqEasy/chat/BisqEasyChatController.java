@@ -95,8 +95,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSidebar.getRoot(),
-                channelSidebar.getRoot(),
-                filterBox);
+                channelSidebar.getRoot());
     }
 
     @Override
@@ -109,7 +108,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();
 
-            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE, new TradeGuideController.InitData(false));
+            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
         } else {
             resetSelectedChildTarget();
             model.getPeersRoboIconVisible().set(false);

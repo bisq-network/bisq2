@@ -17,7 +17,6 @@
 
 package bisq.desktop.primary.main.content.academy;
 
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -113,7 +112,7 @@ public class AcademyView extends View<GridPane, AcademyModel, AcademyController>
     private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
         Label headlineLabel = new Label(headline);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
+        // headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
         headlineLabel.setGraphicTextGap(15);
         headlineLabel.setWrapText(true);
 
@@ -126,9 +125,9 @@ public class AcademyView extends View<GridPane, AcademyModel, AcademyController>
         button.setOnAction(e -> controller.onSelect(navigationTarget));
 
         HBox.setMargin(button, new Insets(0, -10, 0, 0));
-        HBox hBox = new HBox(headlineLabel, Spacer.fillHBox(), button);
-
-        VBox vBox = new VBox(20, hBox, contentLabel);
+        HBox hBox = new HBox(Spacer.fillHBox(), button);
+       
+        VBox vBox = new VBox(20, headlineLabel, contentLabel, hBox);
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(PADDING));

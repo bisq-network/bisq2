@@ -37,6 +37,15 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
     private final String channelAdminId;
     private final Set<String> channelModeratorIds;
 
+    public PublicDiscussionChannel(String id) {
+        this(id,
+                Res.get("discussion." + id + ".name").toUpperCase(),
+                Res.get("discussion." + id + ".description").toUpperCase(),
+                "",
+                new HashSet<>(),
+                ChannelNotificationType.MENTION);
+    }
+
     public PublicDiscussionChannel(String id,
                                    String channelName,
                                    String description,
@@ -102,6 +111,6 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
 
     @Override
     public String getDisplayString() {
-        return Res.get(id).toUpperCase();
+        return Res.get(id + ".name").toUpperCase();
     }
 }

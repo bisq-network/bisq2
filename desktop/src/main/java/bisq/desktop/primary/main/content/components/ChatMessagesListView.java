@@ -85,6 +85,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -127,6 +128,10 @@ public class ChatMessagesListView {
 
     public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.model.getFilteredChatMessages();
+    }
+
+    public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        controller.setSearchPredicate(predicate);
     }
 
     public SortedList<ChatMessageListItem<? extends ChatMessage>> getSortedChatMessages() {
@@ -212,20 +217,7 @@ public class ChatMessagesListView {
 
         @Override
         public void onActivate() {
-            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> {
-                Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
-                    boolean offerOnlyPredicate = true;
-                    if (item.getChatMessage() instanceof PublicTradeChatMessage) {
-                        PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
-                        offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
-                    }
-                    return offerOnlyPredicate &&
-                            item.getSenderUserProfile().isPresent() &&
-                            !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
-                            userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
-                };
-                model.filteredChatMessages.setPredicate(predicate);
-            });
+            offerOnlySettingsPin = FxBindings.subscribe(settingsService.getOffersOnly(), offerOnly -> applyPredicate());
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
@@ -296,6 +288,12 @@ public class ChatMessagesListView {
         public void setOfferOnly(boolean offerOnly) {
             model.offerOnly.set(offerOnly);
         }
+
+        void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+            model.setSearchPredicate(Objects.requireNonNullElseGet(predicate, () -> e -> true));
+            applyPredicate();
+        }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         // UI - delegate to client
@@ -433,6 +431,22 @@ public class ChatMessagesListView {
             privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
             return privateTradeChannel;
         }
+
+        private void applyPredicate() {
+            boolean offerOnly = settingsService.getOffersOnly().get();
+            Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
+                boolean offerOnlyPredicate = true;
+                if (item.getChatMessage() instanceof PublicTradeChatMessage) {
+                    PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
+                    offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
+                }
+                return offerOnlyPredicate &&
+                        item.getSenderUserProfile().isPresent() &&
+                        !userProfileService.getIgnoredUserProfileIds().contains(item.getSenderUserProfile().get().getId()) &&
+                        userProfileService.findUserProfile(item.getSenderUserProfile().get().getId()).isPresent();
+            };
+            model.filteredChatMessages.setPredicate(item -> model.getSearchPredicate().test(item) && predicate.test(item));
+        }
     }
 
     @Getter
@@ -449,6 +463,8 @@ public class ChatMessagesListView {
         private final boolean isCreateOfferMode;
         private final boolean isCreateOfferTakerListMode;
         private final boolean isCreateOfferPublishedMode;
+        @Setter
+        private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
         private Optional<Runnable> takeOfferCompleteHandler = Optional.empty();
         private final BooleanProperty offerOnly = new SimpleBooleanProperty();

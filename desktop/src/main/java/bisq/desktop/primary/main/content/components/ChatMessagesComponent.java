@@ -61,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -82,6 +83,10 @@ public class ChatMessagesComponent {
 
     public FilteredList<ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
         return controller.chatMessagesListView.getFilteredChatMessages();
+    }
+
+    public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
+        controller.chatMessagesListView.setSearchPredicate(predicate);
     }
 
     public void setOnShowChatUserDetails(Consumer<UserProfile> handler) {
@@ -183,7 +188,7 @@ public class ChatMessagesComponent {
                 } else if (channel instanceof PrivateTradeChannel) {
                     if (settingsService.getTradeRulesConfirmed().get()) {
                         privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
-                    }else{
+                    } else {
                         new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                     }
                 } else if (channel instanceof PrivateDiscussionChannel) {

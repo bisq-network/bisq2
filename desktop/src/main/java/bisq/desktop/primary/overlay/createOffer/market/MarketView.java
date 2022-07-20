@@ -18,8 +18,8 @@
 package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.common.currency.Market;
-import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
@@ -30,8 +30,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -45,8 +43,8 @@ import java.util.Comparator;
 @Slf4j
 public class MarketView extends View<VBox, MarketModel, MarketController> {
     private final BisqTableView<MarketListItem> tableView;
-    private final TextField searchField;
-    private ToggleGroup toggleGroup = new ToggleGroup();
+    private final ToggleGroup toggleGroup = new ToggleGroup();
+    private final SearchBox searchBox;
 
     public MarketView(MarketModel model, MarketController controller) {
         super(new VBox(), model, controller);
@@ -62,18 +60,8 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        ImageView searchIcon = ImageUtil.getImageViewById("search-white");
-        searchField = new TextField();
-        searchField.setPromptText(Res.get("search"));
-        searchField.getStyleClass().add("small-search-text");
-
-        HBox.setMargin(searchIcon, new Insets(0, -3, 0, 7));
-        HBox searchBox = new HBox(0, searchIcon, searchField);
-        searchBox.setAlignment(Pos.CENTER_LEFT);
-        int searchBoxWidth = 140;
-        searchBox.setMaxWidth(searchBoxWidth);
-        searchBox.setMaxHeight(30);
-        searchBox.getStyleClass().add("small-search-box");
+        searchBox = new SearchBox();
+        searchBox.setPrefWidth(140);
 
         tableView = new BisqTableView<>(model.getSortedList());
         tableView.getStyleClass().add("create-offer-table-view");
@@ -83,7 +71,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
         tableView.setMaxWidth(width);
         configTableView();
 
-        StackPane.setMargin(searchBox, new Insets(0, 0, tableHeight - 3, width - searchBoxWidth - 32));
+        StackPane.setMargin(searchBox, new Insets(0, 16, tableHeight - 3, width - searchBox.getPrefWidth() - 30));
         StackPane tableViewWithSearchBox = new StackPane(tableView, searchBox);
         tableViewWithSearchBox.setMaxWidth(width);
 
@@ -95,7 +83,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
 
     @Override
     protected void onViewAttached() {
-        searchField.textProperty().bindBidirectional(model.getSearchText());
+        searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         tableView.scrollTo(model.getSelectedMarketListItem().get());
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
@@ -103,7 +91,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
 
     @Override
     protected void onViewDetached() {
-        searchField.textProperty().unbindBidirectional(model.getSearchText());
+        searchBox.textProperty().unbindBidirectional(model.getSearchText());
     }
 
     private void configTableView() {

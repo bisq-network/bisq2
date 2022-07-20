@@ -21,7 +21,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.view.NavigationView;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
-import bisq.desktop.components.table.FilterBox;
+import bisq.desktop.components.controls.SearchBox;
 import bisq.i18n.Res;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -45,7 +45,6 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
     private final Button searchButton, notificationsButton, channelInfoButton, helpButton;
     private final VBox left;
     private final VBox sideBar;
-    private final HBox filterBoxRoot;
     protected final Pane chatMessagesComponent;
     private final Pane notificationsSettings;
     private final Pane channelInfo;
@@ -54,6 +53,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
     protected final HBox centerToolbar;
     private final Button createOfferButton;
     protected final VBox center;
+    private final SearchBox searchBox;
     private Pane chatUserOverviewRoot;
     private Subscription sideBarWidthSubscription, sideBarChangedSubscription, rootWidthSubscription, chatUserOverviewRootSubscription;
 
@@ -63,8 +63,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
                     Pane privateChannelSelection,
                     Pane chatMessagesComponent,
                     Pane notificationsSettings,
-                    Pane channelInfo,
-                    FilterBox filterBox) {
+                    Pane channelInfo) {
         super(new SplitPane(), model, controller);
         this.chatMessagesComponent = chatMessagesComponent;
 
@@ -103,16 +102,21 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         selectedChannelLabel = new Label();
         selectedChannelLabel.setId("chat-messages-headline");
         HBox.setMargin(selectedChannelLabel, new Insets(0, 0, 0, 0));
-        searchButton = BisqIconButton.createIconButton("icon-search");
-        notificationsButton = BisqIconButton.createIconButton("icon-bell");
-        channelInfoButton = BisqIconButton.createIconButton("icon-info");
-        helpButton = BisqIconButton.createIconButton("icon-help");
+        
+        searchBox = new SearchBox();
+        //searchBox.setPrefWidth(140);
+
+        searchButton = BisqIconButton.createIconButton("icon-search", Res.get("search"));
+        notificationsButton = BisqIconButton.createIconButton("icon-bell", Res.get("notifications"));
+        channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.channelInfo"));
+        helpButton = BisqIconButton.createIconButton("icon-help", Res.get("help"));
 
         centerToolbar = new HBox(
                 10,
                 peersRoboIconView,
                 selectedChannelLabel,
                 Spacer.fillHBox(),
+                searchBox,
                 searchButton,
                 notificationsButton,
                 channelInfoButton,
@@ -128,10 +132,8 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
 
-        filterBoxRoot = filterBox.getRoot();
-
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        center = new VBox(centerToolbar, filterBoxRoot, chatMessagesComponent);
+        center = new VBox(centerToolbar, chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         root.getItems().addAll(left, center, sideBar);
     }
@@ -142,8 +144,8 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         peersRoboIconView.visibleProperty().bind(model.getPeersRoboIconVisible());
         peersRoboIconView.imageProperty().bind(model.getPeersRoboIconImage());
         selectedChannelLabel.textProperty().bind(model.getSelectedChannelAsString());
-        filterBoxRoot.visibleProperty().bind(model.getFilterBoxVisible());
-        filterBoxRoot.managedProperty().bind(model.getFilterBoxVisible());
+        searchBox.visibleProperty().bind(model.getSearchFieldVisible());
+        searchBox.managedProperty().bind(model.getSearchFieldVisible());
         notificationsSettings.visibleProperty().bind(model.getNotificationsVisible());
         notificationsSettings.managedProperty().bind(model.getNotificationsVisible());
         channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
@@ -158,6 +160,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         helpButton.setOnAction(e -> controller.onToggleHelp());
         createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -183,8 +186,8 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         peersRoboIconView.visibleProperty().unbind();
         peersRoboIconView.imageProperty().unbind();
         selectedChannelLabel.textProperty().unbind();
-        filterBoxRoot.visibleProperty().unbind();
-        filterBoxRoot.managedProperty().unbind();
+        searchBox.visibleProperty().unbind();
+        searchBox.managedProperty().unbind();
         notificationsSettings.visibleProperty().unbind();
         notificationsSettings.managedProperty().unbind();
         channelInfo.visibleProperty().unbind();
@@ -199,6 +202,7 @@ public abstract class ChatView extends NavigationView<SplitPane, ChatModel, Chat
         channelInfoButton.setOnAction(null);
         helpButton.setOnAction(null);
         createOfferButton.setOnAction(null);
+        searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription.unsubscribe();
         rootWidthSubscription.unsubscribe();

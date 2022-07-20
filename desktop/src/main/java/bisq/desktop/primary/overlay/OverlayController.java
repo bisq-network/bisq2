@@ -25,7 +25,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
 import bisq.desktop.primary.main.content.settings.userProfile.edit.EditProfileController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.BisqEasyHelpController;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import javafx.application.Platform;
@@ -99,7 +99,7 @@ public class OverlayController extends NavigationController {
                 return Optional.of(new CreateOfferController(applicationService));
             }
             case BISQ_EASY_HELP: {
-                return Optional.of(new TradeGuideController(applicationService));
+                return Optional.of(new BisqEasyHelpController(applicationService));
             }
             case CREATE_PROFILE: {
                 return Optional.of(new CreateUserProfileController(applicationService));

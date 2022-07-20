@@ -15,31 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide;
+package bisq.desktop.primary.main.content.trade.bisqEasy.chat.help;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab1.TradeGuideTab1Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab2.TradeGuideTab2Controller;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab3.TradeGuideTab3Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.tab1.BisqEasyHelpTab1Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.tab2.BisqEasyHelpTab2Controller;
+import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.tab3.BisqEasyHelpTab3Controller;
+import bisq.desktop.primary.overlay.OverlayController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class TradeGuideController extends TabController<TradeGuideModel> {
+public class BisqEasyHelpController extends TabController<BisqEasyHelpModel> {
     @Getter
-    private final TradeGuideView view;
+    private final BisqEasyHelpView view;
     private final DefaultApplicationService applicationService;
 
-    public TradeGuideController(DefaultApplicationService applicationService) {
-        super(new TradeGuideModel(), NavigationTarget.TRADE_GUIDE);
+    public BisqEasyHelpController(DefaultApplicationService applicationService) {
+        super(new BisqEasyHelpModel(), NavigationTarget.BISQ_EASY_HELP);
 
         this.applicationService = applicationService;
-        view = new TradeGuideView(model, this);
+        view = new BisqEasyHelpView(model, this);
     }
 
     @Override
@@ -53,14 +54,14 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
-            case TRADE_GUIDE_TAB_1: {
-                return Optional.of(new TradeGuideTab1Controller(applicationService));
+            case BISQ_EASY_HELP_TAB_1: {
+                return Optional.of(new BisqEasyHelpTab1Controller(applicationService));
             }
-            case TRADE_GUIDE_TAB_2: {
-                return Optional.of(new TradeGuideTab2Controller(applicationService));
+            case BISQ_EASY_HELP_TAB_2: {
+                return Optional.of(new BisqEasyHelpTab2Controller(applicationService));
             }
-            case TRADE_GUIDE_TAB_3: {
-                return Optional.of(new TradeGuideTab3Controller(applicationService));
+            case BISQ_EASY_HELP_TAB_3: {
+                return Optional.of(new BisqEasyHelpTab3Controller(applicationService));
             }
             default: {
                 return Optional.empty();
@@ -68,11 +69,7 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
         }
     }
 
-    void onExpand() {
-        model.getIsCollapsed().set(false);
-    }
-
-    void onCollapse() {
-        model.getIsCollapsed().set(true);
+    void onClose() {
+        OverlayController.hide();
     }
 }

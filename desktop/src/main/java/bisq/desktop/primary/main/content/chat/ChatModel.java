@@ -45,11 +45,11 @@ public abstract class ChatModel extends NavigationModel {
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
     private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
-    private final BooleanProperty filterBoxVisible = new SimpleBooleanProperty();
+    private final BooleanProperty searchFieldVisible = new SimpleBooleanProperty();
     private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();
-
+    private final StringProperty searchText = new SimpleStringProperty();
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
 

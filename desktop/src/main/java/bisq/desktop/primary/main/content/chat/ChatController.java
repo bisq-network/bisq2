@@ -25,18 +25,17 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.table.FilterBox;
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
-import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.NotificationsSidebar;
+import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.PrivateChannelSelection;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
-import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
@@ -45,7 +44,6 @@ import java.util.Optional;
 @Slf4j
 public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
     protected final ChatService chatService;
-    protected final FilterBox filterBox;
     @Getter
     protected final M model;
     private final UserProfileService userProfileService;
@@ -60,6 +58,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
     protected Subscription notificationSettingSubscription;
+    private Subscription searchTextPin;
 
     public ChatController(DefaultApplicationService applicationService, boolean isDiscussionsChat, NavigationTarget host) {
         super(host);
@@ -74,8 +73,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         notificationsSidebar = new NotificationsSidebar(this::onCloseSideBar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
-        //todo
-        filterBox = new FilterBox(chatMessagesComponent.getFilteredChatMessages());
         createComponents();
         model = getChatModel(isDiscussionsChat);
         view = getChatView();
@@ -101,6 +98,14 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             model.setChatUserDetails(Optional.of(userProfileSidebar));
             model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
         });
+        
+        searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
+            if (searchText == null || searchText.isEmpty()) {
+                chatMessagesComponent.setSearchPredicate(item -> true);
+            } else {
+                chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
+            }
+        });
     }
 
     @Override
@@ -109,6 +114,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             notificationSettingSubscription.unsubscribe();
         }
         selectedChannelPin.unbind();
+        searchTextPin.unsubscribe();
     }
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
@@ -127,8 +133,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     public void onToggleFilterBox() {
-        boolean visible = !model.getFilterBoxVisible().get();
-        model.getFilterBoxVisible().set(visible);
+        boolean visible = !model.getSearchFieldVisible().get();
+        model.getSearchFieldVisible().set(visible);
     }
 
     public void onToggleNotifications() {
@@ -154,7 +160,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     public void onToggleHelp() {
-        Navigation.navigateTo(NavigationTarget.BISQ_EASY_HELP, new TradeGuideController.InitData(true));
+        Navigation.navigateTo(NavigationTarget.BISQ_EASY_HELP);
     }
 
     public void onCloseSideBar() {
@@ -172,13 +178,14 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
     }
 
-    protected void showChannelInfo() {
+    public void showChannelInfo() {
         channelSidebar.setChannel(model.getSelectedChannel().get());
         channelSidebar.setOnUndoIgnoreChatUser(() -> {
             chatMessagesComponent.refreshMessages();
             channelSidebar.setChannel(model.getSelectedChannel().get());
         });
     }
+
 
     protected void cleanupChatUserDetails() {
         model.getChatUserDetails().ifPresent(e -> e.setOnMentionUserHandler(null));

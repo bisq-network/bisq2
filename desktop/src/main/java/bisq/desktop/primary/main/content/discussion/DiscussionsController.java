@@ -79,8 +79,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 notificationsSidebar.getRoot(),
-                channelSidebar.getRoot(),
-                filterBox);
+                channelSidebar.getRoot());
     }
 
     @Override
