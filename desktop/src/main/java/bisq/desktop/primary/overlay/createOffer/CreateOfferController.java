@@ -111,6 +111,7 @@ public class CreateOfferController extends NavigationController implements InitW
             reviewOfferController.setMarket(market);
             paymentMethodController.setMarket(market);
             amountController.setMarket(market);
+            updateNextButtonState();
         });
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), reviewOfferController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), reviewOfferController::setQuoteSideAmount);
@@ -236,7 +237,9 @@ public class CreateOfferController extends NavigationController implements InitW
     }
 
     private void updateNextButtonState() {
-        if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
+        if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
+        } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethods().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);

@@ -26,15 +26,19 @@ import java.util.Locale;
 
 public class QuoteFormatter {
     public static String formatWithQuoteCode(Quote quote) {
-        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale());
+        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), false);
+    }
+
+    public static String formatWithQuoteCode(Quote quote, boolean useLowPrecision) {
+        return formatWithQuoteCode(quote, LocaleRepository.getDefaultLocale(), useLowPrecision);
     }
 
     public static String formatMarketPriceOffset(double offset) {
         return MathUtils.roundDouble(offset * 100, 2) + "%";
     }
 
-    public static String formatWithQuoteCode(Quote quote, Locale locale) {
-        return format(quote, locale) + " " + quote.getMarket();
+    public static String formatWithQuoteCode(Quote quote, Locale locale, boolean useLowPrecision) {
+        return format(quote, locale, useLowPrecision) + " " + quote.getMarket().getMarketCodes();
     }
 
     public static String format(Quote quote) {

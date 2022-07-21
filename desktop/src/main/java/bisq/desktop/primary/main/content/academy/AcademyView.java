@@ -123,9 +123,6 @@ public class AcademyView extends View<GridPane, AcademyModel, AcademyController>
         contentLabel.getStyleClass().add("bisq-text-3");
         contentLabel.setWrapText(true);
 
-        // contentLabel.setMinHeight(-1);
-        //  contentLabel.setMaxHeight(-1);
-
         Button button = new Button(buttonLabel.toUpperCase());
         button.getStyleClass().addAll("text-button", "no-background");
         button.setOnAction(e -> controller.onSelect(navigationTarget));

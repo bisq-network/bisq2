@@ -190,7 +190,7 @@ public class UserProfileSelection {
                 {
                     label = new Label();
                     label.setMouseTransparent(true);
-                    label.getStyleClass().add("bisq-input-box-text-input");
+                   // label.getStyleClass().add("bisq-input-box-text-input");
 
                     imageView = new ImageView();
                     imageView.setFitWidth(UserProfileSkin.ICON_SIZE);
@@ -271,7 +271,7 @@ public class UserProfileSelection {
         private final static int ARROW_WIDTH = 10;
         private final static int ARROW_ICON_PADDING = 10;
         private final static int TEXT_PADDING = 6;
-        private final Label userNameLabel;
+        private final Label label;
         private final ImageView imageView;
         private final ChangeListener<Number> userNameLabelWidthListener;
         private boolean isLeftAligned;
@@ -289,11 +289,11 @@ public class UserProfileSelection {
             imageView.setFitHeight(ICON_SIZE);
             imageView.setLayoutY(7);
 
-            arrow.setLayoutY(23);
-            userNameLabel = new Label();
-            userNameLabel.setId("user-name-label");
-            userNameLabel.setLayoutY(12);
-            buttonPane.getChildren().setAll(userNameLabel, arrow, imageView);
+            arrow.setLayoutY(19);
+            label = new Label();
+            label.getStyleClass().add("bisq-text-19");
+            label.setLayoutY(13);
+            buttonPane.getChildren().setAll(label, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
             buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
 
@@ -302,7 +302,7 @@ public class UserProfileSelection {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
                         imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
-                        userNameLabel.setText(userIdentity.getNickName());
+                        label.setText(userIdentity.getNickName());
                         buttonPane.layout();
                     }
                 }
@@ -313,12 +313,12 @@ public class UserProfileSelection {
                 @Override
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     if (newValue.doubleValue() > 0) {
-                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(userNameLabel));
-                        userNameLabel.widthProperty().removeListener(userNameLabelWidthListener);
+                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(label));
+                        label.widthProperty().removeListener(userNameLabelWidthListener);
                     }
                 }
             };
-            userNameLabel.widthProperty().addListener(userNameLabelWidthListener);
+            label.widthProperty().addListener(userNameLabelWidthListener);
         }
 
         private void setIsLeftAligned(boolean isLeftAligned) {
@@ -340,18 +340,18 @@ public class UserProfileSelection {
             super.layoutChildren(x, y, w, h);
 
             if (isLeftAligned) {
-                if (userNameLabel.getWidth() > 0) {
+                if (label.getWidth() > 0) {
                     double iconX = buttonPane.getPrefWidth() - ICON_PADDING - ICON_SIZE;
                     imageView.setX(iconX);
                     double arrowX = iconX - ARROW_ICON_PADDING - ARROW_WIDTH;
                     arrow.setLayoutX(arrowX);
-                    userNameLabel.setLayoutX(arrowX - TEXT_PADDING - userNameLabel.getWidth());
+                    label.setLayoutX(arrowX - TEXT_PADDING - label.getWidth());
                 }
             } else {
-                if (userNameLabel.getWidth() > 0) {
+                if (label.getWidth() > 0) {
                     imageView.setX(ICON_PADDING);
                     arrow.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING);
-                    userNameLabel.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
+                    label.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
                 }
             }
         }

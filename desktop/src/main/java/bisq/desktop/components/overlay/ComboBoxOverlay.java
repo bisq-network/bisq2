@@ -44,6 +44,7 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -72,14 +73,18 @@ public class ComboBoxOverlay<T> {
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
+                           String description,
+                           @Nullable String prompt,
                            double prefWidth) {
-        this(owner, items, cellFactory, selectionHandler, prefWidth, 0, 0);
+        this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0);
     }
 
     public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
+                           String description,
+                           @Nullable String prompt,
                            double prefWidth,
                            double offsetX,
                            double offsetY) {
@@ -97,7 +102,7 @@ public class ComboBoxOverlay<T> {
         listBackground.setFill(Paint.valueOf("#212121"));
         listBackground.setEffect(dropShadow);
 
-        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("search"));
+        comboBox = new AutoCompleteComboBox<>(items, description, prompt);
         comboBox.setCellFactory(cellFactory);
         comboBox.setPrefWidth(prefWidth - 2 * PADDING);
         comboBox.setLayoutX(PADDING);
@@ -110,7 +115,7 @@ public class ComboBoxOverlay<T> {
                 close();
             }
         });
-        UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
+        UIThread.runOnNextRenderFrame(comboBox::forceRedraw);
 
         placeHolder = new Label(Res.get("noData"));
         placeHolder.setVisible(false);
@@ -166,6 +171,9 @@ public class ComboBoxOverlay<T> {
                 close();
             }
         });
+
+        scene.setOnMousePressed(e -> close());
+        ownerRoot.setOnMousePressed(e -> close());
 
         rootWindow.xProperty().addListener(positionListener);
         rootWindow.yProperty().addListener(positionListener);

@@ -139,7 +139,8 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                     toggleButton.setText(Res.get("select"));
                     toggleButton.setSelected(selectedItemProperty.get() != null &&
                             selectedItemProperty.get().equals(item) ||
-                            model.getSelectedMarketListItem().get().equals(item));
+                            (model.getSelectedMarketListItem().get() != null &&
+                                    model.getSelectedMarketListItem().get().equals(item)));
                     toggleButton.setOnAction(e -> {
                         if (toggleButton.isSelected()) {
                             controller.onSelect(item);

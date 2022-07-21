@@ -212,11 +212,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         protected void onViewAttached() {
             super.onViewAttached();
 
-            addChannelIcon.setOnMouseClicked(e -> new ComboBoxOverlay<>(addChannelIcon,
-                    model.allMarketsSortedList,
-                    c -> getMarketListCell(),
-                    controller::onShowMarket,
-                    350, 5, 20).show());
+            addChannelIcon.setOnMouseClicked(e ->
+                    new ComboBoxOverlay<>(addChannelIcon,
+                            model.allMarketsSortedList,
+                            c -> getMarketListCell(),
+                            controller::onShowMarket,
+                            Res.get("tradeChat.addMarketChannel").toUpperCase(),
+                            Res.get("search"),
+                            350, 5, 20)
+                            .show());
         }
 
         @Override

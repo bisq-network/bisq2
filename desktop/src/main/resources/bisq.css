@@ -417,6 +417,24 @@
     -fx-text-fill: -bisq-white;
 }
 
+.bisq-text-18 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-19 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#bisq-text-20 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .wrap-text {
     -fx-wrap-text: true;
 }
@@ -709,6 +727,7 @@
 .bisq-input-box-text-input:focused .content {
     -fx-background-color: transparent;
 }
+
 
 /*******************************************************************************
  * Controls                                          *
