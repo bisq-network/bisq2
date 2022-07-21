@@ -410,6 +410,7 @@
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
 .bisq-text-17 {
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
@@ -636,7 +637,7 @@
 }
 
 .hyperlink.no-underline {
-   /* -fx-underline: false;*/
+    /* -fx-underline: false;*/
     -fx-text-fill: -bisq-grey-dimmed;
 }
 
@@ -649,7 +650,7 @@
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-text-fill: -bisq-grey-dimmed;
-  /*  -fx-underline: false;*/
+    /*  -fx-underline: false;*/
 }
 
 .hyperlink.highlight,
@@ -1271,6 +1272,26 @@
 
 
 /*******************************************************************************
+ *                                                                             *
+ * ScrollBar                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-color: -bisq-grey-14;
+}
+
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-background-color: -bisq-grey-14;
+}
+
+
+/*******************************************************************************
  * List based                                                                  *
  ******************************************************************************/
 
@@ -1323,7 +1344,7 @@
 }
 
 .list-view.channel-selection-list-view .list-cell:selected {
-    -fx-background-color: #262626;
+    -fx-background-color: -bisq-grey-4;
     -fx-fill: -bisq-black;
     -fx-text-fill: -bisq-black;
 }
@@ -1406,7 +1427,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .table-view {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: transparent;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
@@ -1418,7 +1439,7 @@ tree-table-view:focused {
 
 /* column-header */
 .table-view .column-header {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: transparent;
     -fx-pref-height: 54px;
 }
 
@@ -1484,7 +1505,7 @@ tree-table-view:focused {
 
 /* odd */
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-grey-19; /* design has 2 dif. greys on diff. screens -bisq-grey-19; -bisq-grey-17 */
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 /* disabled */

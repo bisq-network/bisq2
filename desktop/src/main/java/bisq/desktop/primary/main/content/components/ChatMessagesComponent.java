@@ -338,7 +338,7 @@ public class ChatMessagesComponent {
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
             VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
-            root.getChildren().addAll(/*tradeGuideBox,*/ messagesListView, quotedMessageBlock, bottomBox);
+            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(UserProfile::getNickName);

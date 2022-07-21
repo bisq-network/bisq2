@@ -24,7 +24,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.left.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
-import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +41,6 @@ public class MainController extends NavigationController {
     public MainController(DefaultApplicationService applicationService) {
         super(NavigationTarget.MAIN);
 
-        SettingsService settingsService = applicationService.getSettingsService();
         this.applicationService = applicationService;
 
         leftNavController = new LeftNavController(applicationService);

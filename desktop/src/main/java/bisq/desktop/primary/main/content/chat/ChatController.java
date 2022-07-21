@@ -32,6 +32,7 @@ import bisq.desktop.primary.main.content.chat.sidebar.NotificationsSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
+import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -176,7 +177,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     public void showChannelInfo() {
