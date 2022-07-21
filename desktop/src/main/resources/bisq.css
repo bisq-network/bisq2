@@ -1363,31 +1363,14 @@
 
 .list-view.chat-messages-list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-padding: 13 0 13 0;
+    -fx-padding: 13 -24 13 0;
     -fx-border-color: -bisq-grey-disabled;
+    -fx-border-insets: 0 24 0 0;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1em;
 }
 
 .list-view.chat-messages-list-view .list-cell:empty {
-    -fx-border-width: 0;
-}
-
-/* When used for create offer we dont show the border lines */
-.list-view.create-offer-list-view {
-    -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-width: 0;
-}
-
-.list-view.create-offer-list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-padding: 13 0 13 0;
-    -fx-border-width: 0;
-    -fx-font-size: 1em;
-}
-
-.list-view.create-offer-list-view .list-cell:empty {
     -fx-border-width: 0;
 }
 

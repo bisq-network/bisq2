@@ -164,7 +164,6 @@ public class ChatMessagesComponent {
                     this::onReply,
                     channelKind,
                     false,
-                    false,
                     false);
 
             model = new Model(channelKind);
