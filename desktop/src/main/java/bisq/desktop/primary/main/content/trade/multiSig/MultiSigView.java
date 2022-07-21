@@ -17,54 +17,28 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig;
 
-import bisq.desktop.common.view.*;
-import bisq.desktop.components.overlay.OverlayWindow;
-import bisq.i18n.Res;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.Parent;
-import javafx.scene.layout.Region;
+import bisq.desktop.common.view.View;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
-public class MultiSigView extends TabView<MultiSigModel, MultiSigController> {
-    protected final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
-    private OverlayWindow overlayWindow;
-
+public class MultiSigView extends View<VBox, MultiSigModel, MultiSigController> {
     public MultiSigView(MultiSigModel model, MultiSigController controller) {
-        super(model, controller);
+        super(new VBox(), model, controller);
 
-        addTab(Res.get("offerBook"), NavigationTarget.MULTI_SIG_OFFER_BOOK);
-        addTab(Res.get("openOffers"), NavigationTarget.MULTI_SIG_OPEN_OFFERS);
-        addTab(Res.get("pendingTrades"), NavigationTarget.MULTI_SIG_PENDING_TRADES);
-        addTab(Res.get("closedTrades"), NavigationTarget.MULTI_SIG_CLOSED_TRADES);
-
-        headLine.setText(Res.get("multiSig"));
-
-        viewChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                Region childRoot = newValue.getRoot();
-                if (overlayWindow != null) {
-                    overlayWindow.close();
-                    overlayWindow = null;
-                }
-                if (model.showCreateOffer.get()) {
-                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseCreateOffer);
-                    overlayWindow.show();
-                } else if (model.showTakeOffer.get()) {
-                    overlayWindow = new OverlayWindow(getRoot(), childRoot, controller::onCloseTakeOffer);
-                    overlayWindow.show();
-                } else {
-                    childRoot.getStyleClass().add("bisq-content-bg");
-                }
-            }
-        };
+        root.setAlignment(Pos.CENTER);
+        Label label = new Label("WIP");
+        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
+        Label small = new Label(getClass().getSimpleName());
+        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
+        root.getChildren().addAll(label, small);
     }
 
     @Override
     protected void onViewAttached() {
-        model.getView().addListener(viewChangeListener);
     }
 
     @Override
     protected void onViewDetached() {
-        model.getView().removeListener(viewChangeListener);
     }
 }

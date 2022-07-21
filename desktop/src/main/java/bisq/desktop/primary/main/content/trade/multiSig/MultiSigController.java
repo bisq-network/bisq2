@@ -19,34 +19,15 @@ package bisq.desktop.primary.main.content.trade.multiSig;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.trade.multiSig.closedTrades.ClosedTradesController;
-import bisq.desktop.primary.main.content.trade.multiSig.createOffer.MultiSigCreateOfferController;
-import bisq.desktop.primary.main.content.trade.multiSig.offerbook.OfferbookController;
-import bisq.desktop.primary.main.content.trade.multiSig.openoffers.OpenOffersController;
-import bisq.desktop.primary.main.content.trade.multiSig.pendingTrades.PendingTradesController;
-import bisq.desktop.primary.main.content.trade.multiSig.takeOffer.TakeOfferController;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
-@Slf4j
-public class MultiSigController extends TabController<MultiSigModel> implements Controller {
-    private final DefaultApplicationService applicationService;
+public class MultiSigController implements Controller {
     @Getter
     private final MultiSigView view;
-    private final OfferbookController offerbookController;
 
     public MultiSigController(DefaultApplicationService applicationService) {
-        super(new MultiSigModel(), NavigationTarget.BISQ_MULTI_SIG);
-
-        this.applicationService = applicationService;
+        MultiSigModel model = new MultiSigModel();
         view = new MultiSigView(model, this);
-
-        offerbookController = new OfferbookController(applicationService);
     }
 
     @Override
@@ -55,52 +36,5 @@ public class MultiSigController extends TabController<MultiSigModel> implements 
 
     @Override
     public void onDeactivate() {
-    }
-
-    @Override
-    public void onNavigate(NavigationTarget navigationTarget, Optional<Object> data) {
-        model.showCreateOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_CREATE_OFFER);
-        model.showTakeOffer.set(navigationTarget == NavigationTarget.MULTI_SIG_TAKE_OFFER);
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        model.showCreateOffer.set(false);
-        model.showTakeOffer.set(false);
-        switch (navigationTarget) {
-            case MULTI_SIG_OFFER_BOOK: {
-                return Optional.of(offerbookController);
-            }
-            case MULTI_SIG_CREATE_OFFER: {
-                model.showCreateOffer.set(true);
-                return Optional.of(new MultiSigCreateOfferController(applicationService));
-            }
-            case MULTI_SIG_TAKE_OFFER: {
-                model.showTakeOffer.set(true);
-                return Optional.of(new TakeOfferController(applicationService));
-            }
-            case MULTI_SIG_OPEN_OFFERS: {
-                return Optional.of(new OpenOffersController(applicationService));
-            }
-            case MULTI_SIG_PENDING_TRADES: {
-                return Optional.of(new PendingTradesController(applicationService));
-            }
-            case MULTI_SIG_CLOSED_TRADES: {
-                return Optional.of(new ClosedTradesController(applicationService));
-            }
-            default: {
-                return Optional.empty();
-            }
-        }
-    }
-
-    public void onCloseCreateOffer() {
-        model.showCreateOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFER_BOOK);
-    }
-
-    public void onCloseTakeOffer() {
-        model.showTakeOffer.set(false);
-        Navigation.navigateTo(NavigationTarget.MULTI_SIG_OFFER_BOOK);
     }
 }
