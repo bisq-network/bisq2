@@ -41,6 +41,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> {
@@ -175,6 +177,19 @@ public class BitcoindRegtestSetup
         return utxos.stream()
                 .filter(u -> Objects.equals(u.getAddress(), address))
                 .findFirst();
+    }
+
+    public CountDownLatch registerWaitUntilNBlocksMinedListener(int n) {
+        var numberOfMinedBlocks = new AtomicInteger();
+        CountDownLatch nBlocksMinedLatch = new CountDownLatch(1);
+
+        zmqListeners.registerNewBlockMinedListener((blockHash) -> {
+            int minedBlocksCount = numberOfMinedBlocks.incrementAndGet();
+            if (minedBlocksCount == n) {
+                nBlocksMinedLatch.countDown();
+            }
+        });
+        return nBlocksMinedLatch;
     }
 
     private RpcConfig createRpcConfig() {

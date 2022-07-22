@@ -25,6 +25,9 @@ import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(BitcoindExtension.class)
@@ -41,9 +44,14 @@ public class BitcoindMineInitialRegtestBlocksIntegrationTest {
     }
 
     @Test
-    public void mineInitialRegtestBlocks() {
+    public void mineInitialRegtestBlocks() throws InterruptedException {
+        CountDownLatch nBlocksMinedLatch = regtestSetup.registerWaitUntilNBlocksMinedListener(101);
         String address = minerWallet.getNewAddress(AddressType.BECH32, "");
         daemon.generateToAddress(101, address);
+
+        boolean allBlocksMined = nBlocksMinedLatch.await(15, TimeUnit.SECONDS);
+        assertThat(allBlocksMined).isTrue();
+
         assertThat(minerWallet.getBalance())
                 .isEqualTo(50);
     }
