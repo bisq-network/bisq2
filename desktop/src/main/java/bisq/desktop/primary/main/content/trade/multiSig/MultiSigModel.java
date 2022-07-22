@@ -17,20 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.desktop.common.view.Model;
 
-public class MultiSigModel extends TabModel {
-    public BooleanProperty showCreateOffer = new SimpleBooleanProperty();
-    public BooleanProperty showTakeOffer = new SimpleBooleanProperty();
-
-    public MultiSigModel() {
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.MULTI_SIG_OFFER_BOOK;
-    }
+public class MultiSigModel implements Model {
 }

@@ -27,11 +27,11 @@ import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
-import bisq.user.NymIdGenerator;
 import bisq.security.DigestUtil;
 import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.ProofOfWorkService;
+import bisq.user.NymIdGenerator;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +105,9 @@ public class GenerateProfileController implements Controller {
     }
 
     protected void onCreateUserProfile() {
+        if (model.getCreateProfileButtonDisabled().get()) {
+            return;
+        }
         model.getCreateProfileProgress().set(-1);
         model.getCreateProfileButtonDisabled().set(true);
         model.getReGenerateButtonDisabled().set(true);

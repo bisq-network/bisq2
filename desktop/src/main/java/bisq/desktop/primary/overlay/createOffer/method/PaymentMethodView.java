@@ -52,10 +52,13 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         Label headLineLabel = new Label(Res.get("onboarding.method.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
+
         Label subtitleLabel = new Label(Res.get("onboarding.method.subTitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
-        subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
+        subtitleLabel.getStyleClass().addAll("bisq-text-3");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.setMaxWidth(450);
 
         nonFoundLabel = new Label(Res.get("onboarding.method.noneFound"));
         nonFoundLabel.getStyleClass().add("bisq-text-6");
@@ -71,7 +74,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         custom.setPrefWidth(300);
 
         addButton = new Button(Res.get("onboarding.method.customMethod.addButton").toUpperCase());
-        // addButton.setDefaultButton(true);
         addButton.getStyleClass().add("outlined-button");
 
         VBox vBox = new VBox(0, custom, addButton);
@@ -79,8 +81,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         vBox.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
-        VBox.setMargin(flowPane, new Insets(80, 65, 50, 65));
-        VBox.setMargin(nonFoundLabel, new Insets(80, 0, 20, 0));
+        VBox.setMargin(flowPane, new Insets(50, 65, 50, 65));
+        VBox.setMargin(nonFoundLabel, new Insets(50, 0, 50, 0));
         root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, vBox);
 
         allPaymentMethodsListener = c -> {

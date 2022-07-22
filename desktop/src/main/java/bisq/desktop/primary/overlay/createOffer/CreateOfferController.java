@@ -18,10 +18,7 @@
 package bisq.desktop.primary.overlay.createOffer;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.Navigation;
-import bisq.desktop.common.view.NavigationController;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.overlay.createOffer.amount.AmountController;
 import bisq.desktop.primary.overlay.createOffer.direction.DirectionController;
@@ -31,7 +28,9 @@ import bisq.desktop.primary.overlay.createOffer.review.ReviewOfferController;
 import bisq.i18n.Res;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -40,7 +39,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class CreateOfferController extends NavigationController {
+public class CreateOfferController extends NavigationController implements InitWithDataController<CreateOfferController.InitData> {
+
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class InitData {
+        private final boolean showMatchingOffers;
+
+        public InitData(boolean showMatchingOffers) {
+            this.showMatchingOffers = showMatchingOffers;
+        }
+    }
+
     private final DefaultApplicationService applicationService;
     @Getter
     private final CreateOfferModel model;
@@ -59,7 +70,7 @@ public class CreateOfferController extends NavigationController {
         super(NavigationTarget.CREATE_OFFER);
 
         this.applicationService = applicationService;
-       
+
         model = new CreateOfferModel();
         view = new CreateOfferView(model, this);
 
@@ -84,6 +95,11 @@ public class CreateOfferController extends NavigationController {
     }
 
     @Override
+    public void initWithData(InitData initData) {
+        reviewOfferController.setShowMatchingOffers(initData.isShowMatchingOffers());
+    }
+
+    @Override
     public void onActivate() {
         model.getNextButtonDisabled().set(false);
 
@@ -95,6 +111,7 @@ public class CreateOfferController extends NavigationController {
             reviewOfferController.setMarket(market);
             paymentMethodController.setMarket(market);
             amountController.setMarket(market);
+            updateNextButtonState();
         });
         baseSideAmountSubscription = EasyBind.subscribe(amountController.getBaseSideAmount(), reviewOfferController::setBaseSideAmount);
         quoteSideAmountSubscription = EasyBind.subscribe(amountController.getQuoteSideAmount(), reviewOfferController::setQuoteSideAmount);
@@ -220,7 +237,9 @@ public class CreateOfferController extends NavigationController {
     }
 
     private void updateNextButtonState() {
-        if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
+        if (NavigationTarget.CREATE_OFFER_MARKET.equals(model.getSelectedChildTarget().get())) {
+            model.getNextButtonDisabled().set(marketController.getMarket().get() == null);
+        } else if (NavigationTarget.CREATE_OFFER_PAYMENT_METHOD.equals(model.getSelectedChildTarget().get())) {
             model.getNextButtonDisabled().set(paymentMethodController.getPaymentMethods().isEmpty());
         } else {
             model.getNextButtonDisabled().set(false);

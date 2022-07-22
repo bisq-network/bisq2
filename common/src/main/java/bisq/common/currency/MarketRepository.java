@@ -65,7 +65,7 @@ public class MarketRepository {
                 .collect(Collectors.toList());
     }
 
-    public static List<Market> getAllFiatMarkets() {
+    public static List<Market> getAllUnsortedFiatMarkets() {
         return FiatCurrencyRepository.getAllCurrencies().stream()
                 .map(currency -> new Market("BTC", currency.getCode(), "Bitcoin", currency.getName()))
                 .distinct()
@@ -98,6 +98,14 @@ public class MarketRepository {
         list.add(getDefault());
         list.addAll(getMajorMarkets());
         list.addAll(getMinorMarkets());
+        return list.stream().distinct().collect(Collectors.toList());
+    }
+
+    public static List<Market> getAllFiatMarkets() {
+        List<Market> list = new ArrayList<>();
+        list.add(getDefault());
+        list.addAll(getMajorFiatMarkets());
+        list.addAll(getMinorFiatMarkets());
         return list.stream().distinct().collect(Collectors.toList());
     }
 }

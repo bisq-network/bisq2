@@ -136,7 +136,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         label.setId("bisq-easy-onboarding-label");
         label.setWrapText(true);
         ImageView bulletPoint = ImageUtil.getImageViewById(imageId);
-        HBox.setMargin(bulletPoint, new Insets(-3, 0, 0, 4));
+        HBox.setMargin(bulletPoint, new Insets(-2, 0, 0, 4));
         HBox hBox = new HBox(15, bulletPoint, label);
         hBox.setAlignment(Pos.CENTER_LEFT);
         return hBox;

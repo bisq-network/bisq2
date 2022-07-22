@@ -120,7 +120,6 @@ public class ChatMessagesListView {
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
                                 ChannelKind channelKind,
-                                boolean isCreateOfferMode,
                                 boolean isCreateOfferTakerListMode,
                                 boolean isCreateOfferPublishedMode) {
         controller = new Controller(applicationService,
@@ -128,7 +127,6 @@ public class ChatMessagesListView {
                 showChatUserDetailsHandler,
                 replyHandler,
                 channelKind,
-                isCreateOfferMode,
                 isCreateOfferTakerListMode,
                 isCreateOfferPublishedMode);
     }
@@ -201,7 +199,6 @@ public class ChatMessagesListView {
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
                            ChannelKind channelKind,
-                           boolean isCreateOfferMode,
                            boolean isCreateOfferTakerListMode,
                            boolean isCreateOfferPublishedMode) {
             chatService = applicationService.getChatService();
@@ -233,7 +230,6 @@ public class ChatMessagesListView {
             model = new Model(chatService,
                     userIdentityService,
                     channelKind,
-                    isCreateOfferMode,
                     isCreateOfferTakerListMode,
                     isCreateOfferPublishedMode);
             view = new View(model, this);
@@ -543,7 +539,6 @@ public class ChatMessagesListView {
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
         private final ChannelKind channelKind;
-        private final boolean isCreateOfferMode;
         private final boolean isCreateOfferTakerListMode;
         private final boolean isCreateOfferPublishedMode;
         @Setter
@@ -555,13 +550,11 @@ public class ChatMessagesListView {
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
                       ChannelKind channelKind,
-                      boolean isCreateOfferMode,
                       boolean isCreateOfferTakerListMode,
                       boolean isCreateOfferPublishedMode) {
             this.chatService = chatService;
             this.userIdentityService = userIdentityService;
             this.channelKind = channelKind;
-            this.isCreateOfferMode = isCreateOfferMode;
             this.isCreateOfferTakerListMode = isCreateOfferTakerListMode;
             this.isCreateOfferPublishedMode = isCreateOfferPublishedMode;
         }
@@ -589,11 +582,7 @@ public class ChatMessagesListView {
             super(new VBox(), model, controller);
 
             messagesListView = new ListView<>(model.getSortedChatMessages());
-            if (model.isCreateOfferMode) {
-                messagesListView.getStyleClass().add("create-offer-list-view");
-            } else {
-                messagesListView.getStyleClass().add("chat-messages-list-view");
-            }
+            messagesListView.getStyleClass().add("chat-messages-list-view");
 
             Label placeholder = new Label(Res.get("noData"));
             messagesListView.setPlaceholder(placeholder);
@@ -603,7 +592,7 @@ public class ChatMessagesListView {
             messagesListView.setSelectionModel(new NoSelectionModel<>());
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            VBox.setMargin(messagesListView, new Insets(0, 24, 0, 24));
+            VBox.setMargin(messagesListView, new Insets(0, 0, 0, 24));
             root.getChildren().addAll(messagesListView);
 
             messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
@@ -717,6 +706,8 @@ public class ChatMessagesListView {
 
                             HBox.setHgrow(vBox, Priority.ALWAYS);
                             hBox = new HBox(15, chatUserIcon, vBox);
+
+                            hBox.setPadding(new Insets(0, 24, 0, 0));
                         }
 
                         private void hideReactionsBox() {
@@ -749,15 +740,7 @@ public class ChatMessagesListView {
                                 });
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
-                                boolean isCreateOfferMode = model.isCreateOfferMode;
-
-                                boolean isCreateOfferTakerListMode = model.isCreateOfferTakerListMode;
-                                boolean isCreateOfferMakerListMode = isCreateOfferMode && !isCreateOfferTakerListMode;
-                                reputationVBox.setVisible(!isCreateOfferMakerListMode);
-                                reputationVBox.setManaged(!isCreateOfferMakerListMode);
-
-                                dateTime.setVisible(!isCreateOfferMakerListMode || model.isCreateOfferPublishedMode);
-                                dateTime.setManaged(!isCreateOfferMakerListMode || model.isCreateOfferPublishedMode);
+                                boolean isCreateOfferMakerListMode = false;
 
                                 actionButton.setVisible(isOfferMessage && !model.isCreateOfferPublishedMode);
                                 actionButton.setManaged(isOfferMessage && !model.isCreateOfferPublishedMode);
@@ -854,7 +837,7 @@ public class ChatMessagesListView {
                             if (reputationVBox.isVisible() && reputationVBoxWidth == 0) {
                                 return;
                             }
-                            double wrappingWidth = width - 50 - actionButtonWidth - reputationVBoxWidth;
+                            double wrappingWidth = width - actionButtonWidth - reputationVBoxWidth - 60;
 
                             message.setWrappingWidth(wrappingWidth);
                             quotedMessageField.setWrappingWidth(wrappingWidth);
@@ -894,9 +877,7 @@ public class ChatMessagesListView {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() != null || editInputField.isVisible()) {
                                     return;
                                 }
-                                if (!model.isCreateOfferMode) {
-                                    reactionsHBox.setVisible(true);
-                                }
+                                reactionsHBox.setVisible(true);
                             });
                             setOnMouseExited(e -> {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() == null) {

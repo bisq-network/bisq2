@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.TextAreaBox;
+import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.overlay.OverlayModel;
 import bisq.i18n.Res;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
     private final ImageView roboIconView;
     private final MaterialTextField statement;
-    private final TextAreaBox terms;
+    private final MaterialTextArea terms;
     private final Button saveButton, cancelButton;
     private final Label nickName, nym;
     protected final Label headLineLabel;
@@ -83,9 +83,9 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         statement = new MaterialTextField(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
         statement.setPrefWidth(width);
 
-        terms = new TextAreaBox(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
+        terms = new MaterialTextArea(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
         terms.setPrefWidth(width);
-        terms.setBoxHeight(100);
+        terms.setFixedHeight(100);
 
         VBox fieldsAndButtonsVBox = new VBox(20, statement, terms);
         fieldsAndButtonsVBox.setPadding(new Insets(50, 0, 0, 0));

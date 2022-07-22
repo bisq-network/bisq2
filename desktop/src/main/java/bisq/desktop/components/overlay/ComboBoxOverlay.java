@@ -44,6 +44,7 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -67,26 +68,33 @@ public class ComboBoxOverlay<T> {
     private UIScheduler fixPositionsScheduler;
     private final Pane root;
     protected final Polygon listBackground = new Polygon();
+    protected double arrowOffset = 31.5;
 
     public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
+                           String description,
+                           @Nullable String prompt,
                            double prefWidth) {
-        this(owner, items, cellFactory, selectionHandler, prefWidth, 0, 0);
+        this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0, 31.5);
     }
 
     public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
                            Callback<ListView<T>, ListCell<T>> cellFactory,
                            Consumer<T> selectionHandler,
+                           String description,
+                           @Nullable String prompt,
                            double prefWidth,
                            double offsetX,
-                           double offsetY) {
+                           double offsetY,
+                           double arrowOffset) {
         this.owner = owner;
         this.prefWidth = prefWidth;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+        this.arrowOffset = arrowOffset;
 
         DropShadow dropShadow = new DropShadow();
         dropShadow.setBlurType(BlurType.GAUSSIAN);
@@ -97,7 +105,7 @@ public class ComboBoxOverlay<T> {
         listBackground.setFill(Paint.valueOf("#212121"));
         listBackground.setEffect(dropShadow);
 
-        comboBox = new AutoCompleteComboBox<>(items, Res.get("tradeChat.addMarketChannel").toUpperCase(), Res.get("search"));
+        comboBox = new AutoCompleteComboBox<>(items, description, prompt);
         comboBox.setCellFactory(cellFactory);
         comboBox.setPrefWidth(prefWidth - 2 * PADDING);
         comboBox.setLayoutX(PADDING);
@@ -110,7 +118,7 @@ public class ComboBoxOverlay<T> {
                 close();
             }
         });
-        UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().requestFocus());
+        UIThread.runOnNextRenderFrame(comboBox::forceRedraw);
 
         placeHolder = new Label(Res.get("noData"));
         placeHolder.setVisible(false);
@@ -137,7 +145,6 @@ public class ComboBoxOverlay<T> {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.sizeToScene();
-
 
         // Listeners, handlers
         heightListener = (observable, oldValue, newValue) -> doLayout();
@@ -166,6 +173,9 @@ public class ComboBoxOverlay<T> {
                 close();
             }
         });
+
+        scene.setOnMousePressed(e -> close());
+        ownerRoot.setOnMousePressed(e -> close());
 
         rootWindow.xProperty().addListener(positionListener);
         rootWindow.yProperty().addListener(positionListener);
@@ -212,7 +222,6 @@ public class ComboBoxOverlay<T> {
         comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().removeListener(heightListener);
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
-        comboBox.setOnChangeConfirmed(null);
     }
 
     protected void layoutListView() {
@@ -221,18 +230,18 @@ public class ComboBoxOverlay<T> {
         double x = 0;
         double listOffset = 8;
         // relative to visible top-left point 
-        double arrowX_l = 22;
-        double arrowX_m = 31.5;
-        double arrowX_r = 41;
+        double arrowX_l = -9.5;
+        double arrowX_m = 0;
+        double arrowX_r = 9.5;
         double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
         double width = prefWidth;
         double y = 0;
         double arrowY_m = y - 7.5;
         listBackground.getPoints().setAll(
                 x, y,
-                x + arrowX_l, y,
-                x + arrowX_m, arrowY_m,
-                x + arrowX_r, y,
+                x + arrowX_l + arrowOffset, y,
+                x + arrowX_m + arrowOffset, arrowY_m,
+                x + arrowX_r + arrowOffset, y,
                 x + width, y,
                 x + width, y + height,
                 x, y + height);

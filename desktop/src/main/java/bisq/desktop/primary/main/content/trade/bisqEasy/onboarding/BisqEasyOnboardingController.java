@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -52,7 +53,7 @@ public class BisqEasyOnboardingController implements Controller {
     }
 
     public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER);
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(true));
     }
 
     public void onDontShowAgain() {

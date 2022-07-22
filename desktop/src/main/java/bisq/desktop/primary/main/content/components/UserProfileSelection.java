@@ -60,10 +60,6 @@ public class UserProfileSelection {
         return controller.view.getRoot();
     }
 
-    public void setComboBoxWidth(double width) {
-        controller.model.comboBoxWidth.set(width);
-    }
-
     public void setIsLeftAligned(boolean isLeftAligned) {
         controller.model.isLeftAligned.set(isLeftAligned);
     }
@@ -94,15 +90,12 @@ public class UserProfileSelection {
 
         @Override
         public void onDeactivate() {
-            if (selectedUserProfilePin != null) {
-                selectedUserProfilePin.unbind();
-            }
-            userProfilesPin.unbind();
-        }
+            // Need to clear list otherwise we get issues with binding when multiple 
+            // instances are used.
+            model.userProfiles.clear();
 
-        @Override
-        public boolean useCaching() {
-            return false;
+            selectedUserProfilePin.unbind();
+            userProfilesPin.unbind();
         }
 
         private void onSelected(ListItem selectedItem) {
@@ -134,7 +127,7 @@ public class UserProfileSelection {
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
-            root.getChildren().addAll(comboBox);
+            root.getChildren().setAll(comboBox);
         }
 
         @Override
@@ -149,7 +142,6 @@ public class UserProfileSelection {
         @Override
         protected void onViewDetached() {
             comboBox.prefWidthProperty().unbind();
-            comboBox.setOnChangeConfirmed(null);
             selectedUserProfilePin.unsubscribe();
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
@@ -166,7 +158,7 @@ public class UserProfileSelection {
 
         @Override
         public String toString() {
-            return userIdentity.getNickName();
+            return userIdentity.getUserName();
         }
     }
 
@@ -190,7 +182,6 @@ public class UserProfileSelection {
                 {
                     label = new Label();
                     label.setMouseTransparent(true);
-                    label.getStyleClass().add("bisq-input-box-text-input");
 
                     imageView = new ImageView();
                     imageView.setFitWidth(UserProfileSkin.ICON_SIZE);
@@ -204,6 +195,7 @@ public class UserProfileSelection {
                         hBox.setAlignment(Pos.CENTER_RIGHT);
                         hBox.getChildren().addAll(label, imageView);
                     } else {
+                        hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.getChildren().addAll(imageView, label);
                     }
                 }
@@ -214,7 +206,7 @@ public class UserProfileSelection {
 
                     if (item != null && !empty) {
                         imageView.setImage(RoboHash.getImage(item.userIdentity.getPubKeyHash()));
-                        label.setText(item.userIdentity.getNickName());
+                        label.setText(item.userIdentity.getUserName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
                             if (newValue.doubleValue() > 0) {
@@ -253,13 +245,13 @@ public class UserProfileSelection {
         protected Skin<?> createDefaultSkin() {
             if (skin == null) {
                 skin = new UserProfileSkin(this, description, prompt);
-                editor = skin.getMaterialTextField().getInputTextField();
+                editor = skin.getMaterialTextField().getField();
             }
             return skin;
         }
 
         private double calculateWidth(Label label) {
-            double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 70;
+            double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 80;
             return Math.max(width, UserProfileComboBox.this.getPrefWidth());
         }
 
@@ -271,7 +263,7 @@ public class UserProfileSelection {
         private final static int ARROW_WIDTH = 10;
         private final static int ARROW_ICON_PADDING = 10;
         private final static int TEXT_PADDING = 6;
-        private final Label userNameLabel;
+        private final Label label;
         private final ImageView imageView;
         private final ChangeListener<Number> userNameLabelWidthListener;
         private boolean isLeftAligned;
@@ -289,11 +281,11 @@ public class UserProfileSelection {
             imageView.setFitHeight(ICON_SIZE);
             imageView.setLayoutY(7);
 
-            arrow.setLayoutY(23);
-            userNameLabel = new Label();
-            userNameLabel.setId("user-name-label");
-            userNameLabel.setLayoutY(12);
-            buttonPane.getChildren().setAll(userNameLabel, arrow, imageView);
+            arrow.setLayoutY(18);
+            label = new Label();
+            label.getStyleClass().add("bisq-text-19");
+            label.setLayoutY(13);
+            buttonPane.getChildren().setAll(label, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
             buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
 
@@ -302,7 +294,7 @@ public class UserProfileSelection {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
                         imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
-                        userNameLabel.setText(userIdentity.getNickName());
+                        label.setText(userIdentity.getUserName());
                         buttonPane.layout();
                     }
                 }
@@ -313,12 +305,12 @@ public class UserProfileSelection {
                 @Override
                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                     if (newValue.doubleValue() > 0) {
-                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(userNameLabel));
-                        userNameLabel.widthProperty().removeListener(userNameLabelWidthListener);
+                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(label));
+                        label.widthProperty().removeListener(userNameLabelWidthListener);
                     }
                 }
             };
-            userNameLabel.widthProperty().addListener(userNameLabelWidthListener);
+            label.widthProperty().addListener(userNameLabelWidthListener);
         }
 
         private void setIsLeftAligned(boolean isLeftAligned) {
@@ -340,18 +332,18 @@ public class UserProfileSelection {
             super.layoutChildren(x, y, w, h);
 
             if (isLeftAligned) {
-                if (userNameLabel.getWidth() > 0) {
+                if (label.getWidth() > 0) {
                     double iconX = buttonPane.getPrefWidth() - ICON_PADDING - ICON_SIZE;
                     imageView.setX(iconX);
                     double arrowX = iconX - ARROW_ICON_PADDING - ARROW_WIDTH;
                     arrow.setLayoutX(arrowX);
-                    userNameLabel.setLayoutX(arrowX - TEXT_PADDING - userNameLabel.getWidth());
+                    label.setLayoutX(arrowX - TEXT_PADDING - label.getWidth());
                 }
             } else {
-                if (userNameLabel.getWidth() > 0) {
+                if (label.getWidth() > 0) {
                     imageView.setX(ICON_PADDING);
                     arrow.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING);
-                    userNameLabel.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
+                    label.setLayoutX(ICON_PADDING + ICON_SIZE + ARROW_ICON_PADDING + ARROW_WIDTH + TEXT_PADDING);
                 }
             }
         }

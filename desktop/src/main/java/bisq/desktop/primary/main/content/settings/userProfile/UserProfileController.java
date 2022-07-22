@@ -22,7 +22,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -49,26 +48,25 @@ public class UserProfileController implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
-                chatUserIdentity -> model.getUserProfileDisplayPane().set(
-                        new UserProfileDisplay(userIdentityService, chatUserIdentity).getRoot())
+                chatUserIdentity -> {
+                    if (model.getSelectedChatUserIdentity() == null ||
+                            (chatUserIdentity != null &&
+                                    !model.getSelectedChatUserIdentity().getId().equals(chatUserIdentity.getId()))) {
+                        model.setSelectedChatUserIdentity(chatUserIdentity);
+                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService, chatUserIdentity);
+                        model.getUserProfileDisplayPane().set(userProfileDisplay.getRoot());
+                    }
+                }
         );
     }
 
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
+        model.setSelectedChatUserIdentity(null);
     }
 
     public void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
-    }
-
-    public void onDeleteChatUser() {
-        userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        new Popup().warning(throwable.getMessage()).show();
-                    }
-                });
     }
 }

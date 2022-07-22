@@ -26,6 +26,7 @@ import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.BisqGridPane;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
@@ -482,7 +483,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void createGridPane() {
         gridPane = new BisqGridPane();
-        gridPane.setPadding(new Insets(64, 64, 64, 64));
+        gridPane.setPadding(new Insets(64));
         gridPane.setPrefWidth(width);
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
@@ -723,9 +724,12 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void applyStyles() {
         Region rootContainer = getRootContainer();
-            rootContainer.getStyleClass().add("overlay-bg");
+        rootContainer.getStyleClass().add("overlay-bg");
 
         if (headLineLabel != null) {
+            headlineIcon.setManaged(true);
+            headlineIcon.setVisible(true);
+
             switch (type) {
                 case Information:
                 case BackgroundInfo:
@@ -734,19 +738,19 @@ public abstract class Overlay<T extends Overlay<T>> {
                 case Feedback:
                 case Notification:
                 case Attention:
+                    Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
                     headLineLabel.getStyleClass().add("overlay-headline-information");
                     headlineIcon.getStyleClass().add("overlay-icon-information");
-                    headlineIcon.setManaged(true);
-                    headlineIcon.setVisible(true);
-                    Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
                     break;
                 case Warning:
-                case Error:
+                    Icons.getIconForLabel(AwesomeIcon.WARNING_SIGN, headlineIcon, "1.5em");
                     headLineLabel.getStyleClass().add("overlay-headline-warning");
                     headlineIcon.getStyleClass().add("overlay-icon-warning");
-                    headlineIcon.setManaged(true);
-                    headlineIcon.setVisible(true);
+                    break;
+                case Error:
                     Icons.getIconForLabel(AwesomeIcon.EXCLAMATION_SIGN, headlineIcon, "1.5em");
+                    headLineLabel.getStyleClass().add("overlay-headline-error");
+                    headlineIcon.getStyleClass().add("overlay-icon-error");
                     break;
                 default:
                     headLineLabel.getStyleClass().add("overlay-headline");
@@ -790,7 +794,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected void addContent() {
         if (message != null) {
             messageLabel = new Label(truncatedMessage);
-            messageLabel.setMouseTransparent(true);
+            messageLabel.setMinWidth(width);
             messageLabel.setWrapText(true);
             GridPane.setHalignment(messageLabel, HPos.LEFT);
             GridPane.setHgrow(messageLabel, Priority.ALWAYS);
@@ -892,20 +896,10 @@ public abstract class Overlay<T extends Overlay<T>> {
             HBox.setHgrow(closeButton, Priority.SOMETIMES);
         }
 
-        Pane spacer = new Pane();
-
-        if (buttonAlignment == HPos.RIGHT) {
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            spacer.setMaxWidth(Double.MAX_VALUE);
-        }
-
-        buttonBox = new HBox();
-
+        buttonBox = new HBox(10);
         GridPane.setHalignment(buttonBox, buttonAlignment);
-        GridPane.setRowIndex(buttonBox, gridPane.getRowCount());
-        GridPane.setColumnSpan(buttonBox, 2);
         GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
-        gridPane.getChildren().add(buttonBox);
+        gridPane.add(buttonBox, 0, gridPane.getRowCount(), 2, 1);
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? Res.get("ok") : actionButtonText);
@@ -917,8 +911,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
             actionButton.setDefaultButton(true);
-            //TODO app wide focus
-            //actionButton.requestFocus();
 
             if (!disableActionButton) {
                 actionButton.setOnAction(event -> {
@@ -929,15 +921,6 @@ public abstract class Overlay<T extends Overlay<T>> {
                 });
             }
 
-            buttonBox.setSpacing(10);
-
-            buttonBox.setAlignment(Pos.CENTER);
-
-            if (buttonAlignment == HPos.RIGHT)
-                buttonBox.getChildren().add(spacer);
-
-            buttonBox.getChildren().addAll(actionButton);
-
             if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
                 secondaryActionButton = new Button(secondaryActionButtonText);
                 secondaryActionButton.setOnAction(event -> {
@@ -946,15 +929,24 @@ public abstract class Overlay<T extends Overlay<T>> {
                     }
                     secondaryActionHandlerOptional.ifPresent(Runnable::run);
                 });
-
-                buttonBox.getChildren().add(secondaryActionButton);
             }
 
-            if (!hideCloseButton)
-                buttonBox.getChildren().add(closeButton);
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
-            buttonBox.getChildren().addAll(spacer, closeButton);
+        }
+
+        if (buttonAlignment == HPos.RIGHT) {
+            buttonBox.getChildren().add(Spacer.fillHBox());
+        }
+
+        if (!hideCloseButton && closeButton != null) {
+            buttonBox.getChildren().add(closeButton);
+        }
+        if (secondaryActionButton != null) {
+            buttonBox.getChildren().add(secondaryActionButton);
+        }
+        if (actionButton != null) {
+            buttonBox.getChildren().add(actionButton);
         }
     }
 

@@ -83,7 +83,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         headLineLabel = new Label();
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        subtitleLabel = new Label(Res.get("onboarding.completed.noOffersAvailable"));
+        subtitleLabel = new Label();
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
         subtitleLabel.setAlignment(Pos.CENTER);
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
@@ -109,7 +109,13 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         createOfferHBox.getStyleClass().add("create-offer-message-my-offer");
         createOfferHBox.setAlignment(Pos.CENTER_LEFT);
 
-        content.getChildren().addAll(headLineLabel, subtitleLabel, tableView, headLine2Label, createOfferHBox);
+       /* Region separator = new Region();
+        separator.setMinHeight(1.5);
+        separator.setMaxWidth(tableView.getMaxWidth());
+        separator.getStyleClass().add("bisq-mid-grey");*/
+
+        // VBox.setMargin(separator, new Insets(-10, 0, 15, 0));
+        content.getChildren().addAll(headLineLabel, subtitleLabel, tableView, /*separator,*/ headLine2Label, createOfferHBox);
 
         createOfferSuccessFeedback = new VBox();
         createOfferSuccessFeedback.setVisible(false);
@@ -130,6 +136,13 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     protected void onViewAttached() {
         configTableView();
         Transitions.removeEffect(content);
+        subtitleLabel.setText(model.isShowMatchingOffers() ?
+                Res.get("onboarding.completed.noMatchingOffers") :
+                Res.get("onboarding.completed.createOfferMode")
+        );
+        if (!model.isShowMatchingOffers()) {
+            VBox.setMargin(subtitleLabel, new Insets(0, 0, 50, 0));
+        }
 
         // 44 header height, 67 row height
         int numEntries = model.getMatchingOffers().size();

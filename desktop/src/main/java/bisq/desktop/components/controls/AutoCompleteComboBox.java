@@ -31,7 +31,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -45,6 +45,7 @@ import javafx.scene.shape.Polygon;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,12 +54,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected final String description;
+    @Nullable
     protected final String prompt;
     protected List<? extends T> list;
     protected List<? extends T> extendedList;
     protected List<T> matchingList;
     protected Skin<T> skin;
-    protected TextField editor;
+    protected TextInputControl editor;
 
     public AutoCompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -72,7 +74,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         this(items, description, "");
     }
 
-    public AutoCompleteComboBox(ObservableList<T> items, String description, String prompt) {
+    public AutoCompleteComboBox(ObservableList<T> items, String description, @Nullable String prompt) {
         super(items);
         this.description = description;
         this.prompt = prompt;
@@ -84,7 +86,11 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    editor.setText(asString(item));
+                    if (editor.getText() != null && !editor.getText().isEmpty()) {
+                        skin.getMaterialTextField().update();
+                        skin.getMaterialTextField().getDescriptionLabel().setLayoutY(6.5);
+                        editor.setText(asString(item));
+                    }
                     if (getParent() != null) {
                         getParent().requestFocus();
                     }
@@ -100,10 +106,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
         // Text input gets focus when added to stage (not clear why...)
         // This prevents that the list gets opened and steals the focus
-        UIThread.runOnNextRenderFrame(() -> {
-            this.requestFocus();
-            clearOnFocus();
-        });
+        setupFocusHandler();
 
         // todo does not update items when we change list so add a handler here for a quick fix
         // need to figure out why its not updating
@@ -114,7 +117,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         return skin;
     }
 
-    public TextField getEditorTextField() {
+    public TextInputControl getEditorTextField() {
         return editor;
     }
 
@@ -122,7 +125,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected javafx.scene.control.Skin<?> createDefaultSkin() {
         if (skin == null) {
             skin = new Skin<>(this, description, prompt);
-            editor = skin.getMaterialTextField().getInputTextField();
+            editor = skin.getMaterialTextField().getField();
         }
         return skin;
     }
@@ -161,21 +164,23 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
      * on every (unconfirmed) value change. The onAction is not really
      * suitable for the search enabled ComboBox.
      */
-    public final void setOnChangeConfirmed(EventHandler<Event> eh) {
+    public final void setOnChangeConfirmed(EventHandler<Event> eventHandler) {
+        if (eventHandler == null) {
+            return;
+        }
         setOnHidden(e -> {
             String inputText = editor.getText();
-
             // Case 1: fire if input text selects (matches) an item
             String selectedItemAsString = getConverter().toString(getSelectionModel().getSelectedItem());
             if (selectedItemAsString != null && selectedItemAsString.equals(inputText)) {
-                eh.handle(e);
+                eventHandler.handle(e);
                 getParent().requestFocus();
                 return;
             }
 
             // Case 2: fire if the text is empty to support special "show all" case
             if (inputText.isEmpty()) {
-                eh.handle(e);
+                eventHandler.handle(e);
                 getParent().requestFocus();
             }
         });
@@ -185,7 +190,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     // wants - to have a blank slate for a new search. The primary motivation though
     // was to work around UX glitches related to (starting) editing text when comboBox
     // had specific item selected.
-    protected void clearOnFocus() {
+    protected void setupFocusHandler() {
         editor.focusedProperty().addListener(new WeakReference<>((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
             if (!oldValue && newValue) {
                 removeFilter();
@@ -262,7 +267,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         editor.setText("");
     }
 
-    protected void forceRedraw() {
+    public void forceRedraw() {
         adjustVisibleRowCount();
         if (matchingListSize() > 0) {
             skin.getPopupContent().autosize();
@@ -295,7 +300,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected final ImageView arrow;
         protected final Polygon listBackground = new Polygon();
         protected final ObservableList<T> items;
-        protected final ComboBox<T> comboBox;
+        protected final AutoCompleteComboBox<T> comboBox;
         protected final Pane buttonPane;
         private final DropShadow dropShadow;
         protected ListView<T> listView;
@@ -304,12 +309,16 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         protected double arrowX_m = DEFAULT_ARROW_X_M;
         protected double arrowX_r = DEFAULT_ARROW_X_R;
 
-        public Skin(ComboBox<T> control, String description, String prompt) {
+        public Skin(ComboBox<T> control, String description, @Nullable String prompt) {
             super(control);
-            comboBox = control;
+            comboBox = (AutoCompleteComboBox<T>) control;
             items = comboBox.getItems();
 
-            materialTextField = new MaterialTextField(description, prompt);
+            if (prompt == null) {
+                materialTextField = new MaterialTextField(description);
+            } else {
+                materialTextField = new MaterialTextField(description, prompt);
+            }
             materialTextField.setStyle("-fx-background-color: transparent");
 
             arrow = ImageUtil.getImageViewById("arrow-down");

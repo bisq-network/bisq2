@@ -48,6 +48,7 @@
     -bisq-buy: #006600;
     -bisq-sell: #660000;
     -bisq-red: #d02c1f;
+    -bisq-warning: #d0831f;
 
     /* Greys */
     -bisq-grey-dimmed: #828282;
@@ -410,10 +411,29 @@
     -fx-font-size: 1.25em;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
 .bisq-text-17 {
     -fx-font-size: 2.15em;
     -fx-font-family: "IBM Plex Sans Light";
     -fx-text-fill: -bisq-white;
+}
+
+.bisq-text-18 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.bisq-text-19 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#bisq-text-20 {
+    -fx-font-size: 0.9em;
+    -fx-text-fill: -bisq-white;
+    -fx-font-family: "IBM Plex Sans Light";
 }
 
 .wrap-text {
@@ -571,8 +591,18 @@
  *                                                                             *
  ******************************************************************************/
 
+.material-text-field {
+    -fx-faint-focus-color: transparent;
+    -fx-background-color: transparent;
+    -fx-text-fill: -bisq-white;
+    -fx-prompt-text-fill: -bisq-grey-disabled;
+    -fx-font-size: 1.25em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 .material-text-field-bg {
     -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 4 4 0 0;
 }
 
 .material-text-field-bg-hover {
@@ -600,21 +630,19 @@
 }
 
 .material-text-field-description-read-only {
-    -fx-text-fill: -bisq-white;
+    -fx-text-fill: -bisq-grey-dimmed;
 }
 
 .material-text-field-read-only {
-    -fx-text-fill: -bisq-grey-disabled !important;
+    -fx-text-fill: -bisq-white;
 }
 
-.material-text-field {
-    -fx-faint-focus-color: transparent;
+
+/* Used for textarea*/
+.material-text-field:focused .content {
     -fx-background-color: transparent;
-    -fx-text-fill: -bisq-white;
-    -fx-prompt-text-fill: -bisq-grey-disabled;
-    -fx-font-size: 1.25em;
-    -fx-font-family: "IBM Plex Sans Light";
 }
+
 
 /*******************************************************************************
  *                                                                             *
@@ -636,7 +664,7 @@
 }
 
 .hyperlink.no-underline {
-   /* -fx-underline: false;*/
+    /* -fx-underline: false;*/
     -fx-text-fill: -bisq-grey-dimmed;
 }
 
@@ -649,7 +677,7 @@
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-text-fill: -bisq-grey-dimmed;
-  /*  -fx-underline: false;*/
+    /*  -fx-underline: false;*/
 }
 
 .hyperlink.highlight,
@@ -708,6 +736,7 @@
 .bisq-input-box-text-input:focused .content {
     -fx-background-color: transparent;
 }
+
 
 /*******************************************************************************
  * Controls                                          *
@@ -820,6 +849,42 @@
     -fx-border-color: rgba(255, 255, 255, 0.2);
     -fx-text-fill: derive(-fx-light-text-color, -20%);
 }
+
+.grey-outlined-button {
+    -fx-border-color: rgba(255, 255, 255, 0.3);
+    -fx-text-fill: rgba(255, 255, 255, 0.3);
+}
+
+.grey-outlined-button:hover {
+    -fx-border-color: rgba(255, 255, 255, 0.33);
+    -fx-text-fill: rgba(255, 255, 255, 0.33);
+}
+
+.grey-outlined-button:pressed {
+    -fx-border-color: rgba(255, 255, 255, 0.27);
+    -fx-text-fill: rgba(255, 255, 255, 0.27);
+}
+
+.grey-outlined-button:disabled {
+    -fx-border-color: rgba(255, 255, 255, 0.15);
+    -fx-text-fill: rgba(255, 255, 255, 0.15);
+}
+
+.red-outlined-button {
+    -fx-border-color: -bisq-red;
+    -fx-text-fill: -bisq-red;
+}
+
+.red-outlined-button:hover {
+    -fx-border-color: derive(-bisq-red, 10%);
+    -fx-text-fill: derive(-bisq-red, 10%);
+}
+
+.red-outlined-button:pressed {
+    -fx-border-color: derive(-bisq-red, -10%);
+    -fx-text-fill: derive(-bisq-red, -10%);
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -1271,6 +1336,26 @@
 
 
 /*******************************************************************************
+ *                                                                             *
+ * ScrollBar                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-color: -bisq-grey-14;
+}
+
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-background-color: -bisq-grey-14;
+}
+
+
+/*******************************************************************************
  * List based                                                                  *
  ******************************************************************************/
 
@@ -1323,7 +1408,7 @@
 }
 
 .list-view.channel-selection-list-view .list-cell:selected {
-    -fx-background-color: #262626;
+    -fx-background-color: -bisq-grey-4;
     -fx-fill: -bisq-black;
     -fx-text-fill: -bisq-black;
 }
@@ -1342,31 +1427,14 @@
 
 .list-view.chat-messages-list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-padding: 13 0 13 0;
+    -fx-padding: 13 -24 13 0;
     -fx-border-color: -bisq-grey-disabled;
+    -fx-border-insets: 0 24 0 0;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1em;
 }
 
 .list-view.chat-messages-list-view .list-cell:empty {
-    -fx-border-width: 0;
-}
-
-/* When used for create offer we dont show the border lines */
-.list-view.create-offer-list-view {
-    -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-width: 0;
-}
-
-.list-view.create-offer-list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-padding: 13 0 13 0;
-    -fx-border-width: 0;
-    -fx-font-size: 1em;
-}
-
-.list-view.create-offer-list-view .list-cell:empty {
     -fx-border-width: 0;
 }
 
@@ -1406,7 +1474,7 @@ tree-table-view:focused {
  ******************************************************************************/
 
 .table-view {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: transparent;
     -fx-border-width: 0;
     -fx-font-size: 1em;
 }
@@ -1418,7 +1486,7 @@ tree-table-view:focused {
 
 /* column-header */
 .table-view .column-header {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: transparent;
     -fx-pref-height: 54px;
 }
 
@@ -1484,7 +1552,7 @@ tree-table-view:focused {
 
 /* odd */
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-grey-19; /* design has 2 dif. greys on diff. screens -bisq-grey-19; -bisq-grey-17 */
+    -fx-background-color: -bisq-content-bg-grey;
 }
 
 /* disabled */
@@ -1838,6 +1906,11 @@ tree-table-view:focused {
 
 .overlay-headline-warning {
     -fx-font-size: 1.5em;
+    -fx-text-fill: -bisq-warning;
+}
+
+.overlay-headline-error {
+    -fx-font-size: 1.5em;
     -fx-text-fill: -bisq-red;
 }
 
@@ -1846,6 +1919,10 @@ tree-table-view:focused {
 }
 
 .overlay-icon-warning {
+    -fx-text-fill: -bisq-warning;
+}
+
+.overlay-icon-error {
     -fx-text-fill: -bisq-red;
 }
 

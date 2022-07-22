@@ -95,9 +95,10 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
     protected void onChildView(View<? extends Parent, ? extends Model, ? extends Controller> oldValue,
                                View<? extends Parent, ? extends Model, ? extends Controller> newValue) {
-        contentPane.getChildren().clear();
         if (newValue != null) {
-            contentPane.getChildren().add(newValue.getRoot());
+            contentPane.getChildren().setAll(newValue.getRoot());
+        } else {
+            contentPane.getChildren().clear();
         }
     }
 

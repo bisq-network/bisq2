@@ -36,6 +36,8 @@ import java.util.List;
 @Getter
 class ReviewOfferModel implements Model {
     @Setter
+    private boolean showMatchingOffers;
+    @Setter
     private PublicTradeChannel selectedChannel;
     @Setter
     private Direction direction;

@@ -26,7 +26,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,7 +37,7 @@ public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
     private final ChangeListener<ReputationSourceListItem> reputationSourceListener;
     private Subscription selectedSourcePin;
 
-    public BsqBondView(BsqBondModel model, BsqBondController controller, Pane userProfileSelection) {
+    public BsqBondView(BsqBondModel model, BsqBondController controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
@@ -64,13 +63,6 @@ public class BsqBondView extends View<VBox, BsqBondModel, BsqBondController> {
 
         VBox.setMargin(headLine, new Insets(25, 0, 0, 0));
         VBox.setMargin(userProfileSelectLabel, new Insets(30, 0, 0, 30));
-        VBox.setMargin(userProfileSelection, new Insets(0, 0, 0, 30));
-      /*  root.getChildren().addAll(headLine, info,
-                userProfileSelectLabel, userProfileSelection,
-                reputationSourcesComboBox,
-                pubKeyHashLabel,
-                txIdInputBox
-        );*/
         reputationSourceListener = (observable, oldValue, newValue) -> controller.onSelectSource(newValue);
     }
 

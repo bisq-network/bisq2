@@ -115,6 +115,10 @@ public class ReviewOfferController implements Controller {
         }
     }
 
+    public void setShowMatchingOffers(boolean showMatchingOffers) {
+        model.setShowMatchingOffers(showMatchingOffers);
+    }
+
     @Override
     public void onActivate() {
         PublicTradeChannel channel = publicTradeChannelService.findChannel(PublicTradeChannel.getId(model.getMarket())).orElseThrow();
@@ -152,7 +156,7 @@ public class ReviewOfferController implements Controller {
                 .limit(3)
                 .collect(Collectors.toList()));
 
-        model.getMatchingOffersFound().set(!model.getMatchingOffers().isEmpty());
+        model.getMatchingOffersFound().set(model.isShowMatchingOffers() && !model.getMatchingOffers().isEmpty());
     }
 
     @Override
