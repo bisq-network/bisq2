@@ -69,12 +69,12 @@ public class FxBindings {
 
 
     public static class ObservableListBindings<T, R> {
-        private final ObservableList<R> observer;
+        private final ObservableList<R> observableList;
         @SuppressWarnings("unchecked")
         private Function<T, R> mapFunction = e -> (R) e;
 
-        private ObservableListBindings(ObservableList<R> observer) {
-            this.observer = observer;
+        private ObservableListBindings(ObservableList<R> observableList) {
+            this.observableList = observableList;
         }
 
         public ObservableListBindings<T, R> map(Function<T, R> mapper) {
@@ -83,7 +83,7 @@ public class FxBindings {
         }
 
         public Pin to(ObservableSet<T> observable) {
-            return observable.addObserver(observer, mapFunction, UIThread::run);
+            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
         }
     }
 
