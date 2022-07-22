@@ -17,24 +17,38 @@
 
 package bisq.wallets.bitcoind.zmq;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqTests {
+@ExtendWith(BitcoindExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class BitcoindZeroMqRawTxIntegrationTests {
+
+    private final BitcoindRegtestSetup regtestSetup;
+    private final ZmqListeners zmqListeners;
+    private final BitcoindWallet minerWallet;
     private BitcoindWallet receiverWallet;
 
+    public BitcoindZeroMqRawTxIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        zmqListeners = regtestSetup.getZmqListeners();
+        minerWallet = regtestSetup.getMinerWallet();
+    }
+
     @BeforeAll
-    @Override
     public void start() throws IOException, InterruptedException {
-        super.start();
+        regtestSetup.mineInitialRegtestBlocks();
         receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
     }
 
@@ -42,10 +56,8 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
     void detectReceiverAddress() throws InterruptedException {
         CountDownLatch didReceiveNotificationLatch = new CountDownLatch(1);
 
-        BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
-
-        bitcoindZeroMq.getListeners().registerTxOutputAddressesListener(outputAddresses -> {
+        zmqListeners.registerTxOutputAddressesListener(outputAddresses -> {
             if (outputAddresses.contains(receiverAddress)) {
                 didReceiveNotificationLatch.countDown();
             }
@@ -63,11 +75,10 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
     void detectWhetherMyInputInTx() throws InterruptedException {
         CountDownLatch didReceiveNotificationLatch = new CountDownLatch(1);
 
-        BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
         String myTxId = minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 2);
 
-        bitcoindZeroMq.getListeners().registerTransactionIdInInputListener(txId -> {
+        zmqListeners.registerTransactionIdInInputListener(txId -> {
             if (txId.equals(myTxId)) {
                 didReceiveNotificationLatch.countDown();
             }

@@ -17,15 +17,26 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-import bisq.wallets.bitcoind.SharedBitcoindInstanceTests;
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindZeroMqConnectionInfoFinderIntegrationTests extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindZeroMqConnectionInfoFinderIntegrationTests {
+
+    private final BitcoindDaemon daemon;
+
+    public BitcoindZeroMqConnectionInfoFinderIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.daemon = regtestSetup.getDaemon();
+    }
+
     @Test
     void findConnectionInfo() {
         List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();

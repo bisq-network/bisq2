@@ -17,12 +17,16 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -31,7 +35,18 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindPsbtMultiSigIntegrationTests {
+
+    private final BitcoindRegtestSetup regtestSetup;
+    private final BitcoindDaemon daemon;
+    private final BitcoindWallet minerWallet;
+
+    public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        this.daemon = regtestSetup.getDaemon();
+        this.minerWallet = regtestSetup.getMinerWallet();
+    }
 
     @Test
     public void psbtMultiSigTest() throws MalformedURLException {

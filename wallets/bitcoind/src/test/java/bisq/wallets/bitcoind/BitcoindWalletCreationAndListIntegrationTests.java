@@ -18,9 +18,12 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.util.FileUtils;
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,23 +33,26 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BitcoindWalletCreationAndListIntegrationTests extends SharedBitcoindInstanceTests {
-    private Path walletFilePath;
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindWalletCreationAndListIntegrationTests {
 
-    @BeforeEach
-    void setUp() throws IOException {
-        Path tmpDir = FileUtils.createTempDir();
-        walletFilePath = tmpDir.resolve("wallet");
+    private final BitcoindDaemon daemon;
+    private final BitcoindWallet minerWallet;
+
+    public BitcoindWalletCreationAndListIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.daemon = regtestSetup.getDaemon();
+        this.minerWallet = regtestSetup.getMinerWallet();
     }
 
     @Test
     public void createFreshWallet() {
-        // SharedBitcoindInstanceTests creates a wallet for the miner automatically.
         assertEquals(0, minerWallet.getBalance());
     }
 
     @Test
-    public void loadWalletIfExisting() {
+    public void loadWalletIfExisting() throws IOException {
+        Path tmpDir = FileUtils.createTempDir();
+        Path walletFilePath = tmpDir.resolve("wallet");
         assertThat(walletFilePath).doesNotExist();
 
         // Create Wallet
@@ -67,7 +73,6 @@ public class BitcoindWalletCreationAndListIntegrationTests extends SharedBitcoin
     @Test
     void listWallets() {
         List<String> results = daemon.listWallets();
-        // SharedBitcoindInstanceTests creates a wallet for the miner automatically.
         assertThat(results).hasSize(1);
     }
 }

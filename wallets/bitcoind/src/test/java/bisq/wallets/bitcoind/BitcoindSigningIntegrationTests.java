@@ -17,16 +17,26 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BitcoindSigningIntegrationTests extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindSigningIntegrationTests {
     private static final String MESSAGE = "my message";
+
+    private final BitcoindWallet minerWallet;
+
+    public BitcoindSigningIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.minerWallet = regtestSetup.getMinerWallet();
+    }
 
     @Test
     public void signAndVerifyMessage() {

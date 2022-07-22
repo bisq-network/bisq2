@@ -17,31 +17,34 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindSendIntegrationTests extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindSendIntegrationTests {
 
-    private BitcoindWallet receiverBackend;
+    private final BitcoindRegtestSetup regtestSetup;
+    private final BitcoindWallet minerWallet;
 
-    @Override
-    @BeforeAll
-    public void start() throws IOException, InterruptedException {
-        super.start();
-        regtestSetup.mineInitialRegtestBlocks();
-        receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
+    public BitcoindSendIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        this.minerWallet = regtestSetup.getMinerWallet();
     }
 
     @Test
-    public void sendOneBtcToAddress() {
+    public void sendOneBtcToAddress() throws MalformedURLException {
+        regtestSetup.mineInitialRegtestBlocks();
+        BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
+
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
         minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
         regtestSetup.mineOneBlock();

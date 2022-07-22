@@ -17,12 +17,29 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindMineInitialRegtestBlocksIntegrationTest extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+public class BitcoindMineInitialRegtestBlocksIntegrationTest {
+
+    private final BitcoindRegtestSetup regtestSetup;
+    private final BitcoindDaemon daemon;
+    private final BitcoindWallet minerWallet;
+
+    public BitcoindMineInitialRegtestBlocksIntegrationTest(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        this.daemon = regtestSetup.getDaemon();
+        this.minerWallet = regtestSetup.getMinerWallet();
+    }
+
     @Test
     public void mineInitialRegtestBlocks() {
         String address = minerWallet.getNewAddress(AddressType.BECH32, "");

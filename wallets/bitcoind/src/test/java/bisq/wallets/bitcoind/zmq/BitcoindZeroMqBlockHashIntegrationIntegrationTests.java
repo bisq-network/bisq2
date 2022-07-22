@@ -17,10 +17,13 @@
 
 package bisq.wallets.bitcoind.zmq;
 
-import bisq.wallets.bitcoind.SharedBitcoindInstanceTests;
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
+import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 import java.util.Set;
@@ -29,13 +32,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@ExtendWith(BitcoindExtension.class)
 @Slf4j
-public class BitcoindZeroMqBlockHashIntegrationIntegrationTests extends SharedBitcoindInstanceTests {
+public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
 
+    private final BitcoindRegtestSetup regtestSetup;
+    private final BitcoindDaemon daemon;
     private final Set<String> minedBlockHashes = new CopyOnWriteArraySet<>();
 
     private final AtomicBoolean didListenerReceiveBlockHash = new AtomicBoolean();
     private final CountDownLatch listenerReceivedBlockHashLatch = new CountDownLatch(1);
+
+    public BitcoindZeroMqBlockHashIntegrationIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        daemon = regtestSetup.getDaemon();
+    }
 
     @Test
     void blockHashNotification() throws InterruptedException {
