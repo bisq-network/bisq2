@@ -865,6 +865,11 @@
     -fx-text-fill: rgba(255, 255, 255, 0.27);
 }
 
+.grey-outlined-button:disabled {
+    -fx-border-color: rgba(255, 255, 255, 0.15);
+    -fx-text-fill: rgba(255, 255, 255, 0.15);
+}
+
 .red-outlined-button {
     -fx-border-color: -bisq-red;
     -fx-text-fill: -bisq-red;

@@ -70,6 +70,7 @@ import javafx.scene.layout.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -102,6 +103,10 @@ public class ChatMessagesComponent {
 
     public void setOnShowChatUserDetails(Consumer<UserProfile> handler) {
         controller.model.showChatUserDetailsHandler = Optional.of(handler);
+    }
+
+    public void resetSelectedChatMessage() {
+        controller.model.selectedChatMessage = null;
     }
 
     public void openPrivateChannel(UserProfile peer) {
@@ -184,6 +189,8 @@ public class ChatMessagesComponent {
             } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
             }
+
+            Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
         }
 
         @Override
@@ -260,6 +267,7 @@ public class ChatMessagesComponent {
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {
+            model.selectedChatMessage = chatMessage;
             userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
@@ -295,6 +303,8 @@ public class ChatMessagesComponent {
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
         private final ChannelKind channelKind;
+        @Nullable
+        private ChatMessage selectedChatMessage;
         private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChannelKind channelKind) {

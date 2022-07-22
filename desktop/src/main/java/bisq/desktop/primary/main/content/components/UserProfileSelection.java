@@ -90,6 +90,10 @@ public class UserProfileSelection {
 
         @Override
         public void onDeactivate() {
+            // Need to clear list otherwise we get issues with binding when multiple 
+            // instances are used.
+            model.userProfiles.clear();
+
             selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
         }

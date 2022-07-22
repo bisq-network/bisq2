@@ -28,6 +28,8 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -68,8 +70,8 @@ public class UserProfileDisplay {
 
             UserProfile userProfile = userIdentity.getUserProfile();
             model.identityId = userProfile.getId();
-            model.statement = userProfile.getStatement();
-            model.terms = userProfile.getTerms();
+            model.statement.set(userProfile.getStatement());
+            model.terms.set(userProfile.getTerms());
             model.reputationScore = userProfile.getBurnScoreAsString();
             model.profileAge = userProfile.getAccountAgeAsString();
             model.nymId = userProfile.getNym();
@@ -81,6 +83,10 @@ public class UserProfileDisplay {
 
         @Override
         public void onActivate() {
+            userIdentityService.getSelectedUserProfile().addObserver(userIdentity -> {
+                model.statement.set(userIdentity.getUserProfile().getStatement());
+                model.terms.set(userIdentity.getUserProfile().getTerms());
+            });
         }
 
         @Override
@@ -97,18 +103,22 @@ public class UserProfileDisplay {
         }
 
         public void onDelete() {
-            new Popup().warning(Res.get("settings.userProfile.deleteProfile.warning"))
-                    .onAction(this::doDelete)
-                    .actionButtonText(Res.get("settings.userProfile.deleteProfile.warning.yes"))
-                    .closeButtonText(Res.get("cancel"))
-                    .show();
+            if (userIdentityService.getUserIdentities().size() < 2) {
+                new Popup().warning(Res.get("settings.userProfile.deleteProfile.lastProfile.warning")).show();
+            } else {
+                new Popup().warning(Res.get("settings.userProfile.deleteProfile.warning"))
+                        .onAction(this::doDelete)
+                        .actionButtonText(Res.get("settings.userProfile.deleteProfile.warning.yes"))
+                        .closeButtonText(Res.get("cancel"))
+                        .show();
+            }
         }
 
         private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
             return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
                     .whenComplete((result, throwable) -> {
                         if (throwable != null) {
-                            new Popup().warning(throwable.getMessage()).show();
+                            new Popup().error(throwable.getMessage()).show();
                         }
                     });
         }
@@ -119,14 +129,16 @@ public class UserProfileDisplay {
         private String nymId;
         private String nickName;
         private String identityId;
-        private String statement;
-        private String terms;
+        private final StringProperty statement = new SimpleStringProperty();
+        private final StringProperty terms = new SimpleStringProperty();
         private String reputationScore;
         private String profileAge;
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<GridPane, Model, Controller> {
+        private final MaterialTextArea terms;
+        private final MaterialTextField statement;
         private int rowIndex;
         private final Button editButton, deletedButton;
 
@@ -158,8 +170,8 @@ public class UserProfileDisplay {
             addField(Res.get("social.chatUser.identityId"), model.identityId, 0, ++rowIndex);
             addField(Res.get("social.chatUser.profileAge"), model.profileAge, 1, rowIndex);
             addField(Res.get("social.chatUser.reputationScore"), model.reputationScore, 0, ++rowIndex);
-            addTextArea(Res.get("social.chatUser.terms"), model.terms, 1, rowIndex);
-            addField(Res.get("social.chatUser.statement"), model.statement, 0, ++rowIndex);
+            terms = addTextArea(Res.get("social.chatUser.terms"), model.terms.get(), 1, rowIndex);
+            statement = addField(Res.get("social.chatUser.statement"), model.statement.get(), 0, ++rowIndex);
 
             deletedButton = new Button(Res.get("settings.userProfile.deleteProfile"));
             deletedButton.getStyleClass().addAll("outlined-button", "grey-outlined-button");
@@ -173,12 +185,16 @@ public class UserProfileDisplay {
 
         @Override
         protected void onViewAttached() {
+            statement.textProperty().bind(model.statement);
+            terms.textProperty().bind(model.terms);
             editButton.setOnAction(e -> controller.onEdit());
             deletedButton.setOnAction(e -> controller.onDelete());
         }
 
         @Override
         protected void onViewDetached() {
+            statement.textProperty().unbind();
+            terms.textProperty().unbind();
             editButton.setOnAction(null);
             deletedButton.setOnAction(null);
         }

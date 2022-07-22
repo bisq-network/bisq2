@@ -48,14 +48,22 @@ public class UserProfileController implements Controller {
     @Override
     public void onActivate() {
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
-                chatUserIdentity -> model.getUserProfileDisplayPane().set(
-                        new UserProfileDisplay(userIdentityService, chatUserIdentity).getRoot())
+                chatUserIdentity -> {
+                    if (model.getSelectedChatUserIdentity() == null ||
+                            (chatUserIdentity != null &&
+                                    !model.getSelectedChatUserIdentity().getId().equals(chatUserIdentity.getId()))) {
+                        model.setSelectedChatUserIdentity(chatUserIdentity);
+                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService, chatUserIdentity);
+                        model.getUserProfileDisplayPane().set(userProfileDisplay.getRoot());
+                    }
+                }
         );
     }
 
     @Override
     public void onDeactivate() {
         selectedUserProfilePin.unbind();
+        model.setSelectedChatUserIdentity(null);
     }
 
     public void onAddNewChatUser() {

@@ -71,8 +71,14 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userProfileService = applicationService.getUserService().getUserProfileService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
-        channelSidebar = new ChannelSidebar(applicationService, this::onCloseSideBar);
-        notificationsSidebar = new NotificationsSidebar(this::onCloseSideBar);
+        channelSidebar = new ChannelSidebar(applicationService, () -> {
+            onCloseSideBar();
+            chatMessagesComponent.resetSelectedChatMessage();
+        });
+        notificationsSidebar = new NotificationsSidebar(() -> {
+            onCloseSideBar();
+            chatMessagesComponent.resetSelectedChatMessage();
+        });
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createComponents();
@@ -92,7 +98,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             onCloseSideBar();
             model.getSideBarVisible().set(true);
 
-            UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService, chatService, chatUser, this::onCloseSideBar);
+            UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
+                    chatService,
+                    chatUser,
+                    () -> {
+                        onCloseSideBar();
+                        chatMessagesComponent.resetSelectedChatMessage();
+                    });
             model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
             userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
             userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
@@ -142,6 +154,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     public void onToggleNotifications() {
         boolean visible = !model.getNotificationsVisible().get();
         onCloseSideBar();
+        chatMessagesComponent.resetSelectedChatMessage();
         model.getNotificationsVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
@@ -153,6 +166,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     public void onToggleChannelInfo() {
         boolean visible = !model.getChannelInfoVisible().get();
         onCloseSideBar();
+        chatMessagesComponent.resetSelectedChatMessage();
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
         model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
