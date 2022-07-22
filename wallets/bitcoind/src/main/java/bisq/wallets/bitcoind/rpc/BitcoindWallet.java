@@ -22,9 +22,13 @@ import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;
+import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
 
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -33,10 +37,22 @@ import java.util.concurrent.TimeUnit;
 public class BitcoindWallet {
 
     private static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.SECONDS.toSeconds(15);
+    private final BitcoindDaemon daemon;
     private final WalletRpcClient rpcClient;
 
-    public BitcoindWallet(WalletRpcClient rpcClient) {
-        this.rpcClient = rpcClient;
+    public BitcoindWallet(BitcoindDaemon daemon, RpcConfig rpcConfig, Path walletPath) throws MalformedURLException {
+        this.daemon = daemon;
+        this.rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
+    }
+
+    public void initialize(Optional<String> passphrase) {
+        Path walletPath = rpcClient.getWalletPath();
+        daemon.createOrLoadWallet(walletPath, passphrase);
+    }
+
+    public void shutdown() {
+        Path walletPath = rpcClient.getWalletPath();
+        daemon.unloadWallet(walletPath);
     }
 
     public BitcoindAddMultisigAddressResponse addMultiSigAddress(int nRequired, List<String> keys) {

@@ -110,7 +110,6 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return createNewWallet(receiverWalletPath);
     }
 
-    @Override
     public ElementsdWallet createNewWallet(Path walletPath) throws MalformedURLException {
         if (loadedWalletPaths.contains(walletPath)) {
             throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +

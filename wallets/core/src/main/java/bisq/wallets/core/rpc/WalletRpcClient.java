@@ -22,6 +22,8 @@ import bisq.wallets.core.rpc.call.RpcCall;
 import bisq.wallets.core.rpc.call.WalletRpcCall;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
+import java.nio.file.Path;
+
 public class WalletRpcClient extends AbstractRpcClient {
 
     private final JsonRpcHttpClient walletJsonRpcClient;
@@ -48,5 +50,12 @@ public class WalletRpcClient extends AbstractRpcClient {
         }
     }
 
+    public Path getWalletPath() {
+        // URL looks like: http://127.0.0.1:45775/wallet//tmp/2035361932108224852/miner_wallet
+        String filePart = walletJsonRpcClient.getServiceUrl().getFile();
+        int startIndex = "/wallet/".length();
+        String walletPath = filePart.substring(startIndex);
+        return Path.of(walletPath);
+    }
 
 }

@@ -33,7 +33,7 @@ public class ElementsdPeginBtcIntegrationTests extends SharedElementsdInstanceTe
     }
 
     @Test
-    void claimPegin() {
+    void claimPegin() throws InterruptedException {
         ElementsdGetPeginAddressResponse peginAddressResponse = elementsdMinerWallet.getPeginAddress();
 
         String bitcoindTxId = bitcoindRegtestSetup.fundAddress(peginAddressResponse.getMainChainAddress(), 20);

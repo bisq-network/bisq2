@@ -17,35 +17,64 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class BitcoindSendUnconfirmedTxIntegrationTests extends SharedBitcoindInstanceTests {
+@ExtendWith(BitcoindExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class BitcoindSendUnconfirmedTxIntegrationTests {
 
-    private BitcoindWallet receiverBackend;
+    private final BitcoindRegtestSetup regtestSetup;
+    private final ZmqListeners zmqListeners;
+    private final BitcoindWallet minerWallet;
 
-    @Override
+    private BitcoindWallet receiverWallet;
+
+    public BitcoindSendUnconfirmedTxIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        this.regtestSetup = regtestSetup;
+        this.zmqListeners = regtestSetup.getZmqListeners();
+        this.minerWallet = regtestSetup.getMinerWallet();
+    }
+
     @BeforeAll
     public void start() throws IOException, InterruptedException {
-        super.start();
         regtestSetup.mineInitialRegtestBlocks();
-        receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
+        receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
     }
 
     @Test
-    public void sendBtcAndCheckIfUnconfirmedBalanceIncluded() {
-        String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
+    public void sendBtcAndCheckIfUnconfirmedBalanceIncluded() throws InterruptedException {
+        CountDownLatch didReceiveNotificationLatch = new CountDownLatch(1);
+
+        String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
+        zmqListeners.registerTxOutputAddressesListener(outputAddresses -> {
+            if (outputAddresses.contains(receiverAddress)) {
+                didReceiveNotificationLatch.countDown();
+            }
+        });
+
         minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
 
-        assertThat(receiverBackend.getBalance())
+        boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);
+        if (!await) {
+            throw new IllegalStateException("Didn't receive ZMQ notification after 1 minute.");
+        }
+
+        assertThat(receiverWallet.getBalance())
                 .isEqualTo(1);
     }
 }

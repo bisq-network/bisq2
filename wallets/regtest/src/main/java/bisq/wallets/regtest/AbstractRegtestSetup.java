@@ -22,7 +22,6 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.regtest.process.BisqProcess;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -47,11 +46,9 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements 
         daemonProcess.shutdown();
     }
 
-    public abstract List<String> mineOneBlock();
+    public abstract List<String> mineOneBlock() throws InterruptedException;
 
-    public abstract W createNewWallet(Path walletPath) throws MalformedURLException;
-
-    public abstract void fundWallet(W receiverWallet, double amount);
+    public abstract void fundWallet(W receiverWallet, double amount) throws InterruptedException;
 
     public abstract RpcConfig getRpcConfig();
 }

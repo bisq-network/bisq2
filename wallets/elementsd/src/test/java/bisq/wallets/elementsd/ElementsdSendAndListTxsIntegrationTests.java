@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendLBtcAndListTxs() throws MalformedURLException {
+    public void sendLBtcAndListTxs() throws MalformedURLException, InterruptedException {
         peginBtc(20);
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
