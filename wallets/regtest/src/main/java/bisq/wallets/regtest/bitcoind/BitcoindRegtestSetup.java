@@ -20,7 +20,12 @@ package bisq.wallets.regtest.bitcoind;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.bitcoind.zmq.BitcoindRawTxProcessor;
+import bisq.wallets.bitcoind.zmq.ZmqConnection;
+import bisq.wallets.bitcoind.zmq.ZmqListeners;
+import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.DaemonRpcClient;
@@ -50,7 +55,11 @@ public class BitcoindRegtestSetup
     private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
 
     @Getter
+    private final ZmqListeners zmqListeners = new ZmqListeners();
+
+    @Getter
     private final BitcoindWallet minerWallet;
+    private ZmqConnection bitcoindZeroMq;
 
     public BitcoindRegtestSetup() throws IOException {
         this(false);
@@ -75,6 +84,7 @@ public class BitcoindRegtestSetup
     @Override
     public void start() throws IOException, InterruptedException {
         super.start();
+        initializeZmqListeners();
         initializeWallet(minerWallet);
 
         if (doMineInitialRegtestBlocks) {
@@ -84,6 +94,7 @@ public class BitcoindRegtestSetup
 
     @Override
     public void shutdown() {
+        bitcoindZeroMq.close();
         loadedWallets.forEach(BitcoindWallet::shutdown);
         super.shutdown();
     }
@@ -106,6 +117,16 @@ public class BitcoindRegtestSetup
             throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
                     "'. It exists already.");
         }
+    }
+
+    @SuppressWarnings("resource")
+    private void initializeZmqListeners() {
+        var bitcoindRawTxProcessor = new BitcoindRawTxProcessor(daemon, zmqListeners);
+        var bitcoindZmqTopicProcessors = new ZmqTopicProcessors(bitcoindRawTxProcessor, zmqListeners);
+        bitcoindZeroMq = new ZmqConnection(bitcoindZmqTopicProcessors, zmqListeners);
+
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        bitcoindZeroMq.initialize(zmqNotifications);
     }
 
     private void initializeWallet(BitcoindWallet wallet) {
