@@ -28,7 +28,4 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class UserProfileModel implements Model {
     private final ObjectProperty<Pane> userProfileDisplayPane = new SimpleObjectProperty<>();
-
-    public UserProfileModel() {
-    }
 }

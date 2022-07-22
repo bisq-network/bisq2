@@ -22,7 +22,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.user.identity.UserIdentityService;
@@ -42,10 +41,8 @@ public class BsqBondController implements Controller {
 
     public BsqBondController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
-
         model = new BsqBondModel();
-        view = new BsqBondView(model, this, userProfileSelection.getRoot());
+        view = new BsqBondView(model, this);
         model.getSources().setAll(Stream.of(Reputation.Source.values())
                 .filter(e -> e != Reputation.Source.PROFILE_AGE)
                 .map(ReputationSourceListItem::new)

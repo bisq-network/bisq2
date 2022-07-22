@@ -60,10 +60,6 @@ public class UserProfileSelection {
         return controller.view.getRoot();
     }
 
-    public void setComboBoxWidth(double width) {
-        controller.model.comboBoxWidth.set(width);
-    }
-
     public void setIsLeftAligned(boolean isLeftAligned) {
         controller.model.isLeftAligned.set(isLeftAligned);
     }
@@ -94,15 +90,8 @@ public class UserProfileSelection {
 
         @Override
         public void onDeactivate() {
-            if (selectedUserProfilePin != null) {
-                selectedUserProfilePin.unbind();
-            }
+            selectedUserProfilePin.unbind();
             userProfilesPin.unbind();
-        }
-
-        @Override
-        public boolean useCaching() {
-            return false;
         }
 
         private void onSelected(ListItem selectedItem) {
@@ -134,7 +123,7 @@ public class UserProfileSelection {
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
-            root.getChildren().addAll(comboBox);
+            root.getChildren().setAll(comboBox);
         }
 
         @Override
@@ -149,7 +138,6 @@ public class UserProfileSelection {
         @Override
         protected void onViewDetached() {
             comboBox.prefWidthProperty().unbind();
-            comboBox.setOnChangeConfirmed(null);
             selectedUserProfilePin.unsubscribe();
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
@@ -166,7 +154,7 @@ public class UserProfileSelection {
 
         @Override
         public String toString() {
-            return userIdentity.getNickName();
+            return userIdentity.getUserName();
         }
     }
 
@@ -190,7 +178,6 @@ public class UserProfileSelection {
                 {
                     label = new Label();
                     label.setMouseTransparent(true);
-                   // label.getStyleClass().add("bisq-input-box-text-input");
 
                     imageView = new ImageView();
                     imageView.setFitWidth(UserProfileSkin.ICON_SIZE);
@@ -204,6 +191,7 @@ public class UserProfileSelection {
                         hBox.setAlignment(Pos.CENTER_RIGHT);
                         hBox.getChildren().addAll(label, imageView);
                     } else {
+                        hBox.setAlignment(Pos.CENTER_LEFT);
                         hBox.getChildren().addAll(imageView, label);
                     }
                 }
@@ -214,7 +202,7 @@ public class UserProfileSelection {
 
                     if (item != null && !empty) {
                         imageView.setImage(RoboHash.getImage(item.userIdentity.getPubKeyHash()));
-                        label.setText(item.userIdentity.getNickName());
+                        label.setText(item.userIdentity.getUserName());
 
                         labelWidthListener = (observable, oldValue, newValue) -> {
                             if (newValue.doubleValue() > 0) {
@@ -253,13 +241,13 @@ public class UserProfileSelection {
         protected Skin<?> createDefaultSkin() {
             if (skin == null) {
                 skin = new UserProfileSkin(this, description, prompt);
-                editor = skin.getMaterialTextField().getInputTextField();
+                editor = skin.getMaterialTextField().getField();
             }
             return skin;
         }
 
         private double calculateWidth(Label label) {
-            double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 70;
+            double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 80;
             return Math.max(width, UserProfileComboBox.this.getPrefWidth());
         }
 
@@ -302,7 +290,7 @@ public class UserProfileSelection {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
                         imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
-                        label.setText(userIdentity.getNickName());
+                        label.setText(userIdentity.getUserName());
                         buttonPane.layout();
                     }
                 }

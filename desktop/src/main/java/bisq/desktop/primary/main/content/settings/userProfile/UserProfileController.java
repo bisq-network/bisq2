@@ -22,7 +22,6 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -61,14 +60,5 @@ public class UserProfileController implements Controller {
 
     public void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
-    }
-
-    public void onDeleteChatUser() {
-        userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        new Popup().warning(throwable.getMessage()).show();
-                    }
-                });
     }
 }

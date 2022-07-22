@@ -31,7 +31,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.skin.ComboBoxListViewSkin;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -60,7 +60,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected List<? extends T> extendedList;
     protected List<T> matchingList;
     protected Skin<T> skin;
-    protected TextField editor;
+    protected TextInputControl editor;
 
     public AutoCompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -117,7 +117,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
         return skin;
     }
 
-    public TextField getEditorTextField() {
+    public TextInputControl getEditorTextField() {
         return editor;
     }
 
@@ -125,7 +125,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     protected javafx.scene.control.Skin<?> createDefaultSkin() {
         if (skin == null) {
             skin = new Skin<>(this, description, prompt);
-            editor = skin.getMaterialTextField().getInputTextField();
+            editor = skin.getMaterialTextField().getField();
         }
         return skin;
     }
@@ -164,21 +164,23 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
      * on every (unconfirmed) value change. The onAction is not really
      * suitable for the search enabled ComboBox.
      */
-    public final void setOnChangeConfirmed(EventHandler<Event> eh) {
+    public final void setOnChangeConfirmed(EventHandler<Event> eventHandler) {
+        if (eventHandler == null) {
+            return;
+        }
         setOnHidden(e -> {
             String inputText = editor.getText();
-
             // Case 1: fire if input text selects (matches) an item
             String selectedItemAsString = getConverter().toString(getSelectionModel().getSelectedItem());
             if (selectedItemAsString != null && selectedItemAsString.equals(inputText)) {
-                eh.handle(e);
+                eventHandler.handle(e);
                 getParent().requestFocus();
                 return;
             }
 
             // Case 2: fire if the text is empty to support special "show all" case
             if (inputText.isEmpty()) {
-                eh.handle(e);
+                eventHandler.handle(e);
                 getParent().requestFocus();
             }
         });

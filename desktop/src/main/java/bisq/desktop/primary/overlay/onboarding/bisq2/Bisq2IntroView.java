@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.onboarding.bisq2;
 
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -72,11 +73,13 @@ public class Bisq2IntroView extends View<VBox, Bisq2IntroModel, Bisq2IntroContro
     @Override
     protected void onViewAttached() {
         nextButton.setOnMouseClicked(e -> controller.onNext());
+        root.setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEnterKeyEvent(keyEvent, controller::onNext));
     }
 
     @Override
     protected void onViewDetached() {
         nextButton.setOnMouseClicked(null);
+        root.setOnKeyReleased(null);
     }
 
     private VBox getWidgetBox(String headline, String content, String imageId) {

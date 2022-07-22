@@ -222,7 +222,6 @@ public class ComboBoxOverlay<T> {
         comboBox.getAutoCompleteComboBoxSkin().getListView().heightProperty().removeListener(heightListener);
         stage.setOnCloseRequest(null);
         scene.setOnKeyPressed(null);
-        comboBox.setOnChangeConfirmed(null);
     }
 
     protected void layoutListView() {

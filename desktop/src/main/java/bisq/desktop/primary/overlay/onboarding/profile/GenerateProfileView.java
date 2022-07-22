@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.overlay.onboarding.profile;
 
+import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.primary.overlay.OverlayModel;
@@ -90,7 +91,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         VBox nymBox = new VBox(titleLabel, nym);
         nymBox.setAlignment(Pos.CENTER);
 
-        nickname = new MaterialTextField(Res.get("addNickName.nickName"), Res.get("addNickName.nickName.prompt"));
+        nickname = new MaterialTextField(Res.get("social.chatUser.nickName"), Res.get("addNickName.nickName.prompt"));
         nickname.setMinWidth(width);
         nickname.setMaxWidth(width);
 
@@ -99,7 +100,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         roboVBox.setPrefWidth(width);
         roboVBox.setPrefHeight(200);
 
-        HBox.setMargin(nickname, new Insets(-20, 0, 0, 0));
+        HBox.setMargin(nickname, new Insets(-40, 0, 0, 0));
         HBox centerHBox = new HBox(10, roboVBox, nickname);
         centerHBox.setAlignment(Pos.CENTER);
 
@@ -161,6 +162,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
             root.requestFocus();
         });
 
+        root.setOnKeyReleased(keyEvent -> KeyHandlerUtil.handleEnterKeyEvent(keyEvent, controller::onCreateUserProfile));
+
         nickname.requestFocus();
     }
 
@@ -190,5 +193,6 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         regenerateButton.setOnMouseClicked(null);
         roboIconView.setOnMouseClicked(null);
         createProfileButton.setOnMouseClicked(null);
+        root.setOnKeyReleased(null);
     }
 }

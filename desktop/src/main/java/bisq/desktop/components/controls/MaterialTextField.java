@@ -26,6 +26,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -36,13 +37,13 @@ import java.lang.ref.WeakReference;
 
 @Slf4j
 public class MaterialTextField extends Pane {
-    private final Region bg, line, selectionLine;
-    private final Label descriptionLabel;
-    private final TextField inputTextField;
-    private final Label helpLabel;
-    private final StringProperty promptProperty = new SimpleStringProperty();
-    private final StringProperty descriptionProperty = new SimpleStringProperty();
-    private final StringProperty helpProperty = new SimpleStringProperty();
+    protected final Region bg, line, selectionLine;
+    protected final Label descriptionLabel;
+    protected final TextInputControl field;
+    protected final Label helpLabel;
+    protected final StringProperty promptProperty = new SimpleStringProperty();
+    protected final StringProperty descriptionProperty = new SimpleStringProperty();
+    protected final StringProperty helpProperty = new SimpleStringProperty();
 
     public MaterialTextField() {
         this(null, null, null);
@@ -62,19 +63,16 @@ public class MaterialTextField extends Pane {
         helpProperty.set(help);
 
         bg = new Region();
-        bg.setMinHeight(56);
-        bg.setMaxHeight(56);
-        bg.setStyle("-fx-background-radius: 4 4 0 0;");
         bg.getStyleClass().add("material-text-field-bg");
 
         line = new Region();
-        line.setLayoutY(55);
+
         line.setPrefHeight(1);
         line.setStyle("-fx-background-color: -bisq-grey-dimmed");
         line.setMouseTransparent(true);
 
         selectionLine = new Region();
-        selectionLine.setLayoutY(54);
+
         selectionLine.setPrefHeight(2);
         selectionLine.getStyleClass().add("bisq-green-line");
         selectionLine.setMouseTransparent(true);
@@ -87,29 +85,27 @@ public class MaterialTextField extends Pane {
             descriptionLabel.setText(description);
         }
 
-        inputTextField = new TextField();
-        inputTextField.setLayoutX(6.5);
-        inputTextField.setLayoutY(18);
-        inputTextField.getStyleClass().add("material-text-field");
+        field = createTextInputControl();
+        field.setLayoutX(6.5);
+        field.getStyleClass().add("material-text-field");
         if (prompt != null) {
-            inputTextField.setPromptText(prompt);
+            field.setPromptText(prompt);
         }
 
         helpLabel = new Label();
         helpLabel.setLayoutX(16);
-        helpLabel.setLayoutY(59.5);
         helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-dimmed; -fx-font-family: \"IBM Plex Sans Light\";");
         helpLabel.setMouseTransparent(true);
         if (help != null) {
             helpLabel.setText(help);
         }
 
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, inputTextField, helpLabel);
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, field, helpLabel);
 
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 onWidthChanged((double) newValue)).get());
 
-        inputTextField.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
+        field.focusedProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 onInputTextFieldFocus(newValue)).get());
         descriptionProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
@@ -117,47 +113,80 @@ public class MaterialTextField extends Pane {
                 update()).get());
         helpProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
-        inputTextField.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
+        field.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
+                update()).get());
+        disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
 
-        bg.setOnMousePressed(e -> inputTextField.requestFocus());
+        bg.setOnMousePressed(e -> field.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());
         bg.setOnMouseExited(e -> onMouseExited());
-        inputTextField.setOnMouseEntered(e -> onMouseEntered());
-        inputTextField.setOnMouseExited(e -> onMouseExited());
+        field.setOnMouseEntered(e -> onMouseEntered());
+        field.setOnMouseExited(e -> onMouseExited());
 
+        doLayout();
         update();
+    }
+
+    protected void doLayout() {
+        bg.setMinHeight(getBgHeight());
+        bg.setMaxHeight(getBgHeight());
+        line.setLayoutY(getBgHeight() - 1);
+        selectionLine.setLayoutY(getBgHeight() - 2);
+        field.setLayoutY(getFieldLayoutY());
+    }
+
+    protected TextInputControl createTextInputControl() {
+        return new TextField();
     }
 
     @Override
     protected double computeMinHeight(double width) {
-        double h = super.computeMinHeight(width);
         if (helpLabel.isManaged()) {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
         } else {
-            return h;
+            return getBgHeight();
         }
     }
 
-    private void onMouseEntered() {
+    @Override
+    protected double computeMaxHeight(double width) {
+        return computeMinHeight(width);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        return computeMinHeight(width);
+    }
+
+    protected void onMouseEntered() {
+        if (!field.isEditable()) {
+            return;
+        }
         removeBgStyles();
-        if (inputTextField.isFocused()) {
+        if (field.isFocused()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg-hover");
         }
     }
 
-    private void onMouseExited() {
+    protected void onMouseExited() {
+        if (!field.isEditable()) {
+            return;
+        }
         removeBgStyles();
-        if (inputTextField.isFocused()) {
+        if (field.isFocused()) {
             bg.getStyleClass().add("material-text-field-bg-selected");
         } else {
             bg.getStyleClass().add("material-text-field-bg");
         }
     }
 
-    private void onInputTextFieldFocus(boolean focus) {
+    protected void onInputTextFieldFocus(boolean focus) {
+        if (!field.isEditable()) {
+            return;
+        }
         if (focus) {
             selectionLine.setPrefWidth(0);
             selectionLine.setOpacity(1);
@@ -169,13 +198,13 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    private void onWidthChanged(double width) {
+    protected void onWidthChanged(double width) {
         if (width > 0) {
             bg.setPrefWidth(width);
             line.setPrefWidth(width);
-            selectionLine.setPrefWidth(inputTextField.isFocused() ? width : 0);
+            selectionLine.setPrefWidth(field.isFocused() ? width : 0);
             descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
-            inputTextField.setPrefWidth(width - 2 * inputTextField.getLayoutX());
+            field.setPrefWidth(width - 2 * field.getLayoutX());
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
         }
     }
@@ -192,7 +221,7 @@ public class MaterialTextField extends Pane {
         helpLabel.setManaged(helpProperty.get() != null);
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
-        inputTextField.getStyleClass().remove("material-text-field-read-only");
+        field.getStyleClass().remove("material-text-field-read-only");
         if (showInputTextField()) {
             descriptionLabel.getStyleClass().remove("material-text-field-description-big");
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
@@ -200,7 +229,7 @@ public class MaterialTextField extends Pane {
             descriptionLabel.getStyleClass().remove("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-big");
         }
-        if (inputTextField.isFocused()) {
+        if (field.isFocused()) {
             descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
             descriptionLabel.getStyleClass().add("material-text-field-description-selected");
         } else {
@@ -208,43 +237,45 @@ public class MaterialTextField extends Pane {
             descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
         }
 
-        if (inputTextField.isEditable()) {
+        if (field.isEditable()) {
             bg.setMouseTransparent(false);
-            inputTextField.setMouseTransparent(false);
+            line.setOpacity(1);
         } else {
             bg.setMouseTransparent(true);
-            inputTextField.setMouseTransparent(true);
-
+            line.setOpacity(0.25);
+            descriptionLabel.getStyleClass().remove("material-text-field-description-big");
             descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
             descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
+            descriptionLabel.getStyleClass().add("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
-            inputTextField.getStyleClass().add("material-text-field-read-only");
+            field.getStyleClass().add("material-text-field-read-only");
         }
+        setOpacity(field.isDisabled() ? 0.35 : 1);
     }
 
-    private void removeBgStyles() {
+    protected void removeBgStyles() {
         bg.getStyleClass().remove("material-text-field-bg-hover");
         bg.getStyleClass().remove("material-text-field-bg-selected");
         bg.getStyleClass().remove("material-text-field-bg");
     }
 
-    private boolean showInputTextField() {
-        return promptProperty.get() != null || ((inputTextField.getText() != null &&
-                !inputTextField.getText().isEmpty()) ||
-                inputTextField.isFocused());
+    protected boolean showInputTextField() {
+        return promptProperty.get() != null || ((field.getText() != null &&
+                !field.getText().isEmpty()) ||
+                field.isFocused());
     }
 
     public void requestFocus() {
-        inputTextField.requestFocus();
+        field.requestFocus();
     }
 
     public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
         setOnMousePressed(handler);
-        inputTextField.setOnMousePressed(handler);
+        field.setOnMousePressed(handler);
     }
 
     public final StringProperty promptTextProperty() {
-        return inputTextField.promptTextProperty();
+        return field.promptTextProperty();
     }
 
     public final StringProperty descriptionProperty() {
@@ -252,19 +283,19 @@ public class MaterialTextField extends Pane {
     }
 
     public final StringProperty textProperty() {
-        return inputTextField.textProperty();
+        return field.textProperty();
     }
 
     public ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
-        return inputTextField.focusedProperty();
+        return field.focusedProperty();
     }
 
     public String getText() {
-        return inputTextField.getText();
+        return field.getText();
     }
 
     public void setText(String value) {
-        inputTextField.setText(value);
+        field.setText(value);
         update();
     }
 
@@ -277,14 +308,23 @@ public class MaterialTextField extends Pane {
     }
 
     public void setEditable(boolean value) {
-        inputTextField.setEditable(value);
+        field.setEditable(value);
+        update();
     }
 
-    public TextField getInputTextField() {
-        return inputTextField;
+    public TextInputControl getField() {
+        return field;
     }
 
     Label getDescriptionLabel() {
         return descriptionLabel;
+    }
+
+    protected double getBgHeight() {
+        return 56;
+    }
+
+    protected double getFieldLayoutY() {
+        return 18;
     }
 }
