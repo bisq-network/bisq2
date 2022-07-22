@@ -62,7 +62,7 @@ public abstract class SharedElementsdInstanceTests
         elementsdMinerWallet = elementsdRegtestSetup.getMinerWallet();
     }
 
-    protected void peginBtc(double amount) {
+    protected void peginBtc(double amount) throws InterruptedException {
         ElementsdGetPeginAddressResponse peginAddressResponse = elementsdMinerWallet.getPeginAddress();
 
         String bitcoindTxId = bitcoindRegtestSetup.fundAddress(peginAddressResponse.getMainChainAddress(), amount);

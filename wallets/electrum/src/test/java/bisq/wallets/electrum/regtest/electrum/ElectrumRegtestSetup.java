@@ -89,12 +89,12 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
     }
 
     @Override
-    public void fundWallet(ElectrumDaemon receiverWallet, double amount) {
+    public void fundWallet(ElectrumDaemon receiverWallet, double amount) throws InterruptedException {
         String address = electrumDaemon.getUnusedAddress();
         fundAddress(address, amount);
     }
 
-    public String fundAddress(String address, double amount) {
+    public String fundAddress(String address, double amount) throws InterruptedException {
         return bitcoindRegtestSetup.fundAddress(address, amount);
     }
 

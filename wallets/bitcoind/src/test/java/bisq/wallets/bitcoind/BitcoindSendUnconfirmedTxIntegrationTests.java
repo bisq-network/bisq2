@@ -41,7 +41,7 @@ public class BitcoindSendUnconfirmedTxIntegrationTests {
     }
 
     @Test
-    public void sendBtcAndCheckIfUnconfirmedBalanceIncluded() throws MalformedURLException {
+    public void sendBtcAndCheckIfUnconfirmedBalanceIncluded() throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
         BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
 

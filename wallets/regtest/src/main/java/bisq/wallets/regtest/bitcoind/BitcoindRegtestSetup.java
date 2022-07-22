@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BitcoindRegtestSetup
@@ -136,27 +137,33 @@ public class BitcoindRegtestSetup
         loadedWallets.add(wallet);
     }
 
-    public void mineInitialRegtestBlocks() {
-        String address = minerWallet.getNewAddress(AddressType.BECH32, "");
-        daemon.generateToAddress(101, address);
+    public void mineInitialRegtestBlocks() throws InterruptedException {
+        mineBlocks(101);
     }
 
     @Override
-    public List<String> mineOneBlock() {
+    public List<String> mineOneBlock() throws InterruptedException {
         return mineBlocks(1);
     }
 
-    public List<String> mineBlocks(int numberOfBlocks) {
+    public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {
+        CountDownLatch blocksMinedLatch = registerWaitUntilNBlocksMinedListener(numberOfBlocks);
         String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
-        return daemon.generateToAddress(numberOfBlocks, minerAddress);
+        List<String> blockHashes = daemon.generateToAddress(numberOfBlocks, minerAddress);
+
+        boolean allBlocksMined = blocksMinedLatch.await(15, TimeUnit.SECONDS);
+        if (!allBlocksMined) {
+            throw new IllegalStateException("Couldn't mine " + numberOfBlocks + " blocks");
+        }
+        return blockHashes;
     }
 
     @Override
-    public void fundWallet(BitcoindWallet receiverWallet, double amount) {
+    public void fundWallet(BitcoindWallet receiverWallet, double amount) throws InterruptedException {
         sendBtcAndMineOneBlock(minerWallet, receiverWallet, amount);
     }
 
-    public String fundAddress(String address, double amount) {
+    public String fundAddress(String address, double amount) throws InterruptedException {
         String txId = minerWallet.sendToAddress(Optional.of(WALLET_PASSPHRASE), address, amount);
         mineOneBlock();
         return txId;
@@ -164,7 +171,7 @@ public class BitcoindRegtestSetup
 
     public String sendBtcAndMineOneBlock(BitcoindWallet senderWallet,
                                          BitcoindWallet receiverWallet,
-                                         double amount) {
+                                         double amount) throws InterruptedException {
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
         senderWallet.sendToAddress(Optional.of(WALLET_PASSPHRASE), receiverAddress, amount);
         mineOneBlock();

@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ElementsdSendAndListUnspentIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void listUnspent() throws MalformedURLException {
+    public void listUnspent() throws MalformedURLException, InterruptedException {
         peginBtc(20);
         ElementsdWallet receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

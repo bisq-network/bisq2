@@ -46,9 +46,9 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements 
         daemonProcess.shutdown();
     }
 
-    public abstract List<String> mineOneBlock();
+    public abstract List<String> mineOneBlock() throws InterruptedException;
 
-    public abstract void fundWallet(W receiverWallet, double amount);
+    public abstract void fundWallet(W receiverWallet, double amount) throws InterruptedException;
 
     public abstract RpcConfig getRpcConfig();
 }

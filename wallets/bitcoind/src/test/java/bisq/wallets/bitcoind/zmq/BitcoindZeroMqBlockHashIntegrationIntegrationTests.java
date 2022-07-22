@@ -30,48 +30,49 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @ExtendWith(BitcoindExtension.class)
 @Slf4j
 public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
 
     private final BitcoindRegtestSetup regtestSetup;
-    private final BitcoindDaemon daemon;
     private final Set<String> minedBlockHashes = new CopyOnWriteArraySet<>();
-
-    private final AtomicBoolean didListenerReceiveBlockHash = new AtomicBoolean();
     private final CountDownLatch listenerReceivedBlockHashLatch = new CountDownLatch(1);
 
     public BitcoindZeroMqBlockHashIntegrationIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.regtestSetup = regtestSetup;
-        daemon = regtestSetup.getDaemon();
     }
 
     @Test
     void blockHashNotification() throws InterruptedException {
-        var zmqListeners = new ZmqListeners();
-        var bitcoindRawTxProcessor = new BitcoindRawTxProcessor(daemon, zmqListeners);
-
-        var bitcoindZmqTopicProcessors = new ZmqTopicProcessors(bitcoindRawTxProcessor, zmqListeners);
-        var bitcoindZeroMq = new ZmqConnection(bitcoindZmqTopicProcessors, zmqListeners);
-
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
-        bitcoindZeroMq.initialize(zmqNotifications);
-
+        ZmqListeners zmqListeners = regtestSetup.getZmqListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
             log.info("Notification: New block with hash " + blockHash);
+
             if (minedBlockHashes.contains(blockHash)) {
-                didListenerReceiveBlockHash.set(true);
                 listenerReceivedBlockHashLatch.countDown();
+            } else {
+                minedBlockHashes.add(blockHash);
             }
         });
 
         createAndStartDaemonThread(() -> {
-            while (!didListenerReceiveBlockHash.get()) {
-                List<String> blockHashes = regtestSetup.mineOneBlock();
-                minedBlockHashes.addAll(blockHashes);
-                log.info("Mined Block: " + blockHashes);
+            while (true) {
+                try {
+                    List<String> blockHashes = regtestSetup.mineOneBlock();
+                    log.info("Mined block: " + blockHashes);
+
+                    for (String blockHash : blockHashes) {
+                        if (minedBlockHashes.contains(blockHash)) {
+                            listenerReceivedBlockHashLatch.countDown();
+                            return;
+                        } else {
+                            minedBlockHashes.add(blockHash);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
@@ -79,8 +80,6 @@ public class BitcoindZeroMqBlockHashIntegrationIntegrationTests {
         if (!await) {
             throw new IllegalStateException("Didn't connect to bitcoind after 1 minute.");
         }
-
-        bitcoindZeroMq.close();
     }
 
     private void createAndStartDaemonThread(Runnable runnable) {

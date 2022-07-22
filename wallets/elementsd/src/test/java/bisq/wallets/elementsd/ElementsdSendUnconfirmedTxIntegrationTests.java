@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdInstanceTests {
     @Test
-    public void sendOneLBtcToAddress() throws MalformedURLException {
+    public void sendOneLBtcToAddress() throws MalformedURLException, InterruptedException {
         peginBtc(20);
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

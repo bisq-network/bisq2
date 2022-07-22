@@ -49,7 +49,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     }
 
     @Test
-    public void psbtMultiSigTest() throws MalformedURLException {
+    public void psbtMultiSigTest() throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
 
         var aliceBackend = regtestSetup.createAndInitializeNewWallet("alice_wallet");

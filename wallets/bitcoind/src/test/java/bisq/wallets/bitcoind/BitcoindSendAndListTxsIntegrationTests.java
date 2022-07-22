@@ -41,7 +41,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
     }
 
     @Test
-    public void sendBtcAndListTxs() throws MalformedURLException {
+    public void sendBtcAndListTxs() throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
         BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
 
