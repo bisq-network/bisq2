@@ -89,11 +89,6 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
     }
 
     @Override
-    public ElectrumDaemon createNewWallet(Path walletPath) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void fundWallet(ElectrumDaemon receiverWallet, double amount) {
         String address = electrumDaemon.getUnusedAddress();
         fundAddress(address, amount);

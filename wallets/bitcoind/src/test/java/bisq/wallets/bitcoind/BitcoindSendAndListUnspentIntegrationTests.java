@@ -34,7 +34,7 @@ public class BitcoindSendAndListUnspentIntegrationTests extends SharedBitcoindIn
         regtestSetup.mineInitialRegtestBlocks();
         BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
 
-        BitcoindWallet receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
+        BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
 
         String firstTxReceiverAddress = regtestSetup.sendBtcAndMineOneBlock(minerWallet, receiverBackend, 1);
         String secondTxReceiverAddress = regtestSetup.sendBtcAndMineOneBlock(minerWallet, receiverBackend, 1);

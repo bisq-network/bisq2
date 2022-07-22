@@ -35,7 +35,7 @@ public class BitcoindZeroMqRawTxIntegrationTests extends AbstractBitcoindZeroMqT
     @Override
     public void start() throws IOException, InterruptedException {
         super.start();
-        receiverWallet = regtestSetup.createNewWallet("receiver_wallet");
+        receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
     }
 
     @Test

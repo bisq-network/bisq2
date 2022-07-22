@@ -37,7 +37,7 @@ public class BitcoindSendUnconfirmedTxIntegrationTests extends SharedBitcoindIns
     public void start() throws IOException, InterruptedException {
         super.start();
         regtestSetup.mineInitialRegtestBlocks();
-        receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
+        receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
     }
 
     @Test

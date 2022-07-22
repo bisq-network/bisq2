@@ -28,8 +28,6 @@ import bisq.wallets.core.exceptions.WalletInitializationFailedException;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
-import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.core.rpc.WalletRpcClient;
 import lombok.Getter;
 
 import java.net.MalformedURLException;
@@ -38,9 +36,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class BitcoinWallet implements Wallet, ZmqWallet {
-    private final Path walletPath;
 
-    private final BitcoindDaemon daemon;
     private final BitcoindWallet wallet;
 
     @Getter
@@ -54,14 +50,11 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
                          BitcoindDaemon daemon,
                          ObservableSet<String> receiveAddresses,
                          ZmqConnection zmqConnection) {
-        this.walletPath = walletPath;
-        this.daemon = daemon;
         this.receiveAddresses = receiveAddresses;
         this.zmqConnection = zmqConnection;
 
         try {
-            WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
-            wallet = new BitcoindWallet(rpcClient);
+            wallet = new BitcoindWallet(daemon, rpcConfig, walletPath);
         } catch (MalformedURLException e) {
             throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }
@@ -69,12 +62,12 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
 
     @Override
     public void initialize(Optional<String> walletPassphrase) {
-        daemon.createOrLoadWallet(walletPath, walletPassphrase);
+        wallet.initialize(walletPassphrase);
     }
 
     @Override
     public void shutdown() {
-        daemon.unloadWallet(walletPath);
+        wallet.shutdown();
     }
 
     @Override

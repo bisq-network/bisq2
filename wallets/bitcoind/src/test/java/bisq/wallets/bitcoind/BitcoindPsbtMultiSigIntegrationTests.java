@@ -37,9 +37,9 @@ public class BitcoindPsbtMultiSigIntegrationTests extends SharedBitcoindInstance
     public void psbtMultiSigTest() throws MalformedURLException {
         regtestSetup.mineInitialRegtestBlocks();
 
-        var aliceBackend = regtestSetup.createNewWallet("alice_wallet");
-        var bobBackend = regtestSetup.createNewWallet("bob_wallet");
-        var charlieBackend = regtestSetup.createNewWallet("charlie_wallet");
+        var aliceBackend = regtestSetup.createAndInitializeNewWallet("alice_wallet");
+        var bobBackend = regtestSetup.createAndInitializeNewWallet("bob_wallet");
+        var charlieBackend = regtestSetup.createAndInitializeNewWallet("charlie_wallet");
 
         String aliceAddress = aliceBackend.getNewAddress(AddressType.BECH32, "");
         String bobAddress = bobBackend.getNewAddress(AddressType.BECH32, "");

@@ -35,7 +35,7 @@ public class BitcoindSendAndListTxsIntegrationTests extends SharedBitcoindInstan
         regtestSetup.mineInitialRegtestBlocks();
         BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
 
-        var receiverBackend = regtestSetup.createNewWallet("receiver_wallet");
+        var receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
 
         String firstTxReceiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
         minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), firstTxReceiverAddress, 1);

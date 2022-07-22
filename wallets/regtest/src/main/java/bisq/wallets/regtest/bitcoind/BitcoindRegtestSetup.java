@@ -25,14 +25,17 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import lombok.Getter;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class BitcoindRegtestSetup
         extends AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> {
@@ -44,10 +47,10 @@ public class BitcoindRegtestSetup
 
     @Getter
     private final BitcoindDaemon daemon;
-    private final Set<Path> loadedWalletPaths;
+    private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
 
     @Getter
-    private BitcoindWallet minerWallet;
+    private final BitcoindWallet minerWallet;
 
     public BitcoindRegtestSetup() throws IOException {
         this(false);
@@ -61,7 +64,7 @@ public class BitcoindRegtestSetup
         bitcoindProcess = createBitcoindProcess();
 
         daemon = createDaemon();
-        loadedWalletPaths = new HashSet<>();
+        minerWallet = createNewWallet("miner_wallet");
     }
 
     @Override
@@ -72,7 +75,7 @@ public class BitcoindRegtestSetup
     @Override
     public void start() throws IOException, InterruptedException {
         super.start();
-        minerWallet = createNewWallet("miner_wallet");
+        initializeWallet(minerWallet);
 
         if (doMineInitialRegtestBlocks) {
             mineInitialRegtestBlocks();
@@ -81,31 +84,33 @@ public class BitcoindRegtestSetup
 
     @Override
     public void shutdown() {
-        loadedWalletPaths.forEach(daemon::unloadWallet);
+        loadedWallets.forEach(BitcoindWallet::shutdown);
         super.shutdown();
     }
 
-    public BitcoindWallet createNewWallet(String walletName) throws MalformedURLException {
-        Path receiverWalletPath = tmpDirPath.resolve(walletName);
-        return createNewWallet(receiverWalletPath);
+    public BitcoindWallet createAndInitializeNewWallet(String walletName) throws MalformedURLException {
+        var bitcoindWallet = createNewWallet(walletName);
+        bitcoindWallet.initialize(Optional.of(WALLET_PASSPHRASE));
+        return bitcoindWallet;
     }
 
-    @Override
-    public BitcoindWallet createNewWallet(Path walletPath) throws MalformedURLException {
-        if (loadedWalletPaths.contains(walletPath)) {
+    private BitcoindWallet createNewWallet(String walletName) throws MalformedURLException {
+        Path walletPath = tmpDirPath.resolve(walletName);
+        checkWhetherWalletExist(walletPath);
+        return new BitcoindWallet(daemon, rpcConfig, walletPath);
+    }
+
+    private void checkWhetherWalletExist(Path walletPath) {
+        File walletFile = walletPath.toFile();
+        if (walletFile.exists()) {
             throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
                     "'. It exists already.");
         }
-
-        daemon.createOrLoadWallet(walletPath, Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE));
-        loadedWalletPaths.add(walletPath);
-
-        return newWallet(walletPath);
     }
 
-    private BitcoindWallet newWallet(Path walletPath) throws MalformedURLException {
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
-        return new BitcoindWallet(rpcClient);
+    private void initializeWallet(BitcoindWallet wallet) {
+        wallet.initialize(Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE));
+        loadedWallets.add(wallet);
     }
 
     public void mineInitialRegtestBlocks() {
