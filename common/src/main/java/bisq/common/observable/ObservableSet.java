@@ -29,16 +29,63 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
+    public interface Observer<M, L> {
+        void add(M element);
+
+        void addAll(Collection<? extends M> values);
+
+        void remove(Object element);
+
+        void removeAll(Collection<?> values);
+
+        void clear();
+    }
+
     @EqualsAndHashCode
     @ToString
-    private static final class Observer<M, L> {
+    private static final class ChangeListener<M, L> implements Observer<M, L> {
+        private final Runnable handler;
+
+        public ChangeListener(Runnable handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void add(M element) {
+            handler.run();
+        }
+
+        @Override
+        public void addAll(Collection<? extends M> values) {
+            handler.run();
+        }
+
+        @Override
+        public void remove(Object element) {
+            handler.run();
+        }
+
+        @Override
+        public void removeAll(Collection<?> values) {
+            handler.run();
+        }
+
+        @Override
+        public void clear() {
+            handler.run();
+        }
+    }
+
+    @EqualsAndHashCode
+    @ToString
+    private static final class ObservableListMapper<M, L> implements Observer<M, L> {
         private final Collection<L> collection;
         private final Function<M, L> mapFunction;
         private final Consumer<Runnable> executor;
 
-        private Observer(Collection<L> collection,
-                         Function<M, L> mapFunction,
-                         Consumer<Runnable> executor) {
+        private ObservableListMapper(Collection<L> collection,
+                                     Function<M, L> mapFunction,
+                                     Consumer<Runnable> executor) {
             this.collection = collection;
             this.mapFunction = mapFunction;
             this.executor = executor;
@@ -80,7 +127,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     }
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private transient List<Observer<T, ?>> observers = new CopyOnWriteArrayList<>();
+    private transient List<Observer<T, ?>> observableListMappers = new CopyOnWriteArrayList<>();
 
     public ObservableSet() {
     }
@@ -90,18 +137,25 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     }
 
     private List<Observer<T, ?>> getObservers() {
-        if (observers == null) {
-            observers = new CopyOnWriteArrayList<>();
+        if (observableListMappers == null) {
+            observableListMappers = new CopyOnWriteArrayList<>();
         }
-        return observers;
+        return observableListMappers;
     }
 
-    public <L> Pin addObserver(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
-        Observer<T, L> observer = new Observer<>(collection, mapFunction, executor);
-        observer.clear();
-        observer.addAll(this);
-        getObservers().add(observer);
-        return () -> getObservers().remove(observer);
+    public <L> Pin addChangedListener(Runnable handler) {
+        ChangeListener<T, L> changedListener = new ChangeListener<>(handler);
+        getObservers().add(changedListener);
+        handler.run();
+        return () -> getObservers().remove(changedListener);
+    }
+
+    public <L> Pin addObservableListMapper(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
+        ObservableListMapper<T, L> observableListMapper = new ObservableListMapper<>(collection, mapFunction, executor);
+        observableListMapper.clear();
+        observableListMapper.addAll(this);
+        getObservers().add(observableListMapper);
+        return () -> getObservers().remove(observableListMapper);
     }
 
     @Override
