@@ -289,7 +289,7 @@ public class UserProfileSelection {
             imageView.setFitHeight(ICON_SIZE);
             imageView.setLayoutY(7);
 
-            arrow.setLayoutY(19);
+            arrow.setLayoutY(18);
             label = new Label();
             label.getStyleClass().add("bisq-text-19");
             label.setLayoutY(13);

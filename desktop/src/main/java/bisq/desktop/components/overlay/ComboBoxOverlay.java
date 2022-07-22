@@ -68,6 +68,7 @@ public class ComboBoxOverlay<T> {
     private UIScheduler fixPositionsScheduler;
     private final Pane root;
     protected final Polygon listBackground = new Polygon();
+    protected double arrowOffset = 31.5;
 
     public ComboBoxOverlay(Region owner,
                            ObservableList<T> items,
@@ -76,7 +77,7 @@ public class ComboBoxOverlay<T> {
                            String description,
                            @Nullable String prompt,
                            double prefWidth) {
-        this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0);
+        this(owner, items, cellFactory, selectionHandler, description, prompt, prefWidth, 0, 0, 31.5);
     }
 
     public ComboBoxOverlay(Region owner,
@@ -87,11 +88,13 @@ public class ComboBoxOverlay<T> {
                            @Nullable String prompt,
                            double prefWidth,
                            double offsetX,
-                           double offsetY) {
+                           double offsetY,
+                           double arrowOffset) {
         this.owner = owner;
         this.prefWidth = prefWidth;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+        this.arrowOffset = arrowOffset;
 
         DropShadow dropShadow = new DropShadow();
         dropShadow.setBlurType(BlurType.GAUSSIAN);
@@ -142,7 +145,6 @@ public class ComboBoxOverlay<T> {
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.sizeToScene();
-
 
         // Listeners, handlers
         heightListener = (observable, oldValue, newValue) -> doLayout();
@@ -229,18 +231,18 @@ public class ComboBoxOverlay<T> {
         double x = 0;
         double listOffset = 8;
         // relative to visible top-left point 
-        double arrowX_l = 22;
-        double arrowX_m = 31.5;
-        double arrowX_r = 41;
+        double arrowX_l = -9.5;
+        double arrowX_m = 0;
+        double arrowX_r = 9.5;
         double height = 33 + 2 * PADDING + comboBox.getHeight() + listOffset + Math.min(comboBox.getVisibleRowCount(), items.size()) * getRowHeight();
         double width = prefWidth;
         double y = 0;
         double arrowY_m = y - 7.5;
         listBackground.getPoints().setAll(
                 x, y,
-                x + arrowX_l, y,
-                x + arrowX_m, arrowY_m,
-                x + arrowX_r, y,
+                x + arrowX_l + arrowOffset, y,
+                x + arrowX_m + arrowOffset, arrowY_m,
+                x + arrowX_r + arrowOffset, y,
                 x + width, y,
                 x + width, y + height,
                 x, y + height);

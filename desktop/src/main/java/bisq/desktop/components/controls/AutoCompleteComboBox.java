@@ -86,7 +86,11 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    editor.setText(asString(item));
+                    if (editor.getText() != null && !editor.getText().isEmpty()) {
+                        skin.getMaterialTextField().update();
+                        skin.getMaterialTextField().getDescriptionLabel().setLayoutY(6.5);
+                        editor.setText(asString(item));
+                    }
                     if (getParent() != null) {
                         getParent().requestFocus();
                     }

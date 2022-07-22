@@ -219,7 +219,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             controller::onShowMarket,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
                             Res.get("search"),
-                            350, 5, 20)
+                            350, 5, 23, 31.5)
                             .show());
         }
 

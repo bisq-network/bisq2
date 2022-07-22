@@ -180,12 +180,11 @@ public class MaterialTextField extends Pane {
         }
     }
 
-    private void update() {
+    void update() {
         if (descriptionProperty.get() != null) {
             if (showInputTextField()) {
                 Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
             } else {
-
                 Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
             }
         }
@@ -285,4 +284,7 @@ public class MaterialTextField extends Pane {
         return inputTextField;
     }
 
+    Label getDescriptionLabel() {
+        return descriptionLabel;
+    }
 }

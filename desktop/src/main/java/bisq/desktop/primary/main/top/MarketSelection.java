@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.common.currency.Market;
+import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -115,9 +117,9 @@ public class MarketSelection {
 
         private void applyMarketPriceMap() {
             UIThread.run(() -> {
-                //todo apply sorted list from settings
-                List<MarketSelection.ListItem> list = marketPriceService.getMarketPriceByCurrencyMap().values().stream()
-                        .filter(marketPrice -> marketPrice.getMarket().isFiat())
+                List<MarketSelection.ListItem> list = MarketRepository.getAllFiatMarkets().stream()
+                        .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
+                        .filter(Objects::nonNull)
                         .map(MarketSelection.ListItem::new)
                         .collect(Collectors.toList());
                 model.items.setAll(list);
@@ -170,7 +172,7 @@ public class MarketSelection {
                             controller::onSelected,
                             Res.get("search"),
                             null,
-                            250, 30, 20)
+                            250, 30, 20, 125)
                             .show());
         }
 
@@ -200,6 +202,7 @@ public class MarketSelection {
                     if (item != null && !empty) {
                         price.setText(item.price);
                         codes.setText(item.codes);
+                        HBox.setMargin(codes, new Insets(0, 0, 0, -10));
                         HBox hBox = new HBox(12, codes, price);
                         hBox.setAlignment(Pos.CENTER_LEFT);
                         setGraphic(hBox);
