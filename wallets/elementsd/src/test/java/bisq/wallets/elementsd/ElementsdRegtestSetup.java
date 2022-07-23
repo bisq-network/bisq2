@@ -18,12 +18,17 @@
 package bisq.wallets.elementsd;
 
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
+import bisq.wallets.bitcoind.zmq.ZmqConnection;
+import bisq.wallets.bitcoind.zmq.ZmqListeners;
+import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
+import bisq.wallets.elementsd.rpc.ElementsdRawTxProcessor;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
 import bisq.wallets.regtest.AbstractRegtestSetup;
@@ -35,6 +40,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> {
 
@@ -48,6 +55,10 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     private final ElementsdDaemon daemon;
     private final Set<Path> loadedWalletPaths;
 
+    @Getter
+    private final ZmqListeners zmqListeners = new ZmqListeners();
+
+    private ZmqConnection zmqMinerWalletConnection;
     @Getter
     private ElementsdWallet minerWallet;
 
@@ -71,22 +82,33 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     public void start() throws IOException, InterruptedException {
         super.start();
         minerWallet = createNewWallet("miner_wallet");
+        initializeZmqMinerListeners();
     }
 
     @Override
     public void shutdown() {
+        zmqMinerWalletConnection.close();
         loadedWalletPaths.forEach(daemon::unloadWallet);
         super.shutdown();
     }
 
     @Override
-    public List<String> mineOneBlock() {
+    public List<String> mineOneBlock() throws InterruptedException {
+        CountDownLatch blockMinedLatch = waitUntilBlockMined();
+
         String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
-        return daemon.generateToAddress(1, minerAddress);
+        List<String> blockHashes = daemon.generateToAddress(1, minerAddress);
+
+        boolean allBlocksMined = blockMinedLatch.await(15, TimeUnit.SECONDS);
+        if (!allBlocksMined) {
+            throw new IllegalStateException("Couldn't mine block.");
+        }
+
+        return blockHashes;
     }
 
     @Override
-    public void fundWallet(ElementsdWallet receiverWallet, double amount) {
+    public void fundWallet(ElementsdWallet receiverWallet, double amount) throws InterruptedException {
         sendBtcAndMineOneBlock(minerWallet, receiverWallet, amount);
     }
 
@@ -97,13 +119,12 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
 
     public String sendBtcAndMineOneBlock(ElementsdWallet senderWallet,
                                          ElementsdWallet receiverWallet,
-                                         double amount) {
+                                         double amount) throws InterruptedException {
         String receiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
         String txId = senderWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), receiverAddress, amount);
         mineOneBlock();
         return txId;
     }
-
 
     public ElementsdWallet createNewWallet(String walletName) throws MalformedURLException {
         Path receiverWalletPath = tmpDirPath.resolve(walletName);
@@ -136,6 +157,15 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return new ElementsdRegtestProcess(elementsdConfig, elementsdDataDir);
     }
 
+    private void initializeZmqMinerListeners() {
+        var rawTxProcessor = new ElementsdRawTxProcessor(daemon, minerWallet, zmqListeners);
+        var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
+        zmqMinerWalletConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
+
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        zmqMinerWalletConnection.initialize(zmqNotifications);
+    }
+
     private ElementsdDaemon createDaemon() throws MalformedURLException {
         DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
         return new ElementsdDaemon(rpcClient);
@@ -153,6 +183,12 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
 
         RpcConfig bitcoindConfig = bitcoindRegtestSetup.getRpcConfig();
         return new ElementsdConfig(bitcoindConfig, elementsdConfig);
+    }
+
+    private CountDownLatch waitUntilBlockMined() {
+        var blockMinedLatch = new CountDownLatch(1);
+        zmqListeners.registerNewBlockMinedListener((blockHash) -> blockMinedLatch.countDown());
+        return blockMinedLatch;
     }
 
     private RpcConfig createRpcConfigForPort(int port) {
