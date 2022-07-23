@@ -17,12 +17,19 @@
 
 package bisq.wallets.elementsd;
 
+import bisq.common.data.Pair;
+import bisq.wallets.bitcoind.zmq.ZmqConnection;
+import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
+import bisq.wallets.elementsd.rpc.ElementsdWallet;
+import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,12 +37,38 @@ public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdI
     @Test
     public void sendOneLBtcToAddress() throws MalformedURLException, InterruptedException {
         peginBtc(20);
-        var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
+        var receiverWallet = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 
-        String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
-        elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);
+        Pair<ZmqConnection, ZmqListeners> connectionAndListeners = elementsdRegtestSetup.initializeZmqListenersForWallet(receiverWallet);
+        ZmqConnection zmqConnection = connectionAndListeners.getFirst();
+        ZmqListeners zmqListeners = connectionAndListeners.getSecond();
 
-        assertThat(receiverBackend.getLBtcBalance())
+        CountDownLatch didReceiveNotificationLatch = new CountDownLatch(1);
+
+        String blindedReceiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
+        String unblindedReceiverAddress = getUnblindedAddress(receiverWallet, blindedReceiverAddress);
+
+        zmqListeners.registerTxOutputAddressesListener(outputAddresses -> {
+            if (outputAddresses.contains(unblindedReceiverAddress)) {
+                didReceiveNotificationLatch.countDown();
+            }
+        });
+
+        elementsdMinerWallet.sendLBtcToAddress(Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), blindedReceiverAddress, 1);
+
+        boolean await = didReceiveNotificationLatch.await(1, TimeUnit.MINUTES);
+        if (!await) {
+            throw new IllegalStateException("Didn't receive ZMQ notification after 1 minute.");
+        }
+
+        assertThat(receiverWallet.getLBtcBalance())
                 .isEqualTo(1);
+
+        zmqConnection.close();
+    }
+
+    private String getUnblindedAddress(ElementsdWallet wallet, String blindedAddress) {
+        ElementsdGetAddressInfoResponse addressInfo = wallet.getAddressInfo(blindedAddress);
+        return addressInfo.getUnconfidential();
     }
 }

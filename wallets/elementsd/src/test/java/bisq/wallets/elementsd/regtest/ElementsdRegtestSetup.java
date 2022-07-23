@@ -17,6 +17,7 @@
 
 package bisq.wallets.elementsd.regtest;
 
+import bisq.common.data.Pair;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
@@ -57,8 +58,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     private final Set<Path> loadedWalletPaths;
 
     @Getter
-    private final ZmqListeners zmqListeners = new ZmqListeners();
-
+    private ZmqListeners zmqMinerListeners;
     private ZmqConnection zmqMinerWalletConnection;
     @Getter
     private ElementsdWallet minerWallet;
@@ -83,7 +83,10 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     public void start() throws IOException, InterruptedException {
         super.start();
         minerWallet = createNewWallet("miner_wallet");
-        initializeZmqMinerListeners();
+
+        Pair<ZmqConnection, ZmqListeners> connectionAndListeners = initializeZmqListenersForWallet(minerWallet);
+        zmqMinerWalletConnection = connectionAndListeners.getFirst();
+        zmqMinerListeners = connectionAndListeners.getSecond();
     }
 
     @Override
@@ -152,19 +155,22 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
                 .findFirst();
     }
 
+    public Pair<ZmqConnection, ZmqListeners> initializeZmqListenersForWallet(ElementsdWallet wallet) {
+        var zmqListeners = new ZmqListeners();
+        var rawTxProcessor = new ElementsdRawTxProcessor(daemon, wallet, zmqListeners);
+        var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
+        var zmqConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
+
+        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        zmqConnection.initialize(zmqNotifications);
+
+        return new Pair<>(zmqConnection, zmqListeners);
+    }
+
     private ElementsdRegtestProcess createElementsdProcess() {
         Path elementsdDataDir = tmpDirPath.resolve("elementsd");
         elementsdConfig = createElementsRpcConfig();
         return new ElementsdRegtestProcess(elementsdConfig, elementsdDataDir);
-    }
-
-    private void initializeZmqMinerListeners() {
-        var rawTxProcessor = new ElementsdRawTxProcessor(daemon, minerWallet, zmqListeners);
-        var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
-        zmqMinerWalletConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
-
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
-        zmqMinerWalletConnection.initialize(zmqNotifications);
     }
 
     private ElementsdDaemon createDaemon() throws MalformedURLException {
@@ -188,7 +194,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
 
     private CountDownLatch waitUntilBlockMined() {
         var blockMinedLatch = new CountDownLatch(1);
-        zmqListeners.registerNewBlockMinedListener((blockHash) -> blockMinedLatch.countDown());
+        zmqMinerListeners.registerNewBlockMinedListener((blockHash) -> blockMinedLatch.countDown());
         return blockMinedLatch;
     }
 

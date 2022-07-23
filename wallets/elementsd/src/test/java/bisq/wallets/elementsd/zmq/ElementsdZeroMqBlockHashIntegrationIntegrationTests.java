@@ -17,12 +17,8 @@
 
 package bisq.wallets.elementsd.zmq;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
-import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.elementsd.SharedElementsdInstanceTests;
-import bisq.wallets.elementsd.rpc.ElementsdRawTxProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +27,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedElementsdInstanceTests {
@@ -41,7 +36,7 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
 
     @Test
     void blockHashNotification() throws InterruptedException {
-        ZmqListeners zmqListeners = elementsdRegtestSetup.getZmqListeners();
+        ZmqListeners zmqListeners = elementsdRegtestSetup.getZmqMinerListeners();
         zmqListeners.registerNewBlockMinedListener((blockHash) -> {
             log.info("Notification: New block with hash " + blockHash);
             if (minedBlockHashes.contains(blockHash)) {
