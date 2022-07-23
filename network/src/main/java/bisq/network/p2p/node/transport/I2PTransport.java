@@ -1,7 +1,9 @@
 package bisq.network.p2p.node.transport;
 
+import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
 import bisq.i2p.I2pClient;
+import bisq.i2p.I2pEmbeddedRouter;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
@@ -28,17 +30,37 @@ public class I2PTransport implements Transport {
         public static Config from(String baseDir, com.typesafe.config.Config config) {
             return new Config(baseDir,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
-                    config.getInt("bandwidth"));
+                    config.getInt("inboundKBytesPerSecond"),
+                    config.getInt("outboundKBytesPerSecond"),
+                    config.getInt("bandwidthSharePercentage"),
+                    config.getString("i2cpHost"),
+                    config.getInt("i2cpPort"),
+                    config.getBoolean("embeddedRouter"),
+                    config.getBoolean("extendedI2pLogging"));
         }
 
         private final int socketTimeout;
-        private final int bandwidth;
+        private final int inboundKBytesPerSecond;
+        private final int outboundKBytesPerSecond;
+        private final int bandwidthSharePercentage;
+        private final int i2cpPort;
+        private final String i2cpHost;
+        private boolean embeddedRouter;
         private final String baseDir;
+        private final boolean extendedI2pLogging;
 
-        public Config(String baseDir, int socketTimeout, int bandwidth) {
+        public Config(String baseDir, int socketTimeout, int inboundKBytesPerSecond, int outboundKBytesPerSecond,
+                      int bandwidthSharePercentage, String i2cpHost, int i2cpPort, boolean embeddedRouter,
+                      boolean extendedI2pLogging) {
             this.baseDir = baseDir;
             this.socketTimeout = socketTimeout;
-            this.bandwidth = bandwidth;
+            this.inboundKBytesPerSecond = inboundKBytesPerSecond;
+            this.outboundKBytesPerSecond = outboundKBytesPerSecond;
+            this.bandwidthSharePercentage = bandwidthSharePercentage;
+            this.i2cpHost = i2cpHost;
+            this.i2cpPort = i2cpPort;
+            this.embeddedRouter = embeddedRouter;
+            this.extendedI2pLogging = extendedI2pLogging;
         }
     }
 
@@ -47,12 +69,14 @@ public class I2PTransport implements Transport {
     private boolean initializeCalled;
     private String sessionId;
 
+    private I2PTransport.Config config;
+
     public I2PTransport(Transport.Config config) {
         // Demonstrate potential usage of specific config.
         // Would be likely passed to i2p router not handled here...
 
         // Failed to get config generic...
-        int bandwidth = ((Config) config).getBandwidth();
+        this.config = (I2PTransport.Config) config;
 
         i2pDirPath = config.getBaseDir() + separator + "i2p";
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
@@ -66,7 +90,38 @@ public class I2PTransport implements Transport {
         }
         initializeCalled = true;
         log.debug("Initialize");
-        i2pClient = I2pClient.getI2pClient(i2pDirPath);
+
+        //If embedded router, start it already ...
+        if(config.isEmbeddedRouter()) {
+            if(!I2pEmbeddedRouter.hasBeenInitialized()) {
+                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
+                        config.getInboundKBytesPerSecond(),
+                        config.getOutboundKBytesPerSecond(),
+                        config.getBandwidthSharePercentage(),
+                        config.isExtendedI2pLogging());
+            }
+            while(!I2pEmbeddedRouter.isRouterRunning()){
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            i2pClient = I2pClient.getI2pClient(i2pDirPath,
+                    config.getI2cpHost(),
+                    config.getI2cpPort(),
+                    config.getSocketTimeout(),
+                    config.isEmbeddedRouter());
+        }
+        else {
+            i2pClient = I2pClient.getI2pClient(i2pDirPath,
+                    config.getI2cpHost(),
+                    config.getI2cpPort(),
+                    config.getSocketTimeout(),
+                    config.isEmbeddedRouter());
+        }
+
+
         return true;
     }
 
@@ -76,7 +131,13 @@ public class I2PTransport implements Transport {
         log.debug("Create serverSocket");
         try {
             sessionId = nodeId + port;
-            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, NetworkUtils.findFreeSystemPort());
+            //TODO: Investigate why not using port passed as parameter and if no port, find one?
+            //Pass parameters to connect with Local instance
+            int i2pPort = port;
+            if(!config.isEmbeddedRouter()) {
+                i2pPort = config.getI2cpPort();
+            }
+            ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);
             String destination = i2pClient.getMyDestination(sessionId);
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
