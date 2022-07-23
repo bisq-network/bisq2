@@ -15,20 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.elementsd;
+package bisq.wallets.elementsd.rpc.responses;
 
-import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
-import bisq.wallets.elementsd.rpc.ElementsdWallet;
-import bisq.wallets.regtest.AbstractRegtestSetup;
-import bisq.wallets.regtest.ConnectionFailureIntegrationTests;
-import bisq.wallets.regtest.process.MultiProcessCoordinator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.io.IOException;
-
-public class ElementsdConnectionFailureIntegrationTests
-        extends ConnectionFailureIntegrationTests<MultiProcessCoordinator, ElementsdWallet> {
-    @Override
-    protected AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> createRegtestSetup() throws IOException {
-        return new ElementsdRegtestSetup();
-    }
+@Getter
+@Setter
+public class ElementsdIssuance {
+    private String assetBlindingNonce;
+    private String assetEntropy;
+    @JsonProperty("isreissuance")
+    private boolean isReissuance;
+    private String token;
+    private String asset;
+    @JsonProperty("assetamount")
+    private double assetAmount;
+    @JsonProperty("tokenamountcommitment")
+    private String tokenAmountCommitment;
 }

@@ -18,6 +18,7 @@
 package bisq.wallets.elementsd;
 
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;

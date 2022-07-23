@@ -18,6 +18,7 @@
 package bisq.wallets.elementsd;
 
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.responses.ElementsdIssueAssetResponse;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,7 +45,7 @@ public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstan
     }
 
     @Test
-    public void sendOneLiquidAssetToAddress() throws MalformedURLException {
+    public void sendOneLiquidAssetToAddress() throws MalformedURLException, InterruptedException {
         ElementsdIssueAssetResponse issueAssetResponse = elementsdMinerWallet.issueAsset(
                 Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), 2, 1
         );

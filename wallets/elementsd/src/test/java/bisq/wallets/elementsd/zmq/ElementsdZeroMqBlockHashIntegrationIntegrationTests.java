@@ -17,12 +17,8 @@
 
 package bisq.wallets.elementsd.zmq;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
-import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.elementsd.SharedElementsdInstanceTests;
-import bisq.wallets.elementsd.rpc.ElementsdRawTxProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -31,40 +27,42 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedElementsdInstanceTests {
 
     private final Set<String> minedBlockHashes = new CopyOnWriteArraySet<>();
-
-    private final AtomicBoolean didListenerReceiveBlockHash = new AtomicBoolean();
     private final CountDownLatch listenerReceivedBlockHashLatch = new CountDownLatch(1);
 
     @Test
     void blockHashNotification() throws InterruptedException {
-        var zmqListeners = new ZmqListeners();
-        var rawTxProcessor = new ElementsdRawTxProcessor(elementsdDaemon, elementsdMinerWallet, zmqListeners);
-
-        var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
-        var zmqConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
-
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = elementsdDaemon.getZmqNotifications();
-        zmqConnection.initialize(zmqNotifications);
-
-        zmqConnection.getListeners().registerNewBlockMinedListener((blockHash) -> {
+        ZmqListeners zmqListeners = elementsdRegtestSetup.getZmqMinerListeners();
+        zmqListeners.registerNewBlockMinedListener((blockHash) -> {
             log.info("Notification: New block with hash " + blockHash);
             if (minedBlockHashes.contains(blockHash)) {
-                didListenerReceiveBlockHash.set(true);
                 listenerReceivedBlockHashLatch.countDown();
+            } else {
+                minedBlockHashes.add(blockHash);
             }
         });
 
         createAndStartDaemonThread(() -> {
-            while (!didListenerReceiveBlockHash.get()) {
-                List<String> blockHashes = elementsdRegtestSetup.mineOneBlock();
-                minedBlockHashes.addAll(blockHashes);
-                log.info("Mined Block: " + blockHashes);
+            while (true) {
+                try {
+                    List<String> blockHashes = elementsdRegtestSetup.mineOneBlock();
+                    log.info("Mined Block: " + blockHashes);
+
+                    for (String blockHash : blockHashes) {
+                        if (minedBlockHashes.contains(blockHash)) {
+                            listenerReceivedBlockHashLatch.countDown();
+                            return;
+                        } else {
+                            minedBlockHashes.add(blockHash);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
 
@@ -72,8 +70,6 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
         if (!await) {
             throw new IllegalStateException("Didn't connect to bitcoind after 1 minute.");
         }
-
-        zmqConnection.close();
     }
 
     private void createAndStartDaemonThread(Runnable runnable) {
