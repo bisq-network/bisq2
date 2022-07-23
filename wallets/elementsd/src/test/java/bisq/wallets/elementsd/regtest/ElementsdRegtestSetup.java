@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.elementsd;
+package bisq.wallets.elementsd.regtest;
 
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
@@ -27,6 +27,7 @@ import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
+import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdRawTxProcessor;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;

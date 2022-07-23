@@ -17,6 +17,7 @@
 
 package bisq.wallets.elementsd;
 
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;
 import org.junit.jupiter.api.Test;
 

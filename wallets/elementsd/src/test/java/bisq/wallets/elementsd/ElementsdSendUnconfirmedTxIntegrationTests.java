@@ -18,6 +18,7 @@
 package bisq.wallets.elementsd;
 
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;

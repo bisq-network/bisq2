@@ -18,6 +18,7 @@
 package bisq.wallets.elementsd;
 
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.responses.ElementsdIssueAssetResponse;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;

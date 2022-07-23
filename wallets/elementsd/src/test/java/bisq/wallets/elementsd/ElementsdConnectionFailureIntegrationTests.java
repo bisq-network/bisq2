@@ -17,6 +17,7 @@
 
 package bisq.wallets.elementsd;
 
+import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.ConnectionFailureIntegrationTests;

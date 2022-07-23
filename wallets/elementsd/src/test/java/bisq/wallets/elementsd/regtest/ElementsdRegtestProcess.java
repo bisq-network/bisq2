@@ -15,13 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.elementsd;
+package bisq.wallets.elementsd.regtest;
 
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
 import bisq.wallets.regtest.process.ProcessConfig;
