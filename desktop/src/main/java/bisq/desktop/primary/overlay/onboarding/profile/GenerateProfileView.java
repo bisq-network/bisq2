@@ -45,6 +45,7 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
     protected final ProgressIndicator powProgressIndicator;
     protected final MaterialTextField nickname;
     protected final ProgressIndicator createProfileIndicator;
+    private final Label busyInfo;
 
     public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
         super(new VBox(), model, controller);
@@ -118,7 +119,11 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.setManaged(false);
         createProfileIndicator.setVisible(false);
 
-        HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator);
+        busyInfo = new Label(Res.get("generateNym.createProfile.busy"));
+        busyInfo.setManaged(false);
+        busyInfo.setVisible(false);
+
+        HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator, busyInfo);
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
@@ -155,6 +160,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
         createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
 
+        busyInfo.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        busyInfo.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+
         regenerateButton.setOnMouseClicked(e -> controller.onRegenerate());
         roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
         createProfileButton.setOnMouseClicked(e -> {
@@ -175,6 +183,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
+        busyInfo.managedProperty().unbind();
+        busyInfo.visibleProperty().unbind();
 
         nym.textProperty().unbind();
         nym.disableProperty().unbind();
