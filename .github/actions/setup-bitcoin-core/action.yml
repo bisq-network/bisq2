@@ -1,9 +1,0 @@
-name: 'Setup Bitcoin Core'
-description: 'Install Bitcoin Core'
-inputs:
-  version:
-    description: 'Bitcoin Core Version'
-    required: true
-runs:
-  using: 'node16'
-  main: 'dist/index.js'
