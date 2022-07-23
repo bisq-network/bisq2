@@ -1,6 +1,132 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 826:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BitcoinCoreInstaller = void 0;
+const core = __importStar(__nccwpck_require__(186));
+const tc = __importStar(__nccwpck_require__(784));
+const node_path_1 = __importDefault(__nccwpck_require__(49));
+const node_os_1 = __importDefault(__nccwpck_require__(28));
+class BitcoinCoreInstaller {
+    constructor(programName = 'Bitcoin Core', versionPropertyId = 'bitcoin-core-version') {
+        this.programName = programName;
+        this.versionPropertyId = versionPropertyId;
+    }
+    install() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const bitcoinVersion = core.getInput(this.versionPropertyId, { required: true });
+            const urlPrefix = this.getUrlPrefix(bitcoinVersion);
+            let url = this.appendUrlSuffixForOs(urlPrefix);
+            const extractedDirPath = yield this.downloadAndUnpackArchive(url);
+            const unpackedTargetDir = this.getUnpackedTargetDirName(bitcoinVersion);
+            const binDirPath = node_path_1.default.join(extractedDirPath, unpackedTargetDir, 'bin');
+            core.addPath(binDirPath);
+        });
+    }
+    getUrlPrefix(version) {
+        return `https://bitcoin.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
+    }
+    appendUrlSuffixForOs(url_prefix) {
+        const platform = node_os_1.default.platform();
+        switch (platform) {
+            case "linux":
+                return url_prefix + 'x86_64-linux-gnu.tar.gz';
+            case "win32":
+                return url_prefix + 'win64.zip';
+            case "darwin":
+                return url_prefix + 'osx64.tar.gz';
+            default:
+                throw 'Unknown OS';
+        }
+    }
+    downloadAndUnpackArchive(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log("Downloading: " + url);
+            const bitcoinCorePath = yield tc.downloadTool(url);
+            if (url.endsWith('.tar.gz')) {
+                return yield tc.extractTar(bitcoinCorePath);
+            }
+            else if (url.endsWith('.zip')) {
+                return yield tc.extractZip(bitcoinCorePath);
+            }
+            else {
+                throw 'Unknown archive format.';
+            }
+        });
+    }
+    getUnpackedTargetDirName(version) {
+        return `bitcoin-${version}`;
+    }
+}
+exports.BitcoinCoreInstaller = BitcoinCoreInstaller;
+
+
+/***/ }),
+
+/***/ 841:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ElementsCoreInstaller = void 0;
+const bitcoin_core_installer_1 = __nccwpck_require__(826);
+class ElementsCoreInstaller extends bitcoin_core_installer_1.BitcoinCoreInstaller {
+    constructor() {
+        super('Elements Core', 'elements-core-version');
+    }
+    getUrlPrefix(version) {
+        return `https://github.com/ElementsProject/elements/releases/download/elements-${version}/elements-elements-${version}-`;
+    }
+    getUnpackedTargetDirName(version) {
+        return `elements-elements-${version}`;
+    }
+}
+exports.ElementsCoreInstaller = ElementsCoreInstaller;
+
+
+/***/ }),
+
 /***/ 109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -39,72 +165,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const os = __importStar(__nccwpck_require__(28));
-const path = __importStar(__nccwpck_require__(49));
 const core = __importStar(__nccwpck_require__(186));
-const tc = __importStar(__nccwpck_require__(784));
+const bitcoin_core_installer_1 = __nccwpck_require__(826);
+const elements_core_installer_1 = __nccwpck_require__(841);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let packageSpecs = [
-                buildBitcoinCorePackageSpec(),
-                buildElementsCorePackageSpec()
+            const installers = [
+                new bitcoin_core_installer_1.BitcoinCoreInstaller(),
+                new elements_core_installer_1.ElementsCoreInstaller()
             ];
-            for (let i = 0; i < packageSpecs.length; i++) {
-                const spec = packageSpecs[i];
-                console.log(`Installing ${spec.packageName}`);
-                let url = appendUrlSuffixForOs(spec.urlPrefix);
-                const extractedDirPath = yield downloadAndUnpackArchive(url);
-                const binDirPath = path.join(extractedDirPath, spec.unpackedTargetDir, 'bin');
-                core.addPath(binDirPath);
-            }
+            installers.forEach(i => {
+                console.log(`Installing ${i.programName}`);
+                i.install();
+            });
         }
         catch (error) {
             core.setFailed(error.message);
-        }
-    });
-}
-function buildBitcoinCorePackageSpec() {
-    const bitcoinVersion = core.getInput('bitcoin-core-version', { required: true });
-    return {
-        packageName: 'Bitcoin Core',
-        urlPrefix: `https://bitcoin.org/bin/bitcoin-core-${bitcoinVersion}/bitcoin-${bitcoinVersion}-`,
-        unpackedTargetDir: `bitcoin-${bitcoinVersion}`
-    };
-}
-function buildElementsCorePackageSpec() {
-    const elementsVersion = core.getInput('elements-core-version', { required: true });
-    return {
-        packageName: 'Elements Core',
-        urlPrefix: `https://github.com/ElementsProject/elements/releases/download/elements-${elementsVersion}/elements-elements-${elementsVersion}-`,
-        unpackedTargetDir: `elements-elements-${elementsVersion}`
-    };
-}
-function appendUrlSuffixForOs(url_prefix) {
-    const platform = os.platform();
-    switch (platform) {
-        case "linux":
-            return url_prefix + 'x86_64-linux-gnu.tar.gz';
-        case "win32":
-            return url_prefix + 'win64.zip';
-        case "darwin":
-            return url_prefix + 'osx64.tar.gz';
-        default:
-            throw 'Unknown OS';
-    }
-}
-function downloadAndUnpackArchive(url) {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("Downloading: " + url);
-        const bitcoinCorePath = yield tc.downloadTool(url);
-        if (url.endsWith('.tar.gz')) {
-            return yield tc.extractTar(bitcoinCorePath);
-        }
-        else if (url.endsWith('.zip')) {
-            return yield tc.extractZip(bitcoinCorePath);
-        }
-        else {
-            throw 'Unknown archive format.';
         }
     });
 }
