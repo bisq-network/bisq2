@@ -22,9 +22,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class ElementsdVin extends AbstractVin {
     @JsonProperty("is_pegin")
     private boolean isPegin;
+    @JsonProperty("pegin_witness")
+    private List<String> peginWitnesses;
 }
