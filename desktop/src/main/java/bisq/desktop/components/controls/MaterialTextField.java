@@ -174,7 +174,6 @@ public class MaterialTextField extends Pane {
 
     private void layoutIconButton() {
         if (getWidth() > 0) {
-            log.error("{} {}", getWidth(), iconButton.getWidth());
             iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
         }
     }

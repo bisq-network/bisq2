@@ -23,6 +23,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.oracle.ots.OpenTimestampService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
@@ -37,11 +38,13 @@ public class UserProfileController implements Controller {
     private final UserProfileView view;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
+    private final OpenTimestampService openTimestampService;
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         reputationService = applicationService.getUserService().getReputationService();
+        openTimestampService = applicationService.getOracleService().getOpenTimestampService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new UserProfileModel();
@@ -58,6 +61,7 @@ public class UserProfileController implements Controller {
                         model.setSelectedChatUserIdentity(chatUserIdentity);
                         UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService,
                                 reputationService,
+                                openTimestampService,
                                 chatUserIdentity);
                         model.getUserProfileDisplayPane().set(userProfileDisplay.getRoot());
                     }

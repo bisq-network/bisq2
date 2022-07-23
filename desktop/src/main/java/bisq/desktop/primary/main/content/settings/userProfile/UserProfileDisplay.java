@@ -17,7 +17,9 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile;
 
+import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -26,6 +28,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.DataService;
+import bisq.oracle.ots.OpenTimestampService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -59,8 +62,9 @@ public class UserProfileDisplay {
 
     public UserProfileDisplay(UserIdentityService userIdentityService,
                               ReputationService reputationService,
+                              OpenTimestampService openTimestampService,
                               UserIdentity userIdentity) {
-        controller = new Controller(userIdentityService, reputationService, userIdentity);
+        controller = new Controller(userIdentityService, reputationService, openTimestampService, userIdentity);
     }
 
     public Pane getRoot() {
@@ -68,6 +72,7 @@ public class UserProfileDisplay {
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
+        private final OpenTimestampService openTimestampService;
         private final Model model;
         @Getter
         private final View view;
@@ -77,9 +82,11 @@ public class UserProfileDisplay {
 
         private Controller(UserIdentityService userIdentityService,
                            ReputationService reputationService,
+                           OpenTimestampService openTimestampService,
                            UserIdentity userIdentity) {
             this.userIdentityService = userIdentityService;
             this.reputationService = reputationService;
+            this.openTimestampService = openTimestampService;
             model = new Model(userIdentity.getUserProfile());
             view = new View(model, this);
         }
@@ -89,6 +96,11 @@ public class UserProfileDisplay {
             userIdentityService.getSelectedUserProfile().addObserver(userIdentity -> {
                 model.statement.set(userIdentity.getUserProfile().getStatement());
                 model.terms.set(userIdentity.getUserProfile().getTerms());
+                openTimestampService.getVerifiedOtsDate(new ByteArray(userIdentity.getPubKeyHash()))
+                        .thenAccept(date ->
+                                UIThread.run(() -> model.profileAge.set(date.map(e -> String.valueOf(e))
+                                        .orElse(Res.get("na")))));
+
             });
             reputationChangedPin = reputationService.getReputationChanged().addObserver(__ -> applyReputationScore());
         }
