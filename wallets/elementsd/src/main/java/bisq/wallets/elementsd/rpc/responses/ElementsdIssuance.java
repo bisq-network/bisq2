@@ -17,19 +17,21 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
-import bisq.wallets.bitcoind.rpc.responses.AbstractVin;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
-public class ElementsdVin extends AbstractVin {
-    @JsonProperty("is_pegin")
-    private boolean isPegin;
-    @JsonProperty("pegin_witness")
-    private List<String> peginWitnesses;
-    private ElementsdIssuance issuance;
+public class ElementsdIssuance {
+    private String assetBlindingNonce;
+    private String assetEntropy;
+    @JsonProperty("isreissuance")
+    private boolean isReissuance;
+    private String token;
+    private String asset;
+    @JsonProperty("assetamount")
+    private double assetAmount;
+    @JsonProperty("tokenamountcommitment")
+    private String tokenAmountCommitment;
 }
