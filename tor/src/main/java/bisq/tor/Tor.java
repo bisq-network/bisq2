@@ -94,6 +94,7 @@ public class Tor {
             if (TOR_BY_APP.containsKey(torDirPath)) {
                 tor = TOR_BY_APP.get(torDirPath);
             } else {
+                log.info("Creating Tor using torDirPath: {}", torDirPath);
                 tor = new Tor(torDirPath);
                 TOR_BY_APP.put(torDirPath, tor);
             }
