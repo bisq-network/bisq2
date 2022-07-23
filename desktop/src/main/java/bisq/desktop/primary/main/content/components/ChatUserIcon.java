@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.components;
 
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.user.profile.UserProfile;
 import javafx.scene.control.Tooltip;
@@ -30,7 +31,7 @@ public class ChatUserIcon extends Pane {
     private final Tooltip tooltip;
 
     public ChatUserIcon(double size) {
-        tooltip = new Tooltip();
+        tooltip = new BisqTooltip();
         tooltip.setId("proof-of-burn-tooltip");
         roboIcon = new ImageView();
         roboIcon.setFitWidth(size);

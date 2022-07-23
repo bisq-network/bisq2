@@ -102,7 +102,7 @@ public class Badge extends StackPane {
 
             //todo not working yet ?
             if (tooltip != null) {
-                Tooltip.uninstall(badgePane, new Tooltip(tooltip));
+                Tooltip.uninstall(badgePane, new BisqTooltip(tooltip));
             }
 
             badge.getChildren().add(badgePane);

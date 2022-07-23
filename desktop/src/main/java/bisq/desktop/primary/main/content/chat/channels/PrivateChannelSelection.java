@@ -34,6 +34,7 @@ import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
@@ -201,7 +202,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 private Subscription widthSubscription;
                 final Label label = new Label();
                 final HBox hBox = new HBox();
-                final Tooltip tooltip = new Tooltip();
+                final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
 
                 {

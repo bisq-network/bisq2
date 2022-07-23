@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.common.currency.Market;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
@@ -183,7 +184,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 if (item != null && !empty) {
                     label.setGraphic(item.getIcon());
                     label.setText(item.getMarketCodes());
-                    label.setTooltip(new Tooltip(item.getMarketName()));
+                    label.setTooltip(new BisqTooltip(item.getMarketName()));
                     setGraphic(label);
                 } else {
                     label.setGraphic(null);

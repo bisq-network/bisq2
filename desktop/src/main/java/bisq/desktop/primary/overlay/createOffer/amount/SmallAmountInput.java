@@ -21,10 +21,10 @@ import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.parser.AmountParser;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -163,14 +163,16 @@ public class SmallAmountInput {
             codeLabel.setId("quote-amount-text-field");
             codeLabel.setPadding(new Insets(0, 0, 0, 0));
 
-            Button marketValueInfo = BisqIconButton.createIconButton(AwesomeIcon.INFO_SIGN, "0.9em");
+            Button marketValueInfo = BisqIconButton.createIconButton("info");
+            marketValueInfo.setScaleX(0.8);
+            marketValueInfo.setScaleY(0.8);
             marketValueInfo.setOpacity(0.5);
-            Tooltip tooltip = new Tooltip(Res.get("onboarding.amount.marketValueInfo"));
+            Tooltip tooltip = new BisqTooltip(Res.get("onboarding.amount.marketValueInfo"));
             tooltip.getStyleClass().add("dark-tooltip");
             marketValueInfo.setTooltip(tooltip);
 
             HBox.setMargin(textInput, new Insets(0, 0, 0, -35));
-            HBox.setMargin(marketValueInfo, new Insets(0, 0, 0, 5));
+            HBox.setMargin(marketValueInfo, new Insets(-8, 0, 0, 1));
             root.getChildren().addAll(textInput, codeLabel, marketValueInfo);
 
             //  Listeners on view component events

@@ -32,7 +32,10 @@ import com.google.common.base.Charsets;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,9 +50,9 @@ public class ReputationService implements DataService.Listener {
     private final Observable<Integer> reputationChanged = new Observable<>(0);
     private boolean isBatchProcessing;
 
-    public ReputationService(PersistenceService persistenceService, 
-                             NetworkService networkService, 
-                             UserIdentityService userIdentityService, 
+    public ReputationService(PersistenceService persistenceService,
+                             NetworkService networkService,
+                             UserIdentityService userIdentityService,
                              ProofOfBurnVerificationService proofOfBurnVerificationService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
@@ -67,7 +70,7 @@ public class ReputationService implements DataService.Listener {
         isBatchProcessing = false;
         if (!authorizedProofOfBurnDataSetByHash.isEmpty()) {
             authorizedProofOfBurnDataSetByHash.keySet().forEach(pubKeyHash -> findAuthorizedProofOfBurnDataSet(pubKeyHash)
-                    .ifPresent(set -> ReputationScoreCalculation.addTotalScore(pubKeyHash, set)));
+                    .ifPresent(set -> ReputationScoreCalculation.addBurnedBsq(pubKeyHash, set)));
             reputationChanged.set(reputationChanged.get() + 1);
         }
         return CompletableFuture.completedFuture(true);
@@ -83,7 +86,7 @@ public class ReputationService implements DataService.Listener {
                 ByteArray hash = new ByteArray(authorizedProofOfBurnData.getHash());
                 findAuthorizedProofOfBurnDataSet(hash)
                         .ifPresent(set -> {
-                            ReputationScoreCalculation.addTotalScore(hash, set);
+                            ReputationScoreCalculation.addBurnedBsq(hash, set);
                             reputationChanged.set(reputationChanged.get() + 1);
                         });
             }
@@ -94,19 +97,17 @@ public class ReputationService implements DataService.Listener {
         return Optional.ofNullable(authorizedProofOfBurnDataSetByHash.get(hash));
     }
 
+    public ReputationScore getReputationScore(UserProfile userProfile) {
+        return findReputationScore(userProfile).orElse(ReputationScore.NONE);
+    }
+
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
         // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
         byte[] preImage = userProfile.getId().getBytes(Charsets.UTF_8);
         byte[] hashOfPreImage = DigestUtil.hash(preImage);
         ByteArray hash = new ByteArray(hashOfPreImage);
-        Optional<ReputationScore> optionalReputationScore = findAuthorizedProofOfBurnDataSet(hash)
+        return findAuthorizedProofOfBurnDataSet(hash)
                 .map(set -> ReputationScoreCalculation.getReputationScore(hash));
-        if (optionalReputationScore.isEmpty()) {
-            //todo random dummy values
-            double randomValue = new Random().nextInt(100) / 100d;
-            optionalReputationScore = Optional.of(new ReputationScore(1000, randomValue, 10, randomValue));
-        }
-        return optionalReputationScore;
     }
 
     private void addAuthorizedProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData) {

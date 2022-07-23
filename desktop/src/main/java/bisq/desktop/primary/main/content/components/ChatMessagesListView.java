@@ -65,6 +65,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqPopupMenu;
 import bisq.desktop.components.controls.BisqPopupMenuItem;
 import bisq.desktop.components.controls.BisqTextArea;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
@@ -733,7 +734,7 @@ public class ChatMessagesListView {
 
                                     chatUserIcon.setChatUser(author);
                                     chatUserIcon.setCursor(Cursor.HAND);
-                                    Tooltip.install(chatUserIcon, new Tooltip(author.getTooltipString()));
+                                    Tooltip.install(chatUserIcon, new BisqTooltip(author.getTooltipString()));
                                     chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));
 
                                     reputationScoreDisplay.applyReputationScore(item.getReputationScore());

@@ -92,7 +92,7 @@ public class DaoBridgeService implements Service {
                 log.error("Invalid authorization keys", e);
             }
         } else {
-            log.warn("Authorization keys are not provided in config");
+            throw new RuntimeException("Authorization keys are not provided in config");
         }
     }
 

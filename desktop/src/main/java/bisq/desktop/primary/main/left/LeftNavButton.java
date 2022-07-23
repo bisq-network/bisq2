@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.i18n.Res;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
@@ -96,7 +97,7 @@ class LeftNavButton extends Pane implements Toggle {
         setToggleGroup(toggleGroup);
         toggleGroup.getToggles().add(this);
 
-        tooltip = new Tooltip(title);
+        tooltip = new BisqTooltip(title);
         if (iconId != null) {
             Stream.of(icon, iconActive, iconHover).forEach(icon -> {
                 icon.setMouseTransparent(true);
@@ -124,7 +125,7 @@ class LeftNavButton extends Pane implements Toggle {
             expandedIcon.setManaged(false);
             expandedIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
             expandedIcon.setLayoutY(10);
-            Tooltip.install(expandedIcon, new Tooltip(Res.get("navigation.expandedIcon.tooltip")));
+            Tooltip.install(expandedIcon, new BisqTooltip(Res.get("navigation.expandedIcon.tooltip")));
             expandedIcon.setOnMouseClicked(e -> {
                 isAutoCollapse.set(true);
                 cookieKey.ifPresent(cookieKey -> SettingsService.getInstance().setCookie(cookieKey, true));
@@ -138,7 +139,7 @@ class LeftNavButton extends Pane implements Toggle {
             autoCollapseIcon.setManaged(false);
             autoCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
             autoCollapseIcon.setLayoutY(12);
-            Tooltip.install(autoCollapseIcon, new Tooltip(Res.get("navigation.autoCollapseIcon.tooltip")));
+            Tooltip.install(autoCollapseIcon, new BisqTooltip(Res.get("navigation.autoCollapseIcon.tooltip")));
             autoCollapseIcon.setOnMouseClicked(e -> {
                 isAutoCollapse.set(false);
                 cookieKey.ifPresent(cookieKey -> SettingsService.getInstance().setCookie(cookieKey, false));

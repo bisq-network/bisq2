@@ -127,20 +127,10 @@ public final class UserProfile implements DistributedData {
     }
 
     public String getTooltipString() {
-        return Res.get("social.chatUser.tooltip", nickName, getNym());
+        return Res.get("social.chatUser.tooltip", nickName, getNym(), getId());
     }
 
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
-    }
-
-    //todo
-    public String getBurnScoreAsString() {
-        return "301"; //todo implement instead of hardcode
-    }
-
-    //todo
-    public String getAccountAgeAsString() {
-        return "274 days"; //todo implement instead of hardcode
     }
 }

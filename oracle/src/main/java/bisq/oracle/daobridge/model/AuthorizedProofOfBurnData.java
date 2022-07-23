@@ -29,15 +29,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
-@ToString
 @Getter
 public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
     // The pubKeys which are authorized for publishing that data.
@@ -119,5 +118,16 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         } else {
             return authorizedPublicKeys;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AuthorizedProofOfBurnData{" +
+                ",\r\n     txId='" + txId + '\'' +
+                ",\r\n     burnedAmount=" + burnedAmount +
+                ",\r\n     blockHeight=" + blockHeight +
+                ",\r\n     time=" + new Date(time * 1000) +
+                ",\r\n     hash=" + Hex.encode(hash) +
+                "\r\n}";
     }
 }

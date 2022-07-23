@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.trade.overview.grid;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
 import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
@@ -183,7 +184,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
             hBox.getChildren().add(label);
         }
 
-        Tooltip tooltip = new Tooltip();
+        Tooltip tooltip = new BisqTooltip();
         tooltip.setMaxWidth(240);
         tooltip.setWrapText(true);
         tooltip.setText(tooltipText);

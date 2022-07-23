@@ -17,8 +17,10 @@
 
 package bisq.desktop.components.controls;
 
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.utils.validation.InputValidator;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -30,6 +32,7 @@ import javafx.scene.control.TextInputControl;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -44,6 +47,8 @@ public class MaterialTextField extends Pane {
     protected final StringProperty promptProperty = new SimpleStringProperty();
     protected final StringProperty descriptionProperty = new SimpleStringProperty();
     protected final StringProperty helpProperty = new SimpleStringProperty();
+    @Getter
+    private final BisqIconButton iconButton;
 
     public MaterialTextField() {
         this(null, null, null);
@@ -92,6 +97,13 @@ public class MaterialTextField extends Pane {
             field.setPromptText(prompt);
         }
 
+        iconButton = new BisqIconButton();
+        iconButton.setIcon("info");
+        iconButton.setLayoutY(6);
+        iconButton.setOpacity(0.6);
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
+
         helpLabel = new Label();
         helpLabel.setLayoutX(16);
         helpLabel.setStyle("-fx-font-size: 0.95em; -fx-text-fill: -bisq-grey-dimmed; -fx-font-family: \"IBM Plex Sans Light\";");
@@ -100,7 +112,7 @@ public class MaterialTextField extends Pane {
             helpLabel.setText(help);
         }
 
-        getChildren().addAll(bg, line, selectionLine, descriptionLabel, field, helpLabel);
+        getChildren().addAll(bg, line, selectionLine, descriptionLabel, field, iconButton, helpLabel);
 
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
                 onWidthChanged((double) newValue)).get());
@@ -117,6 +129,10 @@ public class MaterialTextField extends Pane {
                 update()).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
+        widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
+                update()).get());
+        field.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+                update()).get());
 
         bg.setOnMousePressed(e -> field.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());
@@ -127,6 +143,7 @@ public class MaterialTextField extends Pane {
         doLayout();
         update();
     }
+
 
     protected void doLayout() {
         bg.setMinHeight(getBgHeight());
@@ -146,6 +163,18 @@ public class MaterialTextField extends Pane {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
         } else {
             return getBgHeight();
+        }
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+        layoutIconButton();
+        return super.computePrefWidth(height);
+    }
+
+    private void layoutIconButton() {
+        if (getWidth() > 0) {
+            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
         }
     }
 
@@ -251,6 +280,7 @@ public class MaterialTextField extends Pane {
             field.getStyleClass().add("material-text-field-read-only");
         }
         setOpacity(field.isDisabled() ? 0.35 : 1);
+        UIThread.runOnNextRenderFrame(this::layoutIconButton);
     }
 
     protected void removeBgStyles() {
@@ -326,5 +356,31 @@ public class MaterialTextField extends Pane {
 
     protected double getFieldLayoutY() {
         return 18;
+    }
+
+    public void hideIcon() {
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
+    }
+
+    public void showIcon() {
+        iconButton.setManaged(true);
+        iconButton.setVisible(true);
+        layoutIconButton();
+    }
+
+    public void setIcon(AwesomeIcon icon) {
+        iconButton.setIcon(icon);
+        showIcon();
+    }
+
+    public void setIcon(String iconId) {
+        iconButton.setIcon(iconId);
+        showIcon();
+    }
+
+    public void setIconTooltip(String text) {
+        iconButton.setTooltip(new BisqTooltip(text));
+        showIcon();
     }
 }

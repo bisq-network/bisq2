@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.utils;
 
+import bisq.desktop.components.controls.BisqTooltip;
 import javafx.scene.control.Control;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.SkinBase;
@@ -35,7 +36,7 @@ public class TooltipUtil {
                         labeled.setTooltip(null);
                     }
                 } else if (unTruncatedText != null && !unTruncatedText.trim().isEmpty()) {
-                    final Tooltip tooltip = new Tooltip(unTruncatedText);
+                    Tooltip tooltip = new BisqTooltip(unTruncatedText);
 
                     // Force tooltip to use color, as it takes in some cases the color of the parent label
                     // and can't be overridden by class or nodeId
