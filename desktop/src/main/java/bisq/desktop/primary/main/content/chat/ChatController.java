@@ -35,6 +35,7 @@ import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -49,6 +50,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     @Getter
     protected final M model;
     private final UserProfileService userProfileService;
+    private final ReputationService reputationService;
     @Getter
     protected V view;
     protected final UserIdentityService userIdentityService;
@@ -69,6 +71,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         chatService = applicationService.getChatService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
+        reputationService = applicationService.getUserService().getReputationService();
         privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
@@ -100,6 +103,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
             UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
                     chatService,
+                    reputationService,
                     chatUser,
                     () -> {
                         onCloseSideBar();

@@ -25,6 +25,7 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -49,8 +50,12 @@ import java.util.function.Consumer;
 public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     private final Controller controller;
 
-    public UserProfileSidebar(UserProfileService userProfileService, ChatService chatService, UserProfile userProfile, Runnable closeHandler) {
-        controller = new Controller(userProfileService, chatService, userProfile, closeHandler);
+    public UserProfileSidebar(UserProfileService userProfileService,
+                              ChatService chatService,
+                              ReputationService reputationService,
+                              UserProfile userProfile,
+                              Runnable closeHandler) {
+        controller = new Controller(userProfileService, chatService, reputationService, userProfile, closeHandler);
     }
 
     public Pane getRoot() {
@@ -79,14 +84,17 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
+        private final ReputationService reputationService;
         private final Runnable closeHandler;
 
 
         private Controller(UserProfileService userProfileService,
                            ChatService chatService,
+                           ReputationService reputationService,
                            UserProfile userProfile,
                            Runnable closeHandler) {
             this.userProfileService = userProfileService;
+            this.reputationService = reputationService;
             this.closeHandler = closeHandler;
             model = new Model(chatService, userProfile);
             view = new View(model, this);
@@ -103,12 +111,16 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.id.set(Res.get("social.createUserProfile.id", userProfile.getId()));
             model.statement.set(userProfile.getStatement());
             model.terms.set(userProfile.getTerms());
-            model.reputationScore.set(userProfile.getBurnScoreAsString());
-            model.profileAge.set(userProfile.getAccountAgeAsString());
 
             model.nym.set(userProfile.getNym());
             model.nickName.set(userProfile.getNickName());
             model.roboHashNode.set(RoboHash.getImage(userProfile.getPubKeyHash()));
+
+            // todo add tooltip
+            model.reputationScore.set(String.valueOf(reputationService.getReputationScore(userProfile).getTotalScore()));
+
+            //todo
+            // model.profileAge.set(userProfile.getAccountAgeAsString());
         }
 
         @Override

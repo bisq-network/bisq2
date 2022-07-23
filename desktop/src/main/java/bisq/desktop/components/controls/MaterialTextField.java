@@ -117,6 +117,8 @@ public class MaterialTextField extends Pane {
                 update()).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
+        field.textProperty().addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
+                update()).get());
 
         bg.setOnMousePressed(e -> field.requestFocus());
         bg.setOnMouseEntered(e -> onMouseEntered());

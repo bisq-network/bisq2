@@ -133,14 +133,4 @@ public final class UserProfile implements DistributedData {
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
     }
-
-    //todo
-    public String getBurnScoreAsString() {
-        return "301"; //todo implement instead of hardcode
-    }
-
-    //todo
-    public String getAccountAgeAsString() {
-        return "274 days"; //todo implement instead of hardcode
-    }
 }

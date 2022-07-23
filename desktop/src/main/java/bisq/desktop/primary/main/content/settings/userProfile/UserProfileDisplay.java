@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile;
 
+import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.MaterialTextArea;
@@ -28,6 +29,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.HPos;
@@ -50,8 +52,10 @@ import java.util.concurrent.CompletableFuture;
 public class UserProfileDisplay {
     private final Controller controller;
 
-    public UserProfileDisplay(UserIdentityService userIdentityService, UserIdentity userIdentity) {
-        controller = new Controller(userIdentityService, userIdentity);
+    public UserProfileDisplay(UserIdentityService userIdentityService,
+                              ReputationService reputationService,
+                              UserIdentity userIdentity) {
+        controller = new Controller(userIdentityService, reputationService, userIdentity);
     }
 
     public Pane getRoot() {
@@ -63,21 +67,15 @@ public class UserProfileDisplay {
         @Getter
         private final View view;
         private final UserIdentityService userIdentityService;
+        private final ReputationService reputationService;
+        private Pin reputationChangedPin;
 
-        private Controller(UserIdentityService userIdentityService, UserIdentity userIdentity) {
+        private Controller(UserIdentityService userIdentityService,
+                           ReputationService reputationService,
+                           UserIdentity userIdentity) {
             this.userIdentityService = userIdentityService;
-            model = new Model();
-
-            UserProfile userProfile = userIdentity.getUserProfile();
-            model.identityId = userProfile.getId();
-            model.statement.set(userProfile.getStatement());
-            model.terms.set(userProfile.getTerms());
-            model.reputationScore = userProfile.getBurnScoreAsString();
-            model.profileAge = userProfile.getAccountAgeAsString();
-            model.nymId = userProfile.getNym();
-            model.nickName = userProfile.getNickName();
-            model.roboHashNode = RoboHash.getImage(userProfile.getPubKeyHash());
-
+            this.reputationService = reputationService;
+            model = new Model(userIdentity.getUserProfile());
             view = new View(model, this);
         }
 
@@ -87,10 +85,12 @@ public class UserProfileDisplay {
                 model.statement.set(userIdentity.getUserProfile().getStatement());
                 model.terms.set(userIdentity.getUserProfile().getTerms());
             });
+            reputationChangedPin = reputationService.getReputationChanged().addObserver(__ -> applyReputationScore());
         }
 
         @Override
         public void onDeactivate() {
+            reputationChangedPin.unbind();
         }
 
         @Override
@@ -100,6 +100,10 @@ public class UserProfileDisplay {
 
         public void onEdit() {
             Navigation.navigateTo(NavigationTarget.EDIT_PROFILE);
+        }
+
+        public void onGainReputation() {
+            Navigation.navigateTo(NavigationTarget.REPUTATION);
         }
 
         public void onDelete() {
@@ -122,25 +126,40 @@ public class UserProfileDisplay {
                         }
                     });
         }
+
+        private void applyReputationScore() {
+            model.reputationScore.set(String.valueOf(reputationService.getReputationScore(model.userProfile).getTotalScore()));
+        }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private Image roboHashNode;
-        private String nymId;
-        private String nickName;
-        private String identityId;
+        public final UserProfile userProfile;
+        private final String nickName;
+        private final String nymId;
+        private final String profileId;
+        private final Image roboHashNode;
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
-        private String reputationScore;
-        private String profileAge;
+        private final StringProperty reputationScore = new SimpleStringProperty();
+        private final StringProperty profileAge = new SimpleStringProperty();
+
+        public Model(UserProfile userProfile) {
+            this.userProfile = userProfile;
+            nickName = userProfile.getNickName();
+            nymId = userProfile.getNym();
+            profileId = userProfile.getId();
+            roboHashNode = RoboHash.getImage(userProfile.getPubKeyHash());
+            statement.set(userProfile.getStatement());
+            terms.set(userProfile.getTerms());
+        }
     }
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<GridPane, Model, Controller> {
         private final MaterialTextArea terms;
-        private final MaterialTextField statement;
+        private final MaterialTextField statement, reputationScore, profileAge;
         private int rowIndex;
-        private final Button editButton, deletedButton;
+        private final Button editButton, reputationButton, deletedButton;
 
         private View(Model model, UserProfileDisplay.Controller controller) {
             super(new GridPane(), model, controller);
@@ -167,43 +186,62 @@ public class UserProfileDisplay {
             roboIconImageView.setFitHeight(120);
             root.add(roboIconImageView, 1, rowIndex - 1, 2, 2);
 
-            addField(Res.get("social.chatUser.identityId"), model.identityId, 0, ++rowIndex);
-            addField(Res.get("social.chatUser.profileAge"), model.profileAge, 1, rowIndex);
-            addField(Res.get("social.chatUser.reputationScore"), model.reputationScore, 0, ++rowIndex);
+            addField(Res.get("social.chatUser.profileId"), model.profileId, 0, ++rowIndex);
+            profileAge = addField(Res.get("social.chatUser.profileAge"), model.profileAge.get(), 1, rowIndex);
+            reputationScore = addField(Res.get("social.chatUser.reputationScore"), model.reputationScore.get(), 0, ++rowIndex);
             terms = addTextArea(Res.get("social.chatUser.terms"), model.terms.get(), 1, rowIndex);
             statement = addField(Res.get("social.chatUser.statement"), model.statement.get(), 0, ++rowIndex);
 
             deletedButton = new Button(Res.get("settings.userProfile.deleteProfile"));
             deletedButton.getStyleClass().addAll("outlined-button", "grey-outlined-button");
+
             editButton = new Button(Res.get("edit"));
-            editButton.getStyleClass().addAll("outlined-button");
-            HBox buttons = new HBox(10, deletedButton, editButton);
+            editButton.getStyleClass().addAll("outlined-button", "grey-outlined-button");
+
+            reputationButton = new Button(Res.get("settings.userProfile.gainReputation"));
+            reputationButton.getStyleClass().addAll("outlined-button");
+
+            HBox buttons = new HBox(10, deletedButton, editButton, reputationButton);
             buttons.setAlignment(Pos.CENTER_RIGHT);
+
             GridPane.setHalignment(buttons, HPos.RIGHT);
             root.add(buttons, 0, ++rowIndex, 2, 1);
         }
 
         @Override
         protected void onViewAttached() {
+            profileAge.textProperty().bind(model.profileAge);
+            reputationScore.textProperty().bind(model.reputationScore);
             statement.textProperty().bind(model.statement);
             terms.textProperty().bind(model.terms);
-            editButton.setOnAction(e -> controller.onEdit());
+
+            statement.disableProperty().bind(model.statement.isNull().or(model.statement.isEmpty()));
+            terms.disableProperty().bind(model.terms.isNull().or(model.terms.isEmpty()));
+
             deletedButton.setOnAction(e -> controller.onDelete());
+            editButton.setOnAction(e -> controller.onEdit());
+            reputationButton.setOnAction(e -> controller.onGainReputation());
         }
 
         @Override
         protected void onViewDetached() {
+            profileAge.textProperty().unbind();
+            reputationScore.textProperty().unbind();
             statement.textProperty().unbind();
             terms.textProperty().unbind();
-            editButton.setOnAction(null);
+
+            statement.disableProperty().unbind();
+            terms.disableProperty().unbind();
+
             deletedButton.setOnAction(null);
+            editButton.setOnAction(null);
+            reputationButton.setOnAction(null);
         }
 
         private MaterialTextField addField(String description, String value, int columnIndex, int rowIndex) {
             MaterialTextField field = new MaterialTextField(description);
             field.setEditable(false);
             field.setText(value);
-            field.setDisable(value == null || value.isEmpty());
             root.add(field, columnIndex, rowIndex, 1, 1);
             return field;
         }
@@ -212,7 +250,6 @@ public class UserProfileDisplay {
             MaterialTextArea field = new MaterialTextArea(description);
             field.setEditable(false);
             field.setText(value);
-            field.setDisable(value == null || value.isEmpty());
             field.setFixedHeight(2 * 56 + 20); // MaterialTextField has height 56
             root.add(field, columnIndex, rowIndex, 1, 2);
             return field;

@@ -35,7 +35,7 @@ public class ReputationScoreCalculation {
 
     private static final Map<ByteArray, Long> totalScoreByHash = new ConcurrentHashMap<>();
 
-    public static void addTotalScore(ByteArray pubKeyHash, Set<AuthorizedProofOfBurnData> set) {
+    public static void addBurnedBsq(ByteArray pubKeyHash, Set<AuthorizedProofOfBurnData> set) {
         long totalBurnedBsqScore = set.stream()
                 .mapToLong(proofOfBurnData -> getBurnedBsqScore(proofOfBurnData.getBurnedAmount(),
                         proofOfBurnData.getTime(),

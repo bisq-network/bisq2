@@ -24,6 +24,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,10 +36,12 @@ public class UserProfileController implements Controller {
     @Getter
     private final UserProfileView view;
     private final UserIdentityService userIdentityService;
+    private final ReputationService reputationService;
     private Pin selectedUserProfilePin;
 
     public UserProfileController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
+        reputationService = applicationService.getUserService().getReputationService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new UserProfileModel();
@@ -53,7 +56,9 @@ public class UserProfileController implements Controller {
                             (chatUserIdentity != null &&
                                     !model.getSelectedChatUserIdentity().getId().equals(chatUserIdentity.getId()))) {
                         model.setSelectedChatUserIdentity(chatUserIdentity);
-                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService, chatUserIdentity);
+                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService,
+                                reputationService,
+                                chatUserIdentity);
                         model.getUserProfileDisplayPane().set(userProfileDisplay.getRoot());
                     }
                 }
