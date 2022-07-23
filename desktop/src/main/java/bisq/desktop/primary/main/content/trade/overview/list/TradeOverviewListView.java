@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.trade.overview.list;
 
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.ImageUtil;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.primary.main.content.trade.overview.ProtocolListItem;
@@ -161,7 +162,7 @@ public class TradeOverviewListView extends TradeOverviewBaseView<VBox, TradeOver
                 return new TableCell<>() {
                     final HBox hBox = new HBox();
                     final List<Label> stars = new ArrayList<>();
-                    final Tooltip tooltip = new Tooltip();
+                    final Tooltip tooltip = new BisqTooltip();
 
                     {
                         // Does not take default style

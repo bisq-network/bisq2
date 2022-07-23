@@ -1183,6 +1183,10 @@
  ******************************************************************************/
 
 .tooltip {
+    /* -fx-show-delay does not work from css, so we use BisqTooltip to set it by code */
+    -fx-show-delay: 100ms;
+    -fx-hide-delay: 100ms;
+    -fx-show-duration: 20000ms;
     -fx-background: -bisq-grey-11;
     -fx-text-fill: -bisq-black;
     -fx-background-color: -bisq-grey-11;
@@ -1191,7 +1195,6 @@
     -fx-padding: 0.667em 0.75em 0.667em 0.75em; /* 10px */
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 10, 0.0, 0, 3);
     -fx-font-size: 1em;
-    -fx-show-delay: 300ms;
 }
 
 .tooltip.dark-tooltip {

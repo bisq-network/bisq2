@@ -200,7 +200,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             super(new VBox(), model, controller);
 
             root.setSpacing(10);
-            root.setMinWidth(240);
+            root.setMinWidth(260);
             root.setPadding(new Insets(0, 20, 20, 20));
 
             //root.setPadding(new Insets(0, 25, 0, 35));

@@ -29,7 +29,10 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.HPos;
@@ -45,6 +48,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -128,7 +133,9 @@ public class UserProfileDisplay {
         }
 
         private void applyReputationScore() {
-            model.reputationScore.set(String.valueOf(reputationService.getReputationScore(model.userProfile).getTotalScore()));
+            ReputationScore reputationScore = reputationService.getReputationScore(model.userProfile);
+            model.reputationScoreValue.set(String.valueOf(reputationScore.getTotalScore()));
+            model.reputationScore.set(reputationScore);
         }
     }
 
@@ -140,7 +147,8 @@ public class UserProfileDisplay {
         private final Image roboHashNode;
         private final StringProperty statement = new SimpleStringProperty();
         private final StringProperty terms = new SimpleStringProperty();
-        private final StringProperty reputationScore = new SimpleStringProperty();
+        private final StringProperty reputationScoreValue = new SimpleStringProperty();
+        private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
         private final StringProperty profileAge = new SimpleStringProperty();
 
         public Model(UserProfile userProfile) {
@@ -157,9 +165,10 @@ public class UserProfileDisplay {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<GridPane, Model, Controller> {
         private final MaterialTextArea terms;
-        private final MaterialTextField statement, reputationScore, profileAge;
+        private final MaterialTextField statement, reputationScoreField, profileAge;
         private int rowIndex;
         private final Button editButton, reputationButton, deletedButton;
+        private Subscription reputationScorePin;
 
         private View(Model model, UserProfileDisplay.Controller controller) {
             super(new GridPane(), model, controller);
@@ -179,18 +188,28 @@ public class UserProfileDisplay {
             root.add(headlineLabel, 0, 0, 2, 1);
 
             addField(Res.get("social.chatUser.nickName"), model.nickName, 0, ++rowIndex);
-            addField(Res.get("social.chatUser.nymId"), model.nymId, 0, ++rowIndex);
+
+            MaterialTextField nymId = addField(Res.get("social.chatUser.nymId"), model.nymId, 0, ++rowIndex);
+            nymId.setIconTooltip(Res.get("social.chatUser.nymId.tooltip"));
 
             ImageView roboIconImageView = new ImageView(model.roboHashNode);
             roboIconImageView.setFitWidth(120);
             roboIconImageView.setFitHeight(120);
             root.add(roboIconImageView, 1, rowIndex - 1, 2, 2);
 
-            addField(Res.get("social.chatUser.profileId"), model.profileId, 0, ++rowIndex);
+            MaterialTextField profileId = addField(Res.get("social.chatUser.profileId"), model.profileId, 0, ++rowIndex);
+            profileId.setIconTooltip(Res.get("social.chatUser.profileId.tooltip"));
+
             profileAge = addField(Res.get("social.chatUser.profileAge"), model.profileAge.get(), 1, rowIndex);
-            reputationScore = addField(Res.get("social.chatUser.reputationScore"), model.reputationScore.get(), 0, ++rowIndex);
+            profileAge.setIconTooltip(Res.get("social.chatUser.profileAge.tooltip"));
+
+            reputationScoreField = addField(Res.get("social.chatUser.reputationScore"), model.reputationScoreValue.get(), 0, ++rowIndex);
+
             terms = addTextArea(Res.get("social.chatUser.terms"), model.terms.get(), 1, rowIndex);
+            terms.setIconTooltip(Res.get("social.chatUser.terms.tooltip"));
+
             statement = addField(Res.get("social.chatUser.statement"), model.statement.get(), 0, ++rowIndex);
+            statement.setIconTooltip(Res.get("social.chatUser.statement.tooltip"));
 
             deletedButton = new Button(Res.get("settings.userProfile.deleteProfile"));
             deletedButton.getStyleClass().addAll("outlined-button", "grey-outlined-button");
@@ -211,12 +230,18 @@ public class UserProfileDisplay {
         @Override
         protected void onViewAttached() {
             profileAge.textProperty().bind(model.profileAge);
-            reputationScore.textProperty().bind(model.reputationScore);
+            reputationScoreField.textProperty().bind(model.reputationScoreValue);
             statement.textProperty().bind(model.statement);
             terms.textProperty().bind(model.terms);
 
             statement.disableProperty().bind(model.statement.isNull().or(model.statement.isEmpty()));
             terms.disableProperty().bind(model.terms.isNull().or(model.terms.isEmpty()));
+
+            reputationScorePin = EasyBind.subscribe(model.reputationScore, reputationScore -> {
+                if (reputationScore != null) {
+                    reputationScoreField.setIconTooltip(reputationScore.getDetails());
+                }
+            });
 
             deletedButton.setOnAction(e -> controller.onDelete());
             editButton.setOnAction(e -> controller.onEdit());
@@ -226,12 +251,14 @@ public class UserProfileDisplay {
         @Override
         protected void onViewDetached() {
             profileAge.textProperty().unbind();
-            reputationScore.textProperty().unbind();
+            reputationScoreField.textProperty().unbind();
             statement.textProperty().unbind();
             terms.textProperty().unbind();
 
             statement.disableProperty().unbind();
             terms.disableProperty().unbind();
+
+            reputationScorePin.unsubscribe();
 
             deletedButton.setOnAction(null);
             editButton.setOnAction(null);

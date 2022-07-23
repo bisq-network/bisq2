@@ -84,7 +84,7 @@ public class RoboIconWithNickName extends HBox {
     public void setUserProfile(UserIdentity userIdentity) {
         imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
         nickNameLabel.setText(userIdentity.getNickName());
-        Tooltip.install(this, new Tooltip(Res.get("social.chatUser.tooltip",
-                userIdentity.getNickName(), userIdentity.getNym())));
+        Tooltip.install(this, new BisqTooltip(Res.get("social.chatUser.tooltip",
+                userIdentity.getNickName(), userIdentity.getNym(), userIdentity.getId())));
     }
 }

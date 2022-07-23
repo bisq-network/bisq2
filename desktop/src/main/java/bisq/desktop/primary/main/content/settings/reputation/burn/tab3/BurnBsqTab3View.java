@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -36,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Controller> {
     private final MaterialTextField pubKeyHash;
-    private final Button copyButton, closeButton, backButton;
+    private final Button closeButton, backButton;
     private final Hyperlink learnMore;
 
     public BurnBsqTab3View(BurnBsqTab3Model model,
@@ -59,12 +58,8 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
 
         pubKeyHash = new MaterialTextField(Res.get("reputation.pubKeyHash"), "");
         pubKeyHash.setEditable(false);
-
-        copyButton = BisqIconButton.createIconButton(AwesomeIcon.COPY);
-
-        HBox.setHgrow(pubKeyHash, Priority.ALWAYS);
-        HBox pubKeyHashHBox = new HBox(10, pubKeyHash, copyButton);
-        pubKeyHashHBox.setAlignment(Pos.CENTER_LEFT);
+        pubKeyHash.setIcon(AwesomeIcon.COPY);
+        pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
 
         closeButton = new Button(Res.get("close"));
         closeButton.setDefaultButton(true);
@@ -79,7 +74,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         VBox.setMargin(userProfileSelection, new Insets(0, 0, -30, 0));
         root.getChildren().addAll(headLine, info, learnMore,
                 userProfileSelectLabel, userProfileSelection,
-                pubKeyHashHBox,
+                pubKeyHash,
                 buttons
         );
     }
@@ -87,8 +82,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
     @Override
     protected void onViewAttached() {
         pubKeyHash.textProperty().bind(model.getPubKeyHash());
-
-        copyButton.setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
+        pubKeyHash.getIconButton().setOnAction(e -> controller.onCopyToClipboard(pubKeyHash.getText()));
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
         learnMore.setOnAction(e -> controller.onLearnMore());
@@ -98,7 +92,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
     protected void onViewDetached() {
         pubKeyHash.textProperty().unbind();
 
-        copyButton.setOnAction(null);
+        pubKeyHash.getIconButton().setOnAction(null);
         closeButton.setOnAction(null);
         backButton.setOnAction(null);
         learnMore.setOnAction(null);

@@ -187,7 +187,7 @@ public class ChannelSidebar {
             super(new VBox(), model, controller);
 
             root.setSpacing(15);
-            root.setMinWidth(240);
+            root.setMinWidth(260);
             root.setPadding(new Insets(0, 20, 20, 20));
 
             closeButton = BisqIconButton.createIconButton("close");

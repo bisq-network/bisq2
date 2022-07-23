@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Icons;
-import bisq.i18n.Res;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.user.reputation.ReputationScore;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Pos;
@@ -32,7 +32,7 @@ import java.util.List;
 @Slf4j
 public class ReputationScoreDisplay extends HBox {
     final List<Label> stars;
-    final Tooltip tooltip = new Tooltip();
+    final Tooltip tooltip = new BisqTooltip();
 
     public ReputationScoreDisplay() {
         tooltip.setStyle("-fx-text-fill: black; -fx-background-color: -bisq-grey-11;");
@@ -56,15 +56,10 @@ public class ReputationScoreDisplay extends HBox {
 
     public void applyReputationScore(ReputationScore reputationScore) {
         double relativeScore = reputationScore.getRelativeScore();
-        int ranking = reputationScore.getRanking();
-        long score = reputationScore.getTotalScore();
-
         int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;
         for (int i = 0; i < stars.size(); i++) {
             stars.get(i).setOpacity(i <= target ? 1 : 0.3);
         }
-
-        long percent = Math.round(relativeScore * 10000) / 100;
-        tooltip.setText(Res.get("reputation.score.tooltip", ranking, score, percent));
+        tooltip.setText(reputationScore.getDetails());
     }
 }

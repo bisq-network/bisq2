@@ -26,6 +26,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.primary.main.top.TopPanelView;
 import bisq.i18n.Res;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -144,14 +145,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         expandIcon.setLayoutY(menuTop - 3);
         expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
         expandIcon.setOpacity(0);
-        Tooltip.install(expandIcon, new Tooltip(Res.get("navigation.expandIcon.tooltip")));
+        Tooltip.install(expandIcon, new BisqTooltip(Res.get("navigation.expandIcon.tooltip")));
 
         collapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
         collapseIcon.setCursor(Cursor.HAND);
         collapseIcon.setLayoutY(menuTop - 3);
         collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
         collapseIcon.setOpacity(0);
-        Tooltip.install(collapseIcon, new Tooltip(Res.get("navigation.collapseIcon.tooltip")));
+        Tooltip.install(collapseIcon, new BisqTooltip(Res.get("navigation.collapseIcon.tooltip")));
 
         logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));

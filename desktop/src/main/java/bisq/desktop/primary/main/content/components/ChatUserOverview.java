@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.desktop.common.utils.Layout;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.user.profile.UserProfile;
 import javafx.beans.property.ObjectProperty;
@@ -121,12 +122,12 @@ public class ChatUserOverview implements Comparable<ChatUserOverview> {
 
             userName = new Label();
             userName.setMaxWidth(100);
-            Tooltip.install(userName, new Tooltip(model.userProfile.getTooltipString()));
+            Tooltip.install(userName, new BisqTooltip(model.userProfile.getTooltipString()));
 
             roboIcon = new ImageView();
             roboIcon.setFitWidth(37.5);
             roboIcon.setFitHeight(37.5);
-            Tooltip.install(roboIcon, new Tooltip(model.userProfile.getTooltipString()));
+            Tooltip.install(roboIcon, new BisqTooltip(model.userProfile.getTooltipString()));
 
             HBox hBox = Layout.hBoxWith(roboIcon, userName);
             hBox.setAlignment(Pos.CENTER_LEFT);

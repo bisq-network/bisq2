@@ -11,6 +11,10 @@
     -fx-image: url("images/i2p.png");
 }
 
+#info {
+    -fx-image: url("images/info.png");
+}
+
 #satoshisquare-splash {
     -fx-image: url("images/satoshisquare_splash.png");
 }

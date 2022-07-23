@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.method;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
@@ -28,7 +29,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
@@ -138,7 +138,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                         Label closeIcon = chipButton.setRightIcon(AwesomeIcon.REMOVE_SIGN);
                         closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
                         if (paymentMethod.length() > 13) {
-                            chipButton.setTooltip(new Tooltip(displayString));
+                            chipButton.setTooltip(new BisqTooltip(displayString));
                         }
                     }, () -> {
                         ImageView icon = ImageUtil.getImageViewById(paymentMethod);

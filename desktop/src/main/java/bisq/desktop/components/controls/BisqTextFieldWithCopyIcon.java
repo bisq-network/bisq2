@@ -48,7 +48,7 @@ public class BisqTextFieldWithCopyIcon extends AnchorPane {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().addAll("icon", "highlight");
-        copyIcon.setTooltip(new Tooltip(Res.get("copyToClipboard")));
+        copyIcon.setTooltip(new BisqTooltip(Res.get("copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> {
             if (text != null && text.length() > 0) {

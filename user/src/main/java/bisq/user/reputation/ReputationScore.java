@@ -17,6 +17,7 @@
 
 package bisq.user.reputation;
 
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -39,6 +40,11 @@ public class ReputationScore implements Comparable<ReputationScore> {
         this.relativeScore = relativeScore;
         this.ranking = ranking;
         this.relativeRanking = relativeRanking;
+    }
+
+    public String getDetails() {
+        long percent = Math.round(relativeScore * 10000) / 100;
+        return Res.get("reputation.score.tooltip", ranking, totalScore, percent);
     }
 
     @Override

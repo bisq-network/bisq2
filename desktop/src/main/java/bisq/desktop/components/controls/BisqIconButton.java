@@ -22,34 +22,17 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
 
 import javax.annotation.Nullable;
 
 public class BisqIconButton extends Button {
-    @Getter
-    private final ImageView icon;
-
-    public BisqIconButton() {
-        super();
-
-        icon = new ImageView();
-        setGraphic(icon);
-    }
-
-    public BisqIconButton(String iconId) {
-        this();
-        icon.setId(iconId);
-    }
-
     public static Button createIconButton(AwesomeIcon icon) {
         Button button = AwesomeDude.createIconButton(icon);
         button.getStyleClass().add("icon-button");
         return button;
     }
-
 
     public static Button createIconButton(AwesomeIcon icon, String fontSize) {
         Label label = AwesomeDude.createIconLabel(icon, fontSize);
@@ -68,8 +51,36 @@ public class BisqIconButton extends Button {
         button.setGraphic(ImageUtil.getImageViewById(iconId));
         button.getStyleClass().add("icon-button");
         if (tooltip != null) {
-            button.setTooltip(new Tooltip(tooltip));
+            button.setTooltip(new BisqTooltip(tooltip));
         }
         return button;
+    }
+
+    @Getter
+    private final ImageView icon;
+
+    public BisqIconButton() {
+        super();
+
+        icon = new ImageView();
+        setGraphic(icon);
+        getStyleClass().add("icon-button");
+    }
+
+    public BisqIconButton(String iconId) {
+        this();
+        icon.setId(iconId);
+    }
+
+    public void setIcon(AwesomeIcon icon) {
+        setGraphic(AwesomeDude.createIconLabel(icon));
+    }
+
+    public void setIcon(AwesomeIcon icon, String fontSize) {
+        setGraphic(AwesomeDude.createIconLabel(icon, fontSize));
+    }
+
+    public void setIcon(String iconId) {
+        setGraphic(ImageUtil.getImageViewById(iconId));
     }
 }
