@@ -36,11 +36,11 @@ jobs:
       - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.2.1
         with:
-          arguments: build
+          arguments: --stacktrace build
 
       - name: Gradle Build Action (wallets)
         uses: gradle/gradle-build-action@v2.2.1
         with:
-          arguments: build
+          arguments: --stacktrace build
           build-root-directory: wallets
           gradle-executable: ./gradlew
