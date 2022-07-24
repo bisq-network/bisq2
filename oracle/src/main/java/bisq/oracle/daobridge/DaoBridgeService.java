@@ -22,7 +22,10 @@ import bisq.common.encoding.Hex;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.oracle.daobridge.dto.BondedReputationDto;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
+import bisq.oracle.daobridge.model.AuthorizedBondedReputationData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.security.KeyGeneration;
 import lombok.Getter;
@@ -111,21 +114,30 @@ public class DaoBridgeService implements Service {
         return CompletableFuture.completedFuture(true);
     }
 
-    
-    public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnDtoSet) {
+
+    public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
         checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
-        return CompletableFutureUtils.allOf(proofOfBurnDtoSet.stream()
+        return CompletableFutureUtils.allOf(proofOfBurnList.stream()
                         .map(AuthorizedProofOfBurnData::from)
-                        .map(data -> publishProofOfBurnData(data, authorizedPrivateKey.get(), authorizedPublicKey.get())))
+                        .map(data -> publishAuthorizedData(data, authorizedPrivateKey.get(), authorizedPublicKey.get())))
                 .thenApply(results -> !results.contains(false));
     }
 
-    private CompletableFuture<Boolean> publishProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData,
-                                                              PrivateKey authorizedPrivateKey,
-                                                              PublicKey authorizedPublicKey) {
+    public CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
+        checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
+        checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
+        return CompletableFutureUtils.allOf(bondedReputationList.stream()
+                        .map(AuthorizedBondedReputationData::from)
+                        .map(data -> publishAuthorizedData(data, authorizedPrivateKey.get(), authorizedPublicKey.get())))
+                .thenApply(results -> !results.contains(false));
+    }
+
+    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                                                             PrivateKey authorizedPrivateKey,
+                                                             PublicKey authorizedPublicKey) {
         return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                .thenCompose(identity -> networkService.publishAuthorizedData(authorizedProofOfBurnData,
+                .thenCompose(identity -> networkService.publishAuthorizedData(authorizedDistributedData,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey,
                         authorizedPublicKey))

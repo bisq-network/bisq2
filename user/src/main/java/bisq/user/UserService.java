@@ -56,7 +56,6 @@ public class UserService implements Service {
 
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
-    private final ProofOfBurnVerificationService proofOfBurnVerificationService;
     private final ReputationService reputationService;
 
     public UserService(UserService.Config config,
@@ -65,16 +64,15 @@ public class UserService implements Service {
                        NetworkService networkService,
                        OpenTimestampService openTimestampService,
                        ProofOfWorkService proofOfWorkService) {
-        userProfileService = new UserProfileService(persistenceService, networkService,proofOfWorkService);
+        userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
                 identityService,
                 openTimestampService,
                 networkService);
-        proofOfBurnVerificationService = new ProofOfBurnVerificationService(config.getProofOfBurnVerificationConfig(),
-                persistenceService,
-                networkService);
-        reputationService = new ReputationService(persistenceService, networkService, userIdentityService, proofOfBurnVerificationService);
+        reputationService = new ReputationService(networkService,
+                userIdentityService,
+                userProfileService);
     }
 
 
@@ -91,6 +89,8 @@ public class UserService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFuture.completedFuture(true);
+        return userProfileService.shutdown()
+                .thenCompose(result -> userIdentityService.shutdown())
+                .thenCompose(result -> reputationService.shutdown());
     }
 }

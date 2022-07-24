@@ -17,14 +17,17 @@
 
 package bisq.user.profile;
 
+import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.NymIdGenerator;
+import com.google.common.base.Charsets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,6 +62,8 @@ public final class UserProfile implements DistributedData {
     private final String statement;
 
     private transient String nym;
+    private transient ByteArray proofOfBurnHash;
+    private transient ByteArray bondedReputationHash;
 
     public UserProfile(String nickName,
                        ProofOfWork proofOfWork,
@@ -124,6 +129,20 @@ public final class UserProfile implements DistributedData {
             nym = NymIdGenerator.fromHash(getPubKeyHash());
         }
         return nym;
+    }
+
+    public ByteArray getProofOfBurnHash() {
+        if (proofOfBurnHash == null) {
+            proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
+        }
+        return proofOfBurnHash;
+    }
+
+    public ByteArray getBondedReputationHash() {
+        if (bondedReputationHash == null) {
+            bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
+        }
+        return bondedReputationHash;
     }
 
     public String getTooltipString() {

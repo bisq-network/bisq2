@@ -5,11 +5,16 @@ option java_multiple_files = true;
 import "common.proto";
 
 message AuthorizedProofOfBurnData {
-  string txId = 1;
-  uint64 burnedAmount = 2;
-  uint32 blockHeight = 3;
-  uint64 time = 4;
-  bytes hash = 5;
+  uint64 amount = 1;
+  uint64 time = 2;
+  bytes hash = 3;
+}
+
+message AuthorizedBondedReputationData {
+  uint64 amount = 1;
+  uint64 time = 2;
+  bytes hash = 3;
+  uint64 lockTime = 4;
 }
 
 message OpenTimestampStore {

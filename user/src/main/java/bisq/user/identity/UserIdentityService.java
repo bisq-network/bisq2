@@ -17,6 +17,7 @@
 
 package bisq.user.identity;
 
+import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
@@ -44,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class UserIdentityService implements PersistenceClient<UserIdentityStore> {
+public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
     @Getter
     @ToString
     public static final class Config {
@@ -91,6 +92,10 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return CompletableFuture.completedFuture(true);
     }
 
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return CompletableFuture.completedFuture(true);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API

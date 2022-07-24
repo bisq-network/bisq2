@@ -102,7 +102,7 @@ public class UserProfileDisplay {
                                         .orElse(Res.get("na")))));
 
             });
-            reputationChangedPin = reputationService.getReputationChanged().addObserver(__ -> applyReputationScore());
+            reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> applyReputationScore());
         }
 
         @Override

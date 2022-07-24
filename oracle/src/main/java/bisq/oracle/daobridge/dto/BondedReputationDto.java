@@ -22,13 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Minimal data for the reputation use case.
- * Need to be in sync with the Bisq 1 ProofOfBurnDto class.
+ * Need to be in sync with the Bisq 1 BondedReputationDto class.
  */
 @Slf4j
 @Data
-public class ProofOfBurnDto {
+public class BondedReputationDto {
     private long amount;
     private long time;
     private String hash;
     private int blockHeight;
+    private int lockTime;
 }

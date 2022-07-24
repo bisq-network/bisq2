@@ -24,7 +24,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.oracle.daobridge.dto.ProofOfBurnDto;
+import bisq.oracle.daobridge.dto.BondedReputationDto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -38,52 +38,57 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData {
+public final class AuthorizedBondedReputationData implements AuthorizedDistributedData {
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(1),
             100000,
-            AuthorizedProofOfBurnData.class.getSimpleName());
+            AuthorizedBondedReputationData.class.getSimpleName());
 
     private final long amount;
+    private final long lockTime;
     private final long time;
     private final byte[] hash;
 
-    public static AuthorizedProofOfBurnData from(ProofOfBurnDto dto) {
-        return new AuthorizedProofOfBurnData(
+    public static AuthorizedBondedReputationData from(BondedReputationDto dto) {
+        return new AuthorizedBondedReputationData(
                 dto.getAmount(),
                 dto.getTime(),
-                Hex.decode(dto.getHash()));
+                Hex.decode(dto.getHash()),
+                dto.getLockTime());
     }
 
-    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash) {
+    public AuthorizedBondedReputationData(long amount, long time, byte[] hash, long lockTime) {
         this.amount = amount;
         this.time = time;
         this.hash = hash;
+        this.lockTime = lockTime;
     }
 
     @Override
-    public bisq.oracle.protobuf.AuthorizedProofOfBurnData toProto() {
-        return bisq.oracle.protobuf.AuthorizedProofOfBurnData.newBuilder()
+    public bisq.oracle.protobuf.AuthorizedBondedReputationData toProto() {
+        return bisq.oracle.protobuf.AuthorizedBondedReputationData.newBuilder()
                 .setAmount(amount)
+                .setLockTime(lockTime)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
                 .build();
     }
 
-    public static AuthorizedProofOfBurnData fromProto(bisq.oracle.protobuf.AuthorizedProofOfBurnData proto) {
-        return new AuthorizedProofOfBurnData(
+    public static AuthorizedBondedReputationData fromProto(bisq.oracle.protobuf.AuthorizedBondedReputationData proto) {
+        return new AuthorizedBondedReputationData(
                 proto.getAmount(),
                 proto.getTime(),
-                proto.getHash().toByteArray());
+                proto.getHash().toByteArray(),
+                proto.getLockTime());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedProofOfBurnData.class));
+                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedBondedReputationData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -114,10 +119,11 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
 
     @Override
     public String toString() {
-        return "AuthorizedProofOfBurnData{" +
+        return "AuthorizedBondedReputationData{" +
                 ",\r\n     amount=" + amount +
                 ",\r\n     time=" + new Date(time) +
                 ",\r\n     hash=" + Hex.encode(hash) +
+                ",\r\n     lockTime=" + lockTime +
                 "\r\n}";
     }
 }

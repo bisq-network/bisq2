@@ -19,8 +19,6 @@ package bisq.oracle.ots;
 
 
 import bisq.common.data.ByteArray;
-import bisq.common.threading.ExecutorFactory;
-import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class OpenTimestampService implements PersistenceClient<OpenTimestampStore> {
@@ -79,10 +76,12 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        Scheduler.run(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities)
+       
+      /*  Scheduler.run(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities)
                 .periodically(1, TimeUnit.HOURS)
                 .name("Manage-timestamps");
-        CompletableFuture.runAsync(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities);
+        CompletableFuture.runAsync(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities);*/
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -97,14 +96,16 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
      * @return Verified OTS date or empty if no timestamp exists or if it is not completed.
      */
     public CompletableFuture<Optional<Long>> getVerifiedOtsDate(ByteArray data) {
+        return CompletableFuture.completedFuture(Optional.empty());
+        /*
         return CompletableFuture.supplyAsync(() -> Optional.ofNullable(getTimestampByPubKeyHash().get(data))
-                .map(timestamp -> getTimestampDate(data.getBytes(), timestamp)));
+                .map(timestamp -> getTimestampDate(data.getBytes(), timestamp)));*/
     }
 
     /**
      * Check for given identity if we have a completed timestamp. Request or upgrade timestamp if required.
      */
-    public ByteArray maybeCreateOrUpgradeTimestamp(ByteArray data) {
+    private ByteArray maybeCreateOrUpgradeTimestamp(ByteArray data) {
         return Optional.ofNullable(getTimestampByPubKeyHash().get(data))
                 .map(timestamp -> {
                     if (isTimestampComplete(timestamp)) {
@@ -125,8 +126,9 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     }
 
     public CompletableFuture<ByteArray> maybeCreateOrUpgradeTimestampAsync(ByteArray pubKeyHash) {
-        return CompletableFuture.supplyAsync(() -> maybeCreateOrUpgradeTimestamp(pubKeyHash),
-                ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
+        return CompletableFuture.completedFuture(new ByteArray(new byte[]{}));
+       /* return CompletableFuture.supplyAsync(() -> maybeCreateOrUpgradeTimestamp(pubKeyHash),
+                ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));*/
     }
 
 

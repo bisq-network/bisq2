@@ -17,6 +17,7 @@
 
 package bisq.user.profile;
 
+import bisq.common.application.Service;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -33,7 +34,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener {
+public class UserProfileService implements PersistenceClient<UserProfileStore>, DataService.Listener, Service {
     private static final String SEPARATOR_START = " [";
     private static final String SEPARATOR_END = "]";
 
@@ -57,6 +58,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         log.info("initialize");
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(ds -> ds.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
+        return CompletableFuture.completedFuture(true);
+    }
+
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -132,7 +139,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return persistableStore.getNymsByNickName();
     }
 
-    private Map<String, UserProfile> getUserProfileById() {
+    public Map<String, UserProfile> getUserProfileById() {
         return persistableStore.getUserProfileById();
     }
 
