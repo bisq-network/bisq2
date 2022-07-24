@@ -15,20 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.earnReputation.bond;
+package bisq.desktop.primary.main.content.settings.reputation.bond.tab3;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.primary.main.content.settings.reputation.burn.ReputationSourceListItem;
 import bisq.user.identity.UserIdentity;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class BsqBondModel implements Model {
+public class BondedReputationTab3Model implements Model {
     private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
-    private final ObservableList<ReputationSourceListItem> sources = FXCollections.observableArrayList();
-    private final ObjectProperty<ReputationSourceListItem> selectedSource = new SimpleObjectProperty<>();
+    private final StringProperty pubKeyHash = new SimpleStringProperty();
 }

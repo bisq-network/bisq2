@@ -64,7 +64,12 @@ public enum NavigationTarget {
     BURN_BSQ_TAB_1(BURN_BSQ, false),
     BURN_BSQ_TAB_2(BURN_BSQ, false),
     BURN_BSQ_TAB_3(BURN_BSQ, false),
+
     BSQ_BOND(OVERLAY, false),
+    BSQ_BOND_TAB_1(BSQ_BOND, false),
+    BSQ_BOND_TAB_2(BSQ_BOND, false),
+    BSQ_BOND_TAB_3(BSQ_BOND, false),
+
 
     //////////////////////////////////////////////////////////////////////
     // MAIN

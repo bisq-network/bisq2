@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.burn.tab1;
+package bisq.desktop.primary.main.content.settings.reputation.bond.tab1;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -30,27 +30,27 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Controller> {
+public class BondedReputationTab1View extends View<VBox, BondedReputationTab1Model, BondedReputationTab1Controller> {
     private final Button nextButton;
     private final Hyperlink learnMore;
 
-    public BurnBsqTab1View(BurnBsqTab1Model model,
-                           BurnBsqTab1Controller controller) {
+    public BondedReputationTab1View(BondedReputationTab1Model model,
+                                    BondedReputationTab1Controller controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("reputation.burnedBsq.infoHeadline"));
+        Label headline = new Label(Res.get("reputation.bond.infoHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("reputation.burnedBsq.info"));
+        Label info = new Label(Res.get("reputation.bond.info"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        Label headline2 = new Label(Res.get("reputation.burnedBsq.infoHeadline2"));
+        Label headline2 = new Label(Res.get("reputation.bond.infoHeadline2"));
         headline2.getStyleClass().add("bisq-text-headline-2");
 
-        Label info2 = new Label(Res.get("reputation.burnedBsq.info2"));
+        Label info2 = new Label(Res.get("reputation.bond.info2"));
         info2.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
         nextButton = new Button(Res.get("next"));
@@ -62,8 +62,8 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
+        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         root.getChildren().addAll(headline, info, headline2, info2, buttons);
     }
 

@@ -201,7 +201,6 @@ public class Transitions {
             if (nodeId == null) {
                 node.setId(StringUtils.createUid());
             }
-
             if (!effectChangeListenerByNodeId.containsKey(nodeId)) {
                 ChangeListener<Effect> effectChangeListener = (observable, oldValue, newValue) -> {
                     if (oldValue != null && newValue == null) {
@@ -212,7 +211,7 @@ public class Transitions {
                 };
                 node.effectProperty().addListener(effectChangeListener);
                 effectChangeListenerByNodeId.put(nodeId, effectChangeListener);
-            }else{
+            } else {
                 return;
             }
             if (removeEffectTimeLineByNodeId.containsKey(nodeId)) {
@@ -221,7 +220,7 @@ public class Transitions {
                 node.setEffect(null);
             }
         }
-        
+
         node.setMouseTransparent(true);
         GaussianBlur blur = new GaussianBlur(0.0);
         Timeline timeline = new Timeline();
@@ -253,7 +252,7 @@ public class Transitions {
     }
 
     public static void removeEffect(Node node) {
-        removeEffect(node, DEFAULT_DURATION);
+        removeEffect(node, DEFAULT_DURATION / 2);
     }
 
     private static void removeEffect(Node node, int duration) {

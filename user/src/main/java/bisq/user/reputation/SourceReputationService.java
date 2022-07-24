@@ -35,10 +35,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
 public abstract class SourceReputationService<T extends AuthorizedDistributedData> implements DataService.Listener, Service {
+    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
@@ -108,4 +110,8 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     }
 
     protected abstract long calculateScore(T data);
+
+    static long getAgeInDays(long timeMs) {
+        return (System.currentTimeMillis() - timeMs) / DAY_MS;
+    }
 }

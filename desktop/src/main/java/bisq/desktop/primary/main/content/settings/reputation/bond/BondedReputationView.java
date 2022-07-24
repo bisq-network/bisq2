@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.burn;
+package bisq.desktop.primary.main.content.settings.reputation.bond;
 
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,33 +32,33 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
+public class BondedReputationView extends TabView<BondedReputationModel, BondedReputationController> {
     private Button closeButton;
 
-    public BurnBsqView(BurnBsqModel model, BurnBsqController controller) {
+    public BondedReputationView(BondedReputationModel model, BondedReputationController controller) {
         super(model, controller);
 
         double width = PrimaryStageModel.MIN_WIDTH - 20;
         root.setMinWidth(width);
         root.setMaxWidth(width);
-        double height = PrimaryStageModel.MIN_HEIGHT - 40;
+        double height = PrimaryStageModel.MIN_HEIGHT - 20;
         root.setMinHeight(height);
         root.setMaxHeight(height);
 
         root.setPadding(new Insets(40, 68, 40, 68));
         root.getStyleClass().add("popup-bg");
-      
+
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
-        addTab(Res.get("reputation.burnedBsq.tab1"),
-                NavigationTarget.BURN_BSQ_TAB_1,
+        addTab(Res.get("reputation.bond.tab1"),
+                NavigationTarget.BSQ_BOND_TAB_1,
                 styles);
-        addTab(Res.get("reputation.burnedBsq.tab2"),
-                NavigationTarget.BURN_BSQ_TAB_2,
+        addTab(Res.get("reputation.bond.tab2"),
+                NavigationTarget.BSQ_BOND_TAB_2,
                 styles);
-        addTab(Res.get("reputation.burnedBsq.tab3"),
-                NavigationTarget.BURN_BSQ_TAB_3,
+        addTab(Res.get("reputation.bond.tab3"),
+                NavigationTarget.BSQ_BOND_TAB_3,
                 styles);
     }
 
@@ -87,7 +87,7 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
 
         closeButton = BisqIconButton.createIconButton("close");
 
-        headLine.setText(Res.get("reputation.burnBsq"));
+        headLine.setText(Res.get("reputation.bond"));
 
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
         HBox hBox = new HBox(headLine, Spacer.fillHBox(), closeButton);

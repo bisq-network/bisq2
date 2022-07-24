@@ -20,7 +20,7 @@ package bisq.user.reputation;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.model.AuthorizedBondedReputationData;
+import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -31,14 +31,15 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 @Slf4j
-public class BondedReputationReputationService extends SourceReputationService<AuthorizedBondedReputationData> {
+public class ProofOfBurnService extends SourceReputationService<AuthorizedProofOfBurnData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    private static final double WEIGHT = 100;
-    private static final double AGE_WEIGHT = 1;
+    public static final double MAX_AGE = 30;
+    public static final long WEIGHT = 1000;
+    private static final long AGE_WEIGHT = 1;
 
-    public BondedReputationReputationService(NetworkService networkService,
-                                             UserIdentityService userIdentityService,
-                                             UserProfileService userProfileService) {
+    public ProofOfBurnService(NetworkService networkService,
+                              UserIdentityService userIdentityService,
+                              UserProfileService userProfileService) {
         super(networkService,
                 userIdentityService,
                 userProfileService);
@@ -46,36 +47,34 @@ public class BondedReputationReputationService extends SourceReputationService<A
 
     @Override
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedBondedReputationData) {
-            processData((AuthorizedBondedReputationData) authenticatedData.getDistributedData());
+        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData) {
+            processData((AuthorizedProofOfBurnData) authenticatedData.getDistributedData());
         }
     }
 
     @Override
-    protected ByteArray getOpReturnHash(AuthorizedBondedReputationData data) {
+    protected ByteArray getOpReturnHash(AuthorizedProofOfBurnData data) {
         return new ByteArray(data.getHash());
     }
 
     @Override
     protected ByteArray getHash(UserProfile userProfile) {
-        return userProfile.getBondedReputationHash();
+        return userProfile.getProofOfBurnHash();
     }
 
     @Override
-    protected long calculateScore(AuthorizedBondedReputationData data) {
-        return calculateScore(data.getAmount()) +
-                calculateAgeScore(data.getAmount(), data.getTime());
+    protected long calculateScore(AuthorizedProofOfBurnData data) {
+        long score = calculateScore(data.getAmount(), data.getTime());
+        long ageScore = calculateAgeScore(score, data.getTime());
+        return score * WEIGHT + ageScore * AGE_WEIGHT;
     }
 
-    private static long calculateScore(long amount) {
-        return Math.round(amount / 100d * WEIGHT);
+    private static long calculateScore(long amount, long time) {
+        double decayFactor = Math.max(0, MAX_AGE - getAgeInDays(time)) / MAX_AGE;
+        return Math.round(amount / 100d * decayFactor);
     }
 
-    private static long calculateAgeScore(long amount, long time) {
-        return Math.round(amount / 100d * getAgeInDays(time) * AGE_WEIGHT);
-    }
-
-    private static long getAgeInDays(long timeMs) {
-        return (System.currentTimeMillis() - timeMs) / DAY_MS;
+    private static long calculateAgeScore(long score, long time) {
+        return score * getAgeInDays(time);
     }
 }

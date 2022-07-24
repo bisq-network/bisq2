@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Scene;
@@ -39,6 +40,8 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         this.root = root;
         this.model = model;
         this.controller = controller;
+
+        root.setId(getClass().getSimpleName() + ".root_" + StringUtils.createUid());
 
         sceneChangeListener = (ov, oldValue, newScene) -> handleSceneChange(oldValue, newScene);
         root.sceneProperty().addListener(sceneChangeListener);

@@ -33,9 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class ReputationService implements Service {
-    private final ProofOfBurnReputationService proofOfBurnReputationService;
+    private final ProofOfBurnService proofOfBurnService;
     @Getter
-    private final BondedReputationReputationService bondedReputationReputationService;
+    private final BondedReputationService bondedReputationService;
     private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
     protected final Observable<String> changedUserProfileScore = new Observable<>();
@@ -43,28 +43,28 @@ public class ReputationService implements Service {
     public ReputationService(NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService) {
-        proofOfBurnReputationService = new ProofOfBurnReputationService(networkService,
+        proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService);
-        bondedReputationReputationService = new BondedReputationReputationService(
+        bondedReputationService = new BondedReputationService(
                 networkService,
                 userIdentityService,
                 userProfileService);
 
-        proofOfBurnReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
-        bondedReputationReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        proofOfBurnService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        bondedReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return proofOfBurnReputationService.initialize()
-                .thenCompose(r -> bondedReputationReputationService.initialize());
+        return proofOfBurnService.initialize()
+                .thenCompose(r -> bondedReputationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return proofOfBurnReputationService.shutdown()
-                .thenCompose(r -> bondedReputationReputationService.shutdown());
+        return proofOfBurnService.shutdown()
+                .thenCompose(r -> bondedReputationService.shutdown());
     }
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
@@ -88,8 +88,8 @@ public class ReputationService implements Service {
         if (userProfileId == null) {
             return;
         }
-        long score = proofOfBurnReputationService.getScore(userProfileId) +
-                bondedReputationReputationService.getScore(userProfileId);
+        long score = proofOfBurnService.getScore(userProfileId) +
+                bondedReputationService.getScore(userProfileId);
         scoreByUserProfileId.put(userProfileId, score);
         changedUserProfileScore.set(userProfileId);
     }

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.burn.tab3;
+package bisq.desktop.primary.main.content.settings.reputation.bond.tab3;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -34,23 +34,23 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Controller> {
+public class BondedReputationTab3View extends View<VBox, BondedReputationTab3Model, BondedReputationTab3Controller> {
     private final MaterialTextField pubKeyHash;
     private final Button closeButton, backButton;
     private final Hyperlink learnMore;
 
-    public BurnBsqTab3View(BurnBsqTab3Model model,
-                           BurnBsqTab3Controller controller,
-                           Pane userProfileSelection) {
+    public BondedReputationTab3View(BondedReputationTab3Model model,
+                                    BondedReputationTab3Controller controller,
+                                    Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headLine = new Label(Res.get("reputation.burnedBsq.howToHeadline"));
+        Label headLine = new Label(Res.get("reputation.bond.howToHeadline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("reputation.burnedBsq.howTo"));
+        Label info = new Label(Res.get("reputation.bond.howTo"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
         Label userProfileSelectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
@@ -62,12 +62,10 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         pubKeyHash.setIcon(AwesomeIcon.COPY);
         pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
 
-        backButton = new Button(Res.get("back"));
-
         closeButton = new Button(Res.get("close"));
         closeButton.setDefaultButton(true);
-
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
+        backButton = new Button(Res.get("back"));
 
         HBox buttons = new HBox(20, backButton, closeButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
