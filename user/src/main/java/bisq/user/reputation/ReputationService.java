@@ -17,84 +17,66 @@
 
 package bisq.user.reputation;
 
-import bisq.common.data.ByteArray;
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
-import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
+import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
-import bisq.user.proof.ProofOfBurnVerificationService;
-import com.google.common.base.Charsets;
+import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Getter
 @Slf4j
-public class ReputationService implements DataService.Listener {
-    private final PersistenceService persistenceService;
-    private final NetworkService networkService;
-    private final UserIdentityService userIdentityService;
-    private final ProofOfBurnVerificationService proofOfBurnVerificationService;
-    private final Map<ByteArray, Set<AuthorizedProofOfBurnData>> authorizedProofOfBurnDataSetByHash = new ConcurrentHashMap<>();
-    private final Observable<Integer> reputationChanged = new Observable<>(0);
-    private boolean isBatchProcessing;
+public class ReputationService implements Service {
+    private final ProofOfBurnService proofOfBurnService;
+    @Getter
+    private final BondedReputationService bondedReputationService;
+    private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
+    @Getter
+    protected final Observable<String> changedUserProfileScore = new Observable<>();
+    @Getter
+    private final AccountAgeService accountAgeService;
 
-    public ReputationService(PersistenceService persistenceService,
+    public ReputationService(String baseDir,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             ProofOfBurnVerificationService proofOfBurnVerificationService) {
-        this.persistenceService = persistenceService;
-        this.networkService = networkService;
-        this.userIdentityService = userIdentityService;
-        this.proofOfBurnVerificationService = proofOfBurnVerificationService;
+                             UserProfileService userProfileService,
+                             DaoBridgeService daoBridgeService) {
+        proofOfBurnService = new ProofOfBurnService(networkService,
+                userIdentityService,
+                userProfileService);
+        bondedReputationService = new BondedReputationService(networkService,
+                userIdentityService,
+                userProfileService);
+        accountAgeService = new AccountAgeService(baseDir,
+                networkService,
+                userIdentityService,
+                userProfileService,
+                daoBridgeService);
+
+        proofOfBurnService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        bondedReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        accountAgeService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        networkService.addDataServiceListener(this);
-        isBatchProcessing = true;
-        networkService.getDataService()
-                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
-                        .forEach(this::onAuthenticatedDataAdded));
-        isBatchProcessing = false;
-        if (!authorizedProofOfBurnDataSetByHash.isEmpty()) {
-            authorizedProofOfBurnDataSetByHash.keySet().forEach(pubKeyHash -> findAuthorizedProofOfBurnDataSet(pubKeyHash)
-                    .ifPresent(set -> ReputationScoreCalculation.addBurnedBsq(pubKeyHash, set)));
-            reputationChanged.set(reputationChanged.get() + 1);
-        }
-        return CompletableFuture.completedFuture(true);
+        return proofOfBurnService.initialize()
+                .thenCompose(r -> bondedReputationService.initialize())
+                .thenCompose(r -> accountAgeService.initialize());
     }
 
-    @Override
-    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedProofOfBurnData) {
-            AuthorizedProofOfBurnData authorizedProofOfBurnData = (AuthorizedProofOfBurnData) authenticatedData.getDistributedData();
-            addAuthorizedProofOfBurnData(authorizedProofOfBurnData);
-
-            if (!isBatchProcessing) {
-                ByteArray hash = new ByteArray(authorizedProofOfBurnData.getHash());
-                findAuthorizedProofOfBurnDataSet(hash)
-                        .ifPresent(set -> {
-                            ReputationScoreCalculation.addBurnedBsq(hash, set);
-                            reputationChanged.set(reputationChanged.get() + 1);
-                        });
-            }
-        }
-    }
-
-    private Optional<Set<AuthorizedProofOfBurnData>> findAuthorizedProofOfBurnDataSet(ByteArray hash) {
-        return Optional.ofNullable(authorizedProofOfBurnDataSetByHash.get(hash));
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        return proofOfBurnService.shutdown()
+                .thenCompose(r -> bondedReputationService.shutdown())
+                .thenCompose(r -> accountAgeService.shutdown());
     }
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
@@ -102,19 +84,39 @@ public class ReputationService implements DataService.Listener {
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
-        // We use the UTF8 bytes from the string preImage at the Bisq 1 proof of work tool
-        byte[] preImage = userProfile.getId().getBytes(Charsets.UTF_8);
-        byte[] hashOfPreImage = DigestUtil.hash(preImage);
-        ByteArray hash = new ByteArray(hashOfPreImage);
-        return findAuthorizedProofOfBurnDataSet(hash)
-                .map(set -> ReputationScoreCalculation.getReputationScore(hash));
+        String userProfileId = userProfile.getId();
+        if (!scoreByUserProfileId.containsKey(userProfileId)) {
+            return Optional.empty();
+        }
+        long score = scoreByUserProfileId.get(userProfileId);
+        double relativeScore = getRelativeScore(score, scoreByUserProfileId.values());
+        int index = getIndex(score, scoreByUserProfileId.values());
+        int rank = scoreByUserProfileId.size() - index;
+        double relativeRanking = (index + 1) / (double) scoreByUserProfileId.size();
+        return Optional.of(new ReputationScore(score, relativeScore, rank, relativeRanking));
     }
 
-    private void addAuthorizedProofOfBurnData(AuthorizedProofOfBurnData authorizedProofOfBurnData) {
-        ByteArray key = new ByteArray(authorizedProofOfBurnData.getHash());
-        if (!authorizedProofOfBurnDataSetByHash.containsKey(key)) {
-            authorizedProofOfBurnDataSetByHash.put(key, new HashSet<>());
+    private void onUserProfileScoreChanged(String userProfileId) {
+        if (userProfileId == null) {
+            return;
         }
-        authorizedProofOfBurnDataSetByHash.get(key).add(authorizedProofOfBurnData);
+        long score = proofOfBurnService.getScore(userProfileId) +
+                bondedReputationService.getScore(userProfileId) +
+                accountAgeService.getScore(userProfileId);
+        scoreByUserProfileId.put(userProfileId, score);
+        changedUserProfileScore.set(userProfileId);
+    }
+
+    @VisibleForTesting
+    static double getRelativeScore(long candidateScore, Collection<Long> scores) {
+        long bestScore = scores.stream().max(Comparator.comparing(Long::longValue)).orElse(0L);
+        return bestScore > 0 ? candidateScore / (double) bestScore : 0;
+    }
+
+    @VisibleForTesting
+    static int getIndex(long candidateScore, Collection<Long> scores) {
+        List<Long> list = new ArrayList<>(scores);
+        Collections.sort(list);
+        return list.indexOf(candidateScore);
     }
 }

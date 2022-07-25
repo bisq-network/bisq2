@@ -18,12 +18,14 @@
 package bisq.desktop.primary.main.content.settings.reputation.burn.tab1;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,10 +58,13 @@ public class BurnBsqTab1View extends View<VBox, BurnBsqTab1Model, BurnBsqTab1Con
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
+        HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
+        buttons.setAlignment(Pos.BOTTOM_RIGHT);
+
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
+        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
-        VBox.setMargin(learnMore, new Insets(0, 0, 10, 0));
-        root.getChildren().addAll(headline, info, headline2, info2, learnMore, nextButton);
+        root.getChildren().addAll(headline, info, headline2, info2, buttons);
     }
 
     @Override

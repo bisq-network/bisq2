@@ -128,7 +128,7 @@ public abstract class Protocol<T extends ProtocolModel> implements MessageListen
     }
 
     protected void sendMessage(NetworkMessage networkMessage) {
-        networkService.sendMessage(networkMessage, getPeersNetworkId(), myNodeIdAndKeyPair)
+        networkService.confidentialSend(networkMessage, getPeersNetworkId(), myNodeIdAndKeyPair)
                 .whenComplete((resultMap, throwable) -> {
                     if (throwable == null) {
                         log.info("Sent successfully {} to {}", networkMessage.getClass().getSimpleName(), getPeersNetworkId());

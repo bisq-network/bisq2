@@ -24,6 +24,7 @@ import bisq.common.timer.Scheduler;
 import bisq.network.http.common.BaseHttpClient;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.oracle.daobridge.DaoBridgeService;
+import bisq.oracle.daobridge.dto.BondedReputationDto;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Bisq1BridgeClient {
     private final DaoBridgeService daoBridgeService;
     private final BaseHttpClient httpClient;
-    private final AtomicInteger lastRequestedBlockHeight = new AtomicInteger(0);
+    private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
+    private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
 
     public Bisq1BridgeClient(String[] args) {
         BridgeApplicationService applicationService = new BridgeApplicationService(args);
@@ -65,34 +67,67 @@ public class Bisq1BridgeClient {
     }
 
     private void startRequests() {
-        requestProofOfBurnTxs();
-        Scheduler.run(this::requestProofOfBurnTxs).periodically(5, TimeUnit.SECONDS);
+        requestSerial().thenApply(result ->
+                Scheduler.run(this::requestSerial).periodically(5, TimeUnit.SECONDS)
+        );
     }
 
-    private void requestProofOfBurnTxs() {
-        CompletableFuture.supplyAsync(() -> {
+    private CompletableFuture<Boolean> requestSerial() {
+        return requestProofOfBurnTxs()
+                .thenCompose(result -> requestBondedReputations());
+    }
+
+    private CompletableFuture<Boolean> requestProofOfBurnTxs() {
+        return CompletableFuture.supplyAsync(() -> {
                     try {
-                        String path = "/api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedBlockHeight.get() + 1);
+                        String path = "/api/v1/proof-of-burn/get-proof-of-burn/" + (lastRequestedProofOfBurnBlockHeight.get() + 1);
                         log.info("Request Bisq DAO node: {}", path);
                         String response = httpClient.get(path,
                                 Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
-                        List<ProofOfBurnDto> proofOfBurnDtos = new ObjectMapper().readValue(response, new TypeReference<>() {
+                        List<ProofOfBurnDto> dtoList = new ObjectMapper().readValue(response, new TypeReference<>() {
                         });
-                        log.info("Bisq DAO node response: {}", proofOfBurnDtos);
-                        return proofOfBurnDtos;
+                        log.info("Bisq DAO node response: {}", dtoList);
+                        return dtoList;
                     } catch (IOException e) {
                         e.printStackTrace();
                         return new ArrayList<ProofOfBurnDto>();
                     }
                 }, ExecutorFactory.newSingleThreadExecutor("Request-proof-of-burn-thread"))
-                .thenApply(list -> {
+                .thenCompose(list -> {
                     if (!list.isEmpty()) {
-                        lastRequestedBlockHeight.set(list.stream()
+                        lastRequestedProofOfBurnBlockHeight.set(list.stream()
                                 .max(Comparator.comparingInt(ProofOfBurnDto::getBlockHeight))
                                 .map(ProofOfBurnDto::getBlockHeight)
                                 .orElse(0));
-
                         return daoBridgeService.publishProofOfBurnDtoSet(list);
+                    }
+                    return CompletableFuture.completedFuture(false);
+                });
+    }
+
+    private CompletableFuture<Boolean> requestBondedReputations() {
+        return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        String path = "/api/v1/bonded-reputation/get-bonded-reputation/" + (lastRequestedBondedReputationBlockHeight.get() + 1);
+                        log.info("Request Bisq DAO node: {}", path);
+                        String response = httpClient.get(path,
+                                Optional.of(new Pair<>("User-Agent", httpClient.userAgent)));
+                        List<BondedReputationDto> dtoList = new ObjectMapper().readValue(response, new TypeReference<>() {
+                        });
+                        log.info("Bisq DAO node response: {}", dtoList);
+                        return dtoList;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return new ArrayList<BondedReputationDto>();
+                    }
+                }, ExecutorFactory.newSingleThreadExecutor("Request-bonded-reputation-thread"))
+                .thenCompose(list -> {
+                    if (!list.isEmpty()) {
+                        lastRequestedBondedReputationBlockHeight.set(list.stream()
+                                .max(Comparator.comparingInt(BondedReputationDto::getBlockHeight))
+                                .map(BondedReputationDto::getBlockHeight)
+                                .orElse(0));
+                        return daoBridgeService.publishBondedReputationDtoSet(list);
                     }
                     return CompletableFuture.completedFuture(false);
                 });

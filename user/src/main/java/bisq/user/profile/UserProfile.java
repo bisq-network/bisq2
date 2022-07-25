@@ -17,20 +17,24 @@
 
 package bisq.user.profile;
 
+import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.DigestUtil;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.NymIdGenerator;
+import com.google.common.base.Charsets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +63,8 @@ public final class UserProfile implements DistributedData {
     private final String statement;
 
     private transient String nym;
+    private transient ByteArray proofOfBurnHash;
+    private transient ByteArray bondedReputationHash;
 
     public UserProfile(String nickName,
                        ProofOfWork proofOfWork,
@@ -126,6 +132,24 @@ public final class UserProfile implements DistributedData {
         return nym;
     }
 
+    public ByteArray getProofOfBurnKey() {
+        if (proofOfBurnHash == null) {
+            proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
+        }
+        return proofOfBurnHash;
+    }
+
+    public ByteArray getBondedReputationKey() {
+        if (bondedReputationHash == null) {
+            bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
+        }
+        return bondedReputationHash;
+    }
+
+    public ByteArray getAccountAgeKey() {
+        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+    }
+
     public String getTooltipString() {
         return Res.get("social.chatUser.tooltip", nickName, getNym(), getId());
     }
@@ -133,4 +157,6 @@ public final class UserProfile implements DistributedData {
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
     }
+
+
 }

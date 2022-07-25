@@ -122,7 +122,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         busyInfo = new Label(Res.get("generateNym.createProfile.busy"));
         busyInfo.setManaged(false);
         busyInfo.setVisible(false);
+        busyInfo.getStyleClass().add("bisq-text-18");
 
+        HBox.setMargin(busyInfo, new Insets(0, 0, 0, -10));
         HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator, busyInfo);
         buttons.setAlignment(Pos.CENTER);
 

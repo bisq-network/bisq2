@@ -20,6 +20,7 @@ package bisq.user;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
@@ -56,25 +57,28 @@ public class UserService implements Service {
 
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
-    private final ProofOfBurnVerificationService proofOfBurnVerificationService;
     private final ReputationService reputationService;
 
-    public UserService(UserService.Config config,
+    public UserService(Config config,
+                       String baseDir,
                        PersistenceService persistenceService,
                        IdentityService identityService,
                        NetworkService networkService,
                        OpenTimestampService openTimestampService,
+                       DaoBridgeService daoBridgeService,
                        ProofOfWorkService proofOfWorkService) {
-        userProfileService = new UserProfileService(persistenceService, networkService,proofOfWorkService);
+        userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
                 identityService,
                 openTimestampService,
                 networkService);
-        proofOfBurnVerificationService = new ProofOfBurnVerificationService(config.getProofOfBurnVerificationConfig(),
-                persistenceService,
-                networkService);
-        reputationService = new ReputationService(persistenceService, networkService, userIdentityService, proofOfBurnVerificationService);
+        reputationService = new ReputationService(baseDir,
+                networkService,
+                userIdentityService,
+                userProfileService,
+                daoBridgeService
+        );
     }
 
 
@@ -91,6 +95,8 @@ public class UserService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        return CompletableFuture.completedFuture(true);
+        return userProfileService.shutdown()
+                .thenCompose(result -> userIdentityService.shutdown())
+                .thenCompose(result -> reputationService.shutdown());
     }
 }

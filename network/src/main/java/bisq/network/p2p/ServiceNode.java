@@ -22,9 +22,7 @@ import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.NodesById;
+import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -42,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -110,7 +109,7 @@ public class ServiceNode {
                        Optional<DataService> dataService,
                        KeyPairService keyPairService,
                        PersistenceService persistenceService,
-                       Set<Address> seedNodeAddresses,
+                       List<Address> seedNodeAddresses,
                        Transport.Type transportType) {
         BanList banList = new BanList();
         nodesById = new NodesById(banList, nodeConfig);
@@ -186,7 +185,26 @@ public class ServiceNode {
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
 
+    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
+        return getNodesById().send(senderNodeId, networkMessage, address);
+    }
+
     public void addMessageListener(MessageListener messageListener) {
+        //todo
+        nodesById.addNodeListener(new Node.Listener() {
+            @Override
+            public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
+                messageListener.onMessage(networkMessage);
+            }
+
+            @Override
+            public void onConnection(Connection connection) {
+            }
+
+            @Override
+            public void onDisconnect(Connection connection, CloseReason closeReason) {
+            }
+        });
         confidentialMessageService.ifPresent(service -> service.addMessageListener(messageListener));
     }
 

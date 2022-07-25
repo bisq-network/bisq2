@@ -18,12 +18,14 @@
 package bisq.network.p2p;
 
 
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
@@ -39,9 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -61,7 +61,7 @@ public class ServiceNodesByTransport {
                                    Set<Transport.Type> supportedTransportTypes,
                                    ServiceNode.Config serviceNodeConfig,
                                    Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
-                                   Map<Transport.Type, Set<Address>> seedAddressesByTransport,
+                                   Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
                                    KeyPairService keyPairService,
                                    PersistenceService persistenceService) {
@@ -72,7 +72,7 @@ public class ServiceNodesByTransport {
                     new UnrestrictedAuthorizationService(),
                     transportConfig,
                     transportConfig.getSocketTimeout());
-            Set<Address> seedAddresses = seedAddressesByTransport.get(transportType);
+            List<Address> seedAddresses = seedAddressesByTransport.get(transportType);
             checkNotNull(seedAddresses, "Seed nodes must be setup for %s", transportType);
             PeerGroupService.Config peerGroupServiceConfig = peerGroupServiceConfigByTransport.get(transportType);
             ServiceNode serviceNode = new ServiceNode(serviceNodeConfig,
@@ -135,6 +135,21 @@ public class ServiceNodesByTransport {
             }
         });
         return resultsByType;
+    }
+
+    public Map<Transport.Type, Connection> send(String senderNodeId,
+                                                NetworkMessage networkMessage,
+                                                Map<Transport.Type, Address> receiverAddressByNetworkType) {
+        return receiverAddressByNetworkType.entrySet().stream().map(entry -> {
+                    Transport.Type transportType = entry.getKey();
+                    if (map.containsKey(transportType)) {
+                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
     }
 
 

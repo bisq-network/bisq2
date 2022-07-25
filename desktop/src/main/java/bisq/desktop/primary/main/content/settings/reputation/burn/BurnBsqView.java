@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
     private Button closeButton;
-    private HBox hBox;
 
     public BurnBsqView(BurnBsqModel model, BurnBsqController controller) {
         super(model, controller);
@@ -51,8 +50,6 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
       
         VBox.setMargin(contentPane, new Insets(20, 0, 0, 0));
 
-        // Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
-        //Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-white", "bisq-text-grey-9");
         Styles styles = new Styles("bisq-text-grey-9", "bisq-text-white", "bisq-text-logo-green", "bisq-text-grey-9");
         addTab(Res.get("reputation.burnedBsq.tab1"),
                 NavigationTarget.BURN_BSQ_TAB_1,
@@ -93,7 +90,7 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
         headLine.setText(Res.get("reputation.burnBsq"));
 
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        hBox = new HBox(headLine, Spacer.fillHBox(), closeButton);
+        HBox hBox = new HBox(headLine, Spacer.fillHBox(), closeButton);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);

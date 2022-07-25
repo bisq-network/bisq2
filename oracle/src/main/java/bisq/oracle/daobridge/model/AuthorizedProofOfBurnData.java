@@ -43,28 +43,23 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(300),
+    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(1),
             100000,
             AuthorizedProofOfBurnData.class.getSimpleName());
 
-    private final String txId;
-    private final long burnedAmount;
-    private final int blockHeight;
+    private final long amount;
     private final long time;
     private final byte[] hash;
 
-    public static AuthorizedProofOfBurnData from(ProofOfBurnDto proofOfBurnDto) {
-        return new AuthorizedProofOfBurnData(proofOfBurnDto.getTxId(),
-                proofOfBurnDto.getBurnedAmount(),
-                proofOfBurnDto.getBlockHeight(),
-                proofOfBurnDto.getTime(),
-                Hex.decode(proofOfBurnDto.getHash()));
+    public static AuthorizedProofOfBurnData from(ProofOfBurnDto dto) {
+        return new AuthorizedProofOfBurnData(
+                dto.getAmount(),
+                dto.getTime(),
+                Hex.decode(dto.getHash()));
     }
 
-    public AuthorizedProofOfBurnData(String txId, long burnedAmount, int blockHeight, long time, byte[] hash) {
-        this.txId = txId;
-        this.burnedAmount = burnedAmount;
-        this.blockHeight = blockHeight;
+    public AuthorizedProofOfBurnData(long amount, long time, byte[] hash) {
+        this.amount = amount;
         this.time = time;
         this.hash = hash;
     }
@@ -72,18 +67,15 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public bisq.oracle.protobuf.AuthorizedProofOfBurnData toProto() {
         return bisq.oracle.protobuf.AuthorizedProofOfBurnData.newBuilder()
-                .setTxId(txId)
-                .setBurnedAmount(burnedAmount)
-                .setBlockHeight(blockHeight)
+                .setAmount(amount)
                 .setTime(time)
                 .setHash(ByteString.copyFrom(hash))
                 .build();
     }
 
     public static AuthorizedProofOfBurnData fromProto(bisq.oracle.protobuf.AuthorizedProofOfBurnData proto) {
-        return new AuthorizedProofOfBurnData(proto.getTxId(),
-                proto.getBurnedAmount(),
-                proto.getBlockHeight(),
+        return new AuthorizedProofOfBurnData(
+                proto.getAmount(),
                 proto.getTime(),
                 proto.getHash().toByteArray());
     }
@@ -123,10 +115,8 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     @Override
     public String toString() {
         return "AuthorizedProofOfBurnData{" +
-                ",\r\n     txId='" + txId + '\'' +
-                ",\r\n     burnedAmount=" + burnedAmount +
-                ",\r\n     blockHeight=" + blockHeight +
-                ",\r\n     time=" + new Date(time * 1000) +
+                ",\r\n     amount=" + amount +
+                ",\r\n     time=" + new Date(time) +
                 ",\r\n     hash=" + Hex.encode(hash) +
                 "\r\n}";
     }

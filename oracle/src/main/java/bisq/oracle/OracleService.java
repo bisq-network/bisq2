@@ -20,6 +20,7 @@ package bisq.oracle;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
@@ -31,25 +32,33 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class OracleService implements Service {
+
     @Getter
     public static class Config {
         private final com.typesafe.config.Config openTimestamp;
         private final com.typesafe.config.Config marketPrice;
+        private final com.typesafe.config.Config daoBridge;
 
-        public Config(com.typesafe.config.Config openTimestamp, com.typesafe.config.Config marketPrice) {
+        public Config(com.typesafe.config.Config openTimestamp,
+                      com.typesafe.config.Config marketPrice,
+                      com.typesafe.config.Config daoBridge) {
             this.openTimestamp = openTimestamp;
             this.marketPrice = marketPrice;
+            this.daoBridge = daoBridge;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getConfig("openTimestamp"), config.getConfig("marketPrice"));
+            return new Config(config.getConfig("openTimestamp"),
+                    config.getConfig("marketPrice"),
+                    config.getConfig("daoBridge"));
         }
     }
 
     private final OpenTimestampService openTimestampService;
     private final MarketPriceService marketPriceService;
+    private final DaoBridgeService daoBridgeService;
 
-    public OracleService(Config config, String applicationVersion, 
+    public OracleService(Config config, String applicationVersion,
                          NetworkService networkService,
                          IdentityService identityService,
                          PersistenceService persistenceService) {
@@ -59,6 +68,10 @@ public class OracleService implements Service {
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,
                 applicationVersion);
+        daoBridgeService = new DaoBridgeService(DaoBridgeService.Config.from(config.getDaoBridge(),
+                networkService.getSupportedTransportTypes()),
+                networkService,
+                identityService);
     }
 
 

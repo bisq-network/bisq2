@@ -25,5 +25,6 @@ public enum CookieKey {
     STAGE_H,
     NAVIGATION_TARGET,
     TRADE_OVERVIEW_PIN,
-    EDUCATION_PIN
+    ACADEMY_PIN,
+    FILE_CHOOSER_DIR
 }

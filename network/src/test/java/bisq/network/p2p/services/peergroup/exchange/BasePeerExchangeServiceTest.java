@@ -29,9 +29,7 @@ import bisq.persistence.PersistenceService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +51,7 @@ public abstract class BasePeerExchangeServiceTest extends BaseNetworkTest {
                 null, null, null,
                 100, 100, 100, 100, 100, 100, 100);
 
-        Set<Address> seedNodeAddresses = new HashSet<>();
+        List<Address> seedNodeAddresses = new ArrayList<>();
         for (int i = 0; i < numSeeds; i++) {
             int port = 1000 + i;
             Address address = Address.localHost(port);

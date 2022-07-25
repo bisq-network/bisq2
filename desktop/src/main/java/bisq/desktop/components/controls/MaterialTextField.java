@@ -77,7 +77,7 @@ public class MaterialTextField extends Pane {
         line.setMouseTransparent(true);
 
         selectionLine = new Region();
-
+        selectionLine.setPrefWidth(0);
         selectionLine.setPrefHeight(2);
         selectionLine.getStyleClass().add("bisq-green-line");
         selectionLine.setMouseTransparent(true);
@@ -126,7 +126,9 @@ public class MaterialTextField extends Pane {
         helpProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         field.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-                update()).get());
+        {
+            update();
+        }).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
@@ -143,7 +145,6 @@ public class MaterialTextField extends Pane {
         doLayout();
         update();
     }
-
 
     protected void doLayout() {
         bg.setMinHeight(getBgHeight());
@@ -231,7 +232,7 @@ public class MaterialTextField extends Pane {
         if (width > 0) {
             bg.setPrefWidth(width);
             line.setPrefWidth(width);
-            selectionLine.setPrefWidth(field.isFocused() ? width : 0);
+            selectionLine.setPrefWidth(field.isFocused() && field.isEditable() ? width : 0);
             descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
             field.setPrefWidth(width - 2 * field.getLayoutX());
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());

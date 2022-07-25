@@ -44,7 +44,8 @@ public class BridgeApplicationService extends NetworkApplicationService {
                 networkService
         );
 
-        daoBridgeService = new DaoBridgeService(DaoBridgeService.Config.from(getConfig("daoBridge")),
+        daoBridgeService = new DaoBridgeService(DaoBridgeService.Config.from(getConfig("oracle.daoBridge"),
+                getNetworkService().getSupportedTransportTypes()),
                 networkService,
                 identityService);
     }

@@ -34,6 +34,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,10 +80,12 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
         Scheduler.run(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities)
                 .periodically(1, TimeUnit.HOURS)
                 .name("Manage-timestamps");
         CompletableFuture.runAsync(this::maybeCreateOrUpgradeTimestampsOfActiveIdentities);
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -97,6 +100,8 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
      * @return Verified OTS date or empty if no timestamp exists or if it is not completed.
      */
     public CompletableFuture<Optional<Long>> getVerifiedOtsDate(ByteArray data) {
+        // return CompletableFuture.completedFuture(Optional.empty());
+
         return CompletableFuture.supplyAsync(() -> Optional.ofNullable(getTimestampByPubKeyHash().get(data))
                 .map(timestamp -> getTimestampDate(data.getBytes(), timestamp)));
     }
@@ -104,7 +109,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     /**
      * Check for given identity if we have a completed timestamp. Request or upgrade timestamp if required.
      */
-    public ByteArray maybeCreateOrUpgradeTimestamp(ByteArray data) {
+    private ByteArray maybeCreateOrUpgradeTimestamp(ByteArray data) {
         return Optional.ofNullable(getTimestampByPubKeyHash().get(data))
                 .map(timestamp -> {
                     if (isTimestampComplete(timestamp)) {
@@ -125,6 +130,7 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
     }
 
     public CompletableFuture<ByteArray> maybeCreateOrUpgradeTimestampAsync(ByteArray pubKeyHash) {
+        // return CompletableFuture.completedFuture(new ByteArray(new byte[]{}));
         return CompletableFuture.supplyAsync(() -> maybeCreateOrUpgradeTimestamp(pubKeyHash),
                 ExecutorFactory.newSingleThreadExecutor("Request-timestamp"));
     }
@@ -221,10 +227,12 @@ public class OpenTimestampService implements PersistenceClient<OpenTimestampStor
         DetachedTimestampFile stamped = DetachedTimestampFile.from(new OpSHA256(), data);
         DetachedTimestampFile deserializedOts = DetachedTimestampFile.deserialize(ots.getBytes());
         try {
+            // If ots is not yet confirmed we get an exception here
             return OpenTimestamps.verify(deserializedOts, stamped);
         } catch (Exception e) {
-            log.error("VerifyResultByChains failed", e);
-            throw new RuntimeException(e);
+            //log.error("VerifyResultByChains failed", e);
+            // throw new RuntimeException(e);
+            return new HashMap<>();
         }
     }
 

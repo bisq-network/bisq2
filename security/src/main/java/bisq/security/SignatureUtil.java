@@ -27,7 +27,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 
 public class SignatureUtil {
-    public static final String ECDSA = "SHA256withECDSA";
+    public static final String SHA256withECDSA = "SHA256withECDSA";
+    public static final String SHA256withDSA = "SHA256withDSA";
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -36,14 +37,22 @@ public class SignatureUtil {
     }
 
     public static byte[] sign(byte[] message, PrivateKey privateKey) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance(ECDSA, "BC");
+        return sign(message, privateKey, SHA256withECDSA);
+    }
+
+    public static byte[] sign(byte[] message, PrivateKey privateKey, String algorithm) throws GeneralSecurityException {
+        Signature signature = Signature.getInstance(algorithm, "BC");
         signature.initSign(privateKey);
         signature.update(message);
         return signature.sign();
     }
 
     public static boolean verify(byte[] message, byte[] signature, PublicKey publicKey) throws GeneralSecurityException {
-        Signature sig = Signature.getInstance(ECDSA, "BC");
+        return verify(message, signature, publicKey, SHA256withECDSA);
+    }
+
+    public static boolean verify(byte[] message, byte[] signature, PublicKey publicKey, String algorithm) throws GeneralSecurityException {
+        Signature sig = Signature.getInstance(algorithm, "BC");
         sig.initVerify(publicKey);
         sig.update(message);
         return sig.verify(signature);

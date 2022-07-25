@@ -141,9 +141,8 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void hide() {
+        Transitions.removeEffect(owner);
         animateHide(() -> {
-            Transitions.removeEffect(owner);
-
             if (stage != null) {
                 stage.hide();
             }
@@ -189,7 +188,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void animateHide(Runnable onFinishedHandler) {
-        double duration = model.getDuration(200);
+        double duration = model.getDuration(Transitions.DEFAULT_DURATION / 2d);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
         double endScale = 0.25;

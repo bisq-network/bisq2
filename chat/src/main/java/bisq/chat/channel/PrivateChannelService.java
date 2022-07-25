@@ -93,7 +93,7 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = peer.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
-        return networkService.sendMessage(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
+        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
     public void removeExpiredMessages(C channel) {

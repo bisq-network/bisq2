@@ -29,6 +29,7 @@ import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.ServiceNodesByTransport;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -219,9 +220,14 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
     // Send confidential message
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public CompletableFuture<SendMessageResult> sendMessage(NetworkMessage networkMessage,
-                                                            NetworkId receiverNetworkId,
-                                                            NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
+    /**
+     * Send message via given senderNetworkIdWithKeyPair to the receiverNetworkId as encrypted message.
+     * If peer is offline and if message is of type mailBoxMessage it will not be stored as mailbox message in the
+     * network.
+     */
+    public CompletableFuture<SendMessageResult> confidentialSend(NetworkMessage networkMessage,
+                                                                 NetworkId receiverNetworkId,
+                                                                 NetworkIdWithKeyPair senderNetworkIdWithKeyPair) {
         return getInitializedNetworkId(senderNetworkIdWithKeyPair.getNodeId(), senderNetworkIdWithKeyPair.getPubKey())
                 .thenCompose(networkId -> supplyAsync(() -> serviceNodesByTransport.confidentialSend(networkMessage,
                                 receiverNetworkId,
@@ -230,6 +236,17 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                         NETWORK_IO_POOL));
     }
 
+    /**
+     * Send message via given senderNodeId to the supported network types of the addresses specified at
+     * receiverAddressByNetworkType as direct, unencrypted message. If peer is offline it will not be stored as
+     * mailbox message.
+     */
+    public CompletableFuture<Map<Transport.Type, Connection>> send(String senderNodeId,
+                                                                   NetworkMessage networkMessage,
+                                                                   Map<Transport.Type, Address> receiverAddressByNetworkType) {
+        return supplyAsync(() -> serviceNodesByTransport.send(senderNodeId, networkMessage, receiverAddressByNetworkType),
+                NETWORK_IO_POOL);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Add/remove data
