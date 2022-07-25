@@ -36,9 +36,7 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     public BondedReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
                                    UserProfileService userProfileService) {
-        super(networkService,
-                userIdentityService,
-                userProfileService);
+        super(networkService, userIdentityService, userProfileService);
     }
 
     @Override
@@ -49,13 +47,13 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
-    protected ByteArray getOpReturnHash(AuthorizedBondedReputationData data) {
+    protected ByteArray getDataKey(AuthorizedBondedReputationData data) {
         return new ByteArray(data.getHash());
     }
 
     @Override
-    protected ByteArray getHash(UserProfile userProfile) {
-        return userProfile.getBondedReputationHash();
+    protected ByteArray getUserProfileKey(UserProfile userProfile) {
+        return userProfile.getBondedReputationKey();
     }
 
     @Override

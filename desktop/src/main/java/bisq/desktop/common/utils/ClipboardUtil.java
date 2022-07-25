@@ -21,6 +21,8 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 public class ClipboardUtil {
 
@@ -33,8 +35,18 @@ public class ClipboardUtil {
                 clipboard.setContent(clipboardContent);
             }
         } catch (Throwable e) {
-            log.error("copyToClipboard failed " + e.getMessage());
+            log.error("copyToClipboard failed ", e);
             e.printStackTrace();
+        }
+    }
+
+
+    public static Optional<String> getClipboardString() {
+        try {
+            return Optional.of(Clipboard.getSystemClipboard().getString());
+        } catch (Throwable e) {
+            log.error("getClipboardString failed ", e);
+            return Optional.empty();
         }
     }
 }

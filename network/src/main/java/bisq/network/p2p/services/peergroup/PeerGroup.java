@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
@@ -63,13 +64,13 @@ public class PeerGroup {
     private final Node node;
     private final Config config;
     @Getter
-    private final Set<Address> seedNodeAddresses;
+    private final List<Address> seedNodeAddresses;
     private final BanList banList;
     private final PersistedPeersHandler persistedPeersHandler;
     @Getter
     private final Set<Peer> reportedPeers = new CopyOnWriteArraySet<>();
 
-    public PeerGroup(Node node, Config config, Set<Address> seedNodeAddresses, BanList banList, PersistedPeersHandler persistedPeersHandler) {
+    public PeerGroup(Node node, Config config, List<Address> seedNodeAddresses, BanList banList, PersistedPeersHandler persistedPeersHandler) {
         this.node = node;
         this.config = config;
         this.seedNodeAddresses = seedNodeAddresses;

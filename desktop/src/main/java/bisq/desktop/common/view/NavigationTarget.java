@@ -71,6 +71,18 @@ public enum NavigationTarget {
     BSQ_BOND_TAB_3(BSQ_BOND, false),
 
 
+    ACCOUNT_AGE(OVERLAY, false),
+    ACCOUNT_AGE_TAB_1(ACCOUNT_AGE, false),
+    ACCOUNT_AGE_TAB_2(ACCOUNT_AGE, false),
+    ACCOUNT_AGE_TAB_3(ACCOUNT_AGE, false),
+
+
+    SINGED_ACCOUNT(OVERLAY, false),
+    SINGED_ACCOUNT_TAB_1(SINGED_ACCOUNT, false),
+    SINGED_ACCOUNT_TAB_2(SINGED_ACCOUNT, false),
+    SINGED_ACCOUNT_TAB_3(SINGED_ACCOUNT, false),
+
+
     //////////////////////////////////////////////////////////////////////
     // MAIN
     //////////////////////////////////////////////////////////////////////

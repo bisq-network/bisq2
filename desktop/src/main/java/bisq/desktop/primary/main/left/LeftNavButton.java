@@ -87,7 +87,7 @@ class LeftNavButton extends Pane implements Toggle {
         if (navigationTarget == NavigationTarget.TRADE_OVERVIEW) {
             cookieKey = Optional.of(CookieKey.TRADE_OVERVIEW_PIN);
         } else if (navigationTarget == NavigationTarget.ACADEMY) {
-            cookieKey = Optional.of(CookieKey.EDUCATION_PIN);
+            cookieKey = Optional.of(CookieKey.ACADEMY_PIN);
         }
 
         setMinHeight(calculateHeight());

@@ -22,6 +22,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.primary.main.content.settings.reputation.accountAge.AccountAgeController;
 import bisq.desktop.primary.main.content.settings.reputation.bond.BondedReputationController;
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
@@ -113,6 +114,9 @@ public class OverlayController extends NavigationController {
             }
             case BSQ_BOND: {
                 return Optional.of(new BondedReputationController(applicationService));
+            }
+            case ACCOUNT_AGE: {
+                return Optional.of(new AccountAgeController(applicationService));
             }
             default: {
                 return Optional.empty();

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ReputationView extends View<VBox, ReputationModel, ReputationController> {
-    private final Button burnBsqButton, bsqBondButton;
+    private final Button burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton;
     private final Hyperlink learnMore;
 
     public ReputationView(ReputationModel model,
@@ -45,12 +45,13 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         infoLabel.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
         burnBsqButton = new Button(Res.get("reputation.burnBsq"));
-
         bsqBondButton = new Button(Res.get("reputation.bond"));
+        accountAgeButton = new Button(Res.get("reputation.accountAge"));
+        signedAccountButton = new Button(Res.get("reputation.signedAccount"));
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
-        HBox buttons = new HBox(20, burnBsqButton, bsqBondButton);
+        HBox buttons = new HBox(20, burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton);
 
         VBox.setVgrow(infoLabel, Priority.ALWAYS);
         VBox.setMargin(headlineLabel, new Insets(-10, 0, 0, 0));
@@ -68,13 +69,19 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     protected void onViewAttached() {
         burnBsqButton.setOnAction(e -> controller.onBurnBsq());
         bsqBondButton.setOnAction(e -> controller.onBsqBond());
+        accountAgeButton.setOnAction(e -> controller.onAccountAge());
+        signedAccountButton.setOnAction(e -> controller.onSignedAccount());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
+        // FileChooserUtil.openFile(root.getScene());
     }
 
     @Override
     protected void onViewDetached() {
         burnBsqButton.setOnAction(null);
         bsqBondButton.setOnAction(null);
+        accountAgeButton.setOnAction(null);
+        signedAccountButton.setOnAction(null);
         learnMore.setOnAction(null);
     }
 }

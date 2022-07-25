@@ -49,7 +49,7 @@ public final class NetworkServiceConfig {
 
         Config seedConfig = config.getConfig("seedAddressByTransportType");
         // Only read seed addresses for explicitly supported address types
-        Map<Transport.Type, Set<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
+        Map<Transport.Type, List<Address>> seedAddressesByTransport = supportedTransportTypes.stream()
                 .collect(toMap(supportedTransportType -> supportedTransportType,
                         supportedTransportType -> getSeedAddresses(supportedTransportType, seedConfig)));
 
@@ -140,22 +140,22 @@ public final class NetworkServiceConfig {
         }
     }
 
-    private static Set<Address> getSeedAddresses(Transport.Type transportType, Config config) {
+    private static List<Address> getSeedAddresses(Transport.Type transportType, Config config) {
         switch (transportType) {
             case TOR: {
                 return ConfigUtil.getStringList(config, "tor").stream()
                         .map(Address::new).
-                        collect(Collectors.toSet());
+                        collect(Collectors.toList());
             }
             case I2P: {
                 return ConfigUtil.getStringList(config, "i2p").stream()
                         .map(Address::new)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
             }
             case CLEAR: {
                 return ConfigUtil.getStringList(config, "clear").stream()
                         .map(Address::new)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toList());
             }
             default: {
                 throw new RuntimeException("Unhandled case. transportType=" + transportType);
@@ -169,7 +169,7 @@ public final class NetworkServiceConfig {
     private final ServiceNode.Config serviceNodeConfig;
     private final Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport;
     private final Map<Transport.Type, Integer> defaultNodePortByTransportType;
-    private final Map<Transport.Type, Set<Address>> seedAddressesByTransport;
+    private final Map<Transport.Type, List<Address>> seedAddressesByTransport;
     private final Optional<String> socks5ProxyAddress;
 
     public NetworkServiceConfig(String baseDir,
@@ -178,7 +178,7 @@ public final class NetworkServiceConfig {
                                 ServiceNode.Config serviceNodeConfig,
                                 Map<Transport.Type, PeerGroupService.Config> peerGroupServiceConfigByTransport,
                                 Map<Transport.Type, Integer> defaultNodePortByTransportType,
-                                Map<Transport.Type, Set<Address>> seedAddressesByTransport,
+                                Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                 Optional<String> socks5ProxyAddress) {
         this.baseDir = baseDir;
         this.supportedTransportTypes = supportedTransportTypes;

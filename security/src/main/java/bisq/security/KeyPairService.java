@@ -23,9 +23,19 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.security.interfaces.DSAParams;
+import java.security.interfaces.DSAPrivateKey;
+import java.security.spec.DSAPublicKeySpec;
+import java.security.spec.KeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -99,5 +109,27 @@ public class KeyPairService implements PersistenceClient<KeyPairStore> {
         String keyId = KeyPairService.DEFAULT;
         PublicKey publicKey = getOrCreateKeyPair(keyId).getPublic();
         return new PubKey(publicKey, keyId);
+    }
+
+    public static KeyPair loadDsaKey(String privateKeyPath) throws GeneralSecurityException, IOException {
+        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+        File filePrivateKey = new File(privateKeyPath);
+        try (FileInputStream fileInputStream = new FileInputStream(filePrivateKey.getPath())) {
+            byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+            //noinspection ResultOfMethodCallIgnored
+            fileInputStream.read(encodedPrivateKey);
+
+            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
+            DSAPrivateKey privateKey = (DSAPrivateKey) keyFactory.generatePrivate(privateKeySpec);
+
+            DSAParams dsaParams = privateKey.getParams();
+            BigInteger p = dsaParams.getP();
+            BigInteger q = dsaParams.getQ();
+            BigInteger g = dsaParams.getG();
+            BigInteger y = g.modPow(privateKey.getX(), p);
+            KeySpec publicKeySpec = new DSAPublicKeySpec(y, p, q, g);
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            return new KeyPair(publicKey, privateKey);
+        }
     }
 }

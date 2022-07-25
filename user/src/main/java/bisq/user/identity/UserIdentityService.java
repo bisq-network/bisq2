@@ -196,8 +196,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return findUserIdentity(id).isPresent();
     }
 
-    public Optional<UserIdentity> findUserIdentity(String id) {
-        return getUserIdentities().stream().filter(userProfile -> userProfile.getId().equals(id)).findAny();
+    public Optional<UserIdentity> findUserIdentity(String profileId) {
+        return getUserIdentities().stream().filter(userIdentity -> userIdentity.getId().equals(profileId)).findAny();
     }
 
     private UserIdentity createUserIdentity(String nickName,

@@ -154,4 +154,17 @@ public class OsUtils {
         }
         return parts.toArray(new String[0]);
     }
+
+    public static String getDownloadOfHomeDir() {
+        File file = new File(getHomeDirectory() + "/Downloads");
+        if (file.exists()) {
+            return file.getAbsolutePath();
+        } else {
+            return getHomeDirectory();
+        }
+    }
+
+    public static String getHomeDirectory() {
+        return isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+    }
 }

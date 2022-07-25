@@ -17,7 +17,6 @@
 
 package bisq.application;
 
-import bisq.account.accountage.AccountAgeWitnessData;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.DevMode;
 import bisq.common.currency.FiatCurrencyRepository;
@@ -30,6 +29,8 @@ import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
+import bisq.oracle.daobridge.model.AccountAgeCertificateRequest;
+import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
 import bisq.oracle.daobridge.model.AuthorizedBondedReputationData;
 import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
 import bisq.persistence.PersistenceService;
@@ -143,10 +144,13 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
-        DistributedDataResolver.addResolver("account.AccountAgeWitnessData", AccountAgeWitnessData.getResolver());
+        DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
 
         // Register resolvers for networkMessages 
-        NetworkMessageResolver.addResolver("chat.ChatMessage", ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("chat.ChatMessage",
+                ChatMessage.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("oracle.AccountAgeCertificateRequest",
+                AccountAgeCertificateRequest.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

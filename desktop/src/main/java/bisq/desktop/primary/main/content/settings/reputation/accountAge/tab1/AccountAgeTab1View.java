@@ -15,13 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.burn.tab2;
+package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab1;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.user.reputation.ProofOfBurnService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -32,66 +30,52 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BurnBsqTab2View extends View<VBox, BurnBsqTab2Model, BurnBsqTab2Controller> {
-    private final Button backButton, nextButton;
+public class AccountAgeTab1View extends View<VBox, AccountAgeTab1Model, AccountAgeTab1Controller> {
+    private final Button nextButton;
     private final Hyperlink learnMore;
 
-    public BurnBsqTab2View(BurnBsqTab2Model model,
-                           BurnBsqTab2Controller controller) {
+    public AccountAgeTab1View(AccountAgeTab1Model model,
+                              AccountAgeTab1Controller controller) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headline = new Label(Res.get("reputation.burnedBsq.score.headline"));
+        Label headline = new Label(Res.get("reputation.accountAge.infoHeadline"));
         headline.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("reputation.burnedBsq.score.info"));
+        Label info = new Label(Res.get("reputation.accountAge.info"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        VBox formula = new VBox(10, getField("weight", String.valueOf(ProofOfBurnService.WEIGHT)),
-                getField("score"),
-                getField("ageScore"),
-                getField("totalScore"));
+        Label headline2 = new Label(Res.get("reputation.accountAge.infoHeadline2"));
+        headline2.getStyleClass().add("bisq-text-headline-2");
 
-        backButton = new Button(Res.get("back"));
+        Label info2 = new Label(Res.get("reputation.accountAge.info2"));
+        info2.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
-        HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
+        HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
-        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
         VBox.setMargin(headline, new Insets(10, 0, 0, 0));
-        root.getChildren().addAll(headline, info, formula, buttons);
+        VBox.setMargin(buttons, new Insets(10, 0, 0, 0));
+        VBox.setMargin(headline2, new Insets(20, 0, 0, 0));
+        root.getChildren().addAll(headline, info, headline2, info2, buttons);
     }
 
     @Override
     protected void onViewAttached() {
-        backButton.setOnAction(e -> controller.onBack());
         nextButton.setOnAction(e -> controller.onNext());
         learnMore.setOnAction(e -> controller.onLearnMore());
     }
 
     @Override
     protected void onViewDetached() {
-        backButton.setOnAction(null);
         nextButton.setOnAction(null);
         learnMore.setOnAction(null);
-    }
-
-    private MaterialTextField getField(String key) {
-        return getField(key, Res.get("reputation.burnedBsq." + key));
-    }
-
-    private MaterialTextField getField(String key, String value) {
-        MaterialTextField field = new MaterialTextField(Res.get("reputation." + key));
-        field.setEditable(false);
-        field.setText(value);
-        field.setMaxWidth(400);
-        return field;
     }
 }

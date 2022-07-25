@@ -18,7 +18,6 @@
 package bisq.account;
 
 
-import bisq.account.accountage.AccountAgeWitnessService;
 import bisq.account.accounts.Account;
 import bisq.account.accounts.RevolutAccount;
 import bisq.account.accounts.SepaAccount;
@@ -45,11 +44,9 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     private final AccountStore persistableStore = new AccountStore();
     @Getter
     private final Persistence<AccountStore> persistence;
-    private final AccountAgeWitnessService accountAgeWitnessService;
 
     public AccountService(NetworkService networkService, PersistenceService persistenceService, IdentityService identityService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        accountAgeWitnessService = new AccountAgeWitnessService(networkService, identityService);
     }
 
 
@@ -60,7 +57,7 @@ public class AccountService implements PersistenceClient<AccountStore>, Service 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         addDummyAccounts();
-        return accountAgeWitnessService.initialize();
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {

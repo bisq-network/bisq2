@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation;
+package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab1;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
@@ -26,13 +26,13 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ReputationController implements Controller {
+public class AccountAgeTab1Controller implements Controller {
     @Getter
-    private final ReputationView view;
+    private final AccountAgeTab1View view;
 
-    public ReputationController(DefaultApplicationService applicationService) {
-        ReputationModel model = new ReputationModel();
-        view = new ReputationView(model, this);
+    public AccountAgeTab1Controller(DefaultApplicationService applicationService) {
+        AccountAgeTab1Model model = new AccountAgeTab1Model();
+        view = new AccountAgeTab1View(model, this);
     }
 
     @Override
@@ -43,23 +43,11 @@ public class ReputationController implements Controller {
     public void onDeactivate() {
     }
 
-    public void onBurnBsq() {
-        Navigation.navigateTo(NavigationTarget.BURN_BSQ);
+    void onLearnMore() {
+        Browser.open("https://bisq.wiki/reputation/burnBsq");
     }
 
-    public void onBsqBond() {
-        Navigation.navigateTo(NavigationTarget.BSQ_BOND);
-    }
-
-    public void onAccountAge() {
-        Navigation.navigateTo(NavigationTarget.ACCOUNT_AGE);
-    }
-
-    public void onSignedAccount() {
-        Navigation.navigateTo(NavigationTarget.SINGED_ACCOUNT);
-    }
-
-    public void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation");
+    void onNext() {
+        Navigation.navigateTo(NavigationTarget.ACCOUNT_AGE_TAB_2);
     }
 }

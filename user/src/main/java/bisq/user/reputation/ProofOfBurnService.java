@@ -40,9 +40,7 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     public ProofOfBurnService(NetworkService networkService,
                               UserIdentityService userIdentityService,
                               UserProfileService userProfileService) {
-        super(networkService,
-                userIdentityService,
-                userProfileService);
+        super(networkService, userIdentityService, userProfileService);
     }
 
     @Override
@@ -53,13 +51,13 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
-    protected ByteArray getOpReturnHash(AuthorizedProofOfBurnData data) {
+    protected ByteArray getDataKey(AuthorizedProofOfBurnData data) {
         return new ByteArray(data.getHash());
     }
 
     @Override
-    protected ByteArray getHash(UserProfile userProfile) {
-        return userProfile.getProofOfBurnHash();
+    protected ByteArray getUserProfileKey(UserProfile userProfile) {
+        return userProfile.getProofOfBurnKey();
     }
 
     @Override

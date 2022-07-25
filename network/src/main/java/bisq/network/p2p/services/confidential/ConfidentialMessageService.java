@@ -171,7 +171,6 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
                 return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
             }
         }
-
     }
 
     private Result send(NetworkMessage networkMessage,

@@ -81,11 +81,11 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected abstract void processAuthenticatedData(AuthenticatedData authenticatedData);
 
     protected void processData(T data) {
-        ByteArray opReturnHash = getOpReturnHash(data);
+        ByteArray providedHash = getDataKey(data);
         userProfileService.getUserProfileById().values().stream()
-                .filter(userProfile -> getHash(userProfile).equals(opReturnHash))
+                .filter(userProfile -> getUserProfileKey(userProfile).equals(providedHash))
                 .forEach(userProfile -> {
-                    ByteArray hash = getHash(userProfile);
+                    ByteArray hash = getUserProfileKey(userProfile);
                     if (!dataSetByHash.containsKey(hash)) {
                         dataSetByHash.put(hash, new HashSet<>());
                     }
@@ -95,9 +95,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                 });
     }
 
-    protected abstract ByteArray getOpReturnHash(T data);
+    protected abstract ByteArray getDataKey(T data);
 
-    protected abstract ByteArray getHash(UserProfile userProfile);
+    protected abstract ByteArray getUserProfileKey(UserProfile userProfile);
 
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();

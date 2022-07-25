@@ -140,7 +140,7 @@ public class PeerGroupService implements PersistenceClient<PeerGroupStore>, Pers
                             Node node,
                             BanList banList,
                             Config config,
-                            Set<Address> seedNodeAddresses,
+                            List<Address> seedNodeAddresses,
                             Transport.Type transportType) {
         this.node = node;
         this.banList = banList;

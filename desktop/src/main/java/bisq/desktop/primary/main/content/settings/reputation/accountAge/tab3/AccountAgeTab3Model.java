@@ -15,16 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.settings;
+package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab3;
 
-// Used for persistence of Cookie. We use enum name as key.
-public enum CookieKey {
-    STAGE_X,
-    STAGE_Y,
-    STAGE_W,
-    STAGE_H,
-    NAVIGATION_TARGET,
-    TRADE_OVERVIEW_PIN,
-    ACADEMY_PIN,
-    FILE_CHOOSER_DIR
+import bisq.desktop.common.view.Model;
+import bisq.user.identity.UserIdentity;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Getter
+public class AccountAgeTab3Model implements Model {
+    private final ObjectProperty<UserIdentity> selectedChatUserIdentity = new SimpleObjectProperty<>();
+    private final StringProperty pubKeyHash = new SimpleStringProperty();
 }

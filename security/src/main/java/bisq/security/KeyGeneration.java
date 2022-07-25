@@ -33,6 +33,8 @@ import java.security.spec.X509EncodedKeySpec;
 public class KeyGeneration {
     public static final String ECDH = "ECDH";
     private static final String CURVE = "secp256k1";
+    private static final String ECDSA = "ECDSA";
+    public static final String DSA = "DSA";
 
     static {
         if (java.security.Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -48,13 +50,17 @@ public class KeyGeneration {
     }
 
     public static PublicKey generatePublic(byte[] encodedKey) throws GeneralSecurityException {
+        return generatePublic(encodedKey, ECDH);
+    }
+
+    public static PublicKey generatePublic(byte[] encodedKey, String algorithm) throws GeneralSecurityException {
         EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
-        return getKeyFactory().generatePublic(keySpec);
+        return KeyFactory.getInstance(algorithm).generatePublic(keySpec);
     }
 
     public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
         ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");
-        KeyFactory fact = KeyFactory.getInstance("ECDSA", "BC");
+        KeyFactory fact = KeyFactory.getInstance(ECDSA, "BC");
         ECCurve curve = params.getCurve();
         java.security.spec.EllipticCurve ellipticCurve = EC5Util.convertCurve(curve, params.getSeed());
         java.security.spec.ECPoint point = ECPointUtil.decodePoint(ellipticCurve, compressedKey);
@@ -64,11 +70,15 @@ public class KeyGeneration {
     }
 
     public static PrivateKey generatePrivate(byte[] encodedKey) throws GeneralSecurityException {
-        EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
-        return getKeyFactory().generatePrivate(keySpec);
+        return generatePrivate(encodedKey, ECDH);
     }
 
-    private static KeyFactory getKeyFactory() throws NoSuchAlgorithmException {
-        return KeyFactory.getInstance(ECDH);
+    public static PrivateKey generatePrivate(byte[] encodedKey, String algorithm) throws GeneralSecurityException {
+        EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encodedKey);
+        return KeyFactory.getInstance(algorithm).generatePrivate(keySpec);
+    }
+
+    public static byte[] encodePublicKey(PublicKey publicKey) {
+        return new X509EncodedKeySpec(publicKey.getEncoded()).getEncoded();
     }
 }

@@ -20,6 +20,7 @@ package bisq.user;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
@@ -58,11 +59,13 @@ public class UserService implements Service {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
 
-    public UserService(UserService.Config config,
+    public UserService(Config config,
+                       String baseDir,
                        PersistenceService persistenceService,
                        IdentityService identityService,
                        NetworkService networkService,
                        OpenTimestampService openTimestampService,
+                       DaoBridgeService daoBridgeService,
                        ProofOfWorkService proofOfWorkService) {
         userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
@@ -70,9 +73,12 @@ public class UserService implements Service {
                 identityService,
                 openTimestampService,
                 networkService);
-        reputationService = new ReputationService(networkService,
+        reputationService = new ReputationService(baseDir,
+                networkService,
                 userIdentityService,
-                userProfileService);
+                userProfileService,
+                daoBridgeService
+        );
     }
 
 

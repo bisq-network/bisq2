@@ -47,8 +47,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public abstract class Connection {
-
-
     interface Handler {
         void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
 
@@ -60,7 +58,6 @@ public abstract class Connection {
 
         void onConnectionClosed(CloseReason closeReason);
     }
-
 
     @Getter
     protected final String id = StringUtils.createUid();

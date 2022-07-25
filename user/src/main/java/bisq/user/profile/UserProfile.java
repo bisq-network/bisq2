@@ -34,6 +34,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -131,18 +132,22 @@ public final class UserProfile implements DistributedData {
         return nym;
     }
 
-    public ByteArray getProofOfBurnHash() {
+    public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
             proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
         }
         return proofOfBurnHash;
     }
 
-    public ByteArray getBondedReputationHash() {
+    public ByteArray getBondedReputationKey() {
         if (bondedReputationHash == null) {
             bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
         }
         return bondedReputationHash;
+    }
+
+    public ByteArray getAccountAgeKey() {
+        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }
 
     public String getTooltipString() {
@@ -152,4 +157,6 @@ public final class UserProfile implements DistributedData {
     public String getUserName() {
         return UserNameLookup.getUserName(getNym(), nickName);
     }
+
+
 }
