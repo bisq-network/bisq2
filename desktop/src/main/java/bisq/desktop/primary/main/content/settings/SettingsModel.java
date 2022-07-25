@@ -27,6 +27,6 @@ public class SettingsModel extends TabModel {
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.USER_PROFILE;
+        return NavigationTarget.REPUTATION;
     }
 }

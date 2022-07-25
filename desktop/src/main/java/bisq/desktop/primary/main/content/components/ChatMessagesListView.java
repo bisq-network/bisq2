@@ -732,7 +732,7 @@ public class ChatMessagesListView {
                                     userName.setText(author.getUserName());
                                     userName.setOnMouseClicked(e -> controller.onMention(author));
 
-                                    chatUserIcon.setChatUser(author);
+                                    chatUserIcon.setUserProfile(author);
                                     chatUserIcon.setCursor(Cursor.HAND);
                                     Tooltip.install(chatUserIcon, new BisqTooltip(author.getTooltipString()));
                                     chatUserIcon.setOnMouseClicked(e -> controller.onShowChatUserDetails(chatMessage));

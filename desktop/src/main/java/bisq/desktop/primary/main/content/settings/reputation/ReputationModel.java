@@ -18,10 +18,17 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class ReputationModel implements Model {
+    private final ObservableList<ReputationView.ListItem> listItems = FXCollections.observableArrayList();
+    private final FilteredList<ReputationView.ListItem> filteredList = new FilteredList<>(listItems);
+    private final SortedList<ReputationView.ListItem> sortedList = new SortedList<>(filteredList);
 }

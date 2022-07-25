@@ -28,23 +28,52 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ChatUserIcon extends Pane {
     private final ImageView roboIcon;
-    private final Tooltip tooltip;
 
     public ChatUserIcon(double size) {
-        tooltip = new BisqTooltip();
-        tooltip.setId("proof-of-burn-tooltip");
         roboIcon = new ImageView();
         roboIcon.setFitWidth(size);
         roboIcon.setFitHeight(size);
-
         getChildren().add(roboIcon);
     }
 
-    public void setChatUser(UserProfile userProfile) {
+    public void setUserProfile(UserProfile userProfile) {
+        BisqTooltip tooltip = new BisqTooltip(userProfile.getUserName());
+        tooltip.setId("proof-of-burn-tooltip");
+        Tooltip.install(roboIcon, tooltip);
         roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
     }
 
     public void releaseResources() {
         roboIcon.setImage(null);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        return roboIcon.getFitHeight();
+    }
+
+    @Override
+    protected double computeMinHeight(double width) {
+        return roboIcon.getFitHeight();
+    }
+
+    @Override
+    protected double computeMaxHeight(double width) {
+        return roboIcon.getFitHeight();
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+        return roboIcon.getFitWidth();
+    }
+
+    @Override
+    protected double computeMinWidth(double height) {
+        return roboIcon.getFitWidth();
+    }
+
+    @Override
+    protected double computeMaxWidth(double height) {
+        return roboIcon.getFitWidth();
     }
 }

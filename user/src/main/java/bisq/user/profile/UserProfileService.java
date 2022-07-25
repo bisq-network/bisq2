@@ -18,6 +18,7 @@
 package bisq.user.profile;
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -44,6 +45,8 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final Persistence<UserProfileStore> persistence;
     private final NetworkService networkService;
     private final ProofOfWorkService proofOfWorkService;
+    @Getter
+    private final Observable<Integer> userProfileChangedFlag = new Observable<>();
 
     public UserProfileService(PersistenceService persistenceService,
                               NetworkService networkService,
@@ -149,6 +152,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
             if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
                 log.info("We got a new or edited userProfile {}", userProfile);
                 getUserProfileById().put(userProfile.getId(), userProfile);
+                userProfileChangedFlag.set(userProfileChangedFlag.get() + 1);
                 persist();
             }
         }
@@ -157,6 +161,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private void processUserProfileRemoved(UserProfile userProfile) {
         log.info("Remove userProfile {}", userProfile);
         getUserProfileById().remove(userProfile.getId());
+        userProfileChangedFlag.set(userProfileChangedFlag.get() + 1);
         persist();
     }
 }

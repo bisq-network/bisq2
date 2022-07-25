@@ -18,29 +18,49 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
+import bisq.i18n.Res;
+import bisq.user.profile.UserProfileService;
+import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ReputationController implements Controller {
     @Getter
     private final ReputationView view;
+    private final ReputationService reputationService;
+    private final UserProfileService userProfileService;
+    private final ReputationModel model;
+    private Pin userProfileChangedFlagPin;
 
     public ReputationController(DefaultApplicationService applicationService) {
-        ReputationModel model = new ReputationModel();
+        userProfileService = applicationService.getUserService().getUserProfileService();
+        reputationService = applicationService.getUserService().getReputationService();
+
+        model = new ReputationModel();
         view = new ReputationView(model, this);
     }
 
     @Override
     public void onActivate() {
+        userProfileChangedFlagPin = userProfileService.getUserProfileChangedFlag().addObserver(__ -> {
+            model.getListItems().setAll(userProfileService.getUserProfiles().stream()
+                    .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
+                    .collect(Collectors.toList()));
+        });
     }
 
     @Override
     public void onDeactivate() {
+        userProfileChangedFlagPin.unbind();
     }
 
     public void onBurnBsq() {
@@ -61,5 +81,9 @@ public class ReputationController implements Controller {
 
     public void onLearnMore() {
         Browser.open("https://bisq.wiki/reputation");
+    }
+
+    public void onShowDetails(ReputationView.ListItem item) {
+        new Popup().headLine(Res.get("reputation.table.columns.details.popup.headline")).message(Res.get("reputation.table.columns.details.popup.msg")).show();
     }
 }
