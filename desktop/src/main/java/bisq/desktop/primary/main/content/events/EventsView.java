@@ -28,14 +28,12 @@ public class EventsView extends ChatView {
                       Pane marketChannelSelection,
                       Pane privateChannelSelection,
                       Pane chatMessagesComponent,
-                      Pane notificationsSettings,
                       Pane channelInfo) {
         super(model,
                 controller,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
-                notificationsSettings,
                 channelInfo);
     }
 }

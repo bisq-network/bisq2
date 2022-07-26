@@ -24,6 +24,7 @@ import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -144,6 +145,10 @@ public class PublicEventsChannelSelection extends ChannelSelection {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicEventsChannel) {
                         label.setText(item.getDisplayString().toUpperCase());
+                        item.getIconId().ifPresent(iconId -> {
+                            label.setGraphic(BisqIconButton.createIconButton(iconId));
+                            label.setGraphicTextGap(8);
+                        });
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 70);

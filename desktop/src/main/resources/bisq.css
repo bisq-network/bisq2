@@ -1811,11 +1811,11 @@ tree-table-view:focused {
     -fx-background-radius: 8 8 0 0;
 }
 
-.bisq-darkest-bg {
+.bisq-dark-bg {
     -fx-background-color: -bisq-dark-grey;
 }
 
-.bisq-dark-bg {
+.bisq-grey-2-bg {
     -fx-background-color: -bisq-grey-2;
 }
 
@@ -2105,6 +2105,12 @@ tree-table-view:focused {
     -fx-border-insets: 0 0 -1 0;
 }
 
+#chat-user-profile-bg {
+    -fx-background-color: -bisq-grey-19;
+    -fx-background-insets: 1 20 1 9;
+    -fx-background-radius: 8;
+}
+
 #chat-input-field {
     -fx-background-color: -bisq-grey-19;
     -fx-background-radius: 8;
@@ -2161,6 +2167,12 @@ tree-table-view:focused {
 #chat-sidebar-headline {
     -fx-text-fill: -bisq-white;
     -fx-font-size: 1.78em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+#chat-sidebar-title {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.4em;
     -fx-font-family: "IBM Plex Sans Light";
 }
 

@@ -68,7 +68,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
 
-        root.getStyleClass().add("bisq-darkest-bg");
+        root.getStyleClass().add("bisq-dark-bg");
 
         menuTop = TopPanelView.HEIGHT;
 

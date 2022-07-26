@@ -49,7 +49,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
         super(new VBox(), model, controller);
 
         root.setSpacing(30);
-        root.getStyleClass().add("bisq-darkest-bg");
+        root.getStyleClass().add("bisq-dark-bg");
         root.setPadding(new Insets(POPUP_PADDING, POPUP_PADDING, POPUP_PADDING, POPUP_PADDING));
 
         marketSelection.setMinWidth(280);

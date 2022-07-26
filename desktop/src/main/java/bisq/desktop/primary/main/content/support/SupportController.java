@@ -20,13 +20,14 @@ package bisq.desktop.primary.main.content.support;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PrivateChannel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.SupportChannelSelectionService;
 import bisq.chat.support.priv.PrivateSupportChannel;
 import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicSupportChannelSelection;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
                 value -> {
                     Channel<? extends ChatMessage> channel = supportChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -79,7 +80,6 @@ public class SupportController extends ChatController<SupportView, SupportModel>
                 publicSupportChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSidebar.getRoot(),
                 channelSidebar.getRoot());
     }
 
@@ -88,11 +88,10 @@ public class SupportController extends ChatController<SupportView, SupportModel>
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateSupportChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateSupportChannel) channel).getPeer().getPubKeyHash()));
-            model.getPeersRoboIconVisible().set(true);
+            applyPeersIcon((PrivateChannel<?>) channel);
             publicSupportChannelSelection.deSelectChannel();
         } else {
-            model.getPeersRoboIconVisible().set(false);
+            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

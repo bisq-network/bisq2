@@ -193,22 +193,17 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getDetailsCellFactory() {
         return column -> new TableCell<>() {
-            private final Button infoButton = new Button(Res.get("details"));
-
-            {
-                infoButton.getStyleClass().add("text-button");
-                infoButton.setStyle("-fx-text-fill: -bisq-green;");
-            }
+            private final Hyperlink info = new Hyperlink(Res.get("reputation.table.columns.details.button"));
 
             @Override
             public void updateItem(final ListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    infoButton.setOnAction(e -> controller.onShowDetails(item));
-                    setGraphic(infoButton);
+                    info.setOnAction(e -> controller.onShowDetails(item));
+                    setGraphic(info);
                 } else {
-                    infoButton.setOnAction(null);
+                    info.setOnAction(null);
                     setGraphic(null);
                 }
             }

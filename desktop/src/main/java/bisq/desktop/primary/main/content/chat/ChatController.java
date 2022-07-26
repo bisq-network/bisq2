@@ -21,14 +21,20 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PrivateChannel;
+import bisq.chat.channel.PublicChannel;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.chat.channels.PrivateChannelSelection;
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
-import bisq.desktop.primary.main.content.chat.sidebar.NotificationsSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
@@ -36,6 +42,8 @@ import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -57,7 +65,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final DefaultApplicationService applicationService;
     protected final PrivateChannelSelection privateChannelSelection;
     protected final ChannelSidebar channelSidebar;
-    protected final NotificationsSidebar notificationsSidebar;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
@@ -75,10 +82,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
-            onCloseSideBar();
-            chatMessagesComponent.resetSelectedChatMessage();
-        });
-        notificationsSidebar = new NotificationsSidebar(() -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
         });
@@ -150,30 +153,12 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             }*/
     }
 
-    public void onToggleFilterBox() {
-        boolean visible = !model.getSearchFieldVisible().get();
-        model.getSearchFieldVisible().set(visible);
-    }
-
-    public void onToggleNotifications() {
-        boolean visible = !model.getNotificationsVisible().get();
-        onCloseSideBar();
-        chatMessagesComponent.resetSelectedChatMessage();
-        model.getNotificationsVisible().set(visible);
-        model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
-        if (visible) {
-            notificationsSidebar.setChannel(model.getSelectedChannel().get());
-        }
-    }
-
     public void onToggleChannelInfo() {
         boolean visible = !model.getChannelInfoVisible().get();
         onCloseSideBar();
         chatMessagesComponent.resetSelectedChatMessage();
         model.getChannelInfoVisible().set(visible);
         model.getSideBarVisible().set(visible);
-        model.getSideBarWidth().set(visible ? notificationsSidebar.getRoot().getMinWidth() : 0);
         if (visible) {
             showChannelInfo();
         }
@@ -187,7 +172,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         model.getSideBarVisible().set(false);
         model.getSideBarWidth().set(0);
         model.getChannelInfoVisible().set(false);
-        model.getNotificationsVisible().set(false);
         model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
         cleanupChatUserDetails();
@@ -217,5 +201,28 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     protected void cleanupChannelInfo() {
         channelSidebar.setOnUndoIgnoreChatUser(null);
+    }
+
+    protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
+        Image image = RoboHash.getImage(privateChannel.getPeer().getPubKeyHash());
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(42);
+        imageView.setFitHeight(42);
+        model.getChannelIcon().set(imageView);
+    }
+
+    protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
+        String type = null;
+        if (channel instanceof PublicEventsChannel) {
+            type = "-events-";
+        } else if (channel instanceof PublicDiscussionChannel) {
+            type = "-discussion-";
+        } else if (channel instanceof PublicSupportChannel) {
+            type = "-support-";
+        }
+        if (type != null) {
+            String iconId = "channels" + type + channel.getId() + "-white";
+            model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
+        }
     }
 }

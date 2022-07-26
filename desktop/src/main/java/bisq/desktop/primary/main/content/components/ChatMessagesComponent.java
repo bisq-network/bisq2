@@ -67,6 +67,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,6 +139,7 @@ public class ChatMessagesComponent {
         private final PublicSupportChannelService publicSupportChannelService;
         private final PrivateSupportChannelService privateSupportChannelService;
         private final SupportChannelSelectionService supportChannelSelectionService;
+        private final UserProfileSelection userProfileSelection;
         private Pin selectedChannelPin;
 
         private Controller(DefaultApplicationService applicationService,
@@ -163,6 +165,8 @@ public class ChatMessagesComponent {
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             quotedMessageBlock = new QuotedMessageBlock(applicationService);
+
+            userProfileSelection = new UserProfileSelection(userIdentityService);
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
                     this::showChatUserDetails,
@@ -172,7 +176,10 @@ public class ChatMessagesComponent {
                     false);
 
             model = new Model(channelKind);
-            view = new View(model, this, chatMessagesListView.getRoot(), quotedMessageBlock.getRoot());
+            view = new View(model, this,
+                    chatMessagesListView.getRoot(),
+                    quotedMessageBlock.getRoot(),
+                    userProfileSelection);
         }
 
         @Override
@@ -321,7 +328,11 @@ public class ChatMessagesComponent {
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
 
-        private View(Model model, Controller controller, Pane messagesListView, Pane quotedMessageBlock) {
+        private View(Model model,
+                     Controller controller,
+                     Pane messagesListView,
+                     Pane quotedMessageBlock,
+                     UserProfileSelection userProfileSelection) {
             super(new VBox(), model, controller);
 
             inputField = new BisqTextArea();
@@ -339,8 +350,28 @@ public class ChatMessagesComponent {
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
 
+            Pane pane = new Pane();
+            userProfileSelection.setComboBoxWidth(150);
+            userProfileSelection.setConverter(new StringConverter<>() {
+                @Override
+                public String toString(UserProfileSelection.ListItem item) {
+                    return item != null ? StringUtils.truncate(item.getUserIdentity().getNickName(), 8) : "";
+                }
+
+                @Override
+                public UserProfileSelection.ListItem fromString(String string) {
+                    return null;
+                }
+            });
+            Pane userProfileSelectionRoot = userProfileSelection.getRoot();
+            userProfileSelectionRoot.setMaxHeight(44);
+            userProfileSelectionRoot.setMaxWidth(150);
+            userProfileSelectionRoot.setId("chat-user-profile-bg");
+
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox bottomBox = new HBox(10, bottomBoxStackPane);
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, 0, 0, -23));
+            HBox.setMargin(bottomBoxStackPane, new Insets(0, 0, 0, -20));
+            HBox bottomBox = new HBox(10, userProfileSelectionRoot, bottomBoxStackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
             bottomBox.setPadding(new Insets(14, 24, 14, 24));

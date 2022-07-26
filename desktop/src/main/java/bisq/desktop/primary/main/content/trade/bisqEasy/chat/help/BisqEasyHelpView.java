@@ -97,7 +97,7 @@ public class BisqEasyHelpView extends TabView<BisqEasyHelpModel, BisqEasyHelpCon
     protected void setupLineAndMarker() {
         super.setupLineAndMarker();
 
-        line.getStyleClass().remove("bisq-darkest-bg");
+        line.getStyleClass().remove("bisq-dark-bg");
         line.getStyleClass().add("bisq-mid-grey");
     }
 }

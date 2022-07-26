@@ -105,7 +105,7 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
     protected void setupLineAndMarker() {
         super.setupLineAndMarker();
 
-        line.getStyleClass().remove("bisq-darkest-bg");
+        line.getStyleClass().remove("bisq-dark-bg");
         line.getStyleClass().add("bisq-mid-grey");
     }
 }

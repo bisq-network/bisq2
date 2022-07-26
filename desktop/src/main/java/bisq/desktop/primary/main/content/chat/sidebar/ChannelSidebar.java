@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
@@ -73,20 +73,24 @@ public class ChannelSidebar {
         controller.model.undoIgnoreChatUserHandler = Optional.ofNullable(handler);
     }
 
+    public ReadOnlyObjectProperty<ChannelNotificationType> getSelectedNotificationType() {
+        return controller.notificationsSidebar.getSelected();
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
-        private final ChatService chatService;
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
         private final Runnable closeHandler;
+        private final NotificationsSidebar notificationsSidebar;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
-            this.chatService = applicationService.getChatService();
-            userProfileService = applicationService.getUserService().getUserProfileService();
             this.closeHandler = closeHandler;
+            userProfileService = applicationService.getUserService().getUserProfileService();
+            notificationsSidebar = new NotificationsSidebar();
             model = new Model();
-            view = new View(model, this);
+            view = new View(model, this, notificationsSidebar.getRoot());
         }
 
         @Override
@@ -183,7 +187,7 @@ public class ChannelSidebar {
         private final Text descriptionText;
         private final Button closeButton;
 
-        private View(Model model, Controller controller) {
+        private View(Model model, Controller controller, Pane notificationsSidebar) {
             super(new VBox(), model, controller);
 
             root.setSpacing(15);
@@ -202,17 +206,16 @@ public class ChannelSidebar {
             descriptionText = new Text();
             descriptionText.setId("chat-sidebar-text");
 
-            Label membersHeadLine = new Label(Res.get("social.channel.settings.members").toUpperCase());
-            membersHeadLine.setId("chat-sidebar-text");
-            VBox.setMargin(membersHeadLine, new Insets(20, 0, 0, 0));
+            Label membersHeadLine = new Label(Res.get("social.channel.settings.members"));
+            membersHeadLine.setId("chat-sidebar-title");
 
             members = new ListView<>(model.members);
             VBox.setVgrow(members, Priority.ALWAYS);
             members.setCellFactory(getCellFactory(controller));
 
-
             VBox.setMargin(topHBox, new Insets(0, -20, 0, 0));
-            root.getChildren().addAll(topHBox, descriptionText, membersHeadLine, members);
+            VBox.setMargin(notificationsSidebar, new Insets(20, 0, 20, 0));
+            root.getChildren().addAll(topHBox, descriptionText, notificationsSidebar, membersHeadLine, members);
         }
 
         @Override

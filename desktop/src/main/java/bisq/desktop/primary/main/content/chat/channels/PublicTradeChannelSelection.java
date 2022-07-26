@@ -302,8 +302,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
                                 pair.getSecond().toLowerCase()));
-                        label.setText(item.getDisplayString());
                         label.setGraphicTextGap(8);
+                        label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setPrefWidth(getWidth() - 60);

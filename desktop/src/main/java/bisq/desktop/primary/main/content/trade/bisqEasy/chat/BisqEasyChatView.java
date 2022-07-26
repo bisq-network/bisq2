@@ -40,14 +40,12 @@ public class BisqEasyChatView extends ChatView {
                             Pane marketChannelSelection,
                             Pane privateChannelSelection,
                             Pane chatMessagesComponent,
-                            Pane notificationsSettings,
                             Pane channelInfo) {
         super(model,
                 controller,
                 marketChannelSelection,
                 privateChannelSelection,
                 chatMessagesComponent,
-                notificationsSettings,
                 channelInfo);
 
         bisqEasyChatController = controller;
@@ -56,7 +54,7 @@ public class BisqEasyChatView extends ChatView {
         toggleOffersButton = new BisqToggleButton();
         toggleOffersButton.setText(Res.get("satoshisquareapp.chat.filter.offersOnly"));
 
-        centerToolbar.getChildren().add(5, toggleOffersButton);
+        centerToolbar.getChildren().add(2, toggleOffersButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             log.error("newValue {}", newValue);
