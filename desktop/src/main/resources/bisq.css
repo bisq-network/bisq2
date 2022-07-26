@@ -1550,12 +1550,12 @@ tree-table-view:focused {
 
 /* even */
 .table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: -bisq-grey-5;
 }
 
 /* odd */
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: -bisq-grey-5;
 }
 
 /* disabled */

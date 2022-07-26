@@ -168,13 +168,13 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
         Label method = getTopPaneLabel(Res.get("onboarding.navProgress.method"));
         Label complete = getTopPaneLabel(Res.get("onboarding.navProgress.review"));
 
-        Button skipButton = BisqIconButton.createIconButton("close");
+        Button closeButton = BisqIconButton.createIconButton("close");
 
         HBox hBox = new HBox(10);
         hBox.setAlignment(Pos.CENTER);
         hBox.setId("onboarding-top-panel");
         hBox.setMinHeight(TOP_PANE_HEIGHT);
-        HBox.setMargin(skipButton, new Insets(0, 20, 0, -135));
+        hBox.setPadding(new Insets(0, 20, 0, 50));
         hBox.getChildren().addAll(Spacer.fillHBox(),
                 direction,
                 getSeparator(),
@@ -185,9 +185,9 @@ public class CreateOfferView extends NavigationView<VBox, CreateOfferModel, Crea
                 method,
                 getSeparator(),
                 complete,
-                Spacer.fillHBox(), skipButton);
+                Spacer.fillHBox(), closeButton);
 
-        return new Triple<>(hBox, skipButton, List.of(direction, market, amount, method, complete));
+        return new Triple<>(hBox, closeButton, List.of(direction, market, amount, method, complete));
     }
 
     private Separator getSeparator() {

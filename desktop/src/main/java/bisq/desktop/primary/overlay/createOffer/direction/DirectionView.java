@@ -69,7 +69,7 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         HBox boxes = new HBox(25, buyBox, sellBox);
         boxes.setAlignment(Pos.CENTER);
 
-        VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
+        VBox.setMargin(headLineLabel, new Insets(38, 0, 4, 0));
         VBox.setMargin(subtitleLabel, new Insets(0, 0, 70, 0));
         content.getChildren().addAll(headLineLabel, subtitleLabel, boxes);
 
@@ -181,12 +181,10 @@ public class DirectionView extends View<StackPane, DirectionModel, DirectionCont
         withoutReputationButton = new Button(Res.get("onboarding.direction.feedback.tradeWithoutReputation"));
 
         backToBuyButton = new Button(Res.get("onboarding.direction.feedback.backToBuy"));
-        backToBuyButton.setDefaultButton(true);
 
-        HBox buttons = new HBox(7, withoutReputationButton, backToBuyButton);
+        HBox buttons = new HBox(7, backToBuyButton, withoutReputationButton);
         buttons.setAlignment(Pos.CENTER);
 
-        // VBox.setMargin(closeButton, new Insets(3, 0, 0, width - 35));
         VBox.setMargin(headLineLabel, new Insets(0, 0, 20, 0));
         VBox.setMargin(gainReputationHyperlink, new Insets(10, 0, 30, 0));
         VBox.setMargin(buttons, new Insets(50, 0, 20, 0));
