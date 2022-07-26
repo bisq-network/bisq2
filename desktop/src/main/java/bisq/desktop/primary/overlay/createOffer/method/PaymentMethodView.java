@@ -70,7 +70,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         flowPane.setHgap(20);
 
         custom = new MaterialTextField(Res.get("onboarding.method.customMethod"),
-                null, Res.get("onboarding.method.customMethod.prompt"));
+                null,
+                Res.get("onboarding.method.customMethod.prompt"));
         custom.setPrefWidth(300);
 
         addButton = new Button(Res.get("onboarding.method.customMethod.addButton").toUpperCase());
@@ -127,7 +128,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
             String paymentMethod = model.getAllPaymentMethods().get(i);
             String displayString = Res.has("paymentMethod." + paymentMethod) ? Res.get("paymentMethod." + paymentMethod) : paymentMethod;
             ChipButton chipButton = new ChipButton(displayString);
-            if(model.getSelectedPaymentMethods().contains(paymentMethod)){
+            if (model.getSelectedPaymentMethods().contains(paymentMethod)) {
                 chipButton.setSelected(true);
             }
             chipButton.setOnAction(() -> controller.onTogglePaymentMethod(paymentMethod, chipButton.isSelected()));

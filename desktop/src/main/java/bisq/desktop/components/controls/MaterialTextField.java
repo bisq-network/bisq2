@@ -284,6 +284,7 @@ public class MaterialTextField extends Pane {
         line.setLayoutY(getBgHeight() - 1);
         selectionLine.setLayoutY(getBgHeight() - 2);
         field.setLayoutY(getFieldLayoutY());
+        helpLabel.setLayoutY(getBgHeight() + 3.5);
     }
 
     private void layoutIconButton() {
@@ -305,30 +306,31 @@ public class MaterialTextField extends Pane {
 
         descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
         field.getStyleClass().remove("material-text-field-read-only");
+
+        descriptionLabel.getStyleClass().remove("material-text-field-description-small");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-big");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
+
         if (showInputTextField()) {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-big");
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
         } else {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-big");
         }
         if (field.isFocused()) {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
             descriptionLabel.getStyleClass().add("material-text-field-description-selected");
         } else {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
             descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
         }
 
         if (field.isEditable()) {
             bg.setMouseTransparent(false);
             line.setOpacity(1);
+            field.getStyleClass().remove("material-text-field-read-only");
         } else {
             bg.setMouseTransparent(true);
             line.setOpacity(0.25);
-            descriptionLabel.getStyleClass().remove("material-text-field-description-big");
-            descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
-            descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
             field.getStyleClass().add("material-text-field-read-only");
@@ -363,7 +365,6 @@ public class MaterialTextField extends Pane {
 
     @Override
     protected double computeMinHeight(double width) {
-        log.error("computeMinHeight {}", super.computeMinHeight(width));
         if (helpLabel.isManaged()) {
             return helpLabel.getLayoutY() + helpLabel.getHeight();
         } else {
@@ -373,33 +374,27 @@ public class MaterialTextField extends Pane {
 
     @Override
     protected double computeMaxHeight(double width) {
-        log.error("computeMaxHeight {}", super.computeMaxHeight(width));
         return computeMinHeight(width);
     }
 
     @Override
     protected double computePrefHeight(double width) {
-        log.error("computePrefHeight {}", super.computePrefHeight(width));
         return computeMinHeight(width);
     }
 
     @Override
     protected double computePrefWidth(double height) {
-        log.error("computePrefWidth {}", super.computePrefWidth(height));
         layoutIconButton();
         return super.computePrefWidth(height);
-        // return bg.getWidth();
     }
 
     @Override
     protected double computeMinWidth(double height) {
-        log.error("computeMinWidth {}", super.computeMinWidth(height));
         return super.computeMinWidth(height);
     }
 
     @Override
     protected double computeMaxWidth(double height) {
-        log.error("computeMaxWidth {}", super.computeMaxWidth(height));
         return super.computeMaxWidth(height);
     }
 }
