@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
-import bisq.desktop.components.controls.BisqToggleButton;
+import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatController bisqEasyChatController;
-    private final BisqToggleButton toggleOffersButton;
+    private final Switch toggleOffersButton;
     private final BisqEasyChatModel bisqEasyChatModel;
 
     public BisqEasyChatView(BisqEasyChatModel model,
@@ -51,7 +51,7 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyChatController = controller;
         bisqEasyChatModel = model;
 
-        toggleOffersButton = new BisqToggleButton();
+        toggleOffersButton = new Switch();
         toggleOffersButton.setText(Res.get("satoshisquareapp.chat.filter.offersOnly"));
 
         centerToolbar.getChildren().add(2, toggleOffersButton);

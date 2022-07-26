@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls;
 
-import bisq.desktop.components.controls.skins.BisqToggleButtonSkin;
+import bisq.desktop.components.controls.skins.SwitchSkin;
 import javafx.css.*;
 import javafx.css.converter.PaintConverter;
 import javafx.scene.Node;
@@ -30,29 +30,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BisqToggleButton extends ToggleButton {
+public class Switch extends ToggleButton {
 
-    public BisqToggleButton() {
+    public Switch() {
         this("");
     }
 
-    public BisqToggleButton(String text) {
+    public Switch(String text) {
         this(text, null);
     }
 
-    public BisqToggleButton(String text, Node graphic) {
+    public Switch(String text, Node graphic) {
         super(text, graphic);
         this.getStyleClass().add("bisq-toggle-button");
     }
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new BisqToggleButtonSkin(this);
+        return new SwitchSkin(this);
     }
 
 
     private final StyleableObjectProperty<Paint> toggleColor = new SimpleStyleableObjectProperty<>(StyleableProperties.TOGGLE_COLOR,
-            BisqToggleButton.this,
+            Switch.this,
             "toggleColor");
 
     public Paint getToggleColor() {
@@ -64,7 +64,7 @@ public class BisqToggleButton extends ToggleButton {
     }
 
     private final StyleableObjectProperty<Paint> unToggleColor = new SimpleStyleableObjectProperty<>(StyleableProperties.UN_TOGGLE_COLOR,
-            BisqToggleButton.this,
+            Switch.this,
             "unToggleColor");
 
     public Paint getUnToggleColor() {
@@ -77,7 +77,7 @@ public class BisqToggleButton extends ToggleButton {
 
     private final StyleableObjectProperty<Paint> toggleLineColor = new SimpleStyleableObjectProperty<>(
             StyleableProperties.TOGGLE_LINE_COLOR,
-            BisqToggleButton.this,
+            Switch.this,
             "toggleLineColor");
 
     public Paint getToggleLineColor() {
@@ -90,7 +90,7 @@ public class BisqToggleButton extends ToggleButton {
 
     private final StyleableObjectProperty<Paint> unToggleLineColor = new SimpleStyleableObjectProperty<>(
             StyleableProperties.UN_TOGGLE_LINE_COLOR,
-            BisqToggleButton.this,
+            Switch.this,
             "unToggleLineColor");
 
     public Paint getUnToggleLineColor() {
@@ -103,7 +103,7 @@ public class BisqToggleButton extends ToggleButton {
 
     private final StyleableDoubleProperty size = new SimpleStyleableDoubleProperty(
             StyleableProperties.SIZE,
-            BisqToggleButton.this,
+            Switch.this,
             "size");
 
     public double getSize() {
@@ -116,62 +116,62 @@ public class BisqToggleButton extends ToggleButton {
 
 
     private static class StyleableProperties {
-        private static final CssMetaData<BisqToggleButton, Paint> TOGGLE_COLOR = new CssMetaData<>("-bisq-toggle-color", PaintConverter.getInstance(), Color.valueOf("#009688")) {
+        private static final CssMetaData<Switch, Paint> TOGGLE_COLOR = new CssMetaData<>("-bisq-toggle-color", PaintConverter.getInstance(), Color.valueOf("#009688")) {
             @Override
-            public boolean isSettable(BisqToggleButton control) {
+            public boolean isSettable(Switch control) {
                 return !control.toggleColor.isBound();
             }
 
             @Override
-            public StyleableProperty<Paint> getStyleableProperty(BisqToggleButton control) {
+            public StyleableProperty<Paint> getStyleableProperty(Switch control) {
                 return control.toggleColorProperty();
             }
         };
 
-        private static final CssMetaData<BisqToggleButton, Paint> UN_TOGGLE_COLOR = new CssMetaData<>("-bisq-un-toggle-color", PaintConverter.getInstance(), Color.valueOf("#FAFAFA")) {
+        private static final CssMetaData<Switch, Paint> UN_TOGGLE_COLOR = new CssMetaData<>("-bisq-un-toggle-color", PaintConverter.getInstance(), Color.valueOf("#FAFAFA")) {
             @Override
-            public boolean isSettable(BisqToggleButton control) {
+            public boolean isSettable(Switch control) {
                 return !control.unToggleColor.isBound();
             }
 
             @Override
-            public StyleableProperty<Paint> getStyleableProperty(BisqToggleButton control) {
+            public StyleableProperty<Paint> getStyleableProperty(Switch control) {
                 return control.unToggleColorProperty();
             }
         };
 
-        private static final CssMetaData<BisqToggleButton, Paint> TOGGLE_LINE_COLOR = new CssMetaData<>("-bisq-toggle-line-color", PaintConverter.getInstance(), Color.valueOf("#77C2BB")) {
+        private static final CssMetaData<Switch, Paint> TOGGLE_LINE_COLOR = new CssMetaData<>("-bisq-toggle-line-color", PaintConverter.getInstance(), Color.valueOf("#77C2BB")) {
             @Override
-            public boolean isSettable(BisqToggleButton control) {
+            public boolean isSettable(Switch control) {
                 return !control.toggleLineColor.isBound();
             }
 
             @Override
-            public StyleableProperty<Paint> getStyleableProperty(BisqToggleButton control) {
+            public StyleableProperty<Paint> getStyleableProperty(Switch control) {
                 return control.toggleLineColorProperty();
             }
         };
 
-        private static final CssMetaData<BisqToggleButton, Paint> UN_TOGGLE_LINE_COLOR = new CssMetaData<>("-bisq-un-toggle-line-color", PaintConverter.getInstance(), Color.valueOf("#999999")) {
+        private static final CssMetaData<Switch, Paint> UN_TOGGLE_LINE_COLOR = new CssMetaData<>("-bisq-un-toggle-line-color", PaintConverter.getInstance(), Color.valueOf("#999999")) {
             @Override
-            public boolean isSettable(BisqToggleButton control) {
+            public boolean isSettable(Switch control) {
                 return !control.unToggleLineColor.isBound();
             }
 
             @Override
-            public StyleableProperty<Paint> getStyleableProperty(BisqToggleButton control) {
+            public StyleableProperty<Paint> getStyleableProperty(Switch control) {
                 return control.unToggleLineColorProperty();
             }
         };
 
-        private static final CssMetaData<BisqToggleButton, Number> SIZE = new CssMetaData<>("-bisq-size", StyleConverter.getSizeConverter(), 10.0) {
+        private static final CssMetaData<Switch, Number> SIZE = new CssMetaData<>("-bisq-size", StyleConverter.getSizeConverter(), 10.0) {
             @Override
-            public boolean isSettable(BisqToggleButton control) {
+            public boolean isSettable(Switch control) {
                 return !control.size.isBound();
             }
 
             @Override
-            public StyleableProperty<Number> getStyleableProperty(BisqToggleButton control) {
+            public StyleableProperty<Number> getStyleableProperty(Switch control) {
                 return control.sizeProperty();
             }
         };

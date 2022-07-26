@@ -17,7 +17,7 @@
 
 package bisq.desktop.components.controls.skins;
 
-import bisq.desktop.components.controls.BisqToggleButton;
+import bisq.desktop.components.controls.Switch;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -30,16 +30,16 @@ import javafx.scene.shape.StrokeLineCap;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqToggleButtonSkin extends ToggleButtonSkin {
+public class SwitchSkin extends ToggleButtonSkin {
 
-    public BisqToggleButtonSkin(BisqToggleButton toggleButton) {
+    public SwitchSkin(Switch toggleButton) {
         super(toggleButton);
 
         double circleRadius = toggleButton.getSize();
 
         Line line = new Line();
         line.setStroke(computeLineColor(toggleButton));
-        line.setStrokeWidth(circleRadius * 1.5);
+        line.setStrokeWidth(circleRadius * 2);
         line.setStrokeLineCap(StrokeLineCap.ROUND);
         line.setEndX(circleRadius * 2 + 2);
         line.setSmooth(true);
@@ -70,11 +70,11 @@ public class BisqToggleButtonSkin extends ToggleButtonSkin {
         toggleButton.setGraphic(stackPane);
     }
 
-    private Paint computeLineColor(BisqToggleButton toggleButton) {
+    private Paint computeLineColor(Switch toggleButton) {
         return toggleButton.isSelected() ? toggleButton.getToggleLineColor() : toggleButton.getUnToggleLineColor();
     }
 
-    private Paint computeCircleColor(BisqToggleButton toggleButton) {
+    private Paint computeCircleColor(Switch toggleButton) {
         return toggleButton.isSelected() ? toggleButton.getToggleColor() : toggleButton.getUnToggleColor();
     }
 
