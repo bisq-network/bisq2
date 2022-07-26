@@ -228,6 +228,9 @@ public class ReviewOfferController implements Controller {
     private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
+            if (true) {
+                return true;
+            }
             if (item.getSenderUserProfile().isEmpty()) {
                 return false;
             }

@@ -146,48 +146,87 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    protected void doLayout() {
-        bg.setMinHeight(getBgHeight());
-        bg.setMaxHeight(getBgHeight());
-        line.setLayoutY(getBgHeight() - 1);
-        selectionLine.setLayoutY(getBgHeight() - 2);
-        field.setLayoutY(getFieldLayoutY());
+    public void requestFocus() {
+        field.requestFocus();
     }
 
-    protected TextInputControl createTextInputControl() {
-        return new TextField();
+    public void hideIcon() {
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
     }
 
-    @Override
-    protected double computeMinHeight(double width) {
-        if (helpLabel.isManaged()) {
-            return helpLabel.getLayoutY() + helpLabel.getHeight();
-        } else {
-            return getBgHeight();
-        }
-    }
-
-    @Override
-    protected double computePrefWidth(double height) {
+    public void showIcon() {
+        iconButton.setManaged(true);
+        iconButton.setVisible(true);
         layoutIconButton();
-        return super.computePrefWidth(height);
     }
 
-    private void layoutIconButton() {
-        if (getWidth() > 0) {
-            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
-        }
+    public void setIcon(AwesomeIcon icon) {
+        iconButton.setIcon(icon);
+        showIcon();
     }
 
-    @Override
-    protected double computeMaxHeight(double width) {
-        return computeMinHeight(width);
+    public void setIcon(String iconId) {
+        iconButton.setIcon(iconId);
+        showIcon();
     }
 
-    @Override
-    protected double computePrefHeight(double width) {
-        return computeMinHeight(width);
+    public void setIconTooltip(String text) {
+        iconButton.setTooltip(new BisqTooltip(text));
+        showIcon();
     }
+
+    public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
+        setOnMousePressed(handler);
+        field.setOnMousePressed(handler);
+    }
+
+    public final StringProperty promptTextProperty() {
+        return field.promptTextProperty();
+    }
+
+    public final StringProperty descriptionProperty() {
+        return descriptionProperty;
+    }
+
+    public final StringProperty textProperty() {
+        return field.textProperty();
+    }
+
+    public ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
+        return field.focusedProperty();
+    }
+
+    public String getText() {
+        return field.getText();
+    }
+
+    public void setText(String value) {
+        field.setText(value);
+        update();
+    }
+
+    public void setValidator(InputValidator validator) {
+        //todo
+    }
+
+    public void setDescription(String description) {
+        descriptionProperty.set(description);
+    }
+
+    public void setEditable(boolean value) {
+        field.setEditable(value);
+        update();
+    }
+
+    public TextInputControl getField() {
+        return field;
+    }
+
+    Label getDescriptionLabel() {
+        return descriptionLabel;
+    }
+
 
     protected void onMouseEntered() {
         if (!field.isEditable()) {
@@ -236,6 +275,20 @@ public class MaterialTextField extends Pane {
             descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
             field.setPrefWidth(width - 2 * field.getLayoutX());
             helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
+        }
+    }
+
+    protected void doLayout() {
+        bg.setMinHeight(getBgHeight());
+        bg.setMaxHeight(getBgHeight());
+        line.setLayoutY(getBgHeight() - 1);
+        selectionLine.setLayoutY(getBgHeight() - 2);
+        field.setLayoutY(getFieldLayoutY());
+    }
+
+    private void layoutIconButton() {
+        if (getWidth() > 0 && iconButton.isManaged()) {
+            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
         }
     }
 
@@ -296,59 +349,8 @@ public class MaterialTextField extends Pane {
                 field.isFocused());
     }
 
-    public void requestFocus() {
-        field.requestFocus();
-    }
-
-    public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
-        setOnMousePressed(handler);
-        field.setOnMousePressed(handler);
-    }
-
-    public final StringProperty promptTextProperty() {
-        return field.promptTextProperty();
-    }
-
-    public final StringProperty descriptionProperty() {
-        return descriptionProperty;
-    }
-
-    public final StringProperty textProperty() {
-        return field.textProperty();
-    }
-
-    public ReadOnlyBooleanProperty inputTextFieldFocusedProperty() {
-        return field.focusedProperty();
-    }
-
-    public String getText() {
-        return field.getText();
-    }
-
-    public void setText(String value) {
-        field.setText(value);
-        update();
-    }
-
-    public void setValidator(InputValidator validator) {
-        //todo
-    }
-
-    public void setDescription(String description) {
-        descriptionProperty.set(description);
-    }
-
-    public void setEditable(boolean value) {
-        field.setEditable(value);
-        update();
-    }
-
-    public TextInputControl getField() {
-        return field;
-    }
-
-    Label getDescriptionLabel() {
-        return descriptionLabel;
+    protected TextInputControl createTextInputControl() {
+        return new TextField();
     }
 
     protected double getBgHeight() {
@@ -359,29 +361,45 @@ public class MaterialTextField extends Pane {
         return 18;
     }
 
-    public void hideIcon() {
-        iconButton.setManaged(false);
-        iconButton.setVisible(false);
+    @Override
+    protected double computeMinHeight(double width) {
+        log.error("computeMinHeight {}", super.computeMinHeight(width));
+        if (helpLabel.isManaged()) {
+            return helpLabel.getLayoutY() + helpLabel.getHeight();
+        } else {
+            return getBgHeight();
+        }
     }
 
-    public void showIcon() {
-        iconButton.setManaged(true);
-        iconButton.setVisible(true);
+    @Override
+    protected double computeMaxHeight(double width) {
+        log.error("computeMaxHeight {}", super.computeMaxHeight(width));
+        return computeMinHeight(width);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        log.error("computePrefHeight {}", super.computePrefHeight(width));
+        return computeMinHeight(width);
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+        log.error("computePrefWidth {}", super.computePrefWidth(height));
         layoutIconButton();
+        return super.computePrefWidth(height);
+        // return bg.getWidth();
     }
 
-    public void setIcon(AwesomeIcon icon) {
-        iconButton.setIcon(icon);
-        showIcon();
+    @Override
+    protected double computeMinWidth(double height) {
+        log.error("computeMinWidth {}", super.computeMinWidth(height));
+        return super.computeMinWidth(height);
     }
 
-    public void setIcon(String iconId) {
-        iconButton.setIcon(iconId);
-        showIcon();
-    }
-
-    public void setIconTooltip(String text) {
-        iconButton.setTooltip(new BisqTooltip(text));
-        showIcon();
+    @Override
+    protected double computeMaxWidth(double height) {
+        log.error("computeMaxWidth {}", super.computeMaxWidth(height));
+        return super.computeMaxWidth(height);
     }
 }

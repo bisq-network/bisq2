@@ -25,10 +25,7 @@ import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -45,13 +42,13 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
     protected final ProgressIndicator powProgressIndicator;
     protected final MaterialTextField nickname;
     protected final ProgressIndicator createProfileIndicator;
-    private final Label busyInfo;
+    private final Label feedbackLabel;
 
     public GenerateProfileView(GenerateProfileModel model, GenerateProfileController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.TOP_CENTER);
-        root.setSpacing(8);
+        root.setSpacing(25);
         root.setPadding(new Insets(10, 0, 10, 0));
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
@@ -65,11 +62,15 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         subtitleLabel.setMinHeight(40); // does not wrap without that...
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
+        nickname = new MaterialTextField(Res.get("social.chatUser.nickName"), Res.get("addNickName.nickName.prompt"));
+        nickname.setMaxWidth(250);
+
         roboIconView = new ImageView();
         roboIconView.setCursor(Cursor.HAND);
-        int size = 128;
+        int size = 120;
         roboIconView.setFitWidth(size);
         roboIconView.setFitHeight(size);
+        Tooltip.install(roboIconView, new Tooltip(Res.get("generateNym.regenerate")));
 
         int indicatorSize = size / 2;
         powProgressIndicator = new ProgressIndicator();
@@ -77,10 +78,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.setMaxSize(indicatorSize, indicatorSize);
         powProgressIndicator.setOpacity(0.5);
 
-        int width = 250;
         StackPane roboIconPane = new StackPane();
-        roboIconPane.setMinSize(width, size);
-        roboIconPane.setMaxSize(width, size);
+        roboIconPane.setMinSize(size, size);
+        roboIconPane.setMaxSize(size, size);
         roboIconPane.getChildren().addAll(powProgressIndicator, roboIconView);
 
         Label titleLabel = new Label(Res.get("generateNym.nym").toUpperCase());
@@ -92,18 +92,9 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         VBox nymBox = new VBox(titleLabel, nym);
         nymBox.setAlignment(Pos.CENTER);
 
-        nickname = new MaterialTextField(Res.get("social.chatUser.nickName"), Res.get("addNickName.nickName.prompt"));
-        nickname.setMinWidth(width);
-        nickname.setMaxWidth(width);
 
         VBox roboVBox = new VBox(8, roboIconPane, nymBox);
         roboVBox.setAlignment(Pos.CENTER);
-        roboVBox.setPrefWidth(width);
-        roboVBox.setPrefHeight(200);
-
-        HBox.setMargin(nickname, new Insets(-40, 0, 0, 0));
-        HBox centerHBox = new HBox(10, roboVBox, nickname);
-        centerHBox.setAlignment(Pos.CENTER);
 
         regenerateButton = new Button(Res.get("generateNym.regenerate"));
 
@@ -119,22 +110,23 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.setManaged(false);
         createProfileIndicator.setVisible(false);
 
-        busyInfo = new Label(Res.get("generateNym.createProfile.busy"));
-        busyInfo.setManaged(false);
-        busyInfo.setVisible(false);
-        busyInfo.getStyleClass().add("bisq-text-18");
+        feedbackLabel = new Label(Res.get("generateNym.createProfile.busy"));
+        feedbackLabel.setManaged(false);
+        feedbackLabel.setVisible(false);
+        feedbackLabel.getStyleClass().add("bisq-text-18");
 
-        HBox.setMargin(busyInfo, new Insets(0, 0, 0, -10));
-        HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator, busyInfo);
+        HBox.setMargin(feedbackLabel, new Insets(0, 0, 0, -10));
+        HBox buttons = new HBox(20, regenerateButton, createProfileButton, createProfileIndicator, feedbackLabel);
         buttons.setAlignment(Pos.CENTER);
 
         VBox.setMargin(headLineLabel, new Insets(40, 0, 0, 0));
-        VBox.setMargin(subtitleLabel, new Insets(0, 0, 40, 0));
-        VBox.setMargin(buttons, new Insets(60, 0, 0, 0));
+        //VBox.setMargin(nickname, new Insets(20, 0, 20, 0));
+        // VBox.setMargin(buttons, new Insets(20, 0, 0, 0));
         root.getChildren().addAll(
                 headLineLabel,
                 subtitleLabel,
-                centerHBox,
+                nickname,
+                roboVBox,
                 buttons
         );
     }
@@ -162,8 +154,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         createProfileIndicator.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
         createProfileIndicator.progressProperty().bind(model.getCreateProfileProgress());
 
-        busyInfo.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
-        busyInfo.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        feedbackLabel.managedProperty().bind(model.getCreateProfileProgress().lessThan(0));
+        feedbackLabel.visibleProperty().bind(model.getCreateProfileProgress().lessThan(0));
 
         regenerateButton.setOnMouseClicked(e -> controller.onRegenerate());
         roboIconView.setOnMouseClicked(e -> controller.onRegenerate());
@@ -185,8 +177,8 @@ public class GenerateProfileView extends View<VBox, GenerateProfileModel, Genera
         powProgressIndicator.managedProperty().unbind();
         powProgressIndicator.visibleProperty().unbind();
         powProgressIndicator.progressProperty().unbind();
-        busyInfo.managedProperty().unbind();
-        busyInfo.visibleProperty().unbind();
+        feedbackLabel.managedProperty().unbind();
+        feedbackLabel.visibleProperty().unbind();
 
         nym.textProperty().unbind();
         nym.disableProperty().unbind();
