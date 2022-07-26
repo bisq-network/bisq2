@@ -22,7 +22,7 @@ import lombok.Getter;
 public class SwapProtocol {
     @Getter
     public enum Type {
-        SATOSHI_SQUARE(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
+        BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
         LIQUID_SWAP(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
         ATOMIC_CROSS_CHAIN_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
         BISQ_MULTI_SIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),

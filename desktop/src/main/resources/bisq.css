@@ -990,15 +990,24 @@
 
 .super-large-button {
     -fx-background-radius: 8;
-    -fx-padding: 17;
+    -fx-padding: 15;
     -fx-font-size: 1.7em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
 }
 
 .large-button {
     -fx-background-radius: 8;
-    -fx-padding: 17;
+    -fx-border-radius: 8;
+    -fx-padding: 15;
     -fx-font-size: 1.54em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+.medium-large-button {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 10;
+    -fx-font-size: 1.25em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
 }
 

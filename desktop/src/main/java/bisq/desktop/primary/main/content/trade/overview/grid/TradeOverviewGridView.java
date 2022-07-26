@@ -26,6 +26,7 @@ import bisq.desktop.primary.main.content.trade.overview.TradeOverviewBaseView;
 import bisq.i18n.Res;
 import bisq.protocol.SwapProtocol;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -50,9 +51,6 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         for (ProtocolListItem protocol : model.getSortedItems()) {
             Pane protocolBox = getProtocolBox(protocol);
             GridPane.setHgrow(protocolBox, Priority.ALWAYS);
-            if (protocol.getSwapProtocolType() != SwapProtocol.Type.SATOSHI_SQUARE) {
-                protocolBox.setOpacity(0.4);
-            }
             root.add(protocolBox, index % 2, index >> 1);
             index++;
         }
@@ -67,90 +65,89 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
     }
 
     private Pane getProtocolBox(ProtocolListItem protocol) {
-        StackPane pane = new StackPane();
-        pane.getStyleClass().add("bisq-box-2");
-        pane.setMinWidth(360);
+        GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
+        gridPane.setVgap(12);
+        gridPane.setHgap(12);
+        gridPane.getStyleClass().add("bisq-box-2");
+        gridPane.setMinWidth(360);
+        gridPane.setCursor(Cursor.HAND);
+        gridPane.setOnMouseClicked(e -> controller.onSelect(protocol));
 
-        VBox vBox = new VBox();
-        pane.getChildren().add(vBox);
+        ColumnConstraints col1 = new ColumnConstraints();
+        ColumnConstraints col2 = new ColumnConstraints();
+        ColumnConstraints col3 = new ColumnConstraints();
+        col1.setPercentWidth(100 / 3d);
+        col2.setPercentWidth(100 / 3d);
+        col3.setPercentWidth(100 / 3d);
+        gridPane.getColumnConstraints().addAll(col1, col2, col3);
 
+        int rowIndex = 0;
         Label headlineLabel = new Label(protocol.getProtocolsName());
-        headlineLabel.setPadding(new Insets(16, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
+        headlineLabel.setAlignment(Pos.TOP_LEFT);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
-        vBox.getChildren().add(headlineLabel);
+        GridPane.setMargin(headlineLabel, new Insets(-5, 0, 0, 0));
+        gridPane.add(headlineLabel, 0, rowIndex, 2, 1);
+
+        if (protocol.getSwapProtocolType() != SwapProtocol.Type.BISQ_EASY) {
+            Label label = new Label(Res.get("trade.protocols.comingSoon"));
+            label.setOpacity(0.1);
+            GridPane.setHalignment(label, HPos.RIGHT);
+            GridPane.setMargin(label, new Insets(-8, 0, 0, 0));
+            gridPane.add(label, 2, rowIndex);
+        }
 
         Label subTitleLabel = new Label(protocol.getBasicInfo());
         subTitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
-        subTitleLabel.setPadding(new Insets(4, VERTICAL_MARGIN, 0, VERTICAL_MARGIN));
         subTitleLabel.setAlignment(Pos.TOP_LEFT);
         subTitleLabel.setMaxWidth(384);
-        subTitleLabel.setMinHeight(60);
-        vBox.getChildren().addAll(subTitleLabel, Layout.separator());
+        subTitleLabel.setMinHeight(40);
+        GridPane.setMargin(subTitleLabel, new Insets(-10, 0, 0, 0));
+        gridPane.add(subTitleLabel, 0, ++rowIndex, 3, 1);
 
-        GridPane paramsPane = new GridPane();
-        paramsPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
-        paramsPane.setVgap(12);
-        paramsPane.add(
-                getParameterPane(Res.get("markets"), protocol.getMarkets()),
-                0,
-                0
+        Region separator = Layout.separator();
+        GridPane.setMargin(separator, new Insets(5, 0, 15, 0));
+        gridPane.add(separator, 0, ++rowIndex, 3, 1);
+
+        VBox markets = getParameterPane(Res.get("markets"), protocol.getMarkets());
+        gridPane.add(markets, 0, ++rowIndex);
+
+        VBox release = getParameterPane(Res.get("trade.protocols.table.header.release"), protocol.getReleaseDate());
+        gridPane.add(release, 1, rowIndex);
+
+        VBox security = getParameterPane(Res.get("trade.protocols.table.header.security"),
+                protocol.getSwapProtocolType().getSecurity().ordinal(), protocol.getSecurityInfo()
         );
+        gridPane.add(security, 0, ++rowIndex);
 
-        paramsPane.add(
-                getParameterPane(
-                        Res.get("trade.protocols.table.header.release"),
-                        protocol.getReleaseDate()
-                ),
-                1,
-                0
+        VBox privacy = getParameterPane(Res.get("trade.protocols.table.header.privacy"),
+                protocol.getSwapProtocolType().getPrivacy().ordinal(),
+                protocol.getPrivacyInfo()
         );
+        gridPane.add(privacy, 1, rowIndex);
 
-        paramsPane.add(
-                getParameterPane(
-                        Res.get("trade.protocols.table.header.security"),
-                        protocol.getSwapProtocolType().getSecurity().ordinal(),
-                        protocol.getSecurityInfo()
-                ),
-                0,
-                1
+        VBox convenience = getParameterPane(Res.get("trade.protocols.table.header.convenience"),
+                protocol.getSwapProtocolType().getConvenience().ordinal(),
+                protocol.getConvenienceInfo()
         );
+        gridPane.add(convenience, 2, rowIndex);
 
-        paramsPane.add(
-                getParameterPane(
-                        Res.get("trade.protocols.table.header.privacy"),
-                        protocol.getSwapProtocolType().getPrivacy().ordinal(),
-                        protocol.getPrivacyInfo()
-                ),
-                1,
-                1
-        );
-
-        paramsPane.add(
-                getParameterPane(
-                        Res.get("trade.protocols.table.header.convenience"),
-                        protocol.getSwapProtocolType().getConvenience().ordinal(),
-                        protocol.getConvenienceInfo()
-                ),
-                2,
-                1
-        );
-
-        vBox.getChildren().add(paramsPane);
-        vBox.setCursor(Cursor.HAND);
-        vBox.setOnMouseClicked(e -> controller.onSelect(protocol));
-
-        String title = protocol.getSwapProtocolType() == SwapProtocol.Type.SATOSHI_SQUARE ?
-                Res.get("select").toUpperCase() :
-                Res.get("learnMore").toUpperCase() ;
-        Button button = new Button(title);
-        button.getStyleClass().setAll("text-button","no-background");
+        Button button = new Button();
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.getStyleClass().add("medium-large-button");
         button.setOnAction(e -> controller.onSelect(protocol));
-        StackPane.setAlignment(button, Pos.TOP_RIGHT);
-        StackPane.setMargin(button, new Insets(20, 14, 0, 0));
-        pane.getChildren().add(button);
+        if (protocol.getSwapProtocolType() == SwapProtocol.Type.BISQ_EASY) {
+            button.setText(Res.get("select"));
+            button.getStyleClass().add("outlined-button");
+        } else {
+            button.setText(Res.get("learnMore"));
+            button.getStyleClass().addAll("outlined-button", "grey-outlined-button");
+        }
+        GridPane.setMargin(button, new Insets(20, 0, 5, 0));
+        gridPane.add(button, 0, ++rowIndex, 3, 1);
 
-        return pane;
+        return gridPane;
     }
 
     private VBox getParameterPane(String title, String info) {
