@@ -228,9 +228,6 @@ public class ReviewOfferController implements Controller {
     private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {
         return item ->
         {
-            if (true) {
-                return true;
-            }
             if (item.getSenderUserProfile().isEmpty()) {
                 return false;
             }
@@ -271,9 +268,10 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
+            //todo
+           /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
                 return false;
-            }
+            }*/
 
             return true;
         };

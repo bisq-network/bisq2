@@ -1948,6 +1948,22 @@ tree-table-view:focused {
  *                                                                             *
  ******************************************************************************/
 
+.table-view.offer-review .column-header {
+    -fx-pref-height: 40px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-weight: normal;
+}
+
+.table-view.offer-review .filler {
+    -fx-opacity: 0;
+}
+
+.table-view.offer-review .table-row-cell {
+    -fx-pref-height: 55px;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1.1em;
+}
+
 .table-view.create-offer-table-view .column-header {
     -fx-pref-height: 40px;
     -fx-font-family: "IBM Plex Sans";
@@ -1963,7 +1979,6 @@ tree-table-view:focused {
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
 }
-
 
 /* the text property from list view need to set to apply the color to the button label */
 .onboarding-market-table-toggle-button .text {
