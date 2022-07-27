@@ -22,58 +22,27 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.user.profile.UserProfile;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChatUserIcon extends Pane {
-    private final ImageView roboIcon;
-
-    public ChatUserIcon(double size) {
-        roboIcon = new ImageView();
-        roboIcon.setFitWidth(size);
-        roboIcon.setFitHeight(size);
-        getChildren().add(roboIcon);
+public class UserProfileIcon extends ImageView {
+    public UserProfileIcon(double size) {
+        setSize(size);
     }
 
     public void setUserProfile(UserProfile userProfile) {
         BisqTooltip tooltip = new BisqTooltip(userProfile.getUserName());
         tooltip.setId("proof-of-burn-tooltip");
-        Tooltip.install(roboIcon, tooltip);
-        roboIcon.setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
+        Tooltip.install(this, tooltip);
+        setImage(RoboHash.getImage(userProfile.getPubKeyHash()));
     }
 
     public void releaseResources() {
-        roboIcon.setImage(null);
+        setImage(null);
     }
 
-    @Override
-    protected double computePrefHeight(double width) {
-        return roboIcon.getFitHeight();
-    }
-
-    @Override
-    protected double computeMinHeight(double width) {
-        return roboIcon.getFitHeight();
-    }
-
-    @Override
-    protected double computeMaxHeight(double width) {
-        return roboIcon.getFitHeight();
-    }
-
-    @Override
-    protected double computePrefWidth(double height) {
-        return roboIcon.getFitWidth();
-    }
-
-    @Override
-    protected double computeMinWidth(double height) {
-        return roboIcon.getFitWidth();
-    }
-
-    @Override
-    protected double computeMaxWidth(double height) {
-        return roboIcon.getFitWidth();
+    public void setSize(double size) {
+        setFitWidth(size);
+        setFitHeight(size);
     }
 }

@@ -70,7 +70,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         createOfferButton.setMinHeight(37);
         createOfferButton.setDefaultButton(true);
 
-        VBox.setMargin(createOfferButton, new Insets(-2, 24, 17, 24));
+        VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
 
         // Left
         left = Layout.vBoxWith(
@@ -102,7 +102,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         );
         centerToolbar.setAlignment(Pos.CENTER);
         centerToolbar.setMinHeight(64);
-        centerToolbar.setPadding(new Insets(0, 20, 0, 24));
+        centerToolbar.setPadding(new Insets(0, 20, 0, 25));
 
         // sideBar
         sideBar = new VBox(channelInfo);

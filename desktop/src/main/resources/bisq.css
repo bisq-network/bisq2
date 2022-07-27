@@ -438,6 +438,68 @@
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+/* Generic Label properties */
+
+/* colors */
+.text-fill-white {
+    -fx-text-fill: -bisq-white !Important;
+}
+
+.text-fill-grey-dimmed {
+    -fx-text-fill: -bisq-grey-dimmed !Important;
+}
+
+/* sizes */
+.font-size-15 {
+    -fx-font-size: 1.5em !Important;
+}
+
+.font-size-14 {
+    -fx-font-size: 1.4em !Important;
+}
+
+.font-size-13 {
+    -fx-font-size: 1.3em !Important;
+}
+
+.font-size-12 {
+    -fx-font-size: 1.2em !Important;
+}
+
+.font-size-11 {
+    -fx-font-size: 1.1em !Important;
+}
+
+.font-size-10 {
+    -fx-font-size: 1em !Important;
+}
+
+.font-size-09 {
+    -fx-font-size: 0.9em !Important;
+}
+
+.font-size-08 {
+    -fx-font-size: 0.8em !Important;
+}
+
+.font-size-07 {
+    -fx-font-size: 0.7em !Important;
+}
+
+/* fonts */
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+}
+
+.font-default {
+    -fx-font-family: "IBM Plex Sans" !Important;
+}
+
+.font-medium {
+    -fx-font-family: "IBM Plex Sans Medium" !Important;
+}
+
+
 .wrap-text {
     -fx-wrap-text: true;
 }
@@ -873,6 +935,7 @@
 }
 
 .red-outlined-button {
+    -fx-background-color: transparent;
     -fx-border-color: -bisq-red;
     -fx-text-fill: -bisq-red;
 }
@@ -1433,23 +1496,29 @@
  *                                                                             *
  ******************************************************************************/
 
+.list-view.chat-messages-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0 0 0 -25;
+    -fx-padding: 10 0 10 25;
+    -fx-font-size: 1em;
+}
+
 .list-view.chat-messages-list-view {
     -fx-background-color: transparent;
     -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 1 0 0 0;
 }
 
-.list-view.chat-messages-list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-padding: 13 -24 13 0;
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-insets: 0 24 0 0;
-    -fx-border-width: 0 0 1 0;
-    -fx-font-size: 1em;
+.list-view.chat-messages-list-view .list-cell:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.08);
 }
 
 .list-view.chat-messages-list-view .list-cell:empty {
     -fx-border-width: 0;
+}
+
+.list-view.chat-messages-list-view .list-cell:empty:hover {
+    -fx-background-color: transparent;
 }
 
 
@@ -2138,7 +2207,7 @@ tree-table-view:focused {
 #chat-messages-edit-text-area.text-area {
     -fx-background-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.33em;
+    -fx-font-size: 1.3em;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -2191,14 +2260,14 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.chat-offer-box {
-    -fx-background-color: -bisq-grey-5;
-    -fx-background-radius: 8;
+.chat-message-bg-my-message {
+    -fx-background-color: -bisq-grey-18;
+    -fx-background-radius: 30;
 }
 
-.chat-offer-box-my-offer {
-    -fx-background-color: -bisq-grey-18;
-    -fx-background-radius: 8;
+.chat-message-bg-peer-message {
+    -fx-background-color: -bisq-grey-5;
+    -fx-background-radius: 30;
 }
 
 .create-offer-message-my-offer {

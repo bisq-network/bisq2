@@ -61,7 +61,7 @@ public class BisqEasyChatView extends ChatView {
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 // chatMessagesComponent is VBox
-                VBox.setMargin(childRoot, new Insets(24, 24, 24, 24));
+                VBox.setMargin(childRoot, new Insets(25, 25, 25, 25));
                 chatMessagesComponent.getChildren().add(0, childRoot);
                UIThread.runOnNextRenderFrame(()-> Transitions.transitContentViews(oldValue, newValue));
             } else if (oldValue instanceof TradeGuideView) {

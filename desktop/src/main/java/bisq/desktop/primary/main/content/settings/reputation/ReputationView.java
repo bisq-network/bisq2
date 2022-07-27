@@ -21,8 +21,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
-import bisq.desktop.primary.main.content.components.ChatUserIcon;
 import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
+import bisq.desktop.primary.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
@@ -145,13 +145,11 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     private Callback<TableColumn<ListItem, ListItem>, TableCell<ListItem, ListItem>> getUserProfileCellFactory() {
         return column -> new TableCell<>() {
             private final Label userName = new Label();
-            private final ChatUserIcon chatUserIcon = new ChatUserIcon(40);
-            private final HBox hBox = new HBox(10, chatUserIcon, userName);
+            private final UserProfileIcon userProfileIcon = new UserProfileIcon(40);
+            private final HBox hBox = new HBox(10, userProfileIcon, userName);
 
             {
                 userName.setId("chat-user-name");
-
-                chatUserIcon.setMinWidth(40);
                 hBox.setAlignment(Pos.CENTER_LEFT);
             }
 
@@ -164,7 +162,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
                     Tooltip tooltip = new Tooltip(item.getUserName());
                     tooltip.setId("proof-of-burn-tooltip");
                     userName.setTooltip(tooltip);
-                    chatUserIcon.setUserProfile(item.getUserProfile());
+                    userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {
                     setGraphic(null);

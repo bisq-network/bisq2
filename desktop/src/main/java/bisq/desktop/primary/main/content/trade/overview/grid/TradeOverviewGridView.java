@@ -66,7 +66,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
 
     private Pane getProtocolBox(ProtocolListItem protocol) {
         GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(24, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
+        gridPane.setPadding(new Insets(25, VERTICAL_MARGIN, 20, VERTICAL_MARGIN));
         gridPane.setVgap(12);
         gridPane.setHgap(12);
         gridPane.getStyleClass().add("bisq-box-2");

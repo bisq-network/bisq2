@@ -168,9 +168,7 @@ public class ChatMessagesComponent {
                     this::mentionUser,
                     this::showChatUserDetails,
                     this::onReply,
-                    channelKind,
-                    false,
-                    false);
+                    channelKind);
 
             model = new Model(channelKind);
             view = new View(model, this,
@@ -370,14 +368,14 @@ public class ChatMessagesComponent {
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -23));
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
             HBox bottomBox = new HBox(10, userProfileSelectionRoot, bottomBoxStackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(14, 24, 14, 24));
+            bottomBox.setPadding(new Insets(14, 25, 14, 25));
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            VBox.setMargin(quotedMessageBlock, new Insets(0, 24, 0, 24));
+            VBox.setMargin(quotedMessageBlock, new Insets(0, 25, 0, 25));
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
