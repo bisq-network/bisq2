@@ -74,6 +74,8 @@
     -bisq-grey-21: #343434;
     -bisq-grey-22: #707070;
     -bisq-grey-23: #1e1e1e;
+    -bisq-grey-24: #2c2c2c;
+
 
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-2;
@@ -1496,6 +1498,10 @@ tree-table-view:focused {
     -fx-opacity: 0;
 }
 
+.table-view .filler {
+    -fx-opacity: 0;
+}
+
 /* column-header */
 .table-view .column-header {
     -fx-background-color: transparent;
@@ -1559,12 +1565,12 @@ tree-table-view:focused {
 
 /* even */
 .table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-24;
 }
 
 /* odd */
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-grey-5;
+    -fx-background-color: -bisq-grey-24;
 }
 
 /* disabled */
@@ -1963,10 +1969,6 @@ tree-table-view:focused {
     -fx-font-weight: normal;
 }
 
-.table-view.offer-review .filler {
-    -fx-opacity: 0;
-}
-
 .table-view.offer-review .table-row-cell {
     -fx-pref-height: 55px;
     -fx-border-width: 0 0 1 0;
@@ -1979,15 +1981,12 @@ tree-table-view:focused {
     -fx-font-weight: normal;
 }
 
-.table-view.create-offer-table-view .filler {
-    -fx-opacity: 0;
-}
-
 .table-view.create-offer-table-view .table-row-cell {
     -fx-pref-height: 68px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
 }
+
 
 /* the text property from list view need to set to apply the color to the button label */
 .onboarding-market-table-toggle-button .text {

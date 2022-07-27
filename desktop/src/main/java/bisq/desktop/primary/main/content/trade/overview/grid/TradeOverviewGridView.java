@@ -94,7 +94,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
             Label label = new Label(Res.get("trade.protocols.comingSoon"));
             label.setOpacity(0.1);
             GridPane.setHalignment(label, HPos.RIGHT);
-            GridPane.setMargin(label, new Insets(-8, 0, 0, 0));
+            GridPane.setMargin(label, new Insets(-14, 0, 0, 0));
             gridPane.add(label, 2, rowIndex);
         }
 
@@ -103,7 +103,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         subTitleLabel.setAlignment(Pos.TOP_LEFT);
         subTitleLabel.setMaxWidth(384);
         subTitleLabel.setMinHeight(40);
-        GridPane.setMargin(subTitleLabel, new Insets(-10, 0, 0, 0));
+        GridPane.setMargin(subTitleLabel, new Insets(-5, 0, 0, 0));
         gridPane.add(subTitleLabel, 0, ++rowIndex, 3, 1);
 
         Region separator = Layout.separator();

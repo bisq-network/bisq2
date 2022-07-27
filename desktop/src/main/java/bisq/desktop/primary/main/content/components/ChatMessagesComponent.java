@@ -55,10 +55,7 @@ import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -198,6 +195,9 @@ public class ChatMessagesComponent {
             }
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
+
+            userIdentityService.getUserIdentityChangedFlag().addObserver(__ ->
+                    model.userProfileSelectionVisible.set(userIdentityService.getUserIdentities().size() > 1));
         }
 
         @Override
@@ -306,6 +306,7 @@ public class ChatMessagesComponent {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
+        private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
@@ -327,6 +328,7 @@ public class ChatMessagesComponent {
         private final Button sendButton;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
+        private final Pane userProfileSelectionRoot;
 
         private View(Model model,
                      Controller controller,
@@ -345,12 +347,11 @@ public class ChatMessagesComponent {
             sendButton.setMinWidth(31);
             sendButton.setMaxWidth(31);
 
-            StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
             StackPane.setAlignment(inputField, Pos.CENTER_LEFT);
             StackPane.setAlignment(sendButton, Pos.CENTER_RIGHT);
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
+            StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
 
-            Pane pane = new Pane();
             userProfileSelection.setComboBoxWidth(150);
             userProfileSelection.setConverter(new StringConverter<>() {
                 @Override
@@ -363,14 +364,13 @@ public class ChatMessagesComponent {
                     return null;
                 }
             });
-            Pane userProfileSelectionRoot = userProfileSelection.getRoot();
+            userProfileSelectionRoot = userProfileSelection.getRoot();
             userProfileSelectionRoot.setMaxHeight(44);
             userProfileSelectionRoot.setMaxWidth(150);
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
-            HBox.setMargin(userProfileSelectionRoot, new Insets(0, 0, 0, -23));
-            HBox.setMargin(bottomBoxStackPane, new Insets(0, 0, 0, -20));
+            HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -23));
             HBox bottomBox = new HBox(10, userProfileSelectionRoot, bottomBoxStackPane);
             bottomBox.getStyleClass().add("bg-grey-5");
             bottomBox.setAlignment(Pos.CENTER);
@@ -391,6 +391,9 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewAttached() {
+            userProfileSelectionRoot.visibleProperty().bind(model.userProfileSelectionVisible);
+            userProfileSelectionRoot.managedProperty().bind(model.userProfileSelectionVisible);
+
             inputField.textProperty().bindBidirectional(model.getTextInput());
 
             userMentionPopup.filterProperty().bind(Bindings.createStringBinding(
@@ -424,6 +427,8 @@ public class ChatMessagesComponent {
 
         @Override
         protected void onViewDetached() {
+            userProfileSelectionRoot.visibleProperty().unbind();
+            userProfileSelectionRoot.managedProperty().unbind();
             inputField.textProperty().unbindBidirectional(model.getTextInput());
             userMentionPopup.filterProperty().unbind();
             channelMentionPopup.filterProperty().unbind();
