@@ -352,7 +352,7 @@ public class ChatMessagesComponent {
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
             StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
 
-            userProfileSelection.setComboBoxWidth(150);
+            userProfileSelection.setMaxComboBoxWidth(150);
             userProfileSelection.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(UserProfileSelection.ListItem item) {

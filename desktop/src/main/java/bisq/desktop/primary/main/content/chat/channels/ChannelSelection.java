@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
 import java.util.Optional;
 
 @Slf4j
@@ -48,7 +47,6 @@ public abstract class ChannelSelection {
 
         @Override
         public void onActivate() {
-            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(View.ChannelItem::getDisplayString));
         }
 
         protected abstract Model getChannelSelectionModel();

@@ -65,8 +65,8 @@ public class UserProfileSelection {
         controller.model.isLeftAligned.set(isLeftAligned);
     }
 
-    public void setComboBoxWidth(int width) {
-        controller.view.setComboBoxWidth(width);
+    public void setMaxComboBoxWidth(int width) {
+        controller.view.setMaxComboBoxWidth(width);
     }
 
     public void setConverter(StringConverter<ListItem> value) {
@@ -156,7 +156,7 @@ public class UserProfileSelection {
             comboBoxWidthPin.unsubscribe();
         }
 
-        public void setComboBoxWidth(int width) {
+        public void setMaxComboBoxWidth(int width) {
             comboBox.setComboBoxWidth(width);
         }
 
@@ -259,6 +259,14 @@ public class UserProfileSelection {
             ((UserProfileSkin) skin).setComboBoxWidth(width);
         }
 
+        private void setMaxComboBoxWidth(double width) {
+            if (width == 0) {
+                width = DEFAULT_COMBO_BOX_WIDTH;
+            }
+            setPrefWidth(width);
+            ((UserProfileSkin) skin).setMaxComboBoxWidth(width);
+        }
+
         @Override
         protected Skin<?> createDefaultSkin() {
             if (skin == null) {
@@ -337,6 +345,10 @@ public class UserProfileSelection {
 
         private void setComboBoxWidth(double width) {
             buttonPane.setPrefWidth(width);
+        }
+
+        private void setMaxComboBoxWidth(double width) {
+            setComboBoxWidth(width);
             label.setMaxWidth(width - UserProfileSkin.ICON_SIZE - 80);
         }
 
