@@ -375,7 +375,6 @@ public class ChatMessagesComponent {
             bottomBox.setPadding(new Insets(14, 25, 14, 25));
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            VBox.setMargin(quotedMessageBlock, new Insets(0, 25, 0, 25));
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);

@@ -63,7 +63,6 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.NoSelectionModel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
@@ -91,10 +90,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
@@ -601,13 +601,14 @@ public class ChatMessagesListView {
                 @Override
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
+                        private HBox removeOfferButtonHBox;
                         private Button removeOfferButton;
                         private final Label message, userName, dateTime, replyButton, pmButton, editButton, deleteButton, copyButton, moreOptionsButton;
                         private final Text quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
-                        private final VBox mainVBox;
-                        private final HBox cellHBox, messageHBox, messageBgHBox, reactionsHBox, editButtonsHBox, quotedMessageHBox;
+                        private final VBox mainVBox, quotedMessageVBox;
+                        private final HBox cellHBox, messageHBox, messageBgHBox, reactionsHBox, editButtonsHBox;
                         private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
 
                         {
@@ -619,9 +620,10 @@ public class ChatMessagesListView {
 
                             // quoted message
                             quotedMessageField = new Text();
-                            quotedMessageHBox = new HBox(10);
-                            quotedMessageHBox.setVisible(false);
-                            quotedMessageHBox.setManaged(false);
+                            quotedMessageVBox = new VBox(5);
+                            quotedMessageVBox.setId("chat-message-quote-box");
+                            quotedMessageVBox.setVisible(false);
+                            quotedMessageVBox.setManaged(false);
 
                             // HBox for message reputation vBox and action button
                             message = new Label();
@@ -670,7 +672,7 @@ public class ChatMessagesListView {
                             HBox.setHgrow(messageBgHBox, Priority.SOMETIMES);
                             messageHBox = new HBox();
 
-                            VBox.setMargin(quotedMessageHBox, new Insets(15, 0, 10, 5));
+                            VBox.setMargin(quotedMessageVBox, new Insets(15, 0, 10, 5));
                             VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
                             VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
                             VBox.setMargin(reactionsHBox, new Insets(4, 0, -10, 0));
@@ -699,9 +701,8 @@ public class ChatMessagesListView {
 
                                 message.maxWidthProperty().bind(root.widthProperty().subtract(135));
 
-                                VBox userNameAndDateVBox = new VBox(0);
+
                                 dateTime.setVisible(false);
-                                userNameAndDateVBox.getChildren().setAll(dateTime, userName);
 
                                 cellHBox.getChildren().setAll(mainVBox);
                                 if (isOfferMessage) {
@@ -715,11 +716,12 @@ public class ChatMessagesListView {
                                 VBox userProfileIconVbox = new VBox(userProfileIcon);
 
                                 if (myMessage) {
+                                    HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
+                                    userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
                                     message.setAlignment(Pos.CENTER_RIGHT);
-                                    userNameAndDateVBox.setAlignment(Pos.CENTER_RIGHT);
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
-                                    VBox.setMargin(userNameAndDateVBox, new Insets(-5, 30, -5, 0));
+                                    VBox.setMargin(userNameAndDateHBox, new Insets(-5, 30, -5, 0));
 
 
                                     HBox.setMargin(copyButton, new Insets(0, 15, 0, 0));
@@ -728,38 +730,37 @@ public class ChatMessagesListView {
                                     if (isOfferMessage) {
                                         userProfileIcon.setSize(60);
                                         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+                                        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
+                                        HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
+
                                         removeOfferButton = new Button(Res.get("deleteOffer"));
                                         removeOfferButton.getStyleClass().addAll("red-button");
                                         removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-
-                                        Region messageHBoxSpacer = Spacer.fillHBox();
-                                        messageHBox.getChildren().setAll(messageHBoxSpacer, messageBgHBox);
-
-                                        HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                        HBox.setMargin(message, new Insets(0, -10, 0, 0));
-
-                                        HBox.setMargin(editInputField, new Insets(-4, -10, -15, 0));
-
-                                        messageBgHBox.getChildren().setAll(message, editInputField, userProfileIconVbox);
-
-                                        mainVBox.getChildren().setAll(userNameAndDateVBox, quotedMessageHBox, messageHBox, editButtonsHBox, reactionsHBox);
+                                        HBox.setMargin(reactionsHBox, new Insets(2.5, -10, 0, 0));
+                                        removeOfferButtonHBox = new HBox(0, reactionsHBox, removeOfferButton);
+                                        reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
+                                        removeOfferButtonHBox.setAlignment(Pos.CENTER_RIGHT);
+                                        removeOfferButtonHBox.setManaged(false);
+                                        removeOfferButtonHBox.setVisible(false);
+                                        VBox.setMargin(removeOfferButtonHBox, new Insets(7.5, 25, 0, 0));
+                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, removeOfferButtonHBox);
                                     } else {
                                         userProfileIcon.setSize(30);
                                         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
-
                                         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                        HBox.setMargin(message, new Insets(0, -10, 0, 0));
-
                                         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
-
-                                        messageBgHBox.getChildren().setAll(message, editInputField, userProfileIconVbox);
-                                        messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
-                                        mainVBox.getChildren().setAll(userNameAndDateVBox, quotedMessageHBox, messageHBox, editButtonsHBox, reactionsHBox);
+                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
                                     }
+                                    VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
+                                    HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
+                                    messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
+                                    messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
+
                                 } else {
                                     // Peer
+                                    HBox userNameAndDateHBox = new HBox(10, userName, dateTime);
                                     message.setAlignment(Pos.CENTER_LEFT);
-                                    userNameAndDateVBox.setAlignment(Pos.CENTER_LEFT);
+                                    userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
 
                                     userProfileIcon.setSize(60);
                                     HBox.setMargin(replyButton, new Insets(0, 0, 0, 15));
@@ -768,6 +769,7 @@ public class ChatMessagesListView {
                                     messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
                                     if (isOfferMessage) {
                                         userProfileIconVbox.setAlignment(Pos.CENTER_LEFT);
+
                                         Label reputationLabel = new Label(Res.get("reputation").toUpperCase());
                                         reputationLabel.getStyleClass().add("bisq-text-7");
                                         ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay(item.getReputationScore());
@@ -779,27 +781,28 @@ public class ChatMessagesListView {
                                         takeOfferButton.getStyleClass().add("default-button");
                                         takeOfferButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
 
+                                        VBox messageVBox = new VBox(quotedMessageVBox, message);
                                         HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));
-                                        HBox.setMargin(message, new Insets(0, 0, 0, -10));
+                                        HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
                                         HBox.setMargin(takeOfferButton, new Insets(0, 10, 0, 0));
-                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, message, Spacer.fillHBox(), reputationVBox, takeOfferButton);
+                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox, Spacer.fillHBox(), reputationVBox, takeOfferButton);
 
-                                        VBox.setMargin(userNameAndDateVBox, new Insets(-5, 0, 5, 30));
-                                        mainVBox.getChildren().setAll(userNameAndDateVBox, quotedMessageHBox, messageBgHBox, reactionsHBox);
+                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, 5, 30));
+                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageBgHBox, reactionsHBox);
                                     } else {
                                         userProfileIcon.setSize(30);
                                         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
 
+                                        VBox messageVBox = new VBox(quotedMessageVBox, message);
                                         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
-                                        HBox.setMargin(message, new Insets(0, 0, 0, -10));
-                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, message);
+                                        HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
+                                        messageBgHBox.getChildren().setAll(userProfileIconVbox, messageVBox);
                                         messageHBox.getChildren().setAll(messageBgHBox, Spacer.fillHBox());
 
-                                        VBox.setMargin(userNameAndDateVBox, new Insets(-5, 0, -5, 30));
-                                        mainVBox.getChildren().setAll(userNameAndDateVBox, quotedMessageHBox, messageHBox, reactionsHBox);
+                                        VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 30));
+                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
                                     }
                                 }
-
 
                                 handleQuoteMessageBox(item);
                                 handleReactionsBox(item);
@@ -829,16 +832,12 @@ public class ChatMessagesListView {
 
 
                                 editInputField.maxWidthProperty().bind(message.widthProperty());
-                             /* widthSubscription = EasyBind.subscribe(root.widthProperty(),
-                                        w -> adjustMessageWidth(item));
-                                UIThread.runOnNextRenderFrame(() -> adjustMessageWidth(item));*/
                                 setGraphic(cellHBox);
                             } else {
                                 editInputField.maxWidthProperty().unbind();
 
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
-                                //actionButton.setOnAction(null);
 
                                 userName.setOnMouseClicked(null);
                                 userProfileIcon.setOnMouseClicked(null);
@@ -898,9 +897,9 @@ public class ChatMessagesListView {
                                 reactionsHBox.setVisible(true);
                                 dateTime.setVisible(true);
 
-                                if (removeOfferButton != null) {
-                                    removeOfferButton.setVisible(true);
-                                    removeOfferButton.setManaged(true);
+                                if (removeOfferButtonHBox != null) {
+                                    removeOfferButtonHBox.setManaged(true);
+                                    removeOfferButtonHBox.setVisible(true);
                                 }
                             });
                             setOnMouseExited(e -> {
@@ -908,11 +907,10 @@ public class ChatMessagesListView {
                                     hideReactionsBox();
                                 }
                                 dateTime.setVisible(false);
-                                if (removeOfferButton != null) {
-                                    removeOfferButton.setVisible(false);
-                                    removeOfferButton.setManaged(false);
+                                if (removeOfferButtonHBox != null) {
+                                    removeOfferButtonHBox.setVisible(false);
+                                    removeOfferButtonHBox.setManaged(false);
                                 }
-
                             });
                         }
 
@@ -921,40 +919,19 @@ public class ChatMessagesListView {
                             if (optionalQuotation.isPresent()) {
                                 Quotation quotation = optionalQuotation.get();
                                 if (quotation.isValid()) {
-                                    quotedMessageHBox.setVisible(true);
-                                    quotedMessageHBox.setManaged(true);
-
-                                    Region verticalLine = new Region();
-                                    verticalLine.setStyle("-fx-background-color: -bisq-grey-dimmed");
-                                    verticalLine.setMinWidth(3);
-                                    verticalLine.setMinHeight(25);
-
+                                    quotedMessageVBox.setVisible(true);
+                                    quotedMessageVBox.setManaged(true);
                                     quotedMessageField.setText(quotation.getMessage());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
-
-                                    ImageView roboIconImageView = new ImageView();
-                                    roboIconImageView.setFitWidth(25);
-                                    roboIconImageView.setFitHeight(25);
-                                    Image image = RoboHash.getImage(quotation.getPubKeyHash());
-                                    roboIconImageView.setImage(image);
-
                                     Label userName = new Label(quotation.getUserName());
-                                    userName.setPadding(new Insets(4, 0, 0, 0));
-
-                                    HBox.setMargin(roboIconImageView, new Insets(0, 0, 0, -5));
-                                    HBox iconAndUserName = new HBox(15, roboIconImageView, userName);
-                                    iconAndUserName.setSpacing(5);
-
-                                    VBox contentVBox = new VBox(5, iconAndUserName, quotedMessageField);
-
-                                    HBox.setMargin(verticalLine, new Insets(0, 0, 0, 5));
-                                    quotedMessageHBox.getChildren().setAll(verticalLine, contentVBox);
-                                    UIThread.runOnNextRenderFrame(() -> verticalLine.setMinHeight(contentVBox.getHeight() - 10));
+                                    userName.getStyleClass().add("font-medium");
+                                    userName.setStyle("-fx-text-fill: -bisq-grey-10");
+                                    quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
                                 }
                             } else {
-                                quotedMessageHBox.getChildren().clear();
-                                quotedMessageHBox.setVisible(false);
-                                quotedMessageHBox.setManaged(false);
+                                quotedMessageVBox.getChildren().clear();
+                                quotedMessageVBox.setVisible(false);
+                                quotedMessageVBox.setManaged(false);
                             }
                         }
 

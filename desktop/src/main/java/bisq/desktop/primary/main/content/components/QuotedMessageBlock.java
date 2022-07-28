@@ -18,14 +18,14 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.Quotation;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.chat.ChatService;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -139,26 +139,33 @@ public class QuotedMessageBlock {
             root.setSpacing(10);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setStyle("-fx-background-color: -bisq-dark-grey;");
+            root.setPadding(new Insets(0, 15, 0, 20));
 
             Label headline = new Label(Res.get("social.reply.headline"));
-            headline.setStyle("-fx-text-fill: -bisq-grey-dimmed");
+            headline.setStyle("-fx-text-fill: -bisq-grey-10");
+            headline.getStyleClass().addAll("font-light", "font-size-11");
+
             closeButton = BisqIconButton.createIconButton(AwesomeIcon.REMOVE_SIGN);
+            closeButton.setOpacity(0.5);
+            HBox.setMargin(headline, new Insets(0, 0, 5, 0));
             HBox.setMargin(closeButton, new Insets(0, -22, 0, 0));
             HBox topBox = Layout.hBoxWith(headline, Spacer.fillHBox(), closeButton);
             topBox.setAlignment(Pos.CENTER);
-            topBox.setPadding(new Insets(5, 30, -5, 10));
+            topBox.setPadding(new Insets(5, 30, -5, 0));
 
             userName = new Label();
             userName.setPadding(new Insets(3, 0, 0, -3));
-            userName.setStyle("-fx-text-fill: -bisq-grey-dimmed");
+            userName.getStyleClass().add("font-medium");
+            userName.setStyle("-fx-text-fill: -bisq-grey-10");
+
             roboIconImageView = new ImageView();
             roboIconImageView.setFitWidth(25);
             roboIconImageView.setFitHeight(25);
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
-            VBox.setMargin(userBox, new Insets(0, 0, 0, 20));
+            VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
             quotedMessage = new Text();
             quotedMessage.setStyle("-fx-fill: -bisq-grey-dimmed");
-            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 20));
+            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 0));
             root.getChildren().addAll(topBox, userBox, quotedMessage);
         }
 
