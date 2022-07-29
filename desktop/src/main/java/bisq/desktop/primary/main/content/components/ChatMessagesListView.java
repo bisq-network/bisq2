@@ -57,7 +57,10 @@ import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.*;
+import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.utils.Layout;
+import bisq.desktop.common.utils.NoSelectionModel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.table.FilteredListItem;
@@ -600,8 +603,7 @@ public class ChatMessagesListView {
                     return new ListCell<>() {
                         private final ReputationScoreDisplay reputationScoreDisplay;
                         private final Button takeOfferButton, removeOfferButton;
-                        private HBox removeOfferButtonHBox;
-                        private final Label message, userName, dateTime, replyButton, pmButton, editButton, deleteButton, copyButton, moreOptionsButton;
+                        private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon, moreOptionsIcon;
                         private final Text quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
@@ -621,7 +623,7 @@ public class ChatMessagesListView {
                             takeOfferButton.getStyleClass().add("default-button");
 
                             removeOfferButton = new Button(Res.get("deleteOffer"));
-                            removeOfferButton.getStyleClass().addAll("red-button");
+                            removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
 
                             // quoted message
                             quotedMessageField = new Text();
@@ -657,21 +659,21 @@ public class ChatMessagesListView {
                             messageBgHBox.setAlignment(Pos.CENTER_LEFT);
 
                             // Reactions box
-                            replyButton = Icons.getIcon(AwesomeIcon.REPLY);
-                            replyButton.setCursor(Cursor.HAND);
-                            pmButton = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
-                            pmButton.setCursor(Cursor.HAND);
-                            editButton = Icons.getIcon(AwesomeIcon.EDIT);
-                            editButton.setCursor(Cursor.HAND);
-                            copyButton = Icons.getIcon(AwesomeIcon.COPY);
-                            copyButton.setCursor(Cursor.HAND);
-                            deleteButton = Icons.getIcon(AwesomeIcon.REMOVE_SIGN);
-                            deleteButton.setCursor(Cursor.HAND);
-                            moreOptionsButton = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
-                            moreOptionsButton.setCursor(Cursor.HAND);
+                            replyIcon = Icons.getIcon(AwesomeIcon.REPLY);
+                            replyIcon.setCursor(Cursor.HAND);
+                            pmIcon = Icons.getIcon(AwesomeIcon.COMMENT_ALT);
+                            pmIcon.setCursor(Cursor.HAND);
+                            editIcon = Icons.getIcon(AwesomeIcon.EDIT);
+                            editIcon.setCursor(Cursor.HAND);
+                            copyIcon = Icons.getIcon(AwesomeIcon.COPY);
+                            copyIcon.setCursor(Cursor.HAND);
+                            deleteIcon = Icons.getIcon(AwesomeIcon.REMOVE_SIGN);
+                            deleteIcon.setCursor(Cursor.HAND);
+                            moreOptionsIcon = Icons.getIcon(AwesomeIcon.ELLIPSIS_HORIZONTAL);
+                            moreOptionsIcon.setCursor(Cursor.HAND);
                             reactionsHBox = new HBox(20);
 
-                            reactionsHBox.setPadding(new Insets(0, 15, 5, 15));
+                            // reactionsHBox.setPadding(new Insets(0, 15, 0, 15));
                             reactionsHBox.setVisible(false);
 
                             HBox.setHgrow(messageBgHBox, Priority.SOMETIMES);
@@ -680,7 +682,7 @@ public class ChatMessagesListView {
                             VBox.setMargin(quotedMessageVBox, new Insets(15, 0, 10, 5));
                             VBox.setMargin(messageHBox, new Insets(10, 0, 0, 0));
                             VBox.setMargin(editButtonsHBox, new Insets(10, 25, -15, 0));
-                            VBox.setMargin(reactionsHBox, new Insets(4, 0, -10, 0));
+                            VBox.setMargin(reactionsHBox, new Insets(4, 15, -3, 15));
                             mainVBox = new VBox();
                             mainVBox.setFillWidth(true);
                             HBox.setHgrow(mainVBox, Priority.ALWAYS);
@@ -718,7 +720,6 @@ public class ChatMessagesListView {
                                 messageBgHBox.getStyleClass().remove("chat-message-bg-my-message");
                                 messageBgHBox.getStyleClass().remove("chat-message-bg-peer-message");
                                 VBox userProfileIconVbox = new VBox(userProfileIcon);
-                                removeOfferButtonHBox = null;
                                 if (myMessage) {
                                     HBox userNameAndDateHBox = new HBox(10, dateTime, userName);
                                     userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
@@ -727,8 +728,8 @@ public class ChatMessagesListView {
                                     messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
                                     VBox.setMargin(userNameAndDateHBox, new Insets(-5, 30, -5, 0));
 
-                                    HBox.setMargin(copyButton, new Insets(0, 15, 0, 0));
-                                    reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyButton, pmButton, editButton, deleteButton, copyButton);
+                                    HBox.setMargin(copyIcon, new Insets(0, 15, 0, 0));
+
 
                                     VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
                                     if (isOfferMessage) {
@@ -740,23 +741,21 @@ public class ChatMessagesListView {
                                         HBox.setMargin(messageVBox, new Insets(0, -10, 0, 0));
 
                                         removeOfferButton.setOnAction(e -> controller.onDeleteMessage(chatMessage));
-                                        HBox.setMargin(reactionsHBox, new Insets(2.5, -10, 0, 0));
-                                        removeOfferButtonHBox = new HBox(0, reactionsHBox, removeOfferButton);
+                                        HBox.setMargin(removeOfferButton, new Insets(0, 11, 0, -15));
+                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, removeOfferButton);
                                         reactionsHBox.setAlignment(Pos.CENTER_RIGHT);
-                                        removeOfferButtonHBox.setAlignment(Pos.CENTER_RIGHT);
-                                        removeOfferButtonHBox.setManaged(false);
-                                        removeOfferButtonHBox.setVisible(false);
-                                        VBox.setMargin(removeOfferButtonHBox, new Insets(7.5, 25, 0, 0));
-                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, removeOfferButtonHBox);
+                                        // HBox.setMargin(reactionsHBox, new Insets(2.5, -10, 0, 0));
                                     } else {
                                         message.maxWidthProperty().bind(root.widthProperty().subtract(140));
                                         userProfileIcon.setSize(30);
                                         userProfileIconVbox.setAlignment(Pos.TOP_LEFT);
+                                        HBox.setMargin(deleteIcon, new Insets(0, 11, 0, -15));
+                                        reactionsHBox.getChildren().setAll(Spacer.fillHBox(), replyIcon, pmIcon, editIcon, copyIcon, deleteIcon);
                                         HBox.setMargin(messageVBox, new Insets(0, -15, 0, 0));
                                         HBox.setMargin(userProfileIconVbox, new Insets(7.5, 0, -5, 5));
                                         HBox.setMargin(editInputField, new Insets(6, -10, -25, 0));
-                                        mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
                                     }
+                                    mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
 
                                     messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
                                     messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
@@ -768,8 +767,8 @@ public class ChatMessagesListView {
                                     userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
 
                                     userProfileIcon.setSize(60);
-                                    HBox.setMargin(replyButton, new Insets(0, 0, 0, 15));
-                                    reactionsHBox.getChildren().setAll(replyButton, pmButton, editButton, deleteButton, moreOptionsButton, Spacer.fillHBox());
+                                    HBox.setMargin(replyIcon, new Insets(0, 0, 0, 15));
+                                    reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
                                     if (isOfferMessage) {
@@ -852,12 +851,12 @@ public class ChatMessagesListView {
 
                                 userName.setOnMouseClicked(null);
                                 userProfileIcon.setOnMouseClicked(null);
-                                replyButton.setOnMouseClicked(null);
-                                pmButton.setOnMouseClicked(null);
-                                editButton.setOnMouseClicked(null);
-                                copyButton.setOnMouseClicked(null);
-                                deleteButton.setOnMouseClicked(null);
-                                moreOptionsButton.setOnMouseClicked(null);
+                                replyIcon.setOnMouseClicked(null);
+                                pmIcon.setOnMouseClicked(null);
+                                editIcon.setOnMouseClicked(null);
+                                copyIcon.setOnMouseClicked(null);
+                                deleteIcon.setOnMouseClicked(null);
+                                moreOptionsIcon.setOnMouseClicked(null);
 
                                 editInputField.setOnKeyPressed(null);
 
@@ -883,64 +882,45 @@ public class ChatMessagesListView {
                             boolean isMyMessage = model.isMyMessage(chatMessage);
                             boolean allowEditing = model.allowEditing.get();
                             if (isMyMessage) {
-                                copyButton.setOnMouseClicked(e -> controller.onCopyMessage(chatMessage));
+                                copyIcon.setOnMouseClicked(e -> controller.onCopyMessage(chatMessage));
                                 if (allowEditing) {
-                                    editButton.setOnMouseClicked(e -> onEditMessage(item));
-                                    deleteButton.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
+                                    editIcon.setOnMouseClicked(e -> onEditMessage(item));
+                                    deleteIcon.setOnMouseClicked(e -> controller.onDeleteMessage(chatMessage));
                                 }
                             } else {
-                                moreOptionsButton.setOnMouseClicked(e -> controller.onOpenMoreOptions(pmButton, chatMessage, () -> {
+                                moreOptionsIcon.setOnMouseClicked(e -> controller.onOpenMoreOptions(pmIcon, chatMessage, () -> {
                                     hideReactionsBox();
                                     model.selectedChatMessageForMoreOptionsPopup.set(null);
                                 }));
-                                replyButton.setOnMouseClicked(e -> controller.onReply(chatMessage));
-                                pmButton.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
+                                replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
+                                pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                             }
-                            replyButton.setVisible(!isMyMessage);
-                            replyButton.setManaged(!isMyMessage);
-                            pmButton.setVisible(!isMyMessage);
-                            pmButton.setManaged(!isMyMessage);
-                            editButton.setVisible(isMyMessage && allowEditing);
-                            editButton.setManaged(isMyMessage && allowEditing);
-                            deleteButton.setVisible(isMyMessage && allowEditing);
-                            deleteButton.setManaged(isMyMessage && allowEditing);
+                            replyIcon.setVisible(!isMyMessage);
+                            replyIcon.setManaged(!isMyMessage);
+                            pmIcon.setVisible(!isMyMessage);
+                            pmIcon.setManaged(!isMyMessage);
+                            editIcon.setVisible(isMyMessage && allowEditing);
+                            editIcon.setManaged(isMyMessage && allowEditing);
+                            deleteIcon.setVisible(isMyMessage && allowEditing);
+                            deleteIcon.setManaged(isMyMessage && allowEditing);
+                            removeOfferButton.setVisible(isMyMessage && allowEditing);
+                            removeOfferButton.setManaged(isMyMessage && allowEditing);
 
+                            setOnMouseEntered(e -> {
+                                if (model.selectedChatMessageForMoreOptionsPopup.get() != null || editInputField.isVisible()) {
+                                    return;
+                                }
+                                dateTime.setVisible(true);
+                                reactionsHBox.setVisible(true);
+                            });
 
-                            setupOnMouseEntered();
                             setOnMouseExited(e -> {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() == null) {
                                     hideReactionsBox();
                                 }
                                 dateTime.setVisible(false);
                                 reactionsHBox.setVisible(false);
-                                if (removeOfferButtonHBox != null) {
-                                    // We add a delay calling setupOnMouseEntered to avoid flicker due alternate 
-                                    // enter/exit when cell height changes
-                                    Transitions.fadeOut(removeOfferButtonHBox, 100, () -> {
-                                        removeOfferButtonHBox.setVisible(false);
-                                        removeOfferButtonHBox.setManaged(false);
-                                        removeOfferButtonHBox.setOpacity(1);
-                                        setupOnMouseEntered();
-                                    });
-                                } else {
-                                    setupOnMouseEntered();
-                                }
-                            });
-                        }
 
-                        private void setupOnMouseEntered() {
-                            setOnMouseEntered(e -> {
-                                if (model.selectedChatMessageForMoreOptionsPopup.get() != null || editInputField.isVisible()) {
-                                    return;
-                                }
-                                reactionsHBox.setVisible(true);
-                                dateTime.setVisible(true);
-
-                                if (removeOfferButtonHBox != null) {
-                                    removeOfferButtonHBox.setManaged(true);
-                                    removeOfferButtonHBox.setVisible(true);
-                                }
-                                setOnMouseEntered(null);
                             });
                         }
 

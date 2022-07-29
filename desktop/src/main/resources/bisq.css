@@ -883,24 +883,6 @@
 }
 
 
-.red-small-button {
-    -fx-background-radius: 4;
-    -fx-border-color: transparent;
-    -fx-border-radius: 4;
-    -fx-text-fill: -fx-light-text-color;
-    -fx-font-size: 0.8em;
-    -fx-padding: 2.5 16 2.5 16;
-    -fx-background-color: -bisq-red;
-}
-
-.red-small-button:hover {
-    -fx-background-color: derive(-bisq-red, 10%);
-}
-
-.red-small-button:pressed {
-    -fx-background-color: derive(-bisq-red, -10%);
-}
-
 /*******************************************************************************
  *                                                                             *
  * Outlined-Button                                                                  *
@@ -973,6 +955,26 @@
     -fx-text-fill: derive(-bisq-red, -10%);
 }
 
+
+.red-small-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-red;
+    -fx-border-width: 1;
+    -fx-border-radius: 2;
+    -fx-text-fill: -bisq-red;
+    -fx-font-size: 0.8em;
+    -fx-padding: 2.5 16 2.5 16;
+}
+
+.red-small-button:hover {
+    -fx-border-color: derive(-bisq-red, 10%);
+    -fx-text-fill: derive(-bisq-red, 10%);
+}
+
+.red-small-button:pressed {
+    -fx-border-color: derive(-bisq-red, -10%);
+    -fx-text-fill: derive(-bisq-red, -10%);
+}
 
 /*******************************************************************************
  *                                                                             *
