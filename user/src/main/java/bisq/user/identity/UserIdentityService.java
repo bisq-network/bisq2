@@ -71,6 +71,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final Config config;
     private final OpenTimestampService openTimestampService;
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
+    @Getter
+    private final Observable<Integer> userIdentityChangedFlag = new Observable<>(0);
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
@@ -163,6 +165,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                     .ifPresentOrElse(e -> persistableStore.getSelectedUserProfile().set(e),
                             () -> persistableStore.getSelectedUserProfile().set(null));
         }
+        userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
         identityService.retireActiveIdentity(userIdentity.getIdentity().getTag());
         return networkService.removeAuthenticatedData(userIdentity.getUserProfile(),
@@ -211,6 +214,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             persistableStore.getUserIdentities().add(userIdentity);
             persistableStore.getSelectedUserProfile().set(userIdentity);
         }
+        userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
         return userIdentity;
     }

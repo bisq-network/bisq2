@@ -2,6 +2,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.events.pub.PublicEventsChannel;
+import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -28,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public abstract class ChannelSelection {
@@ -44,7 +47,6 @@ public abstract class ChannelSelection {
 
         @Override
         public void onActivate() {
-            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(View.ChannelItem::getDisplayString));
         }
 
         protected abstract Model getChannelSelectionModel();
@@ -147,16 +149,28 @@ public abstract class ChannelSelection {
         @Getter
         static class ChannelItem {
             private final Channel<?> channel;
+            private final String displayString;
+            private Optional<String> iconId = Optional.empty();
 
             public ChannelItem(Channel<?> channel) {
                 this.channel = channel;
-            }
 
-            public String getDisplayString() {
+                String type = null;
+                if (channel instanceof PublicEventsChannel) {
+                    type = "-events-";
+                } else if (channel instanceof PublicDiscussionChannel) {
+                    type = "-discussion-";
+                } else if (channel instanceof PublicSupportChannel) {
+                    type = "-support-";
+                }
+                if (type != null) {
+                    iconId = Optional.of("channels" + type + channel.getId());
+                }
+
                 if (channel instanceof PublicTradeChannel) {
-                    return ((PublicTradeChannel) channel).getMarket().getMarketCodes();
+                    displayString = ((PublicTradeChannel) channel).getMarket().getMarketCodes();
                 } else {
-                    return channel.getDisplayString();
+                    displayString = channel.getDisplayString();
                 }
             }
         }

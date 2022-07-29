@@ -46,7 +46,7 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     private final NetworkService networkService;
     private final ProofOfWorkService proofOfWorkService;
     @Getter
-    private final Observable<Integer> userProfileChangedFlag = new Observable<>();
+    private final Observable<Integer> userProfileChangedFlag = new Observable<>(0);
 
     public UserProfileService(PersistenceService persistenceService,
                               NetworkService networkService,

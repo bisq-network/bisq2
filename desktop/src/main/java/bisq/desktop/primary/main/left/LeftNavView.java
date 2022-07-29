@@ -68,7 +68,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
 
-        root.getStyleClass().add("bisq-darkest-bg");
+        root.getStyleClass().add("bisq-dark-bg");
 
         menuTop = TopPanelView.HEIGHT;
 
@@ -228,7 +228,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 expandIcon.setVisible(true);
                 expandIcon.setManaged(true);
 
-                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
+               // model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
                             collapseIcon.setVisible(false);
@@ -303,17 +303,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {
         button.setOnAction(() -> {
             if (button.isSelected()) {
-                controller.onToggleExpandMenu();
+                // controller.onToggleExpandMenu();
             } else {
                 controller.onNavigationTargetSelected(navigationTarget);
                 maybeAnimateMark();
             }
         });
-        button.getIsAutoCollapse().addListener((observable, oldValue, newValue) -> {
+       /* button.getIsAutoCollapse().addListener((observable, oldValue, newValue) -> {
             if (newValue && !button.isSelected()) {
                 updateSubmenu();
             }
-        });
+        });*/
         controller.onNavigationButtonCreated(button);
     }
 
@@ -342,9 +342,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     if (item instanceof VBox) {
                         VBox submenu = (VBox) item;
                         LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
-                        if (parentMenuItem.getIsAutoCollapse().get()) {
+                        /*if (parentMenuItem.getIsAutoCollapse().get()) {
                             targetY -= submenu.getHeight();
-                        }
+                        }*/
                     }
                 }
             }
@@ -368,7 +368,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     parentMenuItem.setWasSelected(true);
                 }
                 UIThread.runOnNextRenderFrame(parentMenuItem::applyStyle);
-                int targetHeight = isSubmenuActive || (parentMenuItem.isWasSelected() && !parentMenuItem.getIsAutoCollapse().get()) ?
+                int targetHeight = isSubmenuActive || (parentMenuItem.isWasSelected()/* && !parentMenuItem.getIsAutoCollapse().get()*/) ?
                         (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
                 Transitions.animateHeight(submenu, targetHeight);
             }

@@ -20,13 +20,14 @@ package bisq.desktop.primary.main.content.events;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PrivateChannel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.events.priv.PrivateEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
                 value -> {
                     Channel<? extends ChatMessage> channel = eventsChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -79,7 +80,6 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
                 publicEventsChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSidebar.getRoot(),
                 channelSidebar.getRoot());
     }
 
@@ -88,11 +88,10 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateEventsChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateEventsChannel) channel).getPeer().getPubKeyHash()));
-            model.getPeersRoboIconVisible().set(true);
+            applyPeersIcon((PrivateChannel<?>) channel);
             publicEventsChannelSelection.deSelectChannel();
         } else {
-            model.getPeersRoboIconVisible().set(false);
+            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

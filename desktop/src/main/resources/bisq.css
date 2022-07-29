@@ -74,6 +74,8 @@
     -bisq-grey-21: #343434;
     -bisq-grey-22: #707070;
     -bisq-grey-23: #1e1e1e;
+    -bisq-grey-24: #2c2c2c;
+
 
     /* Background colors */
     -bisq-darker-grey: -bisq-grey-2;
@@ -435,6 +437,72 @@
     -fx-text-fill: -bisq-white;
     -fx-font-family: "IBM Plex Sans Light";
 }
+
+/* Generic Label properties */
+
+/* colors */
+.text-fill-white {
+    -fx-text-fill: -bisq-white !Important;
+}
+
+.text-fill-grey-dimmed {
+    -fx-text-fill: -bisq-grey-dimmed !Important;
+}
+
+.text-fill-grey-dimmed {
+    -fx-text-fill: -bisq-grey-dimmed !Important;
+}
+
+/* sizes */
+.font-size-15 {
+    -fx-font-size: 1.5em !Important;
+}
+
+.font-size-14 {
+    -fx-font-size: 1.4em !Important;
+}
+
+.font-size-13 {
+    -fx-font-size: 1.3em !Important;
+}
+
+.font-size-12 {
+    -fx-font-size: 1.2em !Important;
+}
+
+.font-size-11 {
+    -fx-font-size: 1.1em !Important;
+}
+
+.font-size-10 {
+    -fx-font-size: 1em !Important;
+}
+
+.font-size-09 {
+    -fx-font-size: 0.9em !Important;
+}
+
+.font-size-08 {
+    -fx-font-size: 0.8em !Important;
+}
+
+.font-size-07 {
+    -fx-font-size: 0.7em !Important;
+}
+
+/* fonts */
+.font-light {
+    -fx-font-family: "IBM Plex Sans Light" !Important;
+}
+
+.font-default {
+    -fx-font-family: "IBM Plex Sans" !Important;
+}
+
+.font-medium {
+    -fx-font-family: "IBM Plex Sans Medium" !Important;
+}
+
 
 .wrap-text {
     -fx-wrap-text: true;
@@ -814,6 +882,7 @@
     -fx-cursor: hand;
 }
 
+
 /*******************************************************************************
  *                                                                             *
  * Outlined-Button                                                                  *
@@ -871,6 +940,7 @@
 }
 
 .red-outlined-button {
+    -fx-background-color: transparent;
     -fx-border-color: -bisq-red;
     -fx-text-fill: -bisq-red;
 }
@@ -885,6 +955,26 @@
     -fx-text-fill: derive(-bisq-red, -10%);
 }
 
+
+.red-small-button {
+    -fx-background-color: transparent;
+    -fx-border-color: -bisq-red;
+    -fx-border-width: 1;
+    -fx-border-radius: 2;
+    -fx-text-fill: -bisq-red;
+    -fx-font-size: 0.8em;
+    -fx-padding: 2.5 16 2.5 16;
+}
+
+.red-small-button:hover {
+    -fx-border-color: derive(-bisq-red, 10%);
+    -fx-text-fill: derive(-bisq-red, 10%);
+}
+
+.red-small-button:pressed {
+    -fx-border-color: derive(-bisq-red, -10%);
+    -fx-text-fill: derive(-bisq-red, -10%);
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -990,15 +1080,24 @@
 
 .super-large-button {
     -fx-background-radius: 8;
-    -fx-padding: 17;
+    -fx-padding: 15;
     -fx-font-size: 1.7em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
 }
 
 .large-button {
     -fx-background-radius: 8;
-    -fx-padding: 17;
+    -fx-border-radius: 8;
+    -fx-padding: 15;
     -fx-font-size: 1.54em;
+    /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
+}
+
+.medium-large-button {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 10;
+    -fx-font-size: 1.25em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
 }
 
@@ -1422,23 +1521,29 @@
  *                                                                             *
  ******************************************************************************/
 
+.list-view.chat-messages-list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0 0 0 -25;
+    -fx-padding: 10 0 10 25;
+    -fx-font-size: 1em;
+}
+
 .list-view.chat-messages-list-view {
     -fx-background-color: transparent;
     -fx-border-color: -bisq-grey-disabled;
     -fx-border-width: 1 0 0 0;
 }
 
-.list-view.chat-messages-list-view .list-cell {
-    -fx-background-color: transparent;
-    -fx-padding: 13 -24 13 0;
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-insets: 0 24 0 0;
-    -fx-border-width: 0 0 1 0;
-    -fx-font-size: 1em;
+.list-view.chat-messages-list-view .list-cell:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.08);
 }
 
 .list-view.chat-messages-list-view .list-cell:empty {
     -fx-border-width: 0;
+}
+
+.list-view.chat-messages-list-view .list-cell:empty:hover {
+    -fx-background-color: transparent;
 }
 
 
@@ -1484,6 +1589,10 @@ tree-table-view:focused {
 
 /* horizontal scrollbars are never needed and are flickering at scaling so lets turn them off */
 .table-view > .scroll-bar:horizontal {
+    -fx-opacity: 0;
+}
+
+.table-view .filler {
     -fx-opacity: 0;
 }
 
@@ -1550,12 +1659,12 @@ tree-table-view:focused {
 
 /* even */
 .table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: -bisq-grey-24;
 }
 
 /* odd */
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: -bisq-content-bg-grey;
+    -fx-background-color: -bisq-grey-24;
 }
 
 /* disabled */
@@ -1811,11 +1920,11 @@ tree-table-view:focused {
     -fx-background-radius: 8 8 0 0;
 }
 
-.bisq-darkest-bg {
+.bisq-dark-bg {
     -fx-background-color: -bisq-dark-grey;
 }
 
-.bisq-dark-bg {
+.bisq-grey-2-bg {
     -fx-background-color: -bisq-grey-2;
 }
 
@@ -1835,6 +1944,14 @@ tree-table-view:focused {
     -fx-background-color: -bisq-content-bg-grey;
 }
 
+#chat-message-quote-box {
+    -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 0 8 8 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-padding: 10 10 10 15;
+}
 
 /*******************************************************************************
  *                                                                             *
@@ -1948,14 +2065,22 @@ tree-table-view:focused {
  *                                                                             *
  ******************************************************************************/
 
-.table-view.create-offer-table-view .column-header {
+.table-view.offer-review .column-header {
     -fx-pref-height: 40px;
     -fx-font-family: "IBM Plex Sans";
     -fx-font-weight: normal;
 }
 
-.table-view.create-offer-table-view .filler {
-    -fx-opacity: 0;
+.table-view.offer-review .table-row-cell {
+    -fx-pref-height: 55px;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-size: 1.1em;
+}
+
+.table-view.create-offer-table-view .column-header {
+    -fx-pref-height: 40px;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-weight: normal;
 }
 
 .table-view.create-offer-table-view .table-row-cell {
@@ -2090,6 +2215,12 @@ tree-table-view:focused {
     -fx-border-insets: 0 0 -1 0;
 }
 
+#chat-user-profile-bg {
+    -fx-background-color: -bisq-grey-19;
+    -fx-background-insets: 1 20 1 9;
+    -fx-background-radius: 8;
+}
+
 #chat-input-field {
     -fx-background-color: -bisq-grey-19;
     -fx-background-radius: 8;
@@ -2109,7 +2240,7 @@ tree-table-view:focused {
 #chat-messages-edit-text-area.text-area {
     -fx-background-color: transparent;
     -fx-text-fill: -bisq-white;
-    -fx-font-size: 1.33em;
+    -fx-font-size: 1.3em;
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -2149,6 +2280,12 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
+#chat-sidebar-title {
+    -fx-text-fill: -bisq-white;
+    -fx-font-size: 1.4em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
 #chat-sidebar-text {
     -fx-text-fill: -bisq-white;
     -fx-fill: -bisq-white;
@@ -2156,13 +2293,13 @@ tree-table-view:focused {
     -fx-font-family: "IBM Plex Sans Light";
 }
 
-.chat-offer-box {
-    -fx-background-color: -bisq-grey-5;
+.chat-message-bg-my-message {
+    -fx-background-color: -bisq-grey-18;
     -fx-background-radius: 8;
 }
 
-.chat-offer-box-my-offer {
-    -fx-background-color: -bisq-grey-18;
+.chat-message-bg-peer-message {
+    -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 8;
 }
 

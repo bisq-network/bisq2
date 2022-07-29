@@ -226,7 +226,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             nym = new Label();
             nym.getStyleClass().addAll("bisq-text-7");
             nym.setAlignment(Pos.CENTER);
-            VBox.setMargin(nym, new Insets(0, 0, 24, 0));
+            VBox.setMargin(nym, new Insets(0, 0, 25, 0));
 
             privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
@@ -251,7 +251,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 
             Region separator = Layout.separator();
-            VBox.setMargin(separator, new Insets(24, -45, 15, -55));
+            VBox.setMargin(separator, new Insets(25, -45, 15, -55));
 
             termsBox = getInfoBox(Res.get("social.chatUser.terms"), true);
             terms = (Label) termsBox.getChildren().get(1);

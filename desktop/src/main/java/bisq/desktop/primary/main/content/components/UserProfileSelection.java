@@ -40,6 +40,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.util.StringConverter;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +63,14 @@ public class UserProfileSelection {
 
     public void setIsLeftAligned(boolean isLeftAligned) {
         controller.model.isLeftAligned.set(isLeftAligned);
+    }
+
+    public void setMaxComboBoxWidth(int width) {
+        controller.view.setMaxComboBoxWidth(width);
+    }
+
+    public void setConverter(StringConverter<ListItem> value) {
+        controller.view.setConverter(value);
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -123,7 +132,7 @@ public class UserProfileSelection {
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
-            root.setMinHeight(60);
+            // root.setMinHeight(60);
 
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
@@ -146,9 +155,18 @@ public class UserProfileSelection {
             isLeftAlignedPin.unsubscribe();
             comboBoxWidthPin.unsubscribe();
         }
+
+        public void setMaxComboBoxWidth(int width) {
+            comboBox.setComboBoxWidth(width);
+        }
+
+        public void setConverter(StringConverter<ListItem> value) {
+            comboBox.setConverter(value);
+        }
     }
 
     @EqualsAndHashCode
+    @Getter
     public static class ListItem {
         private final UserIdentity userIdentity;
 
@@ -241,6 +259,14 @@ public class UserProfileSelection {
             ((UserProfileSkin) skin).setComboBoxWidth(width);
         }
 
+        private void setMaxComboBoxWidth(double width) {
+            if (width == 0) {
+                width = DEFAULT_COMBO_BOX_WIDTH;
+            }
+            setPrefWidth(width);
+            ((UserProfileSkin) skin).setMaxComboBoxWidth(width);
+        }
+
         @Override
         protected Skin<?> createDefaultSkin() {
             if (skin == null) {
@@ -281,10 +307,10 @@ public class UserProfileSelection {
             imageView.setFitHeight(ICON_SIZE);
             imageView.setLayoutY(7);
 
-            arrow.setLayoutY(18);
+            arrow.setLayoutY(19);
             label = new Label();
             label.getStyleClass().add("bisq-text-19");
-            label.setLayoutY(13);
+            label.setLayoutY(14);
             buttonPane.getChildren().setAll(label, arrow, imageView);
             buttonPane.setCursor(Cursor.HAND);
             buttonPane.setLayoutY(-UserProfileComboBox.Y_OFFSET);
@@ -294,7 +320,7 @@ public class UserProfileSelection {
                     UserIdentity userIdentity = newValue.userIdentity;
                     if (userIdentity != null) {
                         imageView.setImage(RoboHash.getImage(userIdentity.getPubKeyHash()));
-                        label.setText(userIdentity.getUserName());
+                        label.setText(control.getConverter().toString(newValue));
                         buttonPane.layout();
                     }
                 }
@@ -319,6 +345,11 @@ public class UserProfileSelection {
 
         private void setComboBoxWidth(double width) {
             buttonPane.setPrefWidth(width);
+        }
+
+        private void setMaxComboBoxWidth(double width) {
+            setComboBoxWidth(width);
+            label.setMaxWidth(width - UserProfileSkin.ICON_SIZE - 80);
         }
 
         @Override

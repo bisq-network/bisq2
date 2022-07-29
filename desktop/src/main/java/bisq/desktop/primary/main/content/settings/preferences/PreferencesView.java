@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqToggleButton;
+import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PreferencesView extends View<VBox, PreferencesModel, PreferencesController> {
 
-    private final BisqToggleButton resetDontShowAgain, useAnimations;
+    private final Switch resetDontShowAgain, useAnimations;
 
     public PreferencesView(PreferencesModel model, PreferencesController controller) {
         super(new VBox(20), model, controller);
@@ -40,8 +40,8 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
         Label headlineLabel = new Label(Res.get("settings.preferences.displaySettings"));
         headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
-        useAnimations = new BisqToggleButton(Res.get("settings.preferences.useAnimations"));
-        resetDontShowAgain = new BisqToggleButton(Res.get("settings.preferences.resetDontShowAgain"));
+        useAnimations = new Switch(Res.get("settings.preferences.useAnimations"));
+        resetDontShowAgain = new Switch(Res.get("settings.preferences.resetDontShowAgain"));
         VBox.setMargin(headlineLabel, new Insets(30, 0, 0, 0));
         root.getChildren().addAll(headlineLabel, useAnimations, resetDontShowAgain);
     }

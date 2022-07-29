@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 public final class UserProfile implements DistributedData {
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are 
-    private final static long TTL = TimeUnit.HOURS.toMillis(30);
+    private final static long TTL = TimeUnit.DAYS.toMillis(1);
     // Metadata are not sent over the wire but hardcoded as we want to control it by ourselves.
     private final static MetaData META_DATA = new MetaData(TTL, 100000, UserProfile.class.getSimpleName());
 

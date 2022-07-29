@@ -441,3 +441,27 @@
 #market-xmr {
     -fx-image: url("images/markets/market-xmr.png");
 }
+
+#channels-discussion-bitcoin {
+    -fx-image: url("images/channels/discussion/bitcoin.png");
+}
+
+#channels-discussion-bitcoin-white {
+    -fx-image: url("images/channels/discussion/bitcoin-white.png");
+}
+
+#channels-events-meetups {
+    -fx-image: url("images/channels/events/meetups.png");
+}
+
+#channels-events-meetups-white {
+    -fx-image: url("images/channels/events/meetups-white.png");
+}
+
+#channels-support-support {
+    -fx-image: url("images/channels/support/support.png");
+}
+
+#channels-support-support-white {
+    -fx-image: url("images/channels/support/support-white.png");
+}

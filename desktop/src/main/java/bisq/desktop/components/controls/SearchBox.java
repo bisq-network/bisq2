@@ -32,7 +32,6 @@ public class SearchBox extends HBox {
     public SearchBox() {
         setAlignment(Pos.CENTER_LEFT);
         setMaxHeight(30);
-       // setPrefWidth(140);
         getStyleClass().add("small-search-box");
 
         ImageView searchIcon = ImageUtil.getImageViewById("search-white");

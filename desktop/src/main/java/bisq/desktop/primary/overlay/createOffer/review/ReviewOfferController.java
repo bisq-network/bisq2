@@ -268,9 +268,10 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
+            //todo
+           /* if (reputationService.getReputationScore(senderUserProfile).getTotalScore() < myChatOffer.getRequiredTotalReputationScore()) {
                 return false;
-            }
+            }*/
 
             return true;
         };

@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.onboarding;
 import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.controls.BisqToggleButton;
+import bisq.desktop.components.controls.Switch;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +38,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
     private static final int PADDING = 20;
 
     private final Button createOfferButton, openChatButton;
-    private final BisqToggleButton dontShowAgain;
+    private final Switch dontShowAgain;
 
     public BisqEasyOnboardingView(BisqEasyOnboardingModel model, BisqEasyOnboardingController controller) {
         super(new GridPane(), model, controller);
@@ -84,7 +84,7 @@ public class BisqEasyOnboardingView extends View<GridPane, BisqEasyOnboardingMod
         openChatButton = rightBoxPair.getSecond();
         root.add(rightBoxPair.getFirst(), 1, 1, 1, 1);
 
-        dontShowAgain = new BisqToggleButton(Res.get("dontShowAgain"));
+        dontShowAgain = new Switch(Res.get("dontShowAgain"));
         root.add(dontShowAgain, 0, 2, 2, 1);
     }
 

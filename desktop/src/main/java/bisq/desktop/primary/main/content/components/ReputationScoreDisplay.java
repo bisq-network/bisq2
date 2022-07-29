@@ -54,6 +54,11 @@ public class ReputationScoreDisplay extends HBox {
         getChildren().addAll(stars);
     }
 
+    public ReputationScoreDisplay(ReputationScore reputationScore) {
+        this();
+        applyReputationScore(reputationScore);
+    }
+
     public void applyReputationScore(ReputationScore reputationScore) {
         double relativeScore = reputationScore.getRelativeScore();
         int target = (int) Math.floor((stars.size() + 1) * relativeScore) - 1;

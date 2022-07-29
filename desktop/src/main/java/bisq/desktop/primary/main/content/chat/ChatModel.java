@@ -22,7 +22,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import javafx.beans.property.*;
-import javafx.scene.image.Image;
+import javafx.scene.Node;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,11 +44,8 @@ public abstract class ChatModel extends NavigationModel {
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
-    private final BooleanProperty notificationsVisible = new SimpleBooleanProperty();
-    private final BooleanProperty searchFieldVisible = new SimpleBooleanProperty();
-    private final BooleanProperty peersRoboIconVisible = new SimpleBooleanProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
-    private final ObjectProperty<Image> peersRoboIconImage = new SimpleObjectProperty<>();
+    private final ObjectProperty<Node> channelIcon = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();

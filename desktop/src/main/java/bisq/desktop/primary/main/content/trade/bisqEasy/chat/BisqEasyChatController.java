@@ -20,20 +20,24 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.components.robohash.RoboHash;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicTradeChannelSelection;
+import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.settings.SettingsService;
+import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
@@ -59,7 +63,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(notificationsSidebar.getNotificationSetting(),
+        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
                 value -> {
                     Channel<? extends ChatMessage> channel = tradeChannelSelectionService.getSelectedChannel().get();
                     if (channel != null) {
@@ -95,7 +99,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 publicTradeChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
-                notificationsSidebar.getRoot(),
                 channelSidebar.getRoot());
     }
 
@@ -104,17 +107,22 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.handleChannelChange(channel);
 
         if (channel instanceof PrivateTradeChannel) {
-            model.getPeersRoboIconImage().set(RoboHash.getImage(((PrivateTradeChannel) channel).getPeer().getPubKeyHash()));
-            model.getPeersRoboIconVisible().set(true);
+            applyPeersIcon((PrivateChannel<?>) channel);
+
             model.getCreateOfferButtonVisible().set(false);
             publicTradeChannelSelection.deSelectChannel();
 
             Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
         } else {
             resetSelectedChildTarget();
-            model.getPeersRoboIconVisible().set(false);
             model.getCreateOfferButtonVisible().set(true);
             privateChannelSelection.deSelectChannel();
+
+            Market market = ((PublicTradeChannel) channel).getMarket();
+            StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
+                    market.getBaseCurrencyCode().toLowerCase(),
+                    market.getQuoteCurrencyCode().toLowerCase());
+            model.getChannelIcon().set(marketsImage);
         }
     }
 

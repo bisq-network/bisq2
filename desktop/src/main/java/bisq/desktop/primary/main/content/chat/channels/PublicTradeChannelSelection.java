@@ -50,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -102,6 +103,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
+            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
             channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
@@ -302,8 +304,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         label.setGraphic(MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
                                 pair.getSecond().toLowerCase()));
-                        label.setText(item.getDisplayString());
                         label.setGraphicTextGap(8);
+                        label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setPrefWidth(getWidth() - 60);

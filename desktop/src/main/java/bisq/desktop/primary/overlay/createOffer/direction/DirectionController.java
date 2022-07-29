@@ -72,14 +72,14 @@ public class DirectionController implements Controller {
     }
 
     void onGainReputation() {
-        model.getIgnoreShowReputationInfo().set(true);
+        //model.getIgnoreShowReputationInfo().set(true);
         setDirection(Direction.BUY);
         OverlayController.hide();
         Navigation.navigateTo(NavigationTarget.REPUTATION);
     }
 
     void onIgnoreReputation() {
-        model.getIgnoreShowReputationInfo().set(true);
+        // model.getIgnoreShowReputationInfo().set(true);
         onNextHandler.run();
     }
 

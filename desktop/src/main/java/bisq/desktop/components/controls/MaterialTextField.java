@@ -146,158 +146,34 @@ public class MaterialTextField extends Pane {
         update();
     }
 
-    protected void doLayout() {
-        bg.setMinHeight(getBgHeight());
-        bg.setMaxHeight(getBgHeight());
-        line.setLayoutY(getBgHeight() - 1);
-        selectionLine.setLayoutY(getBgHeight() - 2);
-        field.setLayoutY(getFieldLayoutY());
-    }
-
-    protected TextInputControl createTextInputControl() {
-        return new TextField();
-    }
-
-    @Override
-    protected double computeMinHeight(double width) {
-        if (helpLabel.isManaged()) {
-            return helpLabel.getLayoutY() + helpLabel.getHeight();
-        } else {
-            return getBgHeight();
-        }
-    }
-
-    @Override
-    protected double computePrefWidth(double height) {
-        layoutIconButton();
-        return super.computePrefWidth(height);
-    }
-
-    private void layoutIconButton() {
-        if (getWidth() > 0) {
-            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
-        }
-    }
-
-    @Override
-    protected double computeMaxHeight(double width) {
-        return computeMinHeight(width);
-    }
-
-    @Override
-    protected double computePrefHeight(double width) {
-        return computeMinHeight(width);
-    }
-
-    protected void onMouseEntered() {
-        if (!field.isEditable()) {
-            return;
-        }
-        removeBgStyles();
-        if (field.isFocused()) {
-            bg.getStyleClass().add("material-text-field-bg-selected");
-        } else {
-            bg.getStyleClass().add("material-text-field-bg-hover");
-        }
-    }
-
-    protected void onMouseExited() {
-        if (!field.isEditable()) {
-            return;
-        }
-        removeBgStyles();
-        if (field.isFocused()) {
-            bg.getStyleClass().add("material-text-field-bg-selected");
-        } else {
-            bg.getStyleClass().add("material-text-field-bg");
-        }
-    }
-
-    protected void onInputTextFieldFocus(boolean focus) {
-        if (!field.isEditable()) {
-            return;
-        }
-        if (focus) {
-            selectionLine.setPrefWidth(0);
-            selectionLine.setOpacity(1);
-            Transitions.animateWidth(selectionLine, getWidth());
-        } else {
-            Transitions.fadeOut(selectionLine, 200);
-        }
-        onMouseExited();
-        update();
-    }
-
-    protected void onWidthChanged(double width) {
-        if (width > 0) {
-            bg.setPrefWidth(width);
-            line.setPrefWidth(width);
-            selectionLine.setPrefWidth(field.isFocused() && field.isEditable() ? width : 0);
-            descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
-            field.setPrefWidth(width - 2 * field.getLayoutX());
-            helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
-        }
-    }
-
-    void update() {
-        if (descriptionProperty.get() != null) {
-            if (showInputTextField()) {
-                Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
-            } else {
-                Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
-            }
-        }
-        helpLabel.setVisible(helpProperty.get() != null);
-        helpLabel.setManaged(helpProperty.get() != null);
-
-        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
-        field.getStyleClass().remove("material-text-field-read-only");
-        if (showInputTextField()) {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-big");
-            descriptionLabel.getStyleClass().add("material-text-field-description-small");
-        } else {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-small");
-            descriptionLabel.getStyleClass().add("material-text-field-description-big");
-        }
-        if (field.isFocused()) {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
-            descriptionLabel.getStyleClass().add("material-text-field-description-selected");
-        } else {
-            descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
-            descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
-        }
-
-        if (field.isEditable()) {
-            bg.setMouseTransparent(false);
-            line.setOpacity(1);
-        } else {
-            bg.setMouseTransparent(true);
-            line.setOpacity(0.25);
-            descriptionLabel.getStyleClass().remove("material-text-field-description-big");
-            descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
-            descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
-            descriptionLabel.getStyleClass().add("material-text-field-description-small");
-            descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
-            field.getStyleClass().add("material-text-field-read-only");
-        }
-        setOpacity(field.isDisabled() ? 0.35 : 1);
-        UIThread.runOnNextRenderFrame(this::layoutIconButton);
-    }
-
-    protected void removeBgStyles() {
-        bg.getStyleClass().remove("material-text-field-bg-hover");
-        bg.getStyleClass().remove("material-text-field-bg-selected");
-        bg.getStyleClass().remove("material-text-field-bg");
-    }
-
-    protected boolean showInputTextField() {
-        return promptProperty.get() != null || ((field.getText() != null &&
-                !field.getText().isEmpty()) ||
-                field.isFocused());
-    }
-
     public void requestFocus() {
         field.requestFocus();
+    }
+
+    public void hideIcon() {
+        iconButton.setManaged(false);
+        iconButton.setVisible(false);
+    }
+
+    public void showIcon() {
+        iconButton.setManaged(true);
+        iconButton.setVisible(true);
+        layoutIconButton();
+    }
+
+    public void setIcon(AwesomeIcon icon) {
+        iconButton.setIcon(icon);
+        showIcon();
+    }
+
+    public void setIcon(String iconId) {
+        iconButton.setIcon(iconId);
+        showIcon();
+    }
+
+    public void setIconTooltip(String text) {
+        iconButton.setTooltip(new BisqTooltip(text));
+        showIcon();
     }
 
     public void setOnMousePressedHandler(EventHandler<? super MouseEvent> handler) {
@@ -351,6 +227,134 @@ public class MaterialTextField extends Pane {
         return descriptionLabel;
     }
 
+
+    protected void onMouseEntered() {
+        if (!field.isEditable()) {
+            return;
+        }
+        removeBgStyles();
+        if (field.isFocused()) {
+            bg.getStyleClass().add("material-text-field-bg-selected");
+        } else {
+            bg.getStyleClass().add("material-text-field-bg-hover");
+        }
+    }
+
+    protected void onMouseExited() {
+        if (!field.isEditable()) {
+            return;
+        }
+        removeBgStyles();
+        if (field.isFocused()) {
+            bg.getStyleClass().add("material-text-field-bg-selected");
+        } else {
+            bg.getStyleClass().add("material-text-field-bg");
+        }
+    }
+
+    protected void onInputTextFieldFocus(boolean focus) {
+        if (!field.isEditable()) {
+            return;
+        }
+        if (focus) {
+            selectionLine.setPrefWidth(0);
+            selectionLine.setOpacity(1);
+            Transitions.animateWidth(selectionLine, getWidth());
+        } else {
+            Transitions.fadeOut(selectionLine, 200);
+        }
+        onMouseExited();
+        update();
+    }
+
+    protected void onWidthChanged(double width) {
+        if (width > 0) {
+            bg.setPrefWidth(width);
+            line.setPrefWidth(width);
+            selectionLine.setPrefWidth(field.isFocused() && field.isEditable() ? width : 0);
+            descriptionLabel.setPrefWidth(width - 2 * descriptionLabel.getLayoutX());
+            field.setPrefWidth(width - 2 * field.getLayoutX());
+            helpLabel.setPrefWidth(width - 2 * helpLabel.getLayoutX());
+        }
+    }
+
+    protected void doLayout() {
+        bg.setMinHeight(getBgHeight());
+        bg.setMaxHeight(getBgHeight());
+        line.setLayoutY(getBgHeight() - 1);
+        selectionLine.setLayoutY(getBgHeight() - 2);
+        field.setLayoutY(getFieldLayoutY());
+        helpLabel.setLayoutY(getBgHeight() + 3.5);
+    }
+
+    private void layoutIconButton() {
+        if (getWidth() > 0 && iconButton.isManaged()) {
+            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
+        }
+    }
+
+    void update() {
+        if (descriptionProperty.get() != null) {
+            if (showInputTextField()) {
+                Transitions.animateLayoutY(descriptionLabel, 6.5, Transitions.DEFAULT_DURATION / 6d, null);
+            } else {
+                Transitions.animateLayoutY(descriptionLabel, 16.5, Transitions.DEFAULT_DURATION / 6d, null);
+            }
+        }
+        helpLabel.setVisible(helpProperty.get() != null);
+        helpLabel.setManaged(helpProperty.get() != null);
+
+        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
+        field.getStyleClass().remove("material-text-field-read-only");
+
+        descriptionLabel.getStyleClass().remove("material-text-field-description-small");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-big");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-selected");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-deselected");
+        descriptionLabel.getStyleClass().remove("material-text-field-description-read-only");
+
+        if (showInputTextField()) {
+            descriptionLabel.getStyleClass().add("material-text-field-description-small");
+        } else {
+            descriptionLabel.getStyleClass().add("material-text-field-description-big");
+        }
+        if (field.isFocused()) {
+            descriptionLabel.getStyleClass().add("material-text-field-description-selected");
+        } else {
+            descriptionLabel.getStyleClass().add("material-text-field-description-deselected");
+        }
+
+        if (field.isEditable()) {
+            bg.setMouseTransparent(false);
+            line.setOpacity(1);
+            field.getStyleClass().remove("material-text-field-read-only");
+        } else {
+            bg.setMouseTransparent(true);
+            line.setOpacity(0.25);
+            descriptionLabel.getStyleClass().add("material-text-field-description-small");
+            descriptionLabel.getStyleClass().add("material-text-field-description-read-only");
+            field.getStyleClass().add("material-text-field-read-only");
+        }
+        setOpacity(field.isDisabled() ? 0.35 : 1);
+        UIThread.runOnNextRenderFrame(this::layoutIconButton);
+    }
+
+    protected void removeBgStyles() {
+        bg.getStyleClass().remove("material-text-field-bg-hover");
+        bg.getStyleClass().remove("material-text-field-bg-selected");
+        bg.getStyleClass().remove("material-text-field-bg");
+    }
+
+    protected boolean showInputTextField() {
+        return promptProperty.get() != null || ((field.getText() != null &&
+                !field.getText().isEmpty()) ||
+                field.isFocused());
+    }
+
+    protected TextInputControl createTextInputControl() {
+        return new TextField();
+    }
+
     protected double getBgHeight() {
         return 56;
     }
@@ -359,29 +363,38 @@ public class MaterialTextField extends Pane {
         return 18;
     }
 
-    public void hideIcon() {
-        iconButton.setManaged(false);
-        iconButton.setVisible(false);
+    @Override
+    protected double computeMinHeight(double width) {
+        if (helpLabel.isManaged()) {
+            return helpLabel.getLayoutY() + helpLabel.getHeight();
+        } else {
+            return getBgHeight();
+        }
     }
 
-    public void showIcon() {
-        iconButton.setManaged(true);
-        iconButton.setVisible(true);
+    @Override
+    protected double computeMaxHeight(double width) {
+        return computeMinHeight(width);
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+        return computeMinHeight(width);
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
         layoutIconButton();
+        return super.computePrefWidth(height);
     }
 
-    public void setIcon(AwesomeIcon icon) {
-        iconButton.setIcon(icon);
-        showIcon();
+    @Override
+    protected double computeMinWidth(double height) {
+        return super.computeMinWidth(height);
     }
 
-    public void setIcon(String iconId) {
-        iconButton.setIcon(iconId);
-        showIcon();
-    }
-
-    public void setIconTooltip(String text) {
-        iconButton.setTooltip(new BisqTooltip(text));
-        showIcon();
+    @Override
+    protected double computeMaxWidth(double height) {
+        return super.computeMaxWidth(height);
     }
 }

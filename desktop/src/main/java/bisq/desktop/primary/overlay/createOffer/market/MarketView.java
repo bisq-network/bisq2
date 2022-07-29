@@ -213,7 +213,6 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             icon = MarketImageComposition.imageBoxForMarket(
                     market.getBaseCurrencyCode().toLowerCase(),
                     market.getQuoteCurrencyCode().toLowerCase());
-            icon.getStyleClass().add("create-offer-table-view");
             this.numUsersAsInteger = numUsersAsInteger;
         }
 
