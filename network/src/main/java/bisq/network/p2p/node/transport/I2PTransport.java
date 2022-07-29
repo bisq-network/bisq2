@@ -130,7 +130,7 @@ public class I2PTransport implements Transport {
     public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         try {
-            sessionId = nodeId + port;
+            sessionId = nodeId;
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
