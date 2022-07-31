@@ -77,10 +77,10 @@ public enum NavigationTarget {
     ACCOUNT_AGE_TAB_3(ACCOUNT_AGE, false),
 
 
-    SINGED_ACCOUNT(OVERLAY, false),
-    SINGED_ACCOUNT_TAB_1(SINGED_ACCOUNT, false),
-    SINGED_ACCOUNT_TAB_2(SINGED_ACCOUNT, false),
-    SINGED_ACCOUNT_TAB_3(SINGED_ACCOUNT, false),
+    SIGNED_WITNESS(OVERLAY, false),
+    SIGNED_WITNESS_TAB_1(SIGNED_WITNESS, false),
+    SIGNED_WITNESS_TAB_2(SIGNED_WITNESS, false),
+    SIGNED_WITNESS_TAB_3(SIGNED_WITNESS, false),
 
 
     //////////////////////////////////////////////////////////////////////

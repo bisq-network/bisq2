@@ -60,7 +60,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         burnBsqButton = new Button(Res.get("reputation.burnBsq"));
         bsqBondButton = new Button(Res.get("reputation.bond"));
         accountAgeButton = new Button(Res.get("reputation.accountAge"));
-        signedAccountButton = new Button(Res.get("reputation.signedAccount"));
+        signedAccountButton = new Button(Res.get("reputation.signedWitness"));
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
