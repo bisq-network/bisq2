@@ -76,7 +76,7 @@ public class ReputationController implements Controller {
     }
 
     public void onSignedAccount() {
-        Navigation.navigateTo(NavigationTarget.SINGED_ACCOUNT);
+        Navigation.navigateTo(NavigationTarget.SIGNED_WITNESS);
     }
 
     public void onLearnMore() {

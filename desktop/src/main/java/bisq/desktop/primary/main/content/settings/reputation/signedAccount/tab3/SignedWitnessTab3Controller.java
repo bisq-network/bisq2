@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab3;
+package bisq.desktop.primary.main.content.settings.reputation.signedAccount.tab3;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
@@ -31,27 +31,27 @@ import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.reputation.AccountAgeService;
+import bisq.user.reputation.SignedWitnessService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AccountAgeTab3Controller implements Controller {
-    private final static String PREFIX = "BISQ2_ACCOUNT_AGE:";
-    private final AccountAgeTab3Model model;
+public class SignedWitnessTab3Controller implements Controller {
+    private final static String PREFIX = "BISQ2_SIGNED_WITNESS:";
+    private final SignedWitnessTab3Model model;
     @Getter
-    private final AccountAgeTab3View view;
+    private final SignedWitnessTab3View view;
     private final UserIdentityService userIdentityService;
-    private final AccountAgeService accountAgeService;
+    private final SignedWitnessService signedWitnessService;
     private Pin selectedUserProfilePin;
 
-    public AccountAgeTab3Controller(DefaultApplicationService applicationService) {
+    public SignedWitnessTab3Controller(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
-        accountAgeService = applicationService.getUserService().getReputationService().getAccountAgeService();
+        signedWitnessService = applicationService.getUserService().getReputationService().getSignedWitnessService();
 
-        model = new AccountAgeTab3Model();
-        view = new AccountAgeTab3View(model, this, userProfileSelection.getRoot());
+        model = new SignedWitnessTab3Model();
+        view = new SignedWitnessTab3View(model, this, userProfileSelection.getRoot());
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     void onBack() {
-        Navigation.navigateTo(NavigationTarget.ACCOUNT_AGE_TAB_2);
+        Navigation.navigateTo(NavigationTarget.SIGNED_WITNESS_TAB_2);
     }
 
     void onLearnMore() {
@@ -89,7 +89,7 @@ public class AccountAgeTab3Controller implements Controller {
         ClipboardUtil.getClipboardString().ifPresent(clipboard -> {
             if (clipboard.startsWith(PREFIX)) {
                 String json = clipboard.replace(PREFIX, "");
-                boolean success = accountAgeService.requestAuthorization(json);
+                boolean success = signedWitnessService.requestAuthorization(json);
                 if (success) {
                     new Popup().information(Res.get("reputation.request.success")).show();
                     return;

@@ -20,56 +20,53 @@ package bisq.oracle.daobridge.model;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.network.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
+@ToString
+public final class AuthorizedDaoBridgeServiceProvider implements AuthorizedDistributedData {
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(1),
+    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(10),
             100000,
-            AuthorizedAccountAgeData.class.getSimpleName());
+            AuthorizedDaoBridgeServiceProvider.class.getSimpleName());
 
-    private final String profileId;
-    private final long date;
+    private final NetworkId networkId;
 
-    public AuthorizedAccountAgeData(String profileId, long date) {
-        this.profileId = profileId;
-        this.date = date;
+    public AuthorizedDaoBridgeServiceProvider(NetworkId networkId) {
+        this.networkId = networkId;
     }
 
     @Override
-    public bisq.oracle.protobuf.AuthorizedAccountAgeData toProto() {
-        return bisq.oracle.protobuf.AuthorizedAccountAgeData.newBuilder()
-                .setProfileId(profileId)
-                .setDate(date)
+    public bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider toProto() {
+        return bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider.newBuilder()
+                .setNetworkId(networkId.toProto())
                 .build();
     }
 
-    public static AuthorizedAccountAgeData fromProto(bisq.oracle.protobuf.AuthorizedAccountAgeData proto) {
-        return new AuthorizedAccountAgeData(
-                proto.getProfileId(),
-                proto.getDate());
+    public static AuthorizedDaoBridgeServiceProvider fromProto(bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider proto) {
+        return new AuthorizedDaoBridgeServiceProvider(NetworkId.fromProto(proto.getNetworkId()));
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedAccountAgeData.class));
+                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -96,13 +93,5 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
         } else {
             return authorizedPublicKeys;
         }
-    }
-
-    @Override
-    public String toString() {
-        return "AuthorizedAccountAgeData{" +
-                ",\r\n     profileId=" + profileId +
-                ",\r\n     time=" + new Date(date) +
-                "\r\n}";
     }
 }

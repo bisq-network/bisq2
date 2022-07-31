@@ -29,10 +29,7 @@ import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
-import bisq.oracle.daobridge.model.AccountAgeCertificateRequest;
-import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
-import bisq.oracle.daobridge.model.AuthorizedBondedReputationData;
-import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
+import bisq.oracle.daobridge.model.*;
 import bisq.persistence.PersistenceService;
 import bisq.user.profile.UserProfile;
 import ch.qos.logback.classic.Level;
@@ -142,15 +139,19 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("chat.ChatMessage", ChatMessage.getDistributedDataResolver());
         DistributedDataResolver.addResolver("user.UserProfile", UserProfile.getResolver());
         DistributedDataResolver.addResolver("offer.Offer", Offer.getResolver());
+        DistributedDataResolver.addResolver("oracle.AuthorizedDaoBridgeServiceProvider", AuthorizedDaoBridgeServiceProvider.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedProofOfBurnData", AuthorizedProofOfBurnData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
+        DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",
                 ChatMessage.getNetworkMessageResolver());
-        NetworkMessageResolver.addResolver("oracle.AccountAgeCertificateRequest",
-                AccountAgeCertificateRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("oracle.AuthorizeAccountAgeRequest",
+                AuthorizeAccountAgeRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("oracle.AuthorizeSignedWitnessRequest",
+                AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

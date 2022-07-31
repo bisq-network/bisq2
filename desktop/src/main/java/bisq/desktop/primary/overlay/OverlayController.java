@@ -25,6 +25,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.settings.reputation.accountAge.AccountAgeController;
 import bisq.desktop.primary.main.content.settings.reputation.bond.BondedReputationController;
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
+import bisq.desktop.primary.main.content.settings.reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
 import bisq.desktop.primary.main.content.settings.userProfile.edit.EditProfileController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.BisqEasyHelpController;
@@ -117,6 +118,9 @@ public class OverlayController extends NavigationController {
             }
             case ACCOUNT_AGE: {
                 return Optional.of(new AccountAgeController(applicationService));
+            }
+            case SIGNED_WITNESS: {
+                return Optional.of(new SignedWitnessController(applicationService));
             }
             default: {
                 return Optional.empty();

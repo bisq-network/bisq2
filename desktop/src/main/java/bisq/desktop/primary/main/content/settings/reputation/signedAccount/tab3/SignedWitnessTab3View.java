@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab3;
+package bisq.desktop.primary.main.content.settings.reputation.signedAccount.tab3;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -34,23 +34,23 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountAgeTab3Controller> {
+public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, SignedWitnessTab3Controller> {
     private final MaterialTextField pubKeyHash;
     private final Button closeButton, backButton, requestCertificateButton;
     private final Hyperlink learnMore;
 
-    public AccountAgeTab3View(AccountAgeTab3Model model,
-                              AccountAgeTab3Controller controller,
-                              Pane userProfileSelection) {
+    public SignedWitnessTab3View(SignedWitnessTab3Model model,
+                                 SignedWitnessTab3Controller controller,
+                                 Pane userProfileSelection) {
         super(new VBox(), model, controller);
 
         root.setSpacing(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label headLine = new Label(Res.get("reputation.accountAge.howToHeadline"));
+        Label headLine = new Label(Res.get("reputation.signedWitness.howToHeadline"));
         headLine.getStyleClass().add("bisq-text-headline-2");
 
-        Label info = new Label(Res.get("reputation.accountAge.howTo"));
+        Label info = new Label(Res.get("reputation.signedWitness.howTo"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
         Label userProfileSelectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());

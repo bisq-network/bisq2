@@ -20,10 +20,12 @@ package bisq.user.reputation;
 import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.Observable;
+import bisq.network.NetworkId;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -35,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 
@@ -49,6 +52,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
     protected final Observable<String> changedUserProfileScore = new Observable<>();
+    protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
     public SourceReputationService(NetworkService networkService,
                                    UserIdentityService userIdentityService,
@@ -78,7 +82,12 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         processAuthenticatedData(authenticatedData);
     }
 
-    protected abstract void processAuthenticatedData(AuthenticatedData authenticatedData);
+    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedDaoBridgeServiceProvider) {
+            AuthorizedDaoBridgeServiceProvider data = (AuthorizedDaoBridgeServiceProvider) authenticatedData.getDistributedData();
+            daoBridgeServiceProviders.add(data.getNetworkId());
+        }
+    }
 
     protected void processData(T data) {
         ByteArray providedHash = getDataKey(data);
@@ -111,7 +120,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     protected abstract long calculateScore(T data);
 
-    static long getAgeInDays(long timeMs) {
-        return (System.currentTimeMillis() - timeMs) / DAY_MS;
+    static long getAgeInDays(long date) {
+        return (System.currentTimeMillis() - date) / DAY_MS;
     }
 }

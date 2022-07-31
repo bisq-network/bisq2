@@ -110,7 +110,6 @@ public class DefaultApplicationService extends ApplicationService {
                 identityService,
                 networkService,
                 oracleService.getOpenTimestampService(),
-                oracleService.getDaoBridgeService(),
                 securityService.getProofOfWorkService());
 
         chatService = new ChatService(persistenceService,

@@ -30,18 +30,18 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AccountAgeCertificateRequest implements NetworkMessage {
+public final class AuthorizeAccountAgeRequest implements NetworkMessage {
     private final String profileId;
     private final String hashAsHex;
     private final long date;
     private final String pubKeyBase64;
     private final String signatureBase64;
 
-    public AccountAgeCertificateRequest(String profileId,
-                                        String hashAsHex,
-                                        long date,
-                                        String pubKeyBase64,
-                                        String signatureBase64) {
+    public AuthorizeAccountAgeRequest(String profileId,
+                                      String hashAsHex,
+                                      long date,
+                                      String pubKeyBase64,
+                                      String signatureBase64) {
         this.profileId = profileId;
         this.hashAsHex = hashAsHex;
         this.date = date;
@@ -53,12 +53,12 @@ public final class AccountAgeCertificateRequest implements NetworkMessage {
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAccountAgeCertificateRequestProto())))
+                        .setAny(Any.pack(toAuthorizeAccountAgeRequestProto())))
                 .build();
     }
 
-    private bisq.oracle.protobuf.AccountAgeCertificateRequest toAccountAgeCertificateRequestProto() {
-        return bisq.oracle.protobuf.AccountAgeCertificateRequest.newBuilder()
+    private bisq.oracle.protobuf.AuthorizeAccountAgeRequest toAuthorizeAccountAgeRequestProto() {
+        return bisq.oracle.protobuf.AuthorizeAccountAgeRequest.newBuilder()
                 .setProfileId(profileId)
                 .setHashAsHex(hashAsHex)
                 .setDate(date)
@@ -67,8 +67,8 @@ public final class AccountAgeCertificateRequest implements NetworkMessage {
                 .build();
     }
 
-    public static AccountAgeCertificateRequest fromProto(bisq.oracle.protobuf.AccountAgeCertificateRequest proto) {
-        return new AccountAgeCertificateRequest(proto.getProfileId(),
+    public static AuthorizeAccountAgeRequest fromProto(bisq.oracle.protobuf.AuthorizeAccountAgeRequest proto) {
+        return new AuthorizeAccountAgeRequest(proto.getProfileId(),
                 proto.getHashAsHex(),
                 proto.getDate(),
                 proto.getPubKeyBase64(),
@@ -78,8 +78,8 @@ public final class AccountAgeCertificateRequest implements NetworkMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.oracle.protobuf.AccountAgeCertificateRequest proto = any.unpack(bisq.oracle.protobuf.AccountAgeCertificateRequest.class);
-                return AccountAgeCertificateRequest.fromProto(proto);
+                bisq.oracle.protobuf.AuthorizeAccountAgeRequest proto = any.unpack(bisq.oracle.protobuf.AuthorizeAccountAgeRequest.class);
+                return AuthorizeAccountAgeRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

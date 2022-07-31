@@ -20,7 +20,6 @@ package bisq.oracle;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.oracle.marketprice.MarketPriceService;
 import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
@@ -56,7 +55,6 @@ public class OracleService implements Service {
 
     private final OpenTimestampService openTimestampService;
     private final MarketPriceService marketPriceService;
-    private final DaoBridgeService daoBridgeService;
 
     public OracleService(Config config, String applicationVersion,
                          NetworkService networkService,
@@ -68,10 +66,6 @@ public class OracleService implements Service {
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,
                 applicationVersion);
-        daoBridgeService = new DaoBridgeService(DaoBridgeService.Config.from(config.getDaoBridge(),
-                networkService.getSupportedTransportTypes()),
-                networkService,
-                identityService);
     }
 
 

@@ -20,8 +20,8 @@ package bisq.user.reputation;
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.model.AuthorizeAccountAgeRequest;
-import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
+import bisq.oracle.daobridge.model.AuthorizeSignedWitnessRequest;
+import bisq.oracle.daobridge.model.AuthorizedSignedWitnessData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -34,27 +34,30 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 @Slf4j
-public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> {
+public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    public static final long WEIGHT = 10;
+    public static final long WEIGHT = 50;
 
     // Has to be in sync with Bisq1 class
     @Getter
-    static class AccountAgeWitnessDto {
+    static class SignedWitnessDto {
         private final String profileId;
         private final String hashAsHex;
-        private final long date;
+        private final long accountAgeWitnessDate;
+        private final long witnessSignDate;
         private final String pubKeyBase64;
         private final String signatureBase64;
 
-        public AccountAgeWitnessDto(String profileId,
-                                    String hashAsHex,
-                                    long date,
-                                    String pubKeyBase64,
-                                    String signatureBase64) {
+        public SignedWitnessDto(String profileId,
+                                String hashAsHex,
+                                long accountAgeWitnessDate,
+                                long witnessSignDate,
+                                String pubKeyBase64,
+                                String signatureBase64) {
             this.profileId = profileId;
             this.hashAsHex = hashAsHex;
-            this.date = date;
+            this.accountAgeWitnessDate = accountAgeWitnessDate;
+            this.witnessSignDate = witnessSignDate;
             this.pubKeyBase64 = pubKeyBase64;
             this.signatureBase64 = signatureBase64;
         }
@@ -62,27 +65,30 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
 
     private final String baseDir;
 
-    public AccountAgeService(String baseDir,
-                             NetworkService networkService,
-                             UserIdentityService userIdentityService,
-                             UserProfileService userProfileService) {
+    public SignedWitnessService(String baseDir,
+                                NetworkService networkService,
+                                UserIdentityService userIdentityService,
+                                UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
         this.baseDir = baseDir;
     }
 
     public boolean requestAuthorization(String json) {
         try {
-            AccountAgeWitnessDto dto = new Gson().fromJson(json, AccountAgeWitnessDto.class);
-            String profileId = dto.getProfileId();
-            if (daoBridgeServiceProviders.isEmpty()) {
-                log.warn("daoBridgeServiceProviders is empty");
+            SignedWitnessDto dto = new Gson().fromJson(json, SignedWitnessDto.class);
+            long witnessSignDate = dto.getWitnessSignDate();
+            long age = getAgeInDays(witnessSignDate);
+            if (age < 61) {
+                log.error("witnessSignDate has to be at least 61 days. witnessSignDate={}", witnessSignDate);
                 return false;
-
             }
+            String profileId = dto.getProfileId();
             return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
-                        AuthorizeAccountAgeRequest networkMessage = new AuthorizeAccountAgeRequest(profileId,
+                        String senderNodeId = userIdentity.getNodeIdAndKeyPair().getNodeId();
+                        AuthorizeSignedWitnessRequest networkMessage = new AuthorizeSignedWitnessRequest(profileId,
                                 dto.getHashAsHex(),
-                                dto.getDate(),
+                                dto.getAccountAgeWitnessDate(),
+                                witnessSignDate,
                                 dto.getPubKeyBase64(),
                                 dto.getSignatureBase64());
                         daoBridgeServiceProviders.forEach(receiverNetworkId ->
@@ -99,23 +105,27 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
         super.processAuthenticatedData(authenticatedData);
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
-            processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
+        if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
+            processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
         }
     }
 
     @Override
-    protected ByteArray getDataKey(AuthorizedAccountAgeData data) {
+    protected ByteArray getDataKey(AuthorizedSignedWitnessData data) {
         return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
-        return userProfile.getAccountAgeKey();
+        return userProfile.getSignedWitnessKey();
     }
 
     @Override
-    protected long calculateScore(AuthorizedAccountAgeData data) {
-        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
+    protected long calculateScore(AuthorizedSignedWitnessData data) {
+        long age = getAgeInDays(data.getWitnessSignDate());
+        if (age <= 60) {
+            return 0;
+        }
+        return Math.min(365, age) * WEIGHT;
     }
 }

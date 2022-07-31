@@ -917,10 +917,9 @@ public class ChatMessagesListView {
                             setOnMouseExited(e -> {
                                 if (model.selectedChatMessageForMoreOptionsPopup.get() == null) {
                                     hideReactionsBox();
+                                    dateTime.setVisible(false);
+                                    reactionsHBox.setVisible(false);
                                 }
-                                dateTime.setVisible(false);
-                                reactionsHBox.setVisible(false);
-
                             });
                         }
 

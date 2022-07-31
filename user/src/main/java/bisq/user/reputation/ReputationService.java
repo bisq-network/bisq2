@@ -20,7 +20,6 @@ package bisq.user.reputation;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
-import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -32,22 +31,20 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Getter
 @Slf4j
 public class ReputationService implements Service {
     private final ProofOfBurnService proofOfBurnService;
-    @Getter
     private final BondedReputationService bondedReputationService;
-    private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
-    @Getter
-    protected final Observable<String> changedUserProfileScore = new Observable<>();
-    @Getter
     private final AccountAgeService accountAgeService;
+    private final SignedWitnessService signedWitnessService;
+    private final Observable<String> changedUserProfileScore = new Observable<>();
+    private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
 
     public ReputationService(String baseDir,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService,
-                             DaoBridgeService daoBridgeService) {
+                             UserProfileService userProfileService) {
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService);
@@ -57,26 +54,33 @@ public class ReputationService implements Service {
         accountAgeService = new AccountAgeService(baseDir,
                 networkService,
                 userIdentityService,
-                userProfileService,
-                daoBridgeService);
+                userProfileService);
+        signedWitnessService = new SignedWitnessService(baseDir,
+                networkService,
+                userIdentityService,
+                userProfileService);
+
 
         proofOfBurnService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
         bondedReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
         accountAgeService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        signedWitnessService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return proofOfBurnService.initialize()
                 .thenCompose(r -> bondedReputationService.initialize())
-                .thenCompose(r -> accountAgeService.initialize());
+                .thenCompose(r -> accountAgeService.initialize())
+                .thenCompose(r -> signedWitnessService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return proofOfBurnService.shutdown()
                 .thenCompose(r -> bondedReputationService.shutdown())
-                .thenCompose(r -> accountAgeService.shutdown());
+                .thenCompose(r -> accountAgeService.shutdown())
+                .thenCompose(r -> signedWitnessService.shutdown());
     }
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
@@ -102,7 +106,8 @@ public class ReputationService implements Service {
         }
         long score = proofOfBurnService.getScore(userProfileId) +
                 bondedReputationService.getScore(userProfileId) +
-                accountAgeService.getScore(userProfileId);
+                accountAgeService.getScore(userProfileId) +
+                signedWitnessService.getScore(userProfileId);
         scoreByUserProfileId.put(userProfileId, score);
         changedUserProfileScore.set(userProfileId);
     }
