@@ -19,11 +19,8 @@ package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.DaoBridgeService;
-import bisq.oracle.daobridge.model.AccountAgeCertificateRequest;
+import bisq.oracle.daobridge.model.AuthorizeAccountAgeRequest;
 import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -33,7 +30,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -41,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 10;
-    private final Map<Transport.Type, List<Address>> bridgeNodeAddressByTransportType;
 
     // Has to be in sync with Bisq1 class
     @Getter
@@ -70,31 +65,40 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     public AccountAgeService(String baseDir,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService,
-                             DaoBridgeService daoBridgeService) {
+                             UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
         this.baseDir = baseDir;
-        bridgeNodeAddressByTransportType = daoBridgeService.getBridgeNodeAddressByTransportType();
     }
 
-    public void requestCertificate(Optional<String> clipboard) {
-        clipboard.ifPresent(json -> {
+    public boolean requestAuthorization(String json) {
+        try {
             AccountAgeWitnessDto dto = new Gson().fromJson(json, AccountAgeWitnessDto.class);
             String profileId = dto.getProfileId();
-            userIdentityService.findUserIdentity(profileId).ifPresent(userIdentity -> {
-                String senderNodeId = userIdentity.getNodeIdAndKeyPair().getNodeId();
-                AccountAgeCertificateRequest networkMessage = new AccountAgeCertificateRequest(profileId,
-                        dto.getHashAsHex(),
-                        dto.getDate(),
-                        dto.getPubKeyBase64(),
-                        dto.getSignatureBase64());
-                getAddresses().forEach(address -> networkService.send(senderNodeId, networkMessage, address));
-            });
-        });
+            if (daoBridgeServiceProviders.isEmpty()) {
+                log.warn("daoBridgeServiceProviders is empty");
+                return false;
+
+            }
+            return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
+                        AuthorizeAccountAgeRequest networkMessage = new AuthorizeAccountAgeRequest(profileId,
+                                dto.getHashAsHex(),
+                                dto.getDate(),
+                                dto.getPubKeyBase64(),
+                                dto.getSignatureBase64());
+                        daoBridgeServiceProviders.forEach(receiverNetworkId ->
+                                networkService.confidentialSend(networkMessage, receiverNetworkId, userIdentity.getNodeIdAndKeyPair()));
+                        return true;
+                    })
+                    .orElse(false);
+        } catch (Exception e) {
+            log.error("Error at requestAuthorization", e);
+            return false;
+        }
     }
 
     @Override
     protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        super.processAuthenticatedData(authenticatedData);
         if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
             processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
         }
@@ -112,28 +116,6 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
 
     @Override
     protected long calculateScore(AuthorizedAccountAgeData data) {
-        return Math.min(365, getAgeInDays(data.getTime())) * WEIGHT;
-    }
-
-    private List<Map<Transport.Type, Address>> getAddresses() {
-        List<Map<Transport.Type, Address>> addresses = new ArrayList<>();
-        Map<Transport.Type, List<Address>> mutableClone = new HashMap<>();
-        bridgeNodeAddressByTransportType.forEach((key, value) -> mutableClone.put(key, new ArrayList<>(value)));
-        int iterations = 0;
-        while (iterations < 10 &&
-                mutableClone.values().stream().mapToLong(Collection::size).sum() > 0) {
-            iterations++;
-            Map<Transport.Type, Address> temp = new HashMap<>();
-            mutableClone.forEach((type, value) -> {
-                Optional<Address> optional = value.stream().findAny();
-                if (optional.isPresent()) {
-                    Address address = optional.get();
-                    value.remove(address);
-                    temp.put(type, address);
-                }
-            });
-            addresses.add(temp);
-        }
-        return addresses;
+        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 }

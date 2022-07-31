@@ -3,12 +3,18 @@ package oracle;
 option java_package = "bisq.oracle.protobuf";
 option java_multiple_files = true;
 import "common.proto";
+import "network.proto";
+
+message AuthorizedDaoBridgeServiceProvider {
+  network.NetworkId networkId = 1;
+}
 
 message AuthorizedProofOfBurnData {
   uint64 amount = 1;
   uint64 time = 2;
   bytes hash = 3;
 }
+
 
 message AuthorizedBondedReputationData {
   uint64 amount = 1;
@@ -19,17 +25,31 @@ message AuthorizedBondedReputationData {
 
 message AuthorizedAccountAgeData {
   string profileId = 1;
-  uint64 time = 2;
+  uint64 date = 2;
+}
+
+message AuthorizedSignedWitnessData {
+  string profileId = 1;
+  uint64 witnessSignDate = 2;
 }
 
 message OpenTimestampStore {
   repeated common.ByteArrayMapEntry timestampEntries = 1;
 }
 
-message AccountAgeCertificateRequest {
+message AuthorizeAccountAgeRequest {
   string profileId = 1;
   string hashAsHex = 2;
   uint64 date = 3;
   string pubKeyBase64 = 4;
   string signatureBase64 = 5;
+}
+
+message AuthorizeSignedWitnessRequest {
+  string profileId = 1;
+  string hashAsHex = 2;
+  uint64 accountAgeWitnessDate = 3;
+  uint64 witnessSignDate = 4;
+  string pubKeyBase64 = 5;
+  string signatureBase64 = 6;
 }

@@ -62,7 +62,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         pubKeyHash.setIcon(AwesomeIcon.COPY);
         pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
 
-        requestCertificateButton = new Button(Res.get("reputation.accountAge.request"));
+        requestCertificateButton = new Button(Res.get("reputation.request"));
         requestCertificateButton.getStyleClass().add("outlined-button");
 
         backButton = new Button(Res.get("back"));
@@ -90,7 +90,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        requestCertificateButton.setOnAction(e -> controller.onRequestCertificate());
+        requestCertificateButton.setOnAction(e -> controller.onRequestAuthorization());
     }
 
     @Override

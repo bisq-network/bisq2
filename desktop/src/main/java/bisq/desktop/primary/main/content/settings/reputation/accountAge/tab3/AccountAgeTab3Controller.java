@@ -19,14 +19,17 @@ package bisq.desktop.primary.main.content.settings.reputation.accountAge.tab3;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
 import bisq.desktop.primary.overlay.OverlayController;
+import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.reputation.AccountAgeService;
 import lombok.Getter;
@@ -34,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AccountAgeTab3Controller implements Controller {
-
+    private final static String PREFIX = "BISQ2_ACCOUNT_AGE:";
     private final AccountAgeTab3Model model;
     @Getter
     private final AccountAgeTab3View view;
@@ -75,15 +78,25 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     void onCopyToClipboard(String pubKeyHash) {
-        String prefix = "BISQ2_ACCOUNT_AGE_REQUEST:";
-        ClipboardUtil.copyToClipboard(prefix + pubKeyHash);
+        ClipboardUtil.copyToClipboard(PREFIX + pubKeyHash);
     }
 
     void onClose() {
         OverlayController.hide();
     }
 
-    public void onRequestCertificate() {
-        accountAgeService.requestCertificate(ClipboardUtil.getClipboardString());
+    public void onRequestAuthorization() {
+        ClipboardUtil.getClipboardString().ifPresent(clipboard -> {
+            if (clipboard.startsWith(PREFIX)) {
+                String json = clipboard.replace(PREFIX, "");
+                boolean success = accountAgeService.requestAuthorization(json);
+                if (success) {
+                    new Popup().information(Res.get("reputation.request.success")).show();
+                    return;
+                }
+            }
+
+            new Popup().warning(Res.get("reputation.request.error", StringUtils.truncate(clipboard))).show();
+        });
     }
 }

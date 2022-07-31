@@ -19,12 +19,9 @@ package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
 import bisq.network.NetworkService;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
-import bisq.oracle.daobridge.DaoBridgeService;
-import bisq.oracle.daobridge.model.AccountAgeCertificateRequest;
-import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
+import bisq.oracle.daobridge.model.AuthorizeSignedWitnessRequest;
+import bisq.oracle.daobridge.model.AuthorizedSignedWitnessData;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -33,33 +30,34 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Getter
 @Slf4j
-public class SignedWitnessService extends SourceReputationService<AuthorizedAccountAgeData> {
+public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
-    public static final long WEIGHT = 10;
-    private final Map<Transport.Type, List<Address>> bridgeNodeAddressByTransportType;
+    public static final long WEIGHT = 50;
 
     // Has to be in sync with Bisq1 class
     @Getter
-    static class SignedWitnessServiceDto {
+    static class SignedWitnessDto {
         private final String profileId;
         private final String hashAsHex;
-        private final long date;
+        private final long accountAgeWitnessDate;
+        private final long witnessSignDate;
         private final String pubKeyBase64;
         private final String signatureBase64;
 
-        public SignedWitnessServiceDto(String profileId,
-                                       String hashAsHex,
-                                       long date,
-                                       String pubKeyBase64,
-                                       String signatureBase64) {
+        public SignedWitnessDto(String profileId,
+                                String hashAsHex,
+                                long accountAgeWitnessDate,
+                                long witnessSignDate,
+                                String pubKeyBase64,
+                                String signatureBase64) {
             this.profileId = profileId;
             this.hashAsHex = hashAsHex;
-            this.date = date;
+            this.accountAgeWitnessDate = accountAgeWitnessDate;
+            this.witnessSignDate = witnessSignDate;
             this.pubKeyBase64 = pubKeyBase64;
             this.signatureBase64 = signatureBase64;
         }
@@ -70,70 +68,64 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedAcco
     public SignedWitnessService(String baseDir,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
-                                UserProfileService userProfileService,
-                                DaoBridgeService daoBridgeService) {
+                                UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
         this.baseDir = baseDir;
-        bridgeNodeAddressByTransportType = daoBridgeService.getBridgeNodeAddressByTransportType();
     }
 
-    public void requestCertificate(Optional<String> clipboard) {
-        clipboard.ifPresent(json -> {
-            SignedWitnessServiceDto dto = new Gson().fromJson(json, SignedWitnessServiceDto.class);
+    public boolean requestAuthorization(String json) {
+        try {
+            SignedWitnessDto dto = new Gson().fromJson(json, SignedWitnessDto.class);
+            long witnessSignDate = dto.getWitnessSignDate();
+            long age = getAgeInDays(witnessSignDate);
+            if (age < 61) {
+                log.error("witnessSignDate has to be at least 61 days. witnessSignDate={}", witnessSignDate);
+                return false;
+            }
             String profileId = dto.getProfileId();
-            userIdentityService.findUserIdentity(profileId).ifPresent(userIdentity -> {
-                String senderNodeId = userIdentity.getNodeIdAndKeyPair().getNodeId();
-                AccountAgeCertificateRequest networkMessage = new AccountAgeCertificateRequest(profileId,
-                        dto.getHashAsHex(),
-                        dto.getDate(),
-                        dto.getPubKeyBase64(),
-                        dto.getSignatureBase64());
-                getAddresses().forEach(address -> networkService.send(senderNodeId, networkMessage, address));
-            });
-        });
-    }
-
-    @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
-            processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
+            return userIdentityService.findUserIdentity(profileId).map(userIdentity -> {
+                        String senderNodeId = userIdentity.getNodeIdAndKeyPair().getNodeId();
+                        AuthorizeSignedWitnessRequest networkMessage = new AuthorizeSignedWitnessRequest(profileId,
+                                dto.getHashAsHex(),
+                                dto.getAccountAgeWitnessDate(),
+                                witnessSignDate,
+                                dto.getPubKeyBase64(),
+                                dto.getSignatureBase64());
+                        daoBridgeServiceProviders.forEach(receiverNetworkId ->
+                                networkService.confidentialSend(networkMessage, receiverNetworkId, userIdentity.getNodeIdAndKeyPair()));
+                        return true;
+                    })
+                    .orElse(false);
+        } catch (Exception e) {
+            log.error("Error at requestAuthorization", e);
+            return false;
         }
     }
 
     @Override
-    protected ByteArray getDataKey(AuthorizedAccountAgeData data) {
+    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        super.processAuthenticatedData(authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
+            processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
+        }
+    }
+
+    @Override
+    protected ByteArray getDataKey(AuthorizedSignedWitnessData data) {
         return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
-        return userProfile.getAccountAgeKey();
+        return userProfile.getSignedWitnessKey();
     }
 
     @Override
-    protected long calculateScore(AuthorizedAccountAgeData data) {
-        return Math.min(365, getAgeInDays(data.getTime())) * WEIGHT;
-    }
-
-    private List<Map<Transport.Type, Address>> getAddresses() {
-        List<Map<Transport.Type, Address>> addresses = new ArrayList<>();
-        Map<Transport.Type, List<Address>> mutableClone = new HashMap<>();
-        bridgeNodeAddressByTransportType.forEach((key, value) -> mutableClone.put(key, new ArrayList<>(value)));
-        int iterations = 0;
-        while (iterations < 10 &&
-                mutableClone.values().stream().mapToLong(Collection::size).sum() > 0) {
-            iterations++;
-            Map<Transport.Type, Address> temp = new HashMap<>();
-            mutableClone.forEach((type, value) -> {
-                Optional<Address> optional = value.stream().findAny();
-                if (optional.isPresent()) {
-                    Address address = optional.get();
-                    value.remove(address);
-                    temp.put(type, address);
-                }
-            });
-            addresses.add(temp);
+    protected long calculateScore(AuthorizedSignedWitnessData data) {
+        long age = getAgeInDays(data.getWitnessSignDate());
+        if (age <= 60) {
+            return 0;
         }
-        return addresses;
+        return Math.min(365, age) * WEIGHT;
     }
 }

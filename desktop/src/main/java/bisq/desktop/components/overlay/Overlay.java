@@ -854,7 +854,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             if (message != null) {
                 ClipboardUtil.copyToClipboard(message);
             }
-            Browser.open("https://bisq.network/source/bisq/issues");
+            Browser.open("https://github.com/bisq-network/bisq2/issues");
             hide();
         });
     }

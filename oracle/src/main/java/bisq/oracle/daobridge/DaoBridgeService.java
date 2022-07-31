@@ -20,20 +20,14 @@ package bisq.oracle.daobridge;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.ConfigUtil;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
-import bisq.network.p2p.node.Address;
-import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.oracle.daobridge.dto.BondedReputationDto;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
-import bisq.oracle.daobridge.model.AccountAgeCertificateRequest;
-import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
-import bisq.oracle.daobridge.model.AuthorizedBondedReputationData;
-import bisq.oracle.daobridge.model.AuthorizedProofOfBurnData;
+import bisq.oracle.daobridge.model.*;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
 import lombok.Getter;
@@ -44,12 +38,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * Prepares a service for distributing authorized DAO data. Could be useful for providing existing proof or burns or
@@ -64,79 +58,42 @@ import static java.util.stream.Collectors.toMap;
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class DaoBridgeService implements Service, MessageListener {
-
     @Getter
     @ToString
     public static final class Config {
         private final String privateKey;
         private final String publicKey;
         private final String url;
-        private final Map<Transport.Type, List<Address>> bridgeNodeAddressByTransportType;
 
         public Config(String privateKey,
                       String publicKey,
-                      String url,
-                      Map<Transport.Type, List<Address>> bridgeNodeAddressByTransportType) {
+                      String url) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
             this.url = url;
-            this.bridgeNodeAddressByTransportType = bridgeNodeAddressByTransportType;
         }
 
-        public static Config from(com.typesafe.config.Config config, Set<Transport.Type> supportedTransportTypes1) {
-            com.typesafe.config.Config addressConfig = config.getConfig("bridgeNodeAddressByTransportType");
-
-            Set<Transport.Type> supportedTransportTypes = new HashSet<>();
-            supportedTransportTypes.add(Transport.Type.CLEAR);
-            supportedTransportTypes.add(Transport.Type.TOR);
-            supportedTransportTypes.add(Transport.Type.I2P);
-
-            Map<Transport.Type, List<Address>> addressByTransportType = supportedTransportTypes.stream()
-                    .collect(toMap(transportType -> transportType,
-                            transportType -> getBridgeNodeAddresses(transportType, addressConfig)));
-
+        public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getString("privateKey"),
                     config.getString("publicKey"),
-                    config.getString("url"),
-                    addressByTransportType
+                    config.getString("url")
             );
-        }
-
-        private static List<Address> getBridgeNodeAddresses(Transport.Type transportType, com.typesafe.config.Config config) {
-            switch (transportType) {
-                case TOR: {
-                    return ConfigUtil.getStringList(config, "tor").stream()
-                            .map(Address::new).
-                            collect(Collectors.toList());
-                }
-                case I2P: {
-                    return ConfigUtil.getStringList(config, "i2p").stream()
-                            .map(Address::new)
-                            .collect(Collectors.toList());
-                }
-                case CLEAR: {
-                    return ConfigUtil.getStringList(config, "clear").stream()
-                            .map(Address::new)
-                            .collect(Collectors.toList());
-                }
-                default: {
-                    throw new RuntimeException("Unhandled case. transportType=" + transportType);
-                }
-            }
         }
     }
 
     private final NetworkService networkService;
     private final IdentityService identityService;
-    @Getter
-    private final Config config;
+    private final DaoBridgeHttpService daoBridgeHttpService;
     private Optional<PrivateKey> authorizedPrivateKey = Optional.empty();
     private Optional<PublicKey> authorizedPublicKey = Optional.empty();
 
-    public DaoBridgeService(DaoBridgeService.Config config, NetworkService networkService, IdentityService identityService) {
+    public DaoBridgeService(Config config,
+                            NetworkService networkService,
+                            IdentityService identityService,
+                            DaoBridgeHttpService daoBridgeHttpService) {
         this.networkService = networkService;
         this.identityService = identityService;
-        this.config = config;
+        this.daoBridgeHttpService = daoBridgeHttpService;
 
         String privateKey = config.getPrivateKey();
         String publicKey = config.getPublicKey();
@@ -157,13 +114,22 @@ public class DaoBridgeService implements Service, MessageListener {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        networkService.addMessageListener(this);
+        if (authorizedPrivateKey.isPresent() && authorizedPublicKey.isPresent()) {
+            networkService.addMessageListener(this);
+            identityService.getOrCreateIdentity(IdentityService.DEFAULT)
+                    .whenComplete((identity, throwable) -> {
+                        AuthorizedDaoBridgeServiceProvider data = new AuthorizedDaoBridgeServiceProvider(identity.getNetworkId());
+                        publishAuthorizedData(data);
+                    });
+        }
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
-        networkService.removeMessageListener(this);
+        if (authorizedPrivateKey.isPresent() && authorizedPublicKey.isPresent()) {
+            networkService.removeMessageListener(this);
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -174,8 +140,10 @@ public class DaoBridgeService implements Service, MessageListener {
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof AccountAgeCertificateRequest) {
-            processAccountAgeCertificateRequest((AccountAgeCertificateRequest) networkMessage);
+        if (networkMessage instanceof AuthorizeAccountAgeRequest) {
+            processAuthorizeAccountAgeRequest((AuthorizeAccountAgeRequest) networkMessage);
+        } else if (networkMessage instanceof AuthorizeSignedWitnessRequest) {
+            processAuthorizeSignedWitnessRequest((AuthorizeSignedWitnessRequest) networkMessage);
         }
     }
 
@@ -184,67 +152,107 @@ public class DaoBridgeService implements Service, MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<Transport.Type, List<Address>> getBridgeNodeAddressByTransportType() {
-        return config.getBridgeNodeAddressByTransportType();
-    }
-
     public CompletableFuture<Boolean> publishProofOfBurnDtoSet(List<ProofOfBurnDto> proofOfBurnList) {
         checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
         checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
         return CompletableFutureUtils.allOf(proofOfBurnList.stream()
                         .map(AuthorizedProofOfBurnData::from)
-                        .map(data -> publishAuthorizedData(data, authorizedPrivateKey.get(), authorizedPublicKey.get())))
+                        .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }
 
     public CompletableFuture<Boolean> publishBondedReputationDtoSet(List<BondedReputationDto> bondedReputationList) {
-        checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
-        checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
+
         return CompletableFutureUtils.allOf(bondedReputationList.stream()
                         .map(AuthorizedBondedReputationData::from)
-                        .map(data -> publishAuthorizedData(data, authorizedPrivateKey.get(), authorizedPublicKey.get())))
+                        .map(this::publishAuthorizedData))
                 .thenApply(results -> !results.contains(false));
     }
 
 
-    public CompletableFuture<Boolean> publishAuthorizedAccountAgeData(AuthorizedAccountAgeData authorizedAccountAgeData) {
-        checkArgument(authorizedPrivateKey.isPresent(), "authorizedPrivateKey must be present");
-        checkArgument(authorizedPublicKey.isPresent(), "authorizedPublicKey must be present");
-        return publishAuthorizedData(authorizedAccountAgeData, authorizedPrivateKey.get(), authorizedPublicKey.get());
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData,
-                                                             PrivateKey authorizedPrivateKey,
-                                                             PublicKey authorizedPublicKey) {
+    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData) {
         return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
                 .thenCompose(identity -> networkService.publishAuthorizedData(authorizedDistributedData,
                         identity.getNodeIdAndKeyPair(),
-                        authorizedPrivateKey,
-                        authorizedPublicKey))
+                        authorizedPrivateKey.orElseThrow(),
+                        authorizedPublicKey.orElseThrow()))
                 .thenApply(broadCastDataResult -> true);
     }
 
-    private void processAccountAgeCertificateRequest(AccountAgeCertificateRequest request) {
-        if (verifyAccountAgeCertificateRequest(request)) {
-            publishAuthorizedAccountAgeData(new AuthorizedAccountAgeData(request.getProfileId(), request.getDate()));
-        } else {
-            log.warn("AccountAgeCertificateRequest was invalid. request={}", request);
-        }
-    }
-
-    private boolean verifyAccountAgeCertificateRequest(AccountAgeCertificateRequest request) {
-        String messageString = request.getProfileId() + request.getHashAsHex() + request.getDate();
+    private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
+        long requestDate = request.getDate();
+        String profileId = request.getProfileId();
+        String messageString = profileId + request.getHashAsHex() + requestDate;
         byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
         byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(request.getPubKeyBase64()), KeyGeneration.DSA);
-            return SignatureUtil.verify(message,
+            SignatureUtil.verify(message,
                     signature,
                     publicKey,
                     SignatureUtil.SHA256withDSA);
+            daoBridgeHttpService.requestAccountAgeWitness(request.getHashAsHex())
+                    .whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            result.ifPresent(resultDate -> {
+                                if (resultDate == requestDate) {
+                                    AuthorizedAccountAgeData data = new AuthorizedAccountAgeData(profileId, requestDate);
+                                    publishAuthorizedData(data);
+                                } else {
+                                    log.warn("Date of account age for {} is not matching the date from the users request. " +
+                                                    "Date from bridge service call: {}; Date from users request: {}",
+                                            request.getHashAsHex(), resultDate, requestDate);
+                                }
+                            });
+                        } else {
+                            log.warn("Error at accountAgeService.findAccountAgeWitness", throwable);
+                        }
+                    });
         } catch (GeneralSecurityException e) {
-            log.error("Error at verifyAccountAgeCertificateRequest", e);
-            return false;
+            log.warn("Error at processAuthorizeAccountAgeRequest", e);
+        }
+    }
+
+    private void processAuthorizeSignedWitnessRequest(AuthorizeSignedWitnessRequest request) {
+        long witnessSignDate = request.getWitnessSignDate();
+        if (witnessSignDate < 61) {
+            return;
+        }
+        String messageString = request.getProfileId() + request.getHashAsHex() + request.getAccountAgeWitnessDate() + witnessSignDate;
+        byte[] message = messageString.getBytes(StandardCharsets.UTF_8);
+        byte[] signature = Base64.getDecoder().decode(request.getSignatureBase64());
+        try {
+            PublicKey publicKey = KeyGeneration.generatePublic(Base64.getDecoder().decode(request.getPubKeyBase64()), KeyGeneration.DSA);
+            SignatureUtil.verify(message,
+                    signature,
+                    publicKey,
+                    SignatureUtil.SHA256withDSA);
+
+            daoBridgeHttpService.requestSignedWitnessDate(request.getHashAsHex())
+                    .whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            result.ifPresent(resultDate -> {
+                                if (resultDate == witnessSignDate) {
+                                    AuthorizedSignedWitnessData data = new AuthorizedSignedWitnessData(request.getProfileId(), request.getWitnessSignDate());
+                                    publishAuthorizedData(data);
+                                } else {
+                                    log.warn("Date of signed witness for {} is not matching the date from the users request. " +
+                                                    "Date from bridge service call: {}; Date from users request: {}",
+                                            request.getHashAsHex(), resultDate, witnessSignDate);
+                                }
+                            });
+                        } else {
+                            log.warn("Error at signedWitnessService.requestSignedWitnessDate", throwable);
+                        }
+                    });
+
+
+        } catch (GeneralSecurityException e) {
+            log.warn("Error at processAuthorizeSignedWitnessRequest", e);
         }
     }
 }

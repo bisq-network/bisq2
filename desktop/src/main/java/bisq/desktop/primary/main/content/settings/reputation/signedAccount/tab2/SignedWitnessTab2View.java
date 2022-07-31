@@ -21,7 +21,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import bisq.user.reputation.AccountAgeService;
+import bisq.user.reputation.SignedWitnessService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -49,7 +49,7 @@ public class SignedWitnessTab2View extends View<VBox, SignedWitnessTab2Model, Si
         Label info = new Label(Res.get("reputation.signedWitness.score.info"));
         info.getStyleClass().addAll("bisq-text-13", "wrap-text");
 
-        VBox formula = new VBox(10, getField("weight", String.valueOf(AccountAgeService.WEIGHT)), getField("totalScore"));
+        VBox formula = new VBox(10, getField("weight", String.valueOf(SignedWitnessService.WEIGHT)), getField("totalScore"));
 
         backButton = new Button(Res.get("back"));
 

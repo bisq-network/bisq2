@@ -19,6 +19,7 @@ package bisq.application;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
+import bisq.oracle.daobridge.DaoBridgeHttpService;
 import bisq.oracle.daobridge.DaoBridgeService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class BridgeApplicationService extends NetworkApplicationService {
     private final IdentityService identityService;
     private final DaoBridgeService daoBridgeService;
+    private final DaoBridgeHttpService daoBridgeHttpService;
 
 
     public BridgeApplicationService(String[] args) {
@@ -44,10 +46,12 @@ public class BridgeApplicationService extends NetworkApplicationService {
                 networkService
         );
 
-        daoBridgeService = new DaoBridgeService(DaoBridgeService.Config.from(getConfig("oracle.daoBridge"),
-                getNetworkService().getSupportedTransportTypes()),
+        DaoBridgeService.Config daoBridgeConfig = DaoBridgeService.Config.from(getConfig("oracle.daoBridge"));
+        daoBridgeHttpService = new DaoBridgeHttpService(networkService, daoBridgeConfig.getUrl());
+        daoBridgeService = new DaoBridgeService(daoBridgeConfig,
                 networkService,
-                identityService);
+                identityService,
+                daoBridgeHttpService);
     }
 
     @Override
@@ -55,6 +59,7 @@ public class BridgeApplicationService extends NetworkApplicationService {
         return securityService.initialize()
                 .thenCompose(result -> networkService.initialize())
                 .thenCompose(result -> identityService.initialize())
+                .thenCompose(result -> daoBridgeHttpService.initialize())
                 .thenCompose(result -> daoBridgeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
@@ -70,6 +75,7 @@ public class BridgeApplicationService extends NetworkApplicationService {
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> daoBridgeService.shutdown()
+                        .thenCompose(result -> daoBridgeHttpService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())
                         .thenCompose(result -> securityService.shutdown())

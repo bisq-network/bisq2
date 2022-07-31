@@ -62,7 +62,7 @@ public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, Si
         pubKeyHash.setIcon(AwesomeIcon.COPY);
         pubKeyHash.setIconTooltip(Res.get("copyToClipboard"));
 
-        requestCertificateButton = new Button(Res.get("reputation.signedWitness.request"));
+        requestCertificateButton = new Button(Res.get("reputation.request"));
         requestCertificateButton.getStyleClass().add("outlined-button");
 
         backButton = new Button(Res.get("back"));
@@ -90,7 +90,7 @@ public class SignedWitnessTab3View extends View<VBox, SignedWitnessTab3Model, Si
         closeButton.setOnAction(e -> controller.onClose());
         backButton.setOnAction(e -> controller.onBack());
         learnMore.setOnAction(e -> controller.onLearnMore());
-        requestCertificateButton.setOnAction(e -> controller.onRequestCertificate());
+        requestCertificateButton.setOnAction(e -> controller.onRequestAuthorization());
     }
 
     @Override

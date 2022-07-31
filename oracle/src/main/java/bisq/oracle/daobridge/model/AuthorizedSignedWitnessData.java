@@ -35,41 +35,41 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedAccountAgeData implements AuthorizedDistributedData {
+public final class AuthorizedSignedWitnessData implements AuthorizedDistributedData {
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(1),
             100000,
-            AuthorizedAccountAgeData.class.getSimpleName());
+            AuthorizedSignedWitnessData.class.getSimpleName());
 
     private final String profileId;
-    private final long date;
+    private final long witnessSignDate;
 
-    public AuthorizedAccountAgeData(String profileId, long date) {
+    public AuthorizedSignedWitnessData(String profileId, long witnessSignDate) {
         this.profileId = profileId;
-        this.date = date;
+        this.witnessSignDate = witnessSignDate;
     }
 
     @Override
-    public bisq.oracle.protobuf.AuthorizedAccountAgeData toProto() {
-        return bisq.oracle.protobuf.AuthorizedAccountAgeData.newBuilder()
+    public bisq.oracle.protobuf.AuthorizedSignedWitnessData toProto() {
+        return bisq.oracle.protobuf.AuthorizedSignedWitnessData.newBuilder()
                 .setProfileId(profileId)
-                .setDate(date)
+                .setWitnessSignDate(witnessSignDate)
                 .build();
     }
 
-    public static AuthorizedAccountAgeData fromProto(bisq.oracle.protobuf.AuthorizedAccountAgeData proto) {
-        return new AuthorizedAccountAgeData(
+    public static AuthorizedSignedWitnessData fromProto(bisq.oracle.protobuf.AuthorizedSignedWitnessData proto) {
+        return new AuthorizedSignedWitnessData(
                 proto.getProfileId(),
-                proto.getDate());
+                proto.getWitnessSignDate());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedAccountAgeData.class));
+                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedSignedWitnessData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -100,9 +100,9 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
 
     @Override
     public String toString() {
-        return "AuthorizedAccountAgeData{" +
+        return "AuthorizedSignedWitnessData{" +
                 ",\r\n     profileId=" + profileId +
-                ",\r\n     time=" + new Date(date) +
+                ",\r\n     witnessSignAge=" + new Date(witnessSignDate) +
                 "\r\n}";
     }
 }

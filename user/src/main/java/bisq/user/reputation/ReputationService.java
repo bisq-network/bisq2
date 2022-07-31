@@ -20,7 +20,6 @@ package bisq.user.reputation;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
-import bisq.oracle.daobridge.DaoBridgeService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -45,8 +44,7 @@ public class ReputationService implements Service {
     public ReputationService(String baseDir,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
-                             UserProfileService userProfileService,
-                             DaoBridgeService daoBridgeService) {
+                             UserProfileService userProfileService) {
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService);
@@ -56,13 +54,11 @@ public class ReputationService implements Service {
         accountAgeService = new AccountAgeService(baseDir,
                 networkService,
                 userIdentityService,
-                userProfileService,
-                daoBridgeService);
+                userProfileService);
         signedWitnessService = new SignedWitnessService(baseDir,
                 networkService,
                 userIdentityService,
-                userProfileService,
-                daoBridgeService);
+                userProfileService);
 
 
         proofOfBurnService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
