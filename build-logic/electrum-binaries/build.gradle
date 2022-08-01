@@ -17,5 +17,6 @@ gradlePlugin {
 }
 
 dependencies {
+    implementation libs.google.guava
     implementation group: 'org.bouncycastle', name: 'bcpg-jdk15on', version: '1.70'
 }
