@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation project(':network')
     implementation project(':account')
+    implementation project(':i18n')
     implementation project(':contract')
     implementation project(':offer')
     implementation project(':oracle')

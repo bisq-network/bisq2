@@ -44,9 +44,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public abstract class SourceReputationService<T extends AuthorizedDistributedData> implements DataService.Listener, Service {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+
+    public static long getAgeInDays(long date) {
+        return (System.currentTimeMillis() - date) / DAY_MS;
+    }
+
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
+    @Getter
     protected final Map<ByteArray, Set<T>> dataSetByHash = new ConcurrentHashMap<>();
     @Getter
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
@@ -118,9 +124,5 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return scoreByUserProfileId.containsKey(userProfileId) ? scoreByUserProfileId.get(userProfileId) : 0;
     }
 
-    protected abstract long calculateScore(T data);
-
-    static long getAgeInDays(long date) {
-        return (System.currentTimeMillis() - date) / DAY_MS;
-    }
+    public abstract long calculateScore(T data);
 }

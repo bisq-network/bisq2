@@ -43,8 +43,7 @@ public class ReputationScore implements Comparable<ReputationScore> {
     }
 
     public String getDetails() {
-        long percent = Math.round(relativeScore * 10000) / 100;
-        return Res.get("reputation.score.tooltip", ranking, totalScore, percent);
+        return Res.get("reputation.score.tooltip", totalScore, ranking);
     }
 
     @Override

@@ -115,7 +115,7 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     }
 
     @Override
-    protected long calculateScore(AuthorizedAccountAgeData data) {
+    public long calculateScore(AuthorizedAccountAgeData data) {
         return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 }

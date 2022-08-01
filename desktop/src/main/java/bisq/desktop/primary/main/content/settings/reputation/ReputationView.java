@@ -89,10 +89,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         root.getChildren().addAll(vBox, tableHeadline, tableView);
     }
 
-
     @Override
     protected void onViewAttached() {
-
         burnBsqButton.setOnAction(e -> controller.onBurnBsq());
         bsqBondButton.setOnAction(e -> controller.onBsqBond());
         accountAgeButton.setOnAction(e -> controller.onAccountAge());
@@ -159,9 +157,6 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
                 if (item != null && !empty) {
                     userName.setText(item.getUserName());
-                    Tooltip tooltip = new Tooltip(item.getUserName());
-                    tooltip.setId("proof-of-burn-tooltip");
-                    userName.setTooltip(tooltip);
                     userProfileIcon.setUserProfile(item.getUserProfile());
                     setGraphic(hBox);
                 } else {

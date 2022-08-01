@@ -121,7 +121,7 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     }
 
     @Override
-    protected long calculateScore(AuthorizedSignedWitnessData data) {
+    public long calculateScore(AuthorizedSignedWitnessData data) {
         long age = getAgeInDays(data.getWitnessSignDate());
         if (age <= 60) {
             return 0;
