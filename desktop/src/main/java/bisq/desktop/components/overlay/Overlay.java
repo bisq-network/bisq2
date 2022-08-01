@@ -73,18 +73,18 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
-    public static Region owner;
+    protected final static double DEFAULT_WIDTH = 668;
+
+    public static Region primaryStageOwner;
     private static String baseDir;
     public static SettingsService settingsService;
     private static Runnable shutdownHandler;
 
-    protected final static double DEFAULT_WIDTH = 668;
-
-    public static void init(Region owner,
+    public static void init(Region primaryStageOwner,
                             String baseDir,
                             SettingsService settingsService,
                             Runnable shutdownHandler) {
-        Overlay.owner = owner;
+        Overlay.primaryStageOwner = primaryStageOwner;
         Overlay.baseDir = baseDir;
         Overlay.settingsService = settingsService;
         Overlay.shutdownHandler = shutdownHandler;
@@ -95,7 +95,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private enum AnimationType {
+    public enum AnimationType {
         FadeInAtCenter,
         SlideDownFromCenterTop,
         SlideFromRightTop, // This is used for Notification which is not handled in that class directly but in Notification directly
@@ -104,7 +104,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         ScaleYFromCenter
     }
 
-    protected enum Type {
+    public enum Type {
         Undefined(AnimationType.ScaleFromCenter),
 
         Notification(AnimationType.SlideFromRightTop),
@@ -133,7 +133,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         }
     }
 
-
+    private Region owner;
     protected Stage stage;
     @Getter
     protected BisqGridPane gridPane;
@@ -146,7 +146,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
     protected boolean disableActionButton;
-
+    protected boolean useBgEffect = true;
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
 
@@ -179,6 +179,8 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected UIScheduler centerTime;
     protected Type type = Type.Undefined;
+    protected AnimationType animationType;
+    protected Transitions.Type transitionsType;
     protected int maxChar = 2200;
 
 
@@ -192,6 +194,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (!typeToken.isSupertypeOf(getClass())) {
             throw new RuntimeException("Subclass of Overlay<T> should be castable to T");
         }
+        owner = primaryStageOwner;
     }
 
     public void show(boolean showAgainChecked) {
@@ -236,7 +239,9 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void animateHide() {
         animateHide(() -> {
-            removeEffectFromBackground();
+            if (useBgEffect) {
+                removeEffectFromBackground();
+            }
 
             if (stage != null) {
                 stage.hide();
@@ -325,6 +330,26 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (headLine == null)
             this.headLine = Res.get("popup.headline.feedback");
         preProcessMessage(message);
+        return cast();
+    }
+
+    public T animationType(AnimationType animationType) {
+        this.animationType = animationType;
+        return cast();
+    }
+
+    public T transitionsType(Transitions.Type transitionsType) {
+        this.transitionsType = transitionsType;
+        return cast();
+    }
+
+    public T owner(Region owner) {
+        this.owner = owner;
+        return cast();
+    }
+
+    public T useBgEffect(boolean useBgEffect) {
+        this.useBgEffect = useBgEffect;
         return cast();
     }
 
@@ -495,56 +520,56 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void blurAgain() {
-        UIScheduler.run(() -> type.transitionsType.apply(owner)).after(Transitions.DEFAULT_DURATION);
+        UIScheduler.run(() -> getTransitionsType().apply(owner)).after(Transitions.DEFAULT_DURATION);
     }
 
     public void display() {
-        if (owner != null) {
-            Scene rootScene = owner.getScene();
-            if (rootScene != null) {
-                Scene scene = new Scene(getRootContainer());
-                scene.getStylesheets().setAll(rootScene.getStylesheets());
-                scene.setFill(Color.TRANSPARENT);
+        Scene rootScene = owner.getScene();
+        if (rootScene != null) {
+            Scene scene = new Scene(getRootContainer());
+            scene.getStylesheets().setAll(rootScene.getStylesheets());
+            scene.setFill(Color.TRANSPARENT);
 
-                setupKeyHandler(scene);
+            setupKeyHandler(scene);
 
-                stage = new Stage();
-                stage.setScene(scene);
-                Window window = rootScene.getWindow();
-                setModality();
-                stage.initStyle(StageStyle.TRANSPARENT);
-                stage.setOnCloseRequest(event -> {
-                    event.consume();
-                    doClose();
-                });
-                stage.sizeToScene();
-                stage.show();
+            stage = new Stage();
+            stage.setScene(scene);
+            Window window = rootScene.getWindow();
+            setModality();
+            stage.initStyle(StageStyle.TRANSPARENT);
+            stage.setOnCloseRequest(event -> {
+                event.consume();
+                doClose();
+            });
+            stage.sizeToScene();
+            stage.show();
 
-                layout();
+            layout();
 
+            if (useBgEffect) {
                 addEffectToBackground();
-
-                // On Linux the owner stage does not move the child stage as it does on Mac
-                // So we need to apply centerPopup. Further, with fast movements the handler loses
-                // the latest position, with a delay it fixes that.
-                // Also, on Mac sometimes the popups are positioned outside the main app, so keep it for all OS
-                positionListener = (observable, oldValue, newValue) -> {
-                    if (stage != null) {
-                        layout();
-
-                        if (centerTime != null)
-                            centerTime.stop();
-
-                        centerTime = UIScheduler.run(this::layout).after(3000);
-                    }
-                };
-                window.xProperty().addListener(positionListener);
-                window.yProperty().addListener(positionListener);
-                window.widthProperty().addListener(positionListener);
-
-                animateDisplay();
-                isDisplayed = true;
             }
+
+            // On Linux the owner stage does not move the child stage as it does on Mac
+            // So we need to apply centerPopup. Further, with fast movements the handler loses
+            // the latest position, with a delay it fixes that.
+            // Also, on Mac sometimes the popups are positioned outside the main app, so keep it for all OS
+            positionListener = (observable, oldValue, newValue) -> {
+                if (stage != null) {
+                    layout();
+
+                    if (centerTime != null)
+                        centerTime.stop();
+
+                    centerTime = UIScheduler.run(this::layout).after(3000);
+                }
+            };
+            window.xProperty().addListener(positionListener);
+            window.yProperty().addListener(positionListener);
+            window.widthProperty().addListener(positionListener);
+
+            animateDisplay();
+            isDisplayed = true;
         }
     }
 
@@ -572,7 +597,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
-        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+        AnimationType animationType = getAnimationType();
+        if (animationType == AnimationType.SlideDownFromCenterTop) {
             double startY = -rootContainer.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
@@ -582,7 +608,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.translateYProperty(), -50, interpolator)
             ));
-        } else if (type.animationType == AnimationType.ScaleFromCenter) {
+        } else if (animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
@@ -595,7 +621,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-        } else if (type.animationType == AnimationType.ScaleYFromCenter) {
+        } else if (animationType == AnimationType.ScaleYFromCenter) {
             double startYScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
@@ -606,7 +632,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-        } else if (type.animationType == AnimationType.ScaleDownToCenter) {
+        } else if (animationType == AnimationType.ScaleDownToCenter) {
             double startScale = 1.1;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
@@ -619,7 +645,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
-        } else if (type.animationType == AnimationType.FadeInAtCenter) {
+        } else if (animationType == AnimationType.FadeInAtCenter) {
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
 
@@ -639,7 +665,8 @@ public abstract class Overlay<T extends Overlay<T>> {
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         Region rootContainer = getRootContainer();
-        if (type.animationType == AnimationType.SlideDownFromCenterTop) {
+        AnimationType animationType = getAnimationType();
+        if (animationType == AnimationType.SlideDownFromCenterTop) {
             double endY = -rootContainer.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
@@ -652,7 +679,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             timeline.setOnFinished(e -> onFinishedHandler.run());
             timeline.play();
-        } else if (type.animationType == AnimationType.ScaleFromCenter) {
+        } else if (animationType == AnimationType.ScaleFromCenter) {
             double endScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
@@ -664,7 +691,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
-        } else if (type.animationType == AnimationType.ScaleYFromCenter) {
+        } else if (animationType == AnimationType.ScaleYFromCenter) {
             rootContainer.setRotationAxis(Rotate.X_AXIS);
             rootContainer.getScene().setCamera(new PerspectiveCamera());
             keyFrames.add(new KeyFrame(Duration.millis(0),
@@ -675,7 +702,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
                     new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
-        } else if (type.animationType == AnimationType.ScaleDownToCenter) {
+        } else if (animationType == AnimationType.ScaleDownToCenter) {
             double endScale = 0.1;
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
@@ -687,7 +714,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                     new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
                     new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
-        } else if (type.animationType == AnimationType.FadeInAtCenter) {
+        } else if (animationType == AnimationType.FadeInAtCenter) {
             keyFrames.add(new KeyFrame(Duration.millis(0),
                     new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
@@ -709,17 +736,27 @@ public abstract class Overlay<T extends Overlay<T>> {
             if (OsUtils.isWindows()) {
                 titleBarHeight -= 9;
             }
-            stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth()) / 2));
+            double leftDistance = (window.getWidth() - getRootContainer().getWidth()) / 2;
+            stage.setX(Math.round(window.getX() + leftDistance));
 
-            if (type.animationType == AnimationType.SlideDownFromCenterTop)
+            AnimationType animationType = getAnimationType();
+            if (animationType == AnimationType.SlideDownFromCenterTop)
                 stage.setY(Math.round(window.getY() + titleBarHeight));
             else
                 stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight()) / 2));
         }
     }
 
+    protected AnimationType getAnimationType() {
+        return this.animationType == null ? type.animationType : this.animationType;
+    }
+
+    protected Transitions.Type getTransitionsType() {
+        return this.transitionsType == null ? type.transitionsType : this.transitionsType;
+    }
+
     protected void addEffectToBackground() {
-        type.transitionsType.apply(owner);
+        getTransitionsType().apply(owner);
     }
 
     protected void applyStyles() {
