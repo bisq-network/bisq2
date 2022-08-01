@@ -19,13 +19,18 @@ class BisqElectrumPlugin : Plugin<Project> {
 
         val downloadTask: TaskProvider<DownloadElectrumBinariesTask> =
             project.tasks.register<DownloadElectrumBinariesTask>("downloadElectrumBinaries") {
-                electrumVersion.set(extension.electrumVersion)
+                electrumVersion.set(extension.version)
+
+                binaryHashes.appImageHash.set(extension.appImageHash)
+                binaryHashes.dmgHash.set(extension.dmgHash)
+                binaryHashes.exeHash.set(extension.exeHash)
+
                 outputDir.set(project.layout.buildDirectory.dir("electrum_binaries/downloads"))
             }
 
         val verifyElectrumBinariesTask: TaskProvider<VerifyElectrumBinariesTask> =
             project.tasks.register<VerifyElectrumBinariesTask>("verifyElectrumBinaries") {
-                electrumVersion.set(extension.electrumVersion)
+                electrumVersion.set(extension.version)
 
                 val downloadsDirectory: Provider<Directory> = downloadTask.flatMap { it.outputDir }
                 inputDirectory.set(downloadsDirectory)

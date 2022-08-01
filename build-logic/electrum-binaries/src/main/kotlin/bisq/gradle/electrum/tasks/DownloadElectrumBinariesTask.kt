@@ -1,9 +1,12 @@
 package bisq.gradle.electrum.tasks
 
+import bisq.gradle.electrum.ElectrumBinaryHashes
+import bisq.gradle.electrum.Sha256
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -28,6 +31,9 @@ abstract class DownloadElectrumBinariesTask : DefaultTask() {
     @get:Input
     abstract val electrumVersion: Property<String>
 
+    @get:Nested
+    abstract val binaryHashes: ElectrumBinaryHashes
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -35,6 +41,10 @@ abstract class DownloadElectrumBinariesTask : DefaultTask() {
     fun run() {
         val binaryUrls: Set<String> = getBinaryDownloadUrls(electrumVersion.get())
         for (url in binaryUrls) {
+            if (isFileAlreadyPresent(url)) {
+                continue
+            }
+
             downloadFile(url)
             downloadFile("$url.asc")
         }
@@ -45,6 +55,16 @@ abstract class DownloadElectrumBinariesTask : DefaultTask() {
         return getBinaryNames(electrumVersion)
             .map { filename -> "$urlPrefix/$filename" }
             .toSet()
+    }
+
+    private fun isFileAlreadyPresent(url: String): Boolean {
+        val outputFile: File = getOutputFileForUrl(url)
+        if (outputFile.exists()) {
+            val hash: String = Sha256.hashFile(outputFile)
+            val expectedHash = binaryHashes.getHashPropertyForBinary(outputFile).get()
+            return hash == expectedHash
+        }
+        return false
     }
 
     private fun downloadFile(url: String) {
