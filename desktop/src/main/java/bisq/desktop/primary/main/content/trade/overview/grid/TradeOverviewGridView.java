@@ -139,7 +139,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         button.setOnAction(e -> controller.onSelect(protocol));
         if (protocol.getSwapProtocolType() == SwapProtocol.Type.BISQ_EASY) {
             button.setText(Res.get("select"));
-            button.getStyleClass().add("outlined-button");
+            button.setDefaultButton(true);
         } else {
             button.setText(Res.get("learnMore"));
             button.getStyleClass().addAll("outlined-button", "grey-outlined-button");
