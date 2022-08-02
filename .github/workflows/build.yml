@@ -33,6 +33,12 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Cache Electrum binaries
+        uses: actions/cache@v3
+        with:
+          path: wallets/electrum/build/electrum_binaries
+          key: ${{ runner.os }}-electrum-binaries-${{ hashFiles('wallets/electrum/build.gradle') }}
+
       - name: Gradle Build Action (root)
         uses: gradle/gradle-build-action@v2.2.2
         with:
