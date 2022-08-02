@@ -1667,6 +1667,14 @@ tree-table-view:focused {
     -fx-background-color: -bisq-grey-24;
 }
 
+.table-view .table-row-cell:empty .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
+.table-view .table-row-cell:empty:hover .table-cell {
+    -fx-background-color: -bisq-grey-24;
+}
+
 /* disabled */
 .table-view .table-row-cell:disabled .table-cell .text {
     -fx-fill: -bisq-grey-20;

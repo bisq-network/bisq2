@@ -23,11 +23,14 @@ import bisq.common.util.StringUtils;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.desktop.primary.main.content.settings.reputation.accountAge.AccountAgeView;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
@@ -42,16 +45,18 @@ public class AccountAgeTab3Controller implements Controller {
     @Getter
     private final AccountAgeTab3View view;
     private final UserIdentityService userIdentityService;
+    private final AccountAgeView parentView;
     private final AccountAgeService accountAgeService;
     private Pin selectedUserProfilePin;
 
-    public AccountAgeTab3Controller(DefaultApplicationService applicationService) {
+    public AccountAgeTab3Controller(DefaultApplicationService applicationService, AccountAgeView parentView) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
+        this.parentView = parentView;
         UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
         accountAgeService = applicationService.getUserService().getReputationService().getAccountAgeService();
 
         model = new AccountAgeTab3Model();
-        view = new AccountAgeTab3View(model, this, userProfileSelection.getRoot());
+        this.view = new AccountAgeTab3View(model, this, userProfileSelection.getRoot());
     }
 
     @Override
@@ -91,12 +96,22 @@ public class AccountAgeTab3Controller implements Controller {
                 String json = clipboard.replace(PREFIX, "");
                 boolean success = accountAgeService.requestAuthorization(json);
                 if (success) {
-                    new Popup().information(Res.get("reputation.request.success")).show();
+                    new Popup().information(Res.get("reputation.request.success"))
+                            .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                            .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                            .owner(parentView.getRoot())
+                            .onClose(this::onClose)
+                            .show();
                     return;
                 }
             }
 
-            new Popup().warning(Res.get("reputation.request.error", StringUtils.truncate(clipboard))).show();
+            new Popup().warning(Res.get("reputation.request.error", StringUtils.truncate(clipboard)))
+                    .animationType(Overlay.AnimationType.SlideDownFromCenterTop)
+                    .transitionsType(Transitions.Type.LIGHT_BLUR_LIGHT)
+                    .owner(parentView.getRoot())
+                    .onClose(this::onClose)
+                    .show();
         });
     }
 }

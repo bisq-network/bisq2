@@ -61,7 +61,7 @@ public class SignedWitnessController extends TabController<SignedWitnessModel> {
                 return Optional.of(new SignedWitnessTab2Controller(applicationService));
             }
             case SIGNED_WITNESS_TAB_3: {
-                return Optional.of(new SignedWitnessTab3Controller(applicationService));
+                return Optional.of(new SignedWitnessTab3Controller(applicationService, view));
             }
             default: {
                 return Optional.empty();

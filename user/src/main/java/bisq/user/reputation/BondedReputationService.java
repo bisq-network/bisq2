@@ -57,14 +57,14 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
-    protected long calculateScore(AuthorizedBondedReputationData data) {
+    public long calculateScore(AuthorizedBondedReputationData data) {
         long score = calculateScore(data.getAmount(), data.getLockTime());
         long ageScore = calculateAgeScore(score, data.getTime());
         return score * WEIGHT + ageScore * AGE_WEIGHT;
     }
 
     private static long calculateScore(long amount, long lockTime) {
-        return Math.round(amount / 100d + lockTime / 10000d);
+        return Math.round(amount / 100d * lockTime / 10000d);
     }
 
     private static long calculateAgeScore(long score, long time) {

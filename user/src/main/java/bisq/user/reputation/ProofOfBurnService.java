@@ -61,9 +61,10 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
     }
 
     @Override
-    protected long calculateScore(AuthorizedProofOfBurnData data) {
-        long score = calculateScore(data.getAmount(), data.getTime());
-        long ageScore = calculateAgeScore(score, data.getTime());
+    public long calculateScore(AuthorizedProofOfBurnData data) {
+        long amount = data.getAmount();
+        long score = calculateScore(amount, data.getTime());
+        long ageScore = calculateAgeScore(amount, data.getTime());
         return score * WEIGHT + ageScore * AGE_WEIGHT;
     }
 
@@ -72,7 +73,7 @@ public class ProofOfBurnService extends SourceReputationService<AuthorizedProofO
         return Math.round(amount / 100d * decayFactor);
     }
 
-    private static long calculateAgeScore(long score, long time) {
-        return score * getAgeInDays(time);
+    private static long calculateAgeScore(long amount, long time) {
+        return amount * getAgeInDays(time);
     }
 }

@@ -18,12 +18,16 @@
 package bisq.presentation.formatters;
 
 import bisq.common.locale.LocaleRepository;
+import bisq.i18n.Res;
 
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class TimeFormatter {
+    private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
+
     public static String formatDuration(long duration) {
         //todo
         if (duration < 1000) {
@@ -37,6 +41,16 @@ public class TimeFormatter {
                 return sec + " sec, " + ms + " ms";
             }
         }
+    }
+
+    public static long getAgeInDays(long date) {
+        return (System.currentTimeMillis() - date) / DAY_MS;
+    }
+
+    public static String formatAgeInDays(long date) {
+        long ageInDays = getAgeInDays(date);
+        String postFix = ageInDays > 1 ? Res.get("days") : Res.get("day");
+        return ageInDays + " " + postFix;
     }
 
     public static String formatTime(Date date) {
