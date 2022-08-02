@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  bitcoin-core-version: '22.0'
+  elements-core-version: '0.21.0.2'
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -21,11 +25,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3.0.2
 
+      - name: Cache Bitcoin Core
+        id: cache-bitcoin-core
+        uses: actions/cache@v3
+        with:
+          path: tools/bitcoin-core
+          key: ${{ runner.os }}-bitcoin-core-${{ env.bitcoin-core-version }}
+
+      - name: Cache Elements Core
+        id: cache-elements-core
+        uses: actions/cache@v3
+        with:
+          path: tools/elements-core
+          key: ${{ runner.os }}-elements-core-${{ env.elements-core-version }}
+
       - name: Install Wallets
         uses: ./.github/actions/install-wallets
         with:
-          bitcoin-core-version: '22.0'
-          elements-core-version: '0.21.0.2'
+          bitcoin-core-version: ${{ env.bitcoin-core-version }}
+          elements-core-version: ${{ env.elements-core-version }}
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3.4.1

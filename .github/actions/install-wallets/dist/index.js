@@ -47,21 +47,28 @@ const core = __importStar(__nccwpck_require__(186));
 const tc = __importStar(__nccwpck_require__(784));
 const node_path_1 = __importDefault(__nccwpck_require__(49));
 const node_os_1 = __importDefault(__nccwpck_require__(28));
+const fs_1 = __importDefault(__nccwpck_require__(747));
 class BitcoinCoreInstaller {
-    constructor(programName = 'Bitcoin Core', versionPropertyId = 'bitcoin-core-version') {
+    constructor(programName = 'Bitcoin Core', installDir = 'tools/bitcoin-core', versionPropertyId = 'bitcoin-core-version') {
         this.programName = programName;
+        this.installDir = installDir;
         this.versionPropertyId = versionPropertyId;
     }
     install() {
         return __awaiter(this, void 0, void 0, function* () {
             const bitcoinVersion = core.getInput(this.versionPropertyId, { required: true });
-            const urlPrefix = this.getUrlPrefix(bitcoinVersion);
-            let url = this.appendUrlSuffixForOs(urlPrefix);
-            const extractedDirPath = yield this.downloadAndUnpackArchive(url);
-            const unpackedTargetDir = this.getUnpackedTargetDirName(bitcoinVersion);
-            const binDirPath = node_path_1.default.join(extractedDirPath, unpackedTargetDir, 'bin');
+            if (!this.isCacheHit(bitcoinVersion)) {
+                const urlPrefix = this.getUrlPrefix(bitcoinVersion);
+                let url = this.appendUrlSuffixForOs(urlPrefix);
+                yield this.downloadAndUnpackArchive(url);
+            }
+            const binDirPath = this.getBinDir(bitcoinVersion);
             core.addPath(binDirPath);
         });
+    }
+    isCacheHit(version) {
+        const binDirPath = this.getBinDir(version);
+        return fs_1.default.existsSync(binDirPath);
     }
     getUrlPrefix(version) {
         return `https://bitcoin.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
@@ -84,15 +91,19 @@ class BitcoinCoreInstaller {
             console.log("Downloading: " + url);
             const bitcoinCorePath = yield tc.downloadTool(url);
             if (url.endsWith('.tar.gz')) {
-                return yield tc.extractTar(bitcoinCorePath);
+                return yield tc.extractTar(bitcoinCorePath, this.installDir);
             }
             else if (url.endsWith('.zip')) {
-                return yield tc.extractZip(bitcoinCorePath);
+                return yield tc.extractZip(bitcoinCorePath, this.installDir);
             }
             else {
                 throw 'Unknown archive format.';
             }
         });
+    }
+    getBinDir(version) {
+        const unpackedTargetDir = this.getUnpackedTargetDirName(version);
+        return node_path_1.default.join(this.installDir, unpackedTargetDir, 'bin');
     }
     getUnpackedTargetDirName(version) {
         return `bitcoin-${version}`;
@@ -113,7 +124,7 @@ exports.ElementsCoreInstaller = void 0;
 const bitcoin_core_installer_1 = __nccwpck_require__(826);
 class ElementsCoreInstaller extends bitcoin_core_installer_1.BitcoinCoreInstaller {
     constructor() {
-        super('Elements Core', 'elements-core-version');
+        super('Elements Core', 'tools/elements-core', 'elements-core-version');
     }
     getUrlPrefix(version) {
         return `https://github.com/ElementsProject/elements/releases/download/elements-${version}/elements-elements-${version}-`;
