@@ -44,3 +44,4 @@ seed1-tor-hostname
 seed2-tor-hostname
 seed1-i2p-destination
 seed2-i2p-destination
+/.run/
