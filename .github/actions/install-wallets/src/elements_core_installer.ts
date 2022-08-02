@@ -2,7 +2,9 @@ import {BitcoinCoreInstaller} from "./bitcoin_core_installer";
 
 export class ElementsCoreInstaller extends BitcoinCoreInstaller {
     constructor() {
-        super('Elements Core', 'elements-core-version');
+        super('Elements Core',
+            'tools/elements-core',
+            'elements-core-version');
     }
 
     getUrlPrefix(version: string): string {

@@ -2,28 +2,38 @@ import * as core from "@actions/core";
 import * as tc from "@actions/tool-cache";
 import path from "node:path";
 import os from "node:os";
+import fs from 'fs';
 import {Installer} from "./installer";
 
 export class BitcoinCoreInstaller implements Installer {
     programName: string;
+    installDir: string;
     versionPropertyId: string;
 
     constructor(programName: string = 'Bitcoin Core',
+                installDir: string = 'tools/bitcoin-core',
                 versionPropertyId: string = 'bitcoin-core-version') {
         this.programName = programName;
+        this.installDir = installDir;
         this.versionPropertyId = versionPropertyId;
     }
 
     async install() {
         const bitcoinVersion = core.getInput(this.versionPropertyId, {required: true});
-        const urlPrefix = this.getUrlPrefix(bitcoinVersion);
 
-        let url = this.appendUrlSuffixForOs(urlPrefix)
-        const extractedDirPath = await this.downloadAndUnpackArchive(url);
+        if (!this.isCacheHit(bitcoinVersion)) {
+            const urlPrefix = this.getUrlPrefix(bitcoinVersion);
+            let url = this.appendUrlSuffixForOs(urlPrefix)
+            await this.downloadAndUnpackArchive(url);
+        }
 
-        const unpackedTargetDir = this.getUnpackedTargetDirName(bitcoinVersion);
-        const binDirPath = path.join(extractedDirPath, unpackedTargetDir, 'bin');
+        const binDirPath = this.getBinDir(bitcoinVersion);
         core.addPath(binDirPath);
+    }
+
+    isCacheHit(version: string): boolean {
+        const binDirPath = this.getBinDir(version);
+        return fs.existsSync(binDirPath)
     }
 
     getUrlPrefix(version: string): string {
@@ -49,12 +59,17 @@ export class BitcoinCoreInstaller implements Installer {
         const bitcoinCorePath = await tc.downloadTool(url);
 
         if (url.endsWith('.tar.gz')) {
-            return await tc.extractTar(bitcoinCorePath)
+            return await tc.extractTar(bitcoinCorePath, this.installDir)
         } else if (url.endsWith('.zip')) {
-            return await tc.extractZip(bitcoinCorePath)
+            return await tc.extractZip(bitcoinCorePath, this.installDir)
         } else {
             throw 'Unknown archive format.'
         }
+    }
+
+    getBinDir(version: string): string {
+        const unpackedTargetDir = this.getUnpackedTargetDirName(version);
+        return path.join(this.installDir, unpackedTargetDir, 'bin');
     }
 
     getUnpackedTargetDirName(version: string): string {
