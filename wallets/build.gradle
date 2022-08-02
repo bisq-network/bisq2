@@ -1,5 +1,3 @@
-group 'bisq'
-
 if (hasProperty('buildScan')) {
     buildScan {
         termsOfServiceUrl = 'https://gradle.com/terms-of-service'
