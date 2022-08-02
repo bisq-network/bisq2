@@ -217,7 +217,7 @@ class TorBootstrap {
                 }
                 if (error.hasNextLine()) {
                     // In case we get an error we log it and exit.
-                    throw new RuntimeException("We got an error log from the tor process: Ï" + error.nextLine());
+                    throw new RuntimeException("We got an error log from the tor process: " + error.nextLine());
                 }
                 if (scannedLines.incrementAndGet() >= 10) {
                     throw new RuntimeException("We scanned already 10 lines but did not find the control port.");

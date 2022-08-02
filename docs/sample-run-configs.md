@@ -21,14 +21,14 @@ Program Arguments (Alt+R)
 
 VM Options (Alt+V)
 ```
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1000 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5000 
--Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR 
--Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P 
--Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+-Dapplication.network.defaultNodePortByTransportType.clear=8000 
+-Dapplication.network.defaultNodePortByTransportType.tor=1000 
+-Dapplication.network.defaultNodePortByTransportType.i2p=5000 
+-Dapplication.network.supportedTransportTypes.0=TOR 
+-Dapplication.network.supportedTransportTypes.1=I2P 
+-Dapplication.network.supportedTransportTypes.2=CLEAR 
+-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
 
 #### Run Config: `Seed_2` (clearnet + tor + i2p)
@@ -37,9 +37,9 @@ Copy the `Seed_1` run configuration, rename it to `Seed_2` and change:
 - Program Arguments to `--appName=bisq2_seed2`
 - VM Options: adjust the ports in the following lines to
 ```
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.tor=1001 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.i2p=5001 
+-Dapplication.network.defaultNodePortByTransportType.clear=8001 
+-Dapplication.network.defaultNodePortByTransportType.tor=1001 
+-Dapplication.network.defaultNodePortByTransportType.i2p=5001 
 ```
 
 
@@ -62,9 +62,9 @@ Program Arguments (Alt+R)
 
 VM Options (Alt+V)
 ```
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+-Dapplication.network.supportedTransportTypes.0=CLEAR 
+-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
 
 
@@ -74,9 +74,9 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_tor` and change:
 - Program Arguments to `--appName=bisq_Alice_tor`
 - VM options to:
 ```
--Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR 
--Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=<onion address of seed 1>:1000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=<onion address of seed 2>:1001
+-Dapplication.network.supportedTransportTypes.0=TOR 
+-Dapplication.network.seedAddressByTransportType.tor.0=<onion address of seed 1>:1000 
+-Dapplication.network.seedAddressByTransportType.tor.1=<onion address of seed 2>:1001
 ```
 
 #### Run Config: `Alice_i2p`
@@ -85,9 +85,9 @@ Copy the `Alice_clear` run configuration, rename it to `Alice_i2p` and change:
 - Program Arguments to `--appName=bisq_Alice_i2p`
 - VM options to:
 ```
--Dbisq.networkServiceConfig.supportedTransportTypes.0=I2P 
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001
+-Dapplication.network.supportedTransportTypes.0=I2P 
+-Dapplication.network.seedAddressByTransportType.i2p.0=<i2p destination of seed 1>:5000 
+-Dapplication.network.seedAddressByTransportType.i2p.1=<i2p destination of seed 2>:5001
 ```
 
 ### IntelliJ IDEA: Gradle run configs
@@ -113,18 +113,18 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 # Seed 1
 ./gradlew seed:run \
     -Dbisq.application.appName=bisq2_seed1 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.defaultNodePortByTransportType.clear=8000 \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 
 # Seed 2
 ./gradlew seed:run \
     -Dbisq.application.appName=bisq2_seed2 \
-    -Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.defaultNodePortByTransportType.clear=8001 \
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
 
 Start a desktopapp client with:
@@ -140,7 +140,7 @@ To start a custom desktopapp client connecting only to clearnet:
 # Local client on clearnet only
 ./gradlew desktopapp:run \
     -Dbisq.application.appName=bisq_Alice_clear \
-    -Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
-    -Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001
+    -Dapplication.network.supportedTransportTypes.0=CLEAR \
+    -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
+    -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
 ```
