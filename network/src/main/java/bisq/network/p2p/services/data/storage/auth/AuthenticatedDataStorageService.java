@@ -95,7 +95,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedSequentialData.isExpired()) {
-                log.warn("Data is expired at add. request={}", request);
+                log.info("Data is expired at add. request object={}",
+                        request.getAuthenticatedSequentialData().getAuthenticatedData().distributedData.getClass().getSimpleName());
+                log.debug("Data is expired at add. request={}", request);
                 return new Result(false).expired();
             }
 

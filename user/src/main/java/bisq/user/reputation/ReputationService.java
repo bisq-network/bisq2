@@ -61,10 +61,10 @@ public class ReputationService implements Service {
                 userProfileService);
 
 
-        proofOfBurnService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
-        bondedReputationService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
-        accountAgeService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
-        signedWitnessService.getChangedUserProfileScore().addObserver(this::onUserProfileScoreChanged);
+        proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        accountAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        signedWitnessService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -88,7 +88,10 @@ public class ReputationService implements Service {
     }
 
     public Optional<ReputationScore> findReputationScore(UserProfile userProfile) {
-        String userProfileId = userProfile.getId();
+        return findReputationScore(userProfile.getId());
+    }
+
+    public Optional<ReputationScore> findReputationScore(String userProfileId) {
         if (!scoreByUserProfileId.containsKey(userProfileId)) {
             return Optional.empty();
         }

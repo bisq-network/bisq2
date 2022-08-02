@@ -40,7 +40,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(1),
+    private final MetaData metaData = new MetaData(TimeUnit.SECONDS.toMillis(10),
             100000,
             AuthorizedAccountAgeData.class.getSimpleName());
 

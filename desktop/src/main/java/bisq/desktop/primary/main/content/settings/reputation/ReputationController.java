@@ -39,7 +39,9 @@ public class ReputationController implements Controller {
     private final ReputationService reputationService;
     private final UserProfileService userProfileService;
     private final ReputationModel model;
-    private Pin userProfileChangedFlagPin;
+    private Pin userProfileChangedFlagPin, proofOfBurnScoreChangedFlagPin,
+            bondedReputationScoreChangedFlagPin, signedWitnessScoreChangedFlagPin,
+            accountAgeScoreChangedFlagPin;
 
     public ReputationController(DefaultApplicationService applicationService) {
         userProfileService = applicationService.getUserService().getUserProfileService();
@@ -51,16 +53,36 @@ public class ReputationController implements Controller {
 
     @Override
     public void onActivate() {
-        userProfileChangedFlagPin = userProfileService.getUserProfileChangedFlag().addObserver(__ -> {
-            model.getListItems().setAll(userProfileService.getUserProfiles().stream()
-                    .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
-                    .collect(Collectors.toList()));
-        });
+        userProfileChangedFlagPin = userProfileService.getUserProfileChangedFlag()
+                .addObserver(__ -> {
+                    model.getListItems().setAll(userProfileService.getUserProfiles().stream()
+                            .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
+                            .collect(Collectors.toList()));
+                });
+        proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
+                .addObserver(this::extracted);
+        bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdOfUpdatedScore()
+                .addObserver(this::extracted);
+        accountAgeScoreChangedFlagPin = reputationService.getAccountAgeService().getUserProfileIdOfUpdatedScore()
+                .addObserver(this::extracted);
+        signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdOfUpdatedScore()
+                .addObserver(this::extracted);
+    }
+
+
+    private void extracted(String userProfileId) {
+        model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
+                .forEach(e -> e.requestReputationScore(userProfileId));
+        model.getUserProfileIdOfScoreUpdate().set(userProfileId);
     }
 
     @Override
     public void onDeactivate() {
         userProfileChangedFlagPin.unbind();
+        proofOfBurnScoreChangedFlagPin.unbind();
+        bondedReputationScoreChangedFlagPin.unbind();
+        accountAgeScoreChangedFlagPin.unbind();
+        signedWitnessScoreChangedFlagPin.unbind();
     }
 
     public void onBurnBsq() {
