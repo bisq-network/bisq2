@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class AbstractElementsdZeroMqTests extends SharedElementsdInstanceTests {
 
     private static final int ONE_SECOND_IN_MILLIS = 1000;
-    private static final int TWO_MINUTES_IN_MILLIS = ONE_SECOND_IN_MILLIS * 60 * 2;
+    protected static final int TWO_MINUTES_IN_MILLIS = ONE_SECOND_IN_MILLIS * 60 * 2;
 
     protected ZmqConnection minerWalletZmqConnection;
 
