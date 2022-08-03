@@ -28,6 +28,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static bisq.wallets.elementsd.zmq.AbstractElementsdZeroMqTests.TWO_MINUTES_IN_MILLIS;
+
 @Slf4j
 public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedElementsdInstanceTests {
 
@@ -46,7 +48,7 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
             }
         });
 
-        createAndStartDaemonThread(() -> {
+        Thread thread = createAndStartDaemonThread(() -> {
             while (true) {
                 try {
                     List<String> blockHashes = elementsdRegtestSetup.mineOneBlock();
@@ -70,11 +72,14 @@ public class ElementsdZeroMqBlockHashIntegrationIntegrationTests extends SharedE
         if (!await) {
             throw new IllegalStateException("Didn't connect to bitcoind after 1 minute.");
         }
+
+        thread.join(TWO_MINUTES_IN_MILLIS);
     }
 
-    private void createAndStartDaemonThread(Runnable runnable) {
+    private Thread createAndStartDaemonThread(Runnable runnable) {
         Thread thread = new Thread(runnable);
         thread.setDaemon(true);
         thread.start();
+        return thread;
     }
 }

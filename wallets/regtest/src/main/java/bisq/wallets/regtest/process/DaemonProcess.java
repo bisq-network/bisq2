@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public abstract class DaemonProcess implements BisqProcess {
@@ -54,7 +55,7 @@ public abstract class DaemonProcess implements BisqProcess {
     public void shutdown() {
         try {
             invokeStopRpcCall();
-            process.waitFor();
+            process.waitFor(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             String processName = process.info().command().orElse("<unknown process>");
             throw new WalletShutdownFailedException("Cannot shutdown " + processName + ".", e);
