@@ -35,6 +35,10 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AbstractElementsdZeroMqTests extends SharedElementsdInstanceTests {
+
+    private static final int ONE_SECOND_IN_MILLIS = 1000;
+    protected static final int TWO_MINUTES_IN_MILLIS = ONE_SECOND_IN_MILLIS * 60 * 2;
+
     protected ZmqConnection minerWalletZmqConnection;
 
     protected ElementsdWallet receiverWallet;
@@ -99,7 +103,7 @@ public class AbstractElementsdZeroMqTests extends SharedElementsdInstanceTests {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).join();
+        }).join(TWO_MINUTES_IN_MILLIS);
     }
 
     private Thread createAndStartThread(Runnable runnable) {
