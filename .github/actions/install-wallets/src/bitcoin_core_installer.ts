@@ -1,9 +1,9 @@
 import * as core from "@actions/core";
-import * as tc from "@actions/tool-cache";
 import path from "node:path";
 import os from "node:os";
 import fs from 'fs';
 import {Installer} from "./installer";
+import {downloadAndUnpackArchive} from "./downloader";
 
 export class BitcoinCoreInstaller implements Installer {
     programName: string;
@@ -24,7 +24,7 @@ export class BitcoinCoreInstaller implements Installer {
         if (!this.isCacheHit(bitcoinVersion)) {
             const urlPrefix = this.getUrlPrefix(bitcoinVersion);
             let url = this.appendUrlSuffixForOs(urlPrefix)
-            await this.downloadAndUnpackArchive(url);
+            await downloadAndUnpackArchive(url, this.installDir);
         }
 
         const binDirPath = this.getBinDir(bitcoinVersion);
@@ -51,19 +51,6 @@ export class BitcoinCoreInstaller implements Installer {
                 return url_prefix + 'osx64.tar.gz';
             default:
                 throw 'Unknown OS';
-        }
-    }
-
-    async downloadAndUnpackArchive(url: string) {
-        console.log("Downloading: " + url)
-        const bitcoinCorePath = await tc.downloadTool(url);
-
-        if (url.endsWith('.tar.gz')) {
-            return await tc.extractTar(bitcoinCorePath, this.installDir)
-        } else if (url.endsWith('.zip')) {
-            return await tc.extractZip(bitcoinCorePath, this.installDir)
-        } else {
-            throw 'Unknown archive format.'
         }
     }
 

@@ -4,6 +4,9 @@ inputs:
   bitcoin-core-version:
     description: 'Bitcoin Core Version'
     required: true
+  electrumx-version:
+    description: 'ElectrumX Version'
+    required: true
   elements-core-version:
     description: 'Elements Core Version'
     required: true
