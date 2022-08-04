@@ -26,6 +26,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
@@ -99,7 +100,6 @@ public class MaterialTextField extends Pane {
 
         iconButton = new BisqIconButton();
         iconButton.setIcon("info");
-        iconButton.setLayoutY(6);
         iconButton.setOpacity(0.6);
         iconButton.setManaged(false);
         iconButton.setVisible(false);
@@ -289,7 +289,14 @@ public class MaterialTextField extends Pane {
 
     private void layoutIconButton() {
         if (getWidth() > 0 && iconButton.isManaged()) {
-            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12);
+            if (iconButton.getAlignment() == Pos.CENTER ||
+                    iconButton.getAlignment() == Pos.CENTER_LEFT ||
+                    iconButton.getAlignment() == Pos.CENTER_RIGHT) {
+                iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2);
+            } else {
+                iconButton.setLayoutY(6);
+            }
+            iconButton.setLayoutX(getWidth() - iconButton.getWidth() - 12 + iconButton.getPadding().getLeft());
         }
     }
 
