@@ -110,9 +110,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
-                            model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         } else {
-                            model.selectedChannel.set(null);
+                            model.selectedChannelItem.set(null);
                         }
                     });
 
@@ -151,7 +151,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void deSelectChannel() {
-            model.selectedChannel.set(null);
+            model.selectedChannelItem.set(null);
         }
 
         public void onShowMarket(View.MarketListItem marketListItem) {

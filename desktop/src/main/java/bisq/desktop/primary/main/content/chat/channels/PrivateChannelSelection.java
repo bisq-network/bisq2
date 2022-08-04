@@ -119,7 +119,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTradeChannel) {
-                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
             } else if (model.channelKind == ChannelKind.DISCUSSION) {
@@ -130,7 +130,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateDiscussionChannel) {
-                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
             } else if (model.channelKind == ChannelKind.EVENTS) {
@@ -141,7 +141,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateEventsChannel) {
-                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
             } else if (model.channelKind == ChannelKind.SUPPORT) {
@@ -152,7 +152,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateSupportChannel) {
-                                model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                             }
                         });
             }
@@ -175,7 +175,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         }
 
         public void deSelectChannel() {
-            model.selectedChannel.set(null);
+            model.selectedChannelItem.set(null);
         }
     }
 

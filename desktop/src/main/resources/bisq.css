@@ -1515,6 +1515,15 @@
     -fx-text-fill: -bisq-black;
 }
 
+.list-view.channel-selection-list-view .list-cell:hover .label {
+    -fx-text-fill: -bisq-white;
+}
+
+.list-view.channel-selection-list-view .list-cell:selected .label {
+    -fx-text-fill: -bisq-green;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Chat messages list                                                           *

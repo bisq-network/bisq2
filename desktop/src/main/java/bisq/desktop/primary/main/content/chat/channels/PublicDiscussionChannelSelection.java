@@ -24,18 +24,14 @@ import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
@@ -91,7 +87,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
             selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicDiscussionChannel) {
-                            model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
         }
@@ -106,7 +102,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         }
 
         public void deSelectChannel() {
-            model.selectedChannel.set(null);
+            model.selectedChannelItem.set(null);
         }
     }
 
@@ -127,33 +123,21 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
                 private Subscription widthSubscription;
+                final ImageView iconImageView = new ImageView();
                 final Label label = new Label();
                 final HBox hBox = new HBox();
 
                 {
-                    setCursor(Cursor.HAND);
-                    setPrefHeight(40);
-                    setPadding(new Insets(0, 0, -20, 0));
-
-                    hBox.setSpacing(10);
-                    hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.getChildren().add(label);
+                    initCell(this, label, iconImageView, hBox);
                 }
 
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PublicDiscussionChannel) {
-                        label.setText(item.getDisplayString().toUpperCase());
-                        item.getIconId().ifPresent(iconId -> {
-                            label.setGraphic(BisqIconButton.createIconButton(iconId));
-                            label.setGraphicTextGap(8);
-                        });
-                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                            if (w.doubleValue() > 0) {
-                                label.setMaxWidth(getWidth() - 70);
-                            }
-                        });
+                        widthSubscription = setupCellBinding(this, item, label, iconImageView);
+                        updateCell(this, item, label, iconImageView);
+
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);

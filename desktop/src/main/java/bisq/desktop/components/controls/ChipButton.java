@@ -18,6 +18,7 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.containers.Spacer;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.value.ChangeListener;
@@ -28,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import lombok.extern.slf4j.Slf4j;
 
@@ -113,6 +115,14 @@ public class ChipButton extends HBox {
         HBox.setMargin(labelIcon, new Insets(-1, 0, 0, 20));
         getChildren().addAll(Spacer.fillHBox(), labelIcon);
         return labelIcon;
+    }
+
+    public ImageView setRightIcon(String iconId) {
+        ImageView imageView = ImageUtil.getImageViewById(iconId);
+        imageView.setCursor(Cursor.HAND);
+        HBox.setMargin(imageView, new Insets(0, -5, 0, 20));
+        getChildren().addAll(Spacer.fillHBox(), imageView);
+        return imageView;
     }
 
     public void setSelected(boolean value) {

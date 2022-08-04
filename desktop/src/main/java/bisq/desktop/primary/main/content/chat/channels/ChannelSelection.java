@@ -18,10 +18,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -30,8 +33,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-
-import java.util.Optional;
 
 @Slf4j
 public abstract class ChannelSelection {
@@ -64,7 +65,8 @@ public abstract class ChannelSelection {
 
 
     protected static class Model implements bisq.desktop.common.view.Model {
-        ObjectProperty<View.ChannelItem> selectedChannel = new SimpleObjectProperty<>();
+        ObjectProperty<View.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
+        View.ChannelItem previousSelectedChannelItem;
         ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
@@ -108,17 +110,35 @@ public abstract class ChannelSelection {
         @Override
         protected void onViewAttached() {
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
-                    channel -> {
-                        if (channel != null) {
-                            controller.onSelected(channel);
+                    channelItem -> {
+                        if (channelItem != null) {
+                            log.error("listView.getSelectionModel() NEW {} OLD {}", channelItem.getIconId(),
+                                    model.previousSelectedChannelItem != null ? model.previousSelectedChannelItem.getIconId() : "null");
+                            // channelItem.setSelected(true);
+                            if (model.previousSelectedChannelItem != null) {
+                                model.previousSelectedChannelItem.setSelected(false);
+                            }
+                            channelItem.setSelected(true);
+                            model.previousSelectedChannelItem = channelItem;
+                            controller.onSelected(channelItem);
                         }
                     });
-            modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannel,
-                    channel -> {
-                        if (channel == null) {
+            modelSelectedChannelSubscription = EasyBind.subscribe(model.selectedChannelItem,
+                    channelItem -> {
+                        if (channelItem == null) {
                             listView.getSelectionModel().clearSelection();
-                        } else if (!channel.equals(listView.getSelectionModel().getSelectedItem())) {
-                            listView.getSelectionModel().select(channel);
+                        } else if (!channelItem.equals(listView.getSelectionModel().getSelectedItem())) {
+                            log.error("model.selectedChannelItem NEW {} OLD {} ", channelItem.getIconId(),
+                                    model.previousSelectedChannelItem != null ? model.previousSelectedChannelItem.getIconId() : "null");
+                            if (model.previousSelectedChannelItem != null) {
+                                model.previousSelectedChannelItem.setSelected(false);
+                            }
+                            channelItem.setSelected(true);
+                           /* if (model.previousSelectedChannelItem != null) {
+                                model.previousSelectedChannelItem.setSelected(false);
+                            }*/
+                            model.previousSelectedChannelItem = channelItem;
+                            listView.getSelectionModel().select(channelItem);
                         }
                     });
             model.sortedList.addListener(channelsChangedListener);
@@ -145,15 +165,76 @@ public abstract class ChannelSelection {
             });
         }
 
-        @EqualsAndHashCode
+        protected void initCell(ListCell<ChannelItem> cell, Label label, ImageView iconImageView, HBox hBox) {
+            cell.setCursor(Cursor.HAND);
+            cell.setPrefHeight(40);
+            cell.setPadding(new Insets(0, 0, -20, 0));
+            cell.setPadding(new Insets(0, 0, -20, 0));
+            label.setGraphic(iconImageView);
+            label.setGraphicTextGap(8);
+            hBox.setSpacing(10);
+            hBox.setAlignment(Pos.CENTER_LEFT);
+            hBox.getChildren().add(label);
+        }
+
+        protected void updateCell(ListCell<ChannelItem> cell, ChannelItem item, Label label, ImageView iconImageView) {
+            label.setText(item.getDisplayString().toUpperCase());
+
+            if (item.getIconId() != null) {
+                if (item.isSelected) {
+                    iconImageView.setId(item.iconIdSelected);
+                } else {
+                    iconImageView.setId(item.iconId);
+                }
+
+                cell.setOnMouseEntered(e -> {
+                    if (!item.isSelected) {
+                        iconImageView.setId(item.iconIdHover);
+                    }
+                });
+                cell.setOnMouseExited(e -> {
+                    if (item.isSelected) {
+                        iconImageView.setId(item.iconIdSelected);
+                    } else {
+                        iconImageView.setId(item.iconId);
+                    }
+                });
+
+                cell.setOnMousePressed(e -> {
+                    iconImageView.setId(item.iconIdSelected);
+                });
+                cell.setOnMouseReleased(e -> {
+                    iconImageView.setId(item.iconIdSelected);
+                });
+            }
+        }
+
+        protected Subscription setupCellBinding(ListCell<ChannelItem> cell, ChannelItem item, Label label, ImageView iconImageView) {
+            return EasyBind.subscribe(cell.widthProperty(), w -> {
+                if (w.doubleValue() > 0) {
+                    label.setMaxWidth(cell.getWidth() - 70);
+                }
+            });
+        }
+
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         @Getter
         static class ChannelItem {
+            @EqualsAndHashCode.Include
+            private final String id;
             private final Channel<?> channel;
             private final String displayString;
-            private Optional<String> iconId = Optional.empty();
+            private String iconId;
+            private String iconIdHover;
+            private String iconIdSelected;
+
+            private ListCell<ChannelItem> listCell;
+            private boolean isSelected;
+            private ImageView iconImageView;
 
             public ChannelItem(Channel<?> channel) {
                 this.channel = channel;
+                id = channel.getId();
 
                 String type = null;
                 if (channel instanceof PublicEventsChannel) {
@@ -164,7 +245,9 @@ public abstract class ChannelSelection {
                     type = "-support-";
                 }
                 if (type != null) {
-                    iconId = Optional.of("channels" + type + channel.getId());
+                    iconIdSelected = "channels" + type + channel.getId();
+                    iconIdHover = "channels" + type + channel.getId() + "-white";
+                    iconId = "channels" + type + channel.getId() + "-grey";
                 }
 
                 if (channel instanceof PublicTradeChannel) {
@@ -172,6 +255,46 @@ public abstract class ChannelSelection {
                 } else {
                     displayString = channel.getDisplayString();
                 }
+            }
+
+            public void configLabel(ListCell<ChannelItem> listCell, Label label, ImageView iconImageView) {
+                this.listCell = listCell;
+                this.iconImageView = iconImageView;
+                label.setText(displayString.toUpperCase());
+                // iconId.ifPresent(iconId -> {
+                // label.setGraphic(BisqIconButton.createIconButton(iconId));
+                //  label.setGraphicTextGap(8);
+
+                  /*  listCell.setOnMouseEntered(e -> {
+                        if (!isSelected) {
+                            label.setGraphic(BisqIconButton.createIconButton(iconIdHover.get()));
+                        }
+                    });
+                    listCell.setOnMouseExited(e -> {
+                        if (isSelected) {
+                            label.setGraphic(BisqIconButton.createIconButton(iconIdSelected.get()));
+                        } else {
+                            label.setGraphic(BisqIconButton.createIconButton(iconId));
+                        }
+                    });*/
+                // });
+            }
+
+            public void release(Label label) {
+                label.setOnMouseDragEntered(null);
+                label.setOnMouseDragExited(null);
+            }
+
+            public void setSelected(boolean selected) {
+                isSelected = selected;
+                log.error("setSelected {} {}", iconId, selected);
+              /*  if (iconImageView != null) {
+                    if (isSelected) {
+                        label.setGraphic(BisqIconButton.createIconButton(iconIdSelected.get()));
+                    } else {
+                        label.setGraphic(BisqIconButton.createIconButton(iconId.get()));
+                    }
+                }*/
             }
         }
     }
