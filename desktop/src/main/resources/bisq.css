@@ -2101,9 +2101,19 @@ tree-table-view:focused {
 }
 
 .table-view.create-offer-table-view .table-row-cell {
-    -fx-pref-height: 68px;
+    -fx-pref-height: 50px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
+}
+
+.table-view.create-offer-table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-darker-grey;
+    -fx-border-color: transparent;
+}
+
+.table-view.create-offer-table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+    -fx-border-color: transparent;
 }
 
 

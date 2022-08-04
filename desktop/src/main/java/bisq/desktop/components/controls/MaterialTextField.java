@@ -292,7 +292,7 @@ public class MaterialTextField extends Pane {
             if (iconButton.getAlignment() == Pos.CENTER ||
                     iconButton.getAlignment() == Pos.CENTER_LEFT ||
                     iconButton.getAlignment() == Pos.CENTER_RIGHT) {
-                iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2);
+                iconButton.setLayoutY((getBgHeight() - iconButton.getHeight()) / 2 - 1);
             } else {
                 iconButton.setLayoutY(6);
             }
