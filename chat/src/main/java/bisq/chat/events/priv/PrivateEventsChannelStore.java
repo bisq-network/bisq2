@@ -17,38 +17,38 @@
 
 package bisq.chat.events.priv;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 public class PrivateEventsChannelStore implements PersistableStore<PrivateEventsChannelStore> {
-    private final ObservableSet<PrivateEventsChannel> channels = new ObservableSet<>();
+    private final ObservableArray<PrivateEventsChannel> channels = new ObservableArray<>();
 
     public PrivateEventsChannelStore() {
     }
 
-    private PrivateEventsChannelStore(Set<PrivateEventsChannel> privateEventsChannels) {
+    private PrivateEventsChannelStore(List<PrivateEventsChannel> privateEventsChannels) {
         setAll(privateEventsChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateEventsChannelStore toProto() {
         bisq.chat.protobuf.PrivateEventsChannelStore.Builder builder = bisq.chat.protobuf.PrivateEventsChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateEventsChannel::toProto).collect(Collectors.toSet()));
+                .addAllChannels(channels.stream().map(PrivateEventsChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateEventsChannelStore fromProto(bisq.chat.protobuf.PrivateEventsChannelStore proto) {
-        Set<PrivateEventsChannel> privateEventsChannels = proto.getChannelsList().stream()
+        List<PrivateEventsChannel> privateEventsChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateEventsChannel) PrivateEventsChannel.fromProto(e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new PrivateEventsChannelStore(privateEventsChannels);
     }
 
@@ -73,7 +73,7 @@ public class PrivateEventsChannelStore implements PersistableStore<PrivateEvents
         return new PrivateEventsChannelStore(channels);
     }
 
-    public void setAll(Set<PrivateEventsChannel> privateEventsChannels) {
+    public void setAll(List<PrivateEventsChannel> privateEventsChannels) {
         this.channels.clear();
         this.channels.addAll(privateEventsChannels);
     }

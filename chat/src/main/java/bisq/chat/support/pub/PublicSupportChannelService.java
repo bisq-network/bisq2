@@ -19,7 +19,7 @@ package bisq.chat.support.pub;
 
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -75,7 +75,7 @@ public class PublicSupportChannelService extends PublicChannelService<PublicSupp
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableSet<PublicSupportChannel> getChannels() {
+    public ObservableArray<PublicSupportChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -111,7 +111,7 @@ public class PublicSupportChannelService extends PublicChannelService<PublicSupp
         }
 
         PublicSupportChannel defaultSupportChannel = new PublicSupportChannel("support");
-        ObservableSet<PublicSupportChannel> channels = getChannels();
+        ObservableArray<PublicSupportChannel> channels = getChannels();
         channels.add(defaultSupportChannel);
         channels.add(new PublicSupportChannel("questions"));
         channels.add(new PublicSupportChannel("reports"));

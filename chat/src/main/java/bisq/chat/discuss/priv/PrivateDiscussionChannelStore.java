@@ -17,38 +17,38 @@
 
 package bisq.chat.discuss.priv;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 public class PrivateDiscussionChannelStore implements PersistableStore<PrivateDiscussionChannelStore> {
-    private final ObservableSet<PrivateDiscussionChannel> channels = new ObservableSet<>();
+    private final ObservableArray<PrivateDiscussionChannel> channels = new ObservableArray<>();
 
     public PrivateDiscussionChannelStore() {
     }
 
-    private PrivateDiscussionChannelStore(Set<PrivateDiscussionChannel> privateDiscussionChannels) {
+    private PrivateDiscussionChannelStore(List<PrivateDiscussionChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateDiscussionChannelStore toProto() {
         bisq.chat.protobuf.PrivateDiscussionChannelStore.Builder builder = bisq.chat.protobuf.PrivateDiscussionChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toSet()));
+                .addAllChannels(channels.stream().map(PrivateDiscussionChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateDiscussionChannelStore fromProto(bisq.chat.protobuf.PrivateDiscussionChannelStore proto) {
-        Set<PrivateDiscussionChannel> privateDiscussionChannels = proto.getChannelsList().stream()
+        List<PrivateDiscussionChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateDiscussionChannel) PrivateDiscussionChannel.fromProto(e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new PrivateDiscussionChannelStore(privateDiscussionChannels);
     }
 
@@ -73,7 +73,7 @@ public class PrivateDiscussionChannelStore implements PersistableStore<PrivateDi
         return new PrivateDiscussionChannelStore(channels);
     }
 
-    public void setAll(Set<PrivateDiscussionChannel> privateDiscussionChannels) {
+    public void setAll(List<PrivateDiscussionChannel> privateDiscussionChannels) {
         this.channels.clear();
         this.channels.addAll(privateDiscussionChannels);
     }

@@ -17,38 +17,38 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 public class PrivateTradeChannelStore implements PersistableStore<PrivateTradeChannelStore> {
-    private final ObservableSet<PrivateTradeChannel> channels = new ObservableSet<>();
+    private final ObservableArray<PrivateTradeChannel> channels = new ObservableArray<>();
 
     public PrivateTradeChannelStore() {
     }
 
-    private PrivateTradeChannelStore(Set<PrivateTradeChannel> privateTradeChannels) {
+    private PrivateTradeChannelStore(List<PrivateTradeChannel> privateTradeChannels) {
         setAll(privateTradeChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateTradeChannelStore toProto() {
         bisq.chat.protobuf.PrivateTradeChannelStore.Builder builder = bisq.chat.protobuf.PrivateTradeChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toSet()));
+                .addAllChannels(channels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateTradeChannelStore fromProto(bisq.chat.protobuf.PrivateTradeChannelStore proto) {
-        Set<PrivateTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
+        List<PrivateTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateTradeChannel) PrivateTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new PrivateTradeChannelStore(privateTradeChannels);
     }
 
@@ -73,7 +73,7 @@ public class PrivateTradeChannelStore implements PersistableStore<PrivateTradeCh
         return new PrivateTradeChannelStore(channels);
     }
 
-    public void setAll(Set<PrivateTradeChannel> privateTradeChannels) {
+    public void setAll(List<PrivateTradeChannel> privateTradeChannels) {
         this.channels.clear();
         this.channels.addAll(privateTradeChannels);
     }

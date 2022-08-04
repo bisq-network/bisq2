@@ -19,7 +19,7 @@ package bisq.chat.discuss.pub;
 
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -75,7 +75,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableSet<PublicDiscussionChannel> getChannels() {
+    public ObservableArray<PublicDiscussionChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -110,7 +110,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
             return;
         }
         PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("bisq");
-        ObservableSet<PublicDiscussionChannel> channels = getChannels();
+        ObservableArray<PublicDiscussionChannel> channels = getChannels();
         channels.add(defaultDiscussionChannel);
         channels.add(new PublicDiscussionChannel("bitcoin"));
         channels.add(new PublicDiscussionChannel("monero"));

@@ -166,7 +166,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             this.numUsers = String.valueOf(numUsersAsInteger);
             icon = MarketImageComposition.imageBoxForMarket(
                     market.getBaseCurrencyCode().toLowerCase(),
-                    market.getQuoteCurrencyCode().toLowerCase());
+                    market.getQuoteCurrencyCode().toLowerCase()).getFirst();
             this.numUsersAsInteger = numUsersAsInteger;
         }
 

@@ -81,6 +81,7 @@ public abstract class ChannelSelection {
         private final InvalidationListener channelsChangedListener;
         protected final HBox headerBox;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
+        protected int adjustHeightCounter = 0;
 
         protected View(M model, C controller) {
             super(new AnchorPane(), model, controller);
@@ -94,14 +95,14 @@ public abstract class ChannelSelection {
 
             listView = new ListView<>(model.sortedList);
             listView.getStyleClass().add("channel-selection-list-view");
-            listView.setPrefHeight(100);
+            // listView.setPrefHeight(1000);
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
             VBox vBox = new VBox(10, headerBox, listView);
-            vBox.setFillWidth(true);
             Layout.pinToAnchorPane(vBox, 0, 0, 0, 0);
             root.getChildren().add(vBox);
+
             channelsChangedListener = observable -> adjustHeight();
         }
 
@@ -112,9 +113,6 @@ public abstract class ChannelSelection {
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channelItem -> {
                         if (channelItem != null) {
-                            log.error("listView.getSelectionModel() NEW {} OLD {}", channelItem.getIconId(),
-                                    model.previousSelectedChannelItem != null ? model.previousSelectedChannelItem.getIconId() : "null");
-                            // channelItem.setSelected(true);
                             if (model.previousSelectedChannelItem != null) {
                                 model.previousSelectedChannelItem.setSelected(false);
                             }
@@ -128,21 +126,17 @@ public abstract class ChannelSelection {
                         if (channelItem == null) {
                             listView.getSelectionModel().clearSelection();
                         } else if (!channelItem.equals(listView.getSelectionModel().getSelectedItem())) {
-                            log.error("model.selectedChannelItem NEW {} OLD {} ", channelItem.getIconId(),
-                                    model.previousSelectedChannelItem != null ? model.previousSelectedChannelItem.getIconId() : "null");
                             if (model.previousSelectedChannelItem != null) {
                                 model.previousSelectedChannelItem.setSelected(false);
                             }
                             channelItem.setSelected(true);
-                           /* if (model.previousSelectedChannelItem != null) {
-                                model.previousSelectedChannelItem.setSelected(false);
-                            }*/
                             model.previousSelectedChannelItem = channelItem;
                             listView.getSelectionModel().select(channelItem);
                         }
                     });
             model.sortedList.addListener(channelsChangedListener);
 
+            adjustHeightCounter = 0;
             adjustHeight();
         }
 
@@ -156,11 +150,19 @@ public abstract class ChannelSelection {
         protected abstract ListCell<ChannelItem> getListCell();
 
         private void adjustHeight() {
+            log.error("adjustHeight {}", adjustHeightCounter);
+            adjustHeightCounter++;
             UIThread.runOnNextRenderFrame(() -> {
                 Node lookupNode = listView.lookup(".list-cell");
                 if (lookupNode instanceof ListCell) {
                     //noinspection rawtypes
-                    listView.setPrefHeight(((ListCell) lookupNode).getHeight() * listView.getItems().size() + 10);
+                    double height = ((ListCell) lookupNode).getHeight();
+                    listView.setPrefHeight(height * listView.getItems().size() + 10);
+                    adjustHeightCounter = 10;
+                } else {
+                    if (!listView.getItems().isEmpty() && adjustHeightCounter < 10) {
+                        UIThread.run(this::adjustHeight);
+                    }
                 }
             });
         }
@@ -228,9 +230,7 @@ public abstract class ChannelSelection {
             private String iconIdHover;
             private String iconIdSelected;
 
-            private ListCell<ChannelItem> listCell;
             private boolean isSelected;
-            private ImageView iconImageView;
 
             public ChannelItem(Channel<?> channel) {
                 this.channel = channel;
@@ -257,44 +257,8 @@ public abstract class ChannelSelection {
                 }
             }
 
-            public void configLabel(ListCell<ChannelItem> listCell, Label label, ImageView iconImageView) {
-                this.listCell = listCell;
-                this.iconImageView = iconImageView;
-                label.setText(displayString.toUpperCase());
-                // iconId.ifPresent(iconId -> {
-                // label.setGraphic(BisqIconButton.createIconButton(iconId));
-                //  label.setGraphicTextGap(8);
-
-                  /*  listCell.setOnMouseEntered(e -> {
-                        if (!isSelected) {
-                            label.setGraphic(BisqIconButton.createIconButton(iconIdHover.get()));
-                        }
-                    });
-                    listCell.setOnMouseExited(e -> {
-                        if (isSelected) {
-                            label.setGraphic(BisqIconButton.createIconButton(iconIdSelected.get()));
-                        } else {
-                            label.setGraphic(BisqIconButton.createIconButton(iconId));
-                        }
-                    });*/
-                // });
-            }
-
-            public void release(Label label) {
-                label.setOnMouseDragEntered(null);
-                label.setOnMouseDragExited(null);
-            }
-
             public void setSelected(boolean selected) {
                 isSelected = selected;
-                log.error("setSelected {} {}", iconId, selected);
-              /*  if (iconImageView != null) {
-                    if (isSelected) {
-                        label.setGraphic(BisqIconButton.createIconButton(iconIdSelected.get()));
-                    } else {
-                        label.setGraphic(BisqIconButton.createIconButton(iconId.get()));
-                    }
-                }*/
             }
         }
     }

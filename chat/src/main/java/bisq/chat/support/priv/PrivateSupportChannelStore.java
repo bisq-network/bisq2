@@ -17,38 +17,38 @@
 
 package bisq.chat.support.priv;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 public class PrivateSupportChannelStore implements PersistableStore<PrivateSupportChannelStore> {
-    private final ObservableSet<PrivateSupportChannel> channels = new ObservableSet<>();
+    private final ObservableArray<PrivateSupportChannel> channels = new ObservableArray<>();
 
     public PrivateSupportChannelStore() {
     }
 
-    private PrivateSupportChannelStore(Set<PrivateSupportChannel> privateSupportChannels) {
+    private PrivateSupportChannelStore(List<PrivateSupportChannel> privateSupportChannels) {
         setAll(privateSupportChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateSupportChannelStore toProto() {
         bisq.chat.protobuf.PrivateSupportChannelStore.Builder builder = bisq.chat.protobuf.PrivateSupportChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateSupportChannel::toProto).collect(Collectors.toSet()));
+                .addAllChannels(channels.stream().map(PrivateSupportChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateSupportChannelStore fromProto(bisq.chat.protobuf.PrivateSupportChannelStore proto) {
-        Set<PrivateSupportChannel> privateSupportChannels = proto.getChannelsList().stream()
+        List<PrivateSupportChannel> privateSupportChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateSupportChannel) PrivateSupportChannel.fromProto(e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new PrivateSupportChannelStore(privateSupportChannels);
     }
 
@@ -73,7 +73,7 @@ public class PrivateSupportChannelStore implements PersistableStore<PrivateSuppo
         return new PrivateSupportChannelStore(channels);
     }
 
-    public void setAll(Set<PrivateSupportChannel> privateSupportChannels) {
+    public void setAll(List<PrivateSupportChannel> privateSupportChannels) {
         this.channels.clear();
         this.channels.addAll(privateSupportChannels);
     }

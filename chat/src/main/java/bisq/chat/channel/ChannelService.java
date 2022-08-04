@@ -19,7 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
@@ -52,7 +52,7 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
                 .findAny();
     }
 
-    protected abstract ObservableSet<C> getChannels();
+    protected abstract ObservableArray<C> getChannels();
 
     protected void addMessage(M message, C channel) {
         synchronized (getPersistableStore()) {

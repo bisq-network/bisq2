@@ -53,7 +53,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
 
     public ChatView(ChatModel model,
                     ChatController<?, ?> controller,
-                    Pane marketChannelSelection,
+                    Pane publicChannelSelection,
                     Pane privateChannelSelection,
                     Pane chatMessagesComponent,
                     Pane channelInfo) {
@@ -74,7 +74,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
 
         // Left
         left = Layout.vBoxWith(
-                marketChannelSelection,
+                publicChannelSelection,
                 Layout.separator(),
                 privateChannelSelection,
                 Spacer.fillVBox(),

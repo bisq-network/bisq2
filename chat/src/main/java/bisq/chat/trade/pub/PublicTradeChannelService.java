@@ -22,6 +22,7 @@ import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableArray;
 import bisq.common.observable.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -101,7 +102,7 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableSet<PublicTradeChannel> getChannels() {
+    public ObservableArray<PublicTradeChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
