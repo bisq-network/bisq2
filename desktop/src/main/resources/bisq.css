@@ -1094,8 +1094,8 @@
 }
 
 .medium-large-button {
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
     -fx-padding: 10;
     -fx-font-size: 1.25em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/

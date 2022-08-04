@@ -30,8 +30,17 @@ public class MarketImageComposition {
         stream.forEach(code -> {
             Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
             ImageView imageView = new ImageView();
+
+
+          /*  ColorAdjust monochrome = new ColorAdjust();
+            monochrome.setSaturation(-0.5);
+            monochrome.setBrightness(-0.5);
+            imageView.setEffect(monochrome);*/
+
+
             StackPane.setAlignment(imageView, alignment);
             pane.getChildren().add(imageView);
+
             if (MARKETS_WITH_IMAGE.contains(code)) {
                 imageView.setId("market-" + code);
             } else {

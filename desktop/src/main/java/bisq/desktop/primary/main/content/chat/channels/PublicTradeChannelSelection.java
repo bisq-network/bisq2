@@ -44,6 +44,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -301,9 +302,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         Market market = publicTradeChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
-                        label.setGraphic(MarketImageComposition.imageBoxForMarket(
+
+                        StackPane iconPane = MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
-                                pair.getSecond().toLowerCase()));
+                                pair.getSecond().toLowerCase());
+                        label.setGraphic(iconPane);
                         label.setGraphicTextGap(8);
                         label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

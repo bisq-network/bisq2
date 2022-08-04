@@ -480,6 +480,36 @@
     -fx-image: url("images/markets/market-xmr.png");
 }
 
+
+/* ------------------------------------------------------------------------------------ */
+/* Learn */
+/* ------------------------------------------------------------------------------------ */
+
+#learn-bisq {
+    -fx-image: url("images/learn/bisq.png");
+}
+
+#learn-bitcoin {
+    -fx-image: url("images/learn/bitcoin.png");
+}
+
+#learn-privacy {
+    -fx-image: url("images/learn/privacy.png");
+}
+
+#learn-security {
+    -fx-image: url("images/learn/security.png");
+}
+
+#learn-wallets {
+    -fx-image: url("images/learn/wallets.png");
+}
+
+#learn-openSource {
+    -fx-image: url("images/learn/openSource.png");
+}
+
+
 /* ------------------------------------------------------------------------------------ */
 /* Channels */
 /* ------------------------------------------------------------------------------------ */
