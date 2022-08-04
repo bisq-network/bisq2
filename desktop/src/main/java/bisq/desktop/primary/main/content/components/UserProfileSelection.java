@@ -132,8 +132,6 @@ public class UserProfileSelection {
         private View(Model model, Controller controller) {
             super(new Pane(), model, controller);
 
-            // root.setMinHeight(60);
-
             comboBox = new UserProfileComboBox(model.userProfiles, Res.get("social.userProfile.comboBox.description"));
             comboBox.setLayoutY(UserProfileComboBox.Y_OFFSET);
             root.getChildren().setAll(comboBox);
@@ -280,7 +278,6 @@ public class UserProfileSelection {
             double width = label.getWidth() + UserProfileSkin.ICON_SIZE + 80;
             return Math.max(width, UserProfileComboBox.this.getPrefWidth());
         }
-
     }
 
     private static class UserProfileSkin extends AutoCompleteComboBox.Skin<ListItem> {

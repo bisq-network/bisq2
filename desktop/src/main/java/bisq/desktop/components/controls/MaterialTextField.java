@@ -99,6 +99,7 @@ public class MaterialTextField extends Pane {
         }
 
         iconButton = new BisqIconButton();
+        iconButton.setAlignment(Pos.TOP_RIGHT);
         iconButton.setIcon("info");
         iconButton.setOpacity(0.6);
         iconButton.setManaged(false);
@@ -126,9 +127,7 @@ public class MaterialTextField extends Pane {
         helpProperty.addListener(new WeakReference<ChangeListener<String>>((observable, oldValue, newValue) ->
                 update()).get());
         field.editableProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
-        {
-            update();
-        }).get());
+                update()).get());
         disabledProperty().addListener(new WeakReference<ChangeListener<Boolean>>((observable, oldValue, newValue) ->
                 update()).get());
         widthProperty().addListener(new WeakReference<ChangeListener<Number>>((observable, oldValue, newValue) ->
@@ -333,10 +332,12 @@ public class MaterialTextField extends Pane {
 
         if (field.isEditable()) {
             bg.setMouseTransparent(false);
+            bg.setOpacity(1);
             line.setOpacity(1);
             field.getStyleClass().remove("material-text-field-read-only");
         } else {
             bg.setMouseTransparent(true);
+            bg.setOpacity(0.4);
             line.setOpacity(0.25);
             descriptionLabel.getStyleClass().add("material-text-field-description-small");
             descriptionLabel.getStyleClass().add("material-text-field-description-read-only");

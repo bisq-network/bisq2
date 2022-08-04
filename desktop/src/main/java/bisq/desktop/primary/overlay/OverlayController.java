@@ -27,7 +27,6 @@ import bisq.desktop.primary.main.content.settings.reputation.bond.BondedReputati
 import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqController;
 import bisq.desktop.primary.main.content.settings.reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
-import bisq.desktop.primary.main.content.settings.userProfile.edit.EditProfileController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.BisqEasyHelpController;
 import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
@@ -106,9 +105,6 @@ public class OverlayController extends NavigationController {
             }
             case CREATE_PROFILE: {
                 return Optional.of(new CreateUserProfileController(applicationService));
-            }
-            case EDIT_PROFILE: {
-                return Optional.of(new EditProfileController(applicationService));
             }
             case BURN_BSQ: {
                 return Optional.of(new BurnBsqController(applicationService));

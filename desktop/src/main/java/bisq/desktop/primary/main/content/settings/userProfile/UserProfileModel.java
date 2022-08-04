@@ -19,20 +19,27 @@ package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.desktop.common.view.Model;
 import bisq.user.identity.UserIdentity;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.layout.Pane;
+import bisq.user.reputation.ReputationScore;
+import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.image.Image;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 @Getter
 public class UserProfileModel implements Model {
-    private final ObjectProperty<Pane> userProfileDisplayPane = new SimpleObjectProperty<>();
-    @Setter
-    @Nullable
-    private UserIdentity selectedChatUserIdentity;
+    private final ObjectProperty<UserIdentity> selectedUserIdentity = new SimpleObjectProperty<>();
+    private final ObservableList<UserIdentity> userIdentities = FXCollections.observableArrayList();
+    private final StringProperty nickName = new SimpleStringProperty();
+    private final StringProperty nymId = new SimpleStringProperty();
+    private final StringProperty profileId = new SimpleStringProperty();
+    private final ObjectProperty<Image> roboHash = new SimpleObjectProperty<>();
+    private final StringProperty statement = new SimpleStringProperty("");
+    private final StringProperty terms = new SimpleStringProperty("");
+    private final StringProperty reputationScoreValue = new SimpleStringProperty();
+    private final ObjectProperty<ReputationScore> reputationScore = new SimpleObjectProperty<>();
+    private final StringProperty profileAge = new SimpleStringProperty();
+    private final BooleanProperty saveButtonDisabled = new SimpleBooleanProperty();
 }
