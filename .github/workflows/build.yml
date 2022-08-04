@@ -33,6 +33,14 @@ jobs:
           path: tools/bitcoin-core
           key: ${{ runner.os }}-bitcoin-core-${{ env.bitcoin-core-version }}
 
+      - name: Cache ElectrumX
+        if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
+        id: cache-electrumx
+        uses: actions/cache@v3
+        with:
+          path: tools/electrumx
+          key: ${{ runner.os }}-electrumx-${{ env.electrumx-version }}
+
       - name: Cache Elements Core
         id: cache-elements-core
         uses: actions/cache@v3
