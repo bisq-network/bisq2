@@ -22,13 +22,10 @@ import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
-
-@ToString
 @EqualsAndHashCode
 public final class PubKey implements Proto {
     @Getter
@@ -72,5 +69,14 @@ public final class PubKey implements Proto {
             id = Hex.encode(getHash());
         }
         return id;
+    }
+
+
+    @Override
+    public String toString() {
+        return "PubKey{" +
+                "\r\n     publicKey=" + Hex.encode(publicKey.getEncoded()) +
+                ",\r\n     keyId='" + keyId + '\'' +
+                "\r\n}";
     }
 }

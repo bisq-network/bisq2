@@ -72,6 +72,7 @@ public class UserService implements Service {
                 openTimestampService,
                 networkService);
         reputationService = new ReputationService(baseDir,
+                persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);

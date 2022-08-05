@@ -57,7 +57,6 @@ public class BisqEasyChatView extends ChatView {
         centerToolbar.getChildren().add(2, toggleOffersButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
-            log.error("newValue {}", newValue);
             if (newValue != null) {
                 Region childRoot = newValue.getRoot();
                 // chatMessagesComponent is VBox

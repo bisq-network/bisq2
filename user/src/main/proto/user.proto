@@ -110,3 +110,13 @@ message Reputation {
   string type = 1;
   Proof proof = 2;
 }
+
+message AccountAgeStore {
+  repeated string jsonRequests = 1;
+  uint64 lastRequested = 2;
+}
+
+message SignedWitnessStore {
+  repeated string jsonRequests = 1;
+  uint64 lastRequested = 2;
+}

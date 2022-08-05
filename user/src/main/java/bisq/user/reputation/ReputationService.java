@@ -20,6 +20,7 @@ package bisq.user.reputation;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -42,6 +43,7 @@ public class ReputationService implements Service {
     private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
 
     public ReputationService(String baseDir,
+                             PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService) {
@@ -52,20 +54,26 @@ public class ReputationService implements Service {
                 userIdentityService,
                 userProfileService);
         accountAgeService = new AccountAgeService(baseDir,
+                persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);
         signedWitnessService = new SignedWitnessService(baseDir,
+                persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);
-
 
         proofOfBurnService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         accountAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         signedWitnessService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
@@ -82,6 +90,11 @@ public class ReputationService implements Service {
                 .thenCompose(r -> accountAgeService.shutdown())
                 .thenCompose(r -> signedWitnessService.shutdown());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public ReputationScore getReputationScore(UserProfile userProfile) {
         return findReputationScore(userProfile).orElse(ReputationScore.NONE);

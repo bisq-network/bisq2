@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode
-@ToString
 @Getter
 public final class NetworkId implements Proto {
     private final PubKey pubKey;
@@ -91,5 +90,14 @@ public final class NetworkId implements Proto {
             Transport.Type transportType = ProtobufUtils.enumFromProto(Transport.Type.class, proto.getTransportType());
             return new AddressTransportTypeTuple(transportType, Address.fromProto(proto.getAddress()));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkId{" +
+                "\r\n     pubKey=" + pubKey +
+                ",\r\n     nodeId='" + nodeId + '\'' +
+                ",\r\n     addressByNetworkType=" + addressByNetworkType +
+                "\r\n}";
     }
 }

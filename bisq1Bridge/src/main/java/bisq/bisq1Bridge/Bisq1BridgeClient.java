@@ -49,9 +49,7 @@ public class Bisq1BridgeClient {
     }
 
     private void startRequests() {
-        requestSerial().thenApply(result ->
-                Scheduler.run(this::requestSerial).periodically(5, TimeUnit.SECONDS)
-        );
+        Scheduler.run(this::requestSerial).periodically(0, 5, TimeUnit.SECONDS);
     }
 
     private CompletableFuture<Boolean> requestSerial() {
