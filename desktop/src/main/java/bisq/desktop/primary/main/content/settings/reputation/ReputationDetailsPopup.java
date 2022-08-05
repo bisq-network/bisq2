@@ -129,6 +129,7 @@ public class ReputationDetailsPopup extends VBox {
         BisqTableColumn<ListItem> dateColumn = new BisqTableColumn.Builder<ListItem>()
                 .title(Res.get("date"))
                 .isFirst()
+                .minWidth(110)
                 .comparator(Comparator.comparing(ListItem::getDate))
                 .valueSupplier(ListItem::getDateString)
                 .build();

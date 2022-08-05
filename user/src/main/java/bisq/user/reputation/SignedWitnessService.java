@@ -34,6 +34,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -112,6 +113,21 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         super.processAuthenticatedData(authenticatedData);
         if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
             processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
+        }
+    }
+
+    @Override
+    protected void addToDataSet(Set<AuthorizedSignedWitnessData> dataSet, AuthorizedSignedWitnessData data) {
+        if (dataSet.isEmpty()) {
+            dataSet.add(data);
+            return;
+        }
+
+        // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
+        AuthorizedSignedWitnessData existing = new ArrayList<>(dataSet).get(0);
+        if (existing.getWitnessSignDate() > data.getWitnessSignDate()) {
+            dataSet.clear();
+            dataSet.add(data);
         }
     }
 

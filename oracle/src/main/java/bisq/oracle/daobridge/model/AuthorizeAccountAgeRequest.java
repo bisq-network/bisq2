@@ -19,7 +19,8 @@ package bisq.oracle.daobridge.model;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.network.p2p.message.NetworkMessage;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -27,15 +28,20 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.concurrent.TimeUnit;
+
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class AuthorizeAccountAgeRequest implements NetworkMessage {
+public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     private final String profileId;
     private final String hashAsHex;
     private final long date;
     private final String pubKeyBase64;
     private final String signatureBase64;
+    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
+            100000,
+            AuthorizeAccountAgeRequest.class.getSimpleName());
 
     public AuthorizeAccountAgeRequest(String profileId,
                                       String hashAsHex,
