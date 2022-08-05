@@ -29,9 +29,13 @@ public interface TaskScheduler {
 
     TaskScheduler periodically(long delay, TimeUnit timeUnit);
 
+    TaskScheduler periodically(long initialDelay, long delay, TimeUnit timeUnit);
+
     TaskScheduler repeated(long delayMs, long cycles);
 
     TaskScheduler repeated(long delay, TimeUnit timeUnit, long cycles);
+
+    TaskScheduler repeated(long initialDelay, long delay, TimeUnit timeUnit, long cycles);
 
     void stop();
 
