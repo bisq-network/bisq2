@@ -54,26 +54,17 @@ public class ReputationController implements Controller {
     @Override
     public void onActivate() {
         userProfileChangedFlagPin = userProfileService.getUserProfileChangedFlag()
-                .addObserver(__ -> {
-                    model.getListItems().setAll(userProfileService.getUserProfiles().stream()
-                            .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
-                            .collect(Collectors.toList()));
-                });
+                .addObserver(__ -> model.getListItems().setAll(userProfileService.getUserProfiles().stream()
+                        .map(userProfile -> new ReputationView.ListItem(userProfile, reputationService))
+                        .collect(Collectors.toList())));
         proofOfBurnScoreChangedFlagPin = reputationService.getProofOfBurnService().getUserProfileIdOfUpdatedScore()
-                .addObserver(this::extracted);
+                .addObserver(this::updateScore);
         bondedReputationScoreChangedFlagPin = reputationService.getBondedReputationService().getUserProfileIdOfUpdatedScore()
-                .addObserver(this::extracted);
+                .addObserver(this::updateScore);
         accountAgeScoreChangedFlagPin = reputationService.getAccountAgeService().getUserProfileIdOfUpdatedScore()
-                .addObserver(this::extracted);
+                .addObserver(this::updateScore);
         signedWitnessScoreChangedFlagPin = reputationService.getSignedWitnessService().getUserProfileIdOfUpdatedScore()
-                .addObserver(this::extracted);
-    }
-
-
-    private void extracted(String userProfileId) {
-        model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
-                .forEach(e -> e.requestReputationScore(userProfileId));
-        model.getUserProfileIdOfScoreUpdate().set(userProfileId);
+                .addObserver(this::updateScore);
     }
 
     @Override
@@ -110,5 +101,13 @@ public class ReputationController implements Controller {
                 .content(new ReputationDetailsPopup(item.getUserProfile(), item.getReputationScore(), reputationService))
                 .width(1000)
                 .show();
+    }
+
+    private void updateScore(String userProfileId) {
+        model.getListItems().stream().filter(e -> e.getUserProfile().getId().equals(userProfileId))
+                .forEach(item -> item.requestReputationScore(userProfileId));
+        // Enforce update in view by setting to null first
+        model.getUserProfileIdOfScoreUpdate().set(null);
+        model.getUserProfileIdOfScoreUpdate().set(userProfileId);
     }
 }
