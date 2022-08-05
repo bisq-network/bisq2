@@ -135,7 +135,8 @@ public class AcademyView extends View<GridPane, AcademyModel, AcademyController>
 
         Button button = new Button(buttonLabel);
         button.setMaxWidth(Double.MAX_VALUE);
-        button.getStyleClass().addAll("medium-large-button", "outlined-button");
+        //button.getStyleClass().addAll("medium-large-button", "outlined-button");
+        button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
         button.setOnAction(e -> controller.onSelect(navigationTarget));
 
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
