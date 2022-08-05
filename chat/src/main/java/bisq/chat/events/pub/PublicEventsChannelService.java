@@ -19,7 +19,7 @@ package bisq.chat.events.pub;
 
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -75,7 +75,7 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableSet<PublicEventsChannel> getChannels() {
+    public ObservableArray<PublicEventsChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -110,7 +110,7 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
             return;
         }
         PublicEventsChannel defaultEventsChannel = new PublicEventsChannel("conferences");
-        ObservableSet<PublicEventsChannel> channels = getChannels();
+        ObservableArray<PublicEventsChannel> channels = getChannels();
         channels.add(defaultEventsChannel);
         channels.add(new PublicEventsChannel("meetups"));
         channels.add(new PublicEventsChannel("podcasts"));

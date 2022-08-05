@@ -1094,8 +1094,8 @@
 }
 
 .medium-large-button {
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
     -fx-padding: 10;
     -fx-font-size: 1.25em;
     /*-fx-effect: dropshadow(gaussian, -bisq-grey-17, 0, 0, 0, 2);*/
@@ -1514,6 +1514,15 @@
     -fx-fill: -bisq-black;
     -fx-text-fill: -bisq-black;
 }
+
+.list-view.channel-selection-list-view .list-cell:hover .label {
+    -fx-text-fill: -bisq-white;
+}
+
+.list-view.channel-selection-list-view .list-cell:selected .label {
+    -fx-text-fill: -bisq-green;
+}
+
 
 /*******************************************************************************
  *                                                                             *
@@ -2092,9 +2101,19 @@ tree-table-view:focused {
 }
 
 .table-view.create-offer-table-view .table-row-cell {
-    -fx-pref-height: 68px;
+    -fx-pref-height: 50px;
     -fx-border-width: 0 0 1 0;
     -fx-font-size: 1.1em;
+}
+
+.table-view.create-offer-table-view .table-row-cell:hover .table-cell {
+    -fx-background-color: -bisq-darker-grey;
+    -fx-border-color: transparent;
+}
+
+.table-view.create-offer-table-view .table-row-cell:selected .table-cell {
+    -fx-background-color: -bisq-green;
+    -fx-border-color: transparent;
 }
 
 

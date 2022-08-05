@@ -19,8 +19,11 @@ package bisq.application;
 
 import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
+import bisq.network.NetworkService;
+import bisq.network.NetworkServiceConfig;
 import bisq.oracle.daobridge.DaoBridgeHttpService;
 import bisq.oracle.daobridge.DaoBridgeService;
+import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,14 +34,20 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Slf4j
 @Getter
-public class BridgeApplicationService extends NetworkApplicationService {
+public class BridgeApplicationService extends ApplicationService {
     private final IdentityService identityService;
     private final DaoBridgeService daoBridgeService;
     private final DaoBridgeHttpService daoBridgeHttpService;
-
+    private final SecurityService securityService;
+    private final NetworkService networkService;
 
     public BridgeApplicationService(String[] args) {
-        super(args);
+        super("default", args);
+
+        securityService = new SecurityService(persistenceService);
+
+        NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(), getConfig("network"));
+        networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
 
         identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
                 persistenceService,

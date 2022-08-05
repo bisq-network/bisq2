@@ -221,7 +221,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             type = "-support-";
         }
         if (type != null) {
-            String iconId = "channels" + type + channel.getId() + "-white";
+            //  String iconId = "channels" + type + channel.getId() + "-white";
+            String iconId = "channels" + type + channel.getId();
             model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
         }
     }

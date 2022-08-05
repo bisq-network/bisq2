@@ -25,7 +25,6 @@ import bisq.security.SignatureUtil;
 import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
@@ -38,7 +37,6 @@ import java.security.PublicKey;
  */
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-@ToString
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
     private final byte[] signature;
@@ -105,5 +103,14 @@ public final class AuthorizedData extends AuthenticatedData {
             e.printStackTrace();
             return true;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AuthorizedData{" +
+                "\r\n     signature=" + Hex.encode(signature) +
+                ",\r\n     authorizedPublicKeyBytes=" + Hex.encode(authorizedPublicKeyBytes) +
+                ",\r\n     distributedData=" + distributedData +
+                "\r\n} ";
     }
 }

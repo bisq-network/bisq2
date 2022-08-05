@@ -73,18 +73,24 @@ public class Scheduler implements TaskScheduler {
     }
 
     @Override
+    public Scheduler periodically(long initialDelay, long delay, TimeUnit timeUnit) {
+        return repeated(initialDelay, delay, timeUnit, Long.MAX_VALUE);
+    }
+
+    @Override
     public Scheduler repeated(long delayMs, long cycles) {
         return repeated(delayMs, TimeUnit.MILLISECONDS, cycles);
     }
 
     @Override
     public Scheduler repeated(long delay, TimeUnit timeUnit, long cycles) {
+        return repeated(delay, delay, timeUnit, cycles);
+    }
+
+    @Override
+    public Scheduler repeated(long initialDelay, long delay, TimeUnit timeUnit, long cycles) {
         if (stopped) {
             return this;
-        }
-        if (delay == 0) {
-            log.warn("Delay must be > 0. We set it to 1 ms.");
-            delay = 1;
         }
         if (cycles == 1) {
             executor.schedule(() -> {
@@ -112,7 +118,7 @@ public class Scheduler implements TaskScheduler {
                         stop();
                     }
                 }
-            }, delay, delay, timeUnit);
+            }, initialDelay, delay, timeUnit);
         }
         return this;
     }

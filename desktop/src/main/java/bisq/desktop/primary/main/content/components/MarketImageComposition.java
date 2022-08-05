@@ -1,6 +1,7 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.common.currency.TradeCurrency;
+import bisq.common.data.Pair;
 import bisq.desktop.common.utils.ImageUtil;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -10,13 +11,14 @@ import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
 public class MarketImageComposition {
     private static final List<String> MARKETS_WITH_IMAGE = List.of("bsq", "btc", "eur", "usd", "xmr", "any-base", "any-quote");
 
-    public static StackPane imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
+    public static Pair<StackPane, List<ImageView>> imageBoxForMarket(String baseCurrencyCode, String quoteCurrencyCode) {
         boolean isRetina = ImageUtil.isRetina();
 
         StackPane pane = new StackPane();
@@ -27,11 +29,20 @@ public class MarketImageComposition {
                 ? Stream.of(baseCurrencyCode, quoteCurrencyCode)
                 : Stream.of(quoteCurrencyCode, baseCurrencyCode);
 
-        stream.forEach(code -> {
+        List<ImageView> imageViews = stream.map(code -> {
             Pos alignment = quoteCurrencyCode.equals(code) ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT;
             ImageView imageView = new ImageView();
+
+
+          /*  ColorAdjust monochrome = new ColorAdjust();
+            monochrome.setSaturation(-0.5);
+            monochrome.setBrightness(-0.5);
+            imageView.setEffect(monochrome);*/
+
+
             StackPane.setAlignment(imageView, alignment);
             pane.getChildren().add(imageView);
+
             if (MARKETS_WITH_IMAGE.contains(code)) {
                 imageView.setId("market-" + code);
             } else {
@@ -65,8 +76,9 @@ public class MarketImageComposition {
                 }
                 pane.getChildren().add(label);
             }
-        });
+            return imageView;
+        }).collect(Collectors.toList());
 
-        return pane;
+        return new Pair<>(pane, imageViews);
     }
 }

@@ -23,11 +23,13 @@ import bisq.network.NetworkIdWithKeyPair;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 /**
  * My local user profile. Not shared over network.
  */
 @EqualsAndHashCode
+@ToString
 @Getter
 public final class UserIdentity implements Proto {
     private final Identity identity;

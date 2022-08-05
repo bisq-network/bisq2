@@ -25,6 +25,7 @@ import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.data.broadcast.BroadcastResult;
 import bisq.network.p2p.services.data.filter.DataFilter;
 import bisq.network.p2p.services.data.storage.Result;
+import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
@@ -92,6 +93,28 @@ public class DataService implements DataNetworkService.Listener {
 
     public DataService(StorageService storageService) {
         this.storageService = storageService;
+
+        storageService.addListener(new StorageService.Listener() {
+            @Override
+            public void onAdded(StorageData storageData) {
+                if (storageData instanceof AuthenticatedData) {
+                    listeners.forEach(e -> e.onAuthenticatedDataAdded((AuthenticatedData) storageData));
+                } else if (storageData instanceof MailboxData) {
+                    listeners.forEach(e -> e.onMailboxDataAdded((MailboxData) storageData));
+                } else if (storageData instanceof AppendOnlyData) {
+                    listeners.forEach(e -> e.onAppendOnlyDataAdded((AppendOnlyData) storageData));
+                }
+            }
+
+            @Override
+            public void onRemoved(StorageData storageData) {
+                if (storageData instanceof AuthenticatedData) {
+                    listeners.forEach(e -> e.onAuthenticatedDataRemoved((AuthenticatedData) storageData));
+                } else if (storageData instanceof MailboxData) {
+                    listeners.forEach(e -> e.onMailboxDataRemoved((MailboxData) storageData));
+                }
+            }
+        });
     }
 
     // todo a bit of a hack that way...

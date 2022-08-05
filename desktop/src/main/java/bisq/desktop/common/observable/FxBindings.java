@@ -18,6 +18,7 @@
 package bisq.desktop.common.observable;
 
 import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableArray;
 import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -85,8 +86,11 @@ public class FxBindings {
         public Pin to(ObservableSet<T> observable) {
             return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
         }
-    }
 
+        public Pin to(ObservableArray<T> observable) {
+            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
+        }
+    }
 
     public static final class ObservablePropertyBindings<T> {
         private final ObjectProperty<T> observer;

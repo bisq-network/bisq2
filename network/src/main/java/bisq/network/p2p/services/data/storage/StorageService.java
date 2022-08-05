@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,10 +68,18 @@ public class StorageService {
         }
     }
 
+
+    public interface Listener {
+        void onAdded(StorageData storageData);
+
+        void onRemoved(StorageData storageData);
+    }
+
     final Map<String, AuthenticatedDataStorageService> authenticatedDataStores = new ConcurrentHashMap<>();
     final Map<String, MailboxDataStorageService> mailboxStores = new ConcurrentHashMap<>();
     final Map<String, AppendOnlyDataStorageService> appendOnlyDataStores = new ConcurrentHashMap<>();
     private final PersistenceService persistenceService;
+    private final Set<StorageService.Listener> listeners = new CopyOnWriteArraySet<>();
 
     public StorageService(PersistenceService persistenceService) {
         this.persistenceService = persistenceService;
@@ -85,6 +94,17 @@ public class StorageService {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
                             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService, authStoreName, fileName);
+                            dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
+                                @Override
+                                public void onAdded(AuthenticatedData authenticatedData) {
+                                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
+                                }
+
+                                @Override
+                                public void onRemoved(AuthenticatedData authenticatedData) {
+                                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
+                                }
+                            });
                             authenticatedDataStores.put(fileName, dataStore);
                         });
             }
@@ -94,6 +114,17 @@ public class StorageService {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
                             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService, mailboxStoreName, fileName);
+                            dataStore.addListener(new MailboxDataStorageService.Listener() {
+                                @Override
+                                public void onAdded(MailboxData mailboxData) {
+                                    listeners.forEach(listener -> listener.onAdded(mailboxData));
+                                }
+
+                                @Override
+                                public void onRemoved(MailboxData mailboxData) {
+                                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
+                                }
+                            });
                             mailboxStores.put(fileName, dataStore);
                         });
             }
@@ -104,6 +135,7 @@ public class StorageService {
                 FileUtils.listFilesInDirectory(directory, 1)
                         .forEach(fileName -> {
                             AppendOnlyDataStorageService dataStore = new AppendOnlyDataStorageService(persistenceService, appendStoreName, fileName);
+                            dataStore.addListener(appendOnlyData -> listeners.forEach(listener -> listener.onAdded(appendOnlyData)));
                             appendOnlyDataStores.put(fileName, dataStore);
                         });
             }
@@ -116,6 +148,14 @@ public class StorageService {
         authenticatedDataStores.values().forEach(DataStorageService::shutdown);
         mailboxStores.values().forEach(DataStorageService::shutdown);
         appendOnlyDataStores.values().forEach(DataStorageService::shutdown);
+    }
+
+    public void addListener(StorageService.Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(StorageService.Listener listener) {
+        listeners.remove(listener);
     }
 
 
@@ -326,6 +366,17 @@ public class StorageService {
             AuthenticatedDataStorageService dataStore = new AuthenticatedDataStorageService(persistenceService,
                     AUTHENTICATED_DATA_STORE.getStoreName(),
                     metaData.getFileName());
+            dataStore.addListener(new AuthenticatedDataStorageService.Listener() {
+                @Override
+                public void onAdded(AuthenticatedData authenticatedData) {
+                    listeners.forEach(listener -> listener.onAdded(authenticatedData));
+                }
+
+                @Override
+                public void onRemoved(AuthenticatedData authenticatedData) {
+                    listeners.forEach(listener -> listener.onRemoved(authenticatedData));
+                }
+            });
             authenticatedDataStores.put(key, dataStore);
             return dataStore.readPersisted().thenApplyAsync(__ -> dataStore, NetworkService.DISPATCHER);
         } else {
@@ -339,6 +390,17 @@ public class StorageService {
             MailboxDataStorageService dataStore = new MailboxDataStorageService(persistenceService,
                     MAILBOX_DATA_STORE.getStoreName(),
                     metaData.getFileName());
+            dataStore.addListener(new MailboxDataStorageService.Listener() {
+                @Override
+                public void onAdded(MailboxData mailboxData) {
+                    listeners.forEach(listener -> listener.onAdded(mailboxData));
+                }
+
+                @Override
+                public void onRemoved(MailboxData mailboxData) {
+                    listeners.forEach(listener -> listener.onRemoved(mailboxData));
+                }
+            });
             mailboxStores.put(key, dataStore);
             return dataStore.readPersisted().thenApply(__ -> dataStore);
         } else {

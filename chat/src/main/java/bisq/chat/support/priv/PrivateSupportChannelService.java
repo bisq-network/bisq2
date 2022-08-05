@@ -19,7 +19,7 @@ package bisq.chat.support.priv;
 
 import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.persistence.Persistence;
@@ -79,7 +79,7 @@ public class PrivateSupportChannelService extends PrivateChannelService<PrivateS
     }
 
     @Override
-    public ObservableSet<PrivateSupportChannel> getChannels() {
+    public ObservableArray<PrivateSupportChannel> getChannels() {
         return persistableStore.getChannels();
     }
 }

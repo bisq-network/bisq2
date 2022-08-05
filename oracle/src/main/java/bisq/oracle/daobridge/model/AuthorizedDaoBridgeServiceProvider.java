@@ -27,7 +27,6 @@ import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistribu
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Set;
@@ -36,13 +35,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-@ToString
 public final class AuthorizedDaoBridgeServiceProvider implements AuthorizedDistributedData {
+    public final static long TTL = TimeUnit.DAYS.toMillis(100);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
     private static final Set<String> authorizedPublicKeys = Set.of();
 
-    private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(10),
+    private final MetaData metaData = new MetaData(TTL,
             100000,
             AuthorizedDaoBridgeServiceProvider.class.getSimpleName());
 
@@ -83,15 +82,20 @@ public final class AuthorizedDaoBridgeServiceProvider implements AuthorizedDistr
         return false;
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public Set<String> getAuthorizedPublicKeys() {
         if (DevMode.isDevMode()) {
-            return Set.of(
-                    "3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63"
-            );
+            return DevMode.AUTHORIZED_DEV_PUBLIC_KEYS;
         } else {
             return authorizedPublicKeys;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AuthorizedDaoBridgeServiceProvider{" +
+                "\r\n     metaData=" + metaData +
+                ",\r\n     networkId=" + networkId +
+                "\r\n}";
     }
 }

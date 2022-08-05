@@ -57,7 +57,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     @Getter
     protected final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
     @Getter
-    protected final Observable<String> changedUserProfileScore = new Observable<>();
+    protected final Observable<String> userProfileIdOfUpdatedScore = new Observable<>();
     protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
     public SourceReputationService(NetworkService networkService,
@@ -117,7 +117,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
-        changedUserProfileScore.set(userProfileId);
+        userProfileIdOfUpdatedScore.set(userProfileId);
     }
 
     public long getScore(String userProfileId) {

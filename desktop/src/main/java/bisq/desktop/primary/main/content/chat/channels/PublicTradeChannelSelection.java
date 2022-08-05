@@ -42,8 +42,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -110,9 +113,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
-                            model.selectedChannel.set(new ChannelSelection.View.ChannelItem(channel));
+                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         } else {
-                            model.selectedChannel.set(null);
+                            model.selectedChannelItem.set(null);
                         }
                     });
 
@@ -151,7 +154,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void deSelectChannel() {
-            model.selectedChannel.set(null);
+            model.selectedChannelItem.set(null);
         }
 
         public void onShowMarket(View.MarketListItem marketListItem) {
@@ -278,6 +281,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                 final Label label = new Label();
                 final HBox hBox = new HBox();
+                final ColorAdjust nonSelectedEffect = new ColorAdjust();
+                final ColorAdjust hoverEffect = new ColorAdjust();
 
                 {
                     setCursor(Cursor.HAND);
@@ -291,6 +296,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     removeIcon.setCursor(Cursor.HAND);
                     removeIcon.setId("icon-label-grey");
                     HBox.setMargin(removeIcon, new Insets(0, 12, 0, 0));
+
+                    nonSelectedEffect.setSaturation(-0.4);
+                    nonSelectedEffect.setBrightness(-0.6);
+
+                    hoverEffect.setSaturation(0.2);
+                    hoverEffect.setBrightness(0.2);
                 }
 
                 @Override
@@ -301,9 +312,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         Market market = publicTradeChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
-                        label.setGraphic(MarketImageComposition.imageBoxForMarket(
+
+                        Pair<StackPane, List<ImageView>> marketImageCompositionPair = MarketImageComposition.imageBoxForMarket(
                                 pair.getFirst().toLowerCase(),
-                                pair.getSecond().toLowerCase()));
+                                pair.getSecond().toLowerCase());
+                        StackPane iconPane = marketImageCompositionPair.getFirst();
+                        List<ImageView> icons = marketImageCompositionPair.getSecond();
+                        label.setGraphic(iconPane);
                         label.setGraphicTextGap(8);
                         label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
@@ -314,10 +329,18 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                         removeIcon.setOpacity(0);
                         removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicTradeChannel));
-                        setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
-                        setOnMouseEntered(e -> Transitions.fadeIn(removeIcon));
-                        setOnMouseExited(e -> Transitions.fadeOut(removeIcon));
-
+                        setOnMouseClicked(e -> {
+                            Transitions.fadeIn(removeIcon);
+                        });
+                        setOnMouseEntered(e -> {
+                            Transitions.fadeIn(removeIcon);
+                            applyEffect(icons, item.isSelected(), true);
+                        });
+                        setOnMouseExited(e -> {
+                            Transitions.fadeOut(removeIcon);
+                            applyEffect(icons, item.isSelected(), false);
+                        });
+                        applyEffect(icons, item.isSelected(), false);
                         setGraphic(hBox);
                     } else {
                         label.setGraphic(null);
@@ -330,6 +353,22 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         }
                         setGraphic(null);
                     }
+                }
+
+                private void applyEffect(List<ImageView> icons, boolean isSelected, boolean isHover) {
+                    icons.forEach(icon -> {
+                        if (isSelected) {
+                            icon.setEffect(null);
+                        } else {
+                            if (isHover) {
+                                icon.setEffect(hoverEffect);
+                            } else {
+                                icon.setEffect(nonSelectedEffect);
+                            }
+
+                        }
+                    });
+
                 }
             };
         }

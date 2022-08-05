@@ -18,10 +18,14 @@
 package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizeAccountAgeRequest;
 import bisq.oracle.daobridge.model.AuthorizedAccountAgeData;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -30,11 +34,17 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * We persist our json request data and do the authorisation request again at each start if the age of the last request
+ * exceeds the half of the TTL of the AuthorizedAccountAgeData. That way the network does not keep inactive data for
+ * too long.
+ */
 @Getter
 @Slf4j
-public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> {
+public class AccountAgeService extends SourceReputationService<AuthorizedAccountAgeData> implements PersistenceClient<AccountAgeStore> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 10;
 
@@ -60,17 +70,74 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         }
     }
 
+    @Getter
+    private final AccountAgeStore persistableStore = new AccountAgeStore();
+    @Getter
+    private final Persistence<AccountAgeStore> persistence;
     private final String baseDir;
 
     public AccountAgeService(String baseDir,
+                             PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
         this.baseDir = baseDir;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        // We delay a bit to ensure the network is well established
+        Scheduler.run(this::maybeRequestAgain).after(3, TimeUnit.SECONDS);
+        return super.initialize();
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
+            AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authenticatedData.getDistributedData();
+            String userProfileId = data.getProfileId();
+            userProfileService.findUserProfile(userProfileId)
+                    .map(this::getUserProfileKey)
+                    .ifPresent(dataSetByHash::remove);
+            if (scoreByUserProfileId.containsKey(userProfileId)) {
+                scoreByUserProfileId.remove(userProfileId);
+                userProfileIdOfUpdatedScore.set(userProfileId);
+            }
+        }
     }
 
     public boolean requestAuthorization(String json) {
+        persistableStore.getJsonRequests().add(json);
+        persist();
+        return doRequestAuthorization(json);
+    }
+
+    @Override
+    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        super.processAuthenticatedData(authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
+            processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
+        }
+    }
+
+    @Override
+    protected ByteArray getDataKey(AuthorizedAccountAgeData data) {
+        return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected ByteArray getUserProfileKey(UserProfile userProfile) {
+        return userProfile.getAccountAgeKey();
+    }
+
+    @Override
+    public long calculateScore(AuthorizedAccountAgeData data) {
+        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
+    }
+
+    private boolean doRequestAuthorization(String json) {
         try {
             AccountAgeWitnessDto dto = new Gson().fromJson(json, AccountAgeWitnessDto.class);
             String profileId = dto.getProfileId();
@@ -96,26 +163,11 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         }
     }
 
-    @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        super.processAuthenticatedData(authenticatedData);
-        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
-            processData((AuthorizedAccountAgeData) authenticatedData.getDistributedData());
+    private void maybeRequestAgain() {
+        long now = System.currentTimeMillis();
+        if (now - persistableStore.getLastRequested() > AuthorizedAccountAgeData.TTL / 2) {
+            persistableStore.getJsonRequests().forEach(this::doRequestAuthorization);
+            persistableStore.setLastRequested(now);
         }
-    }
-
-    @Override
-    protected ByteArray getDataKey(AuthorizedAccountAgeData data) {
-        return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    protected ByteArray getUserProfileKey(UserProfile userProfile) {
-        return userProfile.getAccountAgeKey();
-    }
-
-    @Override
-    public long calculateScore(AuthorizedAccountAgeData data) {
-        return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 }

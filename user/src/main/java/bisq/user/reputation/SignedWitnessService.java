@@ -18,10 +18,14 @@
 package bisq.user.reputation;
 
 import bisq.common.data.ByteArray;
+import bisq.common.timer.Scheduler;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.oracle.daobridge.model.AuthorizeSignedWitnessRequest;
 import bisq.oracle.daobridge.model.AuthorizedSignedWitnessData;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -30,11 +34,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * We persist our json request data and do the authorisation request again at each start if the age of the last request
+ * exceeds the half of the TTL of the AuthorizedSignedWitnessData. That way the network does not keep inactive data for
+ * too long.
+ */
 @Getter
 @Slf4j
-public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> {
+public class SignedWitnessService extends SourceReputationService<AuthorizedSignedWitnessData> implements PersistenceClient<SignedWitnessStore> {
     private static final long DAY_MS = TimeUnit.DAYS.toMillis(1);
     public static final long WEIGHT = 50;
 
@@ -63,17 +74,69 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         }
     }
 
+    @Getter
+    private final SignedWitnessStore persistableStore = new SignedWitnessStore();
+    @Getter
+    private final Persistence<SignedWitnessStore> persistence;
     private final String baseDir;
 
     public SignedWitnessService(String baseDir,
+                                PersistenceService persistenceService,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
                                 UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
         this.baseDir = baseDir;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        // We delay a bit to ensure the network is well established
+        Scheduler.run(this::maybeRequestAgain).after(30, TimeUnit.SECONDS);
+        return super.initialize();
+    }
+
+    public Set<String> getJsonRequests() {
+        return persistableStore.getJsonRequests();
     }
 
     public boolean requestAuthorization(String json) {
+        persistableStore.getJsonRequests().add(json);
+        persist();
+        return doRequestAuthorization(json);
+    }
+
+    @Override
+    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        super.processAuthenticatedData(authenticatedData);
+        if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
+            processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
+        }
+    }
+
+    @Override
+    protected ByteArray getDataKey(AuthorizedSignedWitnessData data) {
+        return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    protected ByteArray getUserProfileKey(UserProfile userProfile) {
+        return userProfile.getSignedWitnessKey();
+    }
+
+    @Override
+    public long calculateScore(AuthorizedSignedWitnessData data) {
+        long age = getAgeInDays(data.getWitnessSignDate());
+        if (age <= 60) {
+            return 0;
+        }
+        return Math.min(365, age) * WEIGHT;
+    }
+
+    private boolean doRequestAuthorization(String json) {
+        getJsonRequests().add(json);
+        persist();
         try {
             SignedWitnessDto dto = new Gson().fromJson(json, SignedWitnessDto.class);
             long witnessSignDate = dto.getWitnessSignDate();
@@ -102,30 +165,11 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         }
     }
 
-    @Override
-    protected void processAuthenticatedData(AuthenticatedData authenticatedData) {
-        super.processAuthenticatedData(authenticatedData);
-        if (authenticatedData.getDistributedData() instanceof AuthorizedSignedWitnessData) {
-            processData((AuthorizedSignedWitnessData) authenticatedData.getDistributedData());
+    private void maybeRequestAgain() {
+        long now = System.currentTimeMillis();
+        if (now - persistableStore.getLastRequested() > AuthorizedSignedWitnessData.TTL / 2) {
+            persistableStore.getJsonRequests().forEach(this::doRequestAuthorization);
+            persistableStore.setLastRequested(now);
         }
-    }
-
-    @Override
-    protected ByteArray getDataKey(AuthorizedSignedWitnessData data) {
-        return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    protected ByteArray getUserProfileKey(UserProfile userProfile) {
-        return userProfile.getSignedWitnessKey();
-    }
-
-    @Override
-    public long calculateScore(AuthorizedSignedWitnessData data) {
-        long age = getAgeInDays(data.getWitnessSignDate());
-        if (age <= 60) {
-            return 0;
-        }
-        return Math.min(365, age) * WEIGHT;
     }
 }

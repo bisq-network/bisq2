@@ -36,7 +36,10 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
@@ -45,6 +48,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
     private final Button burnBsqButton, bsqBondButton, accountAgeButton, signedAccountButton;
     private final Hyperlink learnMore;
     private final BisqTableView<ListItem> tableView;
+    private Subscription userProfileIdOfScoreUpdatePin;
 
     public ReputationView(ReputationModel model,
                           ReputationController controller) {
@@ -77,7 +81,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         tableHeadline.getStyleClass().add("bisq-content-headline-label");
 
         tableView = new BisqTableView<>(model.getSortedList());
-       // tableView.getStyleClass().add("create-offer-table-view");
+        // tableView.getStyleClass().add("create-offer-table-view");
         tableView.setMinHeight(300);
         // Triggers to fill the available height
         tableView.setPrefHeight(2000);
@@ -96,6 +100,13 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         accountAgeButton.setOnAction(e -> controller.onAccountAge());
         signedAccountButton.setOnAction(e -> controller.onSignedAccount());
         learnMore.setOnAction(e -> controller.onLearnMore());
+
+        userProfileIdOfScoreUpdatePin = EasyBind.subscribe(model.getUserProfileIdOfScoreUpdate(), profileId ->
+        {
+            if (profileId != null) {
+                tableView.refresh();
+            }
+        });
     }
 
     @Override
@@ -105,6 +116,8 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         accountAgeButton.setOnAction(null);
         signedAccountButton.setOnAction(null);
         learnMore.setOnAction(null);
+
+        userProfileIdOfScoreUpdatePin.unsubscribe();
     }
 
     private void configTableView() {
@@ -205,23 +218,31 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
     @EqualsAndHashCode
     @Getter
+    @ToString
     static class ListItem implements TableItem {
+        private final ReputationService reputationService;
         private final UserProfile userProfile;
-        private final ReputationScore reputationScore;
+        private ReputationScore reputationScore;
         private final String userName;
         private final String profileAgeString;
         private final long profileAge;
-        private final long totalScore;
-        private final String totalScoreString;
+        private long totalScore;
+        private String totalScoreString;
 
         ListItem(UserProfile userProfile, ReputationService reputationService) {
+            this.reputationService = reputationService;
             this.userProfile = userProfile;
             userName = userProfile.getUserName();
-            reputationScore = reputationService.findReputationScore(userProfile).orElse(ReputationScore.NONE);
-            totalScore = reputationScore.getTotalScore();
-            totalScoreString = String.valueOf(totalScore);
+            requestReputationScore(userProfile.getId());
             profileAge = 0;
             profileAgeString = "n/a";
+        }
+
+
+        void requestReputationScore(String userProfileId) {
+            reputationScore = reputationService.findReputationScore(userProfileId).orElse(ReputationScore.NONE);
+            totalScore = reputationScore.getTotalScore();
+            totalScoreString = String.valueOf(totalScore);
         }
     }
 }

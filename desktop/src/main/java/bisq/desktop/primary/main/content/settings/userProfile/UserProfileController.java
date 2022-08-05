@@ -18,16 +18,28 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.components.robohash.RoboHash;
+import bisq.i18n.Res;
+import bisq.network.p2p.services.data.DataService;
 import bisq.oracle.ots.OpenTimestampService;
+import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import java.util.concurrent.CompletableFuture;
 
 import static bisq.desktop.common.view.NavigationTarget.CREATE_PROFILE_STEP1;
 
@@ -39,43 +51,131 @@ public class UserProfileController implements Controller {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final OpenTimestampService openTimestampService;
-    private Pin selectedUserProfilePin;
+    private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
+    private Subscription statementPin, termsPin;
+
 
     public UserProfileController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         reputationService = applicationService.getUserService().getReputationService();
         openTimestampService = applicationService.getOracleService().getOpenTimestampService();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
         model = new UserProfileModel();
-        view = new UserProfileView(model, this, userProfileSelection.getRoot());
+        view = new UserProfileView(model, this);
     }
 
     @Override
     public void onActivate() {
+        userProfilesPin = FxBindings.<UserIdentity, UserIdentity>bind(model.getUserIdentities())
+                .to(userIdentityService.getUserIdentities());
+
         selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
-                chatUserIdentity -> {
-                    if (model.getSelectedChatUserIdentity() == null ||
-                            (chatUserIdentity != null &&
-                                    !model.getSelectedChatUserIdentity().getId().equals(chatUserIdentity.getId()))) {
-                        model.setSelectedChatUserIdentity(chatUserIdentity);
-                        UserProfileDisplay userProfileDisplay = new UserProfileDisplay(userIdentityService,
-                                reputationService,
-                                openTimestampService,
-                                chatUserIdentity);
-                        model.getUserProfileDisplayPane().set(userProfileDisplay.getRoot());
+                userIdentity -> {
+                    if (userIdentity != null) {
+                        model.getSelectedUserIdentity().set(userIdentity);
+
+                        UserProfile userProfile = userIdentity.getUserProfile();
+                        model.getNickName().set(userProfile.getNickName());
+                        model.getNymId().set(userProfile.getNym());
+                        model.getProfileId().set(userProfile.getId());
+                        model.getRoboHash().set(RoboHash.getImage(userProfile.getPubKeyHash()));
+                        model.getStatement().set(userProfile.getStatement());
+                        model.getTerms().set(userProfile.getTerms());
+
+                        openTimestampService.getVerifiedOtsDate(new ByteArray(userIdentity.getPubKeyHash()))
+                                .thenAccept(date ->
+                                        UIThread.run(() -> model.getProfileAge().set(date.map(e -> String.valueOf(e))
+                                                .orElse(Res.get("na")))));
                     }
                 }
         );
+        reputationChangedPin = reputationService.getChangedUserProfileScore().addObserver(userProfileId -> applyReputationScore());
+
+        statementPin = EasyBind.subscribe(model.getStatement(),
+                statement -> updateSaveButtonState());
+        termsPin = EasyBind.subscribe(model.getTerms(),
+                terms -> updateSaveButtonState());
+    }
+
+    private void updateSaveButtonState() {
+        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        if (userIdentity == null) {
+            model.getSaveButtonDisabled().set(false);
+            return;
+        }
+        UserProfile userProfile = userIdentity.getUserProfile();
+        String statement = model.getStatement().get();
+        String terms = model.getTerms().get();
+        model.getSaveButtonDisabled().set(statement.equals(userProfile.getStatement()) &&
+                terms.equals(userProfile.getTerms()));
     }
 
     @Override
     public void onDeactivate() {
+        userProfilesPin.unbind();
         selectedUserProfilePin.unbind();
-        model.setSelectedChatUserIdentity(null);
+        reputationChangedPin.unbind();
+        statementPin.unsubscribe();
+        termsPin.unsubscribe();
+        model.getSelectedUserIdentity().set(null);
+    }
+
+    public void onSelected(UserIdentity userIdentity) {
+        if (userIdentity != null) {
+            userIdentityService.selectChatUserIdentity(userIdentity);
+        }
     }
 
     public void onAddNewChatUser() {
         Navigation.navigateTo(CREATE_PROFILE_STEP1);
+    }
+
+    public void onSave() {
+        userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
+                .thenAccept(result -> {
+                    UIThread.runOnNextRenderFrame(() -> {
+                        UserIdentity value = userIdentityService.getSelectedUserProfile().get();
+                        model.getSelectedUserIdentity().set(value);
+                        updateSaveButtonState();
+                    });
+                });
+    }
+
+    public void onDelete() {
+        if (userIdentityService.getUserIdentities().size() < 2) {
+            new Popup().warning(Res.get("settings.userProfile.deleteProfile.lastProfile.warning")).show();
+        } else {
+            new Popup().warning(Res.get("settings.userProfile.deleteProfile.warning"))
+                    .onAction(this::doDelete)
+                    .actionButtonText(Res.get("settings.userProfile.deleteProfile.warning.yes"))
+                    .closeButtonText(Res.get("cancel"))
+                    .show();
+        }
+    }
+
+    private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
+        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        new Popup().error(throwable.getMessage()).show();
+                    } else {
+                        if (!model.getUserIdentities().isEmpty()) {
+                            UIThread.runOnNextRenderFrame(() -> {
+                                UserIdentity value = model.getUserIdentities().get(0);
+                                model.getSelectedUserIdentity().set(value);
+                                updateSaveButtonState();
+                            });
+                        }
+                    }
+                });
+    }
+
+    private void applyReputationScore() {
+        if (model.getSelectedUserIdentity() == null) {
+            return;
+        }
+        ReputationScore reputationScore = reputationService.getReputationScore(model.getSelectedUserIdentity().get().getUserProfile());
+        model.getReputationScoreValue().set(String.valueOf(reputationScore.getTotalScore()));
+        model.getReputationScore().set(reputationScore);
     }
 }

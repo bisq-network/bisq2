@@ -26,11 +26,12 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.*;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -115,57 +116,10 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 .valueSupplier(MarketListItem::getNumUsers)
                 .comparator(Comparator.comparing(MarketListItem::getNumUsersAsInteger))
                 .build());
+        // We add a placeholder column as we show the search field at the header which would hide the column header
         tableView.getColumns().add(new BisqTableColumn.Builder<MarketListItem>()
                 .fixWidth(140)
-                .setCellFactory(getSelectionCellFactory())
                 .build());
-    }
-
-
-    private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getSelectionCellFactory() {
-        return column -> new TableCell<>() {
-            private ChangeListener<MarketListItem> listener;
-            private final ToggleButton toggleButton = new ToggleButton();
-
-            {
-                toggleButton.setToggleGroup(toggleGroup);
-            }
-
-            @Override
-            public void updateItem(final MarketListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                ReadOnlyObjectProperty<MarketListItem> selectedItemProperty = tableView.getSelectionModel().selectedItemProperty();
-                if (item != null && !empty) {
-                    toggleButton.setText(Res.get("select"));
-                    toggleButton.setSelected(selectedItemProperty.get() != null &&
-                            selectedItemProperty.get().equals(item) ||
-                            (model.getSelectedMarketListItem().get() != null &&
-                                    model.getSelectedMarketListItem().get().equals(item)));
-                    toggleButton.setOnAction(e -> {
-                        if (toggleButton.isSelected()) {
-                            controller.onSelect(item);
-                        } else {
-                            toggleButton.setSelected(true);
-                        }
-                    });
-                    listener = (observable, oldValue, newValue) -> {
-                        boolean selected = newValue != null && newValue.equals(item);
-                        toggleButton.setSelected(selected);
-                        if (selected) {
-                            controller.onSelect(item);
-                        }
-                    };
-                    selectedItemProperty.addListener(listener);
-                    setGraphic(toggleButton);
-                } else {
-                    selectedItemProperty.removeListener(listener);
-                    toggleButton.setSelected(false);
-                    toggleButton.setOnAction(null);
-                    setGraphic(null);
-                }
-            }
-        };
     }
 
     private Callback<TableColumn<MarketListItem, MarketListItem>, TableCell<MarketListItem, MarketListItem>> getNameCellFactory() {
@@ -212,7 +166,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
             this.numUsers = String.valueOf(numUsersAsInteger);
             icon = MarketImageComposition.imageBoxForMarket(
                     market.getBaseCurrencyCode().toLowerCase(),
-                    market.getQuoteCurrencyCode().toLowerCase());
+                    market.getQuoteCurrencyCode().toLowerCase()).getFirst();
             this.numUsersAsInteger = numUsersAsInteger;
         }
 

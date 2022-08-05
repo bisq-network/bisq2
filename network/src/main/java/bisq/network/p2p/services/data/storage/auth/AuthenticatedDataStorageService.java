@@ -95,7 +95,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
 
             if (authenticatedSequentialData.isExpired()) {
-                log.warn("Data is expired at add. request={}", request);
+                log.info("Data is expired at add. request object={}",
+                        request.getAuthenticatedSequentialData().getAuthenticatedData().distributedData.getClass().getSimpleName());
+                log.debug("Data is expired at add. request={}", request);
                 return new Result(false).expired();
             }
 
@@ -262,6 +264,18 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> pruneExpired() {
+        Set<Map.Entry<ByteArray, AuthenticatedDataRequest>> expiredEntries = super.pruneExpired();
+        expiredEntries.stream()
+                .map(Map.Entry::getValue)
+                .filter(e -> e instanceof AddAuthenticatedDataRequest)
+                .map(e -> (AddAuthenticatedDataRequest) e)
+                .map(e -> e.getAuthenticatedSequentialData().getAuthenticatedData())
+                .forEach(e -> listeners.forEach(listener -> listener.onRemoved(e)));
+        return expiredEntries;
+    }
 
     private void maybePruneMap(Map<ByteArray, AuthenticatedDataRequest> persisted) {
         long now = System.currentTimeMillis();

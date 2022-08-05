@@ -51,7 +51,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * An authorized developer could add those data. Verification is done by verifying the signature and pubKey against
  * the provided hard-coded pubKeys.
  * Similar concept is used in Bisq 1 for Filter, Alert or mediator/arbitrator registration.
- * The user who is authorized for publishing that data need to pass the private key as VM argument as defined below (those keys are only valid in dev mode).
+ * The user who is authorized for publishing that data need to pass the private key as VM argument.
+ * For development we use the keys defined in DevMode.AUTHORIZED_DEV_PUBLIC_KEYS:
  * -Dbisq.oracle.daoBridge.privateKey=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
  * -Dbisq.oracle.daoBridge.publicKey=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
  */
@@ -170,18 +171,19 @@ public class DaoBridgeService implements Service, MessageListener {
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData authorizedDistributedData) {
+    public CompletableFuture<Boolean> publishAuthorizedData(AuthorizedDistributedData data) {
         return identityService.getOrCreateIdentity(IdentityService.DEFAULT)
-                .thenCompose(identity -> networkService.publishAuthorizedData(authorizedDistributedData,
+                .thenCompose(identity -> networkService.publishAuthorizedData(data,
                         identity.getNodeIdAndKeyPair(),
                         authorizedPrivateKey.orElseThrow(),
                         authorizedPublicKey.orElseThrow()))
                 .thenApply(broadCastDataResult -> true);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAuthorizeAccountAgeRequest(AuthorizeAccountAgeRequest request) {
         long requestDate = request.getDate();

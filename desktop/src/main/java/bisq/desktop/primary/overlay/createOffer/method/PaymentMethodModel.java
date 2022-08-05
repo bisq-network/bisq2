@@ -33,5 +33,5 @@ public class PaymentMethodModel implements Model {
     private final ObservableList<String> selectedPaymentMethods = FXCollections.observableArrayList();
     private final StringProperty customMethod = new SimpleStringProperty();
     private final BooleanProperty paymentMethodsEmpty = new SimpleBooleanProperty();
-    private final BooleanProperty addCustomMethodIconVisible = new SimpleBooleanProperty();
+    private final BooleanProperty addCustomMethodIconEnabled = new SimpleBooleanProperty();
 }

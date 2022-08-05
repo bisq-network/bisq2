@@ -58,8 +58,6 @@ public enum NavigationTarget {
     BISQ_EASY_HELP_TAB_2(BISQ_EASY_HELP, false),
     BISQ_EASY_HELP_TAB_3(BISQ_EASY_HELP, false),
 
-    EDIT_PROFILE(OVERLAY, false),
-
     BURN_BSQ(OVERLAY, false),
     BURN_BSQ_TAB_1(BURN_BSQ, false),
     BURN_BSQ_TAB_2(BURN_BSQ, false),

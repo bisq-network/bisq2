@@ -19,21 +19,22 @@ package bisq.desktop.primary.overlay.createOffer.method;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.ChipButton;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMethodController> {
@@ -42,7 +43,8 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     private final ListChangeListener<String> allPaymentMethodsListener;
     private final FlowPane flowPane;
     private final Label nonFoundLabel;
-    private final Button addButton;
+    private final BisqIconButton addButton;
+    private Subscription addCustomMethodIconEnabledPin;
 
     public PaymentMethodView(PaymentMethodModel model, PaymentMethodController controller) {
         super(new VBox(), model, controller);
@@ -73,18 +75,17 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                 null,
                 Res.get("onboarding.method.customMethod.prompt"));
         custom.setPrefWidth(300);
-
-        addButton = new Button(Res.get("onboarding.method.customMethod.addButton").toUpperCase());
-        addButton.getStyleClass().add("outlined-button");
-
-        VBox vBox = new VBox(0, custom, addButton);
-        vBox.setAlignment(Pos.CENTER_RIGHT);
-        vBox.setMaxWidth(300);
+        custom.setIcon("add-white");
+        addButton = custom.getIconButton();
+        addButton.setOpacity(0.15);
+        addButton.setDisable(true);
+        addButton.setAlignment(Pos.CENTER);
+        custom.setMaxWidth(300);
 
         VBox.setMargin(headLineLabel, new Insets(44, 0, 2, 0));
         VBox.setMargin(flowPane, new Insets(50, 65, 50, 65));
         VBox.setMargin(nonFoundLabel, new Insets(50, 0, 50, 0));
-        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, vBox);
+        root.getChildren().addAll(headLineLabel, subtitleLabel, nonFoundLabel, flowPane, custom);
 
         allPaymentMethodsListener = c -> {
             c.next();
@@ -96,13 +97,18 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewAttached() {
         custom.textProperty().bindBidirectional(model.getCustomMethod());
-        addButton.visibleProperty().bind(model.getAddCustomMethodIconVisible());
         nonFoundLabel.visibleProperty().bind(model.getPaymentMethodsEmpty());
         nonFoundLabel.managedProperty().bind(model.getPaymentMethodsEmpty());
         flowPane.visibleProperty().bind(model.getPaymentMethodsEmpty().not());
         flowPane.managedProperty().bind(model.getPaymentMethodsEmpty().not());
+        addButton.disableProperty().bind(model.getAddCustomMethodIconEnabled().not());
 
         addButton.setOnAction(e -> controller.onAddCustomMethod());
+
+        addCustomMethodIconEnabledPin = EasyBind.subscribe(model.getAddCustomMethodIconEnabled(), enabled -> {
+            custom.setIcon(enabled ? "add" : "add-white");
+            addButton.setOpacity(enabled ? 1 : 0.15);
+        });
 
         model.getAllPaymentMethods().addListener(allPaymentMethodsListener);
         fillPaymentMethods();
@@ -111,13 +117,16 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
     @Override
     protected void onViewDetached() {
         custom.textProperty().unbindBidirectional(model.getCustomMethod());
-        addButton.visibleProperty().unbind();
         nonFoundLabel.visibleProperty().unbind();
         nonFoundLabel.managedProperty().unbind();
         flowPane.visibleProperty().unbind();
         flowPane.managedProperty().unbind();
+        addButton.disableProperty().unbind();
+        ;
 
         addButton.setOnAction(null);
+
+        addCustomMethodIconEnabledPin.unsubscribe();
 
         model.getAllPaymentMethods().removeListener(allPaymentMethodsListener);
     }
@@ -136,7 +145,7 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
                     .filter(customMethod -> customMethod.equals(paymentMethod))
                     .findAny()
                     .ifPresentOrElse(customMethod -> {
-                        Label closeIcon = chipButton.setRightIcon(AwesomeIcon.REMOVE_SIGN);
+                        ImageView closeIcon = chipButton.setRightIcon("remove-white");
                         closeIcon.setOnMousePressed(e -> controller.onRemoveCustomMethod(paymentMethod));
                         if (paymentMethod.length() > 13) {
                             chipButton.setTooltip(new BisqTooltip(displayString));

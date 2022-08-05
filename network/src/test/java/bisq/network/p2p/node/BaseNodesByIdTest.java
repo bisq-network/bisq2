@@ -39,7 +39,6 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         numNodes = 5;
         int numRepeats = 1;
         for (int i = 0; i < numRepeats; i++) {
-            log.error("Iteration {}", i);
             doMessageRoundTrip(numNodes, nodesById);
         }
         log.error("MessageRoundTrip for {} nodes repeated {} times took {} ms", numNodes, numRepeats, System.currentTimeMillis() - ts);

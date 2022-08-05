@@ -17,6 +17,7 @@
 
 package bisq.oracle.daobridge;
 
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
@@ -39,6 +40,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class DaoBridgeHttpService implements Service {
+    //todo set it to block height of launch date. We are not interested in txs published before
+    private static final int LAUNCH_BLOCK_HEIGHT = 0;
+
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
@@ -48,6 +52,11 @@ public class DaoBridgeHttpService implements Service {
     public DaoBridgeHttpService(NetworkService networkService, String url) {
         this.networkService = networkService;
         this.url = url;
+
+        if (!DevMode.isDevMode()) {
+            lastRequestedProofOfBurnBlockHeight.set(LAUNCH_BLOCK_HEIGHT);
+            lastRequestedBondedReputationBlockHeight.set(LAUNCH_BLOCK_HEIGHT);
+        }
     }
 
 

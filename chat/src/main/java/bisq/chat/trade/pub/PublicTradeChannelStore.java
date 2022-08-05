@@ -17,6 +17,7 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.common.observable.ObservableArray;
 import bisq.common.observable.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -25,18 +26,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
 public class PublicTradeChannelStore implements PersistableStore<PublicTradeChannelStore> {
-    private final ObservableSet<PublicTradeChannel> channels = new ObservableSet<>();
+    private final ObservableArray<PublicTradeChannel> channels = new ObservableArray<>();
     private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
 
     public PublicTradeChannelStore() {
     }
 
-    private PublicTradeChannelStore(Set<PublicTradeChannel> privateTradeChannels,
+    private PublicTradeChannelStore(List<PublicTradeChannel> privateTradeChannels,
                                     Set<String> visibleChannelIds) {
         setAll(privateTradeChannels, visibleChannelIds);
     }
@@ -44,15 +46,15 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
     @Override
     public bisq.chat.protobuf.PublicTradeChannelStore toProto() {
         bisq.chat.protobuf.PublicTradeChannelStore.Builder builder = bisq.chat.protobuf.PublicTradeChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toSet()))
+                .addAllChannels(channels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toList()))
                 .addAllVisibleChannelIds(visibleChannelIds);
         return builder.build();
     }
 
     public static PublicTradeChannelStore fromProto(bisq.chat.protobuf.PublicTradeChannelStore proto) {
-        Set<PublicTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
+        List<PublicTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new PublicTradeChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
     }
 
@@ -77,7 +79,7 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
         return new PublicTradeChannelStore(channels, visibleChannelIds);
     }
 
-    public void setAll(Set<PublicTradeChannel> privateTradeChannels, Set<String> visibleChannelIds) {
+    public void setAll(List<PublicTradeChannel> privateTradeChannels, Set<String> visibleChannelIds) {
         this.channels.clear();
         this.channels.addAll(privateTradeChannels);
         this.visibleChannelIds.clear();

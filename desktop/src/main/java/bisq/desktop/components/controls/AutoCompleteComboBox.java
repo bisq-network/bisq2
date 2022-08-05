@@ -71,7 +71,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
     }
 
     public AutoCompleteComboBox(ObservableList<T> items, String description) {
-        this(items, description, "");
+        this(items, description, null);
     }
 
     public AutoCompleteComboBox(ObservableList<T> items, String description, @Nullable String prompt) {
@@ -86,7 +86,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
             protected void updateItem(T item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    if (editor.getText() != null && !editor.getText().isEmpty()) {
+                    if (editor.getText() != null) {
                         skin.getMaterialTextField().update();
                         skin.getMaterialTextField().getDescriptionLabel().setLayoutY(6.5);
                         editor.setText(asString(item));
@@ -119,6 +119,12 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
     public TextInputControl getEditorTextField() {
         return editor;
+    }
+
+    @Override
+    protected double computeMinHeight(double width) {
+        // MaterialField height
+        return 56;
     }
 
     @Override

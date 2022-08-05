@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.settings.reputation;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -31,4 +33,5 @@ public class ReputationModel implements Model {
     private final ObservableList<ReputationView.ListItem> listItems = FXCollections.observableArrayList();
     private final FilteredList<ReputationView.ListItem> filteredList = new FilteredList<>(listItems);
     private final SortedList<ReputationView.ListItem> sortedList = new SortedList<>(filteredList);
+    private final StringProperty userProfileIdOfScoreUpdate = new SimpleStringProperty();
 }
