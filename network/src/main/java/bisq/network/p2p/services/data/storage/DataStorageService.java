@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class DataStorageService<T extends DataRequest> extends RateLimitedPersistenceClient<DataStore<T>> {
     public static final String SUB_PATH = "db" + File.separator + "network";
+
     @Getter
     protected final Persistence<DataStore<T>> persistence;
     @Getter
@@ -50,27 +51,28 @@ public abstract class DataStorageService<T extends DataRequest> extends RateLimi
         this.fileName = fileName;
         subDirectory = SUB_PATH + File.separator + storeName;
         persistence = persistenceService.getOrCreatePersistence(this, subDirectory, fileName, persistableStore);
-        scheduler = Scheduler.run(this::pruneExpired).periodically(1, TimeUnit.HOURS);
+        scheduler = Scheduler.run(this::pruneExpired).periodically(5, TimeUnit.SECONDS);
     }
 
-    private void pruneExpired() {
+    protected Set<Map.Entry<ByteArray, T>> pruneExpired() {
         Set<Map.Entry<ByteArray, T>> expiredEntries = persistableStore.getMap().entrySet().stream()
                 .filter(entry -> entry.getValue().isExpired())
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
             log.info("We remove {} expired entries from our map", expiredEntries.size());
+            expiredEntries.forEach(e -> persistableStore.getMap().remove(e.getKey()));
         }
-        expiredEntries.forEach(e -> persistableStore.getMap().remove(e.getKey()));
+        return expiredEntries;
     }
 
-  /*  public Inventory getInventory(DataFilter dataFilter) {
-        Map<ByteArray, T> mapClone = getClone();
-        List<T> result = mapClone.entrySet().stream()
-                .filter(e -> dataFilter.doInclude(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
-        return new Inventory(result, mapClone.size() - result.size());
-    }*/
+    /*  public Inventory getInventory(DataFilter dataFilter) {
+          Map<ByteArray, T> mapClone = getClone();
+          List<T> result = mapClone.entrySet().stream()
+                  .filter(e -> dataFilter.doInclude(e.getKey()))
+                  .map(Map.Entry::getValue)
+                  .collect(Collectors.toList());
+          return new Inventory(result, mapClone.size() - result.size());
+      }*/
 
     public void shutdown() {
         scheduler.stop();
