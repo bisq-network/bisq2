@@ -70,6 +70,21 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         this.baseDir = baseDir;
     }
 
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedAccountAgeData) {
+            AuthorizedAccountAgeData data = (AuthorizedAccountAgeData) authenticatedData.getDistributedData();
+            String userProfileId = data.getProfileId();
+            userProfileService.findUserProfile(userProfileId)
+                    .map(this::getUserProfileKey)
+                    .ifPresent(dataSetByHash::remove);
+            if (scoreByUserProfileId.containsKey(userProfileId)) {
+                scoreByUserProfileId.remove(userProfileId);
+                userProfileIdOfUpdatedScore.set(userProfileId);
+            }
+        }
+    }
+
     public boolean requestAuthorization(String json) {
         try {
             AccountAgeWitnessDto dto = new Gson().fromJson(json, AccountAgeWitnessDto.class);
