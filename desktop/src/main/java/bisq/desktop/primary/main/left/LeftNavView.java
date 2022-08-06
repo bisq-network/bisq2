@@ -89,7 +89,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, trade),
                 createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG, trade),
                 createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP, trade),
-                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY, trade),
+                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_X, trade),
                 createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, trade)
         );
 

@@ -21,8 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.dashboard.DashboardController;
-import bisq.desktop.primary.main.content.discussion.DiscussionsController;
 import bisq.desktop.primary.main.content.academy.AcademyController;
 import bisq.desktop.primary.main.content.academy.bisq.BisqAcademyController;
 import bisq.desktop.primary.main.content.academy.bitcoin.BitcoinAcademyController;
@@ -30,6 +28,8 @@ import bisq.desktop.primary.main.content.academy.openSource.OpenSourceAcademyCon
 import bisq.desktop.primary.main.content.academy.privacy.PrivacyAcademyController;
 import bisq.desktop.primary.main.content.academy.security.SecurityAcademyController;
 import bisq.desktop.primary.main.content.academy.wallets.WalletsAcademyController;
+import bisq.desktop.primary.main.content.dashboard.DashboardController;
+import bisq.desktop.primary.main.content.discussion.DiscussionsController;
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.support.SupportController;
@@ -125,7 +125,7 @@ public class ContentController extends NavigationController {
             case BSQ_SWAP: {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LN_3_PARTY: {
+            case LN_X: {
                 return Optional.of(new LightningController(applicationService));
             }
             case WALLET_BITCOIN: {

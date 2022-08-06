@@ -27,7 +27,7 @@ public class SwapProtocol {
         ATOMIC_CROSS_CHAIN_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
         BISQ_MULTI_SIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),
         BSQ_SWAP(Security.HIGH, Privacy.MID, Convenience.MID, Cost.MID, Speed.MID),
-        LN_3_PARTY(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
+        LN_X(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
 
         private final Security security;
         private final Privacy privacy;
