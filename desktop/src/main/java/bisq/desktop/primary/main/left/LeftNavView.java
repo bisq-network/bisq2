@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavController> {
-    public final static int EXPANDED_WIDTH = 220;//220;
+    public final static int EXPANDED_WIDTH = 220;
     private final static int COLLAPSED_WIDTH = 70;
     private final static int MARKER_WIDTH = 3;
     private final static int EXPAND_ICON_SIZE = 18;
@@ -63,7 +63,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final Region selectionMarker;
     private final VBox mainMenuItems;
     private final int menuTop;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -85,22 +85,22 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.TRADE_OVERVIEW, true);
 
         VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY),
-                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP),
-                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG),
-                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP),
-                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY),
-                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP)
+                createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY, trade),
+                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, trade),
+                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG, trade),
+                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP, trade),
+                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_3_PARTY, trade),
+                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, trade)
         );
 
-        
+
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET_BITCOIN, true);
 
         VBox walletSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN),
-                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC)
+                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN, wallet),
+                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC, wallet)
         );
 
 
@@ -109,12 +109,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 NavigationTarget.ACADEMY, true);
 
         VBox learnSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY),
-                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY),
-                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY),
-                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY),
-                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY),
-                createSubmenuNavigationButton(Res.get("academy.openSource"), NavigationTarget.FOSS_ACADEMY)
+                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY, learn),
+                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learn),
+                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY, learn),
+                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learn),
+                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learn),
+                createSubmenuNavigationButton(Res.get("academy.openSource"), NavigationTarget.FOSS_ACADEMY, learn)
         );
 
         LeftNavButton chat = createNavigationButton(Res.get("chat"),
@@ -228,7 +228,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 expandIcon.setVisible(true);
                 expandIcon.setManaged(true);
 
-               // model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
                             collapseIcon.setVisible(false);
@@ -261,7 +261,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             }
         });
 
-        maybeAnimateMark();
+        selectedNavigationButtonPin = EasyBind.subscribe(model.getSelectedNavigationButton(), button -> {
+            if (button != null) {
+                maybeAnimateMark();
+                selectedNavigationButtonPin.unsubscribe();
+            }
+        });
     }
 
     @Override
@@ -270,6 +275,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         collapseIcon.setOnMouseClicked(null);
         navigationTargetSubscription.unsubscribe();
         menuExpandedSubscription.unsubscribe();
+        selectedNavigationButtonPin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
     }
@@ -283,8 +289,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         return button;
     }
 
-    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget) {
-        LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget);
+    private LeftNavSubButton createSubmenuNavigationButton(String title, NavigationTarget navigationTarget, LeftNavButton parentButton) {
+        LeftNavSubButton button = new LeftNavSubButton(title, toggleGroup, navigationTarget, parentButton);
         setupButtonHandler(navigationTarget, button);
         VBox.setVgrow(button, Priority.ALWAYS);
         return button;
@@ -302,26 +308,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {
         button.setOnAction(() -> {
-            if (button.isSelected()) {
-                // controller.onToggleExpandMenu();
-            } else {
-                controller.onNavigationTargetSelected(navigationTarget);
-                maybeAnimateMark();
-            }
+            controller.onNavigationTargetSelected(navigationTarget);
+            maybeAnimateMark();
         });
-       /* button.getIsAutoCollapse().addListener((observable, oldValue, newValue) -> {
-            if (newValue && !button.isSelected()) {
-                updateSubmenu();
-            }
-        });*/
         controller.onNavigationButtonCreated(button);
     }
 
     private void maybeAnimateMark() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
-        if (selectedLeftNavButton == null) {
-            return;
-        }
         UIThread.runOnNextRenderFrame(() -> {
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
@@ -333,18 +327,6 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                             targetY += submenu.getLayoutY();
                             break;
                         }
-                    }
-                }
-            } else {
-                int index = mainMenuItems.getChildren().indexOf(selectedLeftNavButton);
-                for (int i = 0; i < index; i++) {
-                    Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox) {
-                        VBox submenu = (VBox) item;
-                        LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
-                        /*if (parentMenuItem.getIsAutoCollapse().get()) {
-                            targetY -= submenu.getHeight();
-                        }*/
                     }
                 }
             }
@@ -365,10 +347,10 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 parentMenuItem.setHighlighted(isSubmenuActive);
 
                 if (isSubmenuActive) {
-                    parentMenuItem.setWasSelected(true);
+                    parentMenuItem.getWasSelected().set(true);
                 }
                 UIThread.runOnNextRenderFrame(parentMenuItem::applyStyle);
-                int targetHeight = isSubmenuActive || (parentMenuItem.isWasSelected()/* && !parentMenuItem.getIsAutoCollapse().get()*/) ?
+                int targetHeight = isSubmenuActive || (parentMenuItem.getWasSelected().get()) ?
                         (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
                 Transitions.animateHeight(submenu, targetHeight);
             }

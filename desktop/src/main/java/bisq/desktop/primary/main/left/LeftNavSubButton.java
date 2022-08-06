@@ -23,6 +23,7 @@ import bisq.desktop.common.view.NavigationTarget;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 @Slf4j
 class LeftNavSubButton extends LeftNavButton {
@@ -31,10 +32,14 @@ class LeftNavSubButton extends LeftNavButton {
 
     private final String fullTitle;
 
-    LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget) {
+    LeftNavSubButton(String title, ToggleGroup toggleGroup, NavigationTarget navigationTarget, LeftNavButton parentButton) {
         super(title, null, toggleGroup, navigationTarget, false);
         this.fullTitle = title;
         setMinHeight(0);
+        EasyBind.subscribe(parentButton.getWasSelected(), parentSelected -> {
+            setVisible(parentSelected);
+            setManaged(parentSelected);
+        });
     }
 
     @Override

@@ -227,8 +227,8 @@
     -fx-image: url("images/navigation/nav-wallet-hover.png");
 }
 
-#nav-expand {
-    -fx-image: url("images/navigation/nav-expand.png");
+#nav-arrow-down {
+    -fx-image: url("images/navigation/nav-arrow-down.png");
 }
 
 #nav-auto-collapse {
