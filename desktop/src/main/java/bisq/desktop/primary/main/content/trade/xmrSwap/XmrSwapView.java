@@ -26,12 +26,17 @@ public class XmrSwapView extends ProtocolRoadmapView<XmrSwapModel, XmrSwapContro
     }
 
     @Override
-    protected String getProtocol() {
+    protected String getKey() {
         return SwapProtocolType.MONERO_SWAP.name();
     }
 
     @Override
+    protected String getIconId() {
+        return "protocol-monero";
+    }
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getProtocol().toLowerCase();
+        return "https://www.monerooutreach.org/stories/monero-atomic-swaps.html";
     }
 }

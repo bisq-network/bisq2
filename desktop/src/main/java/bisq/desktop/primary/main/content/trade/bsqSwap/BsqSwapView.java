@@ -26,12 +26,17 @@ public class BsqSwapView extends ProtocolRoadmapView<BsqSwapModel, BsqSwapContro
     }
 
     @Override
-    protected String getProtocol() {
+    protected String getKey() {
         return SwapProtocolType.BSQ_SWAP.name();
     }
 
     @Override
+    protected String getIconId() {
+        return "protocol-bsq";
+    }
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getProtocol().toLowerCase();
+        return "https://bisq.wiki/BSQ";
     }
 }

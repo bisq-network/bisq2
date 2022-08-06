@@ -114,8 +114,8 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
         channels.add(defaultEventsChannel);
         channels.add(new PublicEventsChannel("meetups"));
         channels.add(new PublicEventsChannel("podcasts"));
-        channels.add(new PublicEventsChannel("noKyc"));
-        channels.add(new PublicEventsChannel("nodes"));
+      /*  channels.add(new PublicEventsChannel("noKyc"));
+        channels.add(new PublicEventsChannel("nodes"));*/
         channels.add(new PublicEventsChannel("tradeEvents"));
         persist();
     }

@@ -27,12 +27,17 @@ public class LightningView extends ProtocolRoadmapView<LightningModel, Lightning
     }
 
     @Override
-    protected String getProtocol() {
+    protected String getKey() {
         return SwapProtocolType.LIGHTNING_X.name();
     }
 
     @Override
+    protected String getIconId() {
+        return "protocol-lightning";
+    }
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getProtocol().toLowerCase();
+        return "https://github.com/bisq-network/proposals/issues/373";
     }
 }

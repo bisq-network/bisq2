@@ -26,12 +26,17 @@ public class LiquidSwapView extends ProtocolRoadmapView<LiquidSwapModel, LiquidS
     }
 
     @Override
-    protected String getProtocol() {
+    protected String getKey() {
         return SwapProtocolType.LIQUID_SWAP.name();
     }
 
     @Override
+    protected String getIconId() {
+        return "protocol-liquid";
+    }
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getProtocol().toLowerCase();
+        return "https://www.blockstream.com/liquid/";
     }
 }

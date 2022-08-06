@@ -437,8 +437,8 @@
     -fx-text-fill: -bisq-white !Important;
 }
 
-.text-fill-grey-dimmed {
-    -fx-text-fill: -bisq-grey-dimmed !Important;
+.text-fill-light-dimmed {
+    -fx-text-fill: -bisq-grey-11 !Important;
 }
 
 .text-fill-grey-dimmed {
@@ -450,6 +450,34 @@
 }
 
 /* sizes */
+.font-size-40 {
+    -fx-font-size: 4em !Important;
+}
+
+.font-size-36 {
+    -fx-font-size: 3.6em !Important;
+}
+
+.font-size-32 {
+    -fx-font-size: 3.2em !Important;
+}
+
+.font-size-28 {
+    -fx-font-size: 2.8em !Important;
+}
+
+.font-size-24 {
+    -fx-font-size: 2.4em !Important;
+}
+
+.font-size-22 {
+    -fx-font-size: 2.2em !Important;
+}
+
+.font-size-20 {
+    -fx-font-size: 2em !Important;
+}
+
 .font-size-18 {
     -fx-font-size: 1.8em !Important;
 }
@@ -511,6 +539,21 @@
     -fx-font-family: "IBM Plex Sans Medium" !Important;
 }
 
+.bisq-line-spacing-01 {
+    -fx-line-spacing: .1em;
+}
+
+.bisq-line-spacing-02 {
+    -fx-line-spacing: .2em;
+}
+
+.bisq-line-spacing-03 {
+    -fx-line-spacing: .3em;
+}
+
+.bisq-line-spacing-04 {
+    -fx-line-spacing: .4em;
+}
 
 .wrap-text {
     -fx-wrap-text: true;

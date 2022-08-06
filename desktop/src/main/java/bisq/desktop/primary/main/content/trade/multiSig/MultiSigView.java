@@ -26,12 +26,17 @@ public class MultiSigView extends ProtocolRoadmapView<MultiSigModel, MultiSigCon
     }
 
     @Override
-    protected String getProtocol() {
+    protected String getKey() {
         return SwapProtocolType.BISQ_MULTISIG.name();
     }
 
     @Override
+    protected String getIconId() {
+        return "protocol-bisq";
+    }
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getProtocol().toLowerCase();
+        return "https://bisq.network/";
     }
 }

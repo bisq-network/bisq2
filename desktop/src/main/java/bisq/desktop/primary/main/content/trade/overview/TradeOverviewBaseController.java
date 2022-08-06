@@ -58,7 +58,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.costs.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.speed.info.LIQUID_SWAP"),
-                        "Q2/22",
+                        "Q4/22",
                         "protocol-liquid"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.MONERO_SWAP,
@@ -72,7 +72,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.MONERO_SWAP"),
                         Res.get("trade.protocols.costs.info.MONERO_SWAP"),
                         Res.get("trade.protocols.speed.info.MONERO_SWAP"),
-                        "Q3/22",
+                        "Q1/23",
                         "protocol-monero"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.BISQ_MULTISIG,
@@ -86,22 +86,8 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.BISQ_MULTISIG"),
                         Res.get("trade.protocols.costs.info.BISQ_MULTISIG"),
                         Res.get("trade.protocols.speed.info.BISQ_MULTISIG"),
-                        "Q3/22",
+                        "Q2/23",
                         "protocol-bisq"
-                ),
-                new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
-                        NavigationTarget.BSQ_SWAP,
-                        Res.get("trade.protocols.basic.info.BSQ_SWAP"),
-                        Res.get("trade.protocols.markets.BSQ_SWAP"),
-                        Res.get("trade.protocols.markets.info.BSQ_SWAP"),
-                        Res.get("trade.protocols.security.info.BSQ_SWAP"),
-                        new Pair<>(10000L, 700000L),
-                        Res.get("trade.protocols.privacy.info.BSQ_SWAP"),
-                        Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
-                        Res.get("trade.protocols.costs.info.BSQ_SWAP"),
-                        Res.get("trade.protocols.speed.info.BSQ_SWAP"),
-                        "Q4/22",
-                        "protocol-bsq"
                 ),
                 new ProtocolListItem(SwapProtocol.Type.LIGHTNING_X,
                         NavigationTarget.LIGHTNING_X,
@@ -114,8 +100,22 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.LIGHTNING_X"),
                         Res.get("trade.protocols.costs.info.LIGHTNING_X"),
                         Res.get("trade.protocols.speed.info.LIGHTNING_X"),
-                        "Q4/22",
+                        "Q2/23",
                         "protocol-lightning"
+                ),
+                new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
+                        NavigationTarget.BSQ_SWAP,
+                        Res.get("trade.protocols.basic.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.markets.BSQ_SWAP"),
+                        Res.get("trade.protocols.markets.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.security.info.BSQ_SWAP"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.costs.info.BSQ_SWAP"),
+                        Res.get("trade.protocols.speed.info.BSQ_SWAP"),
+                        "Q3/23",
+                        "protocol-bsq"
                 )
         );
     }

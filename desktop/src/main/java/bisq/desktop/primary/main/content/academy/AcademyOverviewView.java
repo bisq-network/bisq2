@@ -87,7 +87,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         // after it's rendered with a large vBox.
         vBox.setMinHeight(500);
         UIThread.runOnNextRenderFrame(() -> {
-            headlineLabel.setMinHeight(Math.max(20, headlineLabel.getHeight()));
+            headlineLabel.setMinHeight(Math.max(35, headlineLabel.getHeight()));
             contentLabel.setMinHeight(Math.max(60, contentLabel.getHeight()));
             vBox.setMinHeight(Region.USE_COMPUTED_SIZE);
         });

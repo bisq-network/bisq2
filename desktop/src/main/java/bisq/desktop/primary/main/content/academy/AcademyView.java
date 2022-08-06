@@ -33,11 +33,11 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
 
 
     public AcademyView(M model, C controller) {
-        super(new VBox(15), model, controller);
+        super(new VBox(20), model, controller);
 
         String key = getKey();
         Label headline = new Label(Res.get("academy.overview." + key));
-        headline.getStyleClass().addAll("font-size-17", "font-light");
+        headline.getStyleClass().addAll("font-size-18", "font-light");
         headline.setWrapText(true);
 
         Label subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
@@ -54,8 +54,8 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         learnMore = new Hyperlink(Res.get("learnMore"));
         learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
 
-        VBox.setMargin(separator, new Insets(15, 0, 40, 0));
-        VBox.setMargin(content, new Insets(0, 0, 30, 0));
+        VBox.setMargin(separator, new Insets(5, 0, 30, 0));
+        VBox.setMargin(content, new Insets(0, 0, 20, 0));
         root.getChildren().addAll(headline, subHeadline, separator, content, learnMore);
     }
 
