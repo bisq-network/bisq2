@@ -106,7 +106,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 "nav-learn",
-                NavigationTarget.ACADEMY, true);
+                NavigationTarget.ACADEMY_OVERVIEW, true);
 
         VBox learnSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY, learn),

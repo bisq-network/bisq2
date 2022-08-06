@@ -17,144 +17,59 @@
 
 package bisq.desktop.primary.main.content.academy;
 
-import bisq.desktop.common.threading.UIThread;
-import bisq.desktop.common.utils.ImageUtil;
-import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.Browser;
+import bisq.desktop.common.view.Controller;
+import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import lombok.extern.slf4j.Slf4j;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
-@Slf4j
-public class AcademyView extends View<GridPane, AcademyModel, AcademyController> {
-    private static final int PADDING = 20;
-    private int rowIndex;
+public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
+    protected final Hyperlink learnMore;
 
-    public AcademyView(AcademyModel model, AcademyController controller) {
-        super(new GridPane(), model, controller);
 
-        root.setHgap(PADDING);
-        root.setVgap(PADDING);
+    public AcademyView(M model, C controller) {
+        super(new VBox(15), model, controller);
 
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(50);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(50);
-        root.getColumnConstraints().addAll(col1, col2);
+        String key = getKey();
+        Label headline = new Label(Res.get("academy.overview." + key));
+        headline.getStyleClass().addAll("font-size-17", "font-light");
+        headline.setWrapText(true);
 
-        addHeaderBox();
+        Label subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
+        subHeadline.getStyleClass().addAll("font-size-14", "font-light");
+        subHeadline.setWrapText(true);
 
-        addSmallBox("learn-bisq", "learn-bitcoin",
-                "bisq", "bitcoin",
-                NavigationTarget.BISQ_ACADEMY, NavigationTarget.BITCOIN_ACADEMY);
-        addSmallBox("learn-security", "learn-privacy",
-                "security", "privacy",
-                NavigationTarget.SECURITY_ACADEMY, NavigationTarget.PRIVACY_ACADEMY);
-        addSmallBox("learn-wallets", "learn-openSource",
-                "wallets", "foss",
-                NavigationTarget.WALLETS_ACADEMY, NavigationTarget.FOSS_ACADEMY);
+        Region separator = new Region();
+        separator.getStyleClass().add("separator-medium-grey");
+
+        Label content = new Label(Res.get("academy." + key + ".content"));
+        content.getStyleClass().addAll("font-size-12", "font-light");
+        content.setWrapText(true);
+
+        learnMore = new Hyperlink(Res.get("learnMore"));
+        learnMore.getStyleClass().addAll("font-size-12", "text-fill-green");
+
+        VBox.setMargin(separator, new Insets(15, 0, 40, 0));
+        VBox.setMargin(content, new Insets(0, 0, 30, 0));
+        root.getChildren().addAll(headline, subHeadline, separator, content, learnMore);
     }
+
+    abstract protected String getKey();
+
+    abstract protected String getUrl();
 
     @Override
     protected void onViewAttached() {
+        learnMore.setOnAction(e -> Browser.open(getUrl()));
     }
 
     @Override
     protected void onViewDetached() {
-    }
-
-    private void addHeaderBox() {
-        Label headlineLabel = new Label(Res.get("education.headline"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-4");
-        headlineLabel.setWrapText(true);
-
-        Label contentLabel = new Label(Res.get("education.content"));
-        contentLabel.getStyleClass().add("bisq-text-16");
-        contentLabel.setWrapText(true);
-
-        VBox.setVgrow(headlineLabel, Priority.ALWAYS);
-        VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox vBox = new VBox(20, headlineLabel, contentLabel);
-        GridPane.setHgrow(vBox, Priority.ALWAYS);
-        GridPane.setVgrow(vBox, Priority.ALWAYS);
-        root.add(vBox, 0, 0, 2, 1);
-
-        // contentLabel adjusts to available height of vBox and does not wrap, so we enforce minHeight 
-        // after it's rendered with a large vBox.
-        vBox.setMinHeight(500);
-        UIThread.runOnNextRenderFrame(() -> {
-            headlineLabel.setMinHeight(Math.max(20, headlineLabel.getHeight()));
-            contentLabel.setMinHeight(Math.max(60, contentLabel.getHeight()));
-            vBox.setMinHeight(Region.USE_COMPUTED_SIZE);
-        });
-    }
-
-    private void addSmallBox(String leftIconId,
-                             String rightIconId,
-                             String leftTopic,
-                             String rightTopic,
-                             NavigationTarget leftNavigationTarget,
-                             NavigationTarget rightNavigationTarget) {
-        VBox leftBox = getWidgetBox(
-                leftIconId,
-                Res.get("education." + leftTopic + ".headline"),
-                Res.get("education." + leftTopic + ".content"),
-                Res.get("education.selectButton"),
-                leftNavigationTarget
-        );
-
-        VBox rightBox = getWidgetBox(
-                rightIconId,
-                Res.get("education." + rightTopic + ".headline"),
-                Res.get("education." + rightTopic + ".content"),
-                Res.get("education.selectButton"),
-                rightNavigationTarget
-        );
-        GridPane.setHgrow(leftBox, Priority.ALWAYS);
-        GridPane.setHgrow(rightBox, Priority.ALWAYS);
-        GridPane.setVgrow(leftBox, Priority.ALWAYS);
-        GridPane.setVgrow(rightBox, Priority.ALWAYS);
-        root.add(leftBox, 0, ++rowIndex, 1, 1);
-        root.add(rightBox, 1, rowIndex, 1, 1);
-    }
-
-    private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
-        Label headlineLabel = new Label(headline);
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-        headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
-        headlineLabel.setGraphicTextGap(15);
-        headlineLabel.setWrapText(true);
-
-        Label contentLabel = new Label(content);
-        contentLabel.getStyleClass().add("bisq-text-3");
-        contentLabel.setWrapText(true);
-
-        Button button = new Button(buttonLabel);
-        button.setMaxWidth(Double.MAX_VALUE);
-        //button.getStyleClass().addAll("medium-large-button", "outlined-button");
-        button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
-        button.setOnAction(e -> controller.onSelect(navigationTarget));
-
-        VBox.setVgrow(headlineLabel, Priority.ALWAYS);
-        VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox.setMargin(button, new Insets(-10, 0, 10, 0));
-        VBox vBox = new VBox(20, headlineLabel, contentLabel, Spacer.fillVBox(), button);
-        vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
-        vBox.getStyleClass().add("bisq-box-1");
-        vBox.setPadding(new Insets(PADDING));
-
-        // contentLabel adjusts to available height of vBox and does not wrap, so we enforce minHeight 
-        // after it's rendered with a large vBox.
-        vBox.setMinHeight(500);
-        UIThread.runOnNextRenderFrame(() -> {
-            // 20 px per line...
-            contentLabel.setMinHeight(Math.max(60, contentLabel.getHeight()));
-            vBox.setMinHeight(Region.USE_COMPUTED_SIZE);
-        });
-        return vBox;
+        learnMore.setOnAction(null);
     }
 }

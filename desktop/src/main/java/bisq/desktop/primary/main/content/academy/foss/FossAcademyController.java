@@ -15,9 +15,26 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.academy;
+package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.desktop.common.view.Model;
+import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.view.Controller;
+import lombok.Getter;
 
-public class AcademyModel implements Model {
+public class FossAcademyController implements Controller {
+    @Getter
+    private final FossAcademyView view;
+
+    public FossAcademyController(DefaultApplicationService applicationService) {
+        FossAcademyModel model = new FossAcademyModel();
+        view = new FossAcademyView(model, this);
+    }
+
+    @Override
+    public void onActivate() {
+    }
+
+    @Override
+    public void onDeactivate() {
+    }
 }

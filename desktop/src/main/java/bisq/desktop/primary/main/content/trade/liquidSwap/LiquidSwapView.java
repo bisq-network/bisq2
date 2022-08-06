@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.trade.liquidSwap;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.desktop.primary.main.content.trade.ProtocolView;
+import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
-public class LiquidSwapView extends ProtocolView<LiquidSwapModel, LiquidSwapController> {
+public class LiquidSwapView extends ProtocolRoadmapView<LiquidSwapModel, LiquidSwapController> {
     public LiquidSwapView(LiquidSwapModel model, LiquidSwapController controller) {
         super(model, controller);
     }

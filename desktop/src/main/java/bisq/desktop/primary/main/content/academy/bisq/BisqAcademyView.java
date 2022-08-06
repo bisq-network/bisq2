@@ -17,30 +17,23 @@
 
 package bisq.desktop.primary.main.content.academy.bisq;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import bisq.desktop.primary.main.content.academy.AcademyView;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqAcademyView extends View<VBox, BisqAcademyModel, BisqAcademyController> {
+public class BisqAcademyView extends AcademyView<BisqAcademyModel, BisqAcademyController> {
 
     public BisqAcademyView(BisqAcademyModel model, BisqAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.bisq"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getKey() {
+        return "bisq";
     }
 
     @Override
-    protected void onViewDetached() {
-
+    protected String getUrl() {
+        return "https://bisq.network/" + getKey();
     }
 }

@@ -28,11 +28,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-public abstract class ProtocolView<M extends Model, C extends Controller> extends View<VBox, M, C> {
+public abstract class ProtocolRoadmapView<M extends Model, C extends Controller> extends View<VBox, M, C> {
     protected final Hyperlink learnMore;
 
 
-    public ProtocolView(M model, C controller) {
+    public ProtocolRoadmapView(M model, C controller) {
         super(new VBox(15), model, controller);
 
         String protocol = getProtocol();

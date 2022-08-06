@@ -15,25 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.academy.security;
+package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.desktop.primary.main.content.academy.AcademyView;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.Model;
 
-@Slf4j
-public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, SecurityAcademyController> {
-
-    public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
-        super(model, controller);
-    }
-
-    @Override
-    protected String getKey() {
-        return "security";
-    }
-
-    @Override
-    protected String getUrl() {
-        return "https://bisq.network/" + getKey();
-    }
+public class FossAcademyModel implements Model {
 }

@@ -17,30 +17,23 @@
 
 package bisq.desktop.primary.main.content.academy.privacy;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import bisq.desktop.primary.main.content.academy.AcademyView;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PrivacyAcademyView extends View<VBox, PrivacyAcademyModel, PrivacyAcademyController> {
+public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, PrivacyAcademyController> {
 
     public PrivacyAcademyView(PrivacyAcademyModel model, PrivacyAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.privacy"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getKey() {
+        return "privacy";
     }
 
     @Override
-    protected void onViewDetached() {
-
+    protected String getUrl() {
+        return "https://bisq.network/" + getKey();
     }
 }

@@ -15,9 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.academy.openSource;
+package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.desktop.common.view.Model;
+import bisq.desktop.primary.main.content.academy.AcademyView;
+import lombok.extern.slf4j.Slf4j;
 
-public class OpenSourceAcademyModel implements Model {
+@Slf4j
+public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyController> {
+
+    public FossAcademyView(FossAcademyModel model, FossAcademyController controller) {
+        super(model, controller);
+    }
+
+    @Override
+    protected String getKey() {
+        return "foss";
+    }
+
+    @Override
+    protected String getUrl() {
+        return "https://bisq.network/" + getKey();
+    }
 }

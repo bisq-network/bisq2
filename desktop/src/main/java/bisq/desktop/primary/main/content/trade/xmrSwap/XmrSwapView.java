@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.trade.xmrSwap;
 
 import bisq.account.protocol.SwapProtocolType;
-import bisq.desktop.primary.main.content.trade.ProtocolView;
+import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
-public class XmrSwapView extends ProtocolView<XmrSwapModel, XmrSwapController> {
+public class XmrSwapView extends ProtocolRoadmapView<XmrSwapModel, XmrSwapController> {
     public XmrSwapView(XmrSwapModel model, XmrSwapController controller) {
         super(model, controller);
     }

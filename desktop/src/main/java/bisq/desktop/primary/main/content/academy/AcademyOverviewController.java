@@ -23,13 +23,13 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
 
-public class AcademyController implements Controller {
+public class AcademyOverviewController implements Controller {
     @Getter
-    private final AcademyView view;
+    private final AcademyOverviewView view;
 
-    public AcademyController(DefaultApplicationService applicationService) {
-        AcademyModel model = new AcademyModel();
-        view = new AcademyView(model, this);
+    public AcademyOverviewController(DefaultApplicationService applicationService) {
+        AcademyOverviewModel model = new AcademyOverviewModel();
+        view = new AcademyOverviewView(model, this);
     }
 
     @Override
