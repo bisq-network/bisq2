@@ -17,28 +17,21 @@
 
 package bisq.desktop.primary.main.content.trade.multiSig;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.account.protocol.SwapProtocolType;
+import bisq.desktop.primary.main.content.trade.ProtocolView;
 
-public class MultiSigView extends View<VBox, MultiSigModel, MultiSigController> {
+public class MultiSigView extends ProtocolView<MultiSigModel, MultiSigController> {
     public MultiSigView(MultiSigModel model, MultiSigController controller) {
-        super(new VBox(), model, controller);
-
-        root.setAlignment(Pos.CENTER);
-        Label label = new Label("WIP");
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
-        Label small = new Label(getClass().getSimpleName());
-        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
-        root.getChildren().addAll(label, small);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getProtocol() {
+        return SwapProtocolType.BISQ_MULTISIG.name();
     }
 
     @Override
-    protected void onViewDetached() {
+    protected String getUrl() {
+        return "https://bisq.network/" + getProtocol().toLowerCase();
     }
 }

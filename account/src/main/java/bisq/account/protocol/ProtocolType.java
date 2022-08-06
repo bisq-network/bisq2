@@ -28,7 +28,7 @@ public interface ProtocolType extends ProtoEnum {
     static List<SwapProtocolType> getProtocols(Market market) {
         List<SwapProtocolType> result = new ArrayList<>();
         if (isBtcXmrSwapSupported(market)) {
-            result.add(SwapProtocolType.BTC_XMR_SWAP);
+            result.add(SwapProtocolType.MONERO_SWAP);
         }
         if (isLiquidSwapSupported(market)) {
             result.add(SwapProtocolType.LIQUID_SWAP);
@@ -37,16 +37,10 @@ public interface ProtocolType extends ProtoEnum {
             result.add(SwapProtocolType.BSQ_SWAP);
         }
         if (isLNSwapSupported(market)) {
-            result.add(SwapProtocolType.LN_SWAP);
+            result.add(SwapProtocolType.LIGHTNING_X);
         }
         if (isMultiSigSupported(market)) {
-            result.add(SwapProtocolType.MULTISIG);
-        }
-        if (isBsqBondSupported(market)) {
-            result.add(SwapProtocolType.BSQ_BOND);
-        }
-        if (isReputationSupported(market)) {
-            result.add(SwapProtocolType.REPUTATION);
+            result.add(SwapProtocolType.BISQ_MULTISIG);
         }
         return result;
     }
@@ -77,13 +71,5 @@ public interface ProtocolType extends ProtoEnum {
 
     private static boolean isMultiSigSupported(Market market) {
         return market.getQuoteCurrencyCode().equals("BTC") || market.getBaseCurrencyCode().equals("BTC");
-    }
-
-    private static boolean isBsqBondSupported(Market market) {
-        return true;
-    }
-
-    private static boolean isReputationSupported(Market market) {
-        return true;
     }
 }

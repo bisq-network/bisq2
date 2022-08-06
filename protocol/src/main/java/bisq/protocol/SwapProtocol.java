@@ -24,10 +24,10 @@ public class SwapProtocol {
     public enum Type {
         BISQ_EASY(Security.LOW, Privacy.MID, Convenience.HIGH, Cost.HIGH, Speed.LOW),
         LIQUID_SWAP(Security.HIGH, Privacy.HIGH, Convenience.MID, Cost.LOW, Speed.HIGH),
-        ATOMIC_CROSS_CHAIN_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
-        BISQ_MULTI_SIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),
+        MONERO_SWAP(Security.HIGH, Privacy.HIGH, Convenience.LOW, Cost.MID, Speed.MID),
+        BISQ_MULTISIG(Security.MID, Privacy.MID, Convenience.MID, Cost.MID, Speed.LOW),
         BSQ_SWAP(Security.HIGH, Privacy.MID, Convenience.MID, Cost.MID, Speed.MID),
-        LN_X(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
+        LIGHTNING_X(Security.MID, Privacy.MID, Convenience.MID, Cost.LOW, Speed.LOW);
 
         private final Security security;
         private final Privacy privacy;

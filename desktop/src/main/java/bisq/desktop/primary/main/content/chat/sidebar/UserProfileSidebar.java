@@ -251,7 +251,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 
             Region separator = Layout.separator();
-            VBox.setMargin(separator, new Insets(25, -45, 15, -55));
+            VBox.setMargin(separator, new Insets(25, -20, 15, -20));
 
             termsBox = getInfoBox(Res.get("social.chatUser.terms"), true);
             terms = (Label) termsBox.getChildren().get(1);

@@ -162,19 +162,15 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private TakerProtocol<TakerProtocolModel> getTakerProtocol(TakerProtocolModel protocolModel,
                                                                NetworkIdWithKeyPair takerNodeIdAndKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
-            case BTC_XMR_SWAP:
+            case MONERO_SWAP:
                 return null;
             case LIQUID_SWAP:
                 return LiquidSwapTakerProtocol.getProtocol(networkService, this, protocolModel, takerNodeIdAndKeyPair);
             case BSQ_SWAP:
                 return null;
-            case LN_SWAP:
+            case LIGHTNING_X:
                 return null;
-            case MULTISIG:
-                return null;
-            case BSQ_BOND:
-                return null;
-            case REPUTATION:
+            case BISQ_MULTISIG:
                 return null;
         }
         return null;
@@ -184,19 +180,15 @@ public class ProtocolService implements MessageListener, PersistenceClient<Proto
     private MakerProtocol<MakerProtocolModel, ? extends TakeOfferRequest> getMakerProtocol(MakerProtocolModel protocolModel,
                                                                                            NetworkIdWithKeyPair makerNetworkIdWithKeyPair) {
         switch (protocolModel.getContract().getProtocolType()) {
-            case BTC_XMR_SWAP:
+            case MONERO_SWAP:
                 return null;
             case LIQUID_SWAP:
                 return LiquidSwapMakerProtocol.getProtocol(networkService, this, protocolModel, makerNetworkIdWithKeyPair);
             case BSQ_SWAP:
                 return null;
-            case LN_SWAP:
+            case LIGHTNING_X:
                 return null;
-            case MULTISIG:
-                return null;
-            case BSQ_BOND:
-                return null;
-            case REPUTATION:
+            case BISQ_MULTISIG:
                 return null;
         }
         return null;

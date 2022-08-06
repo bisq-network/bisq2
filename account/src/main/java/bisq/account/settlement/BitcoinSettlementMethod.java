@@ -34,20 +34,16 @@ public enum BitcoinSettlementMethod implements SettlementMethod {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<BitcoinSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
         switch (protocolType) {
-            case BTC_XMR_SWAP:
+            case MONERO_SWAP:
                 return List.of(BitcoinSettlementMethod.MAINCHAIN);
             case LIQUID_SWAP:
                 return List.of(BitcoinSettlementMethod.LBTC);
             case BSQ_SWAP:
                 return List.of(BitcoinSettlementMethod.MAINCHAIN);
-            case LN_SWAP:
+            case LIGHTNING_X:
                 return List.of(BitcoinSettlementMethod.LN);
-            case MULTISIG:
+            case BISQ_MULTISIG:
                 return List.of(BitcoinSettlementMethod.MAINCHAIN);
-            case BSQ_BOND:
-                return List.of(BitcoinSettlementMethod.values());
-            case REPUTATION:
-                return List.of(BitcoinSettlementMethod.values());
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);
         }

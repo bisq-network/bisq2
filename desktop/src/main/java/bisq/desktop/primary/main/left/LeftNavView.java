@@ -87,9 +87,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         VBox tradeSubMenuItems = createSubmenu(
                 createSubmenuNavigationButton(Res.get("satoshiSquare"), NavigationTarget.BISQ_EASY, trade),
                 createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, trade),
-                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTI_SIG, trade),
-                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.ATOMIC_CROSS_CHAIN_SWAP, trade),
-                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LN_X, trade),
+                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTISIG, trade),
+                createSubmenuNavigationButton(Res.get("xmrSwap"), NavigationTarget.MONERO_SWAP, trade),
+                createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LIGHTNING_X, trade),
                 createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, trade)
         );
 

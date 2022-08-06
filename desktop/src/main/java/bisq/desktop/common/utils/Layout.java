@@ -68,7 +68,7 @@ public class Layout {
 
     public static Region separator() {
         Region separator = new Region();
-        separator.getStyleClass().addAll("border-bottom");
+        separator.getStyleClass().addAll("separator");
         return separator;
     }
 

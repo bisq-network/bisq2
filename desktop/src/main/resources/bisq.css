@@ -143,25 +143,17 @@
  *                                                                             *
  ******************************************************************************/
 
-.border-bottom {
+.separator {
     -fx-border-color: -bisq-grey-17;
-    -fx-border-width: 0 0 1 0;
-}
-
-.border-top-grey-5 {
-    -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
 }
 
-.border-top-grey-7 {
-    -fx-border-color: -bisq-grey-disabled;
+
+.separator-medium-grey {
+    -fx-border-color: -bisq-grey-16;
     -fx-border-width: 1 0 0 0;
 }
 
-.border-bottom-grey-7 {
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-width: 0 0 1 0;
-}
 
 /*******************************************************************************
  * Text based                                            *
@@ -453,7 +445,23 @@
     -fx-text-fill: -bisq-grey-dimmed !Important;
 }
 
+.text-fill-green {
+    -fx-text-fill: -bisq-green !Important;
+}
+
 /* sizes */
+.font-size-18 {
+    -fx-font-size: 1.8em !Important;
+}
+
+.font-size-17 {
+    -fx-font-size: 1.7em !Important;
+}
+
+.font-size-16 {
+    -fx-font-size: 1.6em !Important;
+}
+
 .font-size-15 {
     -fx-font-size: 1.5em !Important;
 }

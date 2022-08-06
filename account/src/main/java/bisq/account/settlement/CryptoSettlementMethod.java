@@ -35,19 +35,15 @@ public enum CryptoSettlementMethod implements SettlementMethod {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<CryptoSettlementMethod> getSettlementMethods(SwapProtocolType protocolType, String code) {
         switch (protocolType) {
-            case BTC_XMR_SWAP:
+            case MONERO_SWAP:
                 return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
             case LIQUID_SWAP:
                 return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
             case BSQ_SWAP:
                 return List.of(CryptoSettlementMethod.NATIVE_CHAIN);
-            case LN_SWAP:
+            case LIGHTNING_X:
                 return List.of(values());
-            case MULTISIG:
-                return List.of(values());
-            case BSQ_BOND:
-                return List.of(values());
-            case REPUTATION:
+            case BISQ_MULTISIG:
                 return List.of(values());
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);

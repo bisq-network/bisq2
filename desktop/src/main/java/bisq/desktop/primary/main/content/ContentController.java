@@ -116,16 +116,16 @@ public class ContentController extends NavigationController {
             case LIQUID_SWAP: {
                 return Optional.of(new LiquidSwapController(applicationService));
             }
-            case BISQ_MULTI_SIG: {
+            case BISQ_MULTISIG: {
                 return Optional.of(new MultiSigController(applicationService));
             }
-            case ATOMIC_CROSS_CHAIN_SWAP: {
+            case MONERO_SWAP: {
                 return Optional.of(new XmrSwapController(applicationService));
             }
             case BSQ_SWAP: {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LN_X: {
+            case LIGHTNING_X: {
                 return Optional.of(new LightningController(applicationService));
             }
             case WALLET_BITCOIN: {
