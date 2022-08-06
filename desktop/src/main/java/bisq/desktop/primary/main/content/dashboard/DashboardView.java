@@ -56,7 +56,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(firstBox, 0, 1, 2, 1);
 
         VBox secondBox = getWidgetBox(
-                "dashboard-trade-apps",
+                "intro-3",
                 Res.get("dashboard.second.headline"),
                 Res.get("dashboard.second.content"),
                 Res.get("dashboard.second.button"),
@@ -65,7 +65,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         root.add(secondBox, 0, 2, 1, 1);
 
         VBox thirdBox = getWidgetBox(
-                "dashboard-chat",
+                "intro-2",
                 Res.get("dashboard.third.headline"),
                 Res.get("dashboard.third.content"),
                 Res.get("dashboard.third.button"),
@@ -151,7 +151,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
     private VBox getWidgetBox(String imageId, String headline, String content, String buttonLabel, Runnable onAction) {
         Label headlineLabel = new Label(headline, ImageUtil.getImageViewById(imageId));
         headlineLabel.setGraphicTextGap(16.0);
-        headlineLabel.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
+        headlineLabel.getStyleClass().addAll("bisq-text-headline-2");
         headlineLabel.setWrapText(true);
 
         Label contentLabel = new Label(content);
