@@ -49,7 +49,7 @@ public class BisqEasyHelpTab3View extends View<VBox, BisqEasyHelpTab3Model, Bisq
         headline.getStyleClass().add("bisq-text-headline-2");
 
         content = new Text(Res.get("tradeGuide.tab3.content"));
-        content.getStyleClass().addAll("bisq-text-13");
+        content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
         backButton = new Button(Res.get("back"));

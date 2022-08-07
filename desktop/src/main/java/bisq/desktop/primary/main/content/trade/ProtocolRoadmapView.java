@@ -57,7 +57,7 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
         overviewHeadline.setWrapText(true);
 
         overview = new Label(Res.get("trade.protocols." + key + ".overview"));
-        overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-02");
+        overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         overview.setWrapText(true);
 
         releaseHeadline = new Label(Res.get("trade.protocols.release"));
@@ -73,7 +73,7 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
         tradeOffsHeadline.setWrapText(true);
 
         tradeOffs = new Label(Res.get("trade.protocols." + key + ".tradeOffs"));
-        tradeOffs.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-02");
+        tradeOffs.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         tradeOffs.setWrapText(true);
 
         learnMore = new Hyperlink(Res.get("learnMore"));

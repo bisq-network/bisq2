@@ -55,7 +55,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         overviewHeadline.setWrapText(true);
 
         overview = new Label(Res.get("academy." + key + ".overview"));
-        overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-02");
+        overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         overview.setWrapText(true);
 
         contentHeadline = new Label(Res.get("academy." + key + ".content.headline"));
@@ -63,7 +63,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
         contentHeadline.setWrapText(true);
 
         content = new Label(Res.get("academy." + key + ".content"));
-        content.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-02");
+        content.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         content.setWrapText(true);
 
         learnMore = new Hyperlink(Res.get("learnMore"));
@@ -71,7 +71,7 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
 
         VBox.setMargin(headline, new Insets(0, 0, 0, 0));
         VBox.setMargin(overviewHeadline, new Insets(25, 0, 0, 0));
-        VBox.setMargin(contentHeadline, new Insets(35, 0, -10, 0));
+        VBox.setMargin(contentHeadline, new Insets(35, 0, 0, 0));
         VBox.setMargin(content, new Insets(0, 0, 15, 0));
         root.getChildren().addAll(headline, subHeadline,
                 overviewHeadline, overview,
