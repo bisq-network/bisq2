@@ -150,7 +150,6 @@ public abstract class ChannelSelection {
         protected abstract ListCell<ChannelItem> getListCell();
 
         private void adjustHeight() {
-            log.error("adjustHeight {}", adjustHeightCounter);
             adjustHeightCounter++;
             UIThread.runOnNextRenderFrame(() -> {
                 Node lookupNode = listView.lookup(".list-cell");

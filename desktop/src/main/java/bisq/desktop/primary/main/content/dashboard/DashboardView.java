@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.dashboard;
 
+import bisq.common.data.Triple;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
+    private final Label marketPriceLabel, marketCodeLabel;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new GridPane(), model, controller);
@@ -44,7 +46,10 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         col2.setPercentWidth(50);
         root.getColumnConstraints().addAll(col1, col2);
 
-        VBox marketPrice = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
+        Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
+        VBox marketPrice = priceTriple.getFirst();
+        marketPriceLabel = priceTriple.getSecond();
+        marketCodeLabel = priceTriple.getThird();
         VBox offersOnline = getValueBox(Res.get("dashboard.offersOnline"), "231");
         VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
@@ -76,13 +81,17 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
     @Override
     protected void onViewAttached() {
+        marketPriceLabel.textProperty().bind(model.getMarketPrice());
+        marketCodeLabel.textProperty().bind(model.getMarketCode());
     }
 
     @Override
     protected void onViewDetached() {
+        marketPriceLabel.textProperty().unbind();
+        marketCodeLabel.textProperty().unbind();
     }
 
-    private VBox getPriceBox(String title, String value, String code) {
+    private Triple<VBox, Label, Label> getPriceBox(String title, String value, String code) {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
 
@@ -97,7 +106,7 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         VBox box = new VBox(titleLabel, hBox);
         box.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(box, Priority.ALWAYS);
-        return box;
+        return new Triple<>(box, valueLabel, codeLabel);
     }
 
     private VBox getValueBox(String title, String value) {

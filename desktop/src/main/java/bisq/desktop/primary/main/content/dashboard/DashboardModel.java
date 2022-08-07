@@ -18,6 +18,12 @@
 package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import lombok.Getter;
 
+@Getter
 public class DashboardModel implements Model {
+    private final StringProperty marketPrice = new SimpleStringProperty();
+    private final StringProperty marketCode = new SimpleStringProperty();
 }

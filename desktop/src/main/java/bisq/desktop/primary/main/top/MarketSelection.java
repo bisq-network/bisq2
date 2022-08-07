@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.main.top;
 
-import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
@@ -44,7 +44,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -60,11 +59,12 @@ public class MarketSelection {
         return controller.view.getRoot();
     }
 
-    private static class Controller implements bisq.desktop.common.view.Controller, MarketPriceService.Listener {
+    private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
         private final MarketPriceService marketPriceService;
+        private Pin selectedMarketPin, marketPriceUpdateFlagPin;
 
         private Controller(MarketPriceService marketPriceService) {
             this.marketPriceService = marketPriceService;
@@ -74,56 +74,42 @@ public class MarketSelection {
         }
 
         @Override
-        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
-            applyMarketPriceMap();
-        }
-
-        @Override
-        public void onMarketSelected(Market selectedMarket) {
-            applySelectedMarket();
-        }
-
-        @Override
         public void onActivate() {
-            marketPriceService.addListener(this);
-            applyMarketPriceMap();
-            applySelectedMarket();
+            selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> {
+                if (selectedMarket != null) {
+                    UIThread.run(() -> model.items.stream()
+                            .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
+                            .findAny()
+                            .ifPresent(listItem -> {
+                                model.price.set(listItem.price);
+                                model.codes.set(listItem.codes);
+                                model.selected.set(listItem);
+                            }));
+                }
+            });
+
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
+                UIThread.run(() -> {
+                    List<MarketSelection.ListItem> list = MarketRepository.getAllFiatMarkets().stream()
+                            .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
+                            .filter(Objects::nonNull)
+                            .map(MarketSelection.ListItem::new)
+                            .collect(Collectors.toList());
+                    model.items.setAll(list);
+                });
+            });
         }
 
         @Override
         public void onDeactivate() {
-            marketPriceService.removeListener(this);
+            selectedMarketPin.unbind();
+            marketPriceUpdateFlagPin.unbind();
         }
 
         private void onSelected(MarketSelection.ListItem selectedItem) {
             if (selectedItem != null) {
                 marketPriceService.select(selectedItem.marketPrice.getMarket());
             }
-        }
-
-        private void applySelectedMarket() {
-            marketPriceService.getSelectedMarket()
-                    .ifPresent(selectedMarket ->
-                            UIThread.run(() -> model.items.stream()
-                                    .filter(e -> e.marketPrice.getMarket().equals(selectedMarket))
-                                    .findAny()
-                                    .ifPresent(listItem -> {
-                                        model.price.set(listItem.price);
-                                        model.codes.set(listItem.codes);
-                                        model.selected.set(listItem);
-                                    }))
-                    );
-        }
-
-        private void applyMarketPriceMap() {
-            UIThread.run(() -> {
-                List<MarketSelection.ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                        .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                        .filter(Objects::nonNull)
-                        .map(MarketSelection.ListItem::new)
-                        .collect(Collectors.toList());
-                model.items.setAll(list);
-            });
         }
     }
 

@@ -18,26 +18,41 @@
 package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.currency.Market;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.oracle.marketprice.MarketPrice;
+import bisq.oracle.marketprice.MarketPriceService;
+import bisq.presentation.formatters.QuoteFormatter;
 import lombok.Getter;
 
 public class DashboardController implements Controller {
     @Getter
     private final DashboardView view;
+    private final MarketPriceService marketPriceService;
+    private final DashboardModel model;
+    private Pin selectedMarketPin, marketPriceUpdateFlagPin;
 
     public DashboardController(DefaultApplicationService applicationService) {
-        DashboardModel model = new DashboardModel();
+        marketPriceService = applicationService.getOracleService().getMarketPriceService();
+
+        model = new DashboardModel();
         view = new DashboardView(model, this);
     }
 
     @Override
     public void onActivate() {
+        selectedMarketPin = marketPriceService.getSelectedMarket().addObserver(selectedMarket -> updateMarketPrice());
+        marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> updateMarketPrice());
     }
 
     @Override
     public void onDeactivate() {
+        selectedMarketPin.unbind();
+        marketPriceUpdateFlagPin.unbind();
     }
 
     public void onLearn() {
@@ -52,4 +67,15 @@ public class DashboardController implements Controller {
         Navigation.navigateTo(NavigationTarget.BISQ_EASY);
     }
 
+    private void updateMarketPrice() {
+        Market selectedMarket = marketPriceService.getSelectedMarket().get();
+        if (selectedMarket != null) {
+            UIThread.run(() -> {
+                MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(selectedMarket);
+                model.getMarketPrice().set(QuoteFormatter.format(marketPrice.getQuote(), true));
+                model.getMarketCode().set(marketPrice.getMarket().getMarketCodes());
+
+            });
+        }
+    }
 }
