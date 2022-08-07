@@ -33,7 +33,13 @@ public class WalletsAcademyView extends AcademyView<WalletsAcademyModel, Wallets
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-wallets";
+    }
+
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getKey();
+        return "https://bitcoin.org/en/choose-your-wallet";
     }
 }

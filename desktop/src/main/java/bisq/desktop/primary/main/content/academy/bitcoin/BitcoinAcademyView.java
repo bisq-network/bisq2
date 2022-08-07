@@ -33,7 +33,13 @@ public class BitcoinAcademyView extends AcademyView<BitcoinAcademyModel, Bitcoin
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-bitcoin";
+    }
+
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getKey();
+        return "https://bitcoin.org";
     }
 }

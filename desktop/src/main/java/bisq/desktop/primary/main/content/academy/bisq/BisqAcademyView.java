@@ -33,6 +33,12 @@ public class BisqAcademyView extends AcademyView<BisqAcademyModel, BisqAcademyCo
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-bisq";
+    }
+
+
+    @Override
     protected String getUrl() {
         return "https://bisq.network/" + getKey();
     }

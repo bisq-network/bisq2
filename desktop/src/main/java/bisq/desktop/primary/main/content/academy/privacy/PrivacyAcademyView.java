@@ -33,7 +33,13 @@ public class PrivacyAcademyView extends AcademyView<PrivacyAcademyModel, Privacy
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-privacy";
+    }
+
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getKey();
+        return "https://bitcoin.org/en/protect-your-privacy";
     }
 }

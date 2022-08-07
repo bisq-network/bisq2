@@ -33,7 +33,13 @@ public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, Secur
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-security";
+    }
+
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getKey();
+        return "https://bitcoin.org/en/secure-your-wallet";
     }
 }

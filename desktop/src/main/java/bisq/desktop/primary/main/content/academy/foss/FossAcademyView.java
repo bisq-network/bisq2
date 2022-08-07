@@ -33,7 +33,13 @@ public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyCo
     }
 
     @Override
+    protected String getIconId() {
+        return "learn-openSource";
+    }
+
+
+    @Override
     protected String getUrl() {
-        return "https://bisq.network/" + getKey();
+        return "https://en.wikipedia.org/wiki/Free_and_open-source_software";
     }
 }
