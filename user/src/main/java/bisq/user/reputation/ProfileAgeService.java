@@ -38,6 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
@@ -147,6 +148,20 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     private void maybeRequestAgain() {
+        // We check if we have some userProfiles which have not been timestamped yet (using the p2p network data).
+        // If so, we request timestamping of the missing one.
+        Set<String> myProfileIds = userIdentityService.getUserIdentities().stream()
+                .map(userIdentity -> userIdentity.getUserProfile().getId())
+                .collect(Collectors.toSet());
+        networkService.getDataService().ifPresent(service -> service.getAllAuthenticatedPayload().forEach(authenticatedData -> {
+            if (authenticatedData.getDistributedData() instanceof AuthorizedTimestampData) {
+                AuthorizedTimestampData data = (AuthorizedTimestampData) authenticatedData.getDistributedData();
+                myProfileIds.remove(data.getProfileId());
+            }
+        }));
+        myProfileIds.forEach(this::requestTimestamp);
+
+        // Before timeout gets triggered we request 
         long now = System.currentTimeMillis();
         if (now - persistableStore.getLastRequested() > AuthorizedTimestampData.TTL / 2) {
             persistableStore.getProfileIds().forEach(this::requestTimestamp);

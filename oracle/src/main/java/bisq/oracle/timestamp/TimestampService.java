@@ -19,7 +19,6 @@ package bisq.oracle.timestamp;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
-import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
@@ -42,7 +41,6 @@ import java.security.PublicKey;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class TimestampService implements Service, PersistenceClient<TimestampStore>, MessageListener, DataService.Listener {
@@ -54,7 +52,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     private final NetworkService networkService;
     private Optional<PrivateKey> authorizedPrivateKey = Optional.empty();
     private Optional<PublicKey> authorizedPublicKey = Optional.empty();
-    private Scheduler scheduler;
 
     public TimestampService(OracleService.Config config,
                             PersistenceService persistenceService,
@@ -94,10 +91,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
                     publishAuthorizedData(data);
                 });
 
-        scheduler = Scheduler.run(this::rePublish)
-                .periodically(0, 1, TimeUnit.HOURS)
-                .name("republish-timestamps");
-
         return CompletableFuture.completedFuture(true);
     }
 
@@ -105,10 +98,6 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeMessageListener(this);
         networkService.removeDataServiceListener(this);
-        if (scheduler != null) {
-            scheduler.stop();
-            scheduler = null;
-        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -128,6 +117,11 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
                 persistableStore.getTimestampsByProfileId().put(profileId, now);
                 persist();
                 publishAuthorizedData(new AuthorizedTimestampData(profileId, now));
+            } else {
+                // If we got requested again from the user it might be because TTL is running out, and we need 
+                // to republish it.
+                long date = persistableStore.getTimestampsByProfileId().get(profileId);
+                publishAuthorizedData(new AuthorizedTimestampData(profileId, date));
             }
         }
     }
@@ -167,10 +161,5 @@ public class TimestampService implements Service, PersistenceClient<TimestampSto
                 persist();
             }
         }
-    }
-
-    private void rePublish() {
-        persistableStore.getTimestampsByProfileId().forEach((key, value) ->
-                publishAuthorizedData(new AuthorizedTimestampData(key, value)));
     }
 }
