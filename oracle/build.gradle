@@ -7,11 +7,6 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 
-configurations.all {
-    exclude group: 'org.slf4j', module: 'slf4j-simple'
-    exclude group: 'org.bitcoinj', module: 'bitcoinj-core'
-}
-
 dependencies {
     implementation project(':persistence')
     implementation project(':security')
@@ -22,6 +17,4 @@ dependencies {
     implementation libs.google.guava
     implementation libs.typesafe.config
     implementation libs.bundles.jackson
-
-    implementation 'com.github.c4talys7:java-opentimestamps:c0c19e4'
 }

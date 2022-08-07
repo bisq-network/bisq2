@@ -114,7 +114,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY, learn),
                 createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learn),
                 createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.openSource"), NavigationTarget.FOSS_ACADEMY, learn)
+                createSubmenuNavigationButton(Res.get("academy.foss"), NavigationTarget.FOSS_ACADEMY, learn)
         );
 
         LeftNavButton chat = createNavigationButton(Res.get("chat"),

@@ -150,6 +150,10 @@ public final class UserProfile implements DistributedData {
         return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }
 
+    public ByteArray getProfileAgeKey() {
+        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+    }
+
     public ByteArray getSignedWitnessKey() {
         return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
     }

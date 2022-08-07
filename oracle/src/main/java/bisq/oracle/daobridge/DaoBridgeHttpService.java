@@ -28,6 +28,8 @@ import bisq.oracle.daobridge.dto.BondedReputationDto;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -43,15 +45,29 @@ public class DaoBridgeHttpService implements Service {
     //todo set it to block height of launch date. We are not interested in txs published before
     private static final int LAUNCH_BLOCK_HEIGHT = 0;
 
+    @Getter
+    @ToString
+    public static final class Config {
+        private final String url;
+
+        public Config(String url) {
+            this.url = url;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getString("url"));
+        }
+    }
+
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
     private final String url;
     private BaseHttpClient httpClient;
 
-    public DaoBridgeHttpService(NetworkService networkService, String url) {
+    public DaoBridgeHttpService(Config config, NetworkService networkService) {
         this.networkService = networkService;
-        this.url = url;
+        this.url = config.getUrl();
 
         if (!DevMode.isDevMode()) {
             lastRequestedProofOfBurnBlockHeight.set(LAUNCH_BLOCK_HEIGHT);

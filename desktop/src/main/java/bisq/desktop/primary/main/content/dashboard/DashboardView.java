@@ -17,6 +17,8 @@
 
 package bisq.desktop.primary.main.content.dashboard;
 
+import bisq.common.data.Pair;
+import bisq.common.data.Triple;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;
 import bisq.i18n.Res;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DashboardView extends View<GridPane, DashboardModel, DashboardController> {
     private static final int PADDING = 20;
+    private final Label marketPriceLabel, marketCodeLabel, offersOnlineLabel, activeUsersLabel;
 
     public DashboardView(DashboardModel model, DashboardController controller) {
         super(new GridPane(), model, controller);
@@ -44,9 +47,19 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         col2.setPercentWidth(50);
         root.getColumnConstraints().addAll(col1, col2);
 
-        VBox marketPrice = getPriceBox(Res.get("dashboard.marketPrice"), "32149.34", "BTC/EUR");
-        VBox offersOnline = getValueBox(Res.get("dashboard.offersOnline"), "231");
-        VBox activeUsers = getValueBox(Res.get("dashboard.activeUsers"), "181");
+        Triple<VBox, Label, Label> priceTriple = getPriceBox(Res.get("dashboard.marketPrice"));
+        VBox marketPrice = priceTriple.getFirst();
+        marketPriceLabel = priceTriple.getSecond();
+        marketCodeLabel = priceTriple.getThird();
+
+        Pair<VBox, Label> offersPair = getValueBox(Res.get("dashboard.offersOnline"));
+        VBox offersOnline = offersPair.getFirst();
+        offersOnlineLabel = offersPair.getSecond();
+
+        Pair<VBox, Label> usersPair = getValueBox(Res.get("dashboard.activeUsers"));
+        VBox activeUsers = usersPair.getFirst();
+        activeUsersLabel = usersPair.getSecond();
+
         HBox hBox = new HBox(16, marketPrice, offersOnline, activeUsers);
         root.add(hBox, 0, 0, 2, 1);
 
@@ -76,20 +89,28 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
 
     @Override
     protected void onViewAttached() {
+        marketPriceLabel.textProperty().bind(model.getMarketPrice());
+        marketCodeLabel.textProperty().bind(model.getMarketCode());
+        offersOnlineLabel.textProperty().bind(model.getOffersOnline());
+        activeUsersLabel.textProperty().bind(model.getActiveUsers());
     }
 
     @Override
     protected void onViewDetached() {
+        marketPriceLabel.textProperty().unbind();
+        marketCodeLabel.textProperty().unbind();
+        offersOnlineLabel.textProperty().unbind();
+        activeUsersLabel.textProperty().unbind();
     }
 
-    private VBox getPriceBox(String title, String value, String code) {
+    private Triple<VBox, Label, Label> getPriceBox(String title) {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
 
-        Label valueLabel = new Label(value);
+        Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
-        Label codeLabel = new Label(code);
+        Label codeLabel = new Label();
         codeLabel.getStyleClass().addAll("bisq-text-12");
 
         HBox hBox = new HBox(9, valueLabel, codeLabel);
@@ -97,20 +118,20 @@ public class DashboardView extends View<GridPane, DashboardModel, DashboardContr
         VBox box = new VBox(titleLabel, hBox);
         box.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(box, Priority.ALWAYS);
-        return box;
+        return new Triple<>(box, valueLabel, codeLabel);
     }
 
-    private VBox getValueBox(String title, String value) {
+    private Pair<VBox, Label> getValueBox(String title) {
         Label titleLabel = new Label(title);
         titleLabel.getStyleClass().addAll("bisq-text-7", "bisq-text-grey-9");
 
-        Label valueLabel = new Label(value);
+        Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
         VBox box = new VBox(titleLabel, valueLabel);
         box.setAlignment(Pos.TOP_CENTER);
         HBox.setHgrow(box, Priority.ALWAYS);
-        return box;
+        return new Pair<>(box, valueLabel);
     }
 
     private VBox getBigWidgetBox() {

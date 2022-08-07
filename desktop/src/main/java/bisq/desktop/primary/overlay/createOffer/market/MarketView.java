@@ -39,6 +39,8 @@ import javafx.util.Callback;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 
@@ -47,6 +49,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     private final BisqTableView<MarketListItem> tableView;
     private final ToggleGroup toggleGroup = new ToggleGroup();
     private final SearchBox searchBox;
+    private Subscription selectedItemPin;
 
     public MarketView(MarketModel model, MarketController controller) {
         super(new VBox(), model, controller);
@@ -89,11 +92,13 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
 
         tableView.scrollTo(model.getSelectedMarketListItem().get());
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
+        selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onSelect);
     }
 
     @Override
     protected void onViewDetached() {
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
+        selectedItemPin.unsubscribe();
     }
 
     private void configTableView() {

@@ -61,9 +61,12 @@ public class MarketController implements Controller {
 
     @Override
     public void onActivate() {
+        // Used selected public channel or if private channel is selected we use any of the public channels for 
+        // setting the default market 
         Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
                 .filter(channel -> channel instanceof PublicTradeChannel)
                 .map(channel -> (PublicTradeChannel) channel)
+                .or(() -> publicTradeChannelService.getVisibleChannels().stream().findFirst())
                 .map(PublicTradeChannel::getMarket)
                 .ifPresent(market -> model.getSelectedMarket().set(market));
 
@@ -109,7 +112,7 @@ public class MarketController implements Controller {
     }
 
     public void onSelect(MarketView.MarketListItem item) {
-        if (item.equals(model.getSelectedMarketListItem().get())) {
+        if (item == null || item.equals(model.getSelectedMarketListItem().get())) {
             return;
         }
         model.getSelectedMarketListItem().set(item);

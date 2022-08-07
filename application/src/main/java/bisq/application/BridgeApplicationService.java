@@ -21,8 +21,10 @@ import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.oracle.OracleService;
 import bisq.oracle.daobridge.DaoBridgeHttpService;
 import bisq.oracle.daobridge.DaoBridgeService;
+import bisq.oracle.timestamp.TimestampService;
 import bisq.security.SecurityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,7 @@ public class BridgeApplicationService extends ApplicationService {
     private final DaoBridgeHttpService daoBridgeHttpService;
     private final SecurityService securityService;
     private final NetworkService networkService;
+    private final TimestampService timestampService;
 
     public BridgeApplicationService(String[] args) {
         super("default", args);
@@ -55,12 +58,16 @@ public class BridgeApplicationService extends ApplicationService {
                 networkService
         );
 
-        DaoBridgeService.Config daoBridgeConfig = DaoBridgeService.Config.from(getConfig("oracle.daoBridge"));
-        daoBridgeHttpService = new DaoBridgeHttpService(networkService, daoBridgeConfig.getUrl());
-        daoBridgeService = new DaoBridgeService(daoBridgeConfig,
+        DaoBridgeHttpService.Config daoBridgeConfig = DaoBridgeHttpService.Config.from(getConfig("oracle.daoBridgeHttpService"));
+        daoBridgeHttpService = new DaoBridgeHttpService(daoBridgeConfig, networkService);
+
+        OracleService.Config oracleConfig = OracleService.Config.from(getConfig("oracle"));
+        daoBridgeService = new DaoBridgeService(oracleConfig,
                 networkService,
                 identityService,
                 daoBridgeHttpService);
+
+        timestampService = new TimestampService(oracleConfig, getPersistenceService(), identityService, networkService);
     }
 
     @Override
@@ -70,6 +77,7 @@ public class BridgeApplicationService extends ApplicationService {
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> daoBridgeHttpService.initialize())
                 .thenCompose(result -> daoBridgeService.initialize())
+                .thenCompose(result -> timestampService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (success) {
@@ -83,7 +91,8 @@ public class BridgeApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> daoBridgeService.shutdown()
+        return supplyAsync(() -> timestampService.shutdown()
+                        .thenCompose(result -> daoBridgeService.shutdown())
                         .thenCompose(result -> daoBridgeHttpService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())

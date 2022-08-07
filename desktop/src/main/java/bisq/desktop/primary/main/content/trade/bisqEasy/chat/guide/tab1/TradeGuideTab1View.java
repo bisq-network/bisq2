@@ -49,7 +49,7 @@ public class TradeGuideTab1View extends View<VBox, TradeGuideTab1Model, TradeGui
         headline.getStyleClass().add("bisq-text-headline-2");
 
         content = new Text(Res.get("tradeGuide.tab1.content"));
-        content.getStyleClass().addAll("bisq-text-13");
+        content.getStyleClass().addAll("bisq-text-13", "bisq-line-spacing-01");
 
         nextButton = new Button(Res.get("next"));
         nextButton.setDefaultButton(true);

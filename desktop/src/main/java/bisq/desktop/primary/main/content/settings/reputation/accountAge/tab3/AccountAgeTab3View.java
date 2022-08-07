@@ -51,7 +51,7 @@ public class AccountAgeTab3View extends View<VBox, AccountAgeTab3Model, AccountA
         headLine.getStyleClass().add("bisq-text-headline-2");
 
         Label info = new Label(Res.get("reputation.accountAge.howTo"));
-        info.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
         Label userProfileSelectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");

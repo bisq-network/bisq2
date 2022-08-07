@@ -22,6 +22,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.data.Pair;
 import bisq.common.monetary.Quote;
+import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.CollectionUtil;
@@ -38,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -99,22 +99,18 @@ public class MarketPriceService {
         }
     }
 
-    public interface Listener {
-        void onMarketPriceUpdate(Map<Market, MarketPrice> map);
-
-        void onMarketSelected(Market selectedMarket);
-    }
-
     private final List<Provider> providers;
     private final NetworkService networkService;
     private final String userAgent;
-    private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
     private final List<Provider> candidates = new ArrayList<>();
     private Optional<BaseHttpClient> httpClient = Optional.empty();
     @Getter
     private final Map<Market, MarketPrice> marketPriceByCurrencyMap = new HashMap<>();
+
     @Getter
-    private Optional<Market> selectedMarket = Optional.empty();
+    private final Observable<Market> selectedMarket = new Observable<>();
+    @Getter
+    private final Observable<Boolean> marketPriceUpdateFlag = new Observable<>(true);
 
     public MarketPriceService(Config conf, NetworkService networkService, String version) {
         providers = new ArrayList<>(conf.providers);
@@ -138,8 +134,7 @@ public class MarketPriceService {
     }
 
     public void select(Market market) {
-        selectedMarket = Optional.of(market);
-        listeners.forEach(listener -> listener.onMarketSelected(market));
+        selectedMarket.set(market);
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -160,14 +155,6 @@ public class MarketPriceService {
         return request(httpClient.get());
     }
 
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
-    }
-
     private CompletableFuture<Map<Market, MarketPrice>> request(BaseHttpClient httpClient) {
         if (httpClient.hasPendingRequest()) {
             return CompletableFuture.failedFuture(new PendingRequestException());
@@ -184,11 +171,11 @@ public class MarketPriceService {
 
                 marketPriceByCurrencyMap.clear();
                 marketPriceByCurrencyMap.putAll(map);
-                listeners.forEach(listener -> listener.onMarketPriceUpdate(marketPriceByCurrencyMap));
-                if (selectedMarket.isEmpty()) {
-                    selectedMarket = Optional.of(map.get(MarketRepository.getDefault()).getMarket());
-                    listeners.forEach(listener -> listener.onMarketSelected(selectedMarket.get()));
+                notifyObservers();
+                if (selectedMarket.get() == null) {
+                    selectedMarket.set(map.get(MarketRepository.getDefault()).getMarket());
                 }
+
                 return marketPriceByCurrencyMap;
             } catch (IOException e) {
                 if (!shutdownStarted) {
@@ -266,5 +253,9 @@ public class MarketPriceService {
     private BaseHttpClient getHttpClient(Provider provider) {
         httpClient.ifPresent(BaseHttpClient::shutdown);
         return networkService.getHttpClient(provider.url, userAgent, provider.transportType);
+    }
+
+    private void notifyObservers() {
+        marketPriceUpdateFlag.set(!marketPriceUpdateFlag.get());
     }
 }

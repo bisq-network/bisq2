@@ -30,6 +30,8 @@ import bisq.network.p2p.message.NetworkMessageResolver;
 import bisq.network.p2p.services.data.storage.DistributedDataResolver;
 import bisq.offer.Offer;
 import bisq.oracle.daobridge.model.*;
+import bisq.oracle.timestamp.AuthorizeTimestampRequest;
+import bisq.oracle.timestamp.AuthorizedTimestampData;
 import bisq.persistence.PersistenceService;
 import bisq.user.profile.UserProfile;
 import ch.qos.logback.classic.Level;
@@ -144,6 +146,7 @@ public abstract class ApplicationService {
         DistributedDataResolver.addResolver("oracle.AuthorizedBondedReputationData", AuthorizedBondedReputationData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedAccountAgeData", AuthorizedAccountAgeData.getResolver());
         DistributedDataResolver.addResolver("oracle.AuthorizedSignedWitnessData", AuthorizedSignedWitnessData.getResolver());
+        DistributedDataResolver.addResolver("oracle.AuthorizedTimestampData", AuthorizedTimestampData.getResolver());
 
         // Register resolvers for networkMessages 
         NetworkMessageResolver.addResolver("chat.ChatMessage",
@@ -152,6 +155,8 @@ public abstract class ApplicationService {
                 AuthorizeAccountAgeRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("oracle.AuthorizeSignedWitnessRequest",
                 AuthorizeSignedWitnessRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("oracle.AuthorizeTimestampRequest",
+                AuthorizeTimestampRequest.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

@@ -25,13 +25,12 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.oracle.OracleService;
 import bisq.oracle.daobridge.dto.BondedReputationDto;
 import bisq.oracle.daobridge.dto.ProofOfBurnDto;
 import bisq.oracle.daobridge.model.*;
 import bisq.security.KeyGeneration;
 import bisq.security.SignatureUtil;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -53,42 +52,19 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Similar concept is used in Bisq 1 for Filter, Alert or mediator/arbitrator registration.
  * The user who is authorized for publishing that data need to pass the private key as VM argument.
  * For development we use the keys defined in DevMode.AUTHORIZED_DEV_PUBLIC_KEYS:
- * -Dbisq.oracle.daoBridge.privateKey=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
- * -Dbisq.oracle.daoBridge.publicKey=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
+ * -Dbisq.oracle.privateKey=30818d020100301006072a8648ce3d020106052b8104000a04763074020101042010c2ea3b2b1f1787f8a57d074e550b120cc04b326b43c545214434e474e5cde2a00706052b8104000aa14403420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
+ * -Dbisq.oracle.publicKey=3056301006072a8648ce3d020106052b8104000a03420004170a828efbaa0316b7a59ec5a1e8033ca4c215b5e58b17b16f3e3cbfa5ec085f4bdb660c7b766ec5ba92b432265ba3ed3689c5d87118fbebe19e92b9228aca63
  */
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class DaoBridgeService implements Service, MessageListener {
-    @Getter
-    @ToString
-    public static final class Config {
-        private final String privateKey;
-        private final String publicKey;
-        private final String url;
-
-        public Config(String privateKey,
-                      String publicKey,
-                      String url) {
-            this.privateKey = privateKey;
-            this.publicKey = publicKey;
-            this.url = url;
-        }
-
-        public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getString("privateKey"),
-                    config.getString("publicKey"),
-                    config.getString("url")
-            );
-        }
-    }
-
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final DaoBridgeHttpService daoBridgeHttpService;
     private Optional<PrivateKey> authorizedPrivateKey = Optional.empty();
     private Optional<PublicKey> authorizedPublicKey = Optional.empty();
 
-    public DaoBridgeService(Config config,
+    public DaoBridgeService(OracleService.Config config,
                             NetworkService networkService,
                             IdentityService identityService,
                             DaoBridgeHttpService daoBridgeHttpService) {

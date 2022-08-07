@@ -106,6 +106,9 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
+        if (channel == null) {
+            return;
+        }
         if (channel instanceof PrivateTradeChannel) {
             applyPeersIcon((PrivateChannel<?>) channel);
 

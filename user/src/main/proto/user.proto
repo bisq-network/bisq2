@@ -101,10 +101,10 @@ message Role {
 message Reputation {
   enum Type {
     BURNED_BSQ = 0;
-    BURNED_BSQ_AGE = 1;
-    IDENTITY_AGE = 2;
-    BISQ1_ACCOUNT_AGE = 3;
-    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 4;
+    BSQ_BOND = 1;
+    BISQ1_ACCOUNT_AGE = 2;
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 3;
+    PROFILE_AGE = 4;
   }
 
   string type = 1;
@@ -118,5 +118,10 @@ message AccountAgeStore {
 
 message SignedWitnessStore {
   repeated string jsonRequests = 1;
+  uint64 lastRequested = 2;
+}
+
+message ProfileAgeStore {
+  repeated string profileIds = 1;
   uint64 lastRequested = 2;
 }

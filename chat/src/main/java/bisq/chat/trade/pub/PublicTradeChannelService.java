@@ -37,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class PublicTradeChannelService extends PublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
@@ -73,6 +75,10 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
 
     public ObservableSet<String> getVisibleChannelIds() {
         return persistableStore.getVisibleChannelIds();
+    }
+
+    public Set<PublicTradeChannel> getVisibleChannels() {
+        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }
 
 

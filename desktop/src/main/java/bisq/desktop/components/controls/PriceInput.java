@@ -19,6 +19,7 @@ package bisq.desktop.components.controls;
 
 import bisq.common.currency.Market;
 import bisq.common.monetary.Quote;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.PriceValidator;
 import bisq.i18n.Res;
@@ -33,8 +34,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
 
 @Slf4j
 public class PriceInput {
@@ -64,14 +63,17 @@ public class PriceInput {
         return controller.view.getRoot();
     }
 
-    private static class Controller implements bisq.desktop.common.view.Controller, MarketPriceService.Listener {
+    private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
         private final PriceValidator validator = new PriceValidator();
+        private final MarketPriceService marketPriceService;
+        private Pin marketPriceUpdateFlagPin;
 
         private Controller(MarketPriceService marketPriceService) {
-            model = new Model(marketPriceService);
+            this.marketPriceService = marketPriceService;
+            model = new Model();
             view = new View(model, this, validator);
         }
 
@@ -93,31 +95,22 @@ public class PriceInput {
 
         @Override
         public void onActivate() {
-            if (model.isCreateOffer) {
-                model.marketPriceService.addListener(this);
-            }
             updateFromMarketPrice();
-        }
 
-        @Override
-        public void onDeactivate() {
-            if (model.isCreateOffer) {
-                model.marketPriceService.removeListener(this);
-            }
-        }
-
-        @Override
-        public void onMarketPriceUpdate(Map<Market, MarketPrice> map) {
-            UIThread.run(() -> {
-                // We only set it initially
-                if (model.fixPrice.get() != null) return;
-                setFixPriceFromMarketPrice();
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
+                UIThread.run(() -> {
+                    // We only set it initially
+                    if (model.fixPrice.get() != null) return;
+                    setFixPriceFromMarketPrice();
+                });
             });
         }
 
         @Override
-        public void onMarketSelected(Market selectedMarket) {
+        public void onDeactivate() {
+            marketPriceUpdateFlagPin.unbind();
         }
+
 
         // View events
         private void onFocusChange(boolean hasFocus) {
@@ -141,7 +134,7 @@ public class PriceInput {
 
         private void setFixPriceFromMarketPrice() {
             if (model.selectedMarket == null) return;
-            MarketPrice marketPrice = model.marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
+            MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(model.selectedMarket);
             if (marketPrice == null) return;
             model.fixPrice.set(marketPrice.getQuote());
         }
@@ -149,15 +142,13 @@ public class PriceInput {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<Quote> fixPrice = new SimpleObjectProperty<>();
-        private final MarketPriceService marketPriceService;
         private Market selectedMarket;
         private boolean hasFocus;
         private final StringProperty marketString = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private boolean isCreateOffer = true;
 
-        private Model(MarketPriceService marketPriceService) {
-            this.marketPriceService = marketPriceService;
+        private Model() {
         }
     }
 

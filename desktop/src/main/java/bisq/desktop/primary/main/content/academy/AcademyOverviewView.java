@@ -21,9 +21,9 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
-import bisq.desktop.components.containers.Spacer;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
@@ -39,6 +39,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
 
         root.setHgap(PADDING);
         root.setVgap(PADDING);
+        root.setCursor(Cursor.HAND);
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setPercentWidth(50);
@@ -80,7 +81,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox vBox = new VBox(20, headlineLabel, contentLabel);
         GridPane.setHgrow(vBox, Priority.ALWAYS);
-        GridPane.setVgrow(vBox, Priority.ALWAYS);
+        // GridPane.setVgrow(vBox, Priority.ALWAYS);
         root.add(vBox, 0, 0, 2, 1);
 
         // contentLabel adjusts to available height of vBox and does not wrap, so we enforce minHeight 
@@ -116,8 +117,8 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         );
         GridPane.setHgrow(leftBox, Priority.ALWAYS);
         GridPane.setHgrow(rightBox, Priority.ALWAYS);
-        GridPane.setVgrow(leftBox, Priority.ALWAYS);
-        GridPane.setVgrow(rightBox, Priority.ALWAYS);
+        // GridPane.setVgrow(leftBox, Priority.ALWAYS);
+        // GridPane.setVgrow(rightBox, Priority.ALWAYS);
         root.add(leftBox, 0, ++rowIndex, 1, 1);
         root.add(rightBox, 1, rowIndex, 1, 1);
     }
@@ -127,6 +128,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
         headlineLabel.setGraphicTextGap(15);
+        headlineLabel.setMinHeight(35);
         headlineLabel.setWrapText(true);
 
         Label contentLabel = new Label(content);
@@ -141,8 +143,8 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
 
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
-        VBox.setMargin(button, new Insets(-10, 0, 10, 0));
-        VBox vBox = new VBox(20, headlineLabel, contentLabel, Spacer.fillVBox(), button);
+        VBox.setMargin(button, new Insets(10, 0, 10, 0));
+        VBox vBox = new VBox(20, headlineLabel, contentLabel, button);
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(PADDING));

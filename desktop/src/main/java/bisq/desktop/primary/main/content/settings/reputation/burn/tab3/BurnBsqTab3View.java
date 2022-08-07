@@ -51,7 +51,7 @@ public class BurnBsqTab3View extends View<VBox, BurnBsqTab3Model, BurnBsqTab3Con
         headLine.getStyleClass().add("bisq-text-headline-2");
 
         Label info = new Label(Res.get("reputation.burnedBsq.howTo"));
-        info.getStyleClass().addAll("bisq-text-13", "wrap-text");
+        info.getStyleClass().addAll("bisq-text-13", "wrap-text", "bisq-line-spacing-01");
 
         Label userProfileSelectLabel = new Label(Res.get("settings.userProfile.select").toUpperCase());
         userProfileSelectLabel.getStyleClass().add("bisq-text-4");

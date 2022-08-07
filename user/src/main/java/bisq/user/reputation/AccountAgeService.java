@@ -76,15 +76,12 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     private final AccountAgeStore persistableStore = new AccountAgeStore();
     @Getter
     private final Persistence<AccountAgeStore> persistence;
-    private final String baseDir;
 
-    public AccountAgeService(String baseDir,
-                             PersistenceService persistenceService,
+    public AccountAgeService(PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
-        this.baseDir = baseDir;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
