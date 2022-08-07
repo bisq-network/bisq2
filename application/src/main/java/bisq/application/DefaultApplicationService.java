@@ -94,11 +94,7 @@ public class DefaultApplicationService extends ApplicationService {
                 securityService,
                 networkService);
 
-        oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")),
-                config.getVersion(),
-                networkService,
-                identityService,
-                persistenceService);
+        oracleService = new OracleService(OracleService.Config.from(getConfig("oracle")), config.getVersion(), networkService);
 
         accountService = new AccountService(networkService, persistenceService, identityService);
 
@@ -108,7 +104,6 @@ public class DefaultApplicationService extends ApplicationService {
                 persistenceService,
                 identityService,
                 networkService,
-                oracleService.getOpenTimestampService(),
                 securityService.getProofOfWorkService());
 
         chatService = new ChatService(persistenceService,

@@ -33,10 +33,6 @@ message AuthorizedSignedWitnessData {
   uint64 witnessSignDate = 2;
 }
 
-message OpenTimestampStore {
-  repeated common.ByteArrayMapEntry timestampEntries = 1;
-}
-
 message AuthorizeAccountAgeRequest {
   string profileId = 1;
   string hashAsHex = 2;

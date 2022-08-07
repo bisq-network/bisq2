@@ -18,11 +18,8 @@
 package bisq.oracle;
 
 import bisq.common.application.Service;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.oracle.marketprice.MarketPriceService;
-import bisq.oracle.ots.OpenTimestampService;
-import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,37 +32,26 @@ public class OracleService implements Service {
     public static class Config {
         private final String privateKey;
         private final String publicKey;
-        private final com.typesafe.config.Config openTimestamp;
         private final com.typesafe.config.Config marketPrice;
 
         public Config(String privateKey,
                       String publicKey,
-                      com.typesafe.config.Config openTimestamp,
                       com.typesafe.config.Config marketPrice) {
             this.privateKey = privateKey;
             this.publicKey = publicKey;
-            this.openTimestamp = openTimestamp;
             this.marketPrice = marketPrice;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getString("privateKey"),
                     config.getString("publicKey"),
-                    config.getConfig("openTimestamp"),
                     config.getConfig("marketPrice"));
         }
     }
 
-    private final OpenTimestampService openTimestampService;
     private final MarketPriceService marketPriceService;
 
-    public OracleService(Config config, String applicationVersion,
-                         NetworkService networkService,
-                         IdentityService identityService,
-                         PersistenceService persistenceService) {
-        openTimestampService = new OpenTimestampService(OpenTimestampService.Config.from(config.getOpenTimestamp()),
-                identityService,
-                persistenceService);
+    public OracleService(Config config, String applicationVersion, NetworkService networkService) {
         marketPriceService = new MarketPriceService(MarketPriceService.Config.from(config.getMarketPrice()),
                 networkService,
                 applicationVersion);
@@ -78,8 +64,7 @@ public class OracleService implements Service {
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        return openTimestampService.initialize()
-                .thenCompose(result -> marketPriceService.initialize());
+        return marketPriceService.initialize();
     }
 
     public CompletableFuture<Boolean> shutdown() {
