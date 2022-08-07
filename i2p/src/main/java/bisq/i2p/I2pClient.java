@@ -18,7 +18,6 @@
 package bisq.i2p;
 
 import bisq.common.util.FileUtils;
-import bisq.common.util.NetworkUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.I2PAppContext;
 import net.i2p.I2PException;
@@ -28,9 +27,6 @@ import net.i2p.client.streaming.I2PSocketOptions;
 import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 import net.i2p.data.PrivateKeyFile;
-import net.i2p.router.CommSystemFacade;
-import net.i2p.router.Router;
-import net.i2p.router.RouterContext;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -75,7 +71,7 @@ public class I2pClient {
     private I2pClient(String dirPath, String host, int port, long socketTimeout, boolean isEmbeddedRouter) {
         this.embeddedRouter = isEmbeddedRouter;
         if(isEmbeddedRouter) {
-            this.i2pRouter = I2pEmbeddedRouter.getInitialzedI2pEmbeddedRouter();
+            this.i2pRouter = I2pEmbeddedRouter.getInitializedI2pEmbeddedRouter();
         }
 
         this.socketTimeout = socketTimeout;
@@ -83,10 +79,6 @@ public class I2pClient {
         log.info("I2P client created with dirPath={}; host={}; port={}; socketTimeout={}", dirPath, host, port,
                 socketTimeout);
         configureI2pLogging();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("I2pClient.shutdownHook");
-            shutdown();
-        }));
     }
 
     /**
