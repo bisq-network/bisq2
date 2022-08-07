@@ -1,6 +1,5 @@
 package bisq.network.p2p.node.transport;
 
-import bisq.common.timer.Scheduler;
 import bisq.common.util.NetworkUtils;
 import bisq.i2p.I2pClient;
 import bisq.i2p.I2pEmbeddedRouter;
@@ -82,7 +81,6 @@ public class I2PTransport implements Transport {
         log.info("I2PTransport using i2pDirPath: {}", i2pDirPath);
     }
 
-
     @Override
     public boolean initialize() {
         if (initializeCalled) {
@@ -92,37 +90,50 @@ public class I2PTransport implements Transport {
         log.debug("Initialize");
 
         //If embedded router, start it already ...
-        if(config.isEmbeddedRouter()) {
-            if(!I2pEmbeddedRouter.hasBeenInitialized()) {
-                I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
-                        config.getInboundKBytesPerSecond(),
-                        config.getOutboundKBytesPerSecond(),
-                        config.getBandwidthSharePercentage(),
-                        config.isExtendedI2pLogging());
-            }
-            while(!I2pEmbeddedRouter.isRouterRunning()){
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+        boolean isEmbeddedRouter;
+        isEmbeddedRouter = isEmbeddedRouter();
+
+        if(isEmbeddedRouter) {
+                if(!I2pEmbeddedRouter.isInitialized()) {
+                    I2pEmbeddedRouter.getI2pEmbeddedRouter(i2pDirPath,
+                            config.getInboundKBytesPerSecond(),
+                            config.getOutboundKBytesPerSecond(),
+                            config.getBandwidthSharePercentage(),
+                            config.isExtendedI2pLogging());
                 }
-            }
-            i2pClient = I2pClient.getI2pClient(i2pDirPath,
-                    config.getI2cpHost(),
-                    config.getI2cpPort(),
-                    config.getSocketTimeout(),
-                    config.isEmbeddedRouter());
+                while(!I2pEmbeddedRouter.isRouterRunning()){
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                i2pClient = getClient(isEmbeddedRouter);
         }
         else {
-            i2pClient = I2pClient.getI2pClient(i2pDirPath,
-                    config.getI2cpHost(),
-                    config.getI2cpPort(),
-                    config.getSocketTimeout(),
-                    config.isEmbeddedRouter());
+            i2pClient = getClient(isEmbeddedRouter);
         }
-
-
         return true;
+    }
+
+    private boolean isEmbeddedRouter() {
+        if (config.isEmbeddedRouter()) {
+            //Is there a running router? If so ignore the config for embeeded router if exists
+            if (NetworkUtils.isPortInUse("127.0.0.1", 7654)) {
+                log.info("Embedded router parameter set to true, but there's a service running on 127.0.0.1:7654...");
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private I2pClient getClient(boolean isEmbeddedRouter) {
+        return I2pClient.getI2pClient(i2pDirPath,
+                config.getI2cpHost(),
+                config.getI2cpPort(),
+                config.getSocketTimeout(),
+                isEmbeddedRouter);
     }
 
 
@@ -134,7 +145,7 @@ public class I2PTransport implements Transport {
             //TODO: Investigate why not using port passed as parameter and if no port, find one?
             //Pass parameters to connect with Local instance
             int i2pPort = port;
-            if(!config.isEmbeddedRouter()) {
+            if(!isEmbeddedRouter()) {
                 i2pPort = config.getI2cpPort();
             }
             ServerSocket serverSocket = i2pClient.getServerSocket(sessionId, config.getI2cpHost(), i2pPort);

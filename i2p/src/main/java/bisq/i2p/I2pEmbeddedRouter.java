@@ -2,13 +2,13 @@ package bisq.i2p;
 
 import bisq.common.timer.Scheduler;
 import bisq.i2p.util.I2PLogManager;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.i2p.client.streaming.I2PSocketManager;
 import net.i2p.client.streaming.I2PSocketManagerFactory;
 import net.i2p.router.CommSystemFacade;
 import net.i2p.router.Router;
 import net.i2p.router.RouterContext;
-import org.minidns.record.UNKNOWN;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +23,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Getter
 public class I2pEmbeddedRouter {
 
     //TODO - Restart of embedded router not implemented yet
@@ -53,11 +54,11 @@ public class I2pEmbeddedRouter {
         return localRouter;
     }
 
-    public static boolean hasBeenInitialized(){
+    public static boolean isInitialized(){
         return initialized;
     }
 
-    public static I2pEmbeddedRouter getInitialzedI2pEmbeddedRouter() {
+    public static I2pEmbeddedRouter getInitializedI2pEmbeddedRouter() {
         return localRouter;
     }
 
@@ -84,15 +85,12 @@ public class I2pEmbeddedRouter {
                 .periodically(30, TimeUnit.SECONDS)
                 .name("I2pStatus");
 
-
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-
     public I2PSocketManager getManager(File privKeyFile) throws IOException {
 
         I2PSocketManager manager;
-
         //Has the router been initialized?
         while(RouterContext.listContexts().size() < 1) {
             try {
@@ -149,48 +147,16 @@ public class I2pEmbeddedRouter {
         }
     }
 
-    public void reportRouterStatus() {
-        if(i2pRouterStatus == CommSystemFacade.Status.OK ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_OK ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_FIREWALLED_IPV6_OK ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_SNAT_IPV6_OK ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_UNKNOWN_IPV6_OK ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_OK_IPV6_UNKNOWN ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_FIREWALLED ||
-                i2pRouterStatus == CommSystemFacade.Status.REJECT_UNSOLICITED ||
-                i2pRouterStatus == CommSystemFacade.Status.IPV4_OK_IPV6_FIREWALLED) {
-            log.info("I2P Router status - {}", i2pRouterStatus.toStatusString());
-        }
-        else if(i2pRouterStatus == CommSystemFacade.Status.DIFFERENT ||
-                i2pRouterStatus == CommSystemFacade.Status.HOSED) {
-            log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
-        }
-        else if(i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
-            log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
-            //todo - create a restart() routine?
-        }
-        else {
-            log.warn("Not connected to I2P Network.");
-        }
-    }
-
     public static boolean isRouterRunning() {
         if(null == localRouter) {
             return false;
         }
-        return getInitialzedI2pEmbeddedRouter().isRouterInstanceRunning();
+        return localRouter.getRouter().isRunning();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean isRouterInstanceRunning() {
-        if(null == router) {
-            return false;
-        }
-        return router.isRunning();
-    }
 
     @SuppressWarnings("SpellCheckingInspection")
     private void startEmbeddedRouter(boolean extendedI2pLogging) throws IOException {
@@ -278,5 +244,30 @@ public class I2pEmbeddedRouter {
 
     private CommSystemFacade.Status getRouterStatus() {
         return routerContext.commSystem().getStatus();
+    }
+
+    private void reportRouterStatus() {
+        if(i2pRouterStatus == CommSystemFacade.Status.OK ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_OK ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_FIREWALLED_IPV6_OK ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_SNAT_IPV6_OK ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_UNKNOWN_IPV6_OK ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_OK_IPV6_UNKNOWN ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_DISABLED_IPV6_FIREWALLED ||
+                i2pRouterStatus == CommSystemFacade.Status.REJECT_UNSOLICITED ||
+                i2pRouterStatus == CommSystemFacade.Status.IPV4_OK_IPV6_FIREWALLED) {
+            log.info("I2P Router status - {}", i2pRouterStatus.toStatusString());
+        }
+        else if(i2pRouterStatus == CommSystemFacade.Status.DIFFERENT ||
+                i2pRouterStatus == CommSystemFacade.Status.HOSED) {
+            log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
+        }
+        else if(i2pRouterStatus == CommSystemFacade.Status.DISCONNECTED) {
+            log.warn("I2P Router status - {}", i2pRouterStatus.toStatusString());
+            //todo - create a restart() routine?
+        }
+        else {
+            log.warn("Not connected to I2P Network.");
+        }
     }
 }
