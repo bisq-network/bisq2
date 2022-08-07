@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.settings.userProfile;
 
 import bisq.application.DefaultApplicationService;
-import bisq.common.data.ByteArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -28,10 +27,11 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.DataService;
-import bisq.oracle.ots.OpenTimestampService;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ProfileAgeService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
@@ -50,7 +50,7 @@ public class UserProfileController implements Controller {
     private final UserProfileView view;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
-    private final OpenTimestampService openTimestampService;
+    private final ProfileAgeService profileAgeService;
     private Pin userProfilesPin, selectedUserProfilePin, reputationChangedPin;
     private Subscription statementPin, termsPin;
 
@@ -58,7 +58,7 @@ public class UserProfileController implements Controller {
     public UserProfileController(DefaultApplicationService applicationService) {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         reputationService = applicationService.getUserService().getReputationService();
-        openTimestampService = applicationService.getOracleService().getOpenTimestampService();
+        profileAgeService = reputationService.getProfileAgeService();
 
         model = new UserProfileModel();
         view = new UserProfileView(model, this);
@@ -82,10 +82,9 @@ public class UserProfileController implements Controller {
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 
-                        openTimestampService.getVerifiedOtsDate(new ByteArray(userIdentity.getPubKeyHash()))
-                                .thenAccept(date ->
-                                        UIThread.run(() -> model.getProfileAge().set(date.map(e -> String.valueOf(e))
-                                                .orElse(Res.get("na")))));
+                        model.getProfileAge().set(profileAgeService.getProfileAgeInDays(userIdentity.getUserProfile())
+                                .map(TimeFormatter::formatAgeInDays)
+                                .orElse(Res.get("na")));
                     }
                 }
         );

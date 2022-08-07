@@ -23,6 +23,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -119,8 +120,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             // todo add tooltip
             model.reputationScore.set(String.valueOf(reputationService.getReputationScore(userProfile).getTotalScore()));
 
-            //todo
-            // model.profileAge.set(userProfile.getAccountAgeAsString());
+            model.profileAge.set(reputationService.getProfileAgeService().getProfileAgeInDays(userProfile)
+                    .map(TimeFormatter::formatAgeInDays)
+                    .orElse(Res.get("na")));
         }
 
         @Override

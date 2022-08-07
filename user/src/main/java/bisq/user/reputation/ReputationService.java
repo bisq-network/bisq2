@@ -41,9 +41,9 @@ public class ReputationService implements Service {
     private final SignedWitnessService signedWitnessService;
     private final Observable<String> changedUserProfileScore = new Observable<>();
     private final Map<String, Long> scoreByUserProfileId = new ConcurrentHashMap<>();
+    private final ProfileAgeService profileAgeService;
 
-    public ReputationService(String baseDir,
-                             PersistenceService persistenceService,
+    public ReputationService(PersistenceService persistenceService,
                              NetworkService networkService,
                              UserIdentityService userIdentityService,
                              UserProfileService userProfileService) {
@@ -53,13 +53,15 @@ public class ReputationService implements Service {
         bondedReputationService = new BondedReputationService(networkService,
                 userIdentityService,
                 userProfileService);
-        accountAgeService = new AccountAgeService(baseDir,
-                persistenceService,
+        accountAgeService = new AccountAgeService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);
-        signedWitnessService = new SignedWitnessService(baseDir,
-                persistenceService,
+        signedWitnessService = new SignedWitnessService(persistenceService,
+                networkService,
+                userIdentityService,
+                userProfileService);
+        profileAgeService = new ProfileAgeService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);
@@ -68,6 +70,7 @@ public class ReputationService implements Service {
         bondedReputationService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         accountAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
         signedWitnessService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
+        profileAgeService.getUserProfileIdOfUpdatedScore().addObserver(this::onUserProfileScoreChanged);
     }
 
 
@@ -80,7 +83,8 @@ public class ReputationService implements Service {
         return proofOfBurnService.initialize()
                 .thenCompose(r -> bondedReputationService.initialize())
                 .thenCompose(r -> accountAgeService.initialize())
-                .thenCompose(r -> signedWitnessService.initialize());
+                .thenCompose(r -> signedWitnessService.initialize())
+                .thenCompose(r -> profileAgeService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -88,7 +92,8 @@ public class ReputationService implements Service {
         return proofOfBurnService.shutdown()
                 .thenCompose(r -> bondedReputationService.shutdown())
                 .thenCompose(r -> accountAgeService.shutdown())
-                .thenCompose(r -> signedWitnessService.shutdown());
+                .thenCompose(r -> signedWitnessService.shutdown())
+                .thenCompose(r -> profileAgeService.shutdown());
     }
 
 
@@ -123,7 +128,8 @@ public class ReputationService implements Service {
         long score = proofOfBurnService.getScore(userProfileId) +
                 bondedReputationService.getScore(userProfileId) +
                 accountAgeService.getScore(userProfileId) +
-                signedWitnessService.getScore(userProfileId);
+                signedWitnessService.getScore(userProfileId) +
+                profileAgeService.getScore(userProfileId);
         scoreByUserProfileId.put(userProfileId, score);
         changedUserProfileScore.set(userProfileId);
     }

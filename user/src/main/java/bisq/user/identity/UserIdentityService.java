@@ -18,16 +18,17 @@
 package bisq.user.identity;
 
 import bisq.common.application.Service;
-import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.oracle.ots.OpenTimestampService;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.oracle.daobridge.model.AuthorizedDaoBridgeServiceProvider;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -40,12 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service {
+public class UserIdentityService implements PersistenceClient<UserIdentityStore>, Service, DataService.Listener {
     @Getter
     @ToString
     public static final class Config {
@@ -69,25 +72,31 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     private final NetworkService networkService;
     private final Object lock = new Object();
     private final Config config;
-    private final OpenTimestampService openTimestampService;
     private final Map<String, Long> publishTimeByChatUserId = new ConcurrentHashMap<>();
     @Getter
     private final Observable<Integer> userIdentityChangedFlag = new Observable<>(0);
+    @Getter
+    private final Observable<UserIdentity> newlyCreatedUserIdentity = new Observable<>();
+    protected Set<NetworkId> daoBridgeServiceProviders = new CopyOnWriteArraySet<>();
 
     public UserIdentityService(Config config,
                                PersistenceService persistenceService,
                                IdentityService identityService,
-                               OpenTimestampService openTimestampService,
                                NetworkService networkService) {
         this.config = config;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-        this.openTimestampService = openTimestampService;
         this.identityService = identityService;
         this.networkService = networkService;
     }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        networkService.getDataService()
+                .ifPresent(dataService -> dataService.getAllAuthenticatedPayload()
+                        .forEach(this::processAuthenticatedData));
+        networkService.addDataServiceListener(this);
+
         // todo delay
         getUserIdentities().forEach(userProfile ->
                 maybePublicUserProfile(userProfile.getUserProfile(), userProfile.getNodeIdAndKeyPair()));
@@ -95,9 +104,28 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeDataServiceListener(this);
         log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // DataService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        processAuthenticatedData(authenticatedData);
+    }
+
+    private void processAuthenticatedData(AuthenticatedData authenticatedData) {
+        if (authenticatedData.getDistributedData() instanceof AuthorizedDaoBridgeServiceProvider) {
+            AuthorizedDaoBridgeServiceProvider data = (AuthorizedDaoBridgeServiceProvider) authenticatedData.getDistributedData();
+            daoBridgeServiceProviders.add(data.getNetworkId());
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -111,7 +139,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         String tag = getTag(nickName, proofOfWork);
         Identity identity = identityService.swapPooledIdentity(tag, pooledIdentity);
         UserIdentity userIdentity = createUserIdentity(nickName, proofOfWork, terms, bio, identity);
-        maybeCreateOrUpgradeTimestampAsync(userIdentity);
         publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
         return userIdentity;
     }
@@ -126,7 +153,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return identityService.createNewActiveIdentity(tag, keyId, keyPair)
                 .thenApply(identity -> createUserIdentity(nickName, proofOfWork, terms, bio, identity))
                 .thenApply(userIdentity -> {
-                    maybeCreateOrUpgradeTimestampAsync(userIdentity);
                     publishPublicUserProfile(userIdentity.getUserProfile(), userIdentity.getIdentity().getNodeIdAndKeyPair());
                     return userIdentity;
                 });
@@ -214,6 +240,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
             persistableStore.getUserIdentities().add(userIdentity);
             persistableStore.getSelectedUserProfile().set(userIdentity);
         }
+        newlyCreatedUserIdentity.set(userIdentity);
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
         return userIdentity;
@@ -223,12 +250,6 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
                                                                                         NetworkIdWithKeyPair nodeIdAndKeyPair) {
         publishTimeByChatUserId.put(userProfile.getId(), System.currentTimeMillis());
         return networkService.publishAuthenticatedData(userProfile, nodeIdAndKeyPair);
-    }
-
-    private void maybeCreateOrUpgradeTimestampAsync(UserIdentity userIdentity) {
-        // We don't wait for OTS is completed as it will become usable only after the tx is 
-        // published and confirmed which can take half a day or more.
-        openTimestampService.maybeCreateOrUpgradeTimestampAsync(new ByteArray(userIdentity.getPubKeyHash()));
     }
 
     private String getTag(String nickName, ProofOfWork proofOfWork) {

@@ -53,3 +53,16 @@ message AuthorizeSignedWitnessRequest {
   string pubKeyBase64 = 5;
   string signatureBase64 = 6;
 }
+
+message AuthorizeTimestampRequest {
+  string profileId = 1;
+}
+
+message AuthorizedTimestampData {
+  string profileId = 1;
+  uint64 date = 2;
+}
+
+message TimestampStore {
+  repeated common.StringLongPair stringLongPairs = 1;
+}

@@ -87,3 +87,8 @@ message ByteArrayMapEntry {
   common.ByteArray key = 1;
   common.ByteArray value = 2;
 }
+
+message StringLongPair {
+  string key = 1;
+  uint64 value = 2;
+}

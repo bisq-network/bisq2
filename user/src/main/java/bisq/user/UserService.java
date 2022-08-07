@@ -20,7 +20,6 @@ package bisq.user;
 import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
-import bisq.oracle.ots.OpenTimestampService;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
@@ -59,20 +58,16 @@ public class UserService implements Service {
     private final ReputationService reputationService;
 
     public UserService(Config config,
-                       String baseDir,
                        PersistenceService persistenceService,
                        IdentityService identityService,
                        NetworkService networkService,
-                       OpenTimestampService openTimestampService,
                        ProofOfWorkService proofOfWorkService) {
         userProfileService = new UserProfileService(persistenceService, networkService, proofOfWorkService);
         userIdentityService = new UserIdentityService(config.getUserIdentityConfig(),
                 persistenceService,
                 identityService,
-                openTimestampService,
                 networkService);
-        reputationService = new ReputationService(baseDir,
-                persistenceService,
+        reputationService = new ReputationService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);

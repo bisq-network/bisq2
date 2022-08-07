@@ -105,7 +105,6 @@ public class DefaultApplicationService extends ApplicationService {
         offerService = new OfferService(networkService, identityService, persistenceService);
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
-                config.getBaseDir(),
                 persistenceService,
                 identityService,
                 networkService,

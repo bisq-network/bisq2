@@ -88,6 +88,14 @@ public class ReputationDetailsPopup extends VBox {
                                 signedWitnessService.calculateScore(data)))
                         .toList()));
 
+        ProfileAgeService profileAgeService = reputationService.getProfileAgeService();
+        Optional.ofNullable(profileAgeService.getDataSetByHash().get(userProfile.getProfileAgeKey()))
+                .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
+                        .map(data -> new ListItem(Reputation.Source.PROFILE_AGE,
+                                data.getDate(),
+                                profileAgeService.calculateScore(data)))
+                        .toList()));
+
         SortedList<ReputationDetailsPopup.ListItem> sortedList = new SortedList<>(listItems);
         tableView = new BisqTableView<>(sortedList);
         setPrefHeight(500);

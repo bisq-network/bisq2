@@ -31,25 +31,28 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class OracleService implements Service {
-
     @Getter
     public static class Config {
+        private final String privateKey;
+        private final String publicKey;
         private final com.typesafe.config.Config openTimestamp;
         private final com.typesafe.config.Config marketPrice;
-        private final com.typesafe.config.Config daoBridge;
 
-        public Config(com.typesafe.config.Config openTimestamp,
-                      com.typesafe.config.Config marketPrice,
-                      com.typesafe.config.Config daoBridge) {
+        public Config(String privateKey,
+                      String publicKey,
+                      com.typesafe.config.Config openTimestamp,
+                      com.typesafe.config.Config marketPrice) {
+            this.privateKey = privateKey;
+            this.publicKey = publicKey;
             this.openTimestamp = openTimestamp;
             this.marketPrice = marketPrice;
-            this.daoBridge = daoBridge;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getConfig("openTimestamp"),
-                    config.getConfig("marketPrice"),
-                    config.getConfig("daoBridge"));
+            return new Config(config.getString("privateKey"),
+                    config.getString("publicKey"),
+                    config.getConfig("openTimestamp"),
+                    config.getConfig("marketPrice"));
         }
     }
 

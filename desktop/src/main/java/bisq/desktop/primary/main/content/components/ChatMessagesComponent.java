@@ -365,6 +365,7 @@ public class ChatMessagesComponent {
             userProfileSelectionRoot = userProfileSelection.getRoot();
             userProfileSelectionRoot.setMaxHeight(44);
             userProfileSelectionRoot.setMaxWidth(150);
+            userProfileSelectionRoot.setMinWidth(150);
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);

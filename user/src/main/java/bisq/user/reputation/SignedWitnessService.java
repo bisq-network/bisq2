@@ -79,15 +79,12 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     private final SignedWitnessStore persistableStore = new SignedWitnessStore();
     @Getter
     private final Persistence<SignedWitnessStore> persistence;
-    private final String baseDir;
 
-    public SignedWitnessService(String baseDir,
-                                PersistenceService persistenceService,
+    public SignedWitnessService(PersistenceService persistenceService,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
                                 UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService);
-        this.baseDir = baseDir;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
