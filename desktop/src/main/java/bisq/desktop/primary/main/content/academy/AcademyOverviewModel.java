@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.academy.openSource;
+package bisq.desktop.primary.main.content.academy;
 
 import bisq.desktop.common.view.Model;
 
-public class OpenSourceAcademyModel implements Model {
+public class AcademyOverviewModel implements Model {
 }

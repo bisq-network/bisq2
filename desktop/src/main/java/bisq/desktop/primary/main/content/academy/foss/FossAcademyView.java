@@ -15,26 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.academy.openSource;
+package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.primary.main.content.academy.AcademyView;
+import lombok.extern.slf4j.Slf4j;
 
-public class OpenSourceAcademyController implements Controller {
-    @Getter
-    private final OpenSourceAcademyView view;
+@Slf4j
+public class FossAcademyView extends AcademyView<FossAcademyModel, FossAcademyController> {
 
-    public OpenSourceAcademyController(DefaultApplicationService applicationService) {
-        OpenSourceAcademyModel model = new OpenSourceAcademyModel();
-        view = new OpenSourceAcademyView(model, this);
+    public FossAcademyView(FossAcademyModel model, FossAcademyController controller) {
+        super(model, controller);
     }
 
     @Override
-    public void onActivate() {
+    protected String getKey() {
+        return "foss";
     }
 
     @Override
-    public void onDeactivate() {
+    protected String getIconId() {
+        return "learn-openSource";
+    }
+
+
+    @Override
+    protected String getUrl() {
+        return "https://en.wikipedia.org/wiki/Free_and_open-source_software";
     }
 }

@@ -37,4 +37,9 @@ public class BsqSwapController implements Controller {
     @Override
     public void onDeactivate() {
     }
+
+    @Override
+    public boolean useCaching() {
+        return false;
+    }
 }

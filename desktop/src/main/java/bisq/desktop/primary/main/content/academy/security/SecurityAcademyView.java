@@ -17,30 +17,29 @@
 
 package bisq.desktop.primary.main.content.academy.security;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import bisq.desktop.primary.main.content.academy.AcademyView;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SecurityAcademyView extends View<VBox, SecurityAcademyModel, SecurityAcademyController> {
+public class SecurityAcademyView extends AcademyView<SecurityAcademyModel, SecurityAcademyController> {
 
     public SecurityAcademyView(SecurityAcademyModel model, SecurityAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.security"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getKey() {
+        return "security";
     }
 
     @Override
-    protected void onViewDetached() {
+    protected String getIconId() {
+        return "learn-security";
+    }
 
+
+    @Override
+    protected String getUrl() {
+        return "https://bitcoin.org/en/secure-your-wallet";
     }
 }

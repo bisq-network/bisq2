@@ -17,30 +17,29 @@
 
 package bisq.desktop.primary.main.content.academy.wallets;
 
-import bisq.desktop.common.view.View;
-import bisq.i18n.Res;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
+import bisq.desktop.primary.main.content.academy.AcademyView;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class WalletsAcademyView extends View<VBox, WalletsAcademyModel, WalletsAcademyController> {
+public class WalletsAcademyView extends AcademyView<WalletsAcademyModel, WalletsAcademyController> {
 
     public WalletsAcademyView(WalletsAcademyModel model, WalletsAcademyController controller) {
-        super(new VBox(), model, controller);
-
-        Text headlineLabel = new Text(Res.get("academy.wallets"));
-        headlineLabel.getStyleClass().add("bisq-text-headline-2");
-
-        root.getChildren().add(headlineLabel);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getKey() {
+        return "wallets";
     }
 
     @Override
-    protected void onViewDetached() {
+    protected String getIconId() {
+        return "learn-wallets";
+    }
 
+
+    @Override
+    protected String getUrl() {
+        return "https://bitcoin.org/en/choose-your-wallet";
     }
 }

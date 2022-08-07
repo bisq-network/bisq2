@@ -34,6 +34,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -123,9 +125,25 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     }
 
     @Override
+    protected void addToDataSet(Set<AuthorizedAccountAgeData> dataSet, AuthorizedAccountAgeData data) {
+        if (dataSet.isEmpty()) {
+            dataSet.add(data);
+            return;
+        }
+
+        // If new data is older than existing entry we clear set and add our new data, otherwise we ignore the new data.
+        AuthorizedAccountAgeData existing = new ArrayList<>(dataSet).get(0);
+        if (existing.getDate() > data.getDate()) {
+            dataSet.clear();
+            dataSet.add(data);
+        }
+    }
+
+    @Override
     protected ByteArray getDataKey(AuthorizedAccountAgeData data) {
         return new ByteArray(data.getProfileId().getBytes(StandardCharsets.UTF_8));
     }
+
 
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {

@@ -17,28 +17,27 @@
 
 package bisq.desktop.primary.main.content.trade.lightning;
 
-import bisq.desktop.common.view.View;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
+import bisq.account.protocol.SwapProtocolType;
+import bisq.desktop.primary.main.content.trade.ProtocolRoadmapView;
 
-public class LightningView extends View<VBox, LightningModel, LightningController> {
+public class LightningView extends ProtocolRoadmapView<LightningModel, LightningController> {
+
     public LightningView(LightningModel model, LightningController controller) {
-        super(new VBox(), model, controller);
-
-        root.setAlignment(Pos.CENTER);
-        Label label = new Label("WIP");
-        label.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 20em");
-        Label small = new Label(getClass().getSimpleName());
-        small.setStyle("-fx-text-fill: -bisq-grey-8; -fx-font-size: 2em");
-        root.getChildren().addAll(label, small);
+        super(model, controller);
     }
 
     @Override
-    protected void onViewAttached() {
+    protected String getKey() {
+        return SwapProtocolType.LIGHTNING_X.name();
     }
 
     @Override
-    protected void onViewDetached() {
+    protected String getIconId() {
+        return "protocol-lightning";
+    }
+
+    @Override
+    protected String getUrl() {
+        return "https://github.com/bisq-network/proposals/issues/373";
     }
 }

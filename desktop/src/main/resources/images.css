@@ -227,8 +227,8 @@
     -fx-image: url("images/navigation/nav-wallet-hover.png");
 }
 
-#nav-expand {
-    -fx-image: url("images/navigation/nav-expand.png");
+#nav-arrow-down {
+    -fx-image: url("images/navigation/nav-arrow-down.png");
 }
 
 #nav-auto-collapse {
@@ -322,31 +322,6 @@
 
 #onboarding-3-profile {
     -fx-image: url("images/onboarding/onboarding-3-profile.png");
-}
-
-
-/* ------------------------------------------------------------------------------------ */
-/* Dashboard */
-/* ------------------------------------------------------------------------------------ */
-
-#dashboard-bisq {
-    -fx-image: url("images/dashboard/dashboard-bisq.png");
-}
-
-#dashboard-community {
-    -fx-image: url("images/dashboard/dashboard-community.png");
-}
-
-#dashboard-bisq-easy {
-    -fx-image: url("images/dashboard/dashboard-bisq-easy.png");
-}
-
-#dashboard-chat {
-    -fx-image: url("images/dashboard/dashboard-chat.png");
-}
-
-#dashboard-trade-apps {
-    -fx-image: url("images/dashboard/dashboard-trade-apps.png");
 }
 
 

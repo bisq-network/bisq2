@@ -21,15 +21,15 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.dashboard.DashboardController;
-import bisq.desktop.primary.main.content.discussion.DiscussionsController;
-import bisq.desktop.primary.main.content.academy.AcademyController;
+import bisq.desktop.primary.main.content.academy.AcademyOverviewController;
 import bisq.desktop.primary.main.content.academy.bisq.BisqAcademyController;
 import bisq.desktop.primary.main.content.academy.bitcoin.BitcoinAcademyController;
-import bisq.desktop.primary.main.content.academy.openSource.OpenSourceAcademyController;
+import bisq.desktop.primary.main.content.academy.foss.FossAcademyController;
 import bisq.desktop.primary.main.content.academy.privacy.PrivacyAcademyController;
 import bisq.desktop.primary.main.content.academy.security.SecurityAcademyController;
 import bisq.desktop.primary.main.content.academy.wallets.WalletsAcademyController;
+import bisq.desktop.primary.main.content.dashboard.DashboardController;
+import bisq.desktop.primary.main.content.discussion.DiscussionsController;
 import bisq.desktop.primary.main.content.events.EventsController;
 import bisq.desktop.primary.main.content.settings.SettingsController;
 import bisq.desktop.primary.main.content.support.SupportController;
@@ -80,8 +80,8 @@ public class ContentController extends NavigationController {
             case DISCUSS: {
                 return Optional.of(new DiscussionsController(applicationService));
             }
-            case ACADEMY: {
-                return Optional.of(new AcademyController(applicationService));
+            case ACADEMY_OVERVIEW: {
+                return Optional.of(new AcademyOverviewController(applicationService));
             }
             case BISQ_ACADEMY: {
                 return Optional.of(new BisqAcademyController(applicationService));
@@ -99,7 +99,7 @@ public class ContentController extends NavigationController {
                 return Optional.of(new WalletsAcademyController(applicationService));
             }
             case FOSS_ACADEMY: {
-                return Optional.of(new OpenSourceAcademyController(applicationService));
+                return Optional.of(new FossAcademyController(applicationService));
             }
             case EVENTS: {
                 return Optional.of(new EventsController(applicationService));
@@ -116,16 +116,16 @@ public class ContentController extends NavigationController {
             case LIQUID_SWAP: {
                 return Optional.of(new LiquidSwapController(applicationService));
             }
-            case BISQ_MULTI_SIG: {
+            case BISQ_MULTISIG: {
                 return Optional.of(new MultiSigController(applicationService));
             }
-            case ATOMIC_CROSS_CHAIN_SWAP: {
+            case MONERO_SWAP: {
                 return Optional.of(new XmrSwapController(applicationService));
             }
             case BSQ_SWAP: {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LN_3_PARTY: {
+            case LIGHTNING_X: {
                 return Optional.of(new LightningController(applicationService));
             }
             case WALLET_BITCOIN: {

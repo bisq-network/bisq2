@@ -33,19 +33,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class OpenTimestampStore implements PersistableStore<OpenTimestampStore> {
     @Getter
-    private final Map<ByteArray, ByteArray> timestampByPubKeyHash = new ConcurrentHashMap<>();
+    private final Map<ByteArray, ByteArray> otsByPubKeyHash = new ConcurrentHashMap<>();
 
     public OpenTimestampStore() {
     }
 
-    private OpenTimestampStore(Map<ByteArray, ByteArray> timestampByPubKeyHash) {
-        this.timestampByPubKeyHash.putAll(timestampByPubKeyHash);
+    private OpenTimestampStore(Map<ByteArray, ByteArray> otsByPubKeyHash) {
+        this.otsByPubKeyHash.putAll(otsByPubKeyHash);
     }
 
     @Override
     public bisq.oracle.protobuf.OpenTimestampStore toProto() {
         return bisq.oracle.protobuf.OpenTimestampStore.newBuilder()
-                .addAllTimestampEntries(timestampByPubKeyHash.entrySet().stream()
+                .addAllTimestampEntries(otsByPubKeyHash.entrySet().stream()
                         .map(entry -> new ByteArrayMapEntry(entry.getKey(), entry.getValue()))
                         .map(ByteArrayMapEntry::toProto)
                         .collect(Collectors.toSet()))
@@ -72,12 +72,12 @@ public final class OpenTimestampStore implements PersistableStore<OpenTimestampS
 
     @Override
     public OpenTimestampStore getClone() {
-        return new OpenTimestampStore(timestampByPubKeyHash);
+        return new OpenTimestampStore(otsByPubKeyHash);
     }
 
     @Override
     public void applyPersisted(OpenTimestampStore persisted) {
-        timestampByPubKeyHash.clear();
-        timestampByPubKeyHash.putAll(persisted.getTimestampByPubKeyHash());
+        otsByPubKeyHash.clear();
+        otsByPubKeyHash.putAll(persisted.getOtsByPubKeyHash());
     }
 }

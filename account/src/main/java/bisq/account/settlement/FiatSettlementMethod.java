@@ -39,19 +39,15 @@ public enum FiatSettlementMethod implements SettlementMethod {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     public static List<FiatSettlementMethod> getSettlementMethods(SwapProtocolType protocolType) {
         switch (protocolType) {
-            case BTC_XMR_SWAP:
+            case MONERO_SWAP:
                 throw new IllegalArgumentException("No fiat support for that protocolType");
             case LIQUID_SWAP:
                 throw new IllegalArgumentException("No fiat support for that protocolType");
             case BSQ_SWAP:
                 throw new IllegalArgumentException("No fiat support for that protocolType");
-            case LN_SWAP:
+            case LIGHTNING_X:
                 throw new IllegalArgumentException("No fiat support for that protocolType");
-            case MULTISIG:
-                return List.of(FiatSettlementMethod.values());
-            case BSQ_BOND:
-                return List.of(FiatSettlementMethod.values());
-            case REPUTATION:
+            case BISQ_MULTISIG:
                 return List.of(FiatSettlementMethod.values());
             default:
                 throw new RuntimeException("Not handled case: protocolType=" + protocolType);

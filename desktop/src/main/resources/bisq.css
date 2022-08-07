@@ -143,25 +143,17 @@
  *                                                                             *
  ******************************************************************************/
 
-.border-bottom {
+.separator {
     -fx-border-color: -bisq-grey-17;
-    -fx-border-width: 0 0 1 0;
-}
-
-.border-top-grey-5 {
-    -fx-border-color: -bisq-grey-5;
     -fx-border-width: 1 0 0 0;
 }
 
-.border-top-grey-7 {
-    -fx-border-color: -bisq-grey-disabled;
+
+.separator-medium-grey {
+    -fx-border-color: -bisq-grey-16;
     -fx-border-width: 1 0 0 0;
 }
 
-.border-bottom-grey-7 {
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-width: 0 0 1 0;
-}
 
 /*******************************************************************************
  * Text based                                            *
@@ -445,15 +437,59 @@
     -fx-text-fill: -bisq-white !Important;
 }
 
-.text-fill-grey-dimmed {
-    -fx-text-fill: -bisq-grey-dimmed !Important;
+.text-fill-light-dimmed {
+    -fx-text-fill: -bisq-grey-11 !Important;
 }
 
 .text-fill-grey-dimmed {
     -fx-text-fill: -bisq-grey-dimmed !Important;
+}
+
+.text-fill-green {
+    -fx-text-fill: -bisq-green !Important;
 }
 
 /* sizes */
+.font-size-40 {
+    -fx-font-size: 4em !Important;
+}
+
+.font-size-36 {
+    -fx-font-size: 3.6em !Important;
+}
+
+.font-size-32 {
+    -fx-font-size: 3.2em !Important;
+}
+
+.font-size-28 {
+    -fx-font-size: 2.8em !Important;
+}
+
+.font-size-24 {
+    -fx-font-size: 2.4em !Important;
+}
+
+.font-size-22 {
+    -fx-font-size: 2.2em !Important;
+}
+
+.font-size-20 {
+    -fx-font-size: 2em !Important;
+}
+
+.font-size-18 {
+    -fx-font-size: 1.8em !Important;
+}
+
+.font-size-17 {
+    -fx-font-size: 1.7em !Important;
+}
+
+.font-size-16 {
+    -fx-font-size: 1.6em !Important;
+}
+
 .font-size-15 {
     -fx-font-size: 1.5em !Important;
 }
@@ -503,6 +539,21 @@
     -fx-font-family: "IBM Plex Sans Medium" !Important;
 }
 
+.bisq-line-spacing-01 {
+    -fx-line-spacing: .1em;
+}
+
+.bisq-line-spacing-02 {
+    -fx-line-spacing: .2em;
+}
+
+.bisq-line-spacing-03 {
+    -fx-line-spacing: .3em;
+}
+
+.bisq-line-spacing-04 {
+    -fx-line-spacing: .4em;
+}
 
 .wrap-text {
     -fx-wrap-text: true;

@@ -15,31 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.trade.lightning;
+package bisq.desktop.primary.main.content.academy.foss;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
-import lombok.Getter;
+import bisq.desktop.common.view.Model;
 
-public class LightningController implements Controller {
-    @Getter
-    private final LightningView view;
-
-    public LightningController(DefaultApplicationService applicationService) {
-        LightningModel model = new LightningModel();
-        view = new LightningView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
-    @Override
-    public boolean useCaching() {
-        return false;
-    }
+public class FossAcademyModel implements Model {
 }

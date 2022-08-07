@@ -41,7 +41,7 @@ public class MultiSigControllerOld extends TabController<MultiSigModel> implemen
     private final OfferbookController offerbookController;
 
     public MultiSigControllerOld(DefaultApplicationService applicationService) {
-        super(new MultiSigModel(), NavigationTarget.BISQ_MULTI_SIG);
+        super(new MultiSigModel(), NavigationTarget.BISQ_MULTISIG);
 
         this.applicationService = applicationService;
         view = new MultiSigView(model, this);

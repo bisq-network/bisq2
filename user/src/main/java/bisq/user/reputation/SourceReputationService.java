@@ -104,10 +104,15 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
                     if (!dataSetByHash.containsKey(hash)) {
                         dataSetByHash.put(hash, new HashSet<>());
                     }
-                    dataSetByHash.get(hash).add(data);
                     Set<T> dataSet = dataSetByHash.get(hash);
+                    addToDataSet(dataSet, data);
                     putScore(userProfile.getId(), dataSet);
                 });
+    }
+
+    // Some services don't support multiple entries and will override that method
+    protected void addToDataSet(Set<T> dataSet, T data) {
+        dataSet.add(data);
     }
 
     protected abstract ByteArray getDataKey(T data);

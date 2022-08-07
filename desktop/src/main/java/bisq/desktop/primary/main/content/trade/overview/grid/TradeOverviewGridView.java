@@ -87,6 +87,7 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         headlineLabel.setAlignment(Pos.TOP_LEFT);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(protocol.getIconId()));
+        headlineLabel.setGraphicTextGap(10);
         GridPane.setMargin(headlineLabel, new Insets(-5, 0, 0, 0));
         gridPane.add(headlineLabel, 0, rowIndex, 2, 1);
 
