@@ -258,5 +258,4 @@ public class MarketPriceService {
     private void notifyObservers() {
         marketPriceUpdateFlag.set(!marketPriceUpdateFlag.get());
     }
-
 }

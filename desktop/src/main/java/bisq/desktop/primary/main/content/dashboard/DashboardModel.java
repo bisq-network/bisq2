@@ -26,4 +26,6 @@ import lombok.Getter;
 public class DashboardModel implements Model {
     private final StringProperty marketPrice = new SimpleStringProperty();
     private final StringProperty marketCode = new SimpleStringProperty();
+    private final StringProperty offersOnline = new SimpleStringProperty();
+    private final StringProperty activeUsers = new SimpleStringProperty();
 }
