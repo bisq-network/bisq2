@@ -17,16 +17,19 @@
 
 package bisq.desktop.primary.main.content.academy;
 
-import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -69,29 +72,18 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
     }
 
     private void addHeaderBox() {
-        Label headlineLabel = new Label(Res.get("academy.overview.headline"));
+        Label headlineLabel = new MultiLineLabel(Res.get("academy.overview.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
-        headlineLabel.setWrapText(true);
+        headlineLabel.setMinHeight(35);
 
-        Label contentLabel = new Label(Res.get("academy.overview.content"));
+        Label contentLabel = new MultiLineLabel(Res.get("academy.overview.content"));
         contentLabel.getStyleClass().add("bisq-text-16");
-        contentLabel.setWrapText(true);
 
         VBox.setVgrow(headlineLabel, Priority.ALWAYS);
         VBox.setVgrow(contentLabel, Priority.ALWAYS);
         VBox vBox = new VBox(20, headlineLabel, contentLabel);
         GridPane.setHgrow(vBox, Priority.ALWAYS);
-        // GridPane.setVgrow(vBox, Priority.ALWAYS);
         root.add(vBox, 0, 0, 2, 1);
-
-        // contentLabel adjusts to available height of vBox and does not wrap, so we enforce minHeight 
-        // after it's rendered with a large vBox.
-        vBox.setMinHeight(500);
-        UIThread.runOnNextRenderFrame(() -> {
-            headlineLabel.setMinHeight(Math.max(35, headlineLabel.getHeight()));
-            contentLabel.setMinHeight(Math.max(60, contentLabel.getHeight()));
-            vBox.setMinHeight(Region.USE_COMPUTED_SIZE);
-        });
     }
 
     private void addSmallBox(String leftIconId,
@@ -117,27 +109,24 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         );
         GridPane.setHgrow(leftBox, Priority.ALWAYS);
         GridPane.setHgrow(rightBox, Priority.ALWAYS);
-        // GridPane.setVgrow(leftBox, Priority.ALWAYS);
-        // GridPane.setVgrow(rightBox, Priority.ALWAYS);
         root.add(leftBox, 0, ++rowIndex, 1, 1);
         root.add(rightBox, 1, rowIndex, 1, 1);
     }
 
     private VBox getWidgetBox(String iconId, String headline, String content, String buttonLabel, NavigationTarget navigationTarget) {
-        Label headlineLabel = new Label(headline);
+        Label headlineLabel = new MultiLineLabel(headline);
         headlineLabel.getStyleClass().add("bisq-text-headline-2");
         headlineLabel.setGraphic(ImageUtil.getImageViewById(iconId));
         headlineLabel.setGraphicTextGap(15);
         headlineLabel.setMinHeight(35);
         headlineLabel.setWrapText(true);
 
-        Label contentLabel = new Label(content);
+        Label contentLabel = new MultiLineLabel(content);
         contentLabel.getStyleClass().add("bisq-text-3");
         contentLabel.setWrapText(true);
 
         Button button = new Button(buttonLabel);
         button.setMaxWidth(Double.MAX_VALUE);
-        //button.getStyleClass().addAll("medium-large-button", "outlined-button");
         button.getStyleClass().addAll("medium-large-button", "outlined-button", "grey-outlined-button");
         button.setOnAction(e -> controller.onSelect(navigationTarget));
 
@@ -148,15 +137,6 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
         vBox.setOnMouseClicked(e -> controller.onSelect(navigationTarget));
         vBox.getStyleClass().add("bisq-box-1");
         vBox.setPadding(new Insets(PADDING));
-
-        // contentLabel adjusts to available height of vBox and does not wrap, so we enforce minHeight 
-        // after it's rendered with a large vBox.
-        vBox.setMinHeight(500);
-        UIThread.runOnNextRenderFrame(() -> {
-            // 20 px per line...
-            contentLabel.setMinHeight(Math.max(60, contentLabel.getHeight()));
-            vBox.setMinHeight(Region.USE_COMPUTED_SIZE);
-        });
         return vBox;
     }
 }
