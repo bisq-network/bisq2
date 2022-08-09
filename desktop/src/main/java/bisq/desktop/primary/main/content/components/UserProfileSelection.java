@@ -90,7 +90,7 @@ public class UserProfileSelection {
 
         @Override
         public void onActivate() {
-            selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
+            selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentity(),
                     userProfile -> model.selectedUserProfile.set(new ListItem(userProfile)));
             userProfilesPin = FxBindings.<UserIdentity, ListItem>bind(model.userProfiles)
                     .map(ListItem::new)

@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
-    private final Observable<UserIdentity> selectedUserProfile = new Observable<>();
+    private final Observable<UserIdentity> selectedUserIdentity = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities;
 
     public UserIdentityStore() {
@@ -44,14 +44,14 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     private UserIdentityStore(UserIdentity selectedUserIdentity,
                               Set<UserIdentity> userIdentities) {
-        this.selectedUserProfile.set(selectedUserIdentity);
+        this.selectedUserIdentity.set(selectedUserIdentity);
         this.userIdentities = new ObservableSet<>(userIdentities);
     }
 
     @Override
     public bisq.user.protobuf.UserIdentityStore toProto() {
         return bisq.user.protobuf.UserIdentityStore.newBuilder()
-                .setSelectedUserIdentity(selectedUserProfile.get().toProto())
+                .setSelectedUserIdentity(selectedUserIdentity.get().toProto())
                 .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()))
                 .build();
     }
@@ -76,12 +76,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public UserIdentityStore getClone() {
-        return new UserIdentityStore(selectedUserProfile.get(), userIdentities);
+        return new UserIdentityStore(selectedUserIdentity.get(), userIdentities);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
-        selectedUserProfile.set(persisted.getSelectedUserProfile().get());
+        selectedUserIdentity.set(persisted.getSelectedUserIdentity().get());
         userIdentities.addAll(persisted.getUserIdentities());
     }
 }

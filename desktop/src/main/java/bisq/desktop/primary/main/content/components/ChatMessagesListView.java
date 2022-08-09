@@ -408,7 +408,7 @@ public class ChatMessagesListView {
 
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (isMyMessage(chatMessage)) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 if (chatMessage instanceof PublicTradeChatMessage) {
                     publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
@@ -423,7 +423,7 @@ public class ChatMessagesListView {
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             publicTradeChannelService.publishChatMessage(chatMessage, userIdentity)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
@@ -440,10 +440,10 @@ public class ChatMessagesListView {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicTradeChannelService.publishEditedChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicDiscussionChannelService.publishEditedChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userIdentity);
             }
             //todo editing private message not supported yet

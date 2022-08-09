@@ -20,7 +20,7 @@ package bisq.desktop.components.controls;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
-import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -28,11 +28,12 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Set the minHeight of the label so that it does not get truncated.
+ * todo still not working in all situations correctly ;-(
  */
 @Slf4j
 public class MultiLineLabel extends Label {
     private ChangeListener<Number> heightListener, widthListener;
-    private ChangeListener<Parent> parentListener;
+    private ChangeListener<Scene> sceneListener;
     private double initialHeight = 0;
     private int numRecursions = 0;
     private double minHeight;
@@ -68,38 +69,40 @@ public class MultiLineLabel extends Label {
 
         heightListener = (observable, oldValue, newValue) -> {
             if (newValue.doubleValue() > 0) {
-                log.error("REM heightListener");
                 heightProperty().removeListener(heightListener);
                 initialHeight = newValue.doubleValue();
                 adjustMinHeight();
             }
         };
 
-        parentListener = (observable, oldValue, newValue) -> {
+        sceneListener = (observable, oldValue, newValue) -> {
             if (newValue == null) {
-                log.error("REM parentListener");
                 widthProperty().removeListener(widthListener);
-                parentProperty().removeListener(parentListener);
-            } else if (newValue instanceof Pane) {
+            } else {
                 widthProperty().addListener(widthListener);
                 heightProperty().addListener(heightListener);
             }
         };
-        parentProperty().addListener(parentListener);
+        sceneProperty().addListener(sceneListener);
+
+        widthProperty().addListener(widthListener);
+        heightProperty().addListener(heightListener);
     }
 
 
     private void adjustMinHeight() {
-        Pane parentPane = (Pane) getParent();
-        parentPane.setMinHeight(2000);
-        UIThread.runOnNextRenderFrame(() -> {
-            if (initialHeight == getHeight() && numRecursions < 100) {
-                numRecursions++;
-                adjustMinHeight();
-            } else {
-                minHeight = getHeight();
-            }
-            parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
-        });
+        if (getParent() instanceof Pane) {
+            Pane parentPane = (Pane) getParent();
+            parentPane.setMinHeight(2000);
+            UIThread.runOnNextRenderFrame(() -> {
+                if (initialHeight == getHeight() && numRecursions < 500) {
+                    numRecursions++;
+                    adjustMinHeight();
+                } else {
+                    minHeight = getHeight();
+                    parentPane.setMinHeight(Region.USE_COMPUTED_SIZE);
+                }
+            });
+        }
     }
 }

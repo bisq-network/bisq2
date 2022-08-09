@@ -73,7 +73,7 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<C> createAndAddChannel(UserProfile peer) {
-        return Optional.ofNullable(userIdentityService.getSelectedUserProfile().get())
+        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
                 .flatMap(myUserIdentity -> createAndAddChannel(peer, myUserIdentity.getId()));
     }
 

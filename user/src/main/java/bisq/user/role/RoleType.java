@@ -15,17 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.about;
+package bisq.user.role;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Model;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
 
-@Slf4j
-@Getter
-public class AboutModel implements Model {
+public enum RoleType implements ProtoEnum {
+    MEDIATOR,
+    ARBITRATOR,
+    MODERATOR,
+    ORACLE;
 
-    public AboutModel(DefaultApplicationService applicationService) {
+    @Override
+    public bisq.user.protobuf.RoleType toProto() {
+        return bisq.user.protobuf.RoleType.valueOf(name());
+    }
+
+    public static RoleType fromProto(bisq.user.protobuf.RoleType proto) {
+        return ProtobufUtils.enumFromProto(RoleType.class, proto.name());
     }
 }

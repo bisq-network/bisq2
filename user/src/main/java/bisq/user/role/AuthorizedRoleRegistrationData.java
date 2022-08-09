@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.oracle.timestamp;
+package bisq.user.role;
 
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
@@ -23,55 +23,59 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@ToString
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedTimestampData implements AuthorizedDistributedData {
-    public final static long TTL = TimeUnit.DAYS.toMillis(15);
-
+public final class AuthorizedRoleRegistrationData implements AuthorizedDistributedData {
+    public final static long TTL = TimeUnit.DAYS.toMillis(Long.MAX_VALUE);
     // The pubKeys which are authorized for publishing that data.
     // todo Production key not set yet - we use devMode key only yet
-    private static final Set<String> authorizedPublicKeys = Set.of();
+    public static final Set<String> authorizedPublicKeys = Set.of();
 
     private final MetaData metaData = new MetaData(TTL,
             100000,
-            AuthorizedTimestampData.class.getSimpleName());
+            AuthorizedRoleRegistrationData.class.getSimpleName());
 
-    private final String profileId;
-    private final long date;
+    private final UserProfile userProfile;
+    private final RoleType roleType;
+    private final String publicKeyAsHex;
 
-    public AuthorizedTimestampData(String profileId, long date) {
-        this.profileId = profileId;
-        this.date = date;
+    public AuthorizedRoleRegistrationData(UserProfile userProfile, RoleType roleType, String publicKeyAsHex) {
+        this.userProfile = userProfile;
+        this.roleType = roleType;
+        this.publicKeyAsHex = publicKeyAsHex;
     }
 
     @Override
-    public bisq.oracle.protobuf.AuthorizedTimestampData toProto() {
-        return bisq.oracle.protobuf.AuthorizedTimestampData.newBuilder()
-                .setProfileId(profileId)
-                .setDate(date)
+    public bisq.user.protobuf.AuthorizedRoleRegistrationData toProto() {
+        return bisq.user.protobuf.AuthorizedRoleRegistrationData.newBuilder()
+                .setUserProfile(userProfile.toProto())
+                .setRoleType(roleType.toProto())
+                .setPublicKeyAsHex(publicKeyAsHex)
                 .build();
     }
 
-    public static AuthorizedTimestampData fromProto(bisq.oracle.protobuf.AuthorizedTimestampData proto) {
-        return new AuthorizedTimestampData(
-                proto.getProfileId(),
-                proto.getDate());
+    public static AuthorizedRoleRegistrationData fromProto(bisq.user.protobuf.AuthorizedRoleRegistrationData proto) {
+        return new AuthorizedRoleRegistrationData(UserProfile.fromProto(proto.getUserProfile()),
+                RoleType.fromProto(proto.getRoleType()),
+                proto.getPublicKeyAsHex());
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedTimestampData.class));
+                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedRoleRegistrationData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -95,13 +99,5 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         } else {
             return authorizedPublicKeys;
         }
-    }
-
-    @Override
-    public String toString() {
-        return "AuthorizedTimestampData{" +
-                ",\r\n     profileId=" + profileId +
-                ",\r\n     date=" + new Date(date) +
-                "\r\n}";
     }
 }

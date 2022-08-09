@@ -1,0 +1,5 @@
+syntax = "proto3";
+package support;
+option java_package = "bisq.support.protobuf";
+option java_multiple_files = true;
+

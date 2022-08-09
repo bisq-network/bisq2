@@ -24,6 +24,7 @@ import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.ReputationScoreDisplay;
 import bisq.desktop.primary.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -81,7 +82,6 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
         tableHeadline.getStyleClass().add("bisq-content-headline-label");
 
         tableView = new BisqTableView<>(model.getSortedList());
-        // tableView.getStyleClass().add("create-offer-table-view");
         tableView.setMinHeight(300);
         // Triggers to fill the available height
         tableView.setPrefHeight(2000);
@@ -89,6 +89,7 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
 
         VBox.setMargin(vBox, new Insets(30, 0, 20, 0));
         VBox.setVgrow(vBox, Priority.SOMETIMES);
+        VBox.setMargin(tableHeadline, new Insets(0, 0, -10, 10));
         VBox.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().addAll(vBox, tableHeadline, tableView);
     }
@@ -234,8 +235,11 @@ public class ReputationView extends View<VBox, ReputationModel, ReputationContro
             this.userProfile = userProfile;
             userName = userProfile.getUserName();
             requestReputationScore(userProfile.getId());
-            profileAge = 0;
-            profileAgeString = "n/a";
+            profileAge = reputationService.getProfileAgeService().getProfileAge(userProfile)
+                    .orElse(0L);
+            profileAgeString = reputationService.getProfileAgeService().getProfileAge(userProfile)
+                    .map(TimeFormatter::formatAgeInDays)
+                    .orElse(Res.get("na"));
         }
 
 

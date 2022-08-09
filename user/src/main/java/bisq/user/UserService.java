@@ -21,11 +21,12 @@ import bisq.common.application.Service;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceService;
+import bisq.security.KeyPairService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
-import bisq.user.proof.ProofOfBurnVerificationService;
 import bisq.user.reputation.ReputationService;
+import bisq.user.role.RoleRegistrationService;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -39,26 +40,24 @@ public class UserService implements Service {
     @ToString
     public static final class Config {
         private final UserIdentityService.Config userIdentityConfig;
-        private final ProofOfBurnVerificationService.Config proofOfBurnVerificationConfig;
 
-        public Config(UserIdentityService.Config userIdentityConfig,
-                      ProofOfBurnVerificationService.Config proofOfBurnVerificationConfig) {
+        public Config(UserIdentityService.Config userIdentityConfig) {
             this.userIdentityConfig = userIdentityConfig;
-            this.proofOfBurnVerificationConfig = proofOfBurnVerificationConfig;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(UserIdentityService.Config.from(config.getConfig("userIdentity")),
-                    ProofOfBurnVerificationService.Config.from(config.getConfig("proofOfBurnVerification")));
+            return new Config(UserIdentityService.Config.from(config.getConfig("userIdentity")));
         }
     }
 
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
+    private final RoleRegistrationService roleRegistrationService;
     private final ReputationService reputationService;
 
     public UserService(Config config,
                        PersistenceService persistenceService,
+                       KeyPairService keyPairService,
                        IdentityService identityService,
                        NetworkService networkService,
                        ProofOfWorkService proofOfWorkService) {
@@ -67,6 +66,7 @@ public class UserService implements Service {
                 persistenceService,
                 identityService,
                 networkService);
+        roleRegistrationService = new RoleRegistrationService(keyPairService, networkService);
         reputationService = new ReputationService(persistenceService,
                 networkService,
                 userIdentityService,
@@ -82,6 +82,7 @@ public class UserService implements Service {
         log.info("initialize");
         return userProfileService.initialize()
                 .thenCompose(result -> userIdentityService.initialize())
+                .thenCompose(result -> roleRegistrationService.initialize())
                 .thenCompose(result -> reputationService.initialize());
     }
 
@@ -89,6 +90,7 @@ public class UserService implements Service {
         log.info("shutdown");
         return userProfileService.shutdown()
                 .thenCompose(result -> userIdentityService.shutdown())
+                .thenCompose(result -> roleRegistrationService.shutdown())
                 .thenCompose(result -> reputationService.shutdown());
     }
 }

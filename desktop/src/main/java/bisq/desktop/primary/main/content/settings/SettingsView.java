@@ -30,7 +30,7 @@ public class SettingsView extends TabView<SettingsModel, SettingsController> {
         addTab(Res.get("settings.reputation"), NavigationTarget.REPUTATION);
         addTab(Res.get("settings.preferences"), NavigationTarget.PREFERENCES);
         addTab(Res.get("settings.networkInfo"), NavigationTarget.NETWORK_INFO);
-        addTab(Res.get("settings.about"), NavigationTarget.ABOUT);
+        addTab(Res.get("settings.roles"), NavigationTarget.ROLES);
 
         headLine.setText(Res.get("settings"));
     }

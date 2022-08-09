@@ -50,7 +50,7 @@ public class BurnBsqTab3Controller implements Controller {
 
     @Override
     public void onActivate() {
-        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentity(),
                 chatUserIdentity -> {
                     model.getSelectedChatUserIdentity().set(chatUserIdentity);
                     model.getPubKeyHash().set(chatUserIdentity.getId());

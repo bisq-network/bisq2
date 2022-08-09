@@ -127,7 +127,7 @@ public class ReviewOfferController implements Controller {
         model.getShowCreateOfferSuccess().set(false);
         model.getShowTakeOfferSuccess().set(false);
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
@@ -192,7 +192,7 @@ public class ReviewOfferController implements Controller {
     }
 
     void onCreateOffer() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
         publicTradeChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);

@@ -30,6 +30,7 @@ import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
+import bisq.support.SupportService;
 import bisq.user.UserService;
 import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.elementsd.LiquidWalletService;
@@ -74,6 +75,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final ChatService chatService;
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
+    private final SupportService supportService;
 
     private final Observable<State> state = new Observable<>(State.NEW);
 
@@ -102,6 +104,7 @@ public class DefaultApplicationService extends ApplicationService {
 
         userService = new UserService(UserService.Config.from(getConfig("user")),
                 persistenceService,
+                getKeyPairService(),
                 identityService,
                 networkService,
                 securityService.getProofOfWorkService());
@@ -110,6 +113,8 @@ public class DefaultApplicationService extends ApplicationService {
                 securityService.getProofOfWorkService(),
                 networkService,
                 userService.getUserIdentityService());
+
+        supportService = new SupportService(identityService, networkService);
 
         settingsService = new SettingsService(persistenceService);
 
@@ -132,6 +137,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> userService.initialize())
                 .thenCompose(result -> chatService.initialize())
+                .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
@@ -151,6 +157,7 @@ public class DefaultApplicationService extends ApplicationService {
         // We shut down services in opposite order as they are initialized
         return supplyAsync(() -> protocolService.shutdown()
                         .thenCompose(result -> settingsService.shutdown())
+                        .thenCompose(result -> supportService.shutdown())
                         .thenCompose(result -> chatService.shutdown())
                         .thenCompose(result -> userService.shutdown())
                         .thenCompose(result -> offerService.shutdown())

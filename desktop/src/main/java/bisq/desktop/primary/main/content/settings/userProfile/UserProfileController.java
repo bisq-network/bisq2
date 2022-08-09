@@ -69,7 +69,7 @@ public class UserProfileController implements Controller {
         userProfilesPin = FxBindings.<UserIdentity, UserIdentity>bind(model.getUserIdentities())
                 .to(userIdentityService.getUserIdentities());
 
-        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserProfile(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentity(),
                 userIdentity -> {
                     if (userIdentity != null) {
                         model.getSelectedUserIdentity().set(userIdentity);
@@ -82,7 +82,7 @@ public class UserProfileController implements Controller {
                         model.getStatement().set(userProfile.getStatement());
                         model.getTerms().set(userProfile.getTerms());
 
-                        model.getProfileAge().set(profileAgeService.getProfileAgeInDays(userIdentity.getUserProfile())
+                        model.getProfileAge().set(profileAgeService.getProfileAge(userIdentity.getUserProfile())
                                 .map(TimeFormatter::formatAgeInDays)
                                 .orElse(Res.get("na")));
                     }
@@ -97,7 +97,7 @@ public class UserProfileController implements Controller {
     }
 
     private void updateSaveButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
         if (userIdentity == null) {
             model.getSaveButtonDisabled().set(false);
             return;
@@ -133,7 +133,7 @@ public class UserProfileController implements Controller {
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
                 .thenAccept(result -> {
                     UIThread.runOnNextRenderFrame(() -> {
-                        UserIdentity value = userIdentityService.getSelectedUserProfile().get();
+                        UserIdentity value = userIdentityService.getSelectedUserIdentity().get();
                         model.getSelectedUserIdentity().set(value);
                         updateSaveButtonState();
                     });
@@ -153,7 +153,7 @@ public class UserProfileController implements Controller {
     }
 
     private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
-        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserProfile().get())
+        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity().get())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         new Popup().error(throwable.getMessage()).show();

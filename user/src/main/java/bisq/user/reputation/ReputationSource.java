@@ -15,27 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.about;
+package bisq.user.reputation;
 
-import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.view.Controller;
+import bisq.i18n.Res;
 import lombok.Getter;
 
-public class AboutController implements Controller {
+public enum ReputationSource {
+    BURNED_BSQ(Res.get("reputation.source.BURNED_BSQ")),
+    BSQ_BOND(Res.get("reputation.source.BSQ_BOND")),
+    PROFILE_AGE(Res.get("reputation.source.PROFILE_AGE")),
+    BISQ1_ACCOUNT_AGE(Res.get("reputation.source.BISQ1_ACCOUNT_AGE")),
+    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS(Res.get("reputation.source.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS"));
 
     @Getter
-    private final AboutView view;
+    private final String displayString;
 
-    public AboutController(DefaultApplicationService applicationService) {
-        AboutModel model = new AboutModel(applicationService);
-        view = new AboutView(model, this);
-    }
-
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
+    ReputationSource(String displayString) {
+        this.displayString = displayString;
     }
 }
