@@ -30,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final ChannelKind channelKind;
-
+    private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
+    
     public BisqEasyChatModel(ChannelKind channelKind) {
         this.channelKind = channelKind;
     }

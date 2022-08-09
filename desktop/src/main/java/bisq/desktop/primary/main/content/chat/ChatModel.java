@@ -44,7 +44,6 @@ public abstract class ChatModel extends NavigationModel {
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
     private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
-    private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Node> channelIcon = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
     @Setter

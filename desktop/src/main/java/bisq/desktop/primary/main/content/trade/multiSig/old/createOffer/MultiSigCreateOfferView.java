@@ -60,7 +60,7 @@ public class MultiSigCreateOfferView extends View<VBox, MultiSigCreateOfferModel
 
         amountPrice.setPadding(new Insets(0, 0, -5, 0));
 
-        createOfferButton = new Button(Res.get("createOffer.button"));
+        createOfferButton = new Button(Res.get("createOffer"));
         createOfferButton.setDefaultButton(true);
         Button cancelButton = new Button(Res.get("cancel"));
         cancelButton.setOnAction(e -> controller.onCancel());
