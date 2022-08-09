@@ -84,6 +84,7 @@ public class RoleRegistrationController implements Controller {
                 model.getPublicKey().set(publicKeyAsHex);
                 model.getRegistrationDisabled().set(!AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex));
             }
+            model.getPrivateKeyDisplay().set("•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••");
         });
     }
 
@@ -113,5 +114,9 @@ public class RoleRegistrationController implements Controller {
 
     void onCopy() {
         ClipboardUtil.copyToClipboard(model.getPublicKey().get());
+    }
+
+    void onShowPrivateKey() {
+        model.getPrivateKeyDisplay().set(model.getPrivateKey().get());
     }
 }
