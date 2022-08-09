@@ -29,6 +29,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.security.KeyGeneration;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 import bisq.user.role.RoleRegistrationService;
 import bisq.user.role.RoleType;
@@ -59,7 +60,10 @@ public class RoleRegistrationController implements Controller {
     @Override
     public void onActivate() {
         userIdentityPin = userIdentityService.getSelectedUserIdentity().addObserver(userIdentity -> {
-            model.getSelectedProfile().set(userIdentity.getUserProfile().getUserName());
+            model.setUserIdentity(userIdentity);
+            UserProfile userProfile = userIdentity.getUserProfile();
+            String userProfileId = userProfile.getId();
+            model.getSelectedProfileUserName().set(userProfile.getUserName());
             String publicKeyAsHex;
             if (DevMode.isDevMode()) {
                 // Keypair matching pubKey from DevMode.AUTHORIZED_DEV_PUBLIC_KEYS
@@ -72,20 +76,32 @@ public class RoleRegistrationController implements Controller {
                     PublicKey publicKey = KeyGeneration.generatePublic(Hex.decode(publicKeyAsHex));
                     KeyPair keyPair = new KeyPair(publicKey, privateKey);
                     model.setKeyPair(keyPair);
-                    model.getRegistrationDisabled().set(!DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex));
                 } catch (GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
             } else {
-                KeyPair keyPair = roleRegistrationService.findOrCreateRegistrationKey(model.getRoleType(), userIdentity.getUserProfile().getId());
+                KeyPair keyPair = roleRegistrationService.findOrCreateRegistrationKey(model.getRoleType(), userProfileId);
                 model.setKeyPair(keyPair);
                 model.getPrivateKey().set(Hex.encode(keyPair.getPrivate().getEncoded()));
                 publicKeyAsHex = Hex.encode(keyPair.getPublic().getEncoded());
                 model.getPublicKey().set(publicKeyAsHex);
-                model.getRegistrationDisabled().set(!AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex));
             }
+
+            updateRegistrationState();
+
             model.getPrivateKeyDisplay().set("•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••");
         });
+    }
+
+    private void updateRegistrationState() {
+        String publicKeyAsHex = model.getPublicKey().get();
+        boolean isAuthorizedPublicKey = DevMode.isDevMode() ? DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex) :
+                AuthorizedRoleRegistrationData.authorizedPublicKeys.contains(publicKeyAsHex);
+        boolean isRegistered = roleRegistrationService.isRegistered(model.getUserIdentity().getUserProfile().getId(),
+                model.getRoleType(),
+                publicKeyAsHex);
+        model.getRegistrationDisabled().set(!isAuthorizedPublicKey || isRegistered);
+        model.getRemoveRegistrationVisible().set(isAuthorizedPublicKey && isRegistered);
     }
 
     @Override
@@ -98,15 +114,32 @@ public class RoleRegistrationController implements Controller {
     }
 
     void onRegister() {
-        roleRegistrationService.registerAgent(userIdentityService.getSelectedUserIdentity().get(),
+        roleRegistrationService.register(model.getUserIdentity(),
                         model.getRoleType(),
                         model.getKeyPair())
                 .whenComplete((result, throwable) -> {
                     UIThread.run(() -> {
+                        updateRegistrationState();
                         if (throwable == null) {
                             new Popup().feedback(Res.get("roles.registration.success")).show();
                         } else {
                             new Popup().warning(Res.get("roles.registration.failed", throwable.getMessage())).show();
+                        }
+                    });
+                });
+    }
+
+    void onRemoveRegistration() {
+        roleRegistrationService.removeRegistration(model.getUserIdentity(),
+                        model.getRoleType(),
+                        model.getPublicKey().get())
+                .whenComplete((result, throwable) -> {
+                    UIThread.run(() -> {
+                        updateRegistrationState();
+                        if (throwable == null) {
+                            new Popup().feedback(Res.get("roles.removeRegistration.success")).show();
+                        } else {
+                            new Popup().warning(Res.get("roles.removeRegistration.failed", throwable.getMessage())).show();
                         }
                     });
                 });

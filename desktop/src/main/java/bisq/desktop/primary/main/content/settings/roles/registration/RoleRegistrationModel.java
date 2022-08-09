@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.settings.roles.registration;
 
 import bisq.desktop.common.view.Model;
+import bisq.user.identity.UserIdentity;
 import bisq.user.role.RoleType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -32,12 +33,15 @@ import java.security.KeyPair;
 @Slf4j
 @Getter
 public class RoleRegistrationModel implements Model {
-    private final StringProperty selectedProfile = new SimpleStringProperty();
+    private final StringProperty selectedProfileUserName = new SimpleStringProperty();
     private final StringProperty privateKey = new SimpleStringProperty();
     private final StringProperty publicKey = new SimpleStringProperty();
     private final StringProperty privateKeyDisplay = new SimpleStringProperty();
     private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
     private final RoleType roleType;
+    @Setter
+    private UserIdentity userIdentity;
     @Setter
     private KeyPair keyPair;
 

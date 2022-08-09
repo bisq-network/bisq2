@@ -283,6 +283,12 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
         }
     }
 
+    public CompletableFuture<BroadCastDataResult> removeAuthorizedData(AuthorizedData authorizedData,
+                                                                       NetworkIdWithKeyPair ownerNetworkIdWithKeyPair) {
+        checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
+        return dataService.get().removeAuthenticatedData(authorizedData, ownerNetworkIdWithKeyPair.getKeyPair());
+    }
+
     public CompletableFuture<BroadCastDataResult> publishAppendOnlyData(AppendOnlyData appendOnlyData) {
         checkArgument(dataService.isPresent(), "DataService must be supported when addData is called.");
         return dataService.get().addAppendOnlyData(appendOnlyData);

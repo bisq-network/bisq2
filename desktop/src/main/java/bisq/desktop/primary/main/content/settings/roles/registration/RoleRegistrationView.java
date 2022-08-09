@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, RoleRegistrationController> {
-    private final Button copyButton, registrationButton;
+    private final Button copyButton, registrationButton, removeRegistrationButton;
     private final Hyperlink learnMore;
     private final Label info;
     private final MaterialTextField selectedProfile, privateKey, publicKey;
@@ -64,12 +64,13 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         publicKey.setEditable(false);
 
         registrationButton = new Button(Res.get("roles.registration.register"));
+        removeRegistrationButton = new Button(Res.get("roles.registration.removeRegistration"));
         copyButton = new Button(Res.get("roles.registration.copyPubKey"));
         copyButton.setDefaultButton(true);
 
         learnMore = new Hyperlink(Res.get("reputation.learnMore"));
 
-        HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, copyButton);
+        HBox buttons = new HBox(20, learnMore, Spacer.fillHBox(), registrationButton, removeRegistrationButton, copyButton);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);
 
         VBox.setMargin(info, new Insets(0, 0, 10, 0));
@@ -79,12 +80,15 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
 
     @Override
     protected void onViewAttached() {
-        selectedProfile.textProperty().bind(model.getSelectedProfile());
+        selectedProfile.textProperty().bind(model.getSelectedProfileUserName());
         privateKey.textProperty().bind(model.getPrivateKeyDisplay());
         publicKey.textProperty().bind(model.getPublicKey());
         registrationButton.disableProperty().bind(model.getRegistrationDisabled());
+        removeRegistrationButton.managedProperty().bind(model.getRemoveRegistrationVisible());
+        removeRegistrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible());
 
         registrationButton.setOnAction(e -> controller.onRegister());
+        removeRegistrationButton.setOnAction(e -> controller.onRemoveRegistration());
         learnMore.setOnAction(e -> controller.onLearnMore());
         copyButton.setOnAction(e -> controller.onCopy());
         showPrivateKeyIcon.setOnAction(e -> {
@@ -100,8 +104,11 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         privateKey.textProperty().unbind();
         publicKey.textProperty().unbind();
         registrationButton.disableProperty().unbind();
+        removeRegistrationButton.managedProperty().unbind();
+        removeRegistrationButton.visibleProperty().unbind();
 
         registrationButton.setOnAction(null);
+        removeRegistrationButton.setOnAction(null);
         learnMore.setOnAction(null);
         copyButton.setOnAction(null);
         showPrivateKeyIcon.setOnAction(null);

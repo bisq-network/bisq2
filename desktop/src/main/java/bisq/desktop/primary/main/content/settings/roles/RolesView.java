@@ -24,6 +24,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.components.table.TableItem;
 import bisq.desktop.primary.main.content.components.UserProfileIcon;
 import bisq.i18n.Res;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ProfileAgeService;
@@ -181,11 +182,11 @@ public class RolesView extends View<VBox, RolesModel, RolesController> {
         private final Long profileAge;
         private final String profileAgeString;
 
-        public ListItem(AuthorizedRoleRegistrationData data, ProfileAgeService profileAgeService) {
+        public ListItem(AuthorizedData authorizedData, ProfileAgeService profileAgeService) {
+            data = (AuthorizedRoleRegistrationData) authorizedData.getAuthorizedDistributedData();
             this.userProfile = data.getUserProfile();
             this.roleType = Res.get("roles.type." + data.getRoleType());
             this.publicKeyAsHex = data.getPublicKeyAsHex();
-            this.data = data;
 
             profileAge = profileAgeService.getProfileAge(userProfile)
                     .orElse(0L);

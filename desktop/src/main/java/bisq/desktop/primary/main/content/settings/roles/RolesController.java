@@ -23,11 +23,9 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.settings.roles.registration.RolesTabController;
-import bisq.network.NetworkService;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.user.UserService;
-import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
-import bisq.user.role.AuthorizedRoleRegistrationData;
 import bisq.user.role.RoleRegistrationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,19 +35,15 @@ public class RolesController implements Controller {
     @Getter
     private final RolesView view;
     private final ReputationService reputationService;
-    private final UserProfileService userProfileService;
     private final RolesModel model;
     private final RolesTabController rolesTabController;
-    private final NetworkService networkService;
     private final RoleRegistrationService roleRegistrationService;
     private Pin roleRegistrationDataSetPin;
 
     public RolesController(DefaultApplicationService applicationService) {
         UserService userService = applicationService.getUserService();
-        userProfileService = userService.getUserProfileService();
         reputationService = userService.getReputationService();
         roleRegistrationService = userService.getRoleRegistrationService();
-        networkService = applicationService.getNetworkService();
 
         rolesTabController = new RolesTabController(applicationService);
         model = new RolesModel();
@@ -58,9 +52,9 @@ public class RolesController implements Controller {
 
     @Override
     public void onActivate() {
-        roleRegistrationDataSetPin = FxBindings.<AuthorizedRoleRegistrationData, RolesView.ListItem>bind(model.getListItems())
+        roleRegistrationDataSetPin = FxBindings.<AuthorizedData, RolesView.ListItem>bind(model.getListItems())
                 .map(data -> new RolesView.ListItem(data, reputationService.getProfileAgeService()))
-                .to(roleRegistrationService.getRoleRegistrationDataSet());
+                .to(roleRegistrationService.getAuthorizedDataSet());
     }
 
     @Override
