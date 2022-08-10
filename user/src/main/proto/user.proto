@@ -94,3 +94,7 @@ message AuthorizedRoleRegistrationData {
   string publicKeyAsHex = 3;
 }
 
+message RoleRegistrationServiceStore {
+  repeated AuthorizedRoleRegistrationData myRegistrations = 1;
+}
+    

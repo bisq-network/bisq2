@@ -27,6 +27,7 @@ import lombok.ToString;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,10 +36,27 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMessage> {
 
-    public PrivateTradeChannel(UserProfile peer, UserIdentity myProfile) {
-        this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
+    private final UserProfile trader1;
+    private final UserProfile trader2;
+    private final Optional<UserProfile> mediator;
+    private final UserIdentity myUserIdentity;
+
+    public PrivateTradeChannel(UserProfile trader1, UserProfile trader2, Optional<UserProfile> mediator, UserIdentity myUserIdentity) {
+        super(PrivateChannel.createChannelId(trader1.getId(), trader2.getId()),
+                trader1,
+                myUserIdentity,
+                new HashSet<>(),
+                ChannelNotificationType.ALL);
+        this.trader1 = trader1;
+        this.trader2 = trader2;
+        this.mediator = mediator;
+        this.myUserIdentity = myUserIdentity;
+    }
+
+    public PrivateTradeChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        this(PrivateChannel.createChannelId(peer.getId(), myUserIdentity.getId()),
                 peer,
-                myProfile,
+                myUserIdentity,
                 new HashSet<>(),
                 ChannelNotificationType.ALL
         );
@@ -46,10 +64,15 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
 
     private PrivateTradeChannel(String id,
                                 UserProfile peer,
-                                UserIdentity myProfile,
+                                UserIdentity myUserIdentity,
                                 Set<PrivateTradeChatMessage> chatMessages,
                                 ChannelNotificationType channelNotificationType) {
-        super(id, peer, myProfile, chatMessages, channelNotificationType);
+        super(id, peer, myUserIdentity, chatMessages, channelNotificationType);
+
+        this.trader1 = peer;
+        this.trader2 = myUserIdentity.getUserProfile();
+        this.mediator = Optional.empty();
+        this.myUserIdentity = myUserIdentity;
     }
 
     @Override

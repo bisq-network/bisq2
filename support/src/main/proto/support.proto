@@ -2,4 +2,11 @@ syntax = "proto3";
 package support;
 option java_package = "bisq.support.protobuf";
 option java_multiple_files = true;
+import "user.proto";
 
+
+
+message MediationRequest {
+  user.UserProfile requester = 1;
+  user.UserProfile peer = 2;
+}

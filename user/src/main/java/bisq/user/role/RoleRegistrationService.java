@@ -25,6 +25,9 @@ import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceClient;
+import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.user.identity.UserIdentity;
 import lombok.Getter;
@@ -35,18 +38,23 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class RoleRegistrationService implements Service, DataService.Listener {
+public class RoleRegistrationService implements PersistenceClient<RoleRegistrationServiceStore>, Service, DataService.Listener {
     private final static String REGISTRATION_PREFIX = "Registration-";
-
+    @Getter
+    private final RoleRegistrationServiceStore persistableStore = new RoleRegistrationServiceStore();
+    @Getter
+    private final Persistence<RoleRegistrationServiceStore> persistence;
     private final KeyPairService keyPairService;
     private final NetworkService networkService;
     @Getter
     private final ObservableSet<AuthorizedData> authorizedDataSet = new ObservableSet<>();
 
-    public RoleRegistrationService(KeyPairService keyPairService,
+    public RoleRegistrationService(PersistenceService persistenceService,
+                                   KeyPairService keyPairService,
                                    NetworkService networkService) {
         this.keyPairService = keyPairService;
         this.networkService = networkService;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
 
@@ -105,9 +113,15 @@ public class RoleRegistrationService implements Service, DataService.Listener {
         if ((DevMode.isDevMode() && DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex)) ||
                 (!DevMode.isDevMode() && data.getAuthorizedPublicKeys().contains(publicKeyAsHex))) {
             return networkService.publishAuthorizedData(data,
-                    userIdentity.getIdentity().getNodeIdAndKeyPair(),
-                    keyPair.getPrivate(),
-                    keyPair.getPublic());
+                            userIdentity.getIdentity().getNodeIdAndKeyPair(),
+                            keyPair.getPrivate(),
+                            keyPair.getPublic())
+                    .whenComplete((result, throwable) -> {
+                        if (throwable == null) {
+                            getMyRegistrations().add(data);
+                            persist();
+                        }
+                    });
         } else {
             return CompletableFuture.failedFuture(new RuntimeException("The public key is not in the list of the authorized keys yet. " +
                     "Please follow the process as described at the registration popup."));
@@ -116,8 +130,19 @@ public class RoleRegistrationService implements Service, DataService.Listener {
 
     public CompletableFuture<DataService.BroadCastDataResult> removeRegistration(UserIdentity userIdentity, RoleType roleType, String publicKeyAsHex) {
         return findAuthorizedRoleRegistrationData(userIdentity.getUserProfile().getId(), roleType, publicKeyAsHex)
-                .map(authorizedData -> networkService.removeAuthorizedData(authorizedData, userIdentity.getIdentity().getNodeIdAndKeyPair()))
+                .map(authorizedData -> networkService.removeAuthorizedData(authorizedData,
+                                userIdentity.getIdentity().getNodeIdAndKeyPair())
+                        .whenComplete((result, throwable) -> {
+                            if (throwable == null) {
+                                getMyRegistrations().remove((AuthorizedRoleRegistrationData) authorizedData.getDistributedData());
+                                persist();
+                            }
+                        }))
                 .orElse(CompletableFuture.completedFuture(null));
+    }
+
+    public ObservableSet<AuthorizedRoleRegistrationData> getMyRegistrations() {
+        return persistableStore.getMyRegistrations();
     }
 
     public Optional<AuthorizedData> findAuthorizedRoleRegistrationData(String userProfileId, RoleType roleType, String publicKeyAsHex) {

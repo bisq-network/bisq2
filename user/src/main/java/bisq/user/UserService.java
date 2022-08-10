@@ -66,7 +66,7 @@ public class UserService implements Service {
                 persistenceService,
                 identityService,
                 networkService);
-        roleRegistrationService = new RoleRegistrationService(keyPairService, networkService);
+        roleRegistrationService = new RoleRegistrationService(persistenceService, keyPairService, networkService);
         reputationService = new ReputationService(persistenceService,
                 networkService,
                 userIdentityService,

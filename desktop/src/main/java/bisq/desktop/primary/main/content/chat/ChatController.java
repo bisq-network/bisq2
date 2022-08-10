@@ -38,7 +38,6 @@ import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
-import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -57,7 +56,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final ChatService chatService;
     @Getter
     protected final M model;
-    private final UserProfileService userProfileService;
+    protected final UserProfileService userProfileService;
     private final ReputationService reputationService;
     @Getter
     protected V view;
@@ -176,10 +175,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
         cleanupChatUserDetails();
         cleanupChannelInfo();
-    }
-
-    public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     public void showChannelInfo() {

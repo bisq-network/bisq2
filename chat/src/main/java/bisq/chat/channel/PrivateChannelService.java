@@ -72,26 +72,32 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<C> createAndAddChannel(UserProfile peer) {
+    public Optional<C> maybeCreateAndAddChannel(UserProfile peer) {
         return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
-                .flatMap(myUserIdentity -> createAndAddChannel(peer, myUserIdentity.getId()));
+                .flatMap(myUserIdentity -> maybeCreateAndAddChannel(peer, myUserIdentity.getId()));
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       C channel) {
+        return sendPrivateChatMessage(text, quotedMessage, channel, channel.getMyProfile(), channel.getPeer());
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      C channel,
+                                                                                      UserIdentity senderIdentity,
+                                                                                      UserProfile receiver) {
         String channelId = channel.getId();
-        UserIdentity senderIdentity = channel.getMyProfile();
-        UserProfile peer = channel.getPeer();
         M chatMessage = createNewPrivateChatMessage(channelId,
                 senderIdentity.getUserProfile(),
-                peer.getId(),
+                receiver.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 false);
         addMessage(chatMessage, channel);
-        NetworkId receiverNetworkId = peer.getNetworkId();
+        NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
@@ -113,7 +119,7 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected Optional<C> createAndAddChannel(UserProfile peer, String myUserIdentityId) {
+    protected Optional<C> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
                             C channel = createNewChannel(peer, myUserIdentity);
@@ -138,7 +144,7 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
                 proofOfWorkService.verify(message.getSender().getProofOfWork())) {
             findChannel(message.getChannelId())
-                    .or(() -> createAndAddChannel(message.getSender(), message.getReceiversId()))
+                    .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
                     .ifPresent(channel -> addMessage(message, channel));
         }
     }

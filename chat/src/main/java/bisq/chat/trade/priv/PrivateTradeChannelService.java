@@ -58,13 +58,13 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
 
     @Override
     protected PrivateTradeChatMessage createNewPrivateChatMessage(String channelId,
-                                                                       UserProfile sender,
-                                                                       String receiversId,
-                                                                       String text,
-                                                                       Optional<Quotation> quotedMessage,
-                                                                       long time,
-                                                                       boolean wasEdited) {
-        return  new PrivateTradeChatMessage(channelId,
+                                                                  UserProfile sender,
+                                                                  String receiversId,
+                                                                  String text,
+                                                                  Optional<Quotation> quotedMessage,
+                                                                  long time,
+                                                                  boolean wasEdited) {
+        return new PrivateTradeChatMessage(channelId,
                 sender,
                 receiversId,
                 text,
@@ -76,6 +76,20 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     @Override
     protected PrivateTradeChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
         return new PrivateTradeChannel(peer, myUserIdentity);
+    }
+
+    public PrivateTradeChannel mediatorCreatesNewChannel(UserProfile trader1, UserProfile trader2, Optional<UserProfile> mediator, UserIdentity myUserIdentity) {
+        PrivateTradeChannel channel = new PrivateTradeChannel(trader1, trader2, mediator, myUserIdentity);
+        getChannels().add(channel);
+        persist();
+        return channel;
+    }
+
+    public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
+        PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity.getUserProfile(), peersUserProfile, mediator, myUserIdentity);
+        getChannels().add(channel);
+        persist();
+        return channel;
     }
 
     @Override

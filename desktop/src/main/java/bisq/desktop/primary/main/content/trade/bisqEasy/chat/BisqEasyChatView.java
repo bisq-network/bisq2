@@ -35,7 +35,7 @@ public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatController bisqEasyChatController;
     private final Switch toggleOffersButton;
     private final BisqEasyChatModel bisqEasyChatModel;
-    private final Button createOfferButton;
+    private final Button actionButton;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -58,12 +58,12 @@ public class BisqEasyChatView extends ChatView {
 
         centerToolbar.getChildren().add(2, toggleOffersButton);
 
-        createOfferButton = new Button(Res.get("createOffer"));
-        createOfferButton.setMaxWidth(Double.MAX_VALUE);
-        createOfferButton.setMinHeight(37);
-        createOfferButton.setDefaultButton(true);
-        VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
-        left.getChildren().add(createOfferButton);
+        actionButton = new Button();
+        actionButton.setMaxWidth(Double.MAX_VALUE);
+        actionButton.setMinHeight(37);
+        actionButton.setDefaultButton(true);
+        VBox.setMargin(actionButton, new Insets(-2, 25, 17, 25));
+        left.getChildren().add(actionButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -82,9 +82,8 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        createOfferButton.visibleProperty().bind(bisqEasyChatModel.getCreateOfferButtonVisible());
-        createOfferButton.managedProperty().bind(bisqEasyChatModel.getCreateOfferButtonVisible());
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
+        actionButton.textProperty().bind(bisqEasyChatModel.getActionButtonText());
+        actionButton.setOnAction(e -> bisqEasyChatController.onActionButtonClicked());
 
         toggleOffersButton.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
@@ -93,9 +92,8 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
-        createOfferButton.visibleProperty().unbind();
-        createOfferButton.managedProperty().unbind();
-        createOfferButton.setOnAction(null);
+        actionButton.textProperty().unbind();
+        actionButton.setOnAction(null);
 
         toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
     }

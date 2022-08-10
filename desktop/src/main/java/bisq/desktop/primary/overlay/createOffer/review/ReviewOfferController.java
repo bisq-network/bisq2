@@ -179,7 +179,7 @@ public class ReviewOfferController implements Controller {
                                 String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
                                         tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
                                 String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-                                String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
+                                String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
                                         direction, amount, methods);
                                 privateTradeChannelService.sendPrivateChatMessage(replyText,
                                                 quotation, privateTradeChannel)
@@ -218,7 +218,7 @@ public class ReviewOfferController implements Controller {
     }
 
     private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-        Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
+        Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.maybeCreateAndAddChannel(peer);
         privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
         return privateTradeChannel;
     }
