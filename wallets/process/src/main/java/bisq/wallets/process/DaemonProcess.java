@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest.process;
+package bisq.wallets.process;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
+import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

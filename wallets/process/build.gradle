@@ -6,8 +6,6 @@ dependencies {
     implementation project(':core')
     implementation project(':bitcoind')
 
-    api project(':process')
-
     implementation libs.google.guava
 
     implementation libs.assertj.core

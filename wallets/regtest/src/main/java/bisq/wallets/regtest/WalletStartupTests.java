@@ -17,7 +17,7 @@
 
 package bisq.wallets.regtest;
 
-import bisq.wallets.regtest.process.BisqProcess;
+import bisq.wallets.process.BisqProcess;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

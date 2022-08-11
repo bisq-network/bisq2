@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest;
+package bisq.wallets.process.cli;
 
 import java.io.IOException;
 import java.util.ArrayList;

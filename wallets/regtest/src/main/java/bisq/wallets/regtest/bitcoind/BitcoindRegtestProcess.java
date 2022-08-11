@@ -23,8 +23,8 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.regtest.process.DaemonProcess;
-import bisq.wallets.regtest.process.ProcessConfig;
+import bisq.wallets.process.DaemonProcess;
+import bisq.wallets.process.ProcessConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

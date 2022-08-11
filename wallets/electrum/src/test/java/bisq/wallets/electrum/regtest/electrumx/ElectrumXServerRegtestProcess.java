@@ -18,8 +18,8 @@
 package bisq.wallets.electrum.regtest.electrumx;
 
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.regtest.process.DaemonProcess;
-import bisq.wallets.regtest.process.ProcessConfig;
+import bisq.wallets.process.DaemonProcess;
+import bisq.wallets.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;

@@ -20,8 +20,8 @@ package bisq.wallets.electrum.regtest.electrum;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.electrum.regtest.electrum.cli.ElectrumCli;
 import bisq.wallets.electrum.regtest.electrum.cli.ElectrumCliFacade;
-import bisq.wallets.regtest.process.DaemonProcess;
-import bisq.wallets.regtest.process.ProcessConfig;
+import bisq.wallets.process.DaemonProcess;
+import bisq.wallets.process.ProcessConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

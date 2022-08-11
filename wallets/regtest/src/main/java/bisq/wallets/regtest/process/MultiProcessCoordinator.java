@@ -18,6 +18,7 @@
 package bisq.wallets.regtest.process;
 
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
+import bisq.wallets.process.BisqProcess;
 import com.google.common.collect.Lists;
 
 import java.io.IOException;

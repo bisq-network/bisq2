@@ -25,7 +25,7 @@ import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
-import bisq.wallets.regtest.process.ProcessConfig;
+import bisq.wallets.process.ProcessConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.MalformedURLException;

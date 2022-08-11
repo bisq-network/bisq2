@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest.process;
+package bisq.wallets.process;
 
 import java.io.IOException;
 

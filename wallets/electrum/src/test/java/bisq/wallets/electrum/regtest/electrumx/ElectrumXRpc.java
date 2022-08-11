@@ -18,8 +18,8 @@
 package bisq.wallets.electrum.regtest.electrumx;
 
 import bisq.wallets.core.exceptions.RpcCallFailureException;
-import bisq.wallets.electrum.regtest.AbstractRpcCliProcess;
-import bisq.wallets.electrum.regtest.CliProcessConfig;
+import bisq.wallets.process.cli.AbstractRpcCliProcess;
+import bisq.wallets.process.cli.CliProcessConfig;
 
 import java.io.IOException;
 import java.util.List;
