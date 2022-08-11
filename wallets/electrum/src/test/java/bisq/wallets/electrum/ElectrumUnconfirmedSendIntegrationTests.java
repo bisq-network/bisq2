@@ -30,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -51,7 +50,7 @@ public class ElectrumUnconfirmedSendIntegrationTests {
     }
 
     @BeforeEach
-    void setUp() throws MalformedURLException {
+    void setUp() {
         electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
     }
 

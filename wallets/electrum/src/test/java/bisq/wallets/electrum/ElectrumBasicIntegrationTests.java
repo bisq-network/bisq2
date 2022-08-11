@@ -24,8 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.net.MalformedURLException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ElectrumExtension.class)
@@ -38,7 +36,7 @@ public class ElectrumBasicIntegrationTests {
     }
 
     @BeforeEach
-    void setUp() throws MalformedURLException {
+    void setUp() {
         electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
     }
 

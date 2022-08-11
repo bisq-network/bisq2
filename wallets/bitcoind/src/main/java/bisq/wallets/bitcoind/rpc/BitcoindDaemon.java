@@ -26,7 +26,6 @@ import bisq.wallets.core.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -123,7 +122,7 @@ public class BitcoindDaemon {
             DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             listWalletsWithRpcClient(rpcClient); // Makes a listwallets RPC call
             return true;
-        } catch (MalformedURLException | InvalidRpcCredentialsException e) {
+        } catch (InvalidRpcCredentialsException e) {
             return false;
         }
     }

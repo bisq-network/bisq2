@@ -20,14 +20,12 @@ package bisq.wallets.elementsd;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.exceptions.WalletInitializationFailedException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -46,21 +44,13 @@ public class WalletFactory {
     }
 
     private static ElementsdDaemon createElementsdDaemon(RpcConfig rpcConfig) {
-        try {
-            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-            return new ElementsdDaemon(rpcClient);
-        } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
-        }
+        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        return new ElementsdDaemon(rpcClient);
     }
 
     private static ElementsdWallet createElementsdWallet(RpcConfig rpcConfig, Path walletPath) {
-        try {
-            WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
-            return new ElementsdWallet(rpcClient);
-        } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
-        }
+        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
+        return new ElementsdWallet(rpcClient);
     }
 
     private static ZmqConnection initializeElementsdZeroMq(ElementsdDaemon elementsdDaemon, ElementsdWallet elementsdWallet) {

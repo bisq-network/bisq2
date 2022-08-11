@@ -28,7 +28,6 @@ import bisq.wallets.process.ProcessConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +82,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
             DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             var chainBackend = new BitcoindDaemon(rpcClient);
             chainBackend.stop();
-        } catch (RpcCallFailureException | MalformedURLException e) {
+        } catch (RpcCallFailureException e) {
             log.error("Failed to send stop command to bitcoind.", e);
         }
     }

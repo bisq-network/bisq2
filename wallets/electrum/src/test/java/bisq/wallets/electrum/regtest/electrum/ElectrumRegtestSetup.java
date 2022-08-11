@@ -103,7 +103,7 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
         return electrumRegtestProcess.getRpcConfig();
     }
 
-    public ElectrumDaemon createElectrumDaemon() throws MalformedURLException {
+    public ElectrumDaemon createElectrumDaemon() {
         RpcConfig rpcConfig = electrumRegtestProcess.getRpcConfig();
         DaemonRpcClient daemonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new ElectrumDaemon(daemonRpcClient);
