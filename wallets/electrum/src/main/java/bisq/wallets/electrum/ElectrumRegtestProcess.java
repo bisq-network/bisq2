@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest.electrum;
+package bisq.wallets.electrum;
 
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.electrum.regtest.electrum.cli.ElectrumCli;
-import bisq.wallets.electrum.regtest.electrum.cli.ElectrumCliFacade;
+import bisq.wallets.electrum.rpc.cli.ElectrumCli;
+import bisq.wallets.electrum.rpc.cli.ElectrumCliFacade;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
 import lombok.Getter;

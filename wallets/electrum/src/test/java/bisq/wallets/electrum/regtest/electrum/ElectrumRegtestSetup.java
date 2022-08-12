@@ -22,6 +22,8 @@ import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.electrum.ElectrumRegtestProcess;
+import bisq.wallets.electrum.RpcHostSpec;
 import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerConfig;
 import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerRegtestProcess;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
@@ -32,7 +34,6 @@ import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 

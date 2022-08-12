@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest.electrum.cli;
+package bisq.wallets.electrum.rpc.cli;
 
 import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.process.cli.AbstractRpcCliProcess;

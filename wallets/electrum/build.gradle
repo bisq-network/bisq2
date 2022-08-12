@@ -23,6 +23,7 @@ sourceSets {
 dependencies {
     implementation("bisq:persistence")
     implementation project(':core')
+    implementation project(':process')
 
     implementation libs.jackson.databind
     implementation libs.bundles.glassfish.jersey

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest.electrum.cli;
+package bisq.wallets.electrum.rpc.cli;
 
 import lombok.extern.slf4j.Slf4j;
 
