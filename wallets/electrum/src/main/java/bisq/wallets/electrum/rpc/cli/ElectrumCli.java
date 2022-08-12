@@ -28,6 +28,7 @@ public class ElectrumCli extends AbstractRpcCliProcess {
     public static final String ELECTRUM_BINARY_NAME = "electrum";
     public static final String ELECTRUM_REGTEST_ARG = "--regtest";
     public static final String ELECTRUM_DATA_DIR_ARG = "--dir";
+    public static final String ELECTRUM_HELP_ARG = "--help";
 
     private static final String ELECTRUM_SETCONFIG_ARG = "setconfig";
     private static final String ELECTRUM_GETCONFIG_ARG = "getconfig";
@@ -59,6 +60,9 @@ public class ElectrumCli extends AbstractRpcCliProcess {
         }
     }
 
+    public String help() {
+        return runAndGetOutput(ELECTRUM_HELP_ARG);
+    }
 
     public void stop() {
         String output = runAndGetOutput(ELECTRUM_STOP_ARG);
