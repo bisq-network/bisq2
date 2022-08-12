@@ -21,7 +21,6 @@ import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.process.cli.AbstractRpcCliProcess;
 import bisq.wallets.process.cli.CliProcessConfig;
 
-import java.io.IOException;
 import java.util.List;
 
 public class ElectrumXRpc extends AbstractRpcCliProcess {
@@ -35,18 +34,9 @@ public class ElectrumXRpc extends AbstractRpcCliProcess {
     }
 
     public void stop() {
-        try {
-            Process process = runCliProcess(
-                    "stop"
-            );
-
-            String output = readProcessOutput(process);
-            if (!output.equals("\"stopping\"")) {
-                throw new RpcCallFailureException("Failed to stop get electrumx_server");
-            }
-
-        } catch (InterruptedException | IOException e) {
-            throw new RpcCallFailureException("Failed to stop get electrumx_server", e);
+        String output = runAndGetOutput("stop");
+        if (!output.equals("\"stopping\"")) {
+            throw new RpcCallFailureException("Failed to stop get electrumx_server");
         }
     }
 }

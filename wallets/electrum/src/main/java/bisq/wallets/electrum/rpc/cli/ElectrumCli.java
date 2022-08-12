@@ -21,7 +21,6 @@ import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.process.cli.AbstractRpcCliProcess;
 import bisq.wallets.process.cli.CliProcessConfig;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -32,6 +31,7 @@ public class ElectrumCli extends AbstractRpcCliProcess {
 
     private static final String ELECTRUM_SETCONFIG_ARG = "setconfig";
     private static final String ELECTRUM_GETCONFIG_ARG = "getconfig";
+    private static final String ELECTRUM_STOP_ARG = "stop";
 
     public ElectrumCli(Path dataDir) {
         super(CliProcessConfig.builder()
@@ -45,54 +45,26 @@ public class ElectrumCli extends AbstractRpcCliProcess {
     }
 
     public String getConfig(String configName) {
-        try {
-            Process process = runCliProcess(
-                    ELECTRUM_GETCONFIG_ARG,
-                    configName
-            );
-
-            String output = readProcessOutput(process);
-            if (output.isEmpty()) {
-                throw new RpcCallFailureException("Failed to get electrum config: " + configName);
-            }
-
-            return output;
-
-        } catch (InterruptedException | IOException e) {
-            throw new RpcCallFailureException("Failed to get electrum config: " + configName, e);
+        String output = runAndGetOutput(ELECTRUM_GETCONFIG_ARG, configName);
+        if (output.isEmpty()) {
+            throw new RpcCallFailureException("Failed to get electrum config: " + configName);
         }
+        return output;
     }
 
     public void setConfig(String configName, String configValue) {
-        try {
-            Process process = runCliProcess(
-                    ELECTRUM_SETCONFIG_ARG,
-                    configName,
-                    configValue
-            );
-
-            String output = readProcessOutput(process);
-            if (!output.equals("true")) {
-                throw new RpcCallFailureException("Failed to set electrum config: " + configName + " = " + configValue);
-            }
-
-        } catch (InterruptedException | IOException e) {
-            throw new RpcCallFailureException("Failed to set electrum config: " + configName + " = " + configValue, e);
+        String output = runAndGetOutput(ELECTRUM_SETCONFIG_ARG, configName, configValue);
+        if (!output.equals("true")) {
+            throw new RpcCallFailureException("Failed to set electrum config: " + configName + " = " + configValue);
         }
     }
 
+
     public void stop() {
-        try {
-            Process process = runCliProcess("stop");
-            String output = readProcessOutput(process);
-
-            boolean isStopped = output.equals("Daemon stopped");
-            if (!isStopped) {
-                throw new RpcCallFailureException("Cannot stop electrum daemon: " + output);
-            }
-
-        } catch (InterruptedException | IOException e) {
-            throw new RpcCallFailureException("Failed to get electrum rpc password", e);
+        String output = runAndGetOutput(ELECTRUM_STOP_ARG);
+        boolean isStopped = output.equals("Daemon stopped");
+        if (!isStopped) {
+            throw new RpcCallFailureException("Cannot stop electrum daemon: " + output);
         }
     }
 }
