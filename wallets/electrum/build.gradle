@@ -15,7 +15,7 @@ electrum {
 sourceSets {
     main {
         resources {
-            srcDirs += ['generated/src/main/resources']
+            srcDirs += ['build/generated/src/main/resources']
         }
     }
 }
