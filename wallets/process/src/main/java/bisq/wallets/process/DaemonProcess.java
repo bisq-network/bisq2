@@ -20,7 +20,6 @@ package bisq.wallets.process;
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
-import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +40,7 @@ public abstract class DaemonProcess implements BisqProcess {
     }
 
     @Override
-    public void start() throws IOException, InterruptedException {
+    public void start() {
         try {
             FileUtils.makeDirs(dataDir.toFile());
             process = createAndStartProcess();

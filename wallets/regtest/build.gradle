@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation project(':core')
     implementation project(':bitcoind')
+    implementation project(':process')
 
     api project(':process')
 

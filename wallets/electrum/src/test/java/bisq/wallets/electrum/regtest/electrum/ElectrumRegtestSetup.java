@@ -20,12 +20,10 @@ package bisq.wallets.electrum.regtest.electrum;
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
-import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.electrum.ElectrumRegtestProcess;
-import bisq.wallets.electrum.RpcHostSpec;
+import bisq.wallets.electrum.ElectrumProcess;
 import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerConfig;
 import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerRegtestProcess;
+import bisq.wallets.electrum.rpc.ElectrumConfig;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
 import bisq.wallets.regtest.AbstractRegtestSetup;
@@ -39,19 +37,18 @@ import java.util.List;
 
 public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElectrumDaemon> {
 
-    private static final String LOCALHOST = "127.0.0.1";
-    private final Path electrumDataDir = FileUtils.createTempDir();
-
-    private final boolean doCreateWallet;
-
     // Mine initial regtest blocks automatically
     @Getter
     private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup(true);
+    private final boolean doCreateWallet;
+
+    private final int electrumXServerPort = NetworkUtils.findFreeSystemPort();
     private final ElectrumXServerRegtestProcess electrumXServerRegtestProcess =
             createElectrumXServerRegtestProcess(bitcoindRegtestSetup);
-    private final ElectrumRegtestProcess electrumRegtestProcess =
-            createElectrumRegtestProcess(electrumXServerRegtestProcess);
 
+    private final ElectrumProcess electrumProcess = createElectrumProcess();
+
+    @Getter
     private ElectrumDaemon electrumDaemon;
     @Getter
     private ElectrumCreateResponse walletInfo;
@@ -67,7 +64,7 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
     @Override
     protected MultiProcessCoordinator createProcess() {
         return new MultiProcessCoordinator(
-                List.of(bitcoindRegtestSetup, electrumXServerRegtestProcess, electrumRegtestProcess)
+                List.of(bitcoindRegtestSetup, electrumXServerRegtestProcess, electrumProcess)
         );
     }
 
@@ -76,8 +73,7 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
         super.start();
         bitcoindRegtestSetup.mineInitialRegtestBlocks();
 
-        electrumDaemon = createElectrumDaemon();
-
+        electrumDaemon = electrumProcess.getElectrumDaemon().orElseThrow();
         if (doCreateWallet) {
             walletInfo = electrumDaemon.create(WALLET_PASSPHRASE);
             electrumDaemon.loadWallet(WALLET_PASSPHRASE);
@@ -91,8 +87,8 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
 
     @Override
     public void fundWallet(ElectrumDaemon receiverWallet, double amount) throws InterruptedException {
-        String address = electrumDaemon.getUnusedAddress();
-        fundAddress(address, amount);
+        String unusedAddress = receiverWallet.getUnusedAddress();
+        fundAddress(unusedAddress, amount);
     }
 
     public String fundAddress(String address, double amount) throws InterruptedException {
@@ -101,21 +97,13 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
 
     @Override
     public RpcConfig getRpcConfig() {
-        return electrumRegtestProcess.getRpcConfig();
-    }
-
-    public ElectrumDaemon createElectrumDaemon() {
-        RpcConfig rpcConfig = electrumRegtestProcess.getRpcConfig();
-        DaemonRpcClient daemonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-        return new ElectrumDaemon(daemonRpcClient);
+        throw new UnsupportedOperationException();
     }
 
     private ElectrumXServerRegtestProcess createElectrumXServerRegtestProcess(BitcoindRegtestSetup bitcoindRegtestSetup)
             throws IOException {
-        Path electrumXDataDir = FileUtils.createTempDir();
-        int electrumXServerPort = NetworkUtils.findFreeSystemPort();
         ElectrumXServerConfig electrumXServerConfig = ElectrumXServerConfig.builder()
-                .dataDir(electrumXDataDir)
+                .dataDir(FileUtils.createTempDir())
                 .port(electrumXServerPort)
                 .rpcPort(NetworkUtils.findFreeSystemPort())
                 .bitcoindRpcConfig(bitcoindRegtestSetup.getRpcConfig())
@@ -124,15 +112,18 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
         return new ElectrumXServerRegtestProcess(electrumXServerConfig);
     }
 
-    private ElectrumRegtestProcess createElectrumRegtestProcess(ElectrumXServerRegtestProcess
-                                                                        electrumXServerRegtestProcess) {
-        int freePort = NetworkUtils.findFreeSystemPort();
-        var rpcHostSpec = new RpcHostSpec(LOCALHOST, freePort);
-        int electrumXServerPort = electrumXServerRegtestProcess.getPort();
-        return new ElectrumRegtestProcess(electrumXServerPort, rpcHostSpec, electrumDataDir);
+    private ElectrumProcess createElectrumProcess() throws IOException {
+        Path electrumRootDataDir = FileUtils.createTempDir();
+        ElectrumConfig config = ElectrumConfig.builder()
+                .dataDir(electrumRootDataDir)
+                .electrumXServerPort(electrumXServerPort)
+                .rpcHost("127.0.0.1")
+                .rpcPort(NetworkUtils.findFreeSystemPort())
+                .build();
+        return new ElectrumProcess(electrumRootDataDir, config);
     }
 
-    public Path getDataDir() {
-        return electrumRegtestProcess.getDataDir();
+    public Path getElectrumDataDir() {
+        return electrumProcess.getDataDir();
     }
 }

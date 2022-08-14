@@ -15,21 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum;
+package bisq.wallets.electrum.rpc;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.nio.file.Path;
+
+@Builder
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class RpcHostSpec {
-    private final String host;
-    private final int port;
+public final class ElectrumConfig {
+    private final Path dataDir;
+    private final int electrumXServerPort;
+    private final String rpcHost;
+    private final int rpcPort;
 
-    public RpcHostSpec(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public ElectrumConfig(Path dataDir, int electrumXServerPort, String rpcHost, int rpcPort) {
+        this.dataDir = dataDir;
+        this.electrumXServerPort = electrumXServerPort;
+        this.rpcHost = rpcHost;
+        this.rpcPort = rpcPort;
     }
 }

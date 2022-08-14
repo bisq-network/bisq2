@@ -51,7 +51,7 @@ public class ElectrumUnconfirmedSendIntegrationTests {
 
     @BeforeEach
     void setUp() {
-        electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
+        electrumDaemon = electrumRegtestSetup.getElectrumDaemon();
     }
 
     @Test

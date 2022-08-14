@@ -27,8 +27,7 @@ public class ElectrumExtension implements BeforeAllCallback, AfterAllCallback, P
     private final ElectrumRegtestSetup electrumRegtestSetup;
 
     public ElectrumExtension() throws IOException {
-        boolean doCreateWallet = true;
-        electrumRegtestSetup = new ElectrumRegtestSetup(doCreateWallet);
+        electrumRegtestSetup = new ElectrumRegtestSetup(true);
     }
 
     @Override

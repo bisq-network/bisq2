@@ -56,7 +56,7 @@ public class ElectrumTxAndPasswordIntegrationTests {
 
     @BeforeEach
     void setUp() {
-        electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
+        electrumDaemon = electrumRegtestSetup.getElectrumDaemon();
     }
 
     @Test

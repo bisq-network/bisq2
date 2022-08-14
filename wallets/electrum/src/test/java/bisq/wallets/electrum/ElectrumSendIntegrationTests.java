@@ -50,7 +50,7 @@ public class ElectrumSendIntegrationTests {
 
     @BeforeEach
     void setUp() {
-        electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
+        electrumDaemon = electrumRegtestSetup.getElectrumDaemon();
     }
 
     @Test

@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class ElectrumCli extends AbstractRpcCliProcess {
-    public static final String ELECTRUM_BINARY_NAME = "electrum";
     public static final String ELECTRUM_REGTEST_ARG = "--regtest";
     public static final String ELECTRUM_DATA_DIR_ARG = "--dir";
     public static final String ELECTRUM_HELP_ARG = "--help";
@@ -34,9 +33,11 @@ public class ElectrumCli extends AbstractRpcCliProcess {
     private static final String ELECTRUM_GETCONFIG_ARG = "getconfig";
     private static final String ELECTRUM_STOP_ARG = "stop";
 
-    public ElectrumCli(Path dataDir) {
+    public ElectrumCli(Path binaryPath, Path dataDir) {
         super(CliProcessConfig.builder()
-                .binaryName(ELECTRUM_BINARY_NAME)
+                .binaryName(
+                        String.valueOf(binaryPath.toAbsolutePath())
+                )
                 .defaultArgs(List.of(
                         ELECTRUM_REGTEST_ARG,
                         ELECTRUM_DATA_DIR_ARG, dataDir.toAbsolutePath().toString()
