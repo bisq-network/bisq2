@@ -41,6 +41,7 @@ public class BitcoindRegtestSetup
     @Getter
     private final RpcConfig rpcConfig;
     private final BitcoindRegtestProcess bitcoindProcess;
+    @Getter
     private final RemoteBitcoind remoteBitcoind;
 
     public BitcoindRegtestSetup() throws IOException {
@@ -105,14 +106,18 @@ public class BitcoindRegtestSetup
         return remoteBitcoind.registerWaitUntilNBlocksMinedListener(n);
     }
 
-    private RpcConfig createRpcConfig() {
-        int port = NetworkUtils.findFreeSystemPort();
+    public static RpcConfig createRpcConfig(String hostname, int port) {
         return RpcConfig.builder()
-                .hostname("127.0.0.1")
+                .hostname(hostname)
                 .user("bisq")
                 .password("bisq")
                 .port(port)
                 .build();
+    }
+
+    private RpcConfig createRpcConfig() {
+        int port = NetworkUtils.findFreeSystemPort();
+        return createRpcConfig("127.0.0.1", port);
     }
 
     private BitcoindRegtestProcess createBitcoindProcess() {
