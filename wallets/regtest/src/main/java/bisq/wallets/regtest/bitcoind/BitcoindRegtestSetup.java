@@ -67,7 +67,7 @@ public class BitcoindRegtestSetup
     }
 
     public void mineInitialRegtestBlocks() throws InterruptedException {
-        mineBlocks(101);
+        remoteBitcoind.mineInitialRegtestBlocks();
     }
 
     @Override
@@ -102,8 +102,8 @@ public class BitcoindRegtestSetup
                 .findFirst();
     }
 
-    public CountDownLatch registerWaitUntilNBlocksMinedListener(int n) {
-        return remoteBitcoind.registerWaitUntilNBlocksMinedListener(n);
+    public CountDownLatch waitUntilBlocksMined(List<String> blockHashes) {
+        return remoteBitcoind.waitUntilBlocksMined(blockHashes);
     }
 
     public static RpcConfig createRpcConfig(String hostname, int port) {

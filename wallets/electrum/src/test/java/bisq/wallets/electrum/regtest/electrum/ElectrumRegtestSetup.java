@@ -17,48 +17,21 @@
 
 package bisq.wallets.electrum.regtest.electrum;
 
-import bisq.common.util.FileUtils;
-import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerConfig;
-import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerRegtestProcess;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
 import bisq.wallets.regtest.AbstractRegtestSetup;
-import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
-import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElectrumDaemon> {
-
-    @Getter
-    private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup();
-
-    private final int electrumXServerPort = NetworkUtils.findFreeSystemPort();
-    private final ElectrumXServerRegtestProcess electrumXServerRegtestProcess =
-            createElectrumXServerRegtestProcess(bitcoindRegtestSetup);
-
-    private final ElectrumRegtest electrumRegtest;
+public abstract class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElectrumDaemon> {
+    protected ElectrumRegtest electrumRegtest;
 
     public ElectrumRegtestSetup() throws IOException {
-        this(false);
-    }
-
-    public ElectrumRegtestSetup(boolean doCreateWallet) throws IOException {
-        RemoteBitcoind remoteBitcoind = bitcoindRegtestSetup.getRemoteBitcoind();
-        this.electrumRegtest = new ElectrumRegtest(remoteBitcoind, electrumXServerPort, doCreateWallet);
-    }
-
-    @Override
-    protected MultiProcessCoordinator createProcess() {
-        return new MultiProcessCoordinator(
-                List.of(bitcoindRegtestSetup, electrumXServerRegtestProcess, electrumRegtest)
-        );
     }
 
     @Override
@@ -80,17 +53,7 @@ public class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoord
         throw new UnsupportedOperationException();
     }
 
-    private ElectrumXServerRegtestProcess createElectrumXServerRegtestProcess(BitcoindRegtestSetup bitcoindRegtestSetup)
-            throws IOException {
-        ElectrumXServerConfig electrumXServerConfig = ElectrumXServerConfig.builder()
-                .dataDir(FileUtils.createTempDir())
-                .port(electrumXServerPort)
-                .rpcPort(NetworkUtils.findFreeSystemPort())
-                .bitcoindRpcConfig(bitcoindRegtestSetup.getRpcConfig())
-                .build();
-
-        return new ElectrumXServerRegtestProcess(electrumXServerConfig);
-    }
+    public abstract RemoteBitcoind getRemoteBitcoind();
 
     public Path getElectrumDataDir() {
         return electrumRegtest.getElectrumProcess().getDataDir();

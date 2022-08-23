@@ -43,15 +43,14 @@ public class ElectrumRegtest implements BisqProcess {
     @Getter
     private ElectrumCreateResponse walletInfo;
 
-    public ElectrumRegtest(RemoteBitcoind remoteBitcoind, int electrumXServerPort, boolean doCreateWallet) throws IOException {
+    public ElectrumRegtest(RemoteBitcoind remoteBitcoind, String electrumXHost, int electrumXServerPort, boolean doCreateWallet) throws IOException {
         this.remoteBitcoind = remoteBitcoind;
-        this.electrumProcess = createElectrumProcess(electrumXServerPort);
+        this.electrumProcess = createElectrumProcess(electrumXHost, electrumXServerPort);
         this.doCreateWallet = doCreateWallet;
     }
 
     @Override
-    public void start() throws InterruptedException {
-        remoteBitcoind.mineInitialRegtestBlocks();
+    public void start() {
         electrumProcess.start();
 
         electrumDaemon = electrumProcess.getElectrumDaemon().orElseThrow();
@@ -75,12 +74,12 @@ public class ElectrumRegtest implements BisqProcess {
         return remoteBitcoind.fundAddress(address, amount);
     }
 
-    private ElectrumProcess createElectrumProcess(int electrumXServerPort) throws IOException {
+    private ElectrumProcess createElectrumProcess(String electrumXHost, int electrumXServerPort) throws IOException {
         Path electrumRootDataDir = FileUtils.createTempDir();
         ElectrumConfig config = ElectrumConfig.builder()
                 .dataDir(electrumRootDataDir)
                 .electrumXServerPort(electrumXServerPort)
-                .rpcHost("127.0.0.1")
+                .rpcHost(electrumXHost)
                 .rpcPort(NetworkUtils.findFreeSystemPort())
                 .build();
         return new ElectrumProcess(electrumRootDataDir, config);

@@ -63,7 +63,7 @@ public class ZmqListeners {
         newBlockMinedListeners.add(listener);
     }
 
-    public void removeNewBlockMinedListener(NewBlockMinedListener listener) {
+    public void unregisterNewBlockMinedListener(NewBlockMinedListener listener) {
         newBlockMinedListeners.remove(listener);
     }
 
@@ -71,7 +71,7 @@ public class ZmqListeners {
         txOutputAddressesListeners.add(listener);
     }
 
-    public void removeTxOutputAddressesListener(TransactionOutputAddressesListener listener) {
+    public void unregisterTxOutputAddressesListener(TransactionOutputAddressesListener listener) {
         txOutputAddressesListeners.remove(listener);
     }
 
@@ -79,7 +79,7 @@ public class ZmqListeners {
         txIdInInputListeners.add(listener);
     }
 
-    public void removeTransactionIdInInputListener(TxIdInInputListener listener) {
+    public void unregisterTransactionIdInInputListener(TxIdInInputListener listener) {
         txIdInInputListeners.remove(listener);
     }
 }

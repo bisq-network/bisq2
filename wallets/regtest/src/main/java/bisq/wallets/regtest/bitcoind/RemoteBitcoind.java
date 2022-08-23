@@ -32,14 +32,13 @@ import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static bisq.wallets.regtest.AbstractRegtestSetup.WALLET_PASSPHRASE;
 
@@ -54,6 +53,7 @@ public class RemoteBitcoind implements BisqProcess {
     private final ZmqListeners zmqListeners = new ZmqListeners();
     @Getter
     private final BitcoindWallet minerWallet;
+    private final BitcoindRegtestBlockMiner blockMiner;
     private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
     private ZmqConnection bitcoindZeroMq;
 
@@ -65,10 +65,12 @@ public class RemoteBitcoind implements BisqProcess {
         this.daemon = createBitcoindDaemon();
         this.doMineInitialRegtestBlocks = doMineInitialRegtestBlocks;
         this.minerWallet = createNewWallet("miner_wallet");
+        this.blockMiner = new BitcoindRegtestBlockMiner(daemon, minerWallet, zmqListeners);
     }
 
     @Override
-    public void start() throws InterruptedException {
+    public void start() throws InterruptedException, IOException {
+        blockMiner.start();
         initializeZmqListeners();
         initializeWallet(minerWallet);
 
@@ -79,6 +81,7 @@ public class RemoteBitcoind implements BisqProcess {
 
     @Override
     public void shutdown() {
+        blockMiner.shutdown();
         bitcoindZeroMq.close();
         loadedWallets.forEach(BitcoindWallet::shutdown);
     }
@@ -90,19 +93,11 @@ public class RemoteBitcoind implements BisqProcess {
     }
 
     public void mineInitialRegtestBlocks() throws InterruptedException {
-        mineBlocks(101);
+        blockMiner.mineInitialRegtestBlocks();
     }
 
     public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {
-        CountDownLatch blocksMinedLatch = registerWaitUntilNBlocksMinedListener(numberOfBlocks);
-        String minerAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
-        List<String> blockHashes = daemon.generateToAddress(numberOfBlocks, minerAddress);
-
-        boolean allBlocksMined = blocksMinedLatch.await(15, TimeUnit.SECONDS);
-        if (!allBlocksMined) {
-            throw new IllegalStateException("Couldn't mine " + numberOfBlocks + " blocks");
-        }
-        return blockHashes;
+        return blockMiner.mineBlocks(numberOfBlocks);
     }
 
     public void fundWallet(BitcoindWallet receiverWallet, double amount) throws InterruptedException {
@@ -128,17 +123,8 @@ public class RemoteBitcoind implements BisqProcess {
         return mineBlocks(1);
     }
 
-    public CountDownLatch registerWaitUntilNBlocksMinedListener(int n) {
-        var numberOfMinedBlocks = new AtomicInteger();
-        CountDownLatch nBlocksMinedLatch = new CountDownLatch(1);
-
-        zmqListeners.registerNewBlockMinedListener((blockHash) -> {
-            int minedBlocksCount = numberOfMinedBlocks.incrementAndGet();
-            if (minedBlocksCount == n) {
-                nBlocksMinedLatch.countDown();
-            }
-        });
-        return nBlocksMinedLatch;
+    public CountDownLatch waitUntilBlocksMined(List<String> blockHashes) {
+        return blockMiner.waitUntilBlocksMined(blockHashes);
     }
 
     private BitcoindDaemon createBitcoindDaemon() {

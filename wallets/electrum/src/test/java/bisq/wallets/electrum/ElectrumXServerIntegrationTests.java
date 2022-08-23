@@ -23,12 +23,15 @@ import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerConfig;
 import bisq.wallets.electrum.regtest.electrumx.ElectrumXServerRegtestProcess;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class ElectrumXServerIntegrationTests {
     @Test
+    @EnabledOnOs({OS.MAC, OS.LINUX})
     void startUpAndShutdownTest() throws IOException, InterruptedException {
         BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup();
         bitcoindRegtestSetup.start();

@@ -19,6 +19,7 @@ package bisq.wallets.electrum;
 
 import bisq.wallets.electrum.regtest.ElectrumExtension;
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,7 @@ public class ElectrumBasicIntegrationTests {
 
     @Test
     void getSeedTest() {
-        String seed = electrumDaemon.getSeed(ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        String seed = electrumDaemon.getSeed(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
         String expectedSeed = electrumRegtestSetup.getWalletInfo().getSeed();
         assertThat(seed).isEqualTo(expectedSeed);
     }
@@ -63,7 +64,7 @@ public class ElectrumBasicIntegrationTests {
     void signAndVerifyMessageTest() {
         String address = electrumDaemon.getUnusedAddress();
         String message = "My proof that I own " + address;
-        String signature = electrumDaemon.signMessage(ElectrumRegtestSetup.WALLET_PASSPHRASE, address, message);
+        String signature = electrumDaemon.signMessage(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, address, message);
 
         boolean isValid = electrumDaemon.verifyMessage(address, signature, message);
         assertThat(isValid).isTrue();

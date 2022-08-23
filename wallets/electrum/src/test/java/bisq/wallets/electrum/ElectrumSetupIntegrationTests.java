@@ -18,6 +18,8 @@
 package bisq.wallets.electrum;
 
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.WindowsElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
 import bisq.wallets.electrum.rpc.responses.ElectrumGetInfoResponse;
@@ -34,7 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ElectrumSetupIntegrationTests {
 
-    private final ElectrumRegtestSetup electrumRegtestSetup = new ElectrumRegtestSetup();
+    private final ElectrumRegtestSetup electrumRegtestSetup =
+            !WindowsElectrumRegtestSetup.isExternalBitcoindAndElectrumXEnvironment() ?
+                    new MacLinuxElectrumRegtestSetup() :
+                    new WindowsElectrumRegtestSetup();
     private ElectrumDaemon electrumDaemon;
 
     public ElectrumSetupIntegrationTests() throws IOException {
@@ -53,7 +58,7 @@ public class ElectrumSetupIntegrationTests {
 
     @Test
     void createAndLoadWalletTest() {
-        ElectrumCreateResponse createResponse = electrumDaemon.create(ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        ElectrumCreateResponse createResponse = electrumDaemon.create(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
 
         Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
@@ -62,15 +67,13 @@ public class ElectrumSetupIntegrationTests {
         String[] seedWords = createResponse.getSeed().split(" ");
         assertThat(seedWords.length).isEqualTo(12);
 
-        electrumDaemon.loadWallet(ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        electrumDaemon.loadWallet(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
     }
 
     @Test
     void getInfoTest() {
         ElectrumGetInfoResponse info = electrumDaemon.getInfo();
-
         assertThat(info.isConnected()).isTrue();
-        assertThat(info.getServer()).isEqualTo("localhost");
 
         Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
