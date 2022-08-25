@@ -15,21 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest.electrum;
+package bisq.wallets.process.cli;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class RpcHostSpec {
-    private final String host;
-    private final int port;
-
-    public RpcHostSpec(String host, int port) {
-        this.host = host;
-        this.port = port;
+public class CliCommandFailedException extends RuntimeException {
+    public CliCommandFailedException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

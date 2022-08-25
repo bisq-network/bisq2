@@ -22,7 +22,7 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.regtest.process.BisqProcess;
+import bisq.wallets.process.BisqProcess;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

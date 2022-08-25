@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest.process;
+package bisq.wallets.process;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
@@ -40,7 +40,7 @@ public abstract class DaemonProcess implements BisqProcess {
     }
 
     @Override
-    public void start() throws IOException, InterruptedException {
+    public void start() {
         try {
             FileUtils.makeDirs(dataDir.toFile());
             process = createAndStartProcess();

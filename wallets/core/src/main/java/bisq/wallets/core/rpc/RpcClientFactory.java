@@ -31,17 +31,25 @@ import java.util.Optional;
 
 public class RpcClientFactory {
 
-    public static DaemonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) throws MalformedURLException {
-        return new DaemonRpcClient(
-                createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
-        );
+    public static DaemonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) {
+        try {
+            return new DaemonRpcClient(
+                    createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
+            );
+        } catch (MalformedURLException e) {
+            throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
+        }
     }
 
-    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletPath) throws MalformedURLException {
-        var urlSuffix = "/wallet/" + walletPath.toAbsolutePath();
-        return new WalletRpcClient(
-                createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
-        );
+    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletPath) {
+        try {
+            var urlSuffix = "/wallet/" + walletPath.toAbsolutePath();
+            return new WalletRpcClient(
+                    createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
+            );
+        } catch (MalformedURLException e) {
+            throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
+        }
     }
 
     private static JsonRpcHttpClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)

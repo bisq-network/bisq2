@@ -15,29 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
-
-import bisq.wallets.process.BisqProcess;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.TestInstance;
+package bisq.wallets.process;
 
 import java.io.IOException;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractSharedRegtestInstanceTests<T extends BisqProcess, W> {
-    private AbstractRegtestSetup<T, W> regtestSetup;
+public interface BisqProcess {
+    void start() throws IOException, InterruptedException;
 
-    @BeforeAll
-    public void start() throws IOException, InterruptedException {
-        regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-    }
-
-    @AfterAll
-    public void stop() {
-        regtestSetup.shutdown();
-    }
-
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    void shutdown();
 }

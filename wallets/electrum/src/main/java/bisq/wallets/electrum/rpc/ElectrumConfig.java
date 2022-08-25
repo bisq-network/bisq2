@@ -15,21 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest;
+package bisq.wallets.electrum.rpc;
 
-import bisq.wallets.process.BisqProcess;
-import org.junit.jupiter.api.Test;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-import java.io.IOException;
+import java.nio.file.Path;
 
-public abstract class WalletStartupTests<T extends BisqProcess, W> {
+@Builder
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class ElectrumConfig {
+    private final Path dataDir;
+    private final int electrumXServerPort;
+    private final String rpcHost;
+    private final int rpcPort;
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
-
-    @Test
-    public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
-        regtestSetup.start();
-        regtestSetup.shutdown();
+    public ElectrumConfig(Path dataDir, int electrumXServerPort, String rpcHost, int rpcPort) {
+        this.dataDir = dataDir;
+        this.electrumXServerPort = electrumXServerPort;
+        this.rpcHost = rpcHost;
+        this.rpcPort = rpcPort;
     }
 }

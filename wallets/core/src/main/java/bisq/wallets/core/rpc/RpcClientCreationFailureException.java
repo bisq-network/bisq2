@@ -15,25 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest;
+package bisq.wallets.core.rpc;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-
-import java.util.List;
-
-@Builder
-@Getter
-@ToString
-@EqualsAndHashCode
-public final class CliProcessConfig {
-    private final String binaryName;
-    private final List<String> defaultArgs;
-
-    public CliProcessConfig(String binaryName, List<String> defaultArgs) {
-        this.binaryName = binaryName;
-        this.defaultArgs = defaultArgs;
+public class RpcClientCreationFailureException extends RuntimeException {
+    public RpcClientCreationFailureException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

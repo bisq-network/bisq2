@@ -15,12 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.regtest.process;
+package bisq.wallets.process.cli;
 
-import java.io.IOException;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-public interface BisqProcess {
-    void start() throws IOException, InterruptedException;
+import java.util.List;
 
-    void shutdown();
+@Builder
+@Getter
+@ToString
+@EqualsAndHashCode
+public final class CliProcessConfig {
+    private final String binaryName;
+    private final List<String> defaultArgs;
+
+    public CliProcessConfig(String binaryName, List<String> defaultArgs) {
+        this.binaryName = binaryName;
+        this.defaultArgs = defaultArgs;
+    }
 }

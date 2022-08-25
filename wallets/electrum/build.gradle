@@ -15,7 +15,7 @@ electrum {
 sourceSets {
     main {
         resources {
-            srcDirs += ['generated/src/main/resources']
+            srcDirs += ['build/generated/src/main/resources']
         }
     }
 }
@@ -23,6 +23,7 @@ sourceSets {
 dependencies {
     implementation("bisq:persistence")
     implementation project(':core')
+    implementation project(':process')
 
     implementation libs.jackson.databind
     implementation libs.bundles.glassfish.jersey

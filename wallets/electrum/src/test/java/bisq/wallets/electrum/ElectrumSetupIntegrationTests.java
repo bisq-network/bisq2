@@ -43,7 +43,7 @@ public class ElectrumSetupIntegrationTests {
     @BeforeAll
     void beforeAll() throws IOException, InterruptedException {
         electrumRegtestSetup.start();
-        electrumDaemon = electrumRegtestSetup.createElectrumDaemon();
+        electrumDaemon = electrumRegtestSetup.getElectrumDaemon();
     }
 
     @AfterAll
@@ -55,7 +55,7 @@ public class ElectrumSetupIntegrationTests {
     void createAndLoadWalletTest() {
         ElectrumCreateResponse createResponse = electrumDaemon.create(ElectrumRegtestSetup.WALLET_PASSPHRASE);
 
-        Path electrumDataDir = electrumRegtestSetup.getDataDir();
+        Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
         assertThat(createResponse.getPath()).startsWith(absoluteDataDirPath);
 
@@ -72,7 +72,7 @@ public class ElectrumSetupIntegrationTests {
         assertThat(info.isConnected()).isTrue();
         assertThat(info.getServer()).isEqualTo("localhost");
 
-        Path electrumDataDir = electrumRegtestSetup.getDataDir();
+        Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
 
         assertThat(info.getDefaultWallet()).startsWith(absoluteDataDirPath);

@@ -22,11 +22,9 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqConnectionFactory;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.exceptions.WalletInitializationFailedException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -43,12 +41,8 @@ public class WalletFactory {
     }
 
     private static BitcoindDaemon createBitcoindDaemon(RpcConfig rpcConfig) {
-        try {
-            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-            return new BitcoindDaemon(rpcClient);
-        } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
-        }
+        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        return new BitcoindDaemon(rpcClient);
     }
 
     private static ZmqConnection initializeBitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.regtest;
+package bisq.wallets.process.cli;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,14 +30,34 @@ public abstract class AbstractRpcCliProcess {
         this.cliProcessConfig = cliProcessConfig;
     }
 
-    protected Process runCliProcess(String... args) throws IOException, InterruptedException {
-        List<String> allArgs = createArgsList(args);
-        Process process = new ProcessBuilder(allArgs).start();
-        process.waitFor();
-        return process;
+    protected String runAndGetOutput(String... args) {
+        Process process = runCliProcess(args);
+        return readProcessOutput(process);
     }
 
-    protected String readProcessOutput(Process process) {
+    private Process runCliProcess(String... args) {
+        try {
+            List<String> allArgs = createArgsList(args);
+            Process process = new ProcessBuilder(allArgs).start();
+            process.waitFor();
+
+            if (process.exitValue() != 0) {
+                throw new IOException();
+            }
+
+            return process;
+        } catch (IOException | InterruptedException e) {
+            String errorMessage = String.format(
+                    "`%s %s %s` did not succeed.",
+                    cliProcessConfig.getBinaryName(),
+                    cliProcessConfig.getDefaultArgs(),
+                    String.join(" ", args)
+            );
+            throw new CliCommandFailedException(errorMessage, e);
+        }
+    }
+
+    private String readProcessOutput(Process process) {
         StringBuilder stringBuilder = new StringBuilder();
 
         try (Scanner scanner = new Scanner(process.getInputStream())) {
