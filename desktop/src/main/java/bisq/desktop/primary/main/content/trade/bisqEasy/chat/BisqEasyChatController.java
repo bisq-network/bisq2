@@ -24,12 +24,12 @@ import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -42,16 +42,11 @@ import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
-import bisq.user.identity.UserIdentity;
-import bisq.user.role.RoleRegistrationService;
-import bisq.user.role.RoleType;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
@@ -59,11 +54,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final SettingsService settingsService;
     private final MediationService mediationService;
-    private final RoleRegistrationService roleRegistrationService;
-    private final PrivateTradeChannelService privateTradeChannelService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
-    private final Set<Pin> newMediationRequestPins = new HashSet<>();
-    private Pin offerOnlySettingsPin, myRegistrationsPin;
+    private Pin offerOnlySettingsPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelKind.TRADE, NavigationTarget.BISQ_EASY_CHAT);
@@ -72,8 +64,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
-        roleRegistrationService = applicationService.getUserService().getRoleRegistrationService();
-        privateTradeChannelService = applicationService.getChatService().getPrivateTradeChannelService();
     }
 
     @Override
@@ -89,41 +79,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 });
         selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
-
-
-        myRegistrationsPin = roleRegistrationService.getMyRegistrations().addChangedListener(() -> {
-            roleRegistrationService.getMyRegistrations().stream()
-                    .filter(data -> data.getRoleType() == RoleType.MEDIATOR)
-                    .filter(data -> userIdentityService.findUserIdentity(data.getUserProfile().getId()).isPresent()) // double check that we own that profile
-                    .forEach(data -> {
-                        Pin newMediationRequestPin = mediationService.getNewMediationRequest().addObserver(mediationRequest -> {
-                            if (mediationRequest == null) {
-                                return;
-                            }
-
-                            UserIdentity myUserIdentity = userIdentityService.findUserIdentity(data.getUserProfile().getId()).orElseThrow();
-
-                            PrivateTradeChannel channel = privateTradeChannelService.mediatorCreatesNewChannel(
-                                    mediationRequest.getRequester(),
-                                    mediationRequest.getPeer(),
-                                    Optional.of(myUserIdentity.getUserProfile()),
-                                    myUserIdentity);
-                            tradeChannelSelectionService.selectChannel(channel);
-
-                            privateTradeChannelService.sendPrivateChatMessage("msg to peer",
-                                    Optional.empty(),
-                                    channel,
-                                    myUserIdentity,
-                                    mediationRequest.getPeer());
-                            privateTradeChannelService.sendPrivateChatMessage("msg to requester",
-                                    Optional.empty(),
-                                    channel,
-                                    myUserIdentity,
-                                    mediationRequest.getRequester());
-                        });
-                        newMediationRequestPins.add(newMediationRequestPin);
-                    });
-        });
     }
 
     @Override
@@ -131,8 +86,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.onDeactivate();
 
         offerOnlySettingsPin.unbind();
-        myRegistrationsPin.unbind();
-        newMediationRequestPins.forEach(Pin::unbind);
         resetSelectedChildTarget();
     }
 
@@ -159,28 +112,29 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     @Override
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
+        UIThread.run(() -> {
+            if (channel == null) {
+                return;
+            }
+            if (channel instanceof PrivateTradeChannel) {
+                applyPeersIcon((PrivateChannel<?>) channel);
 
-        if (channel == null) {
-            return;
-        }
-        if (channel instanceof PrivateTradeChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+                publicTradeChannelSelection.deSelectChannel();
+                model.getActionButtonText().set(Res.get("bisqEasy.openDispute"));
 
-            publicTradeChannelSelection.deSelectChannel();
-            model.getActionButtonText().set(Res.get("bisqEasy.openDispute"));
+                Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
+            } else {
+                resetSelectedChildTarget();
+                model.getActionButtonText().set(Res.get("createOffer"));
+                privateChannelSelection.deSelectChannel();
 
-            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
-        } else {
-            resetSelectedChildTarget();
-            model.getActionButtonText().set(Res.get("createOffer"));
-            privateChannelSelection.deSelectChannel();
-
-            Market market = ((PublicTradeChannel) channel).getMarket();
-            StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
-                    market.getBaseCurrencyCode().toLowerCase(),
-                    market.getQuoteCurrencyCode().toLowerCase()).getFirst();
-            model.getChannelIcon().set(marketsImage);
-        }
+                Market market = ((PublicTradeChannel) channel).getMarket();
+                StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
+                        market.getBaseCurrencyCode().toLowerCase(),
+                        market.getQuoteCurrencyCode().toLowerCase()).getFirst();
+                model.getChannelIcon().set(marketsImage);
+            }
+        });
     }
 
     @Override
@@ -200,9 +154,13 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         Channel<? extends ChatMessage> channel = model.getSelectedChannel().get();
         if (channel instanceof PrivateTradeChannel) {
             PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
-            mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer());
-            new Popup().headLine("bisqEasy.requestMediation.popup.headline")
-                    .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+            if (privateTradeChannel.getMediator().isPresent()) {
+                mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
+                        .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+            } else {
+                new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
+            }
         } else {
             Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
         }

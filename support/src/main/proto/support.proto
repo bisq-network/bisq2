@@ -3,10 +3,16 @@ package support;
 option java_package = "bisq.support.protobuf";
 option java_multiple_files = true;
 import "user.proto";
+import "chat.proto";
 
 
 
 message MediationRequest {
   user.UserProfile requester = 1;
   user.UserProfile peer = 2;
+  repeated chat.ChatMessage chatMessages = 3;
+}
+message MediationResponse {
+  string channelId = 1;
+  string message = 2;
 }

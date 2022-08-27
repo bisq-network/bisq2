@@ -20,6 +20,7 @@ package bisq.chat.discuss.pub;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +38,8 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
                                        Optional<Quotation> quotedMessage,
                                        long date,
                                        boolean wasEdited) {
-        this(channelId,
+        this(StringUtils.createShortUid(),
+                channelId,
                 authorId,
                 Optional.of(text),
                 quotedMessage,
@@ -46,14 +48,16 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
                 new MetaData(ChatMessage.TTL, 100000, PublicDiscussionChatMessage.class.getSimpleName()));
     }
 
-    private PublicDiscussionChatMessage(String channelId,
+    private PublicDiscussionChatMessage(String messageId,
+                                        String channelId,
                                         String authorId,
                                         Optional<String> text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited,
                                         MetaData metaData) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 authorId,
                 text,
                 quotedMessage,
@@ -71,6 +75,7 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         return new PublicDiscussionChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 baseProto.getAuthorId(),
                 Optional.of(baseProto.getText()),
@@ -78,10 +83,5 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 MetaData.fromProto(baseProto.getMetaData()));
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
     }
 }

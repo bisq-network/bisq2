@@ -84,7 +84,7 @@ public final class AuthorizedSignedWitnessData implements AuthorizedDistributedD
     }
 
     @Override
-    public boolean isDataInvalid() {
+    public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
 

@@ -17,26 +17,38 @@
 
 package bisq.chat.message;
 
+import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 /**
  * PublicChatMessage is added as public data to the distributed network storage.
  */
+@Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
-    protected PublicChatMessage(String channelId,
+    protected PublicChatMessage(String messageId,
+                                String channelId,
                                 String authorId,
                                 Optional<String> text,
                                 Optional<Quotation> quotation,
                                 long date,
                                 boolean wasEdited,
                                 MetaData metaData) {
-        super(channelId, authorId, text, quotation, date, wasEdited, metaData);
+        super(messageId, channelId, authorId, text, quotation, date, wasEdited, metaData);
+    }
+
+    @Override
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
+        // verified as well, so we can be sure it's the sender of the message. This check prevents against 
+        // impersonation attack.
+        return !authorId.equals(Hex.encode(pubKeyHash));
     }
 }

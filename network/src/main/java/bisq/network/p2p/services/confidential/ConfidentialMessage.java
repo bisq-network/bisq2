@@ -21,10 +21,13 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.security.ConfidentialData;
+import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
 
 @Slf4j
 @ToString
@@ -61,7 +64,9 @@ public final class ConfidentialMessage implements NetworkMessage, DistributedDat
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return confidentialData == null || receiverKeyId == null;
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        return confidentialData == null ||
+                receiverKeyId == null ||
+                !Arrays.equals(DigestUtil.hash(confidentialData.getSenderPublicKey()), pubKeyHash);
     }
 }

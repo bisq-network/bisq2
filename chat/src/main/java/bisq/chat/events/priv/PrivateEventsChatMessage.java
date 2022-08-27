@@ -35,14 +35,16 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateEventsChatMessage extends PrivateChatMessage {
-    public PrivateEventsChatMessage(String channelId,
+    public PrivateEventsChatMessage(String messageId,
+                                    String channelId,
                                     UserProfile sender,
                                     String receiversId,
                                     String text,
                                     Optional<Quotation> quotedMessage,
                                     long date,
                                     boolean wasEdited) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -52,7 +54,8 @@ public final class PrivateEventsChatMessage extends PrivateChatMessage {
                 new MetaData(ChatMessage.TTL, 100000, PrivateEventsChatMessage.class.getSimpleName()));
     }
 
-    private PrivateEventsChatMessage(String channelId,
+    private PrivateEventsChatMessage(String messageId,
+                                     String channelId,
                                      UserProfile sender,
                                      String receiversId,
                                      String text,
@@ -60,7 +63,7 @@ public final class PrivateEventsChatMessage extends PrivateChatMessage {
                                      long date,
                                      boolean wasEdited,
                                      MetaData metaData) {
-        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -84,6 +87,7 @@ public final class PrivateEventsChatMessage extends PrivateChatMessage {
                 Optional.empty();
         bisq.chat.protobuf.PrivateEventsChatMessage privateEventsChatMessage = baseProto.getPrivateEventsChatMessage();
         return new PrivateEventsChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateEventsChatMessage.getSender()),
                 privateEventsChatMessage.getReceiversId(),

@@ -22,7 +22,6 @@ import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
@@ -134,10 +133,10 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
 
     protected CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(UserIdentity userIdentity,
                                                                                     UserProfile userProfile,
-                                                                                    DistributedData distributedData) {
+                                                                                    M publicChatMessage) {
         NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
         return userIdentityService.maybePublicUserProfile(userProfile, nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(distributedData, nodeIdAndKeyPair));
+                .thenCompose(result -> networkService.publishAuthenticatedData(publicChatMessage, nodeIdAndKeyPair));
     }
 
     protected abstract void maybeAddDefaultChannels();

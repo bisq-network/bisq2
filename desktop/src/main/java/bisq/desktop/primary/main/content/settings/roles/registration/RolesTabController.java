@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.overlay.OverlayController;
 import bisq.user.role.RoleType;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -68,9 +67,5 @@ public class RolesTabController extends TabController<RolesTabModel> {
                 return Optional.empty();
             }
         }
-    }
-
-    void onClose() {
-        OverlayController.hide();
     }
 }

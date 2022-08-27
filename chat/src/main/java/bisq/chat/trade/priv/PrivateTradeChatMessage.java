@@ -34,32 +34,41 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateTradeChatMessage extends PrivateChatMessage {
-    public PrivateTradeChatMessage(String channelId,
+    private final Optional<UserProfile> mediator;
+
+    public PrivateTradeChatMessage(String messageId,
+                                   String channelId,
                                    UserProfile sender,
                                    String receiversId,
                                    String text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
-                                   boolean wasEdited) {
-        this(channelId,
+                                   boolean wasEdited,
+                                   Optional<UserProfile> mediator) {
+        this(messageId,
+                channelId,
                 sender,
                 receiversId,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
+                mediator,
                 new MetaData(TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
-    private PrivateTradeChatMessage(String channelId,
+    private PrivateTradeChatMessage(String messageId,
+                                    String channelId,
                                     UserProfile sender,
                                     String receiversId,
                                     String text,
                                     Optional<Quotation> quotedMessage,
                                     long date,
                                     boolean wasEdited,
+                                    Optional<UserProfile> mediator,
                                     MetaData metaData) {
-        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+        this.mediator = mediator;
     }
 
     @Override
@@ -70,10 +79,12 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
     }
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
+        bisq.chat.protobuf.PrivateTradeChatMessage.Builder builder = bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
+                .setReceiversId(receiversId)
+                .setSender(sender.toProto());
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChatMessageBuilder()
-                .setPrivateTradeChatMessage(bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
-                        .setReceiversId(receiversId)
-                        .setSender(sender.toProto()))
+                .setPrivateTradeChatMessage(builder)
                 .build();
     }
 
@@ -82,7 +93,11 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         bisq.chat.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
+        Optional<UserProfile> mediator = privateTradeChatMessage.hasMediator() ?
+                Optional.of(UserProfile.fromProto(privateTradeChatMessage.getMediator())) :
+                Optional.empty();
         return new PrivateTradeChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateTradeChatMessage.getSender()),
                 privateTradeChatMessage.getReceiversId(),
@@ -90,6 +105,8 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                MetaData.fromProto(baseProto.getMetaData()));
+                mediator,
+                MetaData.fromProto(baseProto.getMetaData())
+        );
     }
 }

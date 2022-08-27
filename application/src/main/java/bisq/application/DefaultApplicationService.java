@@ -114,7 +114,7 @@ public class DefaultApplicationService extends ApplicationService {
                 networkService,
                 userService.getUserIdentityService());
 
-        supportService = new SupportService(identityService, networkService);
+        supportService = new SupportService(networkService, chatService, userService);
 
         settingsService = new SettingsService(persistenceService);
 

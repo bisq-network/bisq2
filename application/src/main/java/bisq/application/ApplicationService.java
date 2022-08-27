@@ -34,6 +34,7 @@ import bisq.oracle.timestamp.AuthorizeTimestampRequest;
 import bisq.oracle.timestamp.AuthorizedTimestampData;
 import bisq.persistence.PersistenceService;
 import bisq.support.MediationRequest;
+import bisq.support.MediationResponse;
 import bisq.user.profile.UserProfile;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 import ch.qos.logback.classic.Level;
@@ -162,6 +163,8 @@ public abstract class ApplicationService {
                 AuthorizeTimestampRequest.getNetworkMessageResolver());
         NetworkMessageResolver.addResolver("support.MediationRequest",
                 MediationRequest.getNetworkMessageResolver());
+        NetworkMessageResolver.addResolver("support.MediationResponse",
+                MediationResponse.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
     }

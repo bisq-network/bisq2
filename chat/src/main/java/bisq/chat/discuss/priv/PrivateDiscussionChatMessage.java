@@ -35,14 +35,16 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
-    public PrivateDiscussionChatMessage(String channelId,
+    public PrivateDiscussionChatMessage(String messageId,
+                                        String channelId,
                                         UserProfile sender,
                                         String receiversId,
                                         String text,
                                         Optional<Quotation> quotedMessage,
                                         long date,
                                         boolean wasEdited) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -52,15 +54,16 @@ public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
                 new MetaData(ChatMessage.TTL, 100000, PrivateDiscussionChatMessage.class.getSimpleName()));
     }
 
-    private PrivateDiscussionChatMessage(String channelId,
-                                        UserProfile sender,
-                                        String receiversId,
-                                        String text,
-                                        Optional<Quotation> quotedMessage,
-                                        long date,
-                                        boolean wasEdited,
-                                        MetaData metaData) {
-        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+    private PrivateDiscussionChatMessage(String messageId,
+                                         String channelId,
+                                         UserProfile sender,
+                                         String receiversId,
+                                         String text,
+                                         Optional<Quotation> quotedMessage,
+                                         long date,
+                                         boolean wasEdited,
+                                         MetaData metaData) {
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -84,6 +87,7 @@ public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
                 Optional.empty();
         bisq.chat.protobuf.PrivateDiscussionChatMessage privateDiscussionChatMessage = baseProto.getPrivateDiscussionChatMessage();
         return new PrivateDiscussionChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateDiscussionChatMessage.getSender()),
                 privateDiscussionChatMessage.getReceiversId(),

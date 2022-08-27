@@ -40,7 +40,7 @@ public final class RoleRegistrationServiceStore implements PersistableStore<Role
     }
 
     private RoleRegistrationServiceStore(Set<AuthorizedRoleRegistrationData> myRegistrations) {
-        myRegistrations.addAll(myRegistrations);
+        this.myRegistrations.addAll(myRegistrations);
     }
 
     @Override

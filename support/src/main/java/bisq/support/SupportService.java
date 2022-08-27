@@ -17,9 +17,10 @@
 
 package bisq.support;
 
+import bisq.chat.ChatService;
 import bisq.common.application.Service;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.user.UserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,10 +31,8 @@ public class SupportService implements Service {
     @Getter
     private final MediationService mediationService;
 
-    public SupportService(IdentityService identityService,
-                          NetworkService networkService) {
-
-        mediationService = new MediationService(identityService, networkService);
+    public SupportService(NetworkService networkService, ChatService chatService, UserService userService) {
+        mediationService = new MediationService(networkService, chatService, userService);
     }
 
 

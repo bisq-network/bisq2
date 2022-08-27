@@ -221,8 +221,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getUserIdentities();
     }
 
-    public boolean isUserIdentityPresent(String id) {
-        return findUserIdentity(id).isPresent();
+    public boolean isUserIdentityPresent(String profileId) {
+        return findUserIdentity(profileId).isPresent();
     }
 
     public Optional<UserIdentity> findUserIdentity(String profileId) {

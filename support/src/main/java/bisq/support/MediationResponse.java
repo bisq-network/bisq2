@@ -17,71 +17,58 @@
 
 package bisq.support;
 
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.user.profile.UserProfile;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class MediationRequest implements MailboxMessage {
+public final class MediationResponse implements MailboxMessage {
     private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
             100000,
-            MediationRequest.class.getSimpleName());
-    private final UserProfile requester;
-    private final UserProfile peer;
-    private final Set<PrivateTradeChatMessage> chatMessages;
+            MediationResponse.class.getSimpleName());
+    private final String channelId;
+    private final String message;
 
-    public MediationRequest(Set<PrivateTradeChatMessage> chatMessages, UserProfile requester, UserProfile peer) {
-        this.chatMessages = chatMessages;
-        this.requester = requester;
-        this.peer = peer;
+    public MediationResponse(String channelId, String message) {
+        this.channelId = channelId;
+        this.message = message;
     }
 
     @Override
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationRequestProto())))
+                        .setAny(Any.pack(toMediationResponseProto())))
                 .build();
     }
 
-    private bisq.support.protobuf.MediationRequest toMediationRequestProto() {
-        return bisq.support.protobuf.MediationRequest.newBuilder()
-                .addAllChatMessages(chatMessages.stream()
-                        .map(PrivateTradeChatMessage::toChatMessageProto)
-                        .collect(Collectors.toList()))
-                .setRequester(requester.toProto())
-                .setPeer(peer.toProto())
+    private bisq.support.protobuf.MediationResponse toMediationResponseProto() {
+        return bisq.support.protobuf.MediationResponse.newBuilder()
+                .setChannelId(channelId)
+                .setMessage(message)
                 .build();
     }
 
-    public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new MediationRequest(proto.getChatMessagesList().stream()
-                .map(PrivateTradeChatMessage::fromProto)
-                .collect(Collectors.toSet()),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()));
+    public static MediationResponse fromProto(bisq.support.protobuf.MediationResponse proto) {
+        return new MediationResponse(proto.getChannelId(), proto.getMessage());
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.support.protobuf.MediationRequest proto = any.unpack(bisq.support.protobuf.MediationRequest.class);
-                return MediationRequest.fromProto(proto);
+                bisq.support.protobuf.MediationResponse proto = any.unpack(bisq.support.protobuf.MediationResponse.class);
+                return MediationResponse.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

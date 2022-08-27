@@ -501,7 +501,7 @@ public class ChatMessagesListView {
 
         private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
             UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-            Optional<UserProfile> mediator = mediationService.findMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
+            Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
             return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
         }
 

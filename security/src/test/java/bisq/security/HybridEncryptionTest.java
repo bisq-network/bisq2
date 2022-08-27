@@ -43,7 +43,7 @@ public class HybridEncryptionTest {
         assertArrayEquals(message, decrypted);
 
         // failure cases
-        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
+        byte[] encodedSenderPublicKey = confidentialData.getSenderPublicKey();
         byte[] hmac = confidentialData.getHmac();
         byte[] iv = confidentialData.getIv();
         byte[] cypherText = confidentialData.getCypherText();

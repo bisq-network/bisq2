@@ -131,7 +131,7 @@ public final class Offer implements DistributedData {
     }
 
     @Override
-    public boolean isDataInvalid() {
+    public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
 

@@ -28,6 +28,7 @@ import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -138,18 +139,20 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
-        model.getSelectedChannel().set(channel);
+        UIThread.run(() -> {
+            model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
+            model.getSelectedChannel().set(channel);
 
-        if (model.getChannelInfoVisible().get()) {
-            cleanupChannelInfo();
-            showChannelInfo();
-        }
+            if (model.getChannelInfoVisible().get()) {
+                cleanupChannelInfo();
+                showChannelInfo();
+            }
         
          /* 
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
             }*/
+        });
     }
 
     public void onToggleChannelInfo() {

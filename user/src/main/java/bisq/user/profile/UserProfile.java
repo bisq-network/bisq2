@@ -113,6 +113,10 @@ public final class UserProfile implements DistributedData {
     }
 
     @Override
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    }
+
     public boolean isDataInvalid() {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }

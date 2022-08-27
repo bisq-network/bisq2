@@ -23,5 +23,5 @@ import bisq.common.proto.Proto;
 public interface StorageData extends Proto {
     MetaData getMetaData();
 
-    boolean isDataInvalid();
+    boolean isDataInvalid(byte[] ownerPubKeyHash);
 }

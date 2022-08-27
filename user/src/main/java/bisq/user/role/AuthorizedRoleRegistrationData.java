@@ -18,6 +18,7 @@
 package bisq.user.role;
 
 import bisq.common.application.DevMode;
+import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -88,8 +89,8 @@ public final class AuthorizedRoleRegistrationData implements AuthorizedDistribut
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        return !userProfile.getId().equals(Hex.encode(pubKeyHash));
     }
 
     @Override

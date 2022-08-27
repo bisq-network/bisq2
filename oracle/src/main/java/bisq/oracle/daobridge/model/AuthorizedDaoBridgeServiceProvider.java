@@ -29,6 +29,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -78,8 +79,8 @@ public final class AuthorizedDaoBridgeServiceProvider implements AuthorizedDistr
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
     }
 
     @Override

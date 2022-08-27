@@ -61,14 +61,14 @@ public class HybridEncryption {
         byte[] cypherText = SymEncryption.encrypt(message, sessionKey, ivSpec);
 
         byte[] iv = ivSpec.getIV();
-        byte[] encodedSenderPublicKey = senderKeyPair.getPublic().getEncoded();
+        byte[] senderPublicKeyAsBytes = senderKeyPair.getPublic().getEncoded();
         byte[] encodedReceiverPublicKey = receiverPublicKey.getEncoded();
-        byte[] hmacInput = getHmacInput(iv, cypherText, encodedSenderPublicKey, encodedReceiverPublicKey);
+        byte[] hmacInput = getHmacInput(iv, cypherText, senderPublicKeyAsBytes, encodedReceiverPublicKey);
         byte[] hmac = HmacUtil.createHmac(hmacInput, hmacKey);
 
         byte[] messageToSign = concat(hmac, cypherText);
         byte[] signature = SignatureUtil.sign(messageToSign, senderKeyPair.getPrivate());
-        return new ConfidentialData(encodedSenderPublicKey, hmac, iv, cypherText, signature);
+        return new ConfidentialData(senderPublicKeyAsBytes, hmac, iv, cypherText, signature);
     }
 
     private static byte[] getHmacInput(byte[] iv, byte[] cypherText, byte[] senderPublicKey, byte[] receiverPublicKey) {
@@ -76,7 +76,7 @@ public class HybridEncryption {
     }
 
     public static byte[] decryptAndVerify(ConfidentialData confidentialData, KeyPair receiversKeyPair) throws GeneralSecurityException {
-        byte[] encodedSenderPublicKey = confidentialData.getEncodedSenderPublicKey();
+        byte[] encodedSenderPublicKey = confidentialData.getSenderPublicKey();
         byte[] hmac = confidentialData.getHmac();
         byte[] iv = confidentialData.getIv();
         byte[] cypherText = confidentialData.getCypherText();

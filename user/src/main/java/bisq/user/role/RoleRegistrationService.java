@@ -17,7 +17,6 @@
 
 package bisq.user.role;
 
-import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.ObservableSet;
@@ -110,8 +109,7 @@ public class RoleRegistrationService implements PersistenceClient<RoleRegistrati
         AuthorizedRoleRegistrationData data = new AuthorizedRoleRegistrationData(userIdentity.getUserProfile(),
                 roleType,
                 publicKeyAsHex);
-        if ((DevMode.isDevMode() && DevMode.AUTHORIZED_DEV_PUBLIC_KEYS.contains(publicKeyAsHex)) ||
-                (!DevMode.isDevMode() && data.getAuthorizedPublicKeys().contains(publicKeyAsHex))) {
+        if (data.getAuthorizedPublicKeys().contains(publicKeyAsHex)) {
             return networkService.publishAuthorizedData(data,
                             userIdentity.getIdentity().getNodeIdAndKeyPair(),
                             keyPair.getPrivate(),

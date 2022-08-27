@@ -84,7 +84,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     }
 
     @Override
-    public boolean isDataInvalid() {
+    public boolean isDataInvalid(byte[] pubKeyHash) {
         return false;
     }
 

@@ -19,6 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -80,16 +81,17 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       C channel) {
-        return sendPrivateChatMessage(text, quotedMessage, channel, channel.getMyProfile(), channel.getPeer());
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyProfile(), channel.getPeer());
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Quotation> quotedMessage,
-                                                                                      C channel,
-                                                                                      UserIdentity senderIdentity,
-                                                                                      UserProfile receiver) {
-        String channelId = channel.getId();
-        M chatMessage = createNewPrivateChatMessage(channelId,
+    protected CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String messageId,
+                                                                                         String text,
+                                                                                         Optional<Quotation> quotedMessage,
+                                                                                         C channel,
+                                                                                         UserIdentity senderIdentity,
+                                                                                         UserProfile receiver) {
+        M chatMessage = createNewPrivateChatMessage(messageId,
+                channel,
                 senderIdentity.getUserProfile(),
                 receiver.getId(),
                 text,
@@ -132,7 +134,8 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
 
     protected abstract C createNewChannel(UserProfile peer, UserIdentity myUserIdentity);
 
-    protected abstract M createNewPrivateChatMessage(String channelId,
+    protected abstract M createNewPrivateChatMessage(String messageId,
+                                                     C channel,
                                                      UserProfile sender,
                                                      String receiversId,
                                                      String text,
