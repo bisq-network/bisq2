@@ -187,6 +187,7 @@ public class MarketPriceService {
     }
 
     private Map<Market, MarketPrice> parseResponse(String json) {
+        // size of json is about 8kb
         Map<Market, MarketPrice> map = new HashMap<>();
         Map<?, ?> linkedTreeMap = new Gson().fromJson(json, Map.class);
         List<?> list = (ArrayList<?>) linkedTreeMap.get("data");

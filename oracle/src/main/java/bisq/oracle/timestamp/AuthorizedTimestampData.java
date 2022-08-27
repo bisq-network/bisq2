@@ -18,6 +18,7 @@
 package bisq.oracle.timestamp;
 
 import bisq.common.application.DevMode;
+import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -84,8 +85,8 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return false;
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        return !profileId.equals(Hex.encode(pubKeyHash));
     }
 
     @Override
@@ -101,7 +102,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     public String toString() {
         return "AuthorizedTimestampData{" +
                 ",\r\n     profileId=" + profileId +
-                ",\r\n     time=" + new Date(date) +
+                ",\r\n     date=" + new Date(date) +
                 "\r\n}";
     }
 }

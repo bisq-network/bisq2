@@ -42,32 +42,30 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @ToString
+@Getter
 @EqualsAndHashCode
 public abstract class ChatMessage implements Proto {
     //todo for dev testing we keep it short.
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
-    @Getter
+    protected final String messageId;
     protected final String channelId;
     protected final Optional<String> optionalText;
-    @Getter
     protected String authorId;
-    @Getter
     protected final Optional<Quotation> quotation;
-    @Getter
     protected final long date;
-    @Getter
     protected final boolean wasEdited;
-    @Getter
     protected final MetaData metaData;
 
-    protected ChatMessage(String channelId,
+    protected ChatMessage(String messageId,
+                          String channelId,
                           String authorId,
                           Optional<String> text,
                           Optional<Quotation> quotation,
                           long date,
                           boolean wasEdited,
                           MetaData metaData) {
+        this.messageId = messageId;
         this.channelId = channelId;
         this.authorId = authorId;
         this.optionalText = text;
@@ -83,6 +81,7 @@ public abstract class ChatMessage implements Proto {
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
+                .setMessageId(messageId)
                 .setChannelId(channelId)
                 .setAuthorId(authorId)
                 .setDate(date)

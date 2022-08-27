@@ -27,7 +27,7 @@ message PubKey {
 }
 
 message ConfidentialData {
-  bytes encodedSenderPublicKey = 1;
+  bytes senderPublicKey = 1;
   bytes hmac = 2;
   bytes iv = 3;
   bytes cypherText = 4;

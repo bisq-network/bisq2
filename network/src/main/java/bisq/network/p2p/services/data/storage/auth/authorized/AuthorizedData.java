@@ -93,10 +93,10 @@ public final class AuthorizedData extends AuthenticatedData {
     }
 
     @Override
-    public boolean isDataInvalid() {
+    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
         try {
             AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            return authorizedDistributedData.isDataInvalid() ||
+            return authorizedDistributedData.isDataInvalid(ownerPubKeyHash) ||
                     !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes)) ||
                     !SignatureUtil.verify(distributedData.serialize(), signature, authorizedPublicKey);
         } catch (GeneralSecurityException e) {

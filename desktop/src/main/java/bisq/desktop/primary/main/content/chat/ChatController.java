@@ -28,6 +28,7 @@ import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
@@ -38,7 +39,6 @@ import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
-import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -57,7 +57,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final ChatService chatService;
     @Getter
     protected final M model;
-    private final UserProfileService userProfileService;
+    protected final UserProfileService userProfileService;
     private final ReputationService reputationService;
     @Getter
     protected V view;
@@ -139,18 +139,20 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
-        model.getSelectedChannel().set(channel);
+        UIThread.run(() -> {
+            model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
+            model.getSelectedChannel().set(channel);
 
-        if (model.getChannelInfoVisible().get()) {
-            cleanupChannelInfo();
-            showChannelInfo();
-        }
+            if (model.getChannelInfoVisible().get()) {
+                cleanupChannelInfo();
+                showChannelInfo();
+            }
         
          /* 
             if (model.getNotificationsVisible().get()) {
                 notificationsSettings.setChannel(channel);
             }*/
+        });
     }
 
     public void onToggleChannelInfo() {
@@ -176,10 +178,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
         cleanupChatUserDetails();
         cleanupChannelInfo();
-    }
-
-    public void onCreateOffer() {
-        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     public void showChannelInfo() {

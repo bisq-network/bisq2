@@ -120,7 +120,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             // todo add tooltip
             model.reputationScore.set(String.valueOf(reputationService.getReputationScore(userProfile).getTotalScore()));
 
-            model.profileAge.set(reputationService.getProfileAgeService().getProfileAgeInDays(userProfile)
+            model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("na")));
         }

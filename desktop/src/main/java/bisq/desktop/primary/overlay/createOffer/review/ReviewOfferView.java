@@ -161,7 +161,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
             } else {
                 createOfferHBox.setMinWidth(550);
                 createOfferHBox.setMaxWidth(550);
-                topHeadLine.setText(Res.get("onboarding.completed.headline.createOffer"));
+                topHeadLine.setText(Res.get("createOffer"));
             }
 
             int numEntries = model.getMatchingOffers().size();

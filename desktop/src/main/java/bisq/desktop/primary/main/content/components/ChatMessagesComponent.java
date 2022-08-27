@@ -211,7 +211,7 @@ public class ChatMessagesComponent {
         void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
                 Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
                 if (channel instanceof PublicTradeChannel) {
@@ -256,17 +256,16 @@ public class ChatMessagesComponent {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.getChannelKind() == ChannelKind.TRADE) {
-                privateTradeChannelService.createAndAddChannel(peer)
+                privateTradeChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(tradeChannelSelectionService::selectChannel);
-                ;
             } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
-                privateDiscussionChannelService.createAndAddChannel(peer)
+                privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(discussionChannelSelectionService::selectChannel);
             } else if (model.getChannelKind() == ChannelKind.EVENTS) {
-                privateEventsChannelService.createAndAddChannel(peer)
+                privateEventsChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(eventsChannelSelectionService::selectChannel);
             } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
-                privateSupportChannelService.createAndAddChannel(peer)
+                privateSupportChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(supportChannelSelectionService::selectChannel);
             }
         }

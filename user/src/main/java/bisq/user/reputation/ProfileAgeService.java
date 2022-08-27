@@ -126,7 +126,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         return Math.min(365, getAgeInDays(data.getDate())) * WEIGHT;
     }
 
-    public Optional<Long> getProfileAgeInDays(UserProfile userProfile) {
+    public Optional<Long> getProfileAge(UserProfile userProfile) {
         return Optional.ofNullable(dataSetByHash.get(userProfile.getProfileAgeKey()))
                 .flatMap(e -> e.stream().findFirst())
                 .map(AuthorizedTimestampData::getDate);

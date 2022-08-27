@@ -159,7 +159,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
-        persistableStore.getSelectedUserProfile().set(userIdentity);
+        persistableStore.getSelectedUserIdentity().set(userIdentity);
         persist();
     }
 
@@ -172,7 +172,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         synchronized (lock) {
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);
-            persistableStore.getSelectedUserProfile().set(newUserIdentity);
+            persistableStore.getSelectedUserIdentity().set(newUserIdentity);
         }
         persist();
 
@@ -188,8 +188,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         synchronized (lock) {
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().stream().findAny()
-                    .ifPresentOrElse(e -> persistableStore.getSelectedUserProfile().set(e),
-                            () -> persistableStore.getSelectedUserProfile().set(null));
+                    .ifPresentOrElse(e -> persistableStore.getSelectedUserIdentity().set(e),
+                            () -> persistableStore.getSelectedUserIdentity().set(null));
         }
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
@@ -213,16 +213,16 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return persistableStore.getUserIdentities().isEmpty();
     }
 
-    public Observable<UserIdentity> getSelectedUserProfile() {
-        return persistableStore.getSelectedUserProfile();
+    public Observable<UserIdentity> getSelectedUserIdentity() {
+        return persistableStore.getSelectedUserIdentity();
     }
 
     public ObservableSet<UserIdentity> getUserIdentities() {
         return persistableStore.getUserIdentities();
     }
 
-    public boolean isUserIdentityPresent(String id) {
-        return findUserIdentity(id).isPresent();
+    public boolean isUserIdentityPresent(String profileId) {
+        return findUserIdentity(profileId).isPresent();
     }
 
     public Optional<UserIdentity> findUserIdentity(String profileId) {
@@ -238,7 +238,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
         synchronized (lock) {
             persistableStore.getUserIdentities().add(userIdentity);
-            persistableStore.getSelectedUserProfile().set(userIdentity);
+            persistableStore.getSelectedUserIdentity().set(userIdentity);
         }
         newlyCreatedUserIdentity.set(userIdentity);
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);

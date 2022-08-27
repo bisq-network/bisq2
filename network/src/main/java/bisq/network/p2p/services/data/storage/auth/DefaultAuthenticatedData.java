@@ -41,7 +41,7 @@ public final class DefaultAuthenticatedData extends AuthenticatedData {
     }
 
     @Override
-    public boolean isDataInvalid() {
-        return distributedData.isDataInvalid();
+    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
+        return distributedData.isDataInvalid(ownerPubKeyHash);
     }
 }

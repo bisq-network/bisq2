@@ -39,12 +39,12 @@ import org.fxmisc.easybind.Subscription;
 public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatController<?, ?>> {
     private final Label headline;
     private final Button helpButton;
-    private final VBox left;
+    protected final VBox left;
     private final VBox sideBar;
     protected final Pane chatMessagesComponent;
     private final Pane channelInfo;
     protected final HBox centerToolbar;
-    private final Button createOfferButton;
+
     protected final VBox center;
     private final SearchBox searchBox;
     private Pane chatUserOverviewRoot;
@@ -65,21 +65,12 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         // Undo default padding of ContentView 
         root.setPadding(new Insets(-34, -67, -67, -68));
 
-        createOfferButton = new Button(Res.get("satoshisquareapp.chat.createOffer.button"));
-        createOfferButton.setMaxWidth(Double.MAX_VALUE);
-        createOfferButton.setMinHeight(37);
-        createOfferButton.setDefaultButton(true);
-
-        VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
-
         // Left
         left = Layout.vBoxWith(
                 publicChannelSelection,
                 Layout.separator(),
                 privateChannelSelection,
-                Spacer.fillVBox(),
-                createOfferButton
-        );
+                Spacer.fillVBox());
         left.getStyleClass().add("bisq-grey-2-bg");
         left.setPrefWidth(210);
         left.setMinWidth(210);
@@ -126,11 +117,8 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         channelInfo.managedProperty().bind(model.getChannelInfoVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
-        createOfferButton.visibleProperty().bind(model.getCreateOfferButtonVisible());
-        createOfferButton.managedProperty().bind(model.getCreateOfferButtonVisible());
 
         helpButton.setOnAction(e -> controller.onToggleHelp());
-        createOfferButton.setOnAction(e -> controller.onCreateOffer());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
@@ -163,11 +151,9 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         channelInfo.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
-        createOfferButton.visibleProperty().unbind();
-        createOfferButton.managedProperty().unbind();
 
         helpButton.setOnAction(null);
-        createOfferButton.setOnAction(null);
+       
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription.unsubscribe();

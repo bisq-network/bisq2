@@ -82,7 +82,6 @@ public class BurnBsqView extends TabView<BurnBsqModel, BurnBsqController> {
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("tradeGuide.headline"));
         headLine.getStyleClass().add("bisq-text-17");
 
         closeButton = BisqIconButton.createIconButton("close");

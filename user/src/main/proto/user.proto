@@ -53,14 +53,6 @@ message UserProfileStore {
   map<string, UserProfile> userProfileById = 3;
 }
 
-message ProofOfBurnVerificationStore {
-  map<string, Proof> verifiedProofOfBurnProofs = 1;
-}
-
-
-
-
-
 message ProofOfBurnProof {
   string txId = 1;
   uint64 burntAmount = 2;
@@ -72,43 +64,6 @@ message BondedRoleProof {
 }
 message InvitationProof {
   string invitationCode = 1;
-}
-message Proof {
-  enum Type {
-    PROOF_OF_BURN = 0;
-    BONDED_ROLE = 1;
-    CHANNEL_ADMIN_INVITATION = 2;
-  }
-  oneof message {
-    ProofOfBurnProof proofOfBurnProof = 1;
-    BondedRoleProof bondedRoleProof = 2;
-    InvitationProof invitationProof = 3;
-  }
-}
-
-message Role {
-  enum Type {
-    CHANNEL_ADMIN = 0;
-    CHANNEL_MODERATOR = 1;
-    MEDIATOR = 2;
-  }
-
-  string type = 1;
-  Proof proof = 2;
-}
-
-
-message Reputation {
-  enum Type {
-    BURNED_BSQ = 0;
-    BSQ_BOND = 1;
-    BISQ1_ACCOUNT_AGE = 2;
-    BISQ1_SIGNED_ACCOUNT_AGE_WITNESS = 3;
-    PROFILE_AGE = 4;
-  }
-
-  string type = 1;
-  Proof proof = 2;
 }
 
 message AccountAgeStore {
@@ -125,3 +80,21 @@ message ProfileAgeStore {
   repeated string profileIds = 1;
   uint64 lastRequested = 2;
 }
+
+enum RoleType {
+  MEDIATOR = 0;
+  ARBITRATOR = 1;
+  MODERATOR = 2;
+  ORACLE = 3;
+}
+
+message AuthorizedRoleRegistrationData {
+  UserProfile userProfile = 1;
+  RoleType roleType = 2;
+  string publicKeyAsHex = 3;
+}
+
+message RoleRegistrationServiceStore {
+  repeated AuthorizedRoleRegistrationData myRegistrations = 1;
+}
+    

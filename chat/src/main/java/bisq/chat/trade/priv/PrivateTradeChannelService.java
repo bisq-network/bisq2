@@ -20,6 +20,9 @@ package bisq.chat.trade.priv;
 import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
+import bisq.common.util.CompletableFutureUtils;
+import bisq.common.util.StringUtils;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.persistence.Persistence;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class PrivateTradeChannelService extends PrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
@@ -49,6 +53,11 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
+    public void setMediationActivated(PrivateTradeChannel channel, boolean mediationActivated) {
+        channel.getMediationActivated().set(mediationActivated);
+        persist();
+    }
+
     @Override
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof PrivateTradeChatMessage) {
@@ -57,29 +66,126 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     @Override
-    protected PrivateTradeChatMessage createNewPrivateChatMessage(String channelId,
-                                                                       UserProfile sender,
-                                                                       String receiversId,
-                                                                       String text,
-                                                                       Optional<Quotation> quotedMessage,
-                                                                       long time,
-                                                                       boolean wasEdited) {
-        return  new PrivateTradeChatMessage(channelId,
+    protected PrivateTradeChatMessage createNewPrivateChatMessage(String messageId,
+                                                                  PrivateTradeChannel channel,
+                                                                  UserProfile sender,
+                                                                  String receiversId,
+                                                                  String text,
+                                                                  Optional<Quotation> quotedMessage,
+                                                                  long time,
+                                                                  boolean wasEdited) {
+        // We send the mediator only in the first message to the peer.
+        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
+        return new PrivateTradeChatMessage(
+                messageId,
+                channel.getId(),
                 sender,
                 receiversId,
                 text,
                 quotedMessage,
                 new Date().getTime(),
-                wasEdited);
+                wasEdited,
+                mediator);
     }
 
     @Override
     protected PrivateTradeChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        return new PrivateTradeChannel(peer, myUserIdentity);
+        throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
+                "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
+    }
+
+    public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
+        Optional<UserProfile> mediator = Optional.of(myUserIdentity.getUserProfile());
+        PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, trader1, trader2, mediator);
+        getChannels().add(channel);
+        persist();
+        return channel;
+    }
+
+    public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
+        PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, peersUserProfile, myUserIdentity.getUserProfile(), mediator);
+        getChannels().add(channel);
+        persist();
+        return channel;
     }
 
     @Override
     public ObservableArray<PrivateTradeChannel> getChannels() {
         return persistableStore.getChannels();
+    }
+
+    @Override
+    protected void processMessage(PrivateTradeChatMessage message) {
+        //todo is proofOfWorkService.verify needed?
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
+                proofOfWorkService.verify(message.getSender().getProofOfWork())) {
+            userIdentityService.findUserIdentity(message.getReceiversId())
+                    .flatMap(myUserIdentity -> findChannel(message.getChannelId())
+                            .or(() -> Optional.of(traderCreatesNewChannel(myUserIdentity,
+                                    message.getSender(),
+                                    message.getMediator()))))
+                    .ifPresent(channel -> addMessage(message, channel));
+        }
+    }
+
+    @Override
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      PrivateTradeChannel channel) {
+        UserIdentity myUserIdentity = channel.getMyProfile();
+        String messageId = StringUtils.createShortUid();
+        if (!channel.getMediationActivated().get()) {
+            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer());
+        }
+        // If mediation has been activated we send all messages to the 2 other peers
+        UserProfile receiver1, receiver2;
+        if (channel.isMediator()) {
+            receiver1 = channel.getTrader1();
+            receiver2 = channel.getTrader2();
+        } else {
+            receiver1 = channel.getPeer();
+            receiver2 = channel.getMediator().orElseThrow();
+        }
+
+        UserProfile senderUserProfile = myUserIdentity.getUserProfile();
+        NetworkIdWithKeyPair senderNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
+        long date = new Date().getTime();
+        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
+        PrivateTradeChatMessage message1 = new PrivateTradeChatMessage(
+                messageId,
+                channel.getId(),
+                senderUserProfile,
+                receiver1.getId(),
+                text,
+                quotedMessage,
+                date,
+                false,
+                mediator);
+
+        CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
+                receiver1.getNetworkId(),
+                senderNodeIdAndKeyPair);
+
+        PrivateTradeChatMessage message2 = new PrivateTradeChatMessage(
+                messageId,
+                channel.getId(),
+                senderUserProfile,
+                receiver2.getId(),
+                text,
+                quotedMessage,
+                date,
+                false,
+                mediator);
+        CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
+                receiver2.getNetworkId(),
+                senderNodeIdAndKeyPair);
+
+        // We only add one message to avoid duplicates (receiverId is different)
+        addMessage(message1, channel);
+
+        // We do not use the SendMessageResult yet, so we simply return the first. 
+        // If it becomes relevant we would need to change the API of the method.
+        return CompletableFutureUtils.allOf(sendFuture1, sendFuture2)
+                .thenApply(list -> list.get(0));
     }
 }

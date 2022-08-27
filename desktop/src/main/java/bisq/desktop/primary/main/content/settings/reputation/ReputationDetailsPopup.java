@@ -57,7 +57,7 @@ public class ReputationDetailsPopup extends VBox {
         ProofOfBurnService proofOfBurnService = reputationService.getProofOfBurnService();
         Optional.ofNullable(proofOfBurnService.getDataSetByHash().get(userProfile.getProofOfBurnKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
-                        .map(data -> new ListItem(Reputation.Source.BURNED_BSQ,
+                        .map(data -> new ListItem(ReputationSource.BURNED_BSQ,
                                 data.getTime(),
                                 proofOfBurnService.calculateScore(data),
                                 data.getAmount()))
@@ -66,7 +66,7 @@ public class ReputationDetailsPopup extends VBox {
         BondedReputationService bondedReputationService = reputationService.getBondedReputationService();
         Optional.ofNullable(bondedReputationService.getDataSetByHash().get(userProfile.getBondedReputationKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
-                        .map(data -> new ListItem(Reputation.Source.BSQ_BOND,
+                        .map(data -> new ListItem(ReputationSource.BSQ_BOND,
                                 data.getTime(),
                                 bondedReputationService.calculateScore(data),
                                 Optional.of(data.getAmount()),
@@ -76,14 +76,14 @@ public class ReputationDetailsPopup extends VBox {
         AccountAgeService accountAgeService = reputationService.getAccountAgeService();
         Optional.ofNullable(accountAgeService.getDataSetByHash().get(userProfile.getAccountAgeKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
-                        .map(data -> new ListItem(Reputation.Source.BISQ1_ACCOUNT_AGE,
+                        .map(data -> new ListItem(ReputationSource.BISQ1_ACCOUNT_AGE,
                                 data.getDate(),
                                 accountAgeService.calculateScore(data)))
                         .toList()));
         SignedWitnessService signedWitnessService = reputationService.getSignedWitnessService();
         Optional.ofNullable(signedWitnessService.getDataSetByHash().get(userProfile.getSignedWitnessKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
-                        .map(data -> new ListItem(Reputation.Source.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
+                        .map(data -> new ListItem(ReputationSource.BISQ1_SIGNED_ACCOUNT_AGE_WITNESS,
                                 data.getWitnessSignDate(),
                                 signedWitnessService.calculateScore(data)))
                         .toList()));
@@ -91,7 +91,7 @@ public class ReputationDetailsPopup extends VBox {
         ProfileAgeService profileAgeService = reputationService.getProfileAgeService();
         Optional.ofNullable(profileAgeService.getDataSetByHash().get(userProfile.getProfileAgeKey()))
                 .ifPresent(dataSet -> listItems.addAll(dataSet.stream()
-                        .map(data -> new ListItem(Reputation.Source.PROFILE_AGE,
+                        .map(data -> new ListItem(ReputationSource.PROFILE_AGE,
                                 data.getDate(),
                                 profileAgeService.calculateScore(data)))
                         .toList()));
@@ -147,7 +147,7 @@ public class ReputationDetailsPopup extends VBox {
         tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
                 .title(Res.get("reputation.details.table.columns.source"))
                 .isFirst()
-                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getSource))
+                .comparator(Comparator.comparing(ReputationDetailsPopup.ListItem::getReputationSource))
                 .valueSupplier(ReputationDetailsPopup.ListItem::getSourceString)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<ReputationDetailsPopup.ListItem>()
@@ -175,7 +175,7 @@ public class ReputationDetailsPopup extends VBox {
     @EqualsAndHashCode
     @Getter
     static class ListItem implements TableItem {
-        private final Reputation.Source source;
+        private final ReputationSource reputationSource;
         private final long date;
         private final long age;
         private final long amount;
@@ -189,16 +189,16 @@ public class ReputationDetailsPopup extends VBox {
         private final String scoreString;
         private final String lockTimeString;
 
-        public ListItem(Reputation.Source source, long date, long score) {
-            this(source, date, score, Optional.empty(), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long date, long score) {
+            this(reputationSource, date, score, Optional.empty(), Optional.empty());
         }
 
-        public ListItem(Reputation.Source source, long date, long score, long amount) {
-            this(source, date, score, Optional.of(amount), Optional.empty());
+        public ListItem(ReputationSource reputationSource, long date, long score, long amount) {
+            this(reputationSource, date, score, Optional.of(amount), Optional.empty());
         }
 
-        public ListItem(Reputation.Source source, long date, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
-            this.source = source;
+        public ListItem(ReputationSource reputationSource, long date, long score, Optional<Long> optionalAmount, Optional<Long> optionalLockTime) {
+            this.reputationSource = reputationSource;
             this.date = date;
             this.amount = optionalAmount.orElse(0L);
             this.score = score;
@@ -206,7 +206,7 @@ public class ReputationDetailsPopup extends VBox {
             age = TimeFormatter.getAgeInDays(date);
 
             dateString = DateFormatter.formatDateTime(date);
-            sourceString = Res.get("reputation.source." + source.name());
+            sourceString = Res.get("reputation.source." + reputationSource.name());
             ageString = TimeFormatter.formatAgeInDays(date);
             amountString = optionalAmount.map(amount -> AmountFormatter.formatAmountWithCode(Coin.of(amount, "BSQ"))).orElse("-");
             scoreString = String.valueOf(score);

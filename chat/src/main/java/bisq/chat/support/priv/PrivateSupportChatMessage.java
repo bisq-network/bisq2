@@ -35,14 +35,16 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateSupportChatMessage extends PrivateChatMessage {
-    public PrivateSupportChatMessage(String channelId,
+    public PrivateSupportChatMessage(String messageId,
+                                     String channelId,
                                      UserProfile sender,
                                      String receiversId,
                                      String text,
                                      Optional<Quotation> quotedMessage,
                                      long date,
                                      boolean wasEdited) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -52,7 +54,8 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                 new MetaData(ChatMessage.TTL, 100000, PrivateSupportChatMessage.class.getSimpleName()));
     }
 
-    private PrivateSupportChatMessage(String channelId,
+    private PrivateSupportChatMessage(String messageId,
+                                      String channelId,
                                       UserProfile sender,
                                       String receiversId,
                                       String text,
@@ -60,7 +63,7 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                                       long date,
                                       boolean wasEdited,
                                       MetaData metaData) {
-        super(channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
     }
 
     @Override
@@ -84,6 +87,7 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                 Optional.empty();
         bisq.chat.protobuf.PrivateSupportChatMessage privateSupportChatMessage = baseProto.getPrivateSupportChatMessage();
         return new PrivateSupportChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateSupportChatMessage.getSender()),
                 privateSupportChatMessage.getReceiversId(),

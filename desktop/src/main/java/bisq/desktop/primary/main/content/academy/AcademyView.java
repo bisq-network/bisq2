@@ -22,47 +22,43 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Hyperlink;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
 
 public abstract class AcademyView<M extends Model, C extends Controller> extends View<VBox, M, C> {
-    protected final Label headline, subHeadline, overviewHeadline, overview, contentHeadline, content;
+    protected final MultiLineLabel headline, subHeadline, overviewHeadline, overview, contentHeadline, content;
     protected final Hyperlink learnMore;
-    private Subscription heightPin;
 
     public AcademyView(M model, C controller) {
         super(new VBox(10), model, controller);
 
         String key = getKey();
-        headline = new Label(Res.get("academy." + key));
+        headline = new MultiLineLabel(Res.get("academy." + key));
         headline.setGraphic(ImageUtil.getImageViewById(getIconId()));
         headline.getStyleClass().addAll("font-size-20", "font-light");
         headline.setGraphicTextGap(10);
         headline.setWrapText(true);
 
-        subHeadline = new Label(Res.get("academy." + key + ".subHeadline"));
+        subHeadline = new MultiLineLabel(Res.get("academy." + key + ".subHeadline"));
         subHeadline.getStyleClass().addAll("font-size-14", "font-light", "text-fill-grey-dimmed");
         subHeadline.setWrapText(true);
 
-        overviewHeadline = new Label(Res.get("academy.overview"));
+        overviewHeadline = new MultiLineLabel(Res.get("academy.overview"));
         overviewHeadline.getStyleClass().addAll("font-size-16", "font-light");
         overviewHeadline.setWrapText(true);
 
-        overview = new Label(Res.get("academy." + key + ".overview"));
+        overview = new MultiLineLabel(Res.get("academy." + key + ".overview"));
         overview.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         overview.setWrapText(true);
 
-        contentHeadline = new Label(Res.get("academy." + key + ".content.headline"));
+        contentHeadline = new MultiLineLabel(Res.get("academy." + key + ".content.headline"));
         contentHeadline.getStyleClass().addAll("font-size-16", "font-light");
         contentHeadline.setWrapText(true);
 
-        content = new Label(Res.get("academy." + key + ".content"));
+        content = new MultiLineLabel(Res.get("academy." + key + ".content"));
         content.getStyleClass().addAll("font-size-12", "font-light", "bisq-line-spacing-01");
         content.setWrapText(true);
 
@@ -89,29 +85,10 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
     @Override
     protected void onViewAttached() {
         learnMore.setOnAction(e -> Browser.open(getUrl()));
-
-        root.setMinHeight(2500);
-        heightPin = EasyBind.subscribe(content.heightProperty(), h -> {
-            if (content.getHeight() > 0) {
-
-                headline.setMinHeight(Math.max(20, headline.getHeight()));
-                subHeadline.setMinHeight(Math.max(20, subHeadline.getHeight()));
-
-                overviewHeadline.setMinHeight(Math.max(20, overviewHeadline.getHeight()));
-                overview.setMinHeight(Math.max(20, overview.getHeight()));
-
-                contentHeadline.setMinHeight(Math.max(20, contentHeadline.getHeight()));
-                content.setMinHeight(Math.max(20, content.getHeight()));
-
-                root.setMinHeight(Region.USE_COMPUTED_SIZE);
-                heightPin.unsubscribe();
-            }
-        });
     }
 
     @Override
     protected void onViewDetached() {
         learnMore.setOnAction(null);
-        heightPin.unsubscribe();
     }
 }

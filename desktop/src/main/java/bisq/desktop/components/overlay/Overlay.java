@@ -797,7 +797,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected void setModality() {
         stage.initOwner(owner.getScene().getWindow());
-        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initModality(Modality.NONE);
     }
 
     protected void removeEffectFromBackground() {

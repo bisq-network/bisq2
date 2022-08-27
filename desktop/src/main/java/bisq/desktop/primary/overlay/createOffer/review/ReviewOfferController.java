@@ -40,6 +40,7 @@ import bisq.i18n.Res;
 import bisq.offer.spec.Direction;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.settings.SettingsService;
+import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -68,6 +69,7 @@ public class ReviewOfferController implements Controller {
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final Consumer<Boolean> buttonsVisibleHandler;
     private final PrivateTradeChannelService privateTradeChannelService;
+    private final MediationService mediationService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
                                  Consumer<Boolean> buttonsVisibleHandler,
@@ -81,6 +83,7 @@ public class ReviewOfferController implements Controller {
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         privateTradeChannelService = chatService.getPrivateTradeChannelService();
+        mediationService = applicationService.getSupportService().getMediationService();
         this.closeHandler = closeHandler;
 
         model = new ReviewOfferModel();
@@ -127,7 +130,7 @@ public class ReviewOfferController implements Controller {
         model.getShowCreateOfferSuccess().set(false);
         model.getShowTakeOfferSuccess().set(false);
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
         TradeChatOffer tradeChatOffer = new TradeChatOffer(model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
@@ -167,32 +170,30 @@ public class ReviewOfferController implements Controller {
         PublicTradeChatMessage chatMessage = listItem.getChatMessage();
         userProfileService.findUserProfile(chatMessage.getAuthorId())
                 .ifPresent(userProfile -> {
-                    createAndSelectPrivateTradeChannel(userProfile)
-                            .ifPresent(privateTradeChannel -> {
-                                Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
-                                        userProfile.getNickName(),
-                                        userProfile.getPubKeyHash(),
-                                        chatMessage.getText()));
+                    PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(userProfile);
+                    Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
+                            userProfile.getNickName(),
+                            userProfile.getPubKeyHash(),
+                            chatMessage.getText()));
 
-                                TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().orElseThrow();
-                                String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-                                String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
-                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
-                                String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-                                String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
-                                        direction, amount, methods);
-                                privateTradeChannelService.sendPrivateChatMessage(replyText,
-                                                quotation, privateTradeChannel)
-                                        .thenAccept(result -> UIThread.run(() -> {
-                                            model.getShowTakeOfferSuccess().set(true);
-                                            buttonsVisibleHandler.accept(false);
-                                        }));
-                            });
+                    TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().orElseThrow();
+                    String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+                    String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
+                            tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                    String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+                    String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
+                            direction, amount, methods);
+                    privateTradeChannelService.sendPrivateChatMessage(replyText,
+                                    quotation, privateTradeChannel)
+                            .thenAccept(result -> UIThread.run(() -> {
+                                model.getShowTakeOfferSuccess().set(true);
+                                buttonsVisibleHandler.accept(false);
+                            }));
                 });
     }
 
     void onCreateOffer() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
         publicTradeChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
@@ -217,12 +218,11 @@ public class ReviewOfferController implements Controller {
         Navigation.navigateTo(NavigationTarget.MAIN);
     }
 
-    private Optional<PrivateTradeChannel> createAndSelectPrivateTradeChannel(UserProfile peer) {
-        Optional<PrivateTradeChannel> privateTradeChannel = privateTradeChannelService.createAndAddChannel(peer);
-        privateTradeChannel.ifPresent(tradeChannelSelectionService::selectChannel);
-        return privateTradeChannel;
+    private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
+        UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+        Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
+        return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
     }
-
 
     @SuppressWarnings("RedundantIfStatement")
     private Predicate<? super ReviewOfferView.ListItem> getTakeOfferPredicate() {

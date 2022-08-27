@@ -29,14 +29,19 @@ import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicTradeChannelSelection;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
+import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
+import bisq.i18n.Res;
 import bisq.settings.SettingsService;
+import bisq.support.MediationService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -48,6 +53,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final PublicTradeChannelService publicTradeChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final SettingsService settingsService;
+    private final MediationService mediationService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
     private Pin offerOnlySettingsPin;
 
@@ -57,6 +63,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
+        mediationService = applicationService.getSupportService().getMediationService();
     }
 
     @Override
@@ -105,28 +112,29 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     @Override
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
+        UIThread.run(() -> {
+            if (channel == null) {
+                return;
+            }
+            if (channel instanceof PrivateTradeChannel) {
+                applyPeersIcon((PrivateChannel<?>) channel);
 
-        if (channel == null) {
-            return;
-        }
-        if (channel instanceof PrivateTradeChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+                publicTradeChannelSelection.deSelectChannel();
+                model.getActionButtonText().set(Res.get("bisqEasy.openDispute"));
 
-            model.getCreateOfferButtonVisible().set(false);
-            publicTradeChannelSelection.deSelectChannel();
+                Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
+            } else {
+                resetSelectedChildTarget();
+                model.getActionButtonText().set(Res.get("createOffer"));
+                privateChannelSelection.deSelectChannel();
 
-            Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
-        } else {
-            resetSelectedChildTarget();
-            model.getCreateOfferButtonVisible().set(true);
-            privateChannelSelection.deSelectChannel();
-
-            Market market = ((PublicTradeChannel) channel).getMarket();
-            StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
-                    market.getBaseCurrencyCode().toLowerCase(),
-                    market.getQuoteCurrencyCode().toLowerCase()).getFirst();
-            model.getChannelIcon().set(marketsImage);
-        }
+                Market market = ((PublicTradeChannel) channel).getMarket();
+                StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
+                        market.getBaseCurrencyCode().toLowerCase(),
+                        market.getQuoteCurrencyCode().toLowerCase()).getFirst();
+                model.getChannelIcon().set(marketsImage);
+            }
+        });
     }
 
     @Override
@@ -139,6 +147,22 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             default: {
                 return Optional.empty();
             }
+        }
+    }
+
+    void onActionButtonClicked() {
+        Channel<? extends ChatMessage> channel = model.getSelectedChannel().get();
+        if (channel instanceof PrivateTradeChannel) {
+            PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
+            if (privateTradeChannel.getMediator().isPresent()) {
+                mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
+                        .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+            } else {
+                new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
+            }
+        } else {
+            Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
         }
     }
 }

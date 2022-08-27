@@ -27,18 +27,18 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class ConfidentialData implements Proto {
-    private final byte[] encodedSenderPublicKey;
+    private final byte[] senderPublicKey;
     private final byte[] hmac;
     private final byte[] iv;
     private final byte[] cypherText;
     private final byte[] signature;
 
-    public ConfidentialData(byte[] encodedSenderPublicKey,
+    public ConfidentialData(byte[] senderPublicKey,
                             byte[] hmac,
                             byte[] iv,
                             byte[] cypherText,
                             byte[] signature) {
-        this.encodedSenderPublicKey = encodedSenderPublicKey;
+        this.senderPublicKey = senderPublicKey;
         this.hmac = hmac;
         this.iv = iv;
         this.cypherText = cypherText;
@@ -47,7 +47,7 @@ public final class ConfidentialData implements Proto {
 
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
-                .setEncodedSenderPublicKey(ByteString.copyFrom(encodedSenderPublicKey))
+                .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))
                 .setHmac(ByteString.copyFrom(hmac))
                 .setIv(ByteString.copyFrom(iv))
                 .setCypherText(ByteString.copyFrom(cypherText))
@@ -56,7 +56,7 @@ public final class ConfidentialData implements Proto {
     }
 
     public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
-        return new ConfidentialData(proto.getEncodedSenderPublicKey().toByteArray(),
+        return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
                 proto.getHmac().toByteArray(),
                 proto.getIv().toByteArray(),
                 proto.getCypherText().toByteArray(),

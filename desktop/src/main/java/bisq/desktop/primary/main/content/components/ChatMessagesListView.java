@@ -68,6 +68,7 @@ import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
+import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -184,6 +185,7 @@ public class ChatMessagesListView {
         private final PrivateSupportChannelService privateSupportChannelService;
         private final PublicSupportChannelService publicSupportChannelService;
         private final SupportChannelSelectionService supportChannelSelectionService;
+        private final MediationService mediationService;
         private Pin selectedChannelPin, chatMessagesPin;
         private Pin offerOnlySettingsPin;
 
@@ -213,6 +215,7 @@ public class ChatMessagesListView {
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
             reputationService = applicationService.getUserService().getReputationService();
+            mediationService = applicationService.getSupportService().getMediationService();
             settingsService = applicationService.getSettingsService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
@@ -382,33 +385,31 @@ public class ChatMessagesListView {
                 return;
             }
             userProfileService.findUserProfile(chatMessage.getAuthorId())
-                    .ifPresent(userProfile -> {
-                        Optional<PrivateTradeChannel> channel = privateTradeChannelService.createAndAddChannel(userProfile);
-                        channel.ifPresent(privateTradeChannel -> {
-                            tradeChannelSelectionService.selectChannel(privateTradeChannel);
-                            TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
-                            String text = chatMessage.getText();
-                            Optional<Quotation> quotation = Optional.of(new Quotation(userProfile.getNym(),
-                                    userProfile.getNickName(),
-                                    userProfile.getPubKeyHash(),
-                                    text));
-                            String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
-                            String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
-                                    tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
-                            String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-                            String replyText = Res.get("satoshisquareapp.chat.takeOffer.takerRequest",
-                                    direction, amount, methods);
-                            privateTradeChannelService.sendPrivateChatMessage(replyText,
-                                            quotation,
-                                            privateTradeChannel)
-                                    .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                        });
+                    .ifPresent(peersUserProfile -> {
+                        PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peersUserProfile);
+                        tradeChannelSelectionService.selectChannel(privateTradeChannel);
+                        TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
+                        String text = chatMessage.getText();
+                        Optional<Quotation> quotation = Optional.of(new Quotation(peersUserProfile.getNym(),
+                                peersUserProfile.getNickName(),
+                                peersUserProfile.getPubKeyHash(),
+                                text));
+                        String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
+                        String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
+                                tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                        String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+                        String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
+                                direction, amount, methods);
+                        privateTradeChannelService.sendPrivateChatMessage(replyText,
+                                        quotation,
+                                        privateTradeChannel)
+                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
                     });
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
             if (isMyMessage(chatMessage)) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 if (chatMessage instanceof PublicTradeChatMessage) {
                     publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity);
                 } else if (chatMessage instanceof PublicDiscussionChatMessage) {
@@ -423,7 +424,7 @@ public class ChatMessagesListView {
         }
 
         private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             publicTradeChannelService.publishChatMessage(chatMessage, userIdentity)
                     .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
         }
@@ -440,10 +441,10 @@ public class ChatMessagesListView {
                 return;
             }
             if (chatMessage instanceof PublicTradeChatMessage) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicTradeChannelService.publishEditedChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserProfile().get();
+                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicDiscussionChannelService.publishEditedChatMessage((PublicDiscussionChatMessage) chatMessage, editedText, userIdentity);
             }
             //todo editing private message not supported yet
@@ -486,14 +487,22 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.getChannelKind() == ChannelKind.TRADE) {
-                privateTradeChannelService.createAndAddChannel(peer).ifPresent(tradeChannelSelectionService::selectChannel);
+                PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
+                tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
-                privateDiscussionChannelService.createAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
+                privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
             } else if (model.getChannelKind() == ChannelKind.EVENTS) {
-                privateEventsChannelService.createAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
+                privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
             } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
-                privateSupportChannelService.createAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
+                privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
+        }
+
+
+        private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
+            UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+            Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
+            return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
         }
 
         private void applyPredicate() {

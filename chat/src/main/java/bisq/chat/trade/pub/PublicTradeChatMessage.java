@@ -20,13 +20,16 @@ package bisq.chat.trade.pub;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+@Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -40,7 +43,8 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                                   Optional<Quotation> quotedMessage,
                                   long date,
                                   boolean wasEdited) {
-        this(channelId,
+        this(StringUtils.createShortUid(),
+                channelId,
                 authorId,
                 tradeChatOffer,
                 text,
@@ -50,7 +54,8 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
-    private PublicTradeChatMessage(String channelId,
+    private PublicTradeChatMessage(String messageId,
+                                   String channelId,
                                    String authorId,
                                    Optional<TradeChatOffer> tradeChatOffer,
                                    Optional<String> text,
@@ -58,7 +63,8 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                                    long date,
                                    boolean wasEdited,
                                    MetaData metaData) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 authorId,
                 text,
                 quotedMessage,
@@ -85,6 +91,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 Optional.of(TradeChatOffer.fromProto(baseProto.getPublicTradeChatMessage().getTradeChatOffer())) :
                 Optional.empty();
         return new PublicTradeChatMessage(
+                baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 baseProto.getAuthorId(),
                 tradeChatOffer,
@@ -103,11 +110,6 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
     @Override
     public MetaData getMetaData() {
         return metaData;
-    }
-
-    @Override
-    public boolean isDataInvalid() {
-        return false;
     }
 
     public boolean isOfferMessage() {

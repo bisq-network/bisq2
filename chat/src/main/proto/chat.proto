@@ -34,13 +34,14 @@ message Quotation {
 }
 
 message ChatMessage {
-  string channelId = 1;
-  optional string text = 2;
-  string authorId = 3;
-  optional Quotation quotation = 4;
-  uint64 date = 5;
-  bool wasEdited = 6;
-  network.MetaData metaData = 7;
+  string messageId = 1;
+  string channelId = 2;
+  optional string text = 3;
+  string authorId = 4;
+  optional Quotation quotation = 5;
+  uint64 date = 6;
+  bool wasEdited = 7;
+  network.MetaData metaData = 8;
   oneof message {
     PrivateTradeChatMessage privateTradeChatMessage = 20;
     PublicTradeChatMessage publicTradeChatMessage = 21;
@@ -84,7 +85,9 @@ message Channel {
 message PrivateTradeChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
+  optional user.UserProfile mediator = 3;
 }
+
 message TradeChatOffer {
   offer.Direction direction = 1;
   common.Market market = 2;
@@ -103,6 +106,8 @@ message PrivateTradeChannel {
   user.UserProfile peer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
+  optional user.UserProfile mediator = 4;
+  bool mediationActivated = 5;
 }
 
 message PublicTradeChannel {

@@ -52,7 +52,7 @@ public class Transitions {
 
     public enum Type {
         BLACK(node -> darken(node, -1)),
-        VERY_DARK(node -> darken(node, -0.9)),
+        VERY_DARK(node -> darken(node, -0.85)),
         DARK(node -> darken(node, -0.7)),
         MEDIUM(node -> darken(node, -0.5)),
         LIGHT(node -> darken(node, -0.25)),

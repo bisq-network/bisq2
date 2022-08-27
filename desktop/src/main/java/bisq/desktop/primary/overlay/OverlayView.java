@@ -67,7 +67,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         stage.sizeToScene();
         stage.initStyle(StageStyle.TRANSPARENT);
         stage.initOwner(owner.getScene().getWindow());
-        stage.initModality(Modality.WINDOW_MODAL);
+        stage.initModality(Modality.NONE);
         stage.setOnCloseRequest(event -> {
             event.consume();
             hide();
@@ -118,6 +118,14 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
             });
         }
+        if (ownerScene.getOnKeyReleased() == null) {
+            ownerScene.setOnKeyReleased(keyEvent -> {
+                KeyHandlerUtil.handleShutDownKeyEvent(keyEvent, controller::onQuit);
+                KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::hide);
+                KeyHandlerUtil.handleEnterKeyEvent(keyEvent, this::hide);
+                KeyHandlerUtil.handleDevModeKeyEvent(keyEvent);
+            });
+        }
 
         prefWidth = Math.min(prefWidth, owner.getWidth());
         prefHeight = Math.min(prefHeight, owner.getHeight());
@@ -141,6 +149,8 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     }
 
     private void hide() {
+        scene.setOnKeyReleased(null);
+        ownerScene.setOnKeyReleased(null);
         Transitions.removeEffect(owner);
         animateHide(() -> {
             if (stage != null) {

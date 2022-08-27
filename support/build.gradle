@@ -4,13 +4,15 @@ plugins {
 }
 
 dependencies {
-    implementation project(':identity')
-    implementation project(':account')
-    implementation project(':contract')
-    implementation project(':offer')
-    implementation project(':protocol')
     implementation project(':persistence')
+    implementation project(':security')
+    implementation project(':i18n')
+    implementation project(':identity')
     implementation project(':network')
+    implementation project(':user')
+    implementation project(':chat')
 
+    implementation libs.google.gson
     implementation libs.google.guava
+    implementation libs.typesafe.config
 }

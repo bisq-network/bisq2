@@ -21,10 +21,10 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.settings.about.AboutController;
 import bisq.desktop.primary.main.content.settings.networkInfo.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
 import bisq.desktop.primary.main.content.settings.reputation.ReputationController;
+import bisq.desktop.primary.main.content.settings.roles.RolesController;
 import bisq.desktop.primary.main.content.settings.userProfile.UserProfileController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +41,7 @@ public class SettingsController extends TabController<SettingsModel> {
         super(new SettingsModel(), NavigationTarget.SETTINGS);
 
         this.applicationService = applicationService;
+
         view = new SettingsView(model, this);
     }
 
@@ -66,8 +67,8 @@ public class SettingsController extends TabController<SettingsModel> {
             case NETWORK_INFO: {
                 return Optional.of(new NetworkInfoController(applicationService));
             }
-            case ABOUT: {
-                return Optional.of(new AboutController(applicationService));
+            case ROLES: {
+                return Optional.of(new RolesController(applicationService));
             }
             default: {
                 return Optional.empty();

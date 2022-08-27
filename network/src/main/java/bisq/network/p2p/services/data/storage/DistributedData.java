@@ -33,5 +33,5 @@ public interface DistributedData extends Proto {
 
     MetaData getMetaData();
 
-    boolean isDataInvalid();
+    boolean isDataInvalid(byte[] pubKeyHash);
 }

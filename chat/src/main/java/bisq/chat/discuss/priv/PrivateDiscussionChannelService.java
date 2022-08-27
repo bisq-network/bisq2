@@ -57,14 +57,16 @@ public class PrivateDiscussionChannelService extends PrivateChannelService<Priva
     }
 
     @Override
-    protected PrivateDiscussionChatMessage createNewPrivateChatMessage(String channelId,
+    protected PrivateDiscussionChatMessage createNewPrivateChatMessage(String messageId,
+                                                                       PrivateDiscussionChannel channel,
                                                                        UserProfile sender,
                                                                        String receiversId,
                                                                        String text,
                                                                        Optional<Quotation> quotedMessage,
                                                                        long time,
                                                                        boolean wasEdited) {
-        return new PrivateDiscussionChatMessage(channelId,
+        return new PrivateDiscussionChatMessage(messageId,
+                channel.getId(),
                 sender,
                 receiversId,
                 text,

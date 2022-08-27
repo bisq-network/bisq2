@@ -17,7 +17,6 @@ dependencies {
     implementation project(':user')
     implementation project(':offer')
     implementation project(':settings')
-    implementation project(':oracle')
     implementation project(':presentation')
 
     implementation libs.chimp.jsocks

@@ -82,7 +82,6 @@ public class BondedReputationView extends TabView<BondedReputationModel, BondedR
     @Override
     protected void setupTopBox() {
         headLine = new Label();
-        headLine.setText(Res.get("tradeGuide.headline"));
         headLine.getStyleClass().add("bisq-text-17");
 
         closeButton = BisqIconButton.createIconButton("close");

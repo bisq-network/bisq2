@@ -26,6 +26,7 @@ dependencies {
     implementation project(':settings')
     implementation project(':user')
     implementation project(':chat')
+    implementation project(':support')
     implementation project(':presentation')
     implementation project(':application')
 

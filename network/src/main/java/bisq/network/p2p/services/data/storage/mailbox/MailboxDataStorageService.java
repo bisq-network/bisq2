@@ -85,7 +85,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 return new Result(false).expired();
             }
 
-            if (mailboxData.isDataInvalid()) {
+            if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
                 return new Result(false).dataInvalid();
             }
 

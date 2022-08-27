@@ -37,7 +37,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     protected final String receiversId;
     protected final UserProfile sender;
 
-    protected PrivateChatMessage(String channelId,
+    protected PrivateChatMessage(String messageId,
+                                 String channelId,
                                  UserProfile sender,
                                  String receiversId,
                                  String text,
@@ -45,7 +46,8 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  long date,
                                  boolean wasEdited,
                                  MetaData metaData) {
-        super(channelId,
+        super(messageId,
+                channelId,
                 sender.getId(),
                 Optional.of(text),
                 quotedMessage,
