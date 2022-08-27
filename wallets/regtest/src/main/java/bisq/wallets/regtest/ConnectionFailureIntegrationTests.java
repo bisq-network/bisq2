@@ -34,9 +34,9 @@ import java.io.IOException;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W> {
 
-    private AbstractRegtestSetup<T, W> regtestSetup;
+    private AbstractRegtestSetup<T> regtestSetup;
 
-    protected abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    protected abstract AbstractRegtestSetup<T> createRegtestSetup() throws IOException;
 
     @BeforeAll
     void setup() throws IOException, InterruptedException {

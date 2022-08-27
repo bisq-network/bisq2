@@ -27,7 +27,7 @@ import java.io.IOException;
 
 public class BitcoindStartupIntegrationTests extends WalletStartupTests<MultiProcessCoordinator, BitcoindWallet> {
     @Override
-    public AbstractRegtestSetup<MultiProcessCoordinator, BitcoindWallet> createRegtestSetup() throws IOException {
+    public AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
         return new BitcoindRegtestSetup();
     }
 }
