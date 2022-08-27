@@ -20,8 +20,8 @@ package bisq.wallets.electrum;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.electrum.rpc.ElectrumConfig;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
+import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
 import bisq.wallets.process.DaemonProcess;
 import lombok.Getter;
@@ -32,7 +32,7 @@ import java.util.Optional;
 public class ElectrumProcess implements BisqProcess {
 
     private final Path electrumRootDataDir;
-    private final ElectrumConfig config;
+    private final ElectrumProcessConfig processConfig;
 
     @Getter
     private Optional<Path> binaryPath = Optional.empty();
@@ -42,9 +42,9 @@ public class ElectrumProcess implements BisqProcess {
     private Optional<String> electrumVersion = Optional.empty();
 
 
-    public ElectrumProcess(Path electrumRootDataDir, ElectrumConfig config) {
+    public ElectrumProcess(Path electrumRootDataDir, ElectrumProcessConfig processConfig) {
         this.electrumRootDataDir = electrumRootDataDir;
-        this.config = config;
+        this.processConfig = processConfig;
     }
 
     @Override
@@ -89,7 +89,7 @@ public class ElectrumProcess implements BisqProcess {
 
     private void createAndStartProcess() {
         Path path = binaryPath.orElseThrow();
-        var process = new ElectrumRegtestProcess(path, config);
+        var process = new ElectrumRegtestProcess(path, processConfig);
         process.start();
         electrumRegtestProcess = Optional.of(process);
     }
