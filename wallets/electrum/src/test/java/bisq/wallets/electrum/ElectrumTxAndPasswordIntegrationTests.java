@@ -24,9 +24,10 @@ import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.regtest.ElectrumExtension;
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.*;
-import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,16 +42,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ElectrumTxAndPasswordIntegrationTests {
 
 
-    private final BitcoindRegtestSetup bitcoindRegtestSetup;
+    private final RemoteBitcoind remoteBitcoind;
     private final ElectrumRegtestSetup electrumRegtestSetup;
     private ElectrumDaemon electrumDaemon;
 
     private String fundingAddress;
     private String fundingTxId;
 
-    public ElectrumTxAndPasswordIntegrationTests(BitcoindRegtestSetup bitcoindRegtestSetup,
+    public ElectrumTxAndPasswordIntegrationTests(RemoteBitcoind remoteBitcoind,
                                                  ElectrumRegtestSetup electrumRegtestSetup) {
-        this.bitcoindRegtestSetup = bitcoindRegtestSetup;
+        this.remoteBitcoind = remoteBitcoind;
         this.electrumRegtestSetup = electrumRegtestSetup;
     }
 
@@ -61,16 +62,16 @@ public class ElectrumTxAndPasswordIntegrationTests {
 
     @Test
     void changePasswordTest() {
-        String expectedSeed = electrumDaemon.getSeed(ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        String expectedSeed = electrumDaemon.getSeed(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
 
         String newPassword = "My new password.";
-        electrumDaemon.password(ElectrumRegtestSetup.WALLET_PASSPHRASE, newPassword);
+        electrumDaemon.password(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, newPassword);
 
         String seed = electrumDaemon.getSeed(newPassword);
         assertThat(seed).isEqualTo(expectedSeed);
 
         // Change back otherwise other tests could fail.
-        electrumDaemon.password(newPassword, ElectrumRegtestSetup.WALLET_PASSPHRASE);
+        electrumDaemon.password(newPassword, MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
     }
 
     @Test
@@ -137,11 +138,11 @@ public class ElectrumTxAndPasswordIntegrationTests {
         boolean isSuccess = electrumProcessedTxLatch.await(30, TimeUnit.SECONDS);
         assertThat(isSuccess).isTrue();
 
-        BitcoindWallet minerWallet = bitcoindRegtestSetup.getMinerWallet();
+        BitcoindWallet minerWallet = remoteBitcoind.getMinerWallet();
         String receiverAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
 
-        String unsignedTx = electrumDaemon.payTo(ElectrumRegtestSetup.WALLET_PASSPHRASE, receiverAddress, 5);
-        String signedTx = electrumDaemon.signTransaction(ElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
+        String unsignedTx = electrumDaemon.payTo(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, receiverAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
 
         electrumDaemon.broadcast(signedTx);
         electrumNotifyWebServer.stopServer();

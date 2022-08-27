@@ -24,8 +24,9 @@ import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.regtest.ElectrumExtension;
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
-import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,13 +40,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ElectrumExtension.class)
 public class ElectrumUnconfirmedSendIntegrationTests {
-    private final BitcoindRegtestSetup bitcoindRegtestSetup;
+    private final RemoteBitcoind remoteBitcoind;
     private final ElectrumRegtestSetup electrumRegtestSetup;
     private ElectrumDaemon electrumDaemon;
 
-    public ElectrumUnconfirmedSendIntegrationTests(BitcoindRegtestSetup bitcoindRegtestSetup,
+    public ElectrumUnconfirmedSendIntegrationTests(RemoteBitcoind remoteBitcoind,
                                                    ElectrumRegtestSetup electrumRegtestSetup) {
-        this.bitcoindRegtestSetup = bitcoindRegtestSetup;
+        this.remoteBitcoind = remoteBitcoind;
         this.electrumRegtestSetup = electrumRegtestSetup;
     }
 
@@ -81,15 +82,15 @@ public class ElectrumUnconfirmedSendIntegrationTests {
 
         assertThat(electrumDaemon.getBalance()).isEqualTo(10);
 
-        BitcoindWallet minerWallet = bitcoindRegtestSetup.getMinerWallet();
+        BitcoindWallet minerWallet = remoteBitcoind.getMinerWallet();
         String newAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
 
         var electrumTxLatch = new CountDownLatch(1);
         addressToLatchMap.put(newAddress, electrumTxLatch);
         electrumDaemon.notify(newAddress, electrumNotifyWebServer.getNotifyEndpointUrl());
 
-        String unsignedTx = electrumDaemon.payTo(ElectrumRegtestSetup.WALLET_PASSPHRASE, newAddress, 5);
-        String signedTx = electrumDaemon.signTransaction(ElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
+        String unsignedTx = electrumDaemon.payTo(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, newAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
 
         String txId = electrumDaemon.broadcast(signedTx);
         assertThat(txId).isNotEmpty();

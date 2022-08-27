@@ -18,7 +18,9 @@
 package bisq.wallets.electrum.regtest;
 
 import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
-import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
+import bisq.wallets.electrum.regtest.electrum.WindowsElectrumRegtestSetup;
+import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.extension.*;
 
 import java.io.IOException;
@@ -27,7 +29,8 @@ public class ElectrumExtension implements BeforeAllCallback, AfterAllCallback, P
     private final ElectrumRegtestSetup electrumRegtestSetup;
 
     public ElectrumExtension() throws IOException {
-        electrumRegtestSetup = new ElectrumRegtestSetup(true);
+        electrumRegtestSetup = !WindowsElectrumRegtestSetup.isExternalBitcoindAndElectrumXEnvironment() ?
+                new MacLinuxElectrumRegtestSetup(true) : new WindowsElectrumRegtestSetup(true);
     }
 
     @Override
@@ -44,15 +47,15 @@ public class ElectrumExtension implements BeforeAllCallback, AfterAllCallback, P
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
         Class<?> type = parameterContext.getParameter().getType();
-        return type.equals(BitcoindRegtestSetup.class) || type.equals(ElectrumRegtestSetup.class);
+        return type.equals(RemoteBitcoind.class) || type.equals(ElectrumRegtestSetup.class);
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
         Class<?> type = parameterContext.getParameter().getType();
-        if (type.equals(BitcoindRegtestSetup.class)) {
-            return electrumRegtestSetup.getBitcoindRegtestSetup();
+        if (type.equals(RemoteBitcoind.class)) {
+            return electrumRegtestSetup.getRemoteBitcoind();
         } else if (type.equals(ElectrumRegtestSetup.class)) {
             return electrumRegtestSetup;
         }

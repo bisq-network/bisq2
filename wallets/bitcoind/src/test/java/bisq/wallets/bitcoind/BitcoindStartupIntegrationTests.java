@@ -20,14 +20,14 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.WalletStartupTests;
-import bisq.wallets.regtest.bitcoind.BitcoindRegtestProcess;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import bisq.wallets.regtest.process.MultiProcessCoordinator;
 
 import java.io.IOException;
 
-public class BitcoindStartupIntegrationTests extends WalletStartupTests<BitcoindRegtestProcess, BitcoindWallet> {
+public class BitcoindStartupIntegrationTests extends WalletStartupTests<MultiProcessCoordinator, BitcoindWallet> {
     @Override
-    public AbstractRegtestSetup<BitcoindRegtestProcess, BitcoindWallet> createRegtestSetup() throws IOException {
+    public AbstractRegtestSetup<MultiProcessCoordinator, BitcoindWallet> createRegtestSetup() throws IOException {
         return new BitcoindRegtestSetup();
     }
 }
