@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
-import bisq.chat.ChatService;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
@@ -37,6 +36,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,7 +57,7 @@ public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
     public PrivateChannelSelection(DefaultApplicationService applicationService, ChannelKind channelKind) {
-        controller = new Controller(applicationService.getChatService(), channelKind);
+        controller = new Controller(applicationService, channelKind);
     }
 
     public Pane getRoot() {
@@ -80,9 +80,10 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final PrivateSupportChannelService privateSupportChannelService;
         private final EventsChannelSelectionService eventsChannelSelectionService;
         private final SupportChannelSelectionService supportChannelSelectionService;
+        private final UserIdentityService userIdentityService;
 
-        protected Controller(ChatService chatService, ChannelKind channelKind) {
-            super(chatService);
+        protected Controller(DefaultApplicationService applicationService, ChannelKind channelKind) {
+            super(applicationService.getChatService());
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
@@ -95,6 +96,8 @@ public class PrivateChannelSelection extends ChannelSelection {
 
             privateSupportChannelService = chatService.getPrivateSupportChannelService();
             supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
 
             model = new Model(channelKind);
             view = new View(model, this);
@@ -113,46 +116,46 @@ public class PrivateChannelSelection extends ChannelSelection {
 
             if (model.channelKind == ChannelKind.TRADE) {
                 channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                        .map(ChannelSelection.View.ChannelItem::new)
+                        .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateTradeChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTradeChannel) {
-                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                             }
                         });
             } else if (model.channelKind == ChannelKind.DISCUSSION) {
                 channelsPin = FxBindings.<PrivateDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                        .map(ChannelSelection.View.ChannelItem::new)
+                        .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateDiscussionChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateDiscussionChannel) {
-                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                             }
                         });
             } else if (model.channelKind == ChannelKind.EVENTS) {
                 channelsPin = FxBindings.<PrivateEventsChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                        .map(ChannelSelection.View.ChannelItem::new)
+                        .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateEventsChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateEventsChannel) {
-                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                             }
                         });
             } else if (model.channelKind == ChannelKind.SUPPORT) {
                 channelsPin = FxBindings.<PrivateSupportChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                        .map(ChannelSelection.View.ChannelItem::new)
+                        .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateSupportChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateSupportChannel) {
-                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                             }
                         });
             }
@@ -204,38 +207,57 @@ public class PrivateChannelSelection extends ChannelSelection {
                 final HBox hBox = new HBox();
                 final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
+                final ImageView mediatorsRoboIcon = new ImageView();
 
                 {
                     setCursor(Cursor.HAND);
                     setPrefHeight(40);
                     setPadding(new Insets(0, 0, -20, 0));
 
-                    label.setTooltip(tooltip);
-
                     roboIcon.setFitWidth(35);
                     roboIcon.setFitHeight(35);
 
+                    mediatorsRoboIcon.setFitWidth(35);
+                    mediatorsRoboIcon.setFitHeight(35);
+
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.getChildren().addAll(roboIcon, label);
                 }
 
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
+                        hBox.getChildren().clear();
                         UserProfile peer = ((PrivateChannel<?>) item.getChannel()).getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        hBox.getChildren().add(roboIcon);
                         tooltip.setText(peer.getTooltipString());
-                        label.setText(item.getChannel().getDisplayString());
+                        label.setText(item.getDisplayString());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 70);
                             }
                         });
+                        Tooltip.install(this, tooltip);
+                        if (item.getChannel() instanceof PrivateTradeChannel) {
+                            PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) item.getChannel();
+
+                            if (item.isMediationActivated()) {
+                                UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
+                                mediatorsRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                hBox.getChildren().add(mediatorsRoboIcon);
+                                tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                        Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                            }
+                        }
+                        hBox.getChildren().add(label);
+
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
+                        hBox.getChildren().clear();
+                        Tooltip.install(this, null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
                         }
