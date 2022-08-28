@@ -171,7 +171,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                         .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
                         .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
                         .onAction(() -> {
-                            mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                            mediationService.requestMediation(privateTradeChannel.getMyUserIdentity(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
                             new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
                                     .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
                         })

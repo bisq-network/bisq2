@@ -123,6 +123,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         channel -> {
                             if (channel instanceof PrivateTradeChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
+                                userIdentityService.selectChatUserIdentity(((PrivateTradeChannel) channel).getMyUserIdentity());
                             }
                         });
             } else if (model.channelKind == ChannelKind.DISCUSSION) {
@@ -134,6 +135,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         channel -> {
                             if (channel instanceof PrivateDiscussionChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
+                                userIdentityService.selectChatUserIdentity(((PrivateDiscussionChannel) channel).getMyUserIdentity());
                             }
                         });
             } else if (model.channelKind == ChannelKind.EVENTS) {
@@ -145,6 +147,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         channel -> {
                             if (channel instanceof PrivateEventsChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
+                                userIdentityService.selectChatUserIdentity(((PrivateEventsChannel) channel).getMyUserIdentity());
                             }
                         });
             } else if (model.channelKind == ChannelKind.SUPPORT) {
@@ -156,6 +159,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         channel -> {
                             if (channel instanceof PrivateSupportChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
+                                userIdentityService.selectChatUserIdentity(((PrivateSupportChannel) channel).getMyUserIdentity());
                             }
                         });
             }

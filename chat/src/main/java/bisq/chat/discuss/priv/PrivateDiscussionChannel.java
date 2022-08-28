@@ -55,7 +55,7 @@ public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscus
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateDiscussionChannel(bisq.chat.protobuf.PrivateDiscussionChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyUserIdentity(myProfile.toProto())
+                        .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(PrivateDiscussionChatMessage::toChatMessageProto)
                                 .collect(Collectors.toList())))
@@ -91,6 +91,6 @@ public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscus
 
     @Override
     public String getDisplayString() {
-        return peer.getUserName() + "-" + myProfile.getUserName();
+        return peer.getUserName() + "-" + myUserIdentity.getUserName();
     }
 }

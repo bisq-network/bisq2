@@ -275,7 +275,7 @@ public abstract class ChannelSelection {
                     }
                     if (hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
-                        label += " [" + privateChannel.getMyProfile().getUserName() + "]";
+                        label += " [" + privateChannel.getMyUserIdentity().getUserName() + "]";
                     }
                     displayString = label;
                 } else if (channel instanceof PublicTradeChannel) {

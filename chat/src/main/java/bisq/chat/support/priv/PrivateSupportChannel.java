@@ -55,7 +55,7 @@ public final class PrivateSupportChannel extends PrivateChannel<PrivateSupportCh
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateSupportChannel(bisq.chat.protobuf.PrivateSupportChannel.newBuilder()
                         .setPeer(peer.toProto())
-                        .setMyUserIdentity(myProfile.toProto())
+                        .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(PrivateSupportChatMessage::toChatMessageProto)
                                 .collect(Collectors.toList())))
@@ -91,6 +91,6 @@ public final class PrivateSupportChannel extends PrivateChannel<PrivateSupportCh
 
     @Override
     public String getDisplayString() {
-        return peer.getUserName() + "-" + myProfile.getUserName();
+        return peer.getUserName() + "-" + myUserIdentity.getUserName();
     }
 }

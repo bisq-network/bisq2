@@ -72,7 +72,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
     public bisq.chat.protobuf.Channel toProto() {
         bisq.chat.protobuf.PrivateTradeChannel.Builder builder = bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
                 .setPeer(peer.toProto())
-                .setMyUserIdentity(myProfile.toProto())
+                .setMyUserIdentity(this.myUserIdentity.toProto())
                 .addAllChatMessages(chatMessages.stream()
                         .map(PrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()))
@@ -113,10 +113,10 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
 
     @Override
     public String getDisplayString() {
-        return peer.getUserName() + "-" + myProfile.getUserName();
+        return peer.getUserName() + "-" + this.myUserIdentity.getUserName();
     }
 
     public boolean isMediator() {
-        return mediator.filter(mediator -> mediator.getId().equals(myProfile.getId())).isPresent();
+        return mediator.filter(mediator -> mediator.getId().equals(this.myUserIdentity.getId())).isPresent();
     }
 }

@@ -32,19 +32,19 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
     protected final UserProfile peer;
-    protected final UserIdentity myProfile;
+    protected final UserIdentity myUserIdentity;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<T> chatMessages = new ObservableSet<>();
 
     public PrivateChannel(String id,
                           UserProfile peer,
-                          UserIdentity myProfile,
+                          UserIdentity myUserIdentity,
                           Set<T> chatMessages,
                           ChannelNotificationType channelNotificationType) {
         super(id, channelNotificationType);
         this.peer = peer;
-        this.myProfile = myProfile;
+        this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
     }
 

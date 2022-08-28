@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
@@ -183,19 +184,28 @@ public class ChatMessagesComponent {
             model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.getChannelKind() == ChannelKind.TRADE) {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
-                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.EVENTS) {
-                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
-                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             }
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
 
-            userIdentityService.getUserIdentityChangedFlag().addObserver(__ ->
-                    model.userProfileSelectionVisible.set(userIdentityService.getUserIdentities().size() > 1));
+            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> applyUserProfileSelectionVisible());
+        }
+
+        private void applySelectedChannel(Channel<? extends ChatMessage> channel) {
+            model.selectedChannel.set(channel);
+            applyUserProfileSelectionVisible();
+        }
+
+        private void applyUserProfileSelectionVisible() {
+            boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
+            model.userProfileSelectionVisible.set(multipleProfiles && model.selectedChannel.get() instanceof PublicChannel);
         }
 
         @Override
