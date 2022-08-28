@@ -32,12 +32,16 @@ import bisq.chat.support.priv.PrivateSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
+import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -51,6 +55,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class PrivateChannelSelection extends ChannelSelection {
@@ -81,6 +87,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final EventsChannelSelectionService eventsChannelSelectionService;
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
+        private Pin mediationActivatedPin;
 
         protected Controller(DefaultApplicationService applicationService, ChannelKind channelKind) {
             super(applicationService.getChatService());
@@ -124,6 +131,10 @@ public class PrivateChannelSelection extends ChannelSelection {
                             if (channel instanceof PrivateTradeChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                                 userIdentityService.selectChatUserIdentity(((PrivateTradeChannel) channel).getMyUserIdentity());
+                                if (mediationActivatedPin != null) {
+                                    mediationActivatedPin.unbind();
+                                }
+                                mediationActivatedPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getMediationActivated());
                             }
                         });
             } else if (model.channelKind == ChannelKind.DISCUSSION) {
@@ -166,6 +177,14 @@ public class PrivateChannelSelection extends ChannelSelection {
         }
 
         @Override
+        public void onDeactivate() {
+            super.onDeactivate();
+            if (mediationActivatedPin != null) {
+                mediationActivatedPin.unbind();
+            }
+        }
+
+        @Override
         protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
@@ -188,6 +207,7 @@ public class PrivateChannelSelection extends ChannelSelection {
 
     protected static class Model extends ChannelSelection.Model {
         private final ChannelKind channelKind;
+        private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
 
         public Model(ChannelKind channelKind) {
             this.channelKind = channelKind;
@@ -195,8 +215,24 @@ public class PrivateChannelSelection extends ChannelSelection {
     }
 
     protected static class View extends ChannelSelection.View<Model, Controller> {
+        private Subscription mediationActivatedPin;
+
         protected View(Model model, Controller controller) {
             super(model, controller);
+        }
+
+        @Override
+        protected void onViewAttached() {
+            super.onViewAttached();
+
+            mediationActivatedPin = EasyBind.subscribe(model.mediationActivated, mediationActivated ->
+                    UIThread.runOnNextRenderFrame(listView::refresh));
+        }
+
+        @Override
+        protected void onViewDetached() {
+            super.onViewDetached();
+            mediationActivatedPin.unsubscribe();
         }
 
         @Override
@@ -212,6 +248,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                 final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
                 final ImageView mediatorsRoboIcon = new ImageView();
+                @Nullable
+                private Pin mediationActivatedPin;
 
                 {
                     setCursor(Cursor.HAND);
@@ -232,31 +270,73 @@ public class PrivateChannelSelection extends ChannelSelection {
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
                     if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
-                        hBox.getChildren().clear();
                         UserProfile peer = ((PrivateChannel<?>) item.getChannel()).getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                        hBox.getChildren().add(roboIcon);
-                        tooltip.setText(peer.getTooltipString());
-                        label.setText(item.getDisplayString());
-                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                            if (w.doubleValue() > 0) {
-                                label.setMaxWidth(getWidth() - 70);
-                            }
-                        });
                         Tooltip.install(this, tooltip);
                         if (item.getChannel() instanceof PrivateTradeChannel) {
                             PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) item.getChannel();
-
-                            if (item.isMediationActivated()) {
-                                UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
-                                mediatorsRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
-                                hBox.getChildren().add(mediatorsRoboIcon);
-                                tooltip.setText(peer.getTooltipString() + "\n\n" +
-                                        Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                            if (mediationActivatedPin != null) {
+                                mediationActivatedPin.unbind();
                             }
-                        }
-                        hBox.getChildren().add(label);
+                            mediationActivatedPin = privateTradeChannel.getMediationActivated().addObserver(e ->
+                            {
+                                UIThread.run(() -> {
+                                    hBox.getChildren().clear();
+                                    hBox.getChildren().add(roboIcon);
 
+                                    boolean mediationActivated = privateTradeChannel.getMediator().isPresent() &&
+                                            privateTradeChannel.getMediationActivated().get();
+                                    if (mediationActivated) {
+                                        String displayString = privateTradeChannel.getPeer().getUserName() + ", " +
+                                                privateTradeChannel.getMediator().get().getUserName();
+                                        if (item.isHasMultipleProfiles()) {
+                                            // If we have more than 1 user profiles we add our profile as well
+                                            displayString += " [" + privateTradeChannel.getMyUserIdentity().getUserName() + "]";
+                                        }
+                                        label.setText(displayString);
+
+                                        UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
+                                        mediatorsRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                        hBox.getChildren().add(mediatorsRoboIcon);
+                                        tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                                Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                                    } else {
+                                        String displayString = privateTradeChannel.getPeer().getUserName();
+                                        if (item.isHasMultipleProfiles()) {
+                                            // If we have more than 1 user profiles we add our profile as well
+                                            displayString += " [" + privateTradeChannel.getMyUserIdentity().getUserName() + "]";
+                                        }
+                                        label.setText(displayString);
+                                        tooltip.setText(peer.getTooltipString());
+                                    }
+                                    hBox.getChildren().add(label);
+
+                                    if (widthSubscription != null) {
+                                        widthSubscription.unsubscribe();
+                                    }
+                                    widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                                        if (w.doubleValue() > 0) {
+                                            if (mediatorsRoboIcon.getImage() != null) {
+                                                label.setMaxWidth(getWidth() - 120);
+                                            } else {
+                                                label.setMaxWidth(getWidth() - 75);
+                                            }
+                                        }
+                                    });
+                                });
+                            });
+                        } else {
+                            hBox.getChildren().clear();
+                            hBox.getChildren().add(roboIcon);
+                            label.setText(item.getDisplayString());
+                            tooltip.setText(peer.getTooltipString());
+                            hBox.getChildren().add(label);
+                            widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                                if (w.doubleValue() > 0) {
+                                    label.setMaxWidth(getWidth() - 75);
+                                }
+                            });
+                        }
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);
@@ -264,6 +344,9 @@ public class PrivateChannelSelection extends ChannelSelection {
                         Tooltip.install(this, null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
+                        }
+                        if (mediationActivatedPin != null) {
+                            mediationActivatedPin.unbind();
                         }
                     }
                 }
