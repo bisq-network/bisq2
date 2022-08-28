@@ -22,15 +22,15 @@ import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.security.KeyPairProtoUtil;
 import bisq.security.PubKey;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.security.KeyPair;
+import java.util.Arrays;
+import java.util.Objects;
 
 @Getter
 @ToString
-@EqualsAndHashCode
 public final class Identity implements Proto {
     public static Identity from(String domainId, Identity identity) {
         return new Identity(domainId, identity.getNetworkId(), identity.getKeyPair());
@@ -80,5 +80,24 @@ public final class Identity implements Proto {
 
     public byte[] getPubKeyHash() {
         return networkId.getPubKey().getHash();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Identity identity = (Identity) o;
+        return Objects.equals(tag, identity.tag) &&
+                Objects.equals(networkId, identity.networkId) &&
+                Arrays.equals(keyPair.getPublic().getEncoded(), identity.keyPair.getPublic().getEncoded()) &&
+                Arrays.equals(keyPair.getPrivate().getEncoded(), identity.keyPair.getPrivate().getEncoded());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(tag, networkId);
+        result = 31 * result + Arrays.hashCode(keyPair.getPublic().getEncoded());
+        result = 31 * result + Arrays.hashCode(keyPair.getPrivate().getEncoded());
+        return result;
     }
 }
