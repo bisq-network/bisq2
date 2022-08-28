@@ -637,7 +637,6 @@ public class ChatMessagesListView {
                             // quoted message
                             quotedMessageField = new Text();
                             quotedMessageVBox = new VBox(5);
-                            quotedMessageVBox.setId("chat-message-quote-box");
                             quotedMessageVBox.setVisible(false);
                             quotedMessageVBox.setManaged(false);
 
@@ -734,11 +733,12 @@ public class ChatMessagesListView {
                                     userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
                                     message.setAlignment(Pos.CENTER_RIGHT);
 
+                                    quotedMessageVBox.setId("chat-message-quote-box-my-msg");
+
                                     messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
                                     VBox.setMargin(userNameAndDateHBox, new Insets(-5, 30, -5, 0));
 
                                     HBox.setMargin(copyIcon, new Insets(0, 15, 0, 0));
-
 
                                     VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
                                     if (isOfferMessage) {
@@ -778,6 +778,8 @@ public class ChatMessagesListView {
                                     userProfileIcon.setSize(60);
                                     HBox.setMargin(replyIcon, new Insets(0, 0, 0, 15));
                                     reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
+
+                                    quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
                                     if (isOfferMessage) {

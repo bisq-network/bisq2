@@ -56,4 +56,9 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
             return myId + "-" + peersId;
         }
     }
+
+    @Override
+    public String getDisplayString() {
+        return peer.getUserName() + " - " + myUserIdentity.getUserName();
+    }
 }

@@ -2017,8 +2017,17 @@ tree-table-view:focused {
     -fx-background-color: -bisq-content-bg-grey;
 }
 
-#chat-message-quote-box {
+#chat-message-quote-box-peer-msg {
     -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 0 8 8 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-padding: 10 10 10 15;
+}
+
+#chat-message-quote-box-my-msg {
+    -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;

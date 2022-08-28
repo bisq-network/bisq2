@@ -20,6 +20,7 @@ package bisq.chat.trade.priv;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
 import bisq.common.observable.Observable;
+import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -111,12 +112,16 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
         chatMessages.removeAll(removeMessages);
     }
 
-    @Override
-    public String getDisplayString() {
-        return peer.getUserName() + "-" + this.myUserIdentity.getUserName();
-    }
-
     public boolean isMediator() {
         return mediator.filter(mediator -> mediator.getId().equals(this.myUserIdentity.getId())).isPresent();
+    }
+
+    @Override
+    public String getDisplayString() {
+        String mediatorLabel = "";
+        if (mediator.isPresent() && mediationActivated.get()) {
+            mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
+        }
+        return peer.getUserName() + " - " + myUserIdentity.getUserName() + mediatorLabel;
     }
 }

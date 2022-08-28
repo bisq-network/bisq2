@@ -93,14 +93,14 @@ public abstract class ChannelSelection {
 
             Label headline = new Label(getHeadlineText());
             headline.getStyleClass().add("bisq-text-8");
-            HBox.setMargin(headline, new Insets(22, 0, 10, 22));
+            HBox.setMargin(headline, new Insets(26, 0, 10, 22));
 
             // subclasses add settings icon, so we put it into a box
             headerBox = new HBox(20, headline, Spacer.fillHBox());
+            headerBox.setMinHeight(54);
 
             listView = new ListView<>(model.sortedList);
             listView.getStyleClass().add("channel-selection-list-view");
-            // listView.setPrefHeight(1000);
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
 
