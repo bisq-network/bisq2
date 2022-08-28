@@ -124,6 +124,14 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     protected Optional<C> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
+                            Optional<C> existingChannel = getChannels().stream()
+                                    .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                                            channel.getPeer().equals(peer))
+                                    .findAny();
+                            if (existingChannel.isPresent()) {
+                                return existingChannel.get();
+                            }
+
                             C channel = createNewChannel(peer, myUserIdentity);
                             getChannels().add(channel);
                             persist();

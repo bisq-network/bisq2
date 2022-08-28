@@ -36,6 +36,7 @@ import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.events.pub.PublicEventsChatMessage;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.chat.support.SupportChannelSelectionService;
 import bisq.chat.support.priv.PrivateSupportChannel;
@@ -470,8 +471,10 @@ public class ChatMessagesListView {
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
             if (!isMyMessage(chatMessage)) {
-                items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
-                        () -> onIgnoreUser(chatMessage)));
+                if (chatMessage instanceof PublicChatMessage) {
+                    items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
+                            () -> onIgnoreUser(chatMessage)));
+                }
                 items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.reportUser"),
                         () -> onReportUser(chatMessage)));
             }
@@ -916,10 +919,13 @@ public class ChatMessagesListView {
                                 replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
                                 pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                             }
+                              
                             replyIcon.setVisible(!isMyMessage);
                             replyIcon.setManaged(!isMyMessage);
-                            pmIcon.setVisible(!isMyMessage);
-                            pmIcon.setManaged(!isMyMessage);
+
+                            pmIcon.setVisible(!isMyMessage && chatMessage instanceof PublicChatMessage);
+                            pmIcon.setManaged(!isMyMessage && chatMessage instanceof PublicChatMessage);
+
                             editIcon.setVisible(isMyMessage && allowEditing);
                             editIcon.setManaged(isMyMessage && allowEditing);
                             deleteIcon.setVisible(isMyMessage && allowEditing);

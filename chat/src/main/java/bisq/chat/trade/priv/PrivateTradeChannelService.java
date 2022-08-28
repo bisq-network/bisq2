@@ -95,6 +95,15 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
+        Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
+                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                        channel.getTrader1().equals(trader1) &&
+                        channel.getTrader2().equals(trader1))
+                .findAny();
+        if (existingChannel.isPresent()) {
+            return existingChannel.get();
+        }
+
         Optional<UserProfile> mediator = Optional.of(myUserIdentity.getUserProfile());
         PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, trader1, trader2, mediator);
         getChannels().add(channel);
@@ -103,6 +112,14 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
+        Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
+                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                        channel.getPeer().equals(peersUserProfile))
+                .findAny();
+        if (existingChannel.isPresent()) {
+            return existingChannel.get();
+        }
+
         PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, peersUserProfile, myUserIdentity.getUserProfile(), mediator);
         getChannels().add(channel);
         persist();
