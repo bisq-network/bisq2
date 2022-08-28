@@ -766,7 +766,6 @@ public abstract class Overlay<T extends Overlay<T>> {
         if (headLineLabel != null) {
             headlineIcon.setManaged(true);
             headlineIcon.setVisible(true);
-
             switch (type) {
                 case Information:
                 case BackgroundInfo:
@@ -775,7 +774,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 case Feedback:
                 case Notification:
                 case Attention:
-                    Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.5em");
+                    Icons.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1.8em");
                     headLineLabel.getStyleClass().add("overlay-headline-information");
                     headlineIcon.getStyleClass().add("overlay-icon-information");
                     break;
@@ -812,7 +811,8 @@ public abstract class Overlay<T extends Overlay<T>> {
             headlineIcon = new Label();
             headlineIcon.setManaged(false);
             headlineIcon.setVisible(false);
-            headlineIcon.setPadding(new Insets(3));
+            headlineIcon.setAlignment(Pos.CENTER);
+            headlineIcon.setPadding(new Insets(-2, 5, 0, 0));
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)

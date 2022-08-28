@@ -76,7 +76,7 @@ public class BisqEasyHelpView extends TabView<BisqEasyHelpModel, BisqEasyHelpCon
     protected void setupTopBox() {
         headLine = new Label();
         headLine.setText(Res.get("tradeGuide.headline"));
-        headLine.getStyleClass().add("bisq-text-17");
+        headLine.getStyleClass().addAll("font-size-18", "font-light");
 
         closeButton = BisqIconButton.createIconButton("close");
 

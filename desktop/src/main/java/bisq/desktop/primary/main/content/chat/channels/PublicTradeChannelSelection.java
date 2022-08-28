@@ -209,7 +209,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             addChannelIcon = Icons.getIcon(AwesomeIcon.PLUS_SIGN_ALT, "14");
             addChannelIcon.setOpacity(0.5);
             addChannelIcon.setCursor(Cursor.HAND);
-            addChannelIcon.setPadding(new Insets(22, 12, 0, 0));
+            addChannelIcon.setPadding(new Insets(24, 12, 0, 0));
             headerBox.getChildren().add(addChannelIcon);
         }
 

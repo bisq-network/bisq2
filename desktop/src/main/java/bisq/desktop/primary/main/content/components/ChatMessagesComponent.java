@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
@@ -69,6 +70,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -138,6 +141,7 @@ public class ChatMessagesComponent {
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private Pin selectedChannelPin;
+        private Pin chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
                            ChannelKind channelKind) {
@@ -183,24 +187,26 @@ public class ChatMessagesComponent {
             model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.getChannelKind() == ChannelKind.TRADE) {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
-                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.EVENTS) {
-                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
-                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(model.selectedChannel::set);
+                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             }
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
 
-            userIdentityService.getUserIdentityChangedFlag().addObserver(__ ->
-                    model.userProfileSelectionVisible.set(userIdentityService.getUserIdentities().size() > 1));
+            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> applyUserProfileOrChannelChange());
         }
 
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
         }
 
 
@@ -208,50 +214,86 @@ public class ChatMessagesComponent {
         // UI
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void onSendMessage(String text) {
-            if (text != null && !text.isEmpty()) {
-                Channel<? extends ChatMessage> channel = model.selectedChannel.get();
-                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-                checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
-                Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
-                if (channel instanceof PublicTradeChannel) {
-                    String dontShowAgainId = "sendMsgOfferOnlyWarn";
-                    if (settingsService.getOffersOnly().get()) {
-                        new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
-                                .actionButtonText(Res.get("yes"))
-                                .onAction(() -> settingsService.setOffersOnly(false))
-                                .closeButtonText(Res.get("no"))
-                                .dontShowAgainId(dontShowAgainId)
-                                .show();
-                    }
-                    publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
-                } else if (channel instanceof PrivateTradeChannel) {
-                    if (settingsService.getTradeRulesConfirmed().get()) {
-                        privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
-                    } else {
-                        new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
-                    }
-                } else if (channel instanceof PublicDiscussionChannel) {
-                    publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
-                } else if (channel instanceof PrivateDiscussionChannel) {
-                    privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
-                } else if (channel instanceof PublicEventsChannel) {
-                    publicEventsChannelService.publishChatMessage(text, quotation, (PublicEventsChannel) channel, userIdentity);
-                } else if (channel instanceof PrivateEventsChannel) {
-                    privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateEventsChannel) channel);
-                } else if (channel instanceof PublicSupportChannel) {
-                    publicSupportChannelService.publishChatMessage(text, quotation, (PublicSupportChannel) channel, userIdentity);
-                } else if (channel instanceof PrivateSupportChannel) {
-                    privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateSupportChannel) channel);
-                }
-                quotedMessageBlock.close();
+
+        private void onSendMessage(String text) {
+            if (text == null || text.isEmpty()) {
+                return;
             }
+
+            if (model.selectedChannel.get() instanceof PublicChannel) {
+                List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
+                if (myUserProfilesInChannel.size() > 0) {
+                    UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
+                    if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity().get())) {
+                        new Popup().information(Res.get("chat.sendMessage.differentUserProfile.popup"))
+                                .closeButtonText(Res.get("no"))
+                                .actionButtonText(Res.get("yes"))
+                                .onAction(() -> doSendMessage(text))
+                                .show();
+                        return;
+                    }
+                }
+            }
+
+            doSendMessage(text);
         }
 
-        public void onReply(ChatMessage chatMessage) {
+        private void doSendMessage(String text) {
+            Channel<? extends ChatMessage> channel = model.selectedChannel.get();
+            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+            checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
+            Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
+            if (channel instanceof PublicTradeChannel) {
+                String dontShowAgainId = "sendMsgOfferOnlyWarn";
+                if (settingsService.getOffersOnly().get()) {
+                    new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
+                            .actionButtonText(Res.get("yes"))
+                            .onAction(() -> settingsService.setOffersOnly(false))
+                            .closeButtonText(Res.get("no"))
+                            .dontShowAgainId(dontShowAgainId)
+                            .show();
+                }
+                publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
+            } else if (channel instanceof PrivateTradeChannel) {
+                if (settingsService.getTradeRulesConfirmed().get()) {
+                    privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                } else {
+                    new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
+                }
+            } else if (channel instanceof PublicDiscussionChannel) {
+                publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
+            } else if (channel instanceof PrivateDiscussionChannel) {
+                privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateDiscussionChannel) channel);
+            } else if (channel instanceof PublicEventsChannel) {
+                publicEventsChannelService.publishChatMessage(text, quotation, (PublicEventsChannel) channel, userIdentity);
+            } else if (channel instanceof PrivateEventsChannel) {
+                privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateEventsChannel) channel);
+            } else if (channel instanceof PublicSupportChannel) {
+                publicSupportChannelService.publishChatMessage(text, quotation, (PublicSupportChannel) channel, userIdentity);
+            } else if (channel instanceof PrivateSupportChannel) {
+                privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateSupportChannel) channel);
+            }
+            quotedMessageBlock.close();
+        }
+
+        private void onReply(ChatMessage chatMessage) {
             if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
                 quotedMessageBlock.reply(chatMessage);
             }
+        }
+
+        private void fillUserMention(UserProfile user) {
+            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
+            model.getTextInput().set(content);
+            //todo
+            view.inputField.positionCaret(content.length());
+        }
+
+        private void fillChannelMention(Channel<?> channel) {
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
+            model.getTextInput().set(content);
+            //todo
+            view.inputField.positionCaret(content.length());
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
@@ -284,18 +326,39 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + userProfile.getUserName() + " ");
         }
 
-        public void fillUserMention(UserProfile user) {
-            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
-            model.getTextInput().set(content);
-            //todo
-            view.inputField.positionCaret(content.length());
+        private void applySelectedChannel(Channel<? extends ChatMessage> channel) {
+            model.selectedChannel.set(channel);
+            applyUserProfileOrChannelChange();
         }
 
-        public void fillChannelMention(Channel<?> channel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
-            model.getTextInput().set(content);
-            //todo
-            view.inputField.positionCaret(content.length());
+        private void applyUserProfileOrChannelChange() {
+            boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
+            model.userProfileSelectionVisible.set(multipleProfiles && model.selectedChannel.get() instanceof PublicChannel);
+
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
+            chatMessagesPin = model.selectedChannel.get().getChatMessages().addChangedListener(this::maybeSwitchUserProfile);
+        }
+
+        private void maybeSwitchUserProfile() {
+            if (model.userProfileSelectionVisible.get()) {
+                List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
+                if (myUserProfilesInChannel.size() > 0) {
+                    userIdentityService.selectChatUserIdentity(myUserProfilesInChannel.get(0));
+                }
+            }
+        }
+
+        private List<UserIdentity> getMyUserProfilesInChannel() {
+            return model.selectedChannel.get().getChatMessages().stream()
+                    .sorted(Comparator.comparing(ChatMessage::getDate).reversed())
+                    .map(ChatMessage::getAuthorId)
+                    .map(userIdentityService::findUserIdentity)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .distinct()
+                    .toList();
         }
     }
 

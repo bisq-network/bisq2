@@ -24,8 +24,10 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +37,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideController> {
     private Button collapseButton, expandButton;
-    private HBox hBox;
+    private HBox headerHBox;
     private Subscription isCollapsedPin;
 
     public TradeGuideView(TradeGuideModel model, TradeGuideController controller) {
@@ -65,7 +67,7 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
 
         collapseButton.setOnAction(e -> controller.onCollapse());
         expandButton.setOnAction(e -> controller.onExpand());
-
+        headerHBox.setOnMouseClicked(e -> controller.onHeaderClicked());
         isCollapsedPin = EasyBind.subscribe(model.getIsCollapsed(), isCollapsed -> {
             collapseButton.setManaged(!isCollapsed);
             collapseButton.setVisible(!isCollapsed);
@@ -73,9 +75,9 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
             expandButton.setVisible(isCollapsed);
 
             if (isCollapsed) {
-                VBox.setMargin(hBox, new Insets(0, 0, -17, 0));
+                VBox.setMargin(headerHBox, new Insets(0, 0, -17, 0));
             } else {
-                VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
+                VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
             }
 
             tabs.setManaged(!isCollapsed);
@@ -92,6 +94,7 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         line.prefWidthProperty().unbind();
         collapseButton.setOnAction(null);
         expandButton.setOnAction(null);
+        headerHBox.setOnMouseClicked(null);
         isCollapsedPin.unsubscribe();
     }
 
@@ -99,7 +102,7 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
     protected void setupTopBox() {
         headLine = new Label();
         headLine.setText(Res.get("tradeGuide.headline"));
-        headLine.getStyleClass().add("bisq-text-17");
+        headLine.getStyleClass().addAll("font-size-18", "font-light");
 
         collapseButton = BisqIconButton.createIconButton("collapse");
         expandButton = BisqIconButton.createIconButton("expand");
@@ -107,15 +110,19 @@ public class TradeGuideView extends TabView<TradeGuideModel, TradeGuideControlle
         HBox.setMargin(collapseButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(expandButton, new Insets(-1, -15, 0, 0));
         HBox.setMargin(headLine, new Insets(0, 0, 0, -2));
-        hBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
+        headerHBox = new HBox(headLine, Spacer.fillHBox(), collapseButton, expandButton);
+        headerHBox.setCursor(Cursor.HAND);
+        Tooltip tooltip = new Tooltip(Res.get("tradeGuide.header.tooltip"));
+        tooltip.setStyle("-fx-show-delay: 500ms;");
+        Tooltip.install(headerHBox, tooltip);
 
         tabs.setFillHeight(true);
         tabs.setSpacing(46);
         tabs.setMinHeight(35);
 
         topBox = new VBox();
-        VBox.setMargin(hBox, new Insets(0, 0, 17, 0));
-        topBox.getChildren().addAll(hBox, tabs);
+        VBox.setMargin(headerHBox, new Insets(0, 0, 17, 0));
+        topBox.getChildren().addAll(headerHBox, tabs);
     }
 
     @Override

@@ -24,6 +24,8 @@ import bisq.desktop.common.view.TabController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab1.TradeGuideTab1Controller;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab2.TradeGuideTab2Controller;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.tab3.TradeGuideTab3Controller;
+import bisq.settings.CookieKey;
+import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,16 +36,19 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
     @Getter
     private final TradeGuideView view;
     private final DefaultApplicationService applicationService;
+    private final SettingsService settingsService;
 
     public TradeGuideController(DefaultApplicationService applicationService) {
         super(new TradeGuideModel(), NavigationTarget.TRADE_GUIDE);
 
         this.applicationService = applicationService;
+        settingsService = applicationService.getSettingsService();
         view = new TradeGuideView(model, this);
     }
 
     @Override
     public void onActivate() {
+        model.getIsCollapsed().set(settingsService.getCookie().asBoolean(CookieKey.TRADE_GUIDE_COLLAPSED).orElse(false));
     }
 
     @Override
@@ -69,10 +74,19 @@ public class TradeGuideController extends TabController<TradeGuideModel> {
     }
 
     void onExpand() {
-        model.getIsCollapsed().set(false);
+        setIsCollapsed(false);
     }
 
     void onCollapse() {
-        model.getIsCollapsed().set(true);
+        setIsCollapsed(true);
+    }
+
+    void onHeaderClicked() {
+        setIsCollapsed(!model.getIsCollapsed().get());
+    }
+
+    private void setIsCollapsed(boolean value) {
+        model.getIsCollapsed().set(value);
+        settingsService.setCookie(CookieKey.TRADE_GUIDE_COLLAPSED, value);
     }
 }

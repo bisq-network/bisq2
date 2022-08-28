@@ -82,6 +82,8 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewAttached() {
         super.onViewAttached();
 
+        actionButton.visibleProperty().bind(bisqEasyChatModel.getActionButtonVisible());
+        actionButton.managedProperty().bind(bisqEasyChatModel.getActionButtonVisible());
         actionButton.textProperty().bind(bisqEasyChatModel.getActionButtonText());
         actionButton.setOnAction(e -> bisqEasyChatController.onActionButtonClicked());
 
@@ -92,6 +94,8 @@ public class BisqEasyChatView extends ChatView {
     protected void onViewDetached() {
         super.onViewDetached();
 
+        actionButton.visibleProperty().unbind();
+        actionButton.managedProperty().unbind();
         actionButton.textProperty().unbind();
         actionButton.setOnAction(null);
 

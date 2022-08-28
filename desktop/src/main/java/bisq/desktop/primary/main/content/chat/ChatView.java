@@ -45,7 +45,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
     private final Pane channelInfo;
     protected final HBox centerToolbar;
 
-    protected final VBox center;
+    protected final VBox centerVBox;
     private final SearchBox searchBox;
     private Pane chatUserOverviewRoot;
     private Subscription chatUserOverviewRootSubscription;
@@ -66,7 +66,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         root.setPadding(new Insets(-34, -67, -67, -68));
 
         // Left
-        left = Layout.vBoxWith(
+        left = new VBox(
                 publicChannelSelection,
                 Layout.separator(),
                 privateChannelSelection,
@@ -102,12 +102,12 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.setFillWidth(true);
 
         VBox.setVgrow(chatMessagesComponent, Priority.ALWAYS);
-        center = new VBox(centerToolbar, chatMessagesComponent);
+        centerVBox = new VBox(centerToolbar, Layout.separator(), chatMessagesComponent);
         chatMessagesComponent.setMinWidth(700);
         HBox.setHgrow(left, Priority.NEVER);
-        HBox.setHgrow(center, Priority.ALWAYS);
+        HBox.setHgrow(centerVBox, Priority.ALWAYS);
         HBox.setHgrow(sideBar, Priority.NEVER);
-        root.getChildren().addAll(left, center, sideBar);
+        root.getChildren().addAll(left, centerVBox, sideBar);
     }
 
     @Override
@@ -153,7 +153,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.managedProperty().unbind();
 
         helpButton.setOnAction(null);
-       
+
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription.unsubscribe();

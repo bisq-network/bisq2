@@ -81,7 +81,7 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       C channel) {
-        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyProfile(), channel.getPeer());
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer());
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String messageId,

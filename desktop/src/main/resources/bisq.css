@@ -543,6 +543,10 @@
     -fx-line-spacing: .1em;
 }
 
+.bisq-line-spacing-015 {
+    -fx-line-spacing: .15em;
+}
+
 .bisq-line-spacing-02 {
     -fx-line-spacing: .2em;
 }
@@ -1590,8 +1594,9 @@
 
 .list-view.chat-messages-list-view {
     -fx-background-color: transparent;
-    -fx-border-color: -bisq-grey-disabled;
-    -fx-border-width: 1 0 0 0;
+    -fx-border-width: 0;
+    /* -fx-border-color: -bisq-grey-disabled;
+     -fx-border-width: 1 0 0 0;*/
 }
 
 .list-view.chat-messages-list-view .list-cell:hover {
@@ -2012,8 +2017,17 @@ tree-table-view:focused {
     -fx-background-color: -bisq-content-bg-grey;
 }
 
-#chat-message-quote-box {
+#chat-message-quote-box-peer-msg {
     -fx-background-color: -bisq-grey-2;
+    -fx-background-radius: 0 8 8 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: -bisq-grey-dimmed;
+    -fx-padding: 10 10 10 15;
+}
+
+#chat-message-quote-box-my-msg {
+    -fx-background-color: -bisq-grey-5;
     -fx-background-radius: 0 8 8 0;
     -fx-border-radius: 0;
     -fx-border-width: 0 0 0 3;

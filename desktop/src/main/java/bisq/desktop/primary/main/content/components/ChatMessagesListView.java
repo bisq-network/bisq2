@@ -63,6 +63,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.NoSelectionModel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.AmountFormatter;
@@ -408,25 +409,34 @@ public class ChatMessagesListView {
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
-            if (isMyMessage(chatMessage)) {
-                UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-                if (chatMessage instanceof PublicTradeChatMessage) {
-                    publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, userIdentity);
-                } else if (chatMessage instanceof PublicDiscussionChatMessage) {
-                    publicDiscussionChannelService.deleteChatMessage((PublicDiscussionChatMessage) chatMessage, userIdentity);
-                } else if (chatMessage instanceof PublicEventsChatMessage) {
-                    publicEventsChannelService.deleteChatMessage((PublicEventsChatMessage) chatMessage, userIdentity);
-                } else if (chatMessage instanceof PublicSupportChatMessage) {
-                    publicSupportChannelService.deleteChatMessage((PublicSupportChatMessage) chatMessage, userIdentity);
+            if (userIdentityService.findUserIdentity(chatMessage.getAuthorId()).isPresent()) {
+                UserIdentity messageAuthor = userIdentityService.findUserIdentity(chatMessage.getAuthorId()).get();
+                if (userIdentityService.getSelectedUserIdentity().get().equals(messageAuthor)) {
+                    doDeleteMessage(chatMessage, messageAuthor);
+                } else {
+                    new Popup().information(Res.get("chat.deleteMessage.wrongUserProfile.popup"))
+                            .closeButtonText(Res.get("no"))
+                            .actionButtonText(Res.get("yes"))
+                            .onAction(() -> {
+                                userIdentityService.selectChatUserIdentity(messageAuthor);
+                                doDeleteMessage(chatMessage, messageAuthor);
+                            })
+                            .show();
                 }
                 //todo delete private message
             }
         }
 
-        private void onCreateOffer(PublicTradeChatMessage chatMessage) {
-            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-            publicTradeChannelService.publishChatMessage(chatMessage, userIdentity)
-                    .thenAccept(result -> UIThread.run(() -> model.createOfferCompleteHandler.ifPresent(Runnable::run)));
+        private void doDeleteMessage(ChatMessage chatMessage, UserIdentity messageAuthor) {
+            if (chatMessage instanceof PublicTradeChatMessage) {
+                publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, messageAuthor);
+            } else if (chatMessage instanceof PublicDiscussionChatMessage) {
+                publicDiscussionChannelService.deleteChatMessage((PublicDiscussionChatMessage) chatMessage, messageAuthor);
+            } else if (chatMessage instanceof PublicEventsChatMessage) {
+                publicEventsChannelService.deleteChatMessage((PublicEventsChatMessage) chatMessage, messageAuthor);
+            } else if (chatMessage instanceof PublicSupportChatMessage) {
+                publicSupportChannelService.deleteChatMessage((PublicSupportChatMessage) chatMessage, messageAuthor);
+            }
         }
 
         private void onOpenPrivateChannel(ChatMessage chatMessage) {
@@ -637,7 +647,6 @@ public class ChatMessagesListView {
                             // quoted message
                             quotedMessageField = new Text();
                             quotedMessageVBox = new VBox(5);
-                            quotedMessageVBox.setId("chat-message-quote-box");
                             quotedMessageVBox.setVisible(false);
                             quotedMessageVBox.setManaged(false);
 
@@ -734,11 +743,12 @@ public class ChatMessagesListView {
                                     userNameAndDateHBox.setAlignment(Pos.CENTER_RIGHT);
                                     message.setAlignment(Pos.CENTER_RIGHT);
 
+                                    quotedMessageVBox.setId("chat-message-quote-box-my-msg");
+
                                     messageBgHBox.getStyleClass().add("chat-message-bg-my-message");
                                     VBox.setMargin(userNameAndDateHBox, new Insets(-5, 30, -5, 0));
 
                                     HBox.setMargin(copyIcon, new Insets(0, 15, 0, 0));
-
 
                                     VBox messageVBox = new VBox(quotedMessageVBox, message, editInputField);
                                     if (isOfferMessage) {
@@ -778,6 +788,8 @@ public class ChatMessagesListView {
                                     userProfileIcon.setSize(60);
                                     HBox.setMargin(replyIcon, new Insets(0, 0, 0, 15));
                                     reactionsHBox.getChildren().setAll(replyIcon, pmIcon, editIcon, deleteIcon, moreOptionsIcon, Spacer.fillHBox());
+
+                                    quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
 
                                     messageBgHBox.getStyleClass().add("chat-message-bg-peer-message");
                                     if (isOfferMessage) {

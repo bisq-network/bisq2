@@ -33,6 +33,7 @@ public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final ChannelKind channelKind;
     private final StringProperty actionButtonText = new SimpleStringProperty();
+    private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
 
     public BisqEasyChatModel(ChannelKind channelKind) {
         this.channelKind = channelKind;
