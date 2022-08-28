@@ -134,7 +134,7 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                                                                                       PrivateTradeChannel channel) {
         UserIdentity myUserIdentity = channel.getMyProfile();
         String messageId = StringUtils.createShortUid();
-        if (!channel.getMediationActivated().get()) {
+        if (!channel.getMediationActivated().get() || channel.getMediator().isEmpty()) {
             return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer());
         }
         // If mediation has been activated we send all messages to the 2 other peers

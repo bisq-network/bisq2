@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChannelKind;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
@@ -56,6 +55,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final MediationService mediationService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
     private Pin offerOnlySettingsPin;
+    private Pin mediationActivatedPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelKind.TRADE, NavigationTarget.BISQ_EASY_CHAT);
@@ -86,6 +86,9 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.onDeactivate();
 
         offerOnlySettingsPin.unbind();
+        if (mediationActivatedPin != null) {
+            mediationActivatedPin.unbind();
+        }
         resetSelectedChildTarget();
     }
 
@@ -117,7 +120,16 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 return;
             }
             if (channel instanceof PrivateTradeChannel) {
-                applyPeersIcon((PrivateChannel<?>) channel);
+                PrivateTradeChannel privateChannel = (PrivateTradeChannel) channel;
+                applyPeersIcon(privateChannel);
+
+                if (mediationActivatedPin != null) {
+                    mediationActivatedPin.unbind();
+                }
+                mediationActivatedPin = privateChannel.getMediationActivated().addObserver(mediationActivated ->
+                        model.getActionButtonVisible().set(!mediationActivated &&
+                                !privateChannel.isMediator()));
+
 
                 publicTradeChannelSelection.deSelectChannel();
                 model.getActionButtonText().set(Res.get("bisqEasy.openDispute"));
@@ -155,9 +167,16 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         if (channel instanceof PrivateTradeChannel) {
             PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
             if (privateTradeChannel.getMediator().isPresent()) {
-                mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
-                new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
-                        .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+                new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
+                        .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
+                        .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
+                        .onAction(() -> {
+                            mediationService.requestMediation(privateTradeChannel.getMyProfile(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                            new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
+                                    .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+                        })
+                        .closeButtonText(Res.get("cancel"))
+                        .show();
             } else {
                 new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
             }
