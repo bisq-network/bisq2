@@ -543,6 +543,10 @@
     -fx-line-spacing: .1em;
 }
 
+.bisq-line-spacing-015 {
+    -fx-line-spacing: .15em;
+}
+
 .bisq-line-spacing-02 {
     -fx-line-spacing: .2em;
 }
