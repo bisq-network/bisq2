@@ -70,6 +70,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -139,6 +141,7 @@ public class ChatMessagesComponent {
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private Pin selectedChannelPin;
+        private Pin chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
                            ChannelKind channelKind) {
@@ -195,22 +198,15 @@ public class ChatMessagesComponent {
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
 
-            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> applyUserProfileSelectionVisible());
-        }
-
-        private void applySelectedChannel(Channel<? extends ChatMessage> channel) {
-            model.selectedChannel.set(channel);
-            applyUserProfileSelectionVisible();
-        }
-
-        private void applyUserProfileSelectionVisible() {
-            boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
-            model.userProfileSelectionVisible.set(multipleProfiles && model.selectedChannel.get() instanceof PublicChannel);
+            userIdentityService.getUserIdentityChangedFlag().addObserver(__ -> applyUserProfileOrChannelChange());
         }
 
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
         }
 
 
@@ -218,7 +214,7 @@ public class ChatMessagesComponent {
         // UI
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void onSendMessage(String text) {
+        private void onSendMessage(String text) {
             if (text != null && !text.isEmpty()) {
                 Channel<? extends ChatMessage> channel = model.selectedChannel.get();
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
@@ -258,10 +254,24 @@ public class ChatMessagesComponent {
             }
         }
 
-        public void onReply(ChatMessage chatMessage) {
+        private void onReply(ChatMessage chatMessage) {
             if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
                 quotedMessageBlock.reply(chatMessage);
             }
+        }
+
+        private void fillUserMention(UserProfile user) {
+            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
+            model.getTextInput().set(content);
+            //todo
+            view.inputField.positionCaret(content.length());
+        }
+
+        private void fillChannelMention(Channel<?> channel) {
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
+            model.getTextInput().set(content);
+            //todo
+            view.inputField.positionCaret(content.length());
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
@@ -294,18 +304,35 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + userProfile.getUserName() + " ");
         }
 
-        public void fillUserMention(UserProfile user) {
-            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
-            model.getTextInput().set(content);
-            //todo
-            view.inputField.positionCaret(content.length());
+        private void applySelectedChannel(Channel<? extends ChatMessage> channel) {
+            model.selectedChannel.set(channel);
+            applyUserProfileOrChannelChange();
         }
 
-        public void fillChannelMention(Channel<?> channel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
-            model.getTextInput().set(content);
-            //todo
-            view.inputField.positionCaret(content.length());
+        private void applyUserProfileOrChannelChange() {
+            boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
+            model.userProfileSelectionVisible.set(multipleProfiles && model.selectedChannel.get() instanceof PublicChannel);
+
+            if (chatMessagesPin != null) {
+                chatMessagesPin.unbind();
+            }
+            chatMessagesPin = model.selectedChannel.get().getChatMessages().addChangedListener(this::maybeSwitchUserProfile);
+        }
+
+        private void maybeSwitchUserProfile() {
+            if (model.userProfileSelectionVisible.get()) {
+                List<UserIdentity> myUserProfileIdsInChannel = model.selectedChannel.get().getChatMessages().stream()
+                        .sorted(Comparator.comparing(ChatMessage::getDate).reversed())
+                        .map(ChatMessage::getAuthorId)
+                        .map(userIdentityService::findUserIdentity)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .distinct()
+                        .toList();
+                if (myUserProfileIdsInChannel.size() > 0) {
+                    userIdentityService.selectChatUserIdentity(myUserProfileIdsInChannel.get(0));
+                }
+            }
         }
     }
 
