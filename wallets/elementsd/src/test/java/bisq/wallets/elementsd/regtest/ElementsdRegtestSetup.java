@@ -45,7 +45,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> {
+public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator> {
 
     @Getter
     private final BitcoindRegtestSetup bitcoindRegtestSetup;
@@ -109,11 +109,6 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         }
 
         return blockHashes;
-    }
-
-    @Override
-    public void fundWallet(ElementsdWallet receiverWallet, double amount) throws InterruptedException {
-        sendBtcAndMineOneBlock(minerWallet, receiverWallet, amount);
     }
 
     @Override

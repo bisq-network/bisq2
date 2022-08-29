@@ -24,11 +24,11 @@ import java.io.IOException;
 
 public abstract class WalletStartupTests<T extends BisqProcess, W> {
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    public abstract AbstractRegtestSetup<T> createRegtestSetup() throws IOException;
 
     @Test
     public void startAndStopTest() throws IOException, InterruptedException {
-        AbstractRegtestSetup<T, W> regtestSetup = createRegtestSetup();
+        AbstractRegtestSetup<T> regtestSetup = createRegtestSetup();
         regtestSetup.start();
         regtestSetup.shutdown();
     }

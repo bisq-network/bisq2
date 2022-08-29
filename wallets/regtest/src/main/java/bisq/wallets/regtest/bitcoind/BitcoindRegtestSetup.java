@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 public class BitcoindRegtestSetup
-        extends AbstractRegtestSetup<MultiProcessCoordinator, BitcoindWallet> {
+        extends AbstractRegtestSetup<MultiProcessCoordinator> {
 
     @Getter
     private final RpcConfig rpcConfig;
@@ -77,11 +77,6 @@ public class BitcoindRegtestSetup
 
     public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {
         return remoteBitcoind.mineBlocks(numberOfBlocks);
-    }
-
-    @Override
-    public void fundWallet(BitcoindWallet receiverWallet, double amount) throws InterruptedException {
-        remoteBitcoind.fundWallet(receiverWallet, amount);
     }
 
     public String fundAddress(String address, double amount) throws InterruptedException {

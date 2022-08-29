@@ -28,7 +28,7 @@ import lombok.Getter;
 import java.io.IOException;
 import java.util.List;
 
-public class ElectrumXServerRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, Void> {
+public class ElectrumXServerRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator> {
 
     @Getter
     private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup(true);
@@ -52,11 +52,6 @@ public class ElectrumXServerRegtestSetup extends AbstractRegtestSetup<MultiProce
     @Override
     public List<String> mineOneBlock() throws InterruptedException {
         return bitcoindRegtestSetup.mineOneBlock();
-    }
-
-    @Override
-    public void fundWallet(Void receiverWallet, double amount) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
