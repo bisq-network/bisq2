@@ -17,18 +17,21 @@
 
 package bisq.wallets.electrum;
 
+import bisq.common.util.FileUtils;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.electrum.rpc.ElectrumConfig;
+import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.electrum.rpc.cli.ElectrumCli;
 import bisq.wallets.electrum.rpc.cli.ElectrumCliFacade;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,17 +42,16 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     private static final String LOG_ELECTRUM_RPC_INTERFACE_READY = "now running and listening. socktype=tcp";
 
     private final Path binaryPath;
-    private final ElectrumConfig electrumConfig;
+    private final ElectrumProcessConfig electrumProcessConfig;
     private final ElectrumCliFacade electrumCliFacade;
 
-    private boolean waitUntilRpcPortReady;
     @Getter
     private RpcConfig rpcConfig;
 
-    public ElectrumRegtestProcess(Path binaryPath, ElectrumConfig electrumConfig) {
-        super(electrumConfig.getDataDir());
+    public ElectrumRegtestProcess(Path binaryPath, ElectrumProcessConfig electrumProcessConfig) {
+        super(electrumProcessConfig.getDataDir());
         this.binaryPath = binaryPath;
-        this.electrumConfig = electrumConfig;
+        this.electrumProcessConfig = electrumProcessConfig;
 
         var electrumCli = new ElectrumCli(binaryPath, dataDir);
         electrumCliFacade = new ElectrumCliFacade(electrumCli);
@@ -57,23 +59,10 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     @Override
     public void start() {
+        createElectrumConfigFile();
         super.start();
-
-        electrumCliFacade.enableLoggingToFile();
-        electrumCliFacade.setRpcHost(electrumConfig.getRpcHost());
-        electrumCliFacade.setRpcPort(electrumConfig.getRpcPort());
-
-        // Restart and wait until JSON-RPC interface ready
-        super.shutdown();
-        waitUntilRpcPortReady = true;
-        super.start();
-
-        rpcConfig = RpcConfig.builder()
-                .hostname(electrumConfig.getRpcHost())
-                .port(electrumConfig.getRpcPort())
-                .user(electrumCliFacade.getRpcUser())
-                .password(electrumCliFacade.getRpcPassword())
-                .build();
+        rpcConfig = electrumProcessConfig.getElectrumConfig()
+                .toRpcConfig();
     }
 
     @Override
@@ -85,7 +74,8 @@ public class ElectrumRegtestProcess extends DaemonProcess {
                         "daemon",
 
                         "-s",
-                        electrumConfig.getRpcHost() + ":" + electrumConfig.getElectrumXServerPort() + ":t",
+                        electrumProcessConfig.getElectrumConfig().getRpcHost() + ":" +
+                                electrumProcessConfig.getElectrumXServerPort() + ":t",
 
                         ElectrumCli.ELECTRUM_DATA_DIR_ARG,
                         dataDir.toAbsolutePath().toString(),
@@ -103,12 +93,24 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     @Override
     protected Set<String> getIsSuccessfulStartUpLogLines() {
-        Set<String> linesToMatch = new HashSet<>();
-        linesToMatch.add(LOG_ELECTRUMX_CONNECTION_ESTABLISHED_VERSION);
+        return Set.of(
+                LOG_ELECTRUMX_CONNECTION_ESTABLISHED_VERSION,
+                LOG_ELECTRUM_RPC_INTERFACE_READY
+        );
+    }
 
-        if (waitUntilRpcPortReady) {
-            linesToMatch.add(LOG_ELECTRUM_RPC_INTERFACE_READY);
+    private void createElectrumConfigFile() {
+        try {
+            Path regtestDirectory = dataDir.resolve("regtest");
+            FileUtils.makeDirs(regtestDirectory.toFile());
+
+            Path configFilePath = regtestDirectory.resolve("config");
+            ElectrumConfig electrumConfig = electrumProcessConfig.getElectrumConfig();
+            String configAsString = new ObjectMapper().writeValueAsString(electrumConfig);
+
+            Files.writeString(configFilePath, configAsString);
+        } catch (IOException e) {
+            throw new ElectrumConfigFileCreationFailed(e);
         }
-        return linesToMatch;
     }
 }

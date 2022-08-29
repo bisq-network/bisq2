@@ -19,9 +19,10 @@ package bisq.wallets.electrum.regtest.electrum;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.electrum.ElectrumConfig;
 import bisq.wallets.electrum.ElectrumProcess;
-import bisq.wallets.electrum.rpc.ElectrumConfig;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
+import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
 import bisq.wallets.process.BisqProcess;
 import bisq.wallets.regtest.AbstractRegtestSetup;
@@ -76,11 +77,17 @@ public class ElectrumRegtest implements BisqProcess {
 
     private ElectrumProcess createElectrumProcess(String electrumXHost, int electrumXServerPort) throws IOException {
         Path electrumRootDataDir = FileUtils.createTempDir();
-        ElectrumConfig config = ElectrumConfig.builder()
+        ElectrumConfig electrumConfig = ElectrumConfig.builder()
+                .rpcPort(String.valueOf(NetworkUtils.findFreeSystemPort()))
+                .rpcUser("bisq")
+                .rpcPassword("bisq")
+                .build();
+
+        ElectrumProcessConfig config = ElectrumProcessConfig.builder()
                 .dataDir(electrumRootDataDir)
+                .electrumXServerHost(electrumXHost)
                 .electrumXServerPort(electrumXServerPort)
-                .rpcHost(electrumXHost)
-                .rpcPort(NetworkUtils.findFreeSystemPort())
+                .electrumConfig(electrumConfig)
                 .build();
         return new ElectrumProcess(electrumRootDataDir, config);
     }
