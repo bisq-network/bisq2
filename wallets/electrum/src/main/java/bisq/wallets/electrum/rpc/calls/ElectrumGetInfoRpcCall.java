@@ -32,7 +32,7 @@ public class ElectrumGetInfoRpcCall extends DaemonRpcCall<Void, ElectrumGetInfoR
 
     @Override
     public boolean isResponseValid(ElectrumGetInfoResponse response) {
-        return response.getBlockchainHeight() >= 0;
+        return response.getServerHeight() >= 0;
     }
 
     @Override
