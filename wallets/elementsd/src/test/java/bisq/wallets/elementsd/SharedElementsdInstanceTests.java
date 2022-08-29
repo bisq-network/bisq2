@@ -45,7 +45,7 @@ public abstract class SharedElementsdInstanceTests
     protected ElementsdWallet elementsdMinerWallet;
 
     @Override
-    public AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> createRegtestSetup() throws IOException {
+    public AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
         elementsdRegtestSetup = new ElementsdRegtestSetup();
         return elementsdRegtestSetup;
     }

@@ -100,10 +100,6 @@ public class RemoteBitcoind implements BisqProcess {
         return blockMiner.mineBlocks(numberOfBlocks);
     }
 
-    public void fundWallet(BitcoindWallet receiverWallet, double amount) throws InterruptedException {
-        sendBtcAndMineOneBlock(minerWallet, receiverWallet, amount);
-    }
-
     public String fundAddress(String address, double amount) throws InterruptedException {
         String txId = minerWallet.sendToAddress(Optional.of(WALLET_PASSPHRASE), address, amount);
         mineOneBlock();

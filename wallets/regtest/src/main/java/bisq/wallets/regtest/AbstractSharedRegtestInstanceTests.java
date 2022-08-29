@@ -26,7 +26,7 @@ import java.io.IOException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractSharedRegtestInstanceTests<T extends BisqProcess, W> {
-    private AbstractRegtestSetup<T, W> regtestSetup;
+    private AbstractRegtestSetup<T> regtestSetup;
 
     @BeforeAll
     public void start() throws IOException, InterruptedException {
@@ -39,5 +39,5 @@ public abstract class AbstractSharedRegtestInstanceTests<T extends BisqProcess, 
         regtestSetup.shutdown();
     }
 
-    public abstract AbstractRegtestSetup<T, W> createRegtestSetup() throws IOException;
+    public abstract AbstractRegtestSetup<T> createRegtestSetup() throws IOException;
 }

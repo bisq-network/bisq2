@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-public abstract class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator, ElectrumDaemon> {
+public abstract class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator> {
     protected ElectrumRegtest electrumRegtest;
 
     public ElectrumRegtestSetup() throws IOException {
@@ -37,11 +37,6 @@ public abstract class ElectrumRegtestSetup extends AbstractRegtestSetup<MultiPro
     @Override
     public List<String> mineOneBlock() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void fundWallet(ElectrumDaemon receiverWallet, double amount) throws InterruptedException {
-        electrumRegtest.fundWallet(receiverWallet, amount);
     }
 
     public String fundAddress(String address, double amount) throws InterruptedException {

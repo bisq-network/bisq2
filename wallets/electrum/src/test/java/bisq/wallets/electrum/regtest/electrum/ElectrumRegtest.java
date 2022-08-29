@@ -66,11 +66,6 @@ public class ElectrumRegtest implements BisqProcess {
         electrumProcess.shutdown();
     }
 
-    public void fundWallet(ElectrumDaemon receiverWallet, double amount) throws InterruptedException {
-        String unusedAddress = receiverWallet.getUnusedAddress();
-        fundAddress(unusedAddress, amount);
-    }
-
     public String fundAddress(String address, double amount) throws InterruptedException {
         return remoteBitcoind.fundAddress(address, amount);
     }

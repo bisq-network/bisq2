@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements BisqProcess {
+public abstract class AbstractRegtestSetup<T extends BisqProcess> implements BisqProcess {
     public static final String WALLET_PASSPHRASE = "My super secret passphrase that nobody can guess.";
 
     protected T daemonProcess;
@@ -47,8 +47,6 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess, W> implements 
     }
 
     public abstract List<String> mineOneBlock() throws InterruptedException;
-
-    public abstract void fundWallet(W receiverWallet, double amount) throws InterruptedException;
 
     public abstract RpcConfig getRpcConfig();
 }

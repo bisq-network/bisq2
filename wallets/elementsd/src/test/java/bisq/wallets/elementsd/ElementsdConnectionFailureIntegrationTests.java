@@ -28,7 +28,7 @@ import java.io.IOException;
 public class ElementsdConnectionFailureIntegrationTests
         extends ConnectionFailureIntegrationTests<MultiProcessCoordinator, ElementsdWallet> {
     @Override
-    protected AbstractRegtestSetup<MultiProcessCoordinator, ElementsdWallet> createRegtestSetup() throws IOException {
+    protected AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
         return new ElementsdRegtestSetup();
     }
 }
