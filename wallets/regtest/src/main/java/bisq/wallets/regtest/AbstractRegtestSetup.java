@@ -35,9 +35,9 @@ public abstract class AbstractRegtestSetup<T extends BisqProcess> implements Bis
         this.tmpDirPath = FileUtils.createTempDir();
     }
 
-    protected abstract T createProcess() throws IOException;
+    protected abstract T createProcess();
 
-    public void start() throws IOException, InterruptedException {
+    public void start() throws InterruptedException {
         daemonProcess = createProcess();
         daemonProcess.start();
     }

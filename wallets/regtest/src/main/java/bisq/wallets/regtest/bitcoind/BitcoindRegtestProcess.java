@@ -25,6 +25,8 @@ import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.process.scanner.InputStreamScanner;
+import bisq.wallets.process.scanner.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,6 +71,14 @@ public class BitcoindRegtestProcess extends DaemonProcess {
                         "-txindex=1"))
                 .environmentVars(Collections.emptyMap())
                 .build();
+    }
+
+    @Override
+    protected LogScanner getLogScanner() {
+        return new InputStreamScanner(
+                getIsSuccessfulStartUpLogLines(),
+                process.getInputStream()
+        );
     }
 
     @Override

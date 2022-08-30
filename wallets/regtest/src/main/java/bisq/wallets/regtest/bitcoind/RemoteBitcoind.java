@@ -32,7 +32,6 @@ import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -69,7 +68,7 @@ public class RemoteBitcoind implements BisqProcess {
     }
 
     @Override
-    public void start() throws InterruptedException, IOException {
+    public void start() throws InterruptedException {
         blockMiner.start();
         initializeZmqListeners();
         initializeWallet(minerWallet);

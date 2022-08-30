@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.process;
+package bisq.wallets.electrum;
 
-public interface BisqProcess {
-    void start() throws InterruptedException;
-
-    void shutdown();
+public class CannotCreateElectrumLogFileDirectoryException extends RuntimeException {
+    public CannotCreateElectrumLogFileDirectoryException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -20,6 +20,8 @@ package bisq.wallets.electrum.regtest.electrumx;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.process.scanner.InputStreamScanner;
+import bisq.wallets.process.scanner.LogScanner;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -67,6 +69,14 @@ public class ElectrumXServerRegtestProcess extends DaemonProcess {
     @Override
     public void invokeStopRpcCall() {
         electrumXRpc.stop();
+    }
+
+    @Override
+    protected LogScanner getLogScanner() {
+        return new InputStreamScanner(
+                getIsSuccessfulStartUpLogLines(),
+                process.getInputStream()
+        );
     }
 
     @Override

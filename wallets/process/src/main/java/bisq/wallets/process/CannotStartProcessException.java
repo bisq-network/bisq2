@@ -17,8 +17,8 @@
 
 package bisq.wallets.process;
 
-public interface BisqProcess {
-    void start() throws InterruptedException;
-
-    void shutdown();
+public class CannotStartProcessException extends RuntimeException {
+    public CannotStartProcessException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
