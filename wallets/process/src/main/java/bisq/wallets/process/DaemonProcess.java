@@ -20,20 +20,25 @@ package bisq.wallets.process;
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.exceptions.WalletShutdownFailedException;
 import bisq.wallets.core.exceptions.WalletStartupFailedException;
+import bisq.wallets.process.scanner.LogScanner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public abstract class DaemonProcess implements BisqProcess {
 
     @Getter
     protected final Path dataDir;
-    private Process process;
+    protected Process process;
 
     public DaemonProcess(Path dataDir) {
         this.dataDir = dataDir;
@@ -63,9 +68,7 @@ public abstract class DaemonProcess implements BisqProcess {
     }
 
     private void waitUntilReady() {
-        Set<String> linesToMatch = getIsSuccessfulStartUpLogLines();
-        boolean isSuccess = waitUntilLogFileContainsLines(linesToMatch);
-
+        boolean isSuccess = waitUntilLogContainsLines();
         if (!isSuccess) {
             String processName = process.info().command().orElse("<unknown process>");
             throw new WalletStartupFailedException("Cannot start wallet process." + processName, null);
@@ -92,28 +95,16 @@ public abstract class DaemonProcess implements BisqProcess {
 
     public abstract ProcessConfig createProcessConfig();
 
-    protected boolean waitUntilLogFileContainsLines(Set<String> linesToMatch) {
-        Set<String> matchedLines = new HashSet<>();
+    protected abstract LogScanner getLogScanner();
 
-        try (Scanner scanner = new Scanner(process.getInputStream())) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-
-                for (String lineToMatch : linesToMatch) {
-                    if (line.contains(lineToMatch)) {
-                        matchedLines.add(lineToMatch);
-
-                        if (matchedLines.size() == linesToMatch.size()) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
+    protected boolean waitUntilLogContainsLines() {
+        try {
+            LogScanner logScanner = getLogScanner();
+            return logScanner.waitUntilLogContainsLines();
+        } catch (ExecutionException | InterruptedException | IOException | TimeoutException e) {
             String processName = process.info().command().orElse("<unknown process>");
             log.error(processName + " didn't start correctly.", e);
-            throw e;
+            throw new CannotStartProcessException(processName, e);
         }
-        return false;
     }
 }

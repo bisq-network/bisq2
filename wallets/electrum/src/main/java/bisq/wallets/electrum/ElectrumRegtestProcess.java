@@ -24,6 +24,8 @@ import bisq.wallets.electrum.rpc.cli.ElectrumCli;
 import bisq.wallets.electrum.rpc.cli.ElectrumCliFacade;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
+import bisq.wallets.process.scanner.FileScanner;
+import bisq.wallets.process.scanner.LogScanner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 @Slf4j
 public class ElectrumRegtestProcess extends DaemonProcess {
@@ -47,6 +50,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     @Getter
     private RpcConfig rpcConfig;
+    private Future<Path> logFilePath;
 
     public ElectrumRegtestProcess(Path binaryPath, ElectrumProcessConfig electrumProcessConfig) {
         super(electrumProcessConfig.getDataDir());
@@ -60,6 +64,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     @Override
     public void start() {
         createElectrumConfigFile();
+        logFilePath = findNewLogFile();
         super.start();
         rpcConfig = electrumProcessConfig.getElectrumConfig()
                 .toRpcConfig();
@@ -80,7 +85,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
                         ElectrumCli.ELECTRUM_DATA_DIR_ARG,
                         dataDir.toAbsolutePath().toString(),
 
-                        "-v" // Enable logging
+                        "-v" // Enable logging (only works on Mac and Linux)
                 ))
                 .environmentVars(Collections.emptyMap())
                 .build();
@@ -92,11 +97,30 @@ public class ElectrumRegtestProcess extends DaemonProcess {
     }
 
     @Override
+    protected LogScanner getLogScanner() {
+        return new FileScanner(
+                getIsSuccessfulStartUpLogLines(),
+                logFilePath
+        );
+    }
+
+    @Override
     protected Set<String> getIsSuccessfulStartUpLogLines() {
         return Set.of(
                 LOG_ELECTRUMX_CONNECTION_ESTABLISHED_VERSION,
                 LOG_ELECTRUM_RPC_INTERFACE_READY
         );
+    }
+
+    private Future<Path> findNewLogFile() {
+        try {
+            Path logsDirPath = dataDir.resolve("regtest").resolve("logs");
+            FileUtils.makeDirs(logsDirPath.toFile());
+            var directoryWatcher = new FileCreationWatcher(logsDirPath);
+            return directoryWatcher.waitUntilNewFileCreated();
+        } catch (IOException e) {
+            throw new CannotCreateElectrumLogFileDirectoryException("Cannot create: " + logFilePath, e);
+        }
     }
 
     private void createElectrumConfigFile() {
