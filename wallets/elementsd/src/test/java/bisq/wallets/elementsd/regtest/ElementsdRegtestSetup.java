@@ -39,7 +39,6 @@ import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -80,7 +79,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     @Override
-    public void start() throws IOException, InterruptedException {
+    public void start() throws InterruptedException {
         super.start();
         minerWallet = createNewWallet("miner_wallet");
 
@@ -125,12 +124,12 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return txId;
     }
 
-    public ElementsdWallet createNewWallet(String walletName) throws MalformedURLException {
+    public ElementsdWallet createNewWallet(String walletName) {
         Path receiverWalletPath = tmpDirPath.resolve(walletName);
         return createNewWallet(receiverWalletPath);
     }
 
-    public ElementsdWallet createNewWallet(Path walletPath) throws MalformedURLException {
+    public ElementsdWallet createNewWallet(Path walletPath) {
         if (loadedWalletPaths.contains(walletPath)) {
             throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
                     "'. It exists already.");
@@ -168,12 +167,12 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return new ElementsdRegtestProcess(elementsdConfig, elementsdDataDir);
     }
 
-    private ElementsdDaemon createDaemon() throws MalformedURLException {
+    private ElementsdDaemon createDaemon() {
         DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
         return new ElementsdDaemon(rpcClient);
     }
 
-    private ElementsdWallet newWallet(Path walletPath) throws MalformedURLException {
+    private ElementsdWallet newWallet(Path walletPath) {
         RpcConfig walletRpcConfig = elementsdConfig.elementsdRpcConfig();
         WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletPath);
         return new ElementsdWallet(rpcClient);

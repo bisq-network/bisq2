@@ -21,7 +21,6 @@ import bisq.wallets.core.exceptions.WalletStartupFailedException;
 import bisq.wallets.process.BisqProcess;
 import com.google.common.collect.Lists;
 
-import java.io.IOException;
 import java.util.List;
 
 public class MultiProcessCoordinator implements BisqProcess {
@@ -36,7 +35,7 @@ public class MultiProcessCoordinator implements BisqProcess {
         daemonProcesses.forEach(bisqProcess -> {
             try {
                 bisqProcess.start();
-            } catch (InterruptedException | IOException e) {
+            } catch (InterruptedException e) {
                 throw new WalletStartupFailedException("Cannot start process.", e);
             }
         });

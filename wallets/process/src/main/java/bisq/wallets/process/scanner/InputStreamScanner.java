@@ -15,10 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.process;
+package bisq.wallets.process.scanner;
 
-public interface BisqProcess {
-    void start() throws InterruptedException;
+import lombok.extern.slf4j.Slf4j;
 
-    void shutdown();
+import java.io.InputStream;
+import java.util.Scanner;
+import java.util.Set;
+
+@Slf4j
+public class InputStreamScanner extends LogScanner {
+
+    private final InputStream inputStream;
+
+    public InputStreamScanner(Set<String> linesToMatch, InputStream inputStream) {
+        super(linesToMatch);
+        this.inputStream = inputStream;
+    }
+
+    @Override
+    public boolean waitUntilLogContainsLines() {
+        try (Scanner scanner = new Scanner(inputStream)) {
+            return waitUntilScannerContainsLines(scanner);
+        }
+    }
 }
