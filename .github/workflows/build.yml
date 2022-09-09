@@ -94,3 +94,21 @@ jobs:
           arguments: build --scan
           build-root-directory: wallets
           gradle-executable: ./gradlew
+      - name: Bisq2 artifact (Ubuntu)
+        if: ${{ matrix.os == 'ubuntu-latest'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bisq2-x64-ubuntu-latest
+          path: ./
+      - name: Bisq2 artifact (Windows)
+        if: ${{ matrix.os == 'windows-latest'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bisq2-x64-windows-latest
+          path: ./
+      - name: Bisq2 artifact (macOS)
+        if: ${{ matrix.os == 'macOS-latest'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: bisq2-x64-macOS-latest
+          path: ./
