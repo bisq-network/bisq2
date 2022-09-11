@@ -17,10 +17,6 @@
 
 package bisq.security.pow;
 
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
-import bisq.persistence.PersistenceService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -29,16 +25,11 @@ import java.util.concurrent.CompletableFuture;
 
 // Borrowed from: https://github.com/bisq-network/bisq
 @Slf4j
-public abstract class ProofOfWorkService implements PersistenceClient<ProofOfWorkStore> {
+public abstract class ProofOfWorkService {
     public final static int MINT_NYM_DIFFICULTY = 65536;  // Math.pow(2, 16) = 65536;
 
-    @Getter
-    private final ProofOfWorkStore persistableStore = new ProofOfWorkStore();
-    @Getter
-    private final Persistence<ProofOfWorkStore> persistence;
 
-    public ProofOfWorkService(PersistenceService persistenceService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    public ProofOfWorkService() {
     }
 
     public CompletableFuture<Boolean> initialize() {
