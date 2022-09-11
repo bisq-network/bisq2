@@ -137,6 +137,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
             } else {
                 resetSelectedChildTarget();
+                model.getActionButtonVisible().set(true);
                 model.getActionButtonText().set(Res.get("createOffer"));
                 privateChannelSelection.deSelectChannel();
 
