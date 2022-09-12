@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +29,11 @@ public class BitcoindGetAddressInfoResponse {
     private boolean ismine;
     private boolean iswatchonly;
     private boolean solvable;
+
     private String desc;
+    @JsonProperty("parent_desc")
+    private String parentDesc;
+
     private boolean isscript;
     private boolean ischange;
     private boolean iswitness;
