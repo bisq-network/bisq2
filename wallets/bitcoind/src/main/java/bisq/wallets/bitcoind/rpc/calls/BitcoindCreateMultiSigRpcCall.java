@@ -25,23 +25,26 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class BitcoindAddMultiSigAddressRpcCall
-        extends WalletRpcCall<BitcoindAddMultiSigAddressRpcCall.Request, BitcoindAddOrCreateMultiSigAddressResponse> {
+public class BitcoindCreateMultiSigRpcCall
+        extends WalletRpcCall<BitcoindCreateMultiSigRpcCall.Request, BitcoindAddOrCreateMultiSigAddressResponse> {
+
     @Builder
     @Getter
     public static class Request {
         @JsonProperty("nrequired")
-        private final int nRequired;
-        private final List<String> keys;
+        private int nRequired;
+        private List<String> keys;
+        @JsonProperty("address_type")
+        private String addressType;
     }
 
-    public BitcoindAddMultiSigAddressRpcCall(Request request) {
+    public BitcoindCreateMultiSigRpcCall(Request request) {
         super(request);
     }
 
     @Override
     public String getRpcMethodName() {
-        return "addmultisigaddress";
+        return "createmultisig";
     }
 
     @Override
