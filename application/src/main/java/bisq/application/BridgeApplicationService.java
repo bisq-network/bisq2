@@ -50,7 +50,10 @@ public class BridgeApplicationService extends ApplicationService {
         securityService = new SecurityService(persistenceService);
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(), getConfig("network"));
-        networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
+        networkService = new NetworkService(networkServiceConfig,
+                persistenceService,
+                securityService.getKeyPairService(),
+                securityService.getProofOfWorkService());
 
         identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
                 persistenceService,

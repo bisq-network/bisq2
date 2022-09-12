@@ -48,7 +48,10 @@ public class NetworkApplicationService extends ApplicationService {
         securityService = new SecurityService(persistenceService);
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getBaseDir(), getConfig("network"));
-        networkService = new NetworkService(networkServiceConfig, persistenceService, securityService.getKeyPairService());
+        networkService = new NetworkService(networkServiceConfig,
+                persistenceService,
+                securityService.getKeyPairService(),
+                securityService.getProofOfWorkService());
     }
 
     @Override

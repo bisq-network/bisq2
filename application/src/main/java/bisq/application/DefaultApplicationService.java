@@ -89,7 +89,8 @@ public class DefaultApplicationService extends ApplicationService {
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
                 persistenceService,
-                securityService.getKeyPairService());
+                securityService.getKeyPairService(),
+                securityService.getProofOfWorkService());
 
         identityService = new IdentityService(IdentityService.Config.from(getConfig("identity")),
                 persistenceService,

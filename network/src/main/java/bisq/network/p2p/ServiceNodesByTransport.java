@@ -27,7 +27,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -35,6 +35,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.peergroup.PeerGroupService;
 import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
+import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -64,12 +65,14 @@ public class ServiceNodesByTransport {
                                    Map<Transport.Type, List<Address>> seedAddressesByTransport,
                                    Optional<DataService> dataService,
                                    KeyPairService keyPairService,
-                                   PersistenceService persistenceService) {
+                                   PersistenceService persistenceService,
+                                   ProofOfWorkService proofOfWorkService) {
         supportedTransportTypes.forEach(transportType -> {
             Transport.Config transportConfig = configByTransportType.get(transportType);
+
             Node.Config nodeConfig = new Node.Config(transportType,
                     supportedTransportTypes,
-                    new UnrestrictedAuthorizationService(),
+                    new AuthorizationService(proofOfWorkService),
                     transportConfig,
                     transportConfig.getSocketTimeout());
             List<Address> seedAddresses = seedAddressesByTransport.get(transportType);

@@ -47,6 +47,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.KeyPairService;
 import bisq.security.PubKey;
 import bisq.security.SignatureUtil;
+import bisq.security.pow.ProofOfWorkService;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +97,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
 
     public NetworkService(NetworkServiceConfig config,
                           PersistenceService persistenceService,
-                          KeyPairService keyPairService) {
+                          KeyPairService keyPairService,
+                          ProofOfWorkService proofOfWorkService) {
         this.keyPairService = keyPairService;
         httpService = new HttpService();
 
@@ -112,7 +114,8 @@ public class NetworkService implements PersistenceClient<NetworkServiceStore>, S
                 config.getSeedAddressesByTransport(),
                 dataService,
                 keyPairService,
-                persistenceService);
+                persistenceService,
+                proofOfWorkService);
 
         defaultNodePortByTransportType = config.getDefaultNodePortByTransportType();
 

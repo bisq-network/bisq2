@@ -250,7 +250,10 @@ message DataRequest {
 // NetworkEnvelope
 ////////////////////////////////////////////////////////////////////
 
-message AuthorizationToken {}
+message AuthorizationToken {
+  security.ProofOfWork proofOfWork = 1;
+  uint32 messageCounter = 2;
+}
 
 message NetworkEnvelope {
   uint32 version = 1;

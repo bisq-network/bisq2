@@ -51,7 +51,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
             var proofOfWork = new ProofOfWork(payload, challenge, difficulty, solution);
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
             long duration = System.currentTimeMillis() - ts;
-            log.info("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
+            log.debug("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
             return proofOfWork;
         });
     }

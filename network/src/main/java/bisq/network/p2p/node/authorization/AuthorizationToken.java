@@ -18,15 +18,28 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.common.proto.Proto;
+import bisq.security.pow.ProofOfWork;
 import lombok.Data;
 
 @Data
 public final class AuthorizationToken implements Proto {
+    private final ProofOfWork proofOfWork;
+    private final int messageCounter;
+
+    public AuthorizationToken(ProofOfWork proofOfWork, int messageCounter) {
+        this.proofOfWork = proofOfWork;
+        this.messageCounter = messageCounter;
+    }
+
+    @Override
     public bisq.network.protobuf.AuthorizationToken toProto() {
-        return bisq.network.protobuf.AuthorizationToken.newBuilder().build();
+        return bisq.network.protobuf.AuthorizationToken.newBuilder()
+                .setProofOfWork(proofOfWork.toProto())
+                .setMessageCounter(messageCounter)
+                .build();
     }
 
     public static AuthorizationToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        return new AuthorizationToken();
+        return new AuthorizationToken(ProofOfWork.fromProto(proto.getProofOfWork()), proto.getMessageCounter());
     }
 }
