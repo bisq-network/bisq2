@@ -32,6 +32,7 @@ public class BitcoindCreateWalletRpcCall
         @JsonProperty("wallet_name")
         private String walletName;
         private String passphrase;
+        private final boolean descriptors = true;
     }
 
     public BitcoindCreateWalletRpcCall(Request request) {
