@@ -39,8 +39,16 @@ public class BitcoindDaemon {
     }
 
     public void createOrLoadWallet(Path walletPath, Optional<String> passphrase) {
+        createOrLoadWallet(walletPath, passphrase, false, false);
+    }
+
+    public void createOrLoadWatchOnlyWallet(Path walletPath) {
+        createOrLoadWallet(walletPath, Optional.empty(), true, true);
+    }
+
+    private void createOrLoadWallet(Path walletPath, Optional<String> passphrase, boolean disablePrivateKeys, boolean blank) {
         if (!doesWalletExist(walletPath)) {
-            createWallet(walletPath, passphrase.orElse(""));
+            createWallet(walletPath, passphrase.orElse(""), disablePrivateKeys, blank);
         } else {
             List<String> loadedWallets = listWallets();
             if (!loadedWallets.contains(walletPath.toString())) {
@@ -131,9 +139,11 @@ public class BitcoindDaemon {
         return walletPath.toFile().exists();
     }
 
-    private void createWallet(Path walletPath, String passphrase) {
+    private void createWallet(Path walletPath, String passphrase, boolean disablePrivateKeys, boolean blank) {
         var request = BitcoindCreateWalletRpcCall.Request.builder()
                 .walletName(walletPath.toAbsolutePath().toString())
+                .disablePrivateKeys(disablePrivateKeys)
+                .blank(blank)
                 .passphrase(passphrase)
                 .build();
 

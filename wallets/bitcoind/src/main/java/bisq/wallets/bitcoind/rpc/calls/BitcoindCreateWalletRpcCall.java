@@ -31,7 +31,14 @@ public class BitcoindCreateWalletRpcCall
     public static class Request {
         @JsonProperty("wallet_name")
         private String walletName;
+
+        @JsonProperty("disable_private_keys")
+        private Boolean disablePrivateKeys;
+        private Boolean blank;
+
         private String passphrase;
+        @JsonProperty("avoid_reuse")
+        private Boolean avoidReuse;
         private final boolean descriptors = true;
     }
 
@@ -46,7 +53,7 @@ public class BitcoindCreateWalletRpcCall
 
     @Override
     public boolean isResponseValid(BitcoindCreateOrLoadWalletResponse response) {
-        return response.getName().equals(request.walletName) && !response.hasWarning();
+        return response.getName().equals(request.walletName);
     }
 
     @Override
