@@ -114,6 +114,11 @@ public class BitcoindWallet {
         return Arrays.asList(response);
     }
 
+    public BitcoindListDescriptorResponse listDescriptors() {
+        var rpcCall = new BitcoindListDescriptorsRpcCall();
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public List<BitcoindListTransactionsResponseEntry> listTransactions(int count) {
         var request = BitcoindListTransactionsRpcCall.Request.builder()
                 .count(count)
