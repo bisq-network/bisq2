@@ -18,6 +18,7 @@
 package bisq.wallets.bitcoind.rpc;
 
 import bisq.wallets.bitcoind.rpc.calls.*;
+import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestEntry;
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportMultiRequest;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
@@ -94,6 +95,18 @@ public class BitcoindWallet {
                 .build();
         var rpcCall = new BitcoindGetNewAddressRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public List<BitcoindImportDescriptorResponseEntry> importDescriptors(
+            List<BitcoindImportDescriptorRequestEntry> requests
+    ) {
+        var request = new BitcoindImportDescriptorsRpcCall.Request(
+                requests.toArray(new BitcoindImportDescriptorRequestEntry[0])
+        );
+        var rpcCall = new BitcoindImportDescriptorsRpcCall(request);
+        return Arrays.asList(
+                rpcClient.invokeAndValidate(rpcCall)
+        );
     }
 
     public void importAddress(String address, String label) {
