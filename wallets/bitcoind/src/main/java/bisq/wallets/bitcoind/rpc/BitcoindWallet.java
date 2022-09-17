@@ -88,6 +88,12 @@ public class BitcoindWallet {
         return mineBalancesResponse.getTrusted() + mineBalancesResponse.getUntrustedPending();
     }
 
+    public BitcoindGetDescriptorInfoResponse getDescriptorInfo(String descriptor) {
+        var request = new BitcoindGetDescriptorInfoRpcCall.Request(descriptor);
+        var rpcCall = new BitcoindGetDescriptorInfoRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public String getNewAddress(AddressType addressType, String label) {
         var request = BitcoindGetNewAddressRpcCall.Request.builder()
                 .addressType(addressType.getName())
