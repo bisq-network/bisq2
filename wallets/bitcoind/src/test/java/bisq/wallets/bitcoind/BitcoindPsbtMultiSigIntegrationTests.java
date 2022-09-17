@@ -20,17 +20,21 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
+import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestEntry;
 import bisq.wallets.bitcoind.rpc.responses.*;
+import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
+import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,79 +43,101 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BitcoindPsbtMultiSigIntegrationTests {
 
     private final BitcoindRegtestSetup regtestSetup;
+    private final RpcConfig rpcConfig;
     private final BitcoindDaemon daemon;
     private final BitcoindWallet minerWallet;
 
     public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.regtestSetup = regtestSetup;
+        this.rpcConfig = regtestSetup.getRpcConfig();
         this.daemon = regtestSetup.getDaemon();
         this.minerWallet = regtestSetup.getMinerWallet();
     }
 
     @Test
-    public void psbtMultiSigTest() throws MalformedURLException, InterruptedException {
+    public void psbtMultiSigTest(@TempDir Path tmpDir) throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
 
-        var aliceBackend = regtestSetup.createAndInitializeNewWallet("alice_wallet");
-        var bobBackend = regtestSetup.createAndInitializeNewWallet("bob_wallet");
-        var charlieBackend = regtestSetup.createAndInitializeNewWallet("charlie_wallet");
+        var aliceWallet = regtestSetup.createAndInitializeNewWallet("alice_wallet");
+        var bobWallet = regtestSetup.createAndInitializeNewWallet("bob_wallet");
+        var charlieWallet = regtestSetup.createAndInitializeNewWallet("charlie_wallet");
 
-        String aliceAddress = aliceBackend.getNewAddress(AddressType.BECH32, "");
-        String bobAddress = bobBackend.getNewAddress(AddressType.BECH32, "");
-        String charlieAddress = charlieBackend.getNewAddress(AddressType.BECH32, "");
+        String aliceXPub = getWalletXPub(aliceWallet);
+        String bobXPub = getWalletXPub(bobWallet);
+        String charlieXPub = getWalletXPub(charlieWallet);
 
-        BitcoindGetAddressInfoResponse aliceAddrInfo = aliceBackend.getAddressInfo(aliceAddress);
-        BitcoindGetAddressInfoResponse bobAddrInfo = bobBackend.getAddressInfo(bobAddress);
-        BitcoindGetAddressInfoResponse charlieAddrInfo = charlieBackend.getAddressInfo(charlieAddress);
+        BitcoindWallet aliceWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "alice");
+        BitcoindWallet bobWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "bob");
+        BitcoindWallet charlieWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "charlie");
 
-        // Generate MultiSig Address
-        var keys = new ArrayList<String>();
-        keys.add(aliceAddrInfo.getPubkey());
-        keys.add(bobAddrInfo.getPubkey());
-        keys.add(charlieAddrInfo.getPubkey());
+        String receiveDescriptor = "wsh(sortedmulti(2," +
+                aliceXPub + "/0/*," +
+                bobXPub + "/0/*," +
+                charlieXPub + "/0/*))";
+        String receiveDescriptorWithChecksum = appendChecksumToDescriptor(receiveDescriptor);
 
-        BitcoindAddOrCreateMultiSigAddressResponse aliceMultiSigAddrResponse = aliceBackend.addMultiSigAddress(2, keys);
-        BitcoindAddOrCreateMultiSigAddressResponse bobMultiSigAddrResponse = bobBackend.addMultiSigAddress(2, keys);
-        BitcoindAddOrCreateMultiSigAddressResponse charlieMultiSigAddrResponse = charlieBackend.addMultiSigAddress(2, keys);
+        var receiveDescriptorImportRequest = BitcoindImportDescriptorRequestEntry.builder()
+                .desc(receiveDescriptorWithChecksum)
+                .isActive(true)
+                .isInternal(false)
+                .build();
 
-        aliceBackend.importAddress(aliceMultiSigAddrResponse.getAddress(), "");
-        bobBackend.importAddress(bobMultiSigAddrResponse.getAddress(), "");
-        charlieBackend.importAddress(charlieMultiSigAddrResponse.getAddress(), "");
+        aliceWatchOnlyWallet.importDescriptors(List.of(receiveDescriptorImportRequest));
+        bobWatchOnlyWallet.importDescriptors(List.of(receiveDescriptorImportRequest));
+        charlieWatchOnlyWallet.importDescriptors(List.of(receiveDescriptorImportRequest));
 
-        minerWallet.sendToAddress(
-                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE),
-                aliceMultiSigAddrResponse.getAddress(),
-                5
-        );
-        regtestSetup.mineOneBlock();
+        String changeDescriptor = "wsh(sortedmulti(2," +
+                aliceXPub + "/1/*," +
+                bobXPub + "/1/*," +
+                charlieXPub + "/1/*))";
+        String changeDescriptorWithChecksum = appendChecksumToDescriptor(changeDescriptor);
+
+        var changeDescriptorImportRequest = BitcoindImportDescriptorRequestEntry.builder()
+                .desc(changeDescriptorWithChecksum)
+                .isActive(true)
+                .isInternal(true)
+                .build();
+
+        aliceWatchOnlyWallet.importDescriptors(List.of(changeDescriptorImportRequest));
+        bobWatchOnlyWallet.importDescriptors(List.of(changeDescriptorImportRequest));
+        charlieWatchOnlyWallet.importDescriptors(List.of(changeDescriptorImportRequest));
+
+        String aliceAddress = aliceWatchOnlyWallet.getNewAddress(AddressType.BECH32, "");
+        String bobAddress = bobWatchOnlyWallet.getNewAddress(AddressType.BECH32, "");
+        String charlieAddress = charlieWatchOnlyWallet.getNewAddress(AddressType.BECH32, "");
+
+        assertThat(aliceAddress).isEqualTo(bobAddress)
+                .isEqualTo(charlieAddress);
+        regtestSetup.fundAddress(aliceAddress, 5);
+
+        assertThat(aliceWatchOnlyWallet.getBalance()).isEqualTo(5);
+        assertThat(bobWatchOnlyWallet.getBalance()).isEqualTo(5);
+        assertThat(charlieWatchOnlyWallet.getBalance()).isEqualTo(5);
 
         // Create PSBT (send to Alice without Alice)
-        String aliceReceiveAddr = aliceBackend.getNewAddress(AddressType.BECH32, "");
-        BitcoindPsbtOutput psbtOutput = new BitcoindPsbtOutput();
-        psbtOutput.addOutput(aliceReceiveAddr, 4L);
-
-        var psbtOptions = new BitcoindPsbtOptions(
-                true,
-                new int[]{0}
-        );
-
-        BitcoindWalletCreateFundedPsbtResponse createFundedPsbtResponse = bobBackend.walletCreateFundedPsbt(
+        String aliceReceiveAddr = aliceWallet.getNewAddress(AddressType.BECH32, "");
+        BitcoindWalletCreateFundedPsbtResponse createFundedPsbtResponse = bobWatchOnlyWallet.walletCreateFundedPsbt(
                 Collections.emptyList(),
-                psbtOutput,
-                0,
-                psbtOptions
+                Map.of(aliceReceiveAddr, 4.),
+                Map.of("feeRate", 0.00010)
         );
 
-        // Bob and Charlie sign the PSBT
-        BitcoindWalletProcessPsbtResponse bobPsbtResponse = bobBackend.walletProcessPsbt(
-                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), createFundedPsbtResponse.getPsbt()
+        BitcoindWalletProcessPsbtResponse bobPsbtResponse = bobWallet.walletProcessPsbt(
+                Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE),
+                createFundedPsbtResponse.getPsbt()
         );
-        BitcoindWalletProcessPsbtResponse charliePsbtResponse = charlieBackend.walletProcessPsbt(
-                Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), bobPsbtResponse.getPsbt()
+        BitcoindWalletProcessPsbtResponse charliePsbtResponse = charlieWallet.walletProcessPsbt(
+                Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE),
+                createFundedPsbtResponse.getPsbt()
+        );
+
+        // Combine PSBTs
+        String combinedPsbt = daemon.combinePsbt(
+                List.of(bobPsbtResponse.getPsbt(), charliePsbtResponse.getPsbt())
         );
 
         // Finalize PSBT
-        BitcoindFinalizePsbtResponse finalizePsbtResponse = daemon.finalizePsbt(charliePsbtResponse.getPsbt());
+        BitcoindFinalizePsbtResponse finalizePsbtResponse = daemon.finalizePsbt(combinedPsbt);
         assertThat(finalizePsbtResponse.isComplete())
                 .isTrue();
 
@@ -119,7 +145,28 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         daemon.sendRawTransaction(finalizePsbtResponse.getHex());
 
         regtestSetup.mineOneBlock();
-        assertThat(aliceBackend.getBalance())
+        assertThat(aliceWallet.getBalance())
                 .isGreaterThan(3.9); // Not exactly 4.0 because of fees.
+    }
+
+    private String getWalletXPub(BitcoindWallet wallet) {
+        List<BitcoindDescriptor> descriptors = wallet.listDescriptors().getDescriptors();
+        String xPub = descriptors.stream()
+                .map(BitcoindDescriptor::getDesc)
+                .filter(descriptor -> descriptor.startsWith("pkh"))
+                .findFirst()
+                .orElseThrow();
+        return xPub.split("]")[1].split("/")[0];
+    }
+
+    private BitcoindWallet createWatchOnlyDescriptorWallet(Path tmpDir, String walletName) throws MalformedURLException {
+        Path walletPath = tmpDir.resolve(walletName + "_watch_only_descriptor_wallet");
+        daemon.createOrLoadWatchOnlyWallet(walletPath);
+        return new BitcoindWallet(daemon, rpcConfig, walletPath);
+    }
+
+    private String appendChecksumToDescriptor(String descriptor) {
+        BitcoindGetDescriptorInfoResponse receiveDescriptorInfo = minerWallet.getDescriptorInfo(descriptor);
+        return receiveDescriptorInfo.getDescriptor();
     }
 }

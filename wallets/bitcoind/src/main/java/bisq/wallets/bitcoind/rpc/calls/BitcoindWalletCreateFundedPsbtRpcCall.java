@@ -18,14 +18,13 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindWalletCreateFundedPsbtResponse;
 import bisq.wallets.core.rpc.call.WalletRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 public class BitcoindWalletCreateFundedPsbtRpcCall
         extends WalletRpcCall<BitcoindWalletCreateFundedPsbtRpcCall.Request, BitcoindWalletCreateFundedPsbtResponse> {
@@ -33,10 +32,8 @@ public class BitcoindWalletCreateFundedPsbtRpcCall
     @Getter
     public static class Request {
         private final List<BitcoindPsbtInput> inputs;
-        private final Object[] outputs;
-        @JsonProperty("locktime")
-        private final int lockTime;
-        private final BitcoindPsbtOptions options;
+        private final Map<String, Double> outputs;
+        private final Map<String, Double> options;
     }
 
     public BitcoindWalletCreateFundedPsbtRpcCall(BitcoindWalletCreateFundedPsbtRpcCall.Request request) {
