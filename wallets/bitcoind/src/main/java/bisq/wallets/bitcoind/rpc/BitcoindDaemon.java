@@ -57,6 +57,12 @@ public class BitcoindDaemon {
         }
     }
 
+    public String combinePsbt(List<String> txs) {
+        var request = new BitcoindCombinePsbtRpcCall.Request(txs);
+        var rpcCall = new BitcoindCombinePsbtRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
         var request = new BitcoindDecodeRawTransactionRpcCall.Request(txInHex);
         var rpcCall = new BitcoindDecodeRawTransactionRpcCall(request);
