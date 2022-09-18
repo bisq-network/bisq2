@@ -55,14 +55,22 @@ public class BitcoindWallet {
         daemon.unloadWallet(walletPath);
     }
 
-    public BitcoindAddMultisigAddressResponse addMultiSigAddress(int nRequired, List<String> keys) {
+    public BitcoindAddOrCreateMultiSigAddressResponse createMultiSig(int nRequired, List<String> keys) {
+        var request = BitcoindCreateMultiSigRpcCall.Request.builder()
+                .nRequired(nRequired)
+                .keys(keys)
+                .build();
+        var rpcCall = new BitcoindCreateMultiSigRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public BitcoindAddOrCreateMultiSigAddressResponse addMultiSigAddress(int nRequired, List<String> keys) {
         var request = BitcoindAddMultiSigAddressRpcCall.Request.builder()
                 .nRequired(nRequired)
                 .keys(keys)
                 .build();
         var rpcCall = new BitcoindAddMultiSigAddressRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
-
     }
 
     public BitcoindGetAddressInfoResponse getAddressInfo(String address) {

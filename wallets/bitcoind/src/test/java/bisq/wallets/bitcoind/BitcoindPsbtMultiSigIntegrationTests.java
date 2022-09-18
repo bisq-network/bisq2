@@ -70,9 +70,9 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         keys.add(bobAddrInfo.getPubkey());
         keys.add(charlieAddrInfo.getPubkey());
 
-        BitcoindAddMultisigAddressResponse aliceMultiSigAddrResponse = aliceBackend.addMultiSigAddress(2, keys);
-        BitcoindAddMultisigAddressResponse bobMultiSigAddrResponse = bobBackend.addMultiSigAddress(2, keys);
-        BitcoindAddMultisigAddressResponse charlieMultiSigAddrResponse = charlieBackend.addMultiSigAddress(2, keys);
+        BitcoindAddOrCreateMultiSigAddressResponse aliceMultiSigAddrResponse = aliceBackend.addMultiSigAddress(2, keys);
+        BitcoindAddOrCreateMultiSigAddressResponse bobMultiSigAddrResponse = bobBackend.addMultiSigAddress(2, keys);
+        BitcoindAddOrCreateMultiSigAddressResponse charlieMultiSigAddrResponse = charlieBackend.addMultiSigAddress(2, keys);
 
         aliceBackend.importAddress(aliceMultiSigAddrResponse.getAddress(), "");
         bobBackend.importAddress(bobMultiSigAddrResponse.getAddress(), "");

@@ -22,7 +22,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class BitcoindAddMultisigAddressResponse {
+public class BitcoindAddOrCreateMultiSigAddressResponse {
     private String address;
     private String redeemScript;
     private String descriptor;
