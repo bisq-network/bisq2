@@ -37,7 +37,7 @@ export class BitcoinCoreInstaller implements Installer {
     }
 
     getUrlPrefix(version: string): string {
-        return `https://bitcoin.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
+        return `https://bitcoincore.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
     }
 
     appendUrlSuffixForOs(url_prefix: string): string {
@@ -48,7 +48,7 @@ export class BitcoinCoreInstaller implements Installer {
             case "win32":
                 return url_prefix + 'win64.zip';
             case "darwin":
-                return url_prefix + 'osx64.tar.gz';
+                return url_prefix + 'x86_64-apple-darwin.tar.gz';
             default:
                 throw 'Unknown OS';
         }

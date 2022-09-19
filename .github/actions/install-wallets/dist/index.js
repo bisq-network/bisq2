@@ -71,7 +71,7 @@ class BitcoinCoreInstaller {
         return fs_1.default.existsSync(binDirPath);
     }
     getUrlPrefix(version) {
-        return `https://bitcoin.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
+        return `https://bitcoincore.org/bin/bitcoin-core-${version}/bitcoin-${version}-`;
     }
     appendUrlSuffixForOs(url_prefix) {
         const platform = node_os_1.default.platform();
@@ -81,7 +81,7 @@ class BitcoinCoreInstaller {
             case "win32":
                 return url_prefix + 'win64.zip';
             case "darwin":
-                return url_prefix + 'osx64.tar.gz';
+                return url_prefix + 'x86_64-apple-darwin.tar.gz';
             default:
                 throw 'Unknown OS';
         }
@@ -204,6 +204,7 @@ exports.ElectrumXInstaller = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const fs_1 = __importDefault(__nccwpck_require__(747));
 const downloader_1 = __nccwpck_require__(587);
+const node_path_1 = __importDefault(__nccwpck_require__(49));
 class ElectrumXInstaller {
     constructor() {
         this.programName = 'ElectrumX';
@@ -215,8 +216,8 @@ class ElectrumXInstaller {
             if (!this.isSupportedOs()) {
                 return;
             }
-            if (!this.isCacheHit()) {
-                const version = core.getInput(this.versionPropertyId, { required: true });
+            const version = core.getInput(this.versionPropertyId, { required: true });
+            if (!this.isCacheHit(version)) {
                 let url = `https://github.com/spesmilo/electrumx/archive/refs/tags/${version}.tar.gz`;
                 yield (0, downloader_1.downloadAndUnpackArchive)(url, this.installDir);
             }
@@ -226,8 +227,12 @@ class ElectrumXInstaller {
     isSupportedOs() {
         return process.platform === "darwin" || process.platform === "linux";
     }
-    isCacheHit() {
-        return fs_1.default.existsSync(this.installDir);
+    isCacheHit(version) {
+        const installDir = this.getUnpackedTargetDirName(version);
+        return fs_1.default.existsSync(installDir);
+    }
+    getUnpackedTargetDirName(version) {
+        return node_path_1.default.join(this.installDir, `electrumx-${version}`);
     }
 }
 exports.ElectrumXInstaller = ElectrumXInstaller;
@@ -236,19 +241,32 @@ exports.ElectrumXInstaller = ElectrumXInstaller;
 /***/ }),
 
 /***/ 841:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ElementsCoreInstaller = void 0;
 const bitcoin_core_installer_1 = __nccwpck_require__(826);
+const node_os_1 = __importDefault(__nccwpck_require__(28));
 class ElementsCoreInstaller extends bitcoin_core_installer_1.BitcoinCoreInstaller {
     constructor() {
         super('Elements Core', 'tools/elements-core', 'elements-core-version');
     }
     getUrlPrefix(version) {
         return `https://github.com/ElementsProject/elements/releases/download/elements-${version}/elements-elements-${version}-`;
+    }
+    appendUrlSuffixForOs(url_prefix) {
+        const platform = node_os_1.default.platform();
+        if (platform === "darwin") {
+            return url_prefix + 'osx64.tar.gz';
+        }
+        else {
+            return super.appendUrlSuffixForOs(url_prefix);
+        }
     }
     getUnpackedTargetDirName(version) {
         return `elements-elements-${version}`;
