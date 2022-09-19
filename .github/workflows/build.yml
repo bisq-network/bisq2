@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  bitcoin-core-version: '22.0'
+  bitcoin-core-version: '23.0'
   electrumx-version: '1.16.0'
   elements-core-version: '0.21.0.2'
 
