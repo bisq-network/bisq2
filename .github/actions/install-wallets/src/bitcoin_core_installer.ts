@@ -56,7 +56,7 @@ export class BitcoinCoreInstaller implements Installer {
 
     getBinDir(version: string): string {
         const unpackedTargetDir = this.getUnpackedTargetDirName(version);
-        return path.join(this.installDir, unpackedTargetDir, 'bin');
+        return path.resolve(this.installDir, unpackedTargetDir, 'bin');
     }
 
     getUnpackedTargetDirName(version: string): string {

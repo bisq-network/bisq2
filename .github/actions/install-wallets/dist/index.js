@@ -88,7 +88,7 @@ class BitcoinCoreInstaller {
     }
     getBinDir(version) {
         const unpackedTargetDir = this.getUnpackedTargetDirName(version);
-        return node_path_1.default.join(this.installDir, unpackedTargetDir, 'bin');
+        return node_path_1.default.resolve(this.installDir, unpackedTargetDir, 'bin');
     }
     getUnpackedTargetDirName(version) {
         return `bitcoin-${version}`;
