@@ -35,7 +35,7 @@ public class SecurityService implements Service {
 
     public SecurityService(PersistenceService persistenceService) {
         keyPairService = new KeyPairService(persistenceService);
-        proofOfWorkService = new EquihashProofOfWorkService(persistenceService);
+        proofOfWorkService = new EquihashProofOfWorkService();
     }
 
     public CompletableFuture<Boolean> initialize() {

@@ -26,6 +26,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 public final class Load implements Proto {
+    public static final Load INITIAL_LOAD = new Load(1);
     private final int numConnections;
 
     public Load(int numConnections) {
@@ -38,5 +39,10 @@ public final class Load implements Proto {
 
     public static Load fromProto(bisq.network.protobuf.Load proto) {
         return new Load(proto.getNumConnections());
+    }
+
+    public int getFactor() {
+        //todo
+        return 10;
     }
 }

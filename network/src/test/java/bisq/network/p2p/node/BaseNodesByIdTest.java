@@ -20,7 +20,8 @@ package bisq.network.p2p.node;
 import bisq.network.p2p.BaseNetworkTest;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.BanList;
-import lombok.ToString;
+import bisq.network.p2p.services.peergroup.keepalive.Ping;
+import bisq.network.p2p.services.peergroup.keepalive.Pong;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CountDownLatch;
@@ -59,12 +60,12 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
                 @Override
                 public void onMessage(NetworkMessage networkMessage, Connection connection, String nodeId) {
                     log.info("Received " + networkMessage.toString());
-                    if (networkMessage instanceof ClearNetNodesByIdIntegrationTest.Ping) {
-                        ClearNetNodesByIdIntegrationTest.Pong pong = new ClearNetNodesByIdIntegrationTest.Pong("Pong from " + finalI + " to " + connection.getPeerAddress().getPort());
+                    if (networkMessage instanceof Ping) {
+                        Pong pong = new Pong(((Ping) networkMessage).getNonce());
                         log.info("Send pong " + pong);
                         nodesById.send(nodeId, pong, connection);
                         sendPongLatch.countDown();
-                    } else if (networkMessage instanceof ClearNetNodesByIdIntegrationTest.Pong) {
+                    } else if (networkMessage instanceof Pong) {
                         receivedPongLatch.countDown();
                     }
                 }
@@ -91,7 +92,7 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
             int receiverIndex = (i + 1) % numNodes;
             String receiverNodeId = "node_" + receiverIndex;
             Address receiverNodeAddress = nodesById.findMyAddress(receiverNodeId).orElseThrow();
-            ClearNetNodesByIdIntegrationTest.Ping ping = new ClearNetNodesByIdIntegrationTest.Ping("Ping from " + nodesById.findMyAddress(nodeId) + " to " + receiverNodeAddress);
+            Ping ping = new Ping(1);
             log.info("Send ping " + ping);
             nodesById.send(nodeId, ping, receiverNodeAddress);
             log.info("Send ping completed " + ping);
@@ -133,33 +134,5 @@ public abstract class BaseNodesByIdTest extends BaseNetworkTest {
         }
         nodesById.shutdown().join();
         assertTrue(true);
-    }
-
-    @ToString
-    public static class Ping implements NetworkMessage {
-        public final String msg;
-
-        public Ping(String msg) {
-            this.msg = msg;
-        }
-
-        @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
-            return null;
-        }
-    }
-
-    @ToString
-    public static class Pong implements NetworkMessage {
-        public final String msg;
-
-        public Pong(String msg) {
-            this.msg = msg;
-        }
-
-        @Override
-        public bisq.network.protobuf.NetworkMessage toProto() {
-            return null;
-        }
     }
 }

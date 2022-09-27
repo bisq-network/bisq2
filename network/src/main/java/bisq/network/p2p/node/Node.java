@@ -204,17 +204,21 @@ public class Node implements Connection.Handler {
     private void createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
         myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), config.getSupportedTransportTypes()));
-        server = Optional.of(new Server(serverSocketResult, 
-                socket -> onClientSocket(socket, serverSocketResult, myCapability.get()), 
+        server = Optional.of(new Server(serverSocketResult,
+                socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {
-            handleException(exception);
-            // If server fails we shut down the node
-            shutdown();
-        }));
+                    handleException(exception);
+                    // If server fails we shut down the node
+                    shutdown();
+                }));
     }
 
     private void onClientSocket(Socket socket, Transport.ServerSocketResult serverSocketResult, Capability myCapability) {
-        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket, banList, config.getSocketTimeout(), myCapability, authorizationService);
+        ConnectionHandshake connectionHandshake = new ConnectionHandshake(socket,
+                banList,
+                config.getSocketTimeout(),
+                myCapability,
+                authorizationService);
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Inbound handshake request at: {}", myCapability.getAddress());
         try {
@@ -264,7 +268,10 @@ public class Node implements Connection.Handler {
             throw new ConnectionClosedException(connection);
         }
         try {
-            AuthorizationToken token = authorizationService.createToken(networkMessage.getClass());
+            AuthorizationToken token = authorizationService.createToken(networkMessage,
+                    connection.getPeersLoad(),
+                    connection.getPeerAddress().getFullAddress(),
+                    connection.getSentMessageCounter().incrementAndGet());
             return connection.send(networkMessage, token);
         } catch (Throwable throwable) {
             if (connection.isRunning()) {
@@ -335,7 +342,7 @@ public class Node implements Connection.Handler {
         connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
         log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
         try {
-            ConnectionHandshake.Result result = connectionHandshake.start(getMyLoad()); // Blocking call
+            ConnectionHandshake.Result result = connectionHandshake.start(getMyLoad(), address); // Blocking call
             connectionHandshakes.remove(connectionHandshake.getId());
             log.debug("Outbound handshake completed: Initiated by {} to {}", myCapability.getAddress(), address);
             log.debug("Create new outbound connection to {}", address);
@@ -387,7 +394,13 @@ public class Node implements Connection.Handler {
         if (isShutdown()) {
             return;
         }
-        if (authorizationService.isAuthorized(networkMessage, authorizationToken)) {
+        String myAddress = findMyAddress().orElseThrow().getFullAddress();
+        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+                authorizationToken,
+                getMyLoad(),
+                connection.getId(),
+                myAddress);
+        if (isAuthorized) {
             if (networkMessage instanceof CloseConnectionMessage) {
                 CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
                 log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());

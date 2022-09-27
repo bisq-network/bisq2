@@ -17,7 +17,6 @@
 
 package bisq.security.pow;
 
-import bisq.persistence.PersistenceService;
 import bisq.security.DigestUtil;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
@@ -36,8 +35,8 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
      */
     private static final double DIFFICULTY_SCALE_FACTOR = 3.0e-5;
 
-    public EquihashProofOfWorkService(PersistenceService persistenceService) {
-        super(persistenceService);
+    public EquihashProofOfWorkService() {
+        super();
     }
 
     @Override
@@ -52,7 +51,7 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
             var proofOfWork = new ProofOfWork(payload, challenge, difficulty, solution);
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
             long duration = System.currentTimeMillis() - ts;
-            log.info("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
+            log.debug("Completed minting proofOfWork: {}. {} iterations took {} ms.", proofOfWork, counter, duration);
             return proofOfWork;
         });
     }

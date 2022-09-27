@@ -34,6 +34,7 @@ import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -79,6 +80,8 @@ public abstract class Connection {
     @Getter
     private volatile boolean isStopped;
     private volatile boolean listeningStopped;
+    @Getter
+    private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
     private final Object writeLock = new Object();
 
     protected Connection(Socket socket,

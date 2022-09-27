@@ -19,8 +19,9 @@ package bisq.network.p2p;
 
 import bisq.common.util.OsUtils;
 import bisq.network.p2p.node.Node;
-import bisq.network.p2p.node.authorization.UnrestrictedAuthorizationService;
+import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.security.pow.EquihashProofOfWorkService;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -33,14 +34,11 @@ public abstract class BaseNetworkTest {
     protected Node.Config getConfig(Transport.Type transportType, Set<Transport.Type> supportedTransportTypes) {
         return new Node.Config(transportType,
                 supportedTransportTypes,
-                getAuthorizationService(),
+                new AuthorizationService(new EquihashProofOfWorkService()),
                 getTransportConfig(getBaseDirName()),
                 (int) TimeUnit.SECONDS.toMillis(120));
     }
 
-    protected UnrestrictedAuthorizationService getAuthorizationService() {
-        return new UnrestrictedAuthorizationService();
-    }
 
     protected Transport.Config getTransportConfig(String baseDirName) {
         return new Transport.Config() {
