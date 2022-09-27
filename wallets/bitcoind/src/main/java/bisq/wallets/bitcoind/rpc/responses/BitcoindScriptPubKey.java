@@ -24,6 +24,7 @@ import lombok.Setter;
 @Setter
 public class BitcoindScriptPubKey {
     private String asm;
+    private String desc;
     private String hex;
     private int reqSigs;
     private String type;
