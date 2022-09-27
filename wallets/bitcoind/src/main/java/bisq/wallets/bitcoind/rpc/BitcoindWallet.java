@@ -162,7 +162,9 @@ public class BitcoindWallet {
         var rpcCall = new BitcoindSendToAddressRpcCall(request);
         String txId = rpcClient.invokeAndValidate(rpcCall);
 
-        walletLock();
+        if (passphrase.isPresent()) {
+            walletLock();
+        }
         return txId;
     }
 
@@ -176,7 +178,9 @@ public class BitcoindWallet {
         var rpcCall = new BitcoindSignMessageRpcCall(request);
         String signature = rpcClient.invokeAndValidate(rpcCall);
 
-        walletLock();
+        if (walletPasshrase.isPresent()) {
+            walletLock();
+        }
         return signature;
     }
 
