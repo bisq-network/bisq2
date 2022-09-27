@@ -15,21 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.rpc.psbt;
+package bisq.wallets.bitcoind.rpc.responses;
 
-import lombok.EqualsAndHashCode;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.Setter;
 
 @Getter
-@ToString
-@EqualsAndHashCode
-public final class BitcoindPsbtOptions {
-    private final boolean includeWatching;
-    private final int[] subtractFeeFromOutputs;
-
-    public BitcoindPsbtOptions(boolean includeWatching, int[] subtractFeeFromOutputs) {
-        this.includeWatching = includeWatching;
-        this.subtractFeeFromOutputs = subtractFeeFromOutputs;
-    }
+@Setter
+public class BitcoindGetDescriptorInfoResponse {
+    private String descriptor;
+    private String checksum;
+    @JsonProperty("isrange")
+    private boolean isRange;
+    @JsonProperty("issolvable")
+    private boolean isSolvable;
+    @JsonProperty("hasprivatekeys")
+    private boolean hasPrivateKeys;
 }

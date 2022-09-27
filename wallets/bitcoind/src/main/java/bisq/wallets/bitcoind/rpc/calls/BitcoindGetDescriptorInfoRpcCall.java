@@ -17,41 +17,38 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindWalletCreateFundedPsbtResponse;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindGetDescriptorInfoResponse;
 import bisq.wallets.core.rpc.call.WalletRpcCall;
-import lombok.Builder;
 import lombok.Getter;
 
-import java.util.List;
-import java.util.Map;
+public class BitcoindGetDescriptorInfoRpcCall
+        extends WalletRpcCall<BitcoindGetDescriptorInfoRpcCall.Request, BitcoindGetDescriptorInfoResponse> {
 
-public class BitcoindWalletCreateFundedPsbtRpcCall
-        extends WalletRpcCall<BitcoindWalletCreateFundedPsbtRpcCall.Request, BitcoindWalletCreateFundedPsbtResponse> {
-    @Builder
     @Getter
     public static class Request {
-        private final List<BitcoindPsbtInput> inputs;
-        private final Map<String, Double> outputs;
-        private final Map<String, Double> options;
+        private final String descriptor;
+
+        public Request(String descriptor) {
+            this.descriptor = descriptor;
+        }
     }
 
-    public BitcoindWalletCreateFundedPsbtRpcCall(BitcoindWalletCreateFundedPsbtRpcCall.Request request) {
+    public BitcoindGetDescriptorInfoRpcCall(Request request) {
         super(request);
     }
 
     @Override
     public String getRpcMethodName() {
-        return "walletcreatefundedpsbt";
+        return "getdescriptorinfo";
     }
 
     @Override
-    public boolean isResponseValid(BitcoindWalletCreateFundedPsbtResponse response) {
+    public boolean isResponseValid(BitcoindGetDescriptorInfoResponse response) {
         return true;
     }
 
     @Override
-    public Class<BitcoindWalletCreateFundedPsbtResponse> getRpcResponseClass() {
-        return BitcoindWalletCreateFundedPsbtResponse.class;
+    public Class<BitcoindGetDescriptorInfoResponse> getRpcResponseClass() {
+        return BitcoindGetDescriptorInfoResponse.class;
     }
 }

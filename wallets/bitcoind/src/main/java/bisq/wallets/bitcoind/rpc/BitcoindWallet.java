@@ -18,10 +18,9 @@
 package bisq.wallets.bitcoind.rpc;
 
 import bisq.wallets.bitcoind.rpc.calls.*;
+import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestEntry;
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportMultiRequest;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOptions;
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtOutput;
 import bisq.wallets.bitcoind.rpc.responses.*;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
@@ -32,6 +31,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -87,6 +87,12 @@ public class BitcoindWallet {
         return mineBalancesResponse.getTrusted() + mineBalancesResponse.getUntrustedPending();
     }
 
+    public BitcoindGetDescriptorInfoResponse getDescriptorInfo(String descriptor) {
+        var request = new BitcoindGetDescriptorInfoRpcCall.Request(descriptor);
+        var rpcCall = new BitcoindGetDescriptorInfoRpcCall(request);
+        return rpcClient.invokeAndValidate(rpcCall);
+    }
+
     public String getNewAddress(AddressType addressType, String label) {
         var request = BitcoindGetNewAddressRpcCall.Request.builder()
                 .addressType(addressType.getName())
@@ -94,6 +100,18 @@ public class BitcoindWallet {
                 .build();
         var rpcCall = new BitcoindGetNewAddressRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
+    }
+
+    public List<BitcoindImportDescriptorResponseEntry> importDescriptors(
+            List<BitcoindImportDescriptorRequestEntry> requests
+    ) {
+        var request = new BitcoindImportDescriptorsRpcCall.Request(
+                requests.toArray(new BitcoindImportDescriptorRequestEntry[0])
+        );
+        var rpcCall = new BitcoindImportDescriptorsRpcCall(request);
+        return Arrays.asList(
+                rpcClient.invokeAndValidate(rpcCall)
+        );
     }
 
     public void importAddress(String address, String label) {
@@ -173,14 +191,12 @@ public class BitcoindWallet {
     }
 
     public BitcoindWalletCreateFundedPsbtResponse walletCreateFundedPsbt(List<BitcoindPsbtInput> inputs,
-                                                                         BitcoindPsbtOutput psbtOutput,
-                                                                         int lockTime,
-                                                                         BitcoindPsbtOptions psbtOptions) {
+                                                                         Map<String, Double> outputs,
+                                                                         Map<String, Double> options) {
         var request = BitcoindWalletCreateFundedPsbtRpcCall.Request.builder()
                 .inputs(inputs)
-                .outputs(psbtOutput.toPsbtOutputObject())
-                .lockTime(lockTime)
-                .options(psbtOptions)
+                .outputs(outputs)
+                .options(options)
                 .build();
         var rpcCall = new BitcoindWalletCreateFundedPsbtRpcCall(request);
         return rpcClient.invokeAndValidate(rpcCall);
@@ -214,9 +230,12 @@ public class BitcoindWallet {
 
         var request = new BitcoindWalletProcessPsbtRpcCall.Request(psbt);
         var rpcCall = new BitcoindWalletProcessPsbtRpcCall(request);
-        BitcoindWalletProcessPsbtResponse psbtResponse = rpcClient.invokeAndValidate(rpcCall);
+        BitcoindWalletProcessPsbtResponse response = rpcClient.invokeAndValidate(rpcCall);
 
-        walletLock();
-        return psbtResponse;
+        if (passphrase.isPresent()) {
+            walletLock();
+        }
+
+        return response;
     }
 }

@@ -15,27 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.rpc.psbt;
+package bisq.wallets.bitcoind.rpc.calls.requests;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class BitcoindPsbtOutput {
-
-    private final Map<String, Double> amountByAddress = new HashMap<>();
-
-    @Setter
-    private String data = "00";
-
-    public void addOutput(String address, double amount) {
-        amountByAddress.put(address, amount);
-    }
-
-    public Object[] toPsbtOutputObject() {
-        var dataMap = new HashMap<>();
-        dataMap.put("data", data);
-        return new Object[]{amountByAddress, dataMap};
-    }
+@Builder
+@Getter
+@Setter
+public class BitcoindImportDescriptorRequestEntry {
+    private String desc;
+    @JsonProperty("active")
+    private boolean isActive;
+    @JsonProperty("internal")
+    private boolean isInternal;
+    private final String timestamp = "now";
 }

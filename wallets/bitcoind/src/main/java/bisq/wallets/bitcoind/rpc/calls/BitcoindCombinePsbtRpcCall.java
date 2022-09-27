@@ -17,41 +17,38 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindWalletCreateFundedPsbtResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import lombok.Builder;
+import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import lombok.Getter;
 
 import java.util.List;
-import java.util.Map;
 
-public class BitcoindWalletCreateFundedPsbtRpcCall
-        extends WalletRpcCall<BitcoindWalletCreateFundedPsbtRpcCall.Request, BitcoindWalletCreateFundedPsbtResponse> {
-    @Builder
+public class BitcoindCombinePsbtRpcCall extends DaemonRpcCall<BitcoindCombinePsbtRpcCall.Request, String> {
+
     @Getter
     public static class Request {
-        private final List<BitcoindPsbtInput> inputs;
-        private final Map<String, Double> outputs;
-        private final Map<String, Double> options;
+        private final List<String> txs;
+
+        public Request(List<String> txs) {
+            this.txs = txs;
+        }
     }
 
-    public BitcoindWalletCreateFundedPsbtRpcCall(BitcoindWalletCreateFundedPsbtRpcCall.Request request) {
+    public BitcoindCombinePsbtRpcCall(Request request) {
         super(request);
     }
 
     @Override
     public String getRpcMethodName() {
-        return "walletcreatefundedpsbt";
+        return "combinepsbt";
     }
 
     @Override
-    public boolean isResponseValid(BitcoindWalletCreateFundedPsbtResponse response) {
+    public boolean isResponseValid(String response) {
         return true;
     }
 
     @Override
-    public Class<BitcoindWalletCreateFundedPsbtResponse> getRpcResponseClass() {
-        return BitcoindWalletCreateFundedPsbtResponse.class;
+    public Class<String> getRpcResponseClass() {
+        return String.class;
     }
 }
