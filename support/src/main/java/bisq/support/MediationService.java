@@ -187,7 +187,6 @@ public class MediationService implements Service, DataService.Listener, MessageL
         }
         String concat = myProfileId + peersProfileId;
         int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
-        log.error("index = {}", index);
         return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
     }
 }

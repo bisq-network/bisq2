@@ -229,9 +229,8 @@ public abstract class ChannelSelection {
             @EqualsAndHashCode.Include
             private final String id;
             private final Channel<?> channel;
-            private final String displayString;
+            private String displayString;
             private final boolean hasMultipleProfiles;
-            private boolean mediationActivated;
             private String iconId;
             private String iconIdHover;
             private String iconIdSelected;
@@ -265,19 +264,12 @@ public abstract class ChannelSelection {
 
                 if (channel instanceof PrivateChannel) {
                     PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
-                    String label = privateChannel.getPeer().getUserName();
-                    if (channel instanceof PrivateTradeChannel) {
-                        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
-                        mediationActivated = privateTradeChannel.getMediator().isPresent() && privateTradeChannel.getMediationActivated().get();
-                        if (mediationActivated) {
-                            label += ", " + privateTradeChannel.getMediator().get().getUserName();
-                        }
-                    }
-                    if (hasMultipleProfiles) {
+                    displayString = privateChannel.getPeer().getUserName();
+                    // PrivateTradeChannel is handled in ListCell code
+                    if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
-                        label += " [" + privateChannel.getMyUserIdentity().getUserName() + "]";
+                        displayString += " [" + privateChannel.getMyUserIdentity().getUserName() + "]";
                     }
-                    displayString = label;
                 } else if (channel instanceof PublicTradeChannel) {
                     displayString = ((PublicTradeChannel) channel).getMarket().getMarketCodes();
                 } else {
