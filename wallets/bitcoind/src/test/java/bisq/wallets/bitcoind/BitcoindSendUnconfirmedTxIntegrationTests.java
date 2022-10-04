@@ -74,6 +74,17 @@ public class BitcoindSendUnconfirmedTxIntegrationTests {
             throw new IllegalStateException("Didn't receive ZMQ notification after 1 minute.");
         }
 
+        // Bitcoin Core needs a while until it updates the balance
+        double balance;
+        for (int i = 0; i < 10; i++) {
+            balance = receiverWallet.getBalance();
+            if (balance == 1) {
+                break;
+            }
+
+            Thread.sleep(200);
+        }
+
         assertThat(receiverWallet.getBalance())
                 .isEqualTo(1);
     }
