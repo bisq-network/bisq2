@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.common.util.FileUtils;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -28,8 +29,8 @@ import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -46,8 +47,9 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     private final RpcConfig rpcConfig;
     private final BitcoindDaemon daemon;
     private final BitcoindWallet minerWallet;
+    private final Path watchOnlyWalletDataDir = FileUtils.createTempDir();
 
-    public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+    public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) throws IOException {
         this.regtestSetup = regtestSetup;
         this.rpcConfig = regtestSetup.getRpcConfig();
         this.daemon = regtestSetup.getDaemon();
@@ -55,7 +57,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     }
 
     @Test
-    public void psbtMultiSigTest(@TempDir Path tmpDir) throws MalformedURLException, InterruptedException {
+    public void psbtMultiSigTest() throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
 
         var aliceWallet = regtestSetup.createAndInitializeNewWallet("alice_wallet");
@@ -66,9 +68,9 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         String bobXPub = getWalletXPub(bobWallet);
         String charlieXPub = getWalletXPub(charlieWallet);
 
-        BitcoindWallet aliceWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "alice");
-        BitcoindWallet bobWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "bob");
-        BitcoindWallet charlieWatchOnlyWallet = createWatchOnlyDescriptorWallet(tmpDir, "charlie");
+        BitcoindWallet aliceWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "alice");
+        BitcoindWallet bobWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "bob");
+        BitcoindWallet charlieWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "charlie");
 
         String receiveDescriptor = "wsh(sortedmulti(2," +
                 aliceXPub + "/0/*," +
