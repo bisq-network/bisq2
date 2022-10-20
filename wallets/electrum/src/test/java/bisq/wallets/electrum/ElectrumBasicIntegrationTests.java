@@ -50,7 +50,7 @@ public class ElectrumBasicIntegrationTests {
     @Test
     void getSeedTest() {
         String seed = electrumDaemon.getSeed(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
-        String expectedSeed = electrumRegtestSetup.getWalletInfo().getSeed();
+        String expectedSeed = electrumRegtestSetup.getWalletInfo().getResult().getSeed();
         assertThat(seed).isEqualTo(expectedSeed);
     }
 

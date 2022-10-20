@@ -19,6 +19,8 @@ package bisq.wallets.core.rpc;
 
 import bisq.common.encoding.Base64;
 import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.JsonRpcEndpointSpec;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
 import java.net.MalformedURLException;
@@ -30,10 +32,14 @@ import java.util.Optional;
 
 public class RpcClientFactory {
 
-    public static DaemonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) {
+    public static JsonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) {
+        return createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty());
+    }
+
+    public static DaemonRpcClient createLegacyDaemonRpcClient(RpcConfig rpcConfig) {
         try {
             return new DaemonRpcClient(
-                    createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
+                    createLegacyJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
             );
         } catch (MalformedURLException e) {
             throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
@@ -44,22 +50,33 @@ public class RpcClientFactory {
         try {
             var urlSuffix = "/wallet/" + walletName;
             return new WalletRpcClient(
-                    createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
+                    createLegacyJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
             );
         } catch (MalformedURLException e) {
             throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
         }
     }
 
-    private static JsonRpcHttpClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
+    private static JsonRpcClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) {
+        String url = createRpcUrlWithWithSuffix(rpcConfig, urlSuffix);
+        JsonRpcEndpointSpec endpointSpec = new JsonRpcEndpointSpec(url, rpcConfig.getUser(), rpcConfig.getPassword());
+        return new JsonRpcClient(endpointSpec);
+    }
+
+    private static JsonRpcHttpClient createLegacyJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
             throws MalformedURLException {
+        String url = createRpcUrlWithWithSuffix(rpcConfig, urlSuffix);
+        return new JsonRpcHttpClient(new URL(url), createAuthHeader(rpcConfig));
+    }
+
+    private static String createRpcUrlWithWithSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) {
         String hostname = rpcConfig.getHostname();
         int port = rpcConfig.getPort();
         var url = "http://" + hostname + ":" + port;
         if (urlSuffix.isPresent()) {
             url += urlSuffix.get();
         }
-        return new JsonRpcHttpClient(new URL(url), createAuthHeader(rpcConfig));
+        return url;
     }
 
     private static Map<String, String> createAuthHeader(RpcConfig rpcConfig) {

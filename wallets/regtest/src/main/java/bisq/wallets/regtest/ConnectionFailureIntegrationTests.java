@@ -59,7 +59,7 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
                 .password("WRONG_PASSWORD")
                 .build();
 
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(wrongRpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(wrongRpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         Assertions.assertThatExceptionOfType(InvalidRpcCredentialsException.class)

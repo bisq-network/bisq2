@@ -89,7 +89,7 @@ public class BitcoindRegtestProcess extends DaemonProcess {
     @Override
     public void invokeStopRpcCall() {
         try {
-            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+            DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
             var chainBackend = new BitcoindDaemon(rpcClient);
             chainBackend.stop();
         } catch (RpcCallFailureException e) {

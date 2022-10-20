@@ -120,7 +120,7 @@ public class RemoteBitcoind implements BisqProcess {
     }
 
     private BitcoindDaemon createBitcoindDaemon() {
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
         return new BitcoindDaemon(rpcClient);
     }
 

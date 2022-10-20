@@ -17,23 +17,24 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.electrum.rpc.responses.ElectrumBooleanResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class ElectrumNotifyRpcCall extends DaemonRpcCall<ElectrumNotifyRpcCall.Request, String> {
+public class ElectrumNotifyRpcCall extends DaemonRpcCall<ElectrumNotifyRpcCall.Request, ElectrumBooleanResponse> {
 
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Request {
         private final String address;
-        @JsonProperty("URL")
+        @Json(name = "URL")
         private final String url;
 
-        public Request(String address, @JsonProperty("URL") String url) {
+        public Request(String address, String url) {
             this.address = address;
             this.url = url;
         }
@@ -49,12 +50,12 @@ public class ElectrumNotifyRpcCall extends DaemonRpcCall<ElectrumNotifyRpcCall.R
     }
 
     @Override
-    public boolean isResponseValid(String response) {
-        return response.equals("true");
+    public boolean isResponseValid(ElectrumBooleanResponse response) {
+        return response.getResult();
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<ElectrumBooleanResponse> getRpcResponseClass() {
+        return ElectrumBooleanResponse.class;
     }
 }

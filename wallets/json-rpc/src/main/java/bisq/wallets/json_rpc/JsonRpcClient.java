@@ -40,19 +40,28 @@ public class JsonRpcClient {
         this.rpcEndpointSpec = rpcEndpointSpec;
     }
 
-    public <T, R> R call(RpcCall<T, R> rpcCall) throws IOException {
+    public <T, R> R call(RpcCall<T, R> rpcCall) {
         JsonRpcCall jsonRpcCall = new JsonRpcCall(rpcCall.getRpcMethodName(), rpcCall.request);
         String jsonRequest = jsonRpcCallJsonAdapter.toJson(jsonRpcCall);
         Request request = buildRequest(jsonRequest);
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            if (!response.isSuccessful()) {
+                throw new RpcCallFailureException(
+                        "RPC Call to '" + rpcCall.getRpcMethodName() + "' failed: " + response
+                );
+            }
 
             ResponseBody responseBody = response.body();
             Objects.requireNonNull(responseBody);
 
             JsonAdapter<R> jsonAdapter = rpcCall.getJsonAdapter();
             return jsonAdapter.fromJson(responseBody.source());
+        } catch (IOException e) {
+            throw new RpcCallFailureException(
+                    "RPC Call to '" + rpcCall.getRpcMethodName() + "' failed. ",
+                    e
+            );
         }
     }
 

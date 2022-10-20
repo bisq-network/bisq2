@@ -17,22 +17,23 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.electrum.rpc.responses.ElectrumStringResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class ElectrumGetTransactionRpcCall extends DaemonRpcCall<ElectrumGetTransactionRpcCall.Request, String> {
+public class ElectrumGetTransactionRpcCall extends DaemonRpcCall<ElectrumGetTransactionRpcCall.Request, ElectrumStringResponse> {
 
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("txid")
+        @Json(name = "txid")
         private final String txId;
 
-        public Request(@JsonProperty("txid") String txId) {
+        public Request(String txId) {
             this.txId = txId;
         }
     }
@@ -47,12 +48,12 @@ public class ElectrumGetTransactionRpcCall extends DaemonRpcCall<ElectrumGetTran
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(ElectrumStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<ElectrumStringResponse> getRpcResponseClass() {
+        return ElectrumStringResponse.class;
     }
 }

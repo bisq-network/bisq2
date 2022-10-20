@@ -17,16 +17,23 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
-public class ElectrumDeserializeResponse {
-    private ElectrumDeserializeInputResponse[] inputs;
-    @JsonProperty("locktime")
-    private int lockTime;
-    private ElectrumDeserializeOutputResponse[] outputs;
-    private String version;
+public class ElectrumDeserializeResponse extends JsonRpcResponse<ElectrumDeserializeResponse.Result> {
+    @Getter
+    @Setter
+    public static class Result {
+        private List<ElectrumDeserializeInputResponse> inputs;
+        @Json(name = "locktime")
+        private int lockTime;
+        private List<ElectrumDeserializeOutputResponse> outputs;
+        private String version;
+    }
 }

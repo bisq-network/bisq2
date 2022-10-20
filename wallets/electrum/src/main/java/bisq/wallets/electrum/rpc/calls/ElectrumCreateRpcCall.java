@@ -17,9 +17,11 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumCreateResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonAdapter;
 import lombok.Getter;
 
 public class ElectrumCreateRpcCall extends DaemonRpcCall<ElectrumCreateRpcCall.Request, ElectrumCreateResponse> {
@@ -30,9 +32,9 @@ public class ElectrumCreateRpcCall extends DaemonRpcCall<ElectrumCreateRpcCall.R
     @Getter
     public static class Request {
         private final String passphrase = "";
-        @JsonProperty("encrypt_file")
+        @Json(name = "encrypt_file")
         private final String encryptFile = "true";
-        @JsonProperty("seed_type")
+        @Json(name = "seed_type")
         private final String seedType = "segwit";
 
         private final String password;
@@ -53,7 +55,7 @@ public class ElectrumCreateRpcCall extends DaemonRpcCall<ElectrumCreateRpcCall.R
 
     @Override
     public boolean isResponseValid(ElectrumCreateResponse response) {
-        return response.getMsg().equals(SUCCESS_MSG);
+        return response.getResult().getMsg().equals(SUCCESS_MSG);
     }
 
     @Override

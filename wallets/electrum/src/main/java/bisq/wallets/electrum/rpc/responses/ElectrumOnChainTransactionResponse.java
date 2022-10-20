@@ -18,37 +18,38 @@
 package bisq.wallets.electrum.rpc.responses;
 
 import bisq.wallets.core.model.Transaction;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class ElectrumOnChainTransactionResponse implements Transaction {
-    @JsonProperty("bc_balance")
+    @Json(name = "bc_balance")
     private String bcBalance;
-    @JsonProperty("bc_value")
+    @Json(name = "bc_value")
     private String bcValue;
     private int confirmations;
 
     private String date;
 
     private String fee;
-    @JsonProperty("fee_sat")
-    private long feeSat;
+
+    @Json(name = "fee_sat")
+    private Long feeSat;
 
     private int height;
     private boolean incoming;
     private String label;
 
-    @JsonProperty("monotonic_timestamp")
+    @Json(name = "monotonic_timestamp")
     private long monotonicTimestamp;
-    private long timestamp;
+    private Long timestamp;
 
-    @JsonProperty("txid")
+    @Json(name = "txid")
     private String txId;
-    @JsonProperty("txpos_in_block")
-    private int txPosInBlock;
+    @Json(name = "txpos_in_block")
+    private Integer txPosInBlock;
 
     @Override
     public double getAmount() {

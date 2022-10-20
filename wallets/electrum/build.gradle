@@ -23,6 +23,7 @@ sourceSets {
 dependencies {
     implementation("bisq:persistence")
     implementation project(':core')
+    implementation project(':json-rpc')
     implementation project(':process')
 
     implementation libs.jackson.databind

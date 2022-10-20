@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumGetBalanceResponse;
 
 public class ElectrumGetBalanceRpcCall extends DaemonRpcCall<Void, ElectrumGetBalanceResponse> {

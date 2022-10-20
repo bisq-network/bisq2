@@ -17,17 +17,20 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ElectrumGetBalanceResponse extends JsonRpcResponse<ElectrumGetBalanceResponse.Result> {
-    @Getter
-    @Setter
-    public static class Result {
-        private String confirmed;
-        private String unconfirmed;
-    }
+public class ElectrumDeserializeOutputResponseInput {
+    @Json(name = "prevout_hash")
+    private String prevOutHash;
+    @Json(name = "prevout_n")
+    private int prevOutN;
+    private boolean coinbase;
+    @Json(name = "nsequence")
+    private long nSequence;
+    private String scriptSig;
+    private String witness;
 }

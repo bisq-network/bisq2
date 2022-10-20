@@ -15,19 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.rpc.responses;
+package bisq.wallets.json_rpc;
 
-import bisq.wallets.json_rpc.JsonRpcResponse;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class ElectrumGetBalanceResponse extends JsonRpcResponse<ElectrumGetBalanceResponse.Result> {
-    @Getter
-    @Setter
-    public static class Result {
-        private String confirmed;
-        private String unconfirmed;
+public abstract class DaemonRpcCall<T, R> extends RpcCall<T, R> {
+    public DaemonRpcCall(T request) {
+        super(request);
     }
 }

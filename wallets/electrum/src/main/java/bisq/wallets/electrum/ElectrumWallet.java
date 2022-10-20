@@ -23,11 +23,13 @@ import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainHistoryResponse;
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class ElectrumWallet implements Wallet {
     private final Path walletPath;
@@ -70,12 +72,16 @@ public class ElectrumWallet implements Wallet {
     @Override
     public List<? extends Transaction> listTransactions() {
         ElectrumOnChainHistoryResponse onChainHistoryResponse = daemon.onChainHistory();
-        return onChainHistoryResponse.getTransactions();
+        return onChainHistoryResponse.getResult().getTransactions();
     }
 
     @Override
     public List<? extends Utxo> listUnspent() {
-        return daemon.listUnspent();
+        return daemon.listUnspent()
+                .stream()
+                .map(JsonRpcResponse::getResult)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
     @Override

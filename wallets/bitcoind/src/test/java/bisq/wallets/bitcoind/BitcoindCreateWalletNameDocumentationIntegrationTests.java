@@ -48,7 +48,7 @@ public class BitcoindCreateWalletNameDocumentationIntegrationTests {
         this.dataDir = regtestSetup.getDataDir();
         this.daemon = regtestSetup.getDaemon();
         RpcConfig rpcConfig = regtestSetup.getRpcConfig();
-        this.rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        this.rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
     }
 
     @Test

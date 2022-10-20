@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,8 +25,8 @@ import lombok.Setter;
 @Setter
 public class ElectrumDeserializeOutputResponse {
     private String address;
-    @JsonProperty("scriptpubkey")
+    @Json(name = "scriptpubkey")
     private String scriptPubKey;
-    @JsonProperty("value_sats")
+    @Json(name = "value_sats")
     private long valueSats;
 }

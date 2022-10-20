@@ -27,6 +27,7 @@ import bisq.wallets.electrum.regtest.electrum.ElectrumRegtestSetup;
 import bisq.wallets.electrum.regtest.electrum.MacLinuxElectrumRegtestSetup;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.*;
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,18 +79,21 @@ public class ElectrumTxAndPasswordIntegrationTests {
     void listUnspentGetTxAndHistoryTest() throws InterruptedException {
         fundElectrumWallet();
 
-        // UTXO
-        List<ElectrumListUnspentResponseEntry> unspentResponseEntries = electrumDaemon.listUnspent();
+        List<ElectrumListUnspentResponse.Result> unspentResponseEntries = electrumDaemon.listUnspent()
+                .stream()
+                .map(JsonRpcResponse::getResult)
+                .flatMap(List::stream)
+                .toList();
         assertThat(unspentResponseEntries).hasSize(1);
 
-        ElectrumListUnspentResponseEntry firstEntry = unspentResponseEntries.get(0);
+        ElectrumListUnspentResponse.Result firstEntry = unspentResponseEntries.get(0);
         assertThat(firstEntry.getAddress()).isEqualTo(fundingAddress);
         assertThat(firstEntry.getValue()).isEqualTo("10");
 
         // Transaction
         String tx = electrumDaemon.getTransaction(fundingTxId);
-        ElectrumDeserializeResponse deserializedTx = electrumDaemon.deserialize(tx);
-        ElectrumDeserializeOutputResponse[] outputs = deserializedTx.getOutputs();
+        ElectrumDeserializeResponse.Result deserializedTx = electrumDaemon.deserialize(tx).getResult();
+        List<ElectrumDeserializeOutputResponse> outputs = deserializedTx.getOutputs();
 
         assertThat(outputs).hasSize(2);
 
@@ -103,7 +107,7 @@ public class ElectrumTxAndPasswordIntegrationTests {
         assertThat(hasFundingAddress).isTrue();
 
         // OnChainHistory
-        ElectrumOnChainHistoryResponse electrumOnChainHistoryResponse = electrumDaemon.onChainHistory();
+        ElectrumOnChainHistoryResponse.Result electrumOnChainHistoryResponse = electrumDaemon.onChainHistory().getResult();
         List<ElectrumOnChainTransactionResponse> transactions = electrumOnChainHistoryResponse.getTransactions();
         boolean foundFundingTxInHistory = false;
         for (ElectrumOnChainTransactionResponse t : transactions) {

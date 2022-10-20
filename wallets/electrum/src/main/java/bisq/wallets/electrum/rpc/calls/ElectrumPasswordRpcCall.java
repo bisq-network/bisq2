@@ -17,9 +17,9 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumPasswordResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,10 +32,10 @@ public class ElectrumPasswordRpcCall extends DaemonRpcCall<ElectrumPasswordRpcCa
     @EqualsAndHashCode
     public static final class Request {
         private final String password;
-        @JsonProperty("new_password")
+        @Json(name = "new_password")
         private final String newPassword;
 
-        public Request(String password, @JsonProperty("new_password") String newPassword) {
+        public Request(String password, String newPassword) {
             this.password = password;
             this.newPassword = newPassword;
         }
@@ -56,7 +56,7 @@ public class ElectrumPasswordRpcCall extends DaemonRpcCall<ElectrumPasswordRpcCa
 
     @Override
     public boolean isResponseValid(ElectrumPasswordResponse response) {
-        return response.isPassword();
+        return response.getResult().isPassword();
     }
 
     @Override
