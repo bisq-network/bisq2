@@ -50,7 +50,7 @@ public class BitcoindMineInitialRegtestBlocksIntegrationTest {
         List<String> blockHashes = daemon.generateToAddress(101, address);
 
         CountDownLatch nBlocksMinedLatch = regtestSetup.waitUntilBlocksMined(blockHashes);
-        boolean allBlocksMined = nBlocksMinedLatch.await(15, TimeUnit.SECONDS);
+        boolean allBlocksMined = nBlocksMinedLatch.await(1, TimeUnit.MINUTES);
         assertThat(allBlocksMined).isTrue();
 
         assertThat(minerWallet.getBalance())
