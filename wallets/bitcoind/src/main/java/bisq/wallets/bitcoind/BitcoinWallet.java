@@ -31,7 +31,6 @@ import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
 
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +44,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     @Getter
     private final ZmqConnection zmqConnection;
 
-    public BitcoinWallet(Path walletPath,
+    public BitcoinWallet(String walletName,
                          RpcConfig rpcConfig,
                          BitcoindDaemon daemon,
                          ObservableSet<String> receiveAddresses,
@@ -54,7 +53,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
         this.zmqConnection = zmqConnection;
 
         try {
-            wallet = new BitcoindWallet(daemon, rpcConfig, walletPath);
+            wallet = new BitcoindWallet(daemon, rpcConfig, walletName);
         } catch (MalformedURLException e) {
             throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
         }

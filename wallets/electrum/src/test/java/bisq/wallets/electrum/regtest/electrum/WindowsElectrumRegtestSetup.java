@@ -47,7 +47,7 @@ public class WindowsElectrumRegtestSetup extends ElectrumRegtestSetup {
     public WindowsElectrumRegtestSetup(boolean doCreateWallet) throws IOException {
         RpcConfig bitcoindRpcConfig = createBitcoindRpcConfigFromEnvironmentVars();
         Path tmpDirPath = FileUtils.createTempDir();
-        this.remoteBitcoind = new RemoteBitcoind(tmpDirPath, bitcoindRpcConfig, true);
+        this.remoteBitcoind = new RemoteBitcoind(bitcoindRpcConfig, true);
 
         RpcConfig electrumXRpcConfig = createElectrumXRpcConfigFromEnvironmentVars();
         this.electrumRegtest = new ElectrumRegtest(

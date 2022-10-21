@@ -31,13 +31,11 @@ import java.util.List;
 public class WalletFactory {
 
     public static BitcoinWallet createBitcoinWallet(RpcConfig rpcConfig,
-                                                    Path walletsDataDir,
+                                                    String walletName,
                                                     BitcoinWalletStore bitcoinWalletStore) {
-        Path bitcoindDataDir = walletsDataDir.resolve("bitcoind"); // directory name for bitcoind wallet
-
         BitcoindDaemon daemon = createBitcoindDaemon(rpcConfig);
         ZmqConnection zmqConnection = initializeBitcoindZeroMq(daemon);
-        return new BitcoinWallet(bitcoindDataDir, rpcConfig, daemon, bitcoinWalletStore.getReceiveAddresses(), zmqConnection);
+        return new BitcoinWallet(walletName, rpcConfig, daemon, bitcoinWalletStore.getReceiveAddresses(), zmqConnection);
     }
 
     private static BitcoindDaemon createBitcoindDaemon(RpcConfig rpcConfig) {

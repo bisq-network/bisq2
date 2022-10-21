@@ -28,7 +28,6 @@ import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
 
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -41,19 +40,19 @@ public class BitcoindWallet {
     private final BitcoindDaemon daemon;
     private final WalletRpcClient rpcClient;
 
-    public BitcoindWallet(BitcoindDaemon daemon, RpcConfig rpcConfig, Path walletPath) throws MalformedURLException {
+    public BitcoindWallet(BitcoindDaemon daemon, RpcConfig rpcConfig, String walletName) throws MalformedURLException {
         this.daemon = daemon;
-        this.rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
+        this.rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletName);
     }
 
     public void initialize(Optional<String> passphrase) {
-        Path walletPath = rpcClient.getWalletPath();
-        daemon.createOrLoadWallet(walletPath, passphrase);
+        String walletName = rpcClient.getWalletName();
+        daemon.createOrLoadWallet(walletName, passphrase);
     }
 
     public void shutdown() {
-        Path walletPath = rpcClient.getWalletPath();
-        daemon.unloadWallet(walletPath);
+        String walletName = rpcClient.getWalletName();
+        daemon.unloadWallet(walletName);
     }
 
     public BitcoindAddOrCreateMultiSigAddressResponse createMultiSig(int nRequired, List<String> keys) {

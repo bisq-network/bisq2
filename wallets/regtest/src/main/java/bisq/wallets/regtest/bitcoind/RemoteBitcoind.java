@@ -31,9 +31,7 @@ import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 
-import java.io.File;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +41,6 @@ import static bisq.wallets.regtest.AbstractRegtestSetup.WALLET_PASSPHRASE;
 
 public class RemoteBitcoind implements BisqProcess {
 
-    private final Path tmpDirPath;
     private final RpcConfig rpcConfig;
     @Getter
     private final BitcoindDaemon daemon;
@@ -56,14 +53,12 @@ public class RemoteBitcoind implements BisqProcess {
     private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
     private ZmqConnection bitcoindZeroMq;
 
-    public RemoteBitcoind(Path tmpDirPath,
-                          RpcConfig rpcConfig,
+    public RemoteBitcoind(RpcConfig rpcConfig,
                           boolean doMineInitialRegtestBlocks) throws MalformedURLException {
-        this.tmpDirPath = tmpDirPath;
         this.rpcConfig = rpcConfig;
         this.daemon = createBitcoindDaemon();
         this.doMineInitialRegtestBlocks = doMineInitialRegtestBlocks;
-        this.minerWallet = createNewWallet("miner_wallet");
+        this.minerWallet = new BitcoindWallet(daemon, rpcConfig, "miner_wallet");
         this.blockMiner = new BitcoindRegtestBlockMiner(daemon, minerWallet, zmqListeners);
     }
 
@@ -86,7 +81,7 @@ public class RemoteBitcoind implements BisqProcess {
     }
 
     public BitcoindWallet createAndInitializeNewWallet(String walletName) throws MalformedURLException {
-        var bitcoindWallet = createNewWallet(walletName);
+        var bitcoindWallet = new BitcoindWallet(daemon, rpcConfig, walletName);
         bitcoindWallet.initialize(Optional.of(WALLET_PASSPHRASE));
         return bitcoindWallet;
     }
@@ -125,20 +120,6 @@ public class RemoteBitcoind implements BisqProcess {
     private BitcoindDaemon createBitcoindDaemon() {
         DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new BitcoindDaemon(rpcClient);
-    }
-
-    private BitcoindWallet createNewWallet(String walletName) throws MalformedURLException {
-        Path walletPath = tmpDirPath.resolve(walletName);
-        checkWhetherWalletExist(walletPath);
-        return new BitcoindWallet(daemon, rpcConfig, walletPath);
-    }
-
-    private void checkWhetherWalletExist(Path walletPath) {
-        File walletFile = walletPath.toFile();
-        if (walletFile.exists()) {
-            throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
-                    "'. It exists already.");
-        }
     }
 
     private void initializeZmqListeners() {

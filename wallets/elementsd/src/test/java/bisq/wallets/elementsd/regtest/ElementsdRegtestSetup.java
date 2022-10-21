@@ -54,7 +54,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
 
     @Getter
     private final ElementsdDaemon daemon;
-    private final Set<Path> loadedWalletPaths;
+    private final Set<String> loadedWalletPaths;
 
     @Getter
     private ZmqListeners zmqMinerListeners;
@@ -125,20 +125,15 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     public ElementsdWallet createNewWallet(String walletName) {
-        Path receiverWalletPath = tmpDirPath.resolve(walletName);
-        return createNewWallet(receiverWalletPath);
-    }
-
-    public ElementsdWallet createNewWallet(Path walletPath) {
-        if (loadedWalletPaths.contains(walletPath)) {
-            throw new IllegalStateException("Cannot create wallet '" + walletPath.toAbsolutePath() +
+        if (loadedWalletPaths.contains(walletName)) {
+            throw new IllegalStateException("Cannot create wallet '" + walletName +
                     "'. It exists already.");
         }
 
-        daemon.createOrLoadWallet(walletPath, Optional.of(WALLET_PASSPHRASE));
-        loadedWalletPaths.add(walletPath);
+        daemon.createOrLoadWallet(walletName, Optional.of(WALLET_PASSPHRASE));
+        loadedWalletPaths.add(walletName);
 
-        return newWallet(walletPath);
+        return newWallet(walletName);
     }
 
     public Optional<ElementsdListUnspentResponseEntry> filterUtxosByTxId(
@@ -172,9 +167,9 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return new ElementsdDaemon(rpcClient);
     }
 
-    private ElementsdWallet newWallet(Path walletPath) {
+    private ElementsdWallet newWallet(String walletName) {
         RpcConfig walletRpcConfig = elementsdConfig.elementsdRpcConfig();
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletPath);
+        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletName);
         return new ElementsdWallet(rpcClient);
     }
 

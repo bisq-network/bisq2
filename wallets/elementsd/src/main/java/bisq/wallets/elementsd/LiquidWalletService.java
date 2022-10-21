@@ -24,8 +24,6 @@ import bisq.wallets.core.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.Optional;
 
 @Slf4j
@@ -37,15 +35,14 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     private final Persistence<LiquidWalletStore> persistence;
 
     public LiquidWalletService(PersistenceService persistenceService,
-                               String baseDir,
                                boolean isRegtest) {
-        super("L-BTC", getOptionalRegtestConfig(isRegtest, 7040), Path.of(baseDir + File.separator + "wallets"));
+        super("L-BTC", getOptionalRegtestConfig(isRegtest, 7040), "bisq_elements_default_wallet");
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     @Override
     protected LiquidWallet createWallet(RpcConfig rpcConfig) {
-        return WalletFactory.createLiquidWallet(rpcConfig, walletsDataDir, persistableStore);
+        return WalletFactory.createLiquidWallet(rpcConfig, walletName, persistableStore);
     }
 
     @Override

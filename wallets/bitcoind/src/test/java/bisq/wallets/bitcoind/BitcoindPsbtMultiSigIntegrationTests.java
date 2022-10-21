@@ -17,7 +17,6 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.common.util.FileUtils;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -30,9 +29,7 @@ import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +44,8 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     private final RpcConfig rpcConfig;
     private final BitcoindDaemon daemon;
     private final BitcoindWallet minerWallet;
-    private final Path watchOnlyWalletDataDir = FileUtils.createTempDir();
 
-    public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) throws IOException {
+    public BitcoindPsbtMultiSigIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.regtestSetup = regtestSetup;
         this.rpcConfig = regtestSetup.getRpcConfig();
         this.daemon = regtestSetup.getDaemon();
@@ -68,9 +64,9 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         String bobXPub = getWalletXPub(bobWallet);
         String charlieXPub = getWalletXPub(charlieWallet);
 
-        BitcoindWallet aliceWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "alice");
-        BitcoindWallet bobWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "bob");
-        BitcoindWallet charlieWatchOnlyWallet = createWatchOnlyDescriptorWallet(watchOnlyWalletDataDir, "charlie");
+        BitcoindWallet aliceWatchOnlyWallet = createWatchOnlyDescriptorWallet("alice");
+        BitcoindWallet bobWatchOnlyWallet = createWatchOnlyDescriptorWallet("bob");
+        BitcoindWallet charlieWatchOnlyWallet = createWatchOnlyDescriptorWallet("charlie");
 
         String receiveDescriptor = "wsh(sortedmulti(2," +
                 aliceXPub + "/0/*," +
@@ -161,10 +157,10 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         return xPub.split("]")[1].split("/")[0];
     }
 
-    private BitcoindWallet createWatchOnlyDescriptorWallet(Path tmpDir, String walletName) throws MalformedURLException {
-        Path walletPath = tmpDir.resolve(walletName + "_watch_only_descriptor_wallet");
-        daemon.createOrLoadWatchOnlyWallet(walletPath);
-        return new BitcoindWallet(daemon, rpcConfig, walletPath);
+    private BitcoindWallet createWatchOnlyDescriptorWallet(String walletPrefix) throws MalformedURLException {
+        String walletName = walletPrefix + "_watch_only_descriptor_wallet";
+        daemon.createOrLoadWatchOnlyWallet(walletName);
+        return new BitcoindWallet(daemon, rpcConfig, walletName);
     }
 
     private String appendChecksumToDescriptor(String descriptor) {

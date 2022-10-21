@@ -82,8 +82,8 @@ public class DefaultApplicationService extends ApplicationService {
     public DefaultApplicationService(String[] args) {
         super("default", args);
 
-        bitcoinWalletService = new BitcoinWalletService(persistenceService, config.getBaseDir(), config.isBitcoindRegtest());
-        liquidWalletService = new LiquidWalletService(persistenceService, config.getBaseDir(), config.isElementsdRegtest());
+        bitcoinWalletService = new BitcoinWalletService(persistenceService, config.isBitcoindRegtest());
+        liquidWalletService = new LiquidWalletService(persistenceService, config.isElementsdRegtest());
 
         securityService = new SecurityService(persistenceService);
 

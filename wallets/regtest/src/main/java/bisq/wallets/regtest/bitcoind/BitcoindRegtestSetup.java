@@ -52,7 +52,7 @@ public class BitcoindRegtestSetup
         super();
         rpcConfig = createRpcConfig();
         bitcoindProcess = createBitcoindProcess();
-        remoteBitcoind = new RemoteBitcoind(tmpDirPath, rpcConfig, doMineInitialRegtestBlocks);
+        remoteBitcoind = new RemoteBitcoind(rpcConfig, doMineInitialRegtestBlocks);
     }
 
     @Override
@@ -121,6 +121,10 @@ public class BitcoindRegtestSetup
                 rpcConfig,
                 bitcoindDataDir
         );
+    }
+
+    public Path getDataDir() {
+        return bitcoindProcess.getDataDir();
     }
 
     public BitcoindDaemon getDaemon() {

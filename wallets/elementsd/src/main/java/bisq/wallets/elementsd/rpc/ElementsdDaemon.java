@@ -38,8 +38,8 @@ public class ElementsdDaemon {
         bitcoindDaemon = new BitcoindDaemon(rpcClient);
     }
 
-    public void createOrLoadWallet(Path walletPath, Optional<String> passphrase) {
-        bitcoindDaemon.createOrLoadWallet(walletPath, passphrase);
+    public void createOrLoadWallet(String walletName, Optional<String> passphrase) {
+        bitcoindDaemon.createOrLoadWallet(walletName, passphrase);
     }
 
     public ElementsdDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
@@ -77,7 +77,7 @@ public class ElementsdDaemon {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void unloadWallet(Path walletPath) {
-        bitcoindDaemon.unloadWallet(walletPath);
+    public void unloadWallet(String walletName) {
+        bitcoindDaemon.unloadWallet(walletName);
     }
 }
