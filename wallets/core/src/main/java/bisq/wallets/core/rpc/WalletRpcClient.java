@@ -22,7 +22,7 @@ import bisq.wallets.core.rpc.call.RpcCall;
 import bisq.wallets.core.rpc.call.WalletRpcCall;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
-import java.nio.file.Path;
+import java.util.Arrays;
 
 public class WalletRpcClient extends AbstractRpcClient {
 
@@ -50,12 +50,11 @@ public class WalletRpcClient extends AbstractRpcClient {
         }
     }
 
-    public Path getWalletPath() {
-        // URL looks like: http://127.0.0.1:45775/wallet//tmp/2035361932108224852/miner_wallet
-        String filePart = walletJsonRpcClient.getServiceUrl().getFile();
-        int startIndex = "/wallet/".length();
-        String walletPath = filePart.substring(startIndex);
-        return Path.of(walletPath);
+    public String getWalletName() {
+        // URL looks like: http://127.0.0.1:45775/wallet/miner_wallet
+        // fileUrl: "wallet/miner_wallet"
+        String fileUrl = walletJsonRpcClient.getServiceUrl().getFile();
+        String[] urlParts = fileUrl.split("/");
+        return urlParts[urlParts.length - 1];
     }
-
 }

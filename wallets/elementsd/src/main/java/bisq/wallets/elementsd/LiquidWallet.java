@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class LiquidWallet implements Wallet, ZmqWallet {
-    private final Path walletPath;
+    private final String walletName;
 
     private final ElementsdDaemon daemon;
     private final ElementsdWallet wallet;
@@ -44,12 +44,12 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     @Getter
     private final ZmqConnection zmqConnection;
 
-    public LiquidWallet(Path walletPath,
+    public LiquidWallet(String walletName,
                         ElementsdDaemon daemon,
                         ElementsdWallet wallet,
                         LiquidWalletStore liquidWalletStore,
                         ZmqConnection zmqConnection) {
-        this.walletPath = walletPath;
+        this.walletName = walletName;
         this.daemon = daemon;
         this.wallet = wallet;
         this.liquidWalletStore = liquidWalletStore;
@@ -58,12 +58,12 @@ public class LiquidWallet implements Wallet, ZmqWallet {
 
     @Override
     public void initialize(Optional<String> walletPassphrase) {
-        daemon.createOrLoadWallet(walletPath, walletPassphrase);
+        daemon.createOrLoadWallet(walletName, walletPassphrase);
     }
 
     @Override
     public void shutdown() {
-        daemon.unloadWallet(walletPath);
+        daemon.unloadWallet(walletName);
     }
 
     @Override

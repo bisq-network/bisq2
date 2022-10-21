@@ -26,21 +26,17 @@ import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public class WalletFactory {
 
     public static LiquidWallet createLiquidWallet(RpcConfig rpcConfig,
-                                                  Path walletsDataDir,
+                                                  String walletName,
                                                   LiquidWalletStore liquidWalletStore) {
-        Path walletDir = walletsDataDir.resolve("elementsd"); // directory name for bitcoind wallet
-
         ElementsdDaemon elementsdDaemon = createElementsdDaemon(rpcConfig);
-        ElementsdWallet elementsdWallet = createElementsdWallet(rpcConfig, walletDir);
+        ElementsdWallet elementsdWallet = createElementsdWallet(rpcConfig, walletName);
         ZmqConnection zmqConnection = initializeElementsdZeroMq(elementsdDaemon, elementsdWallet);
-
-        return new LiquidWallet(walletDir, elementsdDaemon, elementsdWallet, liquidWalletStore, zmqConnection);
+        return new LiquidWallet(walletName, elementsdDaemon, elementsdWallet, liquidWalletStore, zmqConnection);
     }
 
     private static ElementsdDaemon createElementsdDaemon(RpcConfig rpcConfig) {
@@ -48,8 +44,8 @@ public class WalletFactory {
         return new ElementsdDaemon(rpcClient);
     }
 
-    private static ElementsdWallet createElementsdWallet(RpcConfig rpcConfig, Path walletPath) {
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletPath);
+    private static ElementsdWallet createElementsdWallet(RpcConfig rpcConfig, String walletName) {
+        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletName);
         return new ElementsdWallet(rpcClient);
     }
 

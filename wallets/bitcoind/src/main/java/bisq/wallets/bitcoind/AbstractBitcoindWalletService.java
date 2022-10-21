@@ -34,8 +34,6 @@ import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +59,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
     private final String currencyCode;
     protected final Optional<RpcConfig> optionalRpcConfig;
-    protected final Path walletsDataDir;
+    protected final String walletName;
     @Getter
     protected final Observable<Coin> observableBalanceAsCoin;
 
@@ -72,10 +70,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
     public AbstractBitcoindWalletService(String currencyCode,
                                          Optional<RpcConfig> optionalRpcConfig,
-                                         Path walletsDataDir) {
+                                         String walletName) {
         this.currencyCode = currencyCode;
         this.optionalRpcConfig = optionalRpcConfig;
-        this.walletsDataDir = walletsDataDir;
+        this.walletName = walletName;
 
         observableBalanceAsCoin = new Observable<>(Coin.of(0, currencyCode));
     }
@@ -87,7 +85,6 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        createWalletsDataDirIfNotExisting();
 
         boolean isSuccess = verifyRpcConfigAndCreateWallet(optionalRpcConfig);
         // No cmd line arguments passed, so try to use saved configuration
@@ -135,7 +132,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         initializeZmqListeners(zmqConnection, receiveAddresses);
 
         this.zmqConnection = Optional.of(zmqConnection);
-        log.info("Successfully created/loaded wallet at {}", walletsDataDir);
+        log.info("Successfully created/loaded wallet at {}", walletName);
 
         updateBalance();
 
@@ -229,17 +226,6 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     protected abstract Optional<RpcConfig> getRpcConfigFromPersistableStore();
 
     protected abstract T createWallet(RpcConfig rpcConfig);
-
-    private void createWalletsDataDirIfNotExisting() {
-        File dataDir = walletsDataDir.toFile();
-        if (!dataDir.exists()) {
-            boolean isSuccess = walletsDataDir.toFile().mkdirs();
-            if (!isSuccess) {
-                throw new WalletNotInitializedException("Couldn't create wallets data dir: " +
-                        dataDir.getAbsolutePath());
-            }
-        }
-    }
 
     private boolean verifyRpcConfigAndCreateWallet(Optional<RpcConfig> optionalRpcConfig) {
         if (optionalRpcConfig.isEmpty()) return false;

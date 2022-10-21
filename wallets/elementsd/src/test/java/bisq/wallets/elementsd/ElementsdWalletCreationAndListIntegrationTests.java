@@ -17,13 +17,9 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.common.util.FileUtils;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,13 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ElementsdWalletCreationAndListIntegrationTests extends SharedElementsdInstanceTests {
-    private Path walletFilePath;
-
-    @BeforeEach
-    void setUp() throws IOException {
-        Path tmpDir = FileUtils.createTempDir();
-        walletFilePath = tmpDir.resolve("wallet");
-    }
 
     @Test
     public void createFreshWallet() {
@@ -47,21 +36,20 @@ public class ElementsdWalletCreationAndListIntegrationTests extends SharedElemen
 
     @Test
     public void loadWalletIfExisting() {
-        assertThat(walletFilePath).doesNotExist();
+        String walletName = "My_new_shiny_wallet";
 
         // Create Wallet
-        elementsdDaemon.createOrLoadWallet(walletFilePath, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
-        assertThat(walletFilePath).exists();
+        elementsdDaemon.createOrLoadWallet(walletName, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
 
         // Unload and reload existing wallet
-        elementsdDaemon.unloadWallet(walletFilePath);
-        elementsdDaemon.createOrLoadWallet(walletFilePath, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
+        elementsdDaemon.unloadWallet(walletName);
+        elementsdDaemon.createOrLoadWallet(walletName, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
 
         assertThat(elementsdMinerWallet.getLBtcBalance())
                 .isZero();
 
         // Cleanup, otherwise other tests don't start on a clean state.
-        elementsdDaemon.unloadWallet(walletFilePath);
+        elementsdDaemon.unloadWallet(walletName);
     }
 
     @Test

@@ -23,10 +23,10 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.exceptions.InvalidRpcCredentialsException;
+import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -38,21 +38,23 @@ public class BitcoindDaemon {
         this.rpcClient = rpcClient;
     }
 
-    public void createOrLoadWallet(Path walletPath, Optional<String> passphrase) {
-        createOrLoadWallet(walletPath, passphrase, false, false);
+    public void createOrLoadWallet(String walletName, Optional<String> passphrase) {
+        createOrLoadWallet(walletName, passphrase, false, false);
     }
 
-    public void createOrLoadWatchOnlyWallet(Path walletPath) {
-        createOrLoadWallet(walletPath, Optional.empty(), true, true);
+    public void createOrLoadWatchOnlyWallet(String walletName) {
+        createOrLoadWallet(walletName, Optional.empty(), true, true);
     }
 
-    private void createOrLoadWallet(Path walletPath, Optional<String> passphrase, boolean disablePrivateKeys, boolean blank) {
-        if (!doesWalletExist(walletPath)) {
-            createWallet(walletPath, passphrase.orElse(""), disablePrivateKeys, blank);
-        } else {
-            List<String> loadedWallets = listWallets();
-            if (!loadedWallets.contains(walletPath.toString())) {
-                loadWallet(walletPath);
+    private void createOrLoadWallet(String walletName, Optional<String> passphrase, boolean disablePrivateKeys, boolean blank) {
+        try {
+            createWallet(walletName, passphrase.orElse(""), disablePrivateKeys, blank);
+        } catch (RpcCallFailureException e) {
+            if (doesWalletExist(e)) {
+                List<String> loadedWallets = listWallets();
+                if (!loadedWallets.contains(walletName)) {
+                    loadWallet(walletName);
+                }
             }
         }
     }
@@ -124,9 +126,8 @@ public class BitcoindDaemon {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    public void unloadWallet(Path walletPath) {
-        String absoluteWalletPath = walletPath.toAbsolutePath().toString();
-        var request = new BitcoindUnloadWalletRpcCall.Request(absoluteWalletPath);
+    public void unloadWallet(String walletName) {
+        var request = new BitcoindUnloadWalletRpcCall.Request(walletName);
         var rpcCall = new BitcoindUnloadWalletRpcCall(request);
         rpcClient.invokeAndValidate(rpcCall);
     }
@@ -141,13 +142,13 @@ public class BitcoindDaemon {
         }
     }
 
-    private boolean doesWalletExist(Path walletPath) {
-        return walletPath.toFile().exists();
+    private boolean doesWalletExist(RpcCallFailureException e) {
+        return e.getCause().getMessage().contains("Database already exists.");
     }
 
-    private void createWallet(Path walletPath, String passphrase, boolean disablePrivateKeys, boolean blank) {
+    private void createWallet(String walletName, String passphrase, boolean disablePrivateKeys, boolean blank) {
         var request = BitcoindCreateWalletRpcCall.Request.builder()
-                .walletName(walletPath.toAbsolutePath().toString())
+                .walletName(walletName)
                 .disablePrivateKeys(disablePrivateKeys)
                 .blank(blank)
                 .passphrase(passphrase)
@@ -157,9 +158,8 @@ public class BitcoindDaemon {
         rpcClient.invokeAndValidate(rpcCall);
     }
 
-    private void loadWallet(Path walletPath) {
-        String absoluteWalletPath = walletPath.toAbsolutePath().toString();
-        var request = new BitcoindLoadWalletRpcCall.Request(absoluteWalletPath);
+    private void loadWallet(String walletName) {
+        var request = new BitcoindLoadWalletRpcCall.Request(walletName);
         var rpcCall = new BitcoindLoadWalletRpcCall(request);
         rpcClient.invokeAndValidate(rpcCall);
     }

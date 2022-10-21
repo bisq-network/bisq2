@@ -24,7 +24,6 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -41,9 +40,9 @@ public class RpcClientFactory {
         }
     }
 
-    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, Path walletPath) {
+    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, String walletName) {
         try {
-            var urlSuffix = "/wallet/" + walletPath.toAbsolutePath();
+            var urlSuffix = "/wallet/" + walletName;
             return new WalletRpcClient(
                     createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
             );
