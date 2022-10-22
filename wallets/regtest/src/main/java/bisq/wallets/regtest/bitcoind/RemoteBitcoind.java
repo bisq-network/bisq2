@@ -41,6 +41,8 @@ import static bisq.wallets.regtest.AbstractRegtestSetup.WALLET_PASSPHRASE;
 
 public class RemoteBitcoind implements BisqProcess {
 
+    public static final String MINER_WALLET_NAME = "miner_wallet";
+
     private final RpcConfig rpcConfig;
     @Getter
     private final BitcoindDaemon daemon;
@@ -58,7 +60,7 @@ public class RemoteBitcoind implements BisqProcess {
         this.rpcConfig = rpcConfig;
         this.daemon = createBitcoindDaemon();
         this.doMineInitialRegtestBlocks = doMineInitialRegtestBlocks;
-        this.minerWallet = new BitcoindWallet(daemon, rpcConfig, "miner_wallet");
+        this.minerWallet = new BitcoindWallet(daemon, rpcConfig, MINER_WALLET_NAME);
         this.blockMiner = new BitcoindRegtestBlockMiner(daemon, minerWallet, zmqListeners);
     }
 

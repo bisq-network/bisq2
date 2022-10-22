@@ -66,7 +66,6 @@ public class BitcoindSendAndListTxsIntegrationTests {
         assertEquals("receive", firstTx.getCategory());
         assertEquals(1, firstTx.getAmount());
         assertEquals(1, firstTx.getConfirmations());
-        assertEquals(102, firstTx.getBlockheight());
         assertEquals(0, firstTx.getWalletconflicts().length);
         assertEquals("no", firstTx.getBip125Replaceable());
 
@@ -75,7 +74,6 @@ public class BitcoindSendAndListTxsIntegrationTests {
         assertEquals("receive", secondTx.getCategory());
         assertEquals(1, secondTx.getAmount());
         assertEquals(1, secondTx.getConfirmations());
-        assertEquals(102, secondTx.getBlockheight());
         assertEquals(0, secondTx.getWalletconflicts().length);
         assertEquals("no", secondTx.getBip125Replaceable());
 
@@ -84,7 +82,6 @@ public class BitcoindSendAndListTxsIntegrationTests {
         assertEquals("receive", thirdTx.getCategory());
         assertEquals(1, thirdTx.getAmount());
         assertEquals(1, thirdTx.getConfirmations());
-        assertEquals(102, thirdTx.getBlockheight());
         assertEquals(0, thirdTx.getWalletconflicts().length);
         assertEquals("no", thirdTx.getBip125Replaceable());
     }

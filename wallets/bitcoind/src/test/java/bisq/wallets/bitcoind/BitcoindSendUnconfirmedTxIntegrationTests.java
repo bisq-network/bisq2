@@ -53,7 +53,7 @@ public class BitcoindSendUnconfirmedTxIntegrationTests {
     @BeforeAll
     public void start() throws IOException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
-        receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
+        receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet_send_check_unconfirmed_balance");
     }
 
     @Test

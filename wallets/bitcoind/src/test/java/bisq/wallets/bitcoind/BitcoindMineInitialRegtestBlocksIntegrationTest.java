@@ -22,6 +22,7 @@ import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -38,10 +39,17 @@ public class BitcoindMineInitialRegtestBlocksIntegrationTest {
     private final BitcoindDaemon daemon;
     private final BitcoindWallet minerWallet;
 
+    private double startBalance;
+
     public BitcoindMineInitialRegtestBlocksIntegrationTest(BitcoindRegtestSetup regtestSetup) {
         this.regtestSetup = regtestSetup;
         this.daemon = regtestSetup.getDaemon();
         this.minerWallet = regtestSetup.getMinerWallet();
+    }
+
+    @BeforeEach
+    void setUp() {
+        startBalance = minerWallet.getBalance();
     }
 
     @Test
@@ -53,7 +61,12 @@ public class BitcoindMineInitialRegtestBlocksIntegrationTest {
         boolean allBlocksMined = nBlocksMinedLatch.await(1, TimeUnit.MINUTES);
         assertThat(allBlocksMined).isTrue();
 
-        assertThat(minerWallet.getBalance())
-                .isEqualTo(50);
+        // Other tests could've mined some blocks already.
+        assertThat(getMinerBalance())
+                .isGreaterThanOrEqualTo(50);
+    }
+
+    private double getMinerBalance() {
+        return minerWallet.getBalance() - startBalance;
     }
 }
