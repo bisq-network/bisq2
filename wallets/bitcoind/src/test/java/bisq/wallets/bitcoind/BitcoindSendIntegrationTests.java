@@ -43,7 +43,7 @@ public class BitcoindSendIntegrationTests {
     @Test
     public void sendOneBtcToAddress() throws MalformedURLException, InterruptedException {
         regtestSetup.mineInitialRegtestBlocks();
-        BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
+        BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet_send_one_btc");
 
         String receiverAddress = receiverBackend.getNewAddress(AddressType.BECH32, "");
         minerWallet.sendToAddress(Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 1);

@@ -20,38 +20,55 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
+import bisq.wallets.core.RpcConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
+import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(BitcoindExtension.class)
 public class BitcoindWalletCreationAndListIntegrationTests {
 
     private final Path dataDir;
+    private final RpcConfig rpcConfig;
     private final BitcoindDaemon daemon;
     private final BitcoindWallet minerWallet;
 
     public BitcoindWalletCreationAndListIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.dataDir = regtestSetup.getDataDir();
+        this.rpcConfig = regtestSetup.getRpcConfig();
         this.daemon = regtestSetup.getDaemon();
         this.minerWallet = regtestSetup.getMinerWallet();
     }
 
     @Test
     public void createFreshWallet() {
-        assertEquals(0, minerWallet.getBalance());
+        String walletName = "fresh_wallet";
+
+        Path walletFilePath = dataDir.resolve("regtest")
+                .resolve("wallets")
+                .resolve(walletName)
+                .resolve("wallet.dat");
+        assertThat(walletFilePath).doesNotExist();
+
+        // Create Wallet
+        daemon.createOrLoadWallet(walletName, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
+        assertThat(walletFilePath).exists();
+
+        // Unload and reload existing wallet
+        daemon.unloadWallet(walletName);
     }
 
     @Test
-    public void loadWalletIfExisting() {
-        String walletName = "wallet";
+    public void loadWalletIfExisting() throws MalformedURLException {
+        String walletName = "wallet_load_if_existing";
 
         Path walletFilePath = dataDir.resolve("regtest")
                 .resolve("wallets")
@@ -67,7 +84,8 @@ public class BitcoindWalletCreationAndListIntegrationTests {
         daemon.unloadWallet(walletName);
         daemon.createOrLoadWallet(walletName, Optional.of(BitcoindRegtestSetup.WALLET_PASSPHRASE));
 
-        assertThat(minerWallet.getBalance())
+        var testWallet = new BitcoindWallet(daemon, rpcConfig, walletName);
+        assertThat(testWallet.getBalance())
                 .isZero();
 
         // Cleanup, otherwise other tests don't start on a clean state.
@@ -77,6 +95,6 @@ public class BitcoindWalletCreationAndListIntegrationTests {
     @Test
     void listWallets() {
         List<String> results = daemon.listWallets();
-        assertThat(results).hasSize(1);
+        assertThat(results).contains(RemoteBitcoind.MINER_WALLET_NAME);
     }
 }
