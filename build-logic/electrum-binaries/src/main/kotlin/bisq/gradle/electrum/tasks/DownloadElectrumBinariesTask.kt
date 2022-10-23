@@ -22,7 +22,7 @@ abstract class DownloadElectrumBinariesTask : DefaultTask() {
         fun getBinaryNames(electrumVersion: String): Set<String> {
             return setOf(
                 "electrum-$electrumVersion.dmg",
-                "electrum-$electrumVersion-portable.exe",
+                "electrum-$electrumVersion.exe",
                 "electrum-$electrumVersion-x86_64.AppImage"
             )
         }

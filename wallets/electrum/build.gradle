@@ -9,7 +9,7 @@ electrum {
 
     appImageHash = '1256a0ca453f28553195deb6f12015b41ee6a043602ac2cca2c4358b1015ea00'
     dmgHash = 'f13fabfa4c227c2a8fbba7ea82eb7ef8c726c52b6f3468cd5e3ef89fdf11902d'
-    exeHash = '9a37a90bf6456d4d37e9db79c7af316cec4cc5a9a28009013fad67d258618013'
+    exeHash = '4b65f322822c405442e5653b31ba7c73c2cf5a273f92af64dc85e9c28e806b38'
 }
 
 sourceSets {
