@@ -79,7 +79,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
                         "daemon",
 
                         "-s",
-                        electrumProcessConfig.getElectrumConfig().getRpcHost() + ":" +
+                        electrumProcessConfig.getElectrumXServerHost() + ":" +
                                 electrumProcessConfig.getElectrumXServerPort() + ":t",
 
                         ElectrumCli.ELECTRUM_DATA_DIR_ARG,
