@@ -109,7 +109,7 @@ public class ElectrumProcess implements BisqProcess {
             Path path = binaryPath.get();
             String fileName = path.getFileName().toString();
 
-            // File name: electrum-4.2.2.dmg / electrum-4.2.2-portable.exe / electrum-4.2.2-x86_64.AppImage
+            // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
             String secondPart = fileName.split("-")[1];
             secondPart = secondPart.replace(".dmg", "");
             electrumVersion = Optional.of(secondPart);
