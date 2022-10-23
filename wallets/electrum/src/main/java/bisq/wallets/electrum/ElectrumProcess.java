@@ -122,6 +122,8 @@ public class ElectrumProcess implements BisqProcess {
         String osName = System.getProperty("os.name");
         if (isRunningOnLinux()) {
             return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
+        } else if (osName.startsWith("Windows")) {
+            return ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
         }
         throw new UnsupportedOperationException("Unsupported OS: " + osName);
     }
