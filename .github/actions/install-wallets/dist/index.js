@@ -221,7 +221,8 @@ class ElectrumXInstaller {
                 let url = `https://github.com/spesmilo/electrumx/archive/refs/tags/${version}.tar.gz`;
                 yield (0, downloader_1.downloadAndUnpackArchive)(url, this.installDir);
             }
-            core.addPath(this.installDir);
+            const absoluteInstallDirPath = node_path_1.default.resolve(this.installDir);
+            core.addPath(absoluteInstallDirPath);
         });
     }
     isSupportedOs() {

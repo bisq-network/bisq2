@@ -20,7 +20,8 @@ export class ElectrumXInstaller implements Installer {
             await downloadAndUnpackArchive(url, this.installDir);
         }
 
-        core.addPath(this.installDir);
+        const absoluteInstallDirPath = path.resolve(this.installDir);
+        core.addPath(absoluteInstallDirPath);
     }
 
     isSupportedOs(): boolean {
