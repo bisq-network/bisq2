@@ -21,6 +21,7 @@ include 'bitcoind'
 include 'electrum'
 include 'elementsd'
 
+include 'json-rpc'
 include 'process'
 include 'regtest'
 

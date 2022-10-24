@@ -1,0 +1,11 @@
+plugins {
+    id 'bisq.gradle.plugin.BisqPlugin'
+}
+
+dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.moshi:moshi:1.14.0'
+
+    testImplementation libs.assertj.core
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+}
