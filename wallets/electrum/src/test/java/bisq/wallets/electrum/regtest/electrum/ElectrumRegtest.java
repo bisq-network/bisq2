@@ -54,7 +54,7 @@ public class ElectrumRegtest implements BisqProcess {
     public void start() {
         electrumProcess.start();
 
-        electrumDaemon = electrumProcess.getElectrumDaemon().orElseThrow();
+        electrumDaemon = electrumProcess.getElectrumDaemon();
         if (doCreateWallet) {
             walletInfo = electrumDaemon.create(AbstractRegtestSetup.WALLET_PASSPHRASE);
             electrumDaemon.loadWallet(AbstractRegtestSetup.WALLET_PASSPHRASE);

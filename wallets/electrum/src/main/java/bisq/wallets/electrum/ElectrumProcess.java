@@ -17,13 +17,9 @@
 
 package bisq.wallets.electrum;
 
-import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
-import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
-import bisq.wallets.process.DaemonProcess;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -37,8 +33,6 @@ public class ElectrumProcess implements BisqProcess {
     @Getter
     private Optional<Path> binaryPath = Optional.empty();
     private Optional<ElectrumRegtestProcess> electrumRegtestProcess = Optional.empty();
-    @Getter
-    private Optional<ElectrumDaemon> electrumDaemon = Optional.empty();
     private Optional<String> electrumVersion = Optional.empty();
 
 
@@ -54,13 +48,11 @@ public class ElectrumProcess implements BisqProcess {
             makeBinaryExecutable();
         }
         createAndStartProcess();
-
-        electrumDaemon = Optional.of(createElectrumDaemon());
     }
 
     @Override
     public void shutdown() {
-        electrumRegtestProcess.ifPresent(DaemonProcess::shutdown);
+        electrumRegtestProcess.ifPresent(ElectrumRegtestProcess::invokeStopRpcCall);
     }
 
     private void unpackArchive() {
@@ -94,12 +86,6 @@ public class ElectrumProcess implements BisqProcess {
         electrumRegtestProcess = Optional.of(process);
     }
 
-    private ElectrumDaemon createElectrumDaemon() {
-        RpcConfig rpcConfig = electrumRegtestProcess.orElseThrow().getRpcConfig();
-        DaemonRpcClient daemonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-        return new ElectrumDaemon(daemonRpcClient);
-    }
-
     public Optional<String> getElectrumVersion() {
         if (electrumVersion.isPresent()) {
             return electrumVersion;
@@ -130,5 +116,9 @@ public class ElectrumProcess implements BisqProcess {
 
     public Path getDataDir() {
         return electrumRegtestProcess.orElseThrow().getDataDir();
+    }
+
+    public ElectrumDaemon getElectrumDaemon() {
+        return electrumRegtestProcess.orElseThrow().getElectrumDaemon();
     }
 }
