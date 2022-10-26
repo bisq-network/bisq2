@@ -19,9 +19,10 @@ package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.RpcConfig;
+import bisq.wallets.core.rpc.DaemonRpcClient;
+import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
-import bisq.wallets.electrum.rpc.cli.ElectrumCli;
-import bisq.wallets.electrum.rpc.cli.ElectrumCliFacade;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
 import bisq.wallets.process.scanner.FileScanner;
@@ -46,7 +47,8 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     private final Path binaryPath;
     private final ElectrumProcessConfig electrumProcessConfig;
-    private final ElectrumCliFacade electrumCliFacade;
+    @Getter
+    private final ElectrumDaemon electrumDaemon;
 
     @Getter
     private RpcConfig rpcConfig;
@@ -56,9 +58,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         super(electrumProcessConfig.getDataDir());
         this.binaryPath = binaryPath;
         this.electrumProcessConfig = electrumProcessConfig;
-
-        var electrumCli = new ElectrumCli(binaryPath, dataDir);
-        electrumCliFacade = new ElectrumCliFacade(electrumCli);
+        this.electrumDaemon = createElectrumDaemon();
     }
 
     @Override
@@ -75,14 +75,14 @@ public class ElectrumRegtestProcess extends DaemonProcess {
         return ProcessConfig.builder()
                 .name(binaryPath.toAbsolutePath().toString())
                 .args(List.of(
-                        ElectrumCli.ELECTRUM_REGTEST_ARG,
+                        "--regtest",
                         "daemon",
 
                         "-s",
                         electrumProcessConfig.getElectrumXServerHost() + ":" +
                                 electrumProcessConfig.getElectrumXServerPort() + ":t",
 
-                        ElectrumCli.ELECTRUM_DATA_DIR_ARG,
+                        "--dir",
                         dataDir.toAbsolutePath().toString(),
 
                         "-v" // Enable logging (only works on Mac and Linux)
@@ -93,7 +93,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     @Override
     public void invokeStopRpcCall() {
-        electrumCliFacade.stop();
+        electrumDaemon.stop();
     }
 
     @Override
@@ -110,6 +110,12 @@ public class ElectrumRegtestProcess extends DaemonProcess {
                 LOG_ELECTRUMX_CONNECTION_ESTABLISHED_VERSION,
                 LOG_ELECTRUM_RPC_INTERFACE_READY
         );
+    }
+
+    private ElectrumDaemon createElectrumDaemon() {
+        RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig();
+        DaemonRpcClient daemonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        return new ElectrumDaemon(daemonRpcClient);
     }
 
     private Future<Path> findNewLogFile() {
