@@ -17,15 +17,15 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class ElectrumOnChainHistoryFlowResponse {
-    @JsonProperty("BTC_incoming")
+    @Json(name = "BTC_incoming")
     private String btcIncoming;
-    @JsonProperty("BTC_outgoing")
+    @Json(name = "BTC_outgoing")
     private String btcOutgoing;
 }

@@ -17,13 +17,16 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ElectrumCreateResponse {
-    private String msg;
-    private String path;
-    private String seed;
+public class ElectrumCreateResponse extends JsonRpcResponse<ElectrumCreateResponse.Result> {
+    @Getter
+    @Setter
+    public static class Result {
+        private String msg;
+        private String path;
+        private String seed;
+    }
 }

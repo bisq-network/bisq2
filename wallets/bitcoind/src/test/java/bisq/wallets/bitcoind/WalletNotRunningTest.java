@@ -41,7 +41,7 @@ public class WalletNotRunningTest {
                 .port(freePort)
                 .build();
 
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         assertThatThrownBy(minerChainBackend::listWallets)

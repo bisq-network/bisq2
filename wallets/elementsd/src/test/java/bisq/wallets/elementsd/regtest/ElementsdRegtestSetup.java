@@ -163,7 +163,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     private ElementsdDaemon createDaemon() {
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
         return new ElementsdDaemon(rpcClient);
     }
 

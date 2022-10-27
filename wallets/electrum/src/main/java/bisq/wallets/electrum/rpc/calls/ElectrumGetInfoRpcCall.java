@@ -17,8 +17,10 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.electrum.rpc.responses.ElectrumGetInfoResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+
+import java.util.HashMap;
 
 public class ElectrumGetInfoRpcCall extends DaemonRpcCall<Void, ElectrumGetInfoResponse> {
     public ElectrumGetInfoRpcCall() {
@@ -30,9 +32,13 @@ public class ElectrumGetInfoRpcCall extends DaemonRpcCall<Void, ElectrumGetInfoR
         return "getinfo";
     }
 
+    public Object getRequestClass() {
+        return new HashMap<String, String>();
+    }
+
     @Override
     public boolean isResponseValid(ElectrumGetInfoResponse response) {
-        return response.getServerHeight() >= 0;
+        return response.getResult().getServerHeight() >= 0;
     }
 
     @Override

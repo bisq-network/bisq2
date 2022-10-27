@@ -17,10 +17,10 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import bisq.wallets.electrum.rpc.responses.ElectrumListUnspentResponseEntry;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.electrum.rpc.responses.ElectrumListUnspentResponse;
 
-public class ElectrumListUnspentRpcCall extends DaemonRpcCall<Void, ElectrumListUnspentResponseEntry[]> {
+public class ElectrumListUnspentRpcCall extends DaemonRpcCall<Void, ElectrumListUnspentResponse> {
     public ElectrumListUnspentRpcCall() {
         super(null);
     }
@@ -31,12 +31,12 @@ public class ElectrumListUnspentRpcCall extends DaemonRpcCall<Void, ElectrumList
     }
 
     @Override
-    public boolean isResponseValid(ElectrumListUnspentResponseEntry[] response) {
+    public boolean isResponseValid(ElectrumListUnspentResponse response) {
         return true;
     }
 
     @Override
-    public Class<ElectrumListUnspentResponseEntry[]> getRpcResponseClass() {
-        return ElectrumListUnspentResponseEntry[].class;
+    public Class<ElectrumListUnspentResponse> getRpcResponseClass() {
+        return ElectrumListUnspentResponse.class;
     }
 }

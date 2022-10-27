@@ -17,13 +17,14 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.electrum.rpc.responses.ElectrumStringResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class ElectrumSignMessageRpcCall extends DaemonRpcCall<ElectrumSignMessageRpcCall.Request, String> {
+public class ElectrumSignMessageRpcCall extends DaemonRpcCall<ElectrumSignMessageRpcCall.Request, ElectrumStringResponse> {
     @Builder
     @Getter
     @ToString
@@ -50,12 +51,12 @@ public class ElectrumSignMessageRpcCall extends DaemonRpcCall<ElectrumSignMessag
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(ElectrumStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<ElectrumStringResponse> getRpcResponseClass() {
+        return ElectrumStringResponse.class;
     }
 }

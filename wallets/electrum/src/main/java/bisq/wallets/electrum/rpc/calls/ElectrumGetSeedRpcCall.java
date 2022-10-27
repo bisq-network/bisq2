@@ -17,12 +17,13 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.electrum.rpc.responses.ElectrumStringResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class ElectrumGetSeedRpcCall extends DaemonRpcCall<ElectrumGetSeedRpcCall.Request, String> {
+public class ElectrumGetSeedRpcCall extends DaemonRpcCall<ElectrumGetSeedRpcCall.Request, ElectrumStringResponse> {
 
     @Getter
     @ToString
@@ -45,12 +46,12 @@ public class ElectrumGetSeedRpcCall extends DaemonRpcCall<ElectrumGetSeedRpcCall
     }
 
     @Override
-    public boolean isResponseValid(String response) {
-        return !response.isEmpty();
+    public boolean isResponseValid(ElectrumStringResponse response) {
+        return !response.getResult().isEmpty();
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<ElectrumStringResponse> getRpcResponseClass() {
+        return ElectrumStringResponse.class;
     }
 }

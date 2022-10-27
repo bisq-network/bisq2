@@ -17,30 +17,35 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ElectrumGetInfoResponse {
-    @JsonProperty("auto_connect")
-    private boolean isAutoConnectEnabled;
-    @JsonProperty("blockchain_height")
-    private int blockchainHeight;
-    @JsonProperty("connected")
-    private boolean isConnected;
+public class ElectrumGetInfoResponse extends JsonRpcResponse<ElectrumGetInfoResponse.Result> {
+    @Getter
+    @Setter
+    public static class Result {
+        @Json(name = "auto_connect")
+        private boolean isAutoConnectEnabled;
+        @Json(name = "blockchain_height")
+        private int blockchainHeight;
+        @Json(name = "connected")
+        private boolean isConnected;
 
-    @JsonProperty("default_wallet")
-    private String defaultWallet;
-    @JsonProperty("fee_per_kb")
-    private int feePerKb;
+        @Json(name = "default_wallet")
+        private String defaultWallet;
+        @Json(name = "fee_per_kb")
+        private int feePerKb;
 
-    private String path;
-    private String server;
-    @JsonProperty("server_height")
-    private int serverHeight;
-    @JsonProperty("spv_nodes")
-    private int spvNodes;
-    private String version;
+        private String path;
+        private String server;
+        @Json(name = "server_height")
+        private int serverHeight;
+        @Json(name = "spv_nodes")
+        private int spvNodes;
+        private String version;
+    }
 }

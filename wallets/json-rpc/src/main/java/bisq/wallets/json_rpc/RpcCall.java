@@ -26,7 +26,7 @@ public abstract class RpcCall<T, R> {
     @Getter
     protected final T request;
 
-    private final Moshi moshi = new Moshi.Builder().build();
+    protected final Moshi moshi = new Moshi.Builder().build();
 
     public RpcCall(T request) {
         this.request = request;

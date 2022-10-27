@@ -19,10 +19,10 @@ package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
 import bisq.wallets.process.scanner.FileScanner;
@@ -114,8 +114,8 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     private ElectrumDaemon createElectrumDaemon() {
         RpcConfig rpcConfig = electrumProcessConfig.getElectrumConfig().toRpcConfig();
-        DaemonRpcClient daemonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
-        return new ElectrumDaemon(daemonRpcClient);
+        JsonRpcClient jsonRpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        return new ElectrumDaemon(jsonRpcClient);
     }
 
     private Future<Path> findNewLogFile() {

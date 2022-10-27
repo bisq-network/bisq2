@@ -17,9 +17,10 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.electrum.rpc.responses.ElectrumStringResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class ElectrumGetUnusedAddressRpcCall extends DaemonRpcCall<Void, String> {
+public class ElectrumGetUnusedAddressRpcCall extends DaemonRpcCall<Void, ElectrumStringResponse> {
     public ElectrumGetUnusedAddressRpcCall() {
         super(null);
     }
@@ -30,12 +31,12 @@ public class ElectrumGetUnusedAddressRpcCall extends DaemonRpcCall<Void, String>
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(ElectrumStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<ElectrumStringResponse> getRpcResponseClass() {
+        return ElectrumStringResponse.class;
     }
 }

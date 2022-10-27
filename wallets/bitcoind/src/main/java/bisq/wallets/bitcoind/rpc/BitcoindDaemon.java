@@ -134,7 +134,7 @@ public class BitcoindDaemon {
 
     public static boolean verifyRpcConfig(RpcConfig rpcConfig) {
         try {
-            DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+            DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
             listWalletsWithRpcClient(rpcClient); // Makes a listwallets RPC call
             return true;
         } catch (InvalidRpcCredentialsException e) {

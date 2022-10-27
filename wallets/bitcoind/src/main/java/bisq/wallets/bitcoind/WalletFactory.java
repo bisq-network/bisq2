@@ -25,7 +25,6 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
 
-import java.nio.file.Path;
 import java.util.List;
 
 public class WalletFactory {
@@ -39,7 +38,7 @@ public class WalletFactory {
     }
 
     private static BitcoindDaemon createBitcoindDaemon(RpcConfig rpcConfig) {
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
         return new BitcoindDaemon(rpcClient);
     }
 

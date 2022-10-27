@@ -62,9 +62,9 @@ public class ElectrumSetupIntegrationTests {
 
         Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
-        assertThat(createResponse.getPath()).startsWith(absoluteDataDirPath);
+        assertThat(createResponse.getResult().getPath()).startsWith(absoluteDataDirPath);
 
-        String[] seedWords = createResponse.getSeed().split(" ");
+        String[] seedWords = createResponse.getResult().getSeed().split(" ");
         assertThat(seedWords.length).isEqualTo(12);
 
         electrumDaemon.loadWallet(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
@@ -72,7 +72,7 @@ public class ElectrumSetupIntegrationTests {
 
     @Test
     void getInfoTest() {
-        ElectrumGetInfoResponse info = electrumDaemon.getInfo();
+        ElectrumGetInfoResponse.Result info = electrumDaemon.getInfo().getResult();
         assertThat(info.isConnected()).isTrue();
 
         Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();

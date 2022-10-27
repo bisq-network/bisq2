@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,12 +25,12 @@ import lombok.Setter;
 @Setter
 public class ElectrumDeserializeInputResponse {
     private boolean coinbase;
-    @JsonProperty("nsequence")
+    @Json(name = "nsequence")
     private long nSequence;
 
-    @JsonProperty("prevout_hash")
+    @Json(name = "prevout_hash")
     private String prevOutHash;
-    @JsonProperty("prevout_n")
+    @Json(name = "prevout_n")
     private int prevOutN;
 
     private String scriptSig;

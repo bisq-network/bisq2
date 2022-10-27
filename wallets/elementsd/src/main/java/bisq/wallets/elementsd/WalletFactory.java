@@ -40,7 +40,7 @@ public class WalletFactory {
     }
 
     private static ElementsdDaemon createElementsdDaemon(RpcConfig rpcConfig) {
-        DaemonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
+        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
         return new ElementsdDaemon(rpcClient);
     }
 

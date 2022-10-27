@@ -17,41 +17,41 @@
 
 package bisq.wallets.electrum.rpc;
 
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.electrum.rpc.calls.*;
 import bisq.wallets.electrum.rpc.responses.*;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class ElectrumDaemon {
-    private final DaemonRpcClient rpcClient;
+    private final JsonRpcClient rpcClient;
 
-    public ElectrumDaemon(DaemonRpcClient rpcClient) {
+    public ElectrumDaemon(JsonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
     public String broadcast(String tx) {
         var request = new ElectrumBroadcastRpcCall.Request(tx);
         var rpcCall = new ElectrumBroadcastRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public ElectrumCreateResponse create(String password) {
         var request = new ElectrumCreateRpcCall.Request(password);
         var rpcCall = new ElectrumCreateRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public ElectrumDeserializeResponse deserialize(String tx) {
         var request = new ElectrumDeserializeRpcCall.Request(tx);
         var rpcCall = new ElectrumDeserializeRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public double getBalance() {
         var rpcCall = new ElectrumGetBalanceRpcCall();
-        ElectrumGetBalanceResponse response = rpcClient.invokeAndValidate(rpcCall);
+        ElectrumGetBalanceResponse.Result response = rpcClient.call(rpcCall).getResult();
         double confirmedBalance = Double.parseDouble(response.getConfirmed());
 
         String unconfirmed = response.getUnconfirmed();
@@ -62,46 +62,46 @@ public class ElectrumDaemon {
 
     public ElectrumGetInfoResponse getInfo() {
         var rpcCall = new ElectrumGetInfoRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public String getSeed(String password) {
         var request = new ElectrumGetSeedRpcCall.Request(password);
         var rpcCall = new ElectrumGetSeedRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String getTransaction(String txId) {
         var request = new ElectrumGetTransactionRpcCall.Request(txId);
         var rpcCall = new ElectrumGetTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String getUnusedAddress() {
         var rpcCall = new ElectrumGetUnusedAddressRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
-    public List<ElectrumListUnspentResponseEntry> listUnspent() {
+    public List<ElectrumListUnspentResponse> listUnspent() {
         var rpcCall = new ElectrumListUnspentRpcCall();
-        return Arrays.asList(rpcClient.invokeAndValidate(rpcCall));
+        return Arrays.asList(rpcClient.call(rpcCall));
     }
 
     public void loadWallet(String password) {
         var request = new ElectrumLoadWalletRpcCall.Request(password);
         var rpcCall = new ElectrumLoadWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public void notify(String bitcoinAddress, String url) {
         var request = new ElectrumNotifyRpcCall.Request(bitcoinAddress, url);
         var rpcCall = new ElectrumNotifyRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public ElectrumOnChainHistoryResponse onChainHistory() {
         var rpcCall = new ElectrumOnChainHistoryRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public void password(String password, String newPassword) {
@@ -110,7 +110,7 @@ public class ElectrumDaemon {
                 .newPassword(newPassword)
                 .build();
         var rpcCall = new ElectrumPasswordRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public String payTo(String password, String destination, double amount) {
@@ -120,7 +120,7 @@ public class ElectrumDaemon {
                 .password(password)
                 .build();
         var rpcCall = new ElectrumPayToRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String signMessage(String password, String address, String message) {
@@ -130,18 +130,18 @@ public class ElectrumDaemon {
                 .message(message)
                 .build();
         var rpcCall = new ElectrumSignMessageRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String signTransaction(String password, String tx) {
         var request = new ElectrumSignTransactionRpcCall.Request(tx, password);
         var rpcCall = new ElectrumSignTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public void stop() {
         var rpcCall = new ElectrumStopRpcCall();
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public boolean verifyMessage(String address, String signature, String message) {
@@ -151,6 +151,6 @@ public class ElectrumDaemon {
                 .message(message)
                 .build();
         var rpcCall = new ElectrumVerifyMessageRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall).equals("true");
+        return rpcClient.call(rpcCall).getResult();
     }
 }
