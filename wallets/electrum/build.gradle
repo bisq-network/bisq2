@@ -26,7 +26,6 @@ dependencies {
     implementation project(':json-rpc')
     implementation project(':process')
 
-    implementation libs.jackson.databind
     implementation libs.bundles.glassfish.jersey
 
     testImplementation project(':bitcoind')
