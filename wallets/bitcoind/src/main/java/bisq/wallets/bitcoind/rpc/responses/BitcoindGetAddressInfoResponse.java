@@ -26,29 +26,43 @@ import lombok.Setter;
 public class BitcoindGetAddressInfoResponse {
     private String address;
     private String scriptPubKey;
-    private boolean ismine;
-    private boolean iswatchonly;
+    @JsonProperty("ismine")
+    private boolean isMine;
+    @JsonProperty("iswatchonly")
+    private boolean isWatchOnly;
     private boolean solvable;
 
     private String desc;
     @JsonProperty("parent_desc")
     private String parentDesc;
 
-    private boolean isscript;
-    private boolean ischange;
-    private boolean iswitness;
-    private int witness_version;
-    private String witness_program;
+    @JsonProperty("isscript")
+    private boolean isScript;
+    @JsonProperty("ischange")
+    private boolean isChange;
+    @JsonProperty("iswitness")
+    private boolean isWitness;
+    @JsonProperty("witness_version")
+    private int witnessVersion;
+    @JsonProperty("witness_program")
+    private String witnessProgram;
     private String script;
     private String hex;
-    private String[] pubkeys;
-    private int sigsrequired;
-    private String pubkey;
+    @JsonProperty("pubkeys")
+    private String[] pubKeys;
+    @JsonProperty("sigsrequired")
+    private int sigsRequired;
+    @JsonProperty("pubkey")
+    private String pubKey;
     private Object embedded;
-    private boolean iscompressed;
+    @JsonProperty("iscompressed")
+    private boolean isCompressed;
     private int timestamp;
-    private String hdkeypath;
-    private String hdseedid;
-    private String hdmasterfingerprint;
+    @JsonProperty("hdkeypath")
+    private String hdKeyPath;
+    @JsonProperty("hdseedid")
+    private String hdSeedId;
+    @JsonProperty("hdmasterfingerprint")
+    private String hdMasterFingerprint;
     private String[] labels;
 }
