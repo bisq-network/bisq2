@@ -20,6 +20,7 @@ package bisq.wallets.json_rpc;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import okhttp3.*;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class JsonRpcClient {
 
     private final JsonRpcEndpointSpec rpcEndpointSpec;
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
     private final MediaType jsonMediaType = MediaType.parse("application/json");
 
     private final Moshi moshi = new Moshi.Builder().build();
@@ -38,6 +39,13 @@ public class JsonRpcClient {
 
     public JsonRpcClient(JsonRpcEndpointSpec rpcEndpointSpec) {
         this.rpcEndpointSpec = rpcEndpointSpec;
+
+        var loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+
+        this.client = new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build();
     }
 
     public <T, R> R call(RpcCall<T, R> rpcCall) {
