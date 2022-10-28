@@ -30,5 +30,4 @@ dependencies {
 
     testImplementation project(':bitcoind')
     testImplementation project(':regtest')
-    testImplementation libs.assertj.core
 }
