@@ -28,7 +28,9 @@ dependencies {
 
     testAnnotationProcessor libs.lombok
     testCompileOnly libs.lombok
+
     testImplementation libs.junit.jupiter
+    testImplementation libs.assertj.core
 }
 
 test {

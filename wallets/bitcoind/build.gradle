@@ -18,5 +18,4 @@ dependencies {
     implementation libs.jeromq
 
     testImplementation project(':regtest')
-    testImplementation libs.assertj.core
 }
