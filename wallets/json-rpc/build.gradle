@@ -3,8 +3,12 @@ plugins {
 }
 
 dependencies {
-    api 'com.squareup.okhttp3:okhttp:4.10.0'
+    api platform("com.squareup.okhttp3:okhttp-bom:4.10.0")
+    implementation platform("com.squareup.okhttp3:okhttp-bom:4.10.0")
+
+    api 'com.squareup.okhttp3:okhttp'
     api 'com.squareup.moshi:moshi:1.14.0'
 
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    testImplementation libs.assertj.core
+    testImplementation 'com.squareup.okhttp3:mockwebserver'
 }
