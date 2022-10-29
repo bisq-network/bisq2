@@ -20,13 +20,10 @@ package bisq.wallets.electrum.rpc.responses;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumGetInfoResponse extends JsonRpcResponse<ElectrumGetInfoResponse.Result> {
     @Getter
-    @Setter
     public static class Result {
         @Json(name = "auto_connect")
         private boolean isAutoConnectEnabled;

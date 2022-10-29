@@ -18,10 +18,8 @@
 package bisq.wallets.electrum.rpc.responses;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumOnChainHistorySummaryResponse {
     private ElectrumOnChainHistoryBeginEndResponse begin;
     private ElectrumOnChainHistoryBeginEndResponse end;

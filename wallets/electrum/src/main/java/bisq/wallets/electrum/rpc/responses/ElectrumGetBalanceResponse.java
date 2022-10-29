@@ -19,13 +19,10 @@ package bisq.wallets.electrum.rpc.responses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumGetBalanceResponse extends JsonRpcResponse<ElectrumGetBalanceResponse.Result> {
     @Getter
-    @Setter
     public static class Result {
         private String confirmed;
         private String unconfirmed;

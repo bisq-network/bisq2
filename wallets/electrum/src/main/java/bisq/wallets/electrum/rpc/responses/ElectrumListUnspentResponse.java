@@ -21,16 +21,13 @@ import bisq.wallets.core.model.Utxo;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
 
 @Getter
-@Setter
 public class ElectrumListUnspentResponse extends JsonRpcResponse<List<ElectrumListUnspentResponse.Result>> {
     @Getter
-    @Setter
     public static class Result implements Utxo {
         private String address;
         @Json(name = "bip32_paths")

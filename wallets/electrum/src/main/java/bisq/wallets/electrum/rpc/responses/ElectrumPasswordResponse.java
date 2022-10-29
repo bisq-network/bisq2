@@ -19,13 +19,10 @@ package bisq.wallets.electrum.rpc.responses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumPasswordResponse extends JsonRpcResponse<ElectrumPasswordResponse.Result> {
     @Getter
-    @Setter
     public static class Result {
         private boolean password;
     }
