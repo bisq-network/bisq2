@@ -26,7 +26,6 @@ jobs:
         uses: actions/checkout@v3.1.0
 
       - name: Cache Bitcoin Core
-        id: cache-bitcoin-core
         uses: actions/cache@v3
         with:
           path: tools/bitcoin-core
@@ -34,14 +33,12 @@ jobs:
 
       - name: Cache ElectrumX
         if: ${{ matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest' }}
-        id: cache-electrumx
         uses: actions/cache@v3
         with:
           path: tools/electrumx
           key: ${{ runner.os }}-electrumx-${{ env.electrumx-version }}
 
       - name: Cache Elements Core
-        id: cache-elements-core
         uses: actions/cache@v3
         with:
           path: tools/elements-core
