@@ -20,15 +20,12 @@ package bisq.wallets.electrum.rpc.responses;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
 @Getter
-@Setter
 public class ElectrumDeserializeResponse extends JsonRpcResponse<ElectrumDeserializeResponse.Result> {
     @Getter
-    @Setter
     public static class Result {
         private List<ElectrumDeserializeInputResponse> inputs;
         @Json(name = "locktime")

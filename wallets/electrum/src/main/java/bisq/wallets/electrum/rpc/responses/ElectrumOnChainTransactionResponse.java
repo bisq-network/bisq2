@@ -20,10 +20,8 @@ package bisq.wallets.electrum.rpc.responses;
 import bisq.wallets.core.model.Transaction;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumOnChainTransactionResponse implements Transaction {
     @Json(name = "bc_balance")
     private String bcBalance;

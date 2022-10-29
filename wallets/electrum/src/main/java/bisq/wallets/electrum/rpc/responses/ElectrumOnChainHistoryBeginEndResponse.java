@@ -19,10 +19,8 @@ package bisq.wallets.electrum.rpc.responses;
 
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class ElectrumOnChainHistoryBeginEndResponse {
     @Json(name = "BTC_balance")
     private String btcBalance;
