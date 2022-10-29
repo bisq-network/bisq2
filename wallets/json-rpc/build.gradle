@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-    api platform("com.squareup.okhttp3:okhttp-bom:4.10.0")
-    implementation platform("com.squareup.okhttp3:okhttp-bom:4.10.0")
+    api platform(libs.square.okhttp.bom)
+    implementation platform(libs.square.okhttp.bom)
 
     api 'com.squareup.okhttp3:okhttp'
-    api 'com.squareup.moshi:moshi:1.14.0'
+    api libs.square.moshi
 
     implementation 'com.squareup.okhttp3:logging-interceptor'
 
