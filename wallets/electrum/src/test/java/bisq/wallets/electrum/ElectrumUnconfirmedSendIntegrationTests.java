@@ -57,6 +57,7 @@ public class ElectrumUnconfirmedSendIntegrationTests {
 
     @Test
     void unconfirmedBalanceTest() throws InterruptedException {
+        double balanceBeforeTest = electrumDaemon.getBalance();
         Map<String, CountDownLatch> addressToLatchMap = new ConcurrentHashMap<>();
         ElectrumNotifyApi.registerListener((address, status) -> {
             CountDownLatch latch = addressToLatchMap.get(address);
@@ -80,7 +81,8 @@ public class ElectrumUnconfirmedSendIntegrationTests {
         boolean isSuccess = electrumProcessedTxLatch.await(30, TimeUnit.SECONDS);
         assertThat(isSuccess).isTrue();
 
-        assertThat(electrumDaemon.getBalance()).isEqualTo(10);
+        double newBalance = electrumDaemon.getBalance() - balanceBeforeTest;
+        assertThat(newBalance).isEqualTo(10);
 
         BitcoindWallet minerWallet = remoteBitcoind.getMinerWallet();
         String newAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
@@ -98,8 +100,8 @@ public class ElectrumUnconfirmedSendIntegrationTests {
         isSuccess = electrumTxLatch.await(30, TimeUnit.SECONDS);
         assertThat(isSuccess).isTrue();
 
-        double balance = electrumDaemon.getBalance();
-        assertThat(balance)
+        newBalance = electrumDaemon.getBalance();
+        assertThat(newBalance)
                 .isGreaterThan(4.9) // Because of tx fees
                 .isLessThan(5);
 

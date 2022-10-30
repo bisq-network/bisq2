@@ -25,22 +25,43 @@ import org.junit.jupiter.api.extension.*;
 
 import java.io.IOException;
 
-public class ElectrumExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
-    private final ElectrumRegtestSetup electrumRegtestSetup;
+import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 
-    public ElectrumExtension() throws IOException {
-        electrumRegtestSetup = !WindowsElectrumRegtestSetup.isExternalBitcoindAndElectrumXEnvironment() ?
-                new MacLinuxElectrumRegtestSetup(true) : new WindowsElectrumRegtestSetup(true);
+public class ElectrumExtension implements BeforeAllCallback, ExtensionContext.Store.CloseableResource, ParameterResolver {
+    private static boolean isRunning;
+    private static final ElectrumRegtestSetup electrumRegtestSetup;
+
+    static {
+        try {
+            electrumRegtestSetup = !WindowsElectrumRegtestSetup.isExternalBitcoindAndElectrumXEnvironment() ?
+                    new MacLinuxElectrumRegtestSetup(true) : new WindowsElectrumRegtestSetup(true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ElectrumExtension() {
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        electrumRegtestSetup.start();
+    public synchronized void beforeAll(ExtensionContext context) throws Exception {
+        if (!isRunning) {
+            electrumRegtestSetup.start();
+            isRunning = true;
+
+            // Register close hook
+            context.getRoot()
+                    .getStore(GLOBAL)
+                    .put("register_electrum_close_hook", this);
+        }
     }
 
     @Override
-    public void afterAll(ExtensionContext context) {
-        electrumRegtestSetup.shutdown();
+    public synchronized void close() {
+        if (isRunning) {
+            electrumRegtestSetup.shutdown();
+            isRunning = false;
+        }
     }
 
     @Override
