@@ -52,7 +52,7 @@ public class BitcoindExtension implements BeforeAllCallback, ExtensionContext.St
             // Register close hook
             context.getRoot()
                     .getStore(GLOBAL)
-                    .put("register_close_hook", this);
+                    .put("register_bitcoind_close_hook", this);
         }
     }
 

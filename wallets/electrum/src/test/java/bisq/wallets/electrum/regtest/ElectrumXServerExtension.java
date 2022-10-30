@@ -23,22 +23,43 @@ import org.junit.jupiter.api.extension.*;
 
 import java.io.IOException;
 
-public class ElectrumXServerExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
+import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 
-    private final ElectrumXServerRegtestSetup regtestSetup;
+public class ElectrumXServerExtension implements BeforeAllCallback, ExtensionContext.Store.CloseableResource, ParameterResolver {
 
-    public ElectrumXServerExtension() throws IOException {
-        regtestSetup = new ElectrumXServerRegtestSetup();
+    private static boolean isRunning;
+    private static final ElectrumXServerRegtestSetup regtestSetup;
+
+    static {
+        try {
+            regtestSetup = new ElectrumXServerRegtestSetup();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ElectrumXServerExtension() {
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        regtestSetup.start();
+    public synchronized void beforeAll(ExtensionContext context) throws Exception {
+        if (!isRunning) {
+            regtestSetup.start();
+            isRunning = true;
+
+            // Register close hook
+            context.getRoot()
+                    .getStore(GLOBAL)
+                    .put("register_electrumx_close_hook", this);
+        }
     }
 
     @Override
-    public void afterAll(ExtensionContext context) {
-        regtestSetup.shutdown();
+    public synchronized void close() {
+        if (isRunning) {
+            regtestSetup.shutdown();
+            isRunning = false;
+        }
     }
 
     @Override
