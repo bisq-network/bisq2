@@ -1,5 +1,5 @@
 {
-  "name": "setup-bitcoin-core",
+  "name": "install-wallets",
   "version": "1.0.0",
   "description": "Install Bitcoin Core on Github Runner",
   "main": "lib/main.js",
