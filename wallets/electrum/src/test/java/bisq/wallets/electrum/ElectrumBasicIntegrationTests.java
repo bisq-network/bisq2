@@ -44,7 +44,7 @@ public class ElectrumBasicIntegrationTests {
     @Test
     void getBalanceTest() {
         double balance = electrumDaemon.getBalance();
-        assertThat(balance).isEqualTo(0);
+        assertThat(balance).isGreaterThanOrEqualTo(0);
     }
 
     @Test

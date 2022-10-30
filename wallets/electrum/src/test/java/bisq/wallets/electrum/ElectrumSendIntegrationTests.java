@@ -56,6 +56,8 @@ public class ElectrumSendIntegrationTests {
 
     @Test
     void sendBtcTest() throws InterruptedException {
+        double balanceBeforeTest = electrumDaemon.getBalance();
+
         var electrumProcessedTxLatch = new CountDownLatch(1);
         ElectrumNotifyApi.registerListener((address, status) -> {
             if (status != null) {
@@ -76,7 +78,8 @@ public class ElectrumSendIntegrationTests {
         boolean isSuccess = electrumProcessedTxLatch.await(30, TimeUnit.SECONDS);
         assertThat(isSuccess).isTrue();
 
-        assertThat(electrumDaemon.getBalance()).isEqualTo(10);
+        double newBalance = electrumDaemon.getBalance() - balanceBeforeTest;
+        assertThat(newBalance).isEqualTo(10);
 
         BitcoindWallet minerWallet = remoteBitcoind.getMinerWallet();
         double balanceBefore = minerWallet.getBalance();

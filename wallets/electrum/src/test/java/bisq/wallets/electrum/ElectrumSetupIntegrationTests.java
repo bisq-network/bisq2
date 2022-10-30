@@ -46,7 +46,7 @@ public class ElectrumSetupIntegrationTests {
     }
 
     @BeforeAll
-    void beforeAll() throws IOException, InterruptedException {
+    void beforeAll() throws InterruptedException {
         electrumRegtestSetup.start();
         electrumDaemon = electrumRegtestSetup.getElectrumDaemon();
     }

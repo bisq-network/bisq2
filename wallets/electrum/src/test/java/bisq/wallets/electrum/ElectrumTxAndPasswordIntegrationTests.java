@@ -29,6 +29,7 @@ import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.*;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,11 +85,12 @@ public class ElectrumTxAndPasswordIntegrationTests {
                 .map(JsonRpcResponse::getResult)
                 .flatMap(List::stream)
                 .toList();
-        assertThat(unspentResponseEntries).hasSize(1);
+        assertThat(unspentResponseEntries).hasSizeGreaterThanOrEqualTo(1);
 
-        ElectrumListUnspentResponse.Result firstEntry = unspentResponseEntries.get(0);
-        assertThat(firstEntry.getAddress()).isEqualTo(fundingAddress);
-        assertThat(firstEntry.getValue()).isEqualTo("10");
+        Condition<ElectrumListUnspentResponse.Result> hasFundingTxCondition = new Condition<>(s ->
+                s.getAddress().equals(fundingAddress) && s.getValue().equals("10"), "hasFundingTx");
+        assertThat(unspentResponseEntries)
+                .have(hasFundingTxCondition);
 
         // Transaction
         String tx = electrumDaemon.getTransaction(fundingTxId);
