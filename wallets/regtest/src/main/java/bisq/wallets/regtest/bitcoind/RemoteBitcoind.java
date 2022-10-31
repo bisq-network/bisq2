@@ -46,7 +46,6 @@ public class RemoteBitcoind implements BisqProcess {
     private final RpcConfig rpcConfig;
     @Getter
     private final BitcoindDaemon daemon;
-    private final boolean doMineInitialRegtestBlocks;
     @Getter
     private final ZmqListeners zmqListeners = new ZmqListeners();
     @Getter
@@ -55,11 +54,9 @@ public class RemoteBitcoind implements BisqProcess {
     private final List<BitcoindWallet> loadedWallets = new ArrayList<>();
     private ZmqConnection bitcoindZeroMq;
 
-    public RemoteBitcoind(RpcConfig rpcConfig,
-                          boolean doMineInitialRegtestBlocks) throws MalformedURLException {
+    public RemoteBitcoind(RpcConfig rpcConfig) throws MalformedURLException {
         this.rpcConfig = rpcConfig;
         this.daemon = createBitcoindDaemon();
-        this.doMineInitialRegtestBlocks = doMineInitialRegtestBlocks;
         this.minerWallet = new BitcoindWallet(daemon, rpcConfig, MINER_WALLET_NAME);
         this.blockMiner = new BitcoindRegtestBlockMiner(daemon, minerWallet, zmqListeners);
     }
@@ -69,10 +66,7 @@ public class RemoteBitcoind implements BisqProcess {
         blockMiner.start();
         initializeZmqListeners();
         initializeWallet(minerWallet);
-
-        if (doMineInitialRegtestBlocks) {
-            mineInitialRegtestBlocks();
-        }
+        mineInitialRegtestBlocks();
     }
 
     @Override
@@ -86,10 +80,6 @@ public class RemoteBitcoind implements BisqProcess {
         var bitcoindWallet = new BitcoindWallet(daemon, rpcConfig, walletName);
         bitcoindWallet.initialize(Optional.of(WALLET_PASSPHRASE));
         return bitcoindWallet;
-    }
-
-    public void mineInitialRegtestBlocks() throws InterruptedException {
-        blockMiner.mineInitialRegtestBlocks();
     }
 
     public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {
@@ -136,5 +126,9 @@ public class RemoteBitcoind implements BisqProcess {
     private void initializeWallet(BitcoindWallet wallet) {
         wallet.initialize(Optional.of(WALLET_PASSPHRASE));
         loadedWallets.add(wallet);
+    }
+
+    private void mineInitialRegtestBlocks() throws InterruptedException {
+        blockMiner.mineBlocks(101);
     }
 }

@@ -54,11 +54,9 @@ public abstract class SharedElementsdInstanceTests
     @BeforeAll
     public void start() throws IOException, InterruptedException {
         super.start();
-
         bitcoindRegtestSetup = elementsdRegtestSetup.getBitcoindRegtestSetup();
-        bitcoindRegtestSetup.mineInitialRegtestBlocks();
-
         bitcoindDaemon = bitcoindRegtestSetup.getDaemon();
+
         elementsdDaemon = elementsdRegtestSetup.getDaemon();
         elementsdMinerWallet = elementsdRegtestSetup.getMinerWallet();
     }

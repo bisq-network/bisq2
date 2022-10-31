@@ -54,8 +54,6 @@ public class BitcoindPsbtMultiSigIntegrationTests {
 
     @Test
     public void psbtMultiSigTest() throws MalformedURLException, InterruptedException {
-        regtestSetup.mineInitialRegtestBlocks();
-
         var aliceWallet = regtestSetup.createAndInitializeNewWallet("alice_wallet");
         var bobWallet = regtestSetup.createAndInitializeNewWallet("bob_wallet");
         var charlieWallet = regtestSetup.createAndInitializeNewWallet("charlie_wallet");

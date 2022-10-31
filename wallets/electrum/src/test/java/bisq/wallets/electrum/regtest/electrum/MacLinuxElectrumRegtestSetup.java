@@ -32,7 +32,7 @@ import java.util.List;
 public class MacLinuxElectrumRegtestSetup extends ElectrumRegtestSetup {
 
     @Getter
-    private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup(true);
+    private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup();
 
     private final int electrumXServerPort = NetworkUtils.findFreeSystemPort();
     private final ElectrumXServerRegtestProcess electrumXServerRegtestProcess =

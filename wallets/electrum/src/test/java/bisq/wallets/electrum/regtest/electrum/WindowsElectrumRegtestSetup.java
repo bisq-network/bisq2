@@ -17,7 +17,6 @@
 
 package bisq.wallets.electrum.regtest.electrum;
 
-import bisq.common.util.FileUtils;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
@@ -25,7 +24,6 @@ import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,8 +44,7 @@ public class WindowsElectrumRegtestSetup extends ElectrumRegtestSetup {
 
     public WindowsElectrumRegtestSetup(boolean doCreateWallet) throws IOException {
         RpcConfig bitcoindRpcConfig = createBitcoindRpcConfigFromEnvironmentVars();
-        Path tmpDirPath = FileUtils.createTempDir();
-        this.remoteBitcoind = new RemoteBitcoind(bitcoindRpcConfig, true);
+        this.remoteBitcoind = new RemoteBitcoind(bitcoindRpcConfig);
 
         RpcConfig electrumXRpcConfig = createElectrumXRpcConfigFromEnvironmentVars();
         this.electrumRegtest = new ElectrumRegtest(
