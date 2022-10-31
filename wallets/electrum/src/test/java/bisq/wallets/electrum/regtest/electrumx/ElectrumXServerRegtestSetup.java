@@ -31,7 +31,7 @@ import java.util.List;
 public class ElectrumXServerRegtestSetup extends AbstractRegtestSetup<MultiProcessCoordinator> {
 
     @Getter
-    private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup(true);
+    private final BitcoindRegtestSetup bitcoindRegtestSetup = new BitcoindRegtestSetup();
 
     private final int electrumXServerPort = NetworkUtils.findFreeSystemPort();
     @Getter

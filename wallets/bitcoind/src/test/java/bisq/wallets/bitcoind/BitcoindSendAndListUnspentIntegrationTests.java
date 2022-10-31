@@ -42,7 +42,6 @@ public class BitcoindSendAndListUnspentIntegrationTests {
 
     @Test
     public void listUnspent() throws MalformedURLException, InterruptedException {
-        regtestSetup.mineInitialRegtestBlocks();
         BitcoindWallet minerWallet = regtestSetup.getMinerWallet();
 
         BitcoindWallet receiverBackend = regtestSetup.createAndInitializeNewWallet("receiver_wallet_list_unspent");

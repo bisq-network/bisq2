@@ -47,8 +47,7 @@ public class BitcoindZeroMqRawTxIntegrationTests {
     }
 
     @BeforeAll
-    public void start() throws IOException, InterruptedException {
-        regtestSetup.mineInitialRegtestBlocks();
+    public void start() throws IOException {
         receiverWallet = regtestSetup.createAndInitializeNewWallet("receiver_wallet");
     }
 

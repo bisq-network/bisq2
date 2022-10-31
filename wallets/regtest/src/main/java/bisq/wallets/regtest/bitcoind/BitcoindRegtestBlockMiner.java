@@ -24,7 +24,6 @@ import bisq.wallets.bitcoind.zmq.listeners.NewBlockMinedListener;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.process.BisqProcess;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -55,10 +54,6 @@ public class BitcoindRegtestBlockMiner implements BisqProcess {
     @Override
     public void shutdown() {
         zmqListeners.unregisterNewBlockMinedListener(newBlockMinedListener);
-    }
-
-    public void mineInitialRegtestBlocks() throws InterruptedException {
-        mineBlocks(101);
     }
 
     public List<String> mineBlocks(int numberOfBlocks) throws InterruptedException {

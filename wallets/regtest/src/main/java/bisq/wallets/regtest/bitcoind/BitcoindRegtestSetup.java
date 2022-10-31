@@ -45,14 +45,10 @@ public class BitcoindRegtestSetup
     private final RemoteBitcoind remoteBitcoind;
 
     public BitcoindRegtestSetup() throws IOException {
-        this(false);
-    }
-
-    public BitcoindRegtestSetup(boolean doMineInitialRegtestBlocks) throws IOException {
         super();
         rpcConfig = createRpcConfig();
         bitcoindProcess = createBitcoindProcess();
-        remoteBitcoind = new RemoteBitcoind(rpcConfig, doMineInitialRegtestBlocks);
+        remoteBitcoind = new RemoteBitcoind(rpcConfig);
     }
 
     @Override
@@ -64,10 +60,6 @@ public class BitcoindRegtestSetup
 
     public BitcoindWallet createAndInitializeNewWallet(String walletName) throws MalformedURLException {
         return remoteBitcoind.createAndInitializeNewWallet(walletName);
-    }
-
-    public void mineInitialRegtestBlocks() throws InterruptedException {
-        remoteBitcoind.mineInitialRegtestBlocks();
     }
 
     @Override
