@@ -93,15 +93,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, trade)
         );
 
-
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
-                NavigationTarget.WALLET_LBTC, true);
-
-        VBox walletSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC, wallet)
-        );
-
+                NavigationTarget.DASHBOARD, false);
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 "nav-learn",
@@ -168,7 +162,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, wallet, walletSubMenuItems,
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, wallet,
                 learn, learnSubMenuItems,
                 chat, events, support,
                 settings);

@@ -40,7 +40,6 @@ import bisq.desktop.primary.main.content.trade.lightning.LightningController;
 import bisq.desktop.primary.main.content.trade.liquidSwap.LiquidSwapController;
 import bisq.desktop.primary.main.content.trade.multiSig.MultiSigController;
 import bisq.desktop.primary.main.content.trade.xmrSwap.XmrSwapController;
-import bisq.desktop.primary.main.content.wallet.LBtcWalletController;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,9 +125,6 @@ public class ContentController extends NavigationController {
             }
             case LIGHTNING_X: {
                 return Optional.of(new LightningController(applicationService));
-            }
-            case WALLET_LBTC: {
-                return Optional.of(new LBtcWalletController(applicationService));
             }
             case SETTINGS: {
                 return Optional.of(new SettingsController(applicationService));
