@@ -96,10 +96,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
-                NavigationTarget.WALLET_BITCOIN, true);
+                NavigationTarget.WALLET_LBTC, true);
 
         VBox walletSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("bitcoin.wallet"), NavigationTarget.WALLET_BITCOIN, wallet),
                 createSubmenuNavigationButton(Res.get("lbtc.wallet"), NavigationTarget.WALLET_LBTC, wallet)
         );
 
