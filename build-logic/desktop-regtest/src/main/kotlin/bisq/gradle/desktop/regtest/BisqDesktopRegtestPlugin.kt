@@ -14,7 +14,7 @@ class BisqDesktopRegtestPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        registerBitcoindRegtestTasks(project)
+        // registerBitcoindRegtestTasks(project)
         registerElementsdRegtestTasks(project)
     }
 
