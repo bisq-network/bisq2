@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.wallet.config.WalletConfigPopup;
 import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
 import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
@@ -35,7 +34,6 @@ public abstract class WalletController extends TabController<WalletModel> implem
     @Getter
     private final WalletView view;
     protected final DefaultApplicationService applicationService;
-    private final WalletConfigPopup walletConfigPopup;
     protected final WalletService walletService;
 
     public WalletController(DefaultApplicationService applicationService, NavigationTarget navigationTarget) {
@@ -45,15 +43,10 @@ public abstract class WalletController extends TabController<WalletModel> implem
         walletService = getWalletService();
 
         view = new WalletView(model, this);
-
-        walletConfigPopup = new WalletConfigPopup(walletService, this::onConfigPopupClosed);
     }
 
     @Override
     public void onActivate() {
-        if (!isWalletReady()) {
-            walletConfigPopup.show();
-        }
     }
 
     @Override
@@ -96,6 +89,4 @@ public abstract class WalletController extends TabController<WalletModel> implem
     protected boolean isWalletReady() {
         return walletService.isWalletReady();
     }
-
-    protected abstract void onConfigPopupClosed();
 }
