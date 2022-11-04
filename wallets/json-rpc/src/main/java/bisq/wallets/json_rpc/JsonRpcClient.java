@@ -19,12 +19,14 @@ package bisq.wallets.json_rpc;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 import java.io.IOException;
 import java.util.Objects;
 
+@Slf4j
 public class JsonRpcClient {
 
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
@@ -40,8 +42,9 @@ public class JsonRpcClient {
     public JsonRpcClient(JsonRpcEndpointSpec rpcEndpointSpec) {
         this.rpcEndpointSpec = rpcEndpointSpec;
 
-        var loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        var loggingInterceptor = new HttpLoggingInterceptor(log::info);
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        loggingInterceptor.redactHeader(AUTHORIZATION_HEADER_NAME);
 
         this.client = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
