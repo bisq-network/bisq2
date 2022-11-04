@@ -32,7 +32,6 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.user.UserService;
-import bisq.wallets.bitcoind.BitcoinWalletService;
 import bisq.wallets.elementsd.LiquidWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +62,6 @@ public class DefaultApplicationService extends ApplicationService {
         INITIALIZE_FAILED
     }
 
-    private final BitcoinWalletService bitcoinWalletService;
     private final LiquidWalletService liquidWalletService;
     private final SecurityService securityService;
     private final NetworkService networkService;
@@ -82,7 +80,6 @@ public class DefaultApplicationService extends ApplicationService {
     public DefaultApplicationService(String[] args) {
         super("default", args);
 
-        bitcoinWalletService = new BitcoinWalletService(persistenceService, config.isBitcoindRegtest());
         liquidWalletService = new LiquidWalletService(persistenceService, config.isElementsdRegtest());
 
         securityService = new SecurityService(persistenceService);
@@ -126,8 +123,7 @@ public class DefaultApplicationService extends ApplicationService {
     // At the moment we do not initialize in parallel to keep thing simple, but can be optimized later
     @Override
     public CompletableFuture<Boolean> initialize() {
-        return bitcoinWalletService.initialize()
-                .thenCompose(result -> liquidWalletService.initialize())
+        return liquidWalletService.initialize()
                 .thenCompose(result -> securityService.initialize())
                 .whenComplete((r, t) -> setState(State.START_NETWORK))
                 .thenCompose(result -> networkService.initialize())
@@ -168,7 +164,6 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> networkService.shutdown())
                         .thenCompose(result -> securityService.shutdown())
                         .thenCompose(result -> liquidWalletService.shutdown())
-                        .thenCompose(result -> bitcoinWalletService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
                         .join(),
