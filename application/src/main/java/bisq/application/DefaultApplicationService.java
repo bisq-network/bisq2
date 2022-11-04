@@ -32,9 +32,11 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.user.UserService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -62,6 +64,7 @@ public class DefaultApplicationService extends ApplicationService {
     }
 
     private final SecurityService securityService;
+    private final ElectrumWalletService walletService;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final OracleService oracleService;
@@ -78,6 +81,7 @@ public class DefaultApplicationService extends ApplicationService {
     public DefaultApplicationService(String[] args) {
         super("default", args);
         securityService = new SecurityService(persistenceService);
+        walletService = new ElectrumWalletService(config.isWalletEnabled(), Path.of(config.getBaseDir()));
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
                 persistenceService,
@@ -119,6 +123,7 @@ public class DefaultApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
+                .thenCompose(result -> walletService.initialize())
                 .whenComplete((r, t) -> setState(State.START_NETWORK))
                 .thenCompose(result -> networkService.initialize())
                 .whenComplete((r, t) -> setState(State.NETWORK_STARTED))
@@ -156,6 +161,7 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> oracleService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())
+                        .thenCompose(result -> walletService.shutdown())
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
