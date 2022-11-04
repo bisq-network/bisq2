@@ -95,7 +95,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
-                NavigationTarget.DASHBOARD, false);
+                NavigationTarget.WALLET, false);
 
         LeftNavButton learn = createNavigationButton(Res.get("learn"),
                 "nav-learn",

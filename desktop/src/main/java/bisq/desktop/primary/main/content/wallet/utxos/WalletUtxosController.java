@@ -19,18 +19,18 @@ package bisq.desktop.primary.main.content.wallet.utxos;
 
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.core.WalletService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletUtxosController implements Controller {
-    private final WalletService walletService;
+    private final ElectrumWalletService walletService;
     private final WalletUtxosModel model;
     @Getter
     private final WalletUtxosView view;
 
-    public WalletUtxosController(WalletService walletService) {
+    public WalletUtxosController(ElectrumWalletService walletService) {
         this.walletService = walletService;
         model = new WalletUtxosModel();
         view = new WalletUtxosView(model, this);

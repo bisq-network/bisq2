@@ -18,18 +18,18 @@
 package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.core.WalletService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 
 import java.util.Optional;
 
 public class WalletSendController implements Controller {
-    private final WalletService walletService;
+    private final ElectrumWalletService walletService;
     private final WalletSendModel model;
     @Getter
     private final WalletSendView view;
 
-    public WalletSendController(WalletService walletService) {
+    public WalletSendController(ElectrumWalletService walletService) {
         this.walletService = walletService;
         model = new WalletSendModel();
         view = new WalletSendView(model, this);
