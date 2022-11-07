@@ -64,10 +64,7 @@ public abstract class ApplicationService {
 
             boolean devMode = config.getBoolean("devMode");
 
-            // todo @alvasw can we use the typesafeConfig instead?
             String dataDir = null;
-            boolean isBitcoindRegtest = false;
-            boolean isElementsdRegtest = false;
             for (String arg : args) {
                 if (arg.startsWith("--appName")) {
                     appName = arg.split("=")[1];
@@ -76,14 +73,6 @@ public abstract class ApplicationService {
                 if (arg.startsWith("--data-dir")) {
                     dataDir = arg.split("=")[1];
                 }
-
-                if (arg.startsWith("--regtest-bitcoind")) {
-                    isBitcoindRegtest = true;
-                }
-
-                if (arg.startsWith("--regtest-elementsd")) {
-                    isElementsdRegtest = true;
-                }
             }
 
             String appDir = dataDir == null ? OsUtils.getUserDataDir() + File.separator + appName : dataDir;
@@ -91,28 +80,22 @@ public abstract class ApplicationService {
 
             String version = config.getString("version");
 
-            return new Config(appDir, appName, version, devMode, isBitcoindRegtest, isElementsdRegtest);
+            return new Config(appDir, appName, version, devMode);
         }
 
         private final String baseDir;
         private final String appName;
         private final String version;
         private final boolean devMode;
-        private final boolean isBitcoindRegtest;
-        private final boolean isElementsdRegtest;
 
         public Config(String baseDir,
                       String appName,
                       String version,
-                      boolean devMode,
-                      boolean isBitcoindRegtest,
-                      boolean isElementsdRegtest) {
+                      boolean devMode) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.version = version;
             this.devMode = devMode;
-            this.isBitcoindRegtest = isBitcoindRegtest;
-            this.isElementsdRegtest = isElementsdRegtest;
         }
     }
 
