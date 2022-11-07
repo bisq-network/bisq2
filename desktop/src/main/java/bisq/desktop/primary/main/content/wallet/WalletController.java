@@ -25,22 +25,22 @@ import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
 import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
 import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
 import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
-import bisq.wallets.core.WalletService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 
 import java.util.Optional;
 
-public abstract class WalletController extends TabController<WalletModel> implements Controller {
+public class WalletController extends TabController<WalletModel> implements Controller {
     @Getter
     private final WalletView view;
-    protected final DefaultApplicationService applicationService;
-    protected final WalletService walletService;
+    private final DefaultApplicationService applicationService;
+    private final ElectrumWalletService walletService;
 
-    public WalletController(DefaultApplicationService applicationService, NavigationTarget navigationTarget) {
-        super(new WalletModel(), navigationTarget);
+    public WalletController(DefaultApplicationService applicationService) {
+        super(new WalletModel(), NavigationTarget.WALLET);
 
         this.applicationService = applicationService;
-        walletService = getWalletService();
+        walletService = applicationService.getWalletService();
 
         view = new WalletView(model, this);
     }
@@ -55,38 +55,12 @@ public abstract class WalletController extends TabController<WalletModel> implem
 
     @Override
     protected Optional<Controller> createController(NavigationTarget navigationTarget) {
-        if (!isWalletReady()) {
-            return Optional.empty();
-        }
-
-        if (navigationTarget == getTransactionsTabNavigationTarget()) {
-            return Optional.of(new WalletTransactionsController(walletService));
-
-        } else if (navigationTarget == getSendTabNavigationTarget()) {
-            return Optional.of(new WalletSendController(walletService));
-
-        } else if (navigationTarget == getReceiveTabNavigationTarget()) {
-            return Optional.of(new WalletReceiveController(walletService));
-
-        } else if (navigationTarget == getUtxoTabNavigationTarget()) {
-            return Optional.of(new WalletUtxosController(walletService));
-
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    public abstract WalletService getWalletService();
-
-    public abstract NavigationTarget getTransactionsTabNavigationTarget();
-
-    public abstract NavigationTarget getSendTabNavigationTarget();
-
-    public abstract NavigationTarget getReceiveTabNavigationTarget();
-
-    public abstract NavigationTarget getUtxoTabNavigationTarget();
-
-    protected boolean isWalletReady() {
-        return walletService.isWalletReady();
+        return switch (navigationTarget) {
+            case WALLET_TRANSACTIONS -> Optional.of(new WalletTransactionsController(walletService));
+            case WALLET_SEND -> Optional.of(new WalletSendController(walletService));
+            case WALLET_RECEIVE -> Optional.of(new WalletReceiveController(walletService));
+            case WALLET_UTXOS -> Optional.of(new WalletUtxosController(walletService));
+            default -> Optional.empty();
+        };
     }
 }

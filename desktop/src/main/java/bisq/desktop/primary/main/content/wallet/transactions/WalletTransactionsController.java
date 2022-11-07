@@ -20,17 +20,18 @@ package bisq.desktop.primary.main.content.wallet.transactions;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.core.WalletService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletTransactionsController implements Controller {
-    private final WalletService walletService;
+    private final ElectrumWalletService walletService;
     private final WalletTransactionsModel model;
     @Getter
     private final WalletTransactionsView view;
 
-    public WalletTransactionsController(WalletService walletService) {
+    public WalletTransactionsController(ElectrumWalletService walletService) {
         this.walletService = walletService;
         model = new WalletTransactionsModel();
         view = new WalletTransactionsView(model, this);

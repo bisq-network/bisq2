@@ -20,18 +20,18 @@ package bisq.desktop.primary.main.content.wallet.receive;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.core.WalletService;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 
 public class WalletReceiveController implements Controller {
-    private final WalletService walletService;
+    private final ElectrumWalletService walletService;
     private final WalletReceiveModel model;
     @Getter
     private final WalletReceiveView view;
 
     private Pin receiveAddressListPin;
 
-    public WalletReceiveController(WalletService walletService) {
+    public WalletReceiveController(ElectrumWalletService walletService) {
         this.walletService = walletService;
         model = new WalletReceiveModel();
         view = new WalletReceiveView(model, this);
