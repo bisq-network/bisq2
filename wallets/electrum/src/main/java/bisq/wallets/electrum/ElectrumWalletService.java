@@ -1,0 +1,120 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.wallets.electrum;
+
+import bisq.common.application.Service;
+import bisq.common.observable.ObservableSet;
+import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.Utxo;
+import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+@Slf4j
+public class ElectrumWalletService implements Service {
+
+    private final boolean isWalletEnabled;
+
+    private final Path electrumRootDataDir;
+    private final ElectrumProcess electrumProcess;
+    @Getter
+    private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
+
+    private ElectrumWallet electrumWallet;
+
+    public ElectrumWalletService(boolean isWalletEnabled, Path bisqDataDir) {
+        this.isWalletEnabled = isWalletEnabled;
+        electrumRootDataDir = bisqDataDir.resolve("wallets")
+                .resolve("electrum");
+        this.electrumProcess = createElectrumProcess();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        if (!isWalletEnabled) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        log.info("initialize");
+        return CompletableFuture.supplyAsync(() -> {
+            electrumProcess.start();
+
+            electrumWallet = new ElectrumWallet(
+                    electrumRootDataDir.resolve("wallet")
+                            .resolve("regtest")
+                            .resolve("wallets")
+                            .resolve("default_wallet"),
+                    electrumProcess.getElectrumDaemon(),
+                    new ObservableSet<>()
+            );
+            electrumWallet.initialize(Optional.empty());
+
+            return true;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        if (!isWalletEnabled) {
+            return CompletableFuture.completedFuture(true);
+        }
+
+        log.info("shutdown");
+        return CompletableFuture.supplyAsync(() -> {
+            electrumWallet.shutdown();
+            electrumProcess.shutdown();
+            return true;
+        });
+    }
+
+    public CompletableFuture<String> getNewAddress() {
+        return CompletableFuture.supplyAsync(() -> {
+            String receiveAddress = electrumWallet.getNewAddress();
+            receiveAddresses.add(receiveAddress);
+            return receiveAddress;
+        });
+    }
+
+    public CompletableFuture<List<? extends Transaction>> listTransactions() {
+        return CompletableFuture.supplyAsync(() -> electrumWallet.listTransactions());
+    }
+
+    public CompletableFuture<List<? extends Utxo>> listUnspent() {
+        return CompletableFuture.supplyAsync(() -> electrumWallet.listUnspent());
+    }
+
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
+        return CompletableFuture.supplyAsync(() -> electrumWallet.sendToAddress(passphrase, address, amount));
+    }
+
+    private ElectrumProcess createElectrumProcess() {
+        var processConfig = ElectrumProcessConfig.builder()
+                .dataDir(electrumRootDataDir.resolve("wallet"))
+                .electrumXServerHost("127.0.0.1")
+                .electrumXServerPort(50001)
+                .electrumConfig(ElectrumConfig.Generator.generate())
+                .build();
+
+        return new ElectrumProcess(electrumRootDataDir, processConfig);
+    }
+}
