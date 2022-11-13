@@ -48,8 +48,10 @@ abstract class VerifyElectrumBinariesTask : DefaultTask() {
                 throw GradleException("Signature verification failed for $filename.")
             }
 
-            val targetPath = outputDir.resolve(filename).toPath()
-            Files.move(fileToVerify.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING)
+            if (!filename.endsWith(".dmg")) {
+                val targetPath = outputDir.resolve(filename).toPath()
+                Files.move(fileToVerify.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING)
+            }
         }
     }
 

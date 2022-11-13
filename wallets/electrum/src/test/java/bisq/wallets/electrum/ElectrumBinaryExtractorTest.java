@@ -38,7 +38,6 @@ public class ElectrumBinaryExtractorTest {
     @ParameterizedTest
     @ValueSource(strings = {
             ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX,
-            ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX,
             ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX
     })
     void extractBinaries(String binarySuffix) {

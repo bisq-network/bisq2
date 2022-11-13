@@ -30,7 +30,6 @@ import java.util.zip.ZipInputStream;
 public class ElectrumBinaryExtractor {
 
     public static final String LINUX_BINARY_SUFFIX = "AppImage";
-    public static final String MAC_OS_BINARY_SUFFIX = "dmg";
     public static final String WINDOWS_BINARY_SUFFIX = "exe";
 
     private static final String ARCHIVE_FILENAME = "electrum-binaries.zip";
