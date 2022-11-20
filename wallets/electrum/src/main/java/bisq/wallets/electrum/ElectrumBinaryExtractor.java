@@ -18,18 +18,23 @@
 package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
+import bisq.common.util.OsUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class ElectrumBinaryExtractor {
 
     public static final String LINUX_BINARY_SUFFIX = "AppImage";
+    public static final String MAC_OS_BINARY_SUFFIX = "app";
     public static final String WINDOWS_BINARY_SUFFIX = "exe";
 
     private static final String ARCHIVE_FILENAME = "electrum-binaries.zip";
@@ -42,10 +47,17 @@ public class ElectrumBinaryExtractor {
 
     public Path extractFileWithSuffix(String fileNameSuffix) {
         try {
-            creatDestDirNotPresent();
+            createDestDirIfNotPresent();
+
             try (InputStream inputStream = openBinariesZipAsStream()) {
-                File extractedFile = extractFileWithSuffixFromStream(inputStream, fileNameSuffix);
-                return extractedFile.toPath();
+                if (OsUtils.isOSX()) {
+                    extractElectrumAppFileToDataDir(inputStream);
+                    return destDir.toPath().resolve("Electrum.app");
+
+                } else {
+                    File extractedFile = extractFileWithSuffixFromStream(inputStream, fileNameSuffix);
+                    return extractedFile.toPath();
+                }
             }
 
         } catch (IOException e) {
@@ -53,7 +65,7 @@ public class ElectrumBinaryExtractor {
         }
     }
 
-    private void creatDestDirNotPresent() {
+    private void createDestDirIfNotPresent() {
         try {
             FileUtils.makeDirs(destDir);
         } catch (IOException e) {
@@ -69,6 +81,12 @@ public class ElectrumBinaryExtractor {
             throw new ElectrumExtractionFailedException("Couldn't open resource: " + ARCHIVE_FILENAME);
         }
         return inputStream;
+    }
+
+    private void extractElectrumAppFileToDataDir(InputStream inputStream) {
+        deleteElectrumAppFileIfExisting();
+        copyZipFromResourcesToDataDir(inputStream);
+        unpackZipFileWithUnzipCommand();
     }
 
     private File extractFileWithSuffixFromStream(InputStream inputStream, String fileSuffix) {
@@ -90,6 +108,42 @@ public class ElectrumBinaryExtractor {
             throw new ElectrumExtractionFailedException("Couldn't extract Electrum binary.", e);
         }
         throw new ElectrumExtractionFailedException("Couldn't extract Electrum binary.");
+    }
+
+    private void deleteElectrumAppFileIfExisting() {
+        File electrumAppInDataDir = new File(destDir, "Electrum.app");
+        if (electrumAppInDataDir.exists()) {
+            boolean isSuccess = electrumAppInDataDir.delete();
+            if (!isSuccess) {
+                throw new IllegalStateException("Couldn't delete old Electrum.app");
+            }
+        }
+    }
+
+    private void copyZipFromResourcesToDataDir(InputStream inputStream) {
+        try {
+            File zipFileInDataDir = new File(destDir, ARCHIVE_FILENAME);
+            Files.copy(inputStream, zipFileInDataDir.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new ElectrumExtractionFailedException(
+                    "Couldn't copy Electrum binaries zip file from resources to the data directory."
+            );
+        }
+    }
+
+    private void unpackZipFileWithUnzipCommand() {
+        try {
+            Process extractProcess = new ProcessBuilder("unzip", ARCHIVE_FILENAME)
+                    .directory(destDir)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .start();
+            boolean isSuccess = extractProcess.waitFor(1, TimeUnit.MINUTES);
+            if (!isSuccess) {
+                throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
+            }
+        } catch (InterruptedException | IOException e) {
+            throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
+        }
     }
 
     private File writeStreamToFile(byte[] buffer, InputStream inputStream, String fileName) {
