@@ -8,9 +8,6 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 
@@ -20,6 +17,8 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         private const val MOUNT_DIR = "/Volumes/Electrum"
         private const val ELECTRUM_APP = "Electrum.app"
         private const val MOUNTED_ELECTRUM_APP_PATH = "$MOUNT_DIR/$ELECTRUM_APP"
+
+        private const val CMD_TIMEOUT: Long = 25
     }
 
 
@@ -49,28 +48,26 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
     private fun attachDmgFile() {
         val dmgFile = inputDirectory.get().asFile.resolve("electrum-${electrumVersion.get()}.dmg")
         val attachDmgFile: Process = ProcessBuilder("hdiutil", "attach", dmgFile.absolutePath).start()
-        val isSuccess: Boolean = attachDmgFile.waitFor(25, TimeUnit.SECONDS)
+        val isSuccess: Boolean = attachDmgFile.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         if (!isSuccess) {
             throw IllegalStateException("Could not attach DMG file.")
         }
     }
 
     private fun copyElectrumAppToOutputDirectory() {
-        val electrumAppFile = Paths.get(MOUNTED_ELECTRUM_APP_PATH)
         val destinationDir = electrumAppDestinationFile.absolutePath
-
-        Files.walk(electrumAppFile)
-            .forEach { source ->
-                val destination: Path = Paths.get(
-                    destinationDir, source.toString().substring(MOUNTED_ELECTRUM_APP_PATH.length)
-                )
-                Files.copy(source, destination)
-            }
+        val copyProcess: Process = ProcessBuilder(
+            "cp", "-r", MOUNTED_ELECTRUM_APP_PATH, destinationDir
+        ).start()
+        val isSuccess: Boolean = copyProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
+        if (!isSuccess) {
+            throw IllegalStateException("Could not copy Electrum.app to output directory.")
+        }
     }
 
     private fun detachDmgFile() {
         val attachDmgFile: Process = ProcessBuilder("hdiutil", "detach", MOUNT_DIR).start()
-        val isSuccess: Boolean = attachDmgFile.waitFor(25, TimeUnit.SECONDS)
+        val isSuccess: Boolean = attachDmgFile.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         if (!isSuccess) {
             throw IllegalStateException("Could not detach DMG file.")
         }

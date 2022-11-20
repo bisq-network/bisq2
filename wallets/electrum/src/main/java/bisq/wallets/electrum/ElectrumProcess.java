@@ -17,6 +17,7 @@
 
 package bisq.wallets.electrum;
 
+import bisq.common.util.OsUtils;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
@@ -61,6 +62,11 @@ public class ElectrumProcess implements BisqProcess {
 
         String binarySuffix = getBinarySuffix();
         Path extractedFilePath = binaryExtractor.extractFileWithSuffix(binarySuffix);
+
+        if (OsUtils.isOSX()) {
+            extractedFilePath = extractedFilePath.resolve("Contents/MacOS/run_electrum");
+        }
+
         binaryPath = Optional.of(extractedFilePath);
     }
 
@@ -105,13 +111,15 @@ public class ElectrumProcess implements BisqProcess {
     }
 
     private String getBinarySuffix() {
-        String osName = System.getProperty("os.name");
-        if (isRunningOnLinux()) {
+        if (OsUtils.isLinux()) {
             return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
-        } else if (osName.startsWith("Windows")) {
+        } else if (OsUtils.isOSX()) {
+            return ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
+        } else if (OsUtils.isWindows()) {
             return ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
         }
-        throw new UnsupportedOperationException("Unsupported OS: " + osName);
+
+        throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
     }
 
     public Path getDataDir() {
