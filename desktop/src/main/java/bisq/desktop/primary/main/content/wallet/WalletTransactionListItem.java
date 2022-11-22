@@ -15,33 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet.utxos;
+package bisq.desktop.primary.main.content.wallet;
 
-import bisq.wallets.core.model.Utxo;
+import bisq.desktop.components.table.TableItem;
+import bisq.wallets.core.model.Transaction;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class WalletUtxoListItem {
-    private final StringProperty txId = new SimpleStringProperty(this, "wallet.column.txId");
-    private final StringProperty address = new SimpleStringProperty(this, "address");
+public class WalletTransactionListItem implements TableItem {
+    private final StringProperty description = new SimpleStringProperty(this, "wallet.transaction.history.description");
     private final StringProperty amount = new SimpleStringProperty(this, "amount");
+    private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
 
-    public WalletUtxoListItem(Utxo utxo) {
-        txId.set(utxo.getTxId());
-        address.set(utxo.getAddress());
-        amount.set(String.valueOf(utxo.getAmount()));
+    public WalletTransactionListItem(Transaction transaction) {
+        description.set(transaction.getTxId());
+        amount.set(String.valueOf(transaction.getAmount()));
+        confirmations.set(String.valueOf(transaction.getConfirmations()));
     }
 
-    public StringProperty txIdProperty() {
-        return txId;
-    }
-
-    public StringProperty addressProperty() {
-        return address;
+    public StringProperty descriptionProperty() {
+        return description;
     }
 
     public StringProperty amountProperty() {
         return amount;
     }
 
+    public StringProperty confirmationsProperty() {
+        return confirmations;
+    }
 }
