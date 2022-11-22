@@ -18,49 +18,47 @@
 package bisq.desktop.primary.main.content.wallet;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabController;
-import bisq.desktop.primary.main.content.wallet.receive.WalletReceiveController;
-import bisq.desktop.primary.main.content.wallet.send.WalletSendController;
-import bisq.desktop.primary.main.content.wallet.transactions.WalletTransactionsController;
-import bisq.desktop.primary.main.content.wallet.utxos.WalletUtxosController;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 
-import java.util.Optional;
-
-public class WalletController extends TabController<WalletModel> implements Controller {
-    @Getter
-    private final WalletView view;
-    private final DefaultApplicationService applicationService;
+public class WalletController implements Controller {
     private final ElectrumWalletService walletService;
+    private final WalletModel model = new WalletModel();
+    @Getter
+    private final WalletView view = new WalletView(model, this);
+    private final WalletWithdrawFundsPopup walletWithdrawFundsPopup;
+
+    private Pin balancePin;
 
     public WalletController(DefaultApplicationService applicationService) {
-        super(new WalletModel(), NavigationTarget.WALLET);
-
-        this.applicationService = applicationService;
         walletService = applicationService.getWalletService();
-
-        view = new WalletView(model, this);
+        walletWithdrawFundsPopup = new WalletWithdrawFundsPopup(walletService);
     }
 
     @Override
     public void onActivate() {
+        balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
+                .to(walletService.getObservableBalanceAsCoin());
+
+        walletService.listTransactions()
+                .thenAccept(txs -> UIThread.run(() -> model.addTransactions(txs)));
+
+        walletService.getNewAddress().
+                thenAccept(receiveAddress ->
+                        UIThread.run(() -> model.getReceiveAddressProperty().setValue(receiveAddress))
+                );
     }
 
     @Override
     public void onDeactivate() {
+        balancePin.unbind();
     }
 
-    @Override
-    protected Optional<Controller> createController(NavigationTarget navigationTarget) {
-        return switch (navigationTarget) {
-            case WALLET_TRANSACTIONS -> Optional.of(new WalletTransactionsController(walletService));
-            case WALLET_SEND -> Optional.of(new WalletSendController(walletService));
-            case WALLET_RECEIVE -> Optional.of(new WalletReceiveController(walletService));
-            case WALLET_UTXOS -> Optional.of(new WalletUtxosController(walletService));
-            default -> Optional.empty();
-        };
+    public void onWithdrawButtonClicked() {
+        walletWithdrawFundsPopup.show();
     }
 }
