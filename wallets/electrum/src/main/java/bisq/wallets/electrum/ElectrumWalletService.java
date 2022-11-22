@@ -18,6 +18,8 @@
 package bisq.wallets.electrum;
 
 import bisq.common.application.Service;
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
@@ -33,10 +35,14 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class ElectrumWalletService implements Service {
 
-    private final boolean isWalletEnabled;
+    private static final String CURRENCY_CODE = "BTC";
 
+    private final boolean isWalletEnabled;
     private final Path electrumRootDataDir;
     private final ElectrumProcess electrumProcess;
+
+    @Getter
+    private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, CURRENCY_CODE));
     @Getter
     private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
 
@@ -69,6 +75,7 @@ public class ElectrumWalletService implements Service {
             );
             electrumWallet.initialize(Optional.empty());
 
+            updateBalance();
             return true;
         });
     }
@@ -116,5 +123,17 @@ public class ElectrumWalletService implements Service {
                 .build();
 
         return new ElectrumProcess(electrumRootDataDir, processConfig);
+    }
+
+    private void updateBalance() {
+        CompletableFuture.runAsync(() -> {
+            double balance = electrumWallet.getBalance();
+            Coin coin = Coin.of(balance, CURRENCY_CODE);
+
+            // Balance changed?
+            if (!observableBalanceAsCoin.get().equals(coin)) {
+                observableBalanceAsCoin.set(coin);
+            }
+        });
     }
 }
