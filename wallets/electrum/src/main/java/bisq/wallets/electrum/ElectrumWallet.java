@@ -56,7 +56,7 @@ public class ElectrumWallet implements Wallet {
 
     @Override
     public void shutdown() {
-        daemon.stop();
+        // Electrum does not provide an unload wallet rpc call.
     }
 
     @Override
