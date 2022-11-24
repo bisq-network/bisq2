@@ -20,27 +20,26 @@ package bisq.security;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThat;
 
-
-public class SymEncryptionUtilTest {
+public class AesGcmTest {
     @Test
-    public void testSymEncryption() {
-        try {
-            byte[] message = "hello".getBytes();
-            SecretKey sessionKey = SymEncryption.generateAESKey();
-            IvParameterSpec ivSpec = SymEncryption.generateIv();
-            byte[] encryptedMessage = SymEncryption.encrypt(message, sessionKey, ivSpec);
-            byte[] iv = ivSpec.getIV();
-            byte[] result = SymEncryption.decrypt(encryptedMessage, sessionKey, new IvParameterSpec(iv));
-            assertArrayEquals(message, result);
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            fail();
-        }
+    void encryptAndDecryptTest() throws GeneralSecurityException {
+        KeyPair aliceKeyPair = KeyGeneration.generateKeyPair();
+        KeyPair bobKeyPair = KeyGeneration.generateKeyPair();
+
+        // Alice sends to Bob
+        SecretKey sharedAesKey = AesGcm.generateSharedAesSecretKey(aliceKeyPair.getPrivate(), bobKeyPair.getPublic());
+        byte[] iv = AesGcm.generateIv().getIV();
+        String message = "hello, world!";
+        byte[] cipherText = AesGcm.encrypt(sharedAesKey, iv, message.getBytes());
+
+        byte[] plainText = AesGcm.decrypt(sharedAesKey, iv, cipherText);
+        String decryptedText = new String(plainText);
+
+        assertThat(decryptedText).isEqualTo(message);
     }
 }

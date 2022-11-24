@@ -28,10 +28,9 @@ message PubKey {
 
 message ConfidentialData {
   bytes senderPublicKey = 1;
-  bytes hmac = 2;
-  bytes iv = 3;
-  bytes cypherText = 4;
-  bytes signature = 5;
+  bytes iv = 2;
+  bytes cypherText = 3;
+  bytes signature = 4;
 }
 
 // Protobuf wrapper for java.security.KeyPair used by other modules

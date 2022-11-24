@@ -28,36 +28,31 @@ import lombok.ToString;
 @EqualsAndHashCode
 public final class ConfidentialData implements Proto {
     private final byte[] senderPublicKey;
-    private final byte[] hmac;
     private final byte[] iv;
-    private final byte[] cypherText;
+    private final byte[] cipherText;
     private final byte[] signature;
 
     public ConfidentialData(byte[] senderPublicKey,
-                            byte[] hmac,
                             byte[] iv,
-                            byte[] cypherText,
+                            byte[] cipherText,
                             byte[] signature) {
         this.senderPublicKey = senderPublicKey;
-        this.hmac = hmac;
         this.iv = iv;
-        this.cypherText = cypherText;
+        this.cipherText = cipherText;
         this.signature = signature;
     }
 
     public bisq.security.protobuf.ConfidentialData toProto() {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))
-                .setHmac(ByteString.copyFrom(hmac))
                 .setIv(ByteString.copyFrom(iv))
-                .setCypherText(ByteString.copyFrom(cypherText))
+                .setCypherText(ByteString.copyFrom(cipherText))
                 .setSignature(ByteString.copyFrom(signature))
                 .build();
     }
 
     public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
         return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
-                proto.getHmac().toByteArray(),
                 proto.getIv().toByteArray(),
                 proto.getCypherText().toByteArray(),
                 proto.getSignature().toByteArray());
