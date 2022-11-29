@@ -7,6 +7,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.net.URL
 
@@ -24,6 +25,9 @@ abstract class FileVerificationTask : DefaultTask() {
     @get:Input
     abstract val publicKeyFingerprints: SetProperty<String>
 
+    @get:OutputFile
+    abstract val resultFile: RegularFileProperty
+
     @TaskAction
     fun verify() {
         val signatureVerifier = SignatureVerifier(
@@ -35,6 +39,8 @@ abstract class FileVerificationTask : DefaultTask() {
             signatureFile = detachedSignatureFile.get().asFile,
             fileToVerify = fileToVerify.get().asFile
         )
+
+        resultFile.get().asFile.writeText("$isSignatureValid")
 
         if (!isSignatureValid) {
             throw GradleException(
