@@ -110,7 +110,7 @@ public class ElectrumProcess implements BisqProcess {
         return Optional.empty();
     }
 
-    private String getBinarySuffix() {
+    public static String getBinarySuffix() {
         if (OsUtils.isLinux()) {
             return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
         } else if (OsUtils.isOSX()) {

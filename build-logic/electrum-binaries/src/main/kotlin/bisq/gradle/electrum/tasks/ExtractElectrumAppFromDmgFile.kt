@@ -2,12 +2,12 @@ package bisq.gradle.electrum.tasks
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 
@@ -19,24 +19,23 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         private const val MOUNTED_ELECTRUM_APP_PATH = "$MOUNT_DIR/$ELECTRUM_APP"
 
         private const val CMD_TIMEOUT: Long = 25
+
+        private const val ELECTRUM_BINARY_PATH_IN_APP_FILE = "Contents/MacOS/run_electrum"
     }
 
-
-    @get:Input
-    abstract val electrumVersion: Property<String>
-
-    @get:InputDirectory
-    abstract val inputDirectory: DirectoryProperty
+    @get:InputFile
+    abstract val dmgFile: RegularFileProperty
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    private val electrumAppDestinationFile: File
-        get() = outputDirectory.get().asFile.resolve(ELECTRUM_APP)
+    @get:OutputDirectory
+    val electrumAppDestinationFile: Provider<RegularFile>
+        get() = outputDirectory.file(ELECTRUM_APP)
 
     @TaskAction
     fun extract() {
-        if (electrumAppDestinationFile.exists()) {
+        if (electrumAppDestinationFile.get().asFile.resolve(ELECTRUM_BINARY_PATH_IN_APP_FILE).exists()) {
             return
         }
 
@@ -46,8 +45,7 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
     }
 
     private fun attachDmgFile() {
-        val dmgFile = inputDirectory.get().asFile.resolve("electrum-${electrumVersion.get()}.dmg")
-        val attachDmgFile: Process = ProcessBuilder("hdiutil", "attach", dmgFile.absolutePath).start()
+        val attachDmgFile: Process = ProcessBuilder("hdiutil", "attach", dmgFile.get().asFile.absolutePath).start()
         val isSuccess: Boolean = attachDmgFile.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         if (!isSuccess) {
             throw IllegalStateException("Could not attach DMG file.")
@@ -55,7 +53,7 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
     }
 
     private fun copyElectrumAppToOutputDirectory() {
-        val destinationDir = electrumAppDestinationFile.absolutePath
+        val destinationDir = outputDirectory.get().asFile.absolutePath
         val copyProcess: Process = ProcessBuilder(
             "cp", "-r", MOUNTED_ELECTRUM_APP_PATH, destinationDir
         ).start()
