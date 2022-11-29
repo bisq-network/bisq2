@@ -18,13 +18,11 @@
 package bisq.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.SecretKey;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.security.Security;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -37,11 +35,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public class HybridEncryption {
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
 
     public static ConfidentialData encryptAndSign(byte[] message, PublicKey receiverPublicKey, KeyPair senderKeyPair)
             throws GeneralSecurityException {
