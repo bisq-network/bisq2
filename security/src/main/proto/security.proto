@@ -29,7 +29,7 @@ message PubKey {
 message ConfidentialData {
   bytes senderPublicKey = 1;
   bytes iv = 2;
-  bytes cypherText = 3;
+  bytes cipherText = 3;
   bytes signature = 4;
 }
 

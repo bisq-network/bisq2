@@ -46,7 +46,7 @@ public final class ConfidentialData implements Proto {
         return bisq.security.protobuf.ConfidentialData.newBuilder()
                 .setSenderPublicKey(ByteString.copyFrom(senderPublicKey))
                 .setIv(ByteString.copyFrom(iv))
-                .setCypherText(ByteString.copyFrom(cipherText))
+                .setCipherText(ByteString.copyFrom(cipherText))
                 .setSignature(ByteString.copyFrom(signature))
                 .build();
     }
@@ -54,7 +54,7 @@ public final class ConfidentialData implements Proto {
     public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
         return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
                 proto.getIv().toByteArray(),
-                proto.getCypherText().toByteArray(),
+                proto.getCipherText().toByteArray(),
                 proto.getSignature().toByteArray());
     }
 }
