@@ -20,8 +20,8 @@ class SignatureVerifier(
 ) {
 
     fun verifySignature(
+        fileToVerify: File,
         signatureFile: File,
-        fileToVerify: File
     ): Boolean {
         Security.addProvider(BouncyCastleProvider())
 

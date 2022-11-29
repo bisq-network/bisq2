@@ -18,8 +18,7 @@
 package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,12 +34,9 @@ public class ElectrumBinaryExtractorTest {
         binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {
-            ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX,
-            ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX
-    })
-    void extractBinaries(String binarySuffix) {
+    @Test
+    void extractBinaries() {
+        String binarySuffix = ElectrumProcess.getBinarySuffix();
         Path electrumBinaryPath = binaryExtractor.extractFileWithSuffix(binarySuffix);
         File electrumBinary = electrumBinaryPath.toFile();
 
