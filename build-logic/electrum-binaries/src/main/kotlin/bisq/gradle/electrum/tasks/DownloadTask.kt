@@ -6,10 +6,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.FileOutputStream
 import java.net.URL
 import java.nio.channels.Channels
@@ -20,6 +17,7 @@ abstract class DownloadTask : DefaultTask() {
     abstract val downloadUrl: Property<String>
 
     @get:Input
+    @get:Optional
     abstract val sha256hash: Property<String>
 
     @get:OutputDirectory
@@ -32,10 +30,6 @@ abstract class DownloadTask : DefaultTask() {
     private val fileName: String
         get() = downloadUrl.get().split("/").last()
 
-    init {
-        sha256hash.convention("")
-    }
-
     @TaskAction
     fun download() {
         if (isFileAlreadyPresent()) {
@@ -46,7 +40,7 @@ abstract class DownloadTask : DefaultTask() {
 
     private fun isFileAlreadyPresent(): Boolean {
         if (outputFile.get().asFile.exists()) {
-            if (sha256hash.get().isNotEmpty()) {
+            if (sha256hash.isPresent) {
                 return verifySha256Hash()
             }
             return true
