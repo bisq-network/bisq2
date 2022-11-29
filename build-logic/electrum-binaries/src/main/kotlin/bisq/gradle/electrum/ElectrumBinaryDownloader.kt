@@ -49,6 +49,8 @@ class ElectrumBinaryDownloader(
             detachedSignatureFile.set(signatureDownloadTask.flatMap { it.outputFile })
             publicKeyUrls.set(getPublicKeyUrls())
             publicKeyFingerprints.set(getPublicKeyFingerprints())
+
+            resultFile.set(project.layout.buildDirectory.file("$DOWNLOADS_DIR/sha256.result"))
         }
     }
 
