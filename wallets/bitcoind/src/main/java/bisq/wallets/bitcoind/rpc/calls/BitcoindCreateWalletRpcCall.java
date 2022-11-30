@@ -39,7 +39,7 @@ public class BitcoindCreateWalletRpcCall
         private String passphrase;
         @JsonProperty("avoid_reuse")
         private Boolean avoidReuse;
-        private final boolean descriptors = true;
+        private boolean descriptors;
     }
 
     public BitcoindCreateWalletRpcCall(Request request) {

@@ -39,7 +39,7 @@ public class ElementsdDaemon {
     }
 
     public void createOrLoadWallet(String walletName, Optional<String> passphrase) {
-        bitcoindDaemon.createOrLoadWallet(walletName, passphrase);
+        bitcoindDaemon.createOrLoadLegacyWallet(walletName, passphrase);
     }
 
     public ElementsdDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
