@@ -12,7 +12,7 @@ dependencies {
     implementation project(':oracle')
     implementation project(':network')
 
-    implementation("bisq.wallets:api")
+    implementation("wallets:api")
 
     implementation libs.google.gson
     implementation libs.google.guava

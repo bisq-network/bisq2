@@ -63,7 +63,7 @@ dependencies {
     implementation project(':application')
     implementation project(':desktop')
 
-    implementation("bisq.wallets:api")
+    implementation("wallets:api")
 
     implementation libs.google.guava
     implementation libs.bundles.fontawesomefx

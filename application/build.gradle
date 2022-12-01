@@ -19,8 +19,8 @@ dependencies {
     implementation project(':support')
     implementation project(':presentation')
 
-    implementation("bisq.wallets:api")
-    implementation("bisq.wallets:electrum")
+    implementation("wallets:api")
+    implementation("wallets:electrum")
 
     implementation libs.google.guava
     implementation libs.typesafe.config
