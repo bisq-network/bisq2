@@ -25,4 +25,4 @@ include 'json-rpc'
 include 'process'
 include 'regtest'
 
-rootProject.name = 'bisq.wallets'
+rootProject.name = 'wallets'
