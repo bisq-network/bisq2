@@ -176,6 +176,11 @@ public class I2PTransport implements Transport {
     }
 
     @Override
+    public boolean isAddressAvailable(Address address) {
+        throw new UnsupportedOperationException("isAddressAvailable needs to be implemented for I2P.");
+    }
+
+    @Override
     public CompletableFuture<Void> shutdown() {
         initializeCalled = false;
         if (i2pClient == null) {

@@ -90,6 +90,11 @@ public class TorTransport implements Transport {
         return socket;
     }
 
+    @Override
+    public boolean isAddressAvailable(Address address) {
+        return tor.isHiddenServiceAvailable(address.getHost());
+    }
+
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.of(tor.getSocks5Proxy(null));
     }

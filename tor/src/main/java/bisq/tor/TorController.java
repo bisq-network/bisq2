@@ -119,6 +119,14 @@ public class TorController {
         return Integer.parseInt(port);
     }
 
+    boolean isHiddenServiceAvailable(String onionUrl) {
+        try {
+            return torControlConnection().isHSAvailable(onionUrl);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     TorControlConnection.CreateHiddenServiceResult createHiddenService(int hiddenServicePort,
                                                                        int localPort) throws IOException {
         assertState();

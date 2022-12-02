@@ -282,6 +282,10 @@ public class Tor {
         return Optional.empty();
     }
 
+    public boolean isHiddenServiceAvailable(String onionUrl) {
+        return torController.isHiddenServiceAvailable(onionUrl);
+    }
+
     private void setState(State newState) {
         log.info("Set new state {}", newState);
         checkArgument(newState.ordinal() > state.get().ordinal(),
