@@ -1,5 +1,6 @@
 package bisq.gradle.electrum.tasks
 
+import bisq.gradle.electrum.DmgImageMounter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -8,6 +9,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 
@@ -39,16 +41,10 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
             return
         }
 
-        attachDmgFile()
-        copyElectrumAppToOutputDirectory()
-        detachDmgFile()
-    }
-
-    private fun attachDmgFile() {
-        val attachDmgFile: Process = ProcessBuilder("hdiutil", "attach", dmgFile.get().asFile.absolutePath).start()
-        val isSuccess: Boolean = attachDmgFile.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
-        if (!isSuccess) {
-            throw IllegalStateException("Could not attach DMG file.")
+        val dmgImageMounter = DmgImageMounter(dmgFile.get().asFile, File(MOUNT_DIR))
+        dmgImageMounter.use {
+            dmgImageMounter.mount()
+            copyElectrumAppToOutputDirectory()
         }
     }
 
@@ -60,14 +56,6 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         val isSuccess: Boolean = copyProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         if (!isSuccess) {
             throw IllegalStateException("Could not copy Electrum.app to output directory.")
-        }
-    }
-
-    private fun detachDmgFile() {
-        val attachDmgFile: Process = ProcessBuilder("hdiutil", "detach", MOUNT_DIR).start()
-        val isSuccess: Boolean = attachDmgFile.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
-        if (!isSuccess) {
-            throw IllegalStateException("Could not detach DMG file.")
         }
     }
 }
