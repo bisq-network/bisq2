@@ -83,4 +83,13 @@ public class ClearNetTransport implements Transport {
     public Optional<Address> getServerAddress(String serverId) {
         return Optional.empty();
     }
+
+    @Override
+    public boolean isAddressAvailable(Address address) {
+        try (Socket ignored = getSocket(address)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 }
