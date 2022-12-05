@@ -18,11 +18,14 @@ import java.util.concurrent.TimeUnit
 abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
 
     companion object {
-        private const val MOUNT_DIR = "/Volumes/Electrum"
+        private const val VOLUMES_DIR = "/Volumes"
+        private const val MOUNT_DIR = "$VOLUMES_DIR/Electrum"
+
         private const val ELECTRUM_APP = "Electrum.app"
         private const val MOUNTED_ELECTRUM_APP_PATH = "$MOUNT_DIR/$ELECTRUM_APP"
 
         private const val CMD_TIMEOUT: Long = 25
+        private const val MOUNT_TIMEOUT_IN_MILLISECONDS = 30 * 1000
     }
 
     @get:InputFile
@@ -47,7 +50,21 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         val dmgImageMounter = DmgImageMounter(dmgFile.get().asFile, File(MOUNT_DIR))
         dmgImageMounter.use {
             dmgImageMounter.mount()
+            waitUntilDmgImageMounted()
             copyElectrumAppToOutputDirectory()
+        }
+    }
+
+    private fun waitUntilDmgImageMounted() {
+        val startTime: Long = System.currentTimeMillis()
+        val mountDir = File(MOUNT_DIR)
+        while (!mountDir.exists()) {
+            Thread.sleep(200)
+
+            val currentTime: Long = System.currentTimeMillis()
+            if (currentTime - startTime >= MOUNT_TIMEOUT_IN_MILLISECONDS) {
+                throw IllegalStateException("$MOUNT_DIR is still missing after 30 seconds of mounting the DMG image.")
+            }
         }
     }
 
