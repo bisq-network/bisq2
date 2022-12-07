@@ -17,10 +17,10 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.electrum.rpc.responses.ElectrumStringResponse;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
 import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class ElectrumStopRpcCall extends DaemonRpcCall<Void, ElectrumStringResponse> {
+public class ElectrumStopRpcCall extends DaemonRpcCall<Void, JsonRpcStringResponse> {
     public ElectrumStopRpcCall() {
         super(null);
     }
@@ -31,12 +31,12 @@ public class ElectrumStopRpcCall extends DaemonRpcCall<Void, ElectrumStringRespo
     }
 
     @Override
-    public boolean isResponseValid(ElectrumStringResponse response) {
+    public boolean isResponseValid(JsonRpcStringResponse response) {
         return response.getResult().equals("Daemon stopped");
     }
 
     @Override
-    public Class<ElectrumStringResponse> getRpcResponseClass() {
-        return ElectrumStringResponse.class;
+    public Class<JsonRpcStringResponse> getRpcResponseClass() {
+        return JsonRpcStringResponse.class;
     }
 }

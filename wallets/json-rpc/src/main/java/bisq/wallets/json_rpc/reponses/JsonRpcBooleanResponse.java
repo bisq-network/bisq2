@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum.rpc.responses;
+package bisq.wallets.json_rpc.reponses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
 
-public class ElectrumBooleanResponse extends JsonRpcResponse<Boolean> {
+public class JsonRpcBooleanResponse extends JsonRpcResponse<Boolean> {
 }
