@@ -18,13 +18,11 @@
 package bisq.wallets.json_rpc;
 
 import lombok.Getter;
-import lombok.Setter;
+import lombok.ToString;
 
 @Getter
-@Setter
-public abstract class JsonRpcResponse<T> {
-    private String jsonrpc;
-    private String id;
-    private T result;
-    private JsonRpcError error;
+@ToString
+public class JsonRpcError {
+    private int code;
+    private String message;
 }
