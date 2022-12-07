@@ -61,7 +61,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "Q4/22",
                         "protocol-liquid"
                 ),
-                new ProtocolListItem(SwapProtocol.Type.MONERO_SWAP,
+                /* new ProtocolListItem(SwapProtocol.Type.MONERO_SWAP,
                         NavigationTarget.MONERO_SWAP,
                         Res.get("trade.protocols.basic.info.MONERO_SWAP"),
                         Res.get("trade.protocols.markets.MONERO_SWAP"),
@@ -74,7 +74,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.speed.info.MONERO_SWAP"),
                         "Q1/23",
                         "protocol-monero"
-                ),
+                ), */
                 new ProtocolListItem(SwapProtocol.Type.BISQ_MULTISIG,
                         NavigationTarget.BISQ_MULTISIG,
                         Res.get("trade.protocols.basic.info.BISQ_MULTISIG"),
@@ -89,7 +89,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "Q2/23",
                         "protocol-bisq"
                 ),
-                new ProtocolListItem(SwapProtocol.Type.LIGHTNING_X,
+                /* new ProtocolListItem(SwapProtocol.Type.LIGHTNING_X,
                         NavigationTarget.LIGHTNING_X,
                         Res.get("trade.protocols.basic.info.LIGHTNING_X"),
                         Res.get("trade.protocols.markets.LIGHTNING_X"),
@@ -102,7 +102,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.speed.info.LIGHTNING_X"),
                         "Q2/23",
                         "protocol-lightning"
-                ),
+                ), */
                 new ProtocolListItem(SwapProtocol.Type.BSQ_SWAP,
                         NavigationTarget.BSQ_SWAP,
                         Res.get("trade.protocols.basic.info.BSQ_SWAP"),

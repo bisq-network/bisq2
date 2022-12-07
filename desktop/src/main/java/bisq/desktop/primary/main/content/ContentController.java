@@ -118,15 +118,15 @@ public class ContentController extends NavigationController {
             case BISQ_MULTISIG: {
                 return Optional.of(new MultiSigController(applicationService));
             }
-            case MONERO_SWAP: {
+            /* case MONERO_SWAP: {
                 return Optional.of(new XmrSwapController(applicationService));
-            }
+            } */
             case BSQ_SWAP: {
                 return Optional.of(new BsqSwapController(applicationService));
             }
-            case LIGHTNING_X: {
+            /* case LIGHTNING_X: {
                 return Optional.of(new LightningController(applicationService));
-            }
+            } */
             case SETTINGS: {
                 return Optional.of(new SettingsController(applicationService));
             }
