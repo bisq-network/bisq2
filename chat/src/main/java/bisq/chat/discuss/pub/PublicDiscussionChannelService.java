@@ -113,7 +113,7 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         ObservableArray<PublicDiscussionChannel> channels = getChannels();
         channels.add(defaultDiscussionChannel);
         channels.add(new PublicDiscussionChannel("bitcoin"));
-        channels.add(new PublicDiscussionChannel("monero"));
+        // channels.add(new PublicDiscussionChannel("monero"));
         channels.add(new PublicDiscussionChannel("markets"));
         channels.add(new PublicDiscussionChannel("economy"));
         channels.add(new PublicDiscussionChannel("offTopic"));
