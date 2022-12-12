@@ -18,7 +18,11 @@ class DmgImageMounter(
             return
         }
 
-        val attachDmgFileProcess: Process = ProcessBuilder("hdiutil", "attach", dmgFile.absolutePath).start()
+        val attachDmgFileProcess: Process = ProcessBuilder("hdiutil", "attach", dmgFile.absolutePath)
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
+
         var isSuccess: Boolean = attachDmgFileProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         val exitCode = attachDmgFileProcess.exitValue()
 
@@ -33,7 +37,11 @@ class DmgImageMounter(
             return
         }
 
-        val detachDmgFileProcess: Process = ProcessBuilder("hdiutil", "detach", mountDirectory.absolutePath).start()
+        val detachDmgFileProcess: Process = ProcessBuilder("hdiutil", "detach", mountDirectory.absolutePath)
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
+
         var isSuccess: Boolean = detachDmgFileProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         val exitCode = detachDmgFileProcess.exitValue()
 

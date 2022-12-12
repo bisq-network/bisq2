@@ -136,6 +136,7 @@ public class ElectrumBinaryExtractor {
             Process extractProcess = new ProcessBuilder("unzip", ARCHIVE_FILENAME)
                     .directory(destDir)
                     .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)
                     .start();
             boolean isSuccess = extractProcess.waitFor(1, TimeUnit.MINUTES);
             if (!isSuccess) {

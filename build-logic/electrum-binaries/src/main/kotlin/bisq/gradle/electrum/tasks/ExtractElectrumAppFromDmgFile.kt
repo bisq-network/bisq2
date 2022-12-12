@@ -80,7 +80,11 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         val destinationDir = outputDirectory.get().asFile.absolutePath
         val copyProcess: Process = ProcessBuilder(
             "cp", "-r", MOUNTED_ELECTRUM_APP_PATH, destinationDir
-        ).start()
+        )
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
+
         val isSuccess: Boolean = copyProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
         if (!isSuccess) {
             throw IllegalStateException("Could not copy Electrum.app to output directory.")
