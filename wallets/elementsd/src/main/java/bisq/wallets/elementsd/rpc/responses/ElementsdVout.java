@@ -18,7 +18,6 @@
 package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.bitcoind.rpc.responses.AbstractVout;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
