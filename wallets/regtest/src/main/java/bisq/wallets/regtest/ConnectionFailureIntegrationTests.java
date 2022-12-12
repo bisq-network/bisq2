@@ -19,9 +19,9 @@ package bisq.wallets.regtest;
 
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.exceptions.InvalidRpcCredentialsException;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.process.BisqProcess;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.IOException;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W> {
+public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess> {
 
     private AbstractRegtestSetup<T> regtestSetup;
 
@@ -50,7 +50,7 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
     }
 
     @Test
-    void wrongRpcCredentialsTest() throws IOException {
+    void wrongRpcCredentialsTest() {
         RpcConfig validRpcConfig = regtestSetup.getRpcConfig();
         RpcConfig wrongRpcConfig = RpcConfig.builder()
                 .hostname(validRpcConfig.getHostname())
@@ -59,7 +59,7 @@ public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess, W
                 .password("WRONG_PASSWORD")
                 .build();
 
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(wrongRpcConfig);
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(wrongRpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         Assertions.assertThatExceptionOfType(InvalidRpcCredentialsException.class)

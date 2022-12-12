@@ -18,12 +18,10 @@
 package bisq.wallets.bitcoind.rpc.responses;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
 @Getter
-@Setter
 public class BitcoindDescriptor {
     private String desc;
     private long timestamp;

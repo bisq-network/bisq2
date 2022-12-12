@@ -17,11 +17,12 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class ElementsdGetBalancesResponse {
-    private ElementsdGetMineBalancesResponse mine;
+public class ElementsdGetBalancesResponse extends JsonRpcResponse<ElementsdGetBalancesResponse.Result> {
+    @Getter
+    public static class Result {
+        private ElementsdGetMineBalances mine;
+    }
 }

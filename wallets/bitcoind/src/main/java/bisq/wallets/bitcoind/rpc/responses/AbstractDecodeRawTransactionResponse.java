@@ -17,16 +17,14 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
 @Getter
-@Setter
 public class AbstractDecodeRawTransactionResponse<S extends AbstractVin, T extends AbstractVout<?>> {
-    @JsonProperty("txid")
+    @Json(name = "txid")
     private String txId;
     private String hash;
     private int size;

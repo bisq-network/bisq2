@@ -17,10 +17,10 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetPeginAddressResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class ElementsdGetPeginAddressRpcCall extends WalletRpcCall<Void, ElementsdGetPeginAddressResponse> {
+public class ElementsdGetPeginAddressRpcCall extends DaemonRpcCall<Void, ElementsdGetPeginAddressResponse> {
     public ElementsdGetPeginAddressRpcCall() {
         super(null);
     }

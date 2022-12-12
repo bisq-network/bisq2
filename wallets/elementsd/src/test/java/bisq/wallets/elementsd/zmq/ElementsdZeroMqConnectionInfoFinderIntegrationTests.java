@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ElementsdZeroMqConnectionInfoFinderIntegrationTests extends SharedElementsdInstanceTests {
     @Test
     void findConnectionInfo() {
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = elementsdDaemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = elementsdDaemon.getZmqNotifications();
         assertThat(zmqNotifications).isNotEmpty();
     }
 }

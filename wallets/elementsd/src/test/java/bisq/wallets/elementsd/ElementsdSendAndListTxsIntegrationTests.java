@@ -19,7 +19,7 @@ package bisq.wallets.elementsd;
 
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponse;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -45,10 +45,10 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
 
         elementsdRegtestSetup.mineOneBlock();
 
-        List<ElementsdListTransactionsResponseEntry> txs = receiverBackend.listTransactions(10);
+        List<ElementsdListTransactionsResponse.Entry> txs = receiverBackend.listTransactions(10);
         assertEquals(3, txs.size());
 
-        ElementsdListTransactionsResponseEntry firstTx = txs.get(0);
+        ElementsdListTransactionsResponse.Entry firstTx = txs.get(0);
         assertEquals(firstTxId, firstTx.getTxId());
         assertEquals("receive", firstTx.getCategory());
         assertEquals(1, firstTx.getAmount());
@@ -57,7 +57,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         assertEquals(0, firstTx.getWalletconflicts().length);
         assertEquals("no", firstTx.getBip125Replaceable());
 
-        ElementsdListTransactionsResponseEntry secondTx = txs.get(1);
+        ElementsdListTransactionsResponse.Entry secondTx = txs.get(1);
         assertEquals(secondTxId, secondTx.getTxId());
         assertEquals("receive", secondTx.getCategory());
         assertEquals(1, secondTx.getAmount());
@@ -66,7 +66,7 @@ public class ElementsdSendAndListTxsIntegrationTests extends SharedElementsdInst
         assertEquals(0, secondTx.getWalletconflicts().length);
         assertEquals("no", secondTx.getBip125Replaceable());
 
-        ElementsdListTransactionsResponseEntry thirdTx = txs.get(2);
+        ElementsdListTransactionsResponse.Entry thirdTx = txs.get(2);
         assertEquals(thirdTxId, thirdTx.getTxId());
         assertEquals("receive", thirdTx.getCategory());
         assertEquals(1, thirdTx.getAmount());

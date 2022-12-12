@@ -46,15 +46,9 @@ public class RpcClientFactory {
         }
     }
 
-    public static WalletRpcClient createWalletRpcClient(RpcConfig rpcConfig, String walletName) {
-        try {
-            var urlSuffix = "/wallet/" + walletName;
-            return new WalletRpcClient(
-                    createLegacyJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix))
-            );
-        } catch (MalformedURLException e) {
-            throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
-        }
+    public static JsonRpcClient createWalletRpcClient(RpcConfig rpcConfig, String walletName) {
+        var urlSuffix = "/wallet/" + walletName;
+        return createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.of(urlSuffix));
     }
 
     private static JsonRpcClient createJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) {

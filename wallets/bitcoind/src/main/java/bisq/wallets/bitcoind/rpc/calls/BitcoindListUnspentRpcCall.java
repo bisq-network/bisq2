@@ -17,10 +17,10 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class BitcoindListUnspentRpcCall extends WalletRpcCall<Void, BitcoindListUnspentResponseEntry[]> {
+public class BitcoindListUnspentRpcCall extends DaemonRpcCall<Void, BitcoindListUnspentResponse> {
     public BitcoindListUnspentRpcCall() {
         super(null);
     }
@@ -31,12 +31,12 @@ public class BitcoindListUnspentRpcCall extends WalletRpcCall<Void, BitcoindList
     }
 
     @Override
-    public boolean isResponseValid(BitcoindListUnspentResponseEntry[] response) {
+    public boolean isResponseValid(BitcoindListUnspentResponse response) {
         return true;
     }
 
     @Override
-    public Class<BitcoindListUnspentResponseEntry[]> getRpcResponseClass() {
-        return BitcoindListUnspentResponseEntry[].class;
+    public Class<BitcoindListUnspentResponse> getRpcResponseClass() {
+        return BitcoindListUnspentResponse.class;
     }
 }

@@ -17,55 +17,56 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
-public class ElementsdGetAddressInfoResponse {
-    private String address;
-    private String scriptPubKey;
+public class ElementsdGetAddressInfoResponse extends JsonRpcResponse<ElementsdGetAddressInfoResponse.Result> {
+    @Getter
+    public static class Result {
+        private String address;
+        private String scriptPubKey;
 
-    @JsonProperty("ismine")
-    private boolean isMine;
-    private boolean solvable;
-    private String desc;
+        @Json(name = "ismine")
+        private boolean isMine;
+        private boolean solvable;
+        private String desc;
 
-    @JsonProperty("iswatchonly")
-    private boolean isWatchOnly;
-    @JsonProperty("isscript")
-    private boolean isScript;
+        @Json(name = "iswatchonly")
+        private boolean isWatchOnly;
+        @Json(name = "isscript")
+        private boolean isScript;
 
-    @JsonProperty("iswitness")
-    private boolean isWitness;
-    @JsonProperty("witness_version")
-    private int witnessVersion;
-    @JsonProperty("witness_program")
-    private String witnessProgram;
+        @Json(name = "iswitness")
+        private boolean isWitness;
+        @Json(name = "witness_version")
+        private int witnessVersion;
+        @Json(name = "witness_program")
+        private String witnessProgram;
 
-    @JsonProperty("pubkey")
-    private String pubKey;
-    @JsonProperty("confidential")
-    private String confidential;
-    @JsonProperty("confidential_key")
-    private String confidentialKey;
-    @JsonProperty("unconfidential")
-    private String unconfidential;
+        @Json(name = "pubkey")
+        private String pubKey;
+        @Json(name = "confidential")
+        private String confidential;
+        @Json(name = "confidential_key")
+        private String confidentialKey;
+        @Json(name = "unconfidential")
+        private String unconfidential;
 
-    @JsonProperty("ischange")
-    private boolean isChange;
-    private long timestamp;
+        @Json(name = "ischange")
+        private boolean isChange;
+        private long timestamp;
 
-    @JsonProperty("hdkeypath")
-    private String hdKeyPath;
-    @JsonProperty("hdseedid")
-    private String hdSeedId;
-    @JsonProperty("hdmasterfingerprint")
-    private String hdMasterFingerprint;
+        @Json(name = "hdkeypath")
+        private String hdKeyPath;
+        @Json(name = "hdseedid")
+        private String hdSeedId;
+        @Json(name = "hdmasterfingerprint")
+        private String hdMasterFingerprint;
 
-    private List<String> labels;
-
+        private List<String> labels;
+    }
 }

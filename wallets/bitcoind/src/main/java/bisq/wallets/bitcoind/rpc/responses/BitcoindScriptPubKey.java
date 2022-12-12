@@ -18,10 +18,8 @@
 package bisq.wallets.bitcoind.rpc.responses;
 
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class BitcoindScriptPubKey {
     private String asm;
     private String desc;

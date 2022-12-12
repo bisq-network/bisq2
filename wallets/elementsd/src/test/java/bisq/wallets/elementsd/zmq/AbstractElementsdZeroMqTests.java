@@ -78,7 +78,7 @@ public class AbstractElementsdZeroMqTests extends SharedElementsdInstanceTests {
         var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
         var zmqConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
 
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = elementsdDaemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = elementsdDaemon.getZmqNotifications();
         zmqConnection.initialize(zmqNotifications);
 
         return zmqConnection;

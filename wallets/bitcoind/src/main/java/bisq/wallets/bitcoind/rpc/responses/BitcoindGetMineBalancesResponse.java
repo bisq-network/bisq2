@@ -17,15 +17,13 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class BitcoindGetMineBalancesResponse {
     private double trusted;
-    @JsonProperty("untrusted_pending")
+    @Json(name = "untrusted_pending")
     private double untrustedPending;
     private double immature;
 }

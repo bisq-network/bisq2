@@ -18,8 +18,8 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindCreateOrLoadWalletResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -29,15 +29,15 @@ public class BitcoindCreateWalletRpcCall
     @Builder
     @Getter
     public static class Request {
-        @JsonProperty("wallet_name")
+        @Json(name = "wallet_name")
         private String walletName;
 
-        @JsonProperty("disable_private_keys")
+        @Json(name = "disable_private_keys")
         private Boolean disablePrivateKeys;
         private Boolean blank;
 
         private String passphrase;
-        @JsonProperty("avoid_reuse")
+        @Json(name = "avoid_reuse")
         private Boolean avoidReuse;
         private boolean descriptors;
     }
@@ -53,7 +53,7 @@ public class BitcoindCreateWalletRpcCall
 
     @Override
     public boolean isResponseValid(BitcoindCreateOrLoadWalletResponse response) {
-        return response.getName().equals(request.walletName);
+        return response.getResult() != null;
     }
 
     @Override

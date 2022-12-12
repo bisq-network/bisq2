@@ -18,10 +18,10 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListDescriptorResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
 public class BitcoindListDescriptorsRpcCall
-        extends WalletRpcCall<Void, BitcoindListDescriptorResponse> {
+        extends DaemonRpcCall<Void, BitcoindListDescriptorResponse> {
 
     public BitcoindListDescriptorsRpcCall() {
         super(null);

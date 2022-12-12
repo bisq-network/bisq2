@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,11 +27,11 @@ import java.util.List;
 @Setter
 public abstract class AbstractVin {
     private String coinbase;
-    @JsonProperty("txid")
+    @Json(name = "txid")
     private String txId;
     private int vout;
     private BitcoindScriptSig scriptSig;
-    @JsonProperty("txinwitness")
+    @Json(name = "txinwitness")
     private List<String> txInWitness;
     private long sequence;
 }

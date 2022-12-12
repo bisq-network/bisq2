@@ -18,8 +18,8 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindCreateOrLoadWalletResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,7 +31,7 @@ public class BitcoindLoadWalletRpcCall
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("filename")
+        @Json(name = "filename")
         private final String fileName;
 
         public Request(String fileName) {
@@ -50,7 +50,8 @@ public class BitcoindLoadWalletRpcCall
 
     @Override
     public boolean isResponseValid(BitcoindCreateOrLoadWalletResponse response) {
-        return response.getName().equals(request.fileName) && !response.hasWarning();
+        BitcoindCreateOrLoadWalletResponse.Result result = response.getResult();
+        return result.getName().equals(request.fileName) && !result.hasWarning();
     }
 
     @Override

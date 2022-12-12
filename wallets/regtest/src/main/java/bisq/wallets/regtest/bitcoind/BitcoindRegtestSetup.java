@@ -20,7 +20,7 @@ package bisq.wallets.regtest.bitcoind;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;
@@ -81,8 +81,8 @@ public class BitcoindRegtestSetup
         return remoteBitcoind.sendBtcAndMineOneBlock(senderWallet, receiverWallet, amount);
     }
 
-    public Optional<BitcoindListUnspentResponseEntry> filterUtxosByAddress(
-            List<BitcoindListUnspentResponseEntry> utxos,
+    public Optional<BitcoindListUnspentResponse.Entry> filterUtxosByAddress(
+            List<BitcoindListUnspentResponse.Entry> utxos,
             String address) {
         return utxos.stream()
                 .filter(u -> Objects.equals(u.getAddress(), address))

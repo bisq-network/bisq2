@@ -37,7 +37,7 @@ public class ElementsdZeroMqRawTxIntegrationTests extends AbstractElementsdZeroM
         String blindedReceiverAddress = receiverWallet.getNewAddress(AddressType.BECH32, "");
 
         ElementsdGetAddressInfoResponse addressInfo = receiverWallet.getAddressInfo(blindedReceiverAddress);
-        String unblindedReceiverAddress = addressInfo.getUnconfidential();
+        String unblindedReceiverAddress = addressInfo.getResult().getUnconfidential();
 
         receiverWalletZmqConnection.getListeners().registerTxOutputAddressesListener(outputAddresses -> {
             if (outputAddresses.contains(unblindedReceiverAddress)) {

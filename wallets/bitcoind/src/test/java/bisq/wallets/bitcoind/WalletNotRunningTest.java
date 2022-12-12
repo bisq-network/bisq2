@@ -20,18 +20,17 @@ package bisq.wallets.bitcoind;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.ConnectException;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class WalletNotRunningTest {
     @Test
-    void notRunningTest() throws IOException {
+    void notRunningTest() {
         int freePort = NetworkUtils.findFreeSystemPort();
 
         RpcConfig rpcConfig = RpcConfig.builder()
@@ -41,7 +40,7 @@ public class WalletNotRunningTest {
                 .port(freePort)
                 .build();
 
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         var minerChainBackend = new BitcoindDaemon(rpcClient);
 
         assertThatThrownBy(minerChainBackend::listWallets)

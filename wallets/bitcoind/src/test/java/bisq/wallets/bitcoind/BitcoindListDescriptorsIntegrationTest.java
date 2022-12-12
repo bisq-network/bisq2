@@ -39,7 +39,7 @@ public class BitcoindListDescriptorsIntegrationTest {
 
     @Test
     void listDescriptorsTest() {
-        BitcoindListDescriptorResponse response = minerWallet.listDescriptors();
+        BitcoindListDescriptorResponse.Result response = minerWallet.listDescriptors().getResult();
         List<BitcoindDescriptor> descriptorList = response.getDescriptors();
 
         assertThat(descriptorList).isNotEmpty()

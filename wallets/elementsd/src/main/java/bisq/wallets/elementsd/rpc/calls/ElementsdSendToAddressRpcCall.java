@@ -17,18 +17,19 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
-public class ElementsdSendToAddressRpcCall extends WalletRpcCall<ElementsdSendToAddressRpcCall.Request, String> {
+public class ElementsdSendToAddressRpcCall extends DaemonRpcCall<ElementsdSendToAddressRpcCall.Request, JsonRpcStringResponse> {
     @Builder
     @Getter
     public static class Request {
         private final String address;
         private final double amount;
-        @JsonProperty("assetlabel")
+        @Json(name = "assetlabel")
         private String assetLabel;
     }
 
@@ -42,13 +43,13 @@ public class ElementsdSendToAddressRpcCall extends WalletRpcCall<ElementsdSendTo
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(JsonRpcStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<JsonRpcStringResponse> getRpcResponseClass() {
+        return JsonRpcStringResponse.class;
     }
 }
 

@@ -15,29 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.bitcoind.rpc.responses;
+package bisq.wallets.elementsd.rpc.responses;
 
-import bisq.wallets.core.model.Utxo;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
+
+import java.util.Map;
 
 @Getter
-@Setter
-public class BitcoindListUnspentResponseEntry implements Utxo {
-    @JsonProperty("txid")
-    private String txId;
-    private int vout;
-    private String address;
-    private String label;
-    private String scriptPubKey;
-    private double amount;
-    private int confirmations;
-    private String redeemScript;
-    private String witnessScript;
-    private boolean spendable;
-    private boolean solvable;
-    private boolean reused;
-    private String desc;
-    private boolean safe;
+public class ElementsdGetMineBalances {
+    private Map<String, Double> trusted;
+    @Json(name = "untrusted_pending")
+    private Map<String, Double> untrustedPending;
+    private Map<String, Double> immature;
 }

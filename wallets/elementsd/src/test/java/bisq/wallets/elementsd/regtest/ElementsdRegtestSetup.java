@@ -25,14 +25,13 @@ import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.ElementsdConfig;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdRawTxProcessor;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponse;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
@@ -136,8 +135,8 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         return newWallet(walletName);
     }
 
-    public Optional<ElementsdListUnspentResponseEntry> filterUtxosByTxId(
-            List<ElementsdListUnspentResponseEntry> utxos,
+    public Optional<ElementsdListUnspentResponse.Entry> filterUtxosByTxId(
+            List<ElementsdListUnspentResponse.Entry> utxos,
             String txId) {
         return utxos.stream()
                 .filter(u -> Objects.equals(u.getTxId(), txId))
@@ -150,7 +149,7 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
         var zmqTopicProcessors = new ZmqTopicProcessors(rawTxProcessor, zmqListeners);
         var zmqConnection = new ZmqConnection(zmqTopicProcessors, zmqListeners);
 
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = daemon.getZmqNotifications();
         zmqConnection.initialize(zmqNotifications);
 
         return new Pair<>(zmqConnection, zmqListeners);
@@ -163,13 +162,13 @@ public class ElementsdRegtestSetup extends AbstractRegtestSetup<MultiProcessCoor
     }
 
     private ElementsdDaemon createDaemon() {
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(elementsdConfig.elementsdRpcConfig());
         return new ElementsdDaemon(rpcClient);
     }
 
     private ElementsdWallet newWallet(String walletName) {
         RpcConfig walletRpcConfig = elementsdConfig.elementsdRpcConfig();
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletName);
+        JsonRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(walletRpcConfig, walletName);
         return new ElementsdWallet(rpcClient);
     }
 

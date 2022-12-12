@@ -17,11 +17,13 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ElementsdUnblindRawTransactionResponse {
-    private String hex;
+public class ElementsdUnblindRawTransactionResponse extends JsonRpcResponse<ElementsdUnblindRawTransactionResponse.Result> {
+    @Getter
+    public static class Result {
+        private String hex;
+    }
 }

@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponseEntry;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponse;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
@@ -57,10 +57,10 @@ public class BitcoindSendAndListTxsIntegrationTests {
 
         regtestSetup.mineOneBlock();
 
-        List<BitcoindListTransactionsResponseEntry> txs = receiverBackend.listTransactions(10);
+        List<BitcoindListTransactionsResponse.Entry> txs = receiverBackend.listTransactions(10);
         assertEquals(3, txs.size());
 
-        BitcoindListTransactionsResponseEntry firstTx = txs.get(0);
+        BitcoindListTransactionsResponse.Entry firstTx = txs.get(0);
         assertEquals(firstTxReceiverAddress, firstTx.getAddress());
         assertEquals("receive", firstTx.getCategory());
         assertEquals(1, firstTx.getAmount());
@@ -68,7 +68,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         assertEquals(0, firstTx.getWalletconflicts().length);
         assertEquals("no", firstTx.getBip125Replaceable());
 
-        BitcoindListTransactionsResponseEntry secondTx = txs.get(1);
+        BitcoindListTransactionsResponse.Entry secondTx = txs.get(1);
         assertEquals(secondTxReceiverAddress, secondTx.getAddress());
         assertEquals("receive", secondTx.getCategory());
         assertEquals(1, secondTx.getAmount());
@@ -76,7 +76,7 @@ public class BitcoindSendAndListTxsIntegrationTests {
         assertEquals(0, secondTx.getWalletconflicts().length);
         assertEquals("no", secondTx.getBip125Replaceable());
 
-        BitcoindListTransactionsResponseEntry thirdTx = txs.get(2);
+        BitcoindListTransactionsResponse.Entry thirdTx = txs.get(2);
         assertEquals(thirdTxReceiverAddress, thirdTx.getAddress());
         assertEquals("receive", thirdTx.getCategory());
         assertEquals(1, thirdTx.getAmount());

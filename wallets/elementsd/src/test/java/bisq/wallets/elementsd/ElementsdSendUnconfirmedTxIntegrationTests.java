@@ -69,6 +69,6 @@ public class ElementsdSendUnconfirmedTxIntegrationTests extends SharedElementsdI
 
     private String getUnblindedAddress(ElementsdWallet wallet, String blindedAddress) {
         ElementsdGetAddressInfoResponse addressInfo = wallet.getAddressInfo(blindedAddress);
-        return addressInfo.getUnconfidential();
+        return addressInfo.getResult().getUnconfidential();
     }
 }

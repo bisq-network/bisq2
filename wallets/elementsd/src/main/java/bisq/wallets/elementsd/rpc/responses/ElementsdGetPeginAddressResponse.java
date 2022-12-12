@@ -17,15 +17,17 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ElementsdGetPeginAddressResponse {
-    @JsonProperty("mainchain_address")
-    private String mainChainAddress;
-    @JsonProperty("claim_script")
-    private String claimScript;
+public class ElementsdGetPeginAddressResponse extends JsonRpcResponse<ElementsdGetPeginAddressResponse.Result> {
+    @Getter
+    public static class Result {
+        @Json(name = "mainchain_address")
+        private String mainChainAddress;
+        @Json(name = "claim_script")
+        private String claimScript;
+    }
 }

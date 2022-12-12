@@ -25,10 +25,8 @@ import bisq.wallets.bitcoind.rpc.responses.*;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.RpcClientFactory;
-import bisq.wallets.core.rpc.WalletRpcClient;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
-import java.net.MalformedURLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,20 +36,20 @@ public class BitcoindWallet {
 
     private static final long DEFAULT_WALLET_TIMEOUT = TimeUnit.SECONDS.toSeconds(15);
     private final BitcoindDaemon daemon;
-    private final WalletRpcClient rpcClient;
+    private final String walletName;
+    private final JsonRpcClient rpcClient;
 
-    public BitcoindWallet(BitcoindDaemon daemon, RpcConfig rpcConfig, String walletName) throws MalformedURLException {
+    public BitcoindWallet(BitcoindDaemon daemon, RpcConfig rpcConfig, String walletName) {
         this.daemon = daemon;
+        this.walletName = walletName;
         this.rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletName);
     }
 
     public void initialize(Optional<String> passphrase) {
-        String walletName = rpcClient.getWalletName();
         daemon.createOrLoadWallet(walletName, passphrase);
     }
 
     public void shutdown() {
-        String walletName = rpcClient.getWalletName();
         daemon.unloadWallet(walletName);
     }
 
@@ -61,7 +59,7 @@ public class BitcoindWallet {
                 .keys(keys)
                 .build();
         var rpcCall = new BitcoindCreateMultiSigRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public BitcoindAddOrCreateMultiSigAddressResponse addMultiSigAddress(int nRequired, List<String> keys) {
@@ -70,26 +68,26 @@ public class BitcoindWallet {
                 .keys(keys)
                 .build();
         var rpcCall = new BitcoindAddMultiSigAddressRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public BitcoindGetAddressInfoResponse getAddressInfo(String address) {
         var request = new BitcoindGetAddressInfoRpcCall.Request(address);
         var rpcCall = new BitcoindGetAddressInfoRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public double getBalance() {
         var rpcCall = new BitcoindGetBalancesRpcCall();
-        BitcoindGetBalancesResponse response = rpcClient.invokeAndValidate(rpcCall);
-        BitcoindGetMineBalancesResponse mineBalancesResponse = response.getMine();
+        BitcoindGetBalancesResponse response = rpcClient.call(rpcCall);
+        BitcoindGetMineBalancesResponse mineBalancesResponse = response.getResult().getMine();
         return mineBalancesResponse.getTrusted() + mineBalancesResponse.getUntrustedPending();
     }
 
     public BitcoindGetDescriptorInfoResponse getDescriptorInfo(String descriptor) {
         var request = new BitcoindGetDescriptorInfoRpcCall.Request(descriptor);
         var rpcCall = new BitcoindGetDescriptorInfoRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public String getNewAddress(AddressType addressType, String label) {
@@ -98,19 +96,17 @@ public class BitcoindWallet {
                 .label(label)
                 .build();
         var rpcCall = new BitcoindGetNewAddressRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
-    public List<BitcoindImportDescriptorResponseEntry> importDescriptors(
+    public List<BitcoindImportDescriptorResponse.Entry> importDescriptors(
             List<BitcoindImportDescriptorRequestEntry> requests
     ) {
         var request = new BitcoindImportDescriptorsRpcCall.Request(
                 requests.toArray(new BitcoindImportDescriptorRequestEntry[0])
         );
         var rpcCall = new BitcoindImportDescriptorsRpcCall(request);
-        return Arrays.asList(
-                rpcClient.invokeAndValidate(rpcCall)
-        );
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public void importAddress(String address, String label) {
@@ -119,36 +115,33 @@ public class BitcoindWallet {
                 .label(label)
                 .build();
         var rpcCall = new BitcoindImportAddressRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
-    public List<BitcoinImportMultiEntryResponse> importMulti(List<BitcoindImportMultiRequest> requests) {
+    public List<BitcoinImportMultiEntryResponse.Entry> importMulti(List<BitcoindImportMultiRequest> requests) {
         var request = BitcoindImportMultiRpcCall.Request.builder()
                 .requests(requests)
                 .build();
         var rpcCall = new BitcoindImportMultiRpcCall(request);
-        BitcoinImportMultiEntryResponse[] response = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(response);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public BitcoindListDescriptorResponse listDescriptors() {
         var rpcCall = new BitcoindListDescriptorsRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
-    public List<BitcoindListTransactionsResponseEntry> listTransactions(int count) {
+    public List<BitcoindListTransactionsResponse.Entry> listTransactions(int count) {
         var request = BitcoindListTransactionsRpcCall.Request.builder()
                 .count(count)
                 .build();
         var rpcCall = new BitcoindListTransactionsRpcCall(request);
-        BitcoindListTransactionsResponseEntry[] response = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(response);
+        return rpcClient.call(rpcCall).getResult();
     }
 
-    public List<BitcoindListUnspentResponseEntry> listUnspent() {
+    public List<BitcoindListUnspentResponse.Entry> listUnspent() {
         var rpcCall = new BitcoindListUnspentRpcCall();
-        BitcoindListUnspentResponseEntry[] response = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(response);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String sendToAddress(Optional<String> passphrase, String address, double amount) {
@@ -159,7 +152,7 @@ public class BitcoindWallet {
                 .amount(amount)
                 .build();
         var rpcCall = new BitcoindSendToAddressRpcCall(request);
-        String txId = rpcClient.invokeAndValidate(rpcCall);
+        String txId = rpcClient.call(rpcCall).getResult();
 
         if (passphrase.isPresent()) {
             walletLock();
@@ -175,7 +168,7 @@ public class BitcoindWallet {
                 .message(message)
                 .build();
         var rpcCall = new BitcoindSignMessageRpcCall(request);
-        String signature = rpcClient.invokeAndValidate(rpcCall);
+        String signature = rpcClient.call(rpcCall).getResult();
 
         if (walletPasshrase.isPresent()) {
             walletLock();
@@ -190,7 +183,7 @@ public class BitcoindWallet {
                 .message(message)
                 .build();
         var rpcCall = new BitcoindVerifyMessageRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public BitcoindWalletCreateFundedPsbtResponse walletCreateFundedPsbt(List<BitcoindPsbtInput> inputs,
@@ -202,19 +195,19 @@ public class BitcoindWallet {
                 .options(options)
                 .build();
         var rpcCall = new BitcoindWalletCreateFundedPsbtRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public void walletLock() {
         var rpcCall = new BitcoindWalletLockRpcCall();
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     private void walletPassphrase(Optional<String> passphrase) {
         walletPassphrase(rpcClient, passphrase);
     }
 
-    public static void walletPassphrase(WalletRpcClient rpcClient, Optional<String> passphrase) {
+    public static void walletPassphrase(JsonRpcClient rpcClient, Optional<String> passphrase) {
         String passphraseString = passphrase.orElse("");
         if (passphraseString.isEmpty()) {
             return;
@@ -225,7 +218,7 @@ public class BitcoindWallet {
                 .timeout(DEFAULT_WALLET_TIMEOUT)
                 .build();
         var rpcCall = new BitcoindWalletPassphraseRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public BitcoindWalletProcessPsbtResponse walletProcessPsbt(Optional<String> passphrase, String psbt) {
@@ -233,7 +226,7 @@ public class BitcoindWallet {
 
         var request = new BitcoindWalletProcessPsbtRpcCall.Request(psbt);
         var rpcCall = new BitcoindWalletProcessPsbtRpcCall(request);
-        BitcoindWalletProcessPsbtResponse response = rpcClient.invokeAndValidate(rpcCall);
+        BitcoindWalletProcessPsbtResponse response = rpcClient.call(rpcCall);
 
         if (passphrase.isPresent()) {
             walletLock();

@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindWalletCreateFundedPsbtResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BitcoindWalletCreateFundedPsbtRpcCall
-        extends WalletRpcCall<BitcoindWalletCreateFundedPsbtRpcCall.Request, BitcoindWalletCreateFundedPsbtResponse> {
+        extends DaemonRpcCall<BitcoindWalletCreateFundedPsbtRpcCall.Request, BitcoindWalletCreateFundedPsbtResponse> {
     @Builder
     @Getter
     public static class Request {

@@ -18,7 +18,7 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

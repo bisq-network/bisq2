@@ -39,7 +39,7 @@ public class BitcoindZeroMqConnectionInfoFinderIntegrationTests {
 
     @Test
     void findConnectionInfo() {
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = daemon.getZmqNotifications();
         assertThat(zmqNotifications).isNotEmpty();
     }
 }

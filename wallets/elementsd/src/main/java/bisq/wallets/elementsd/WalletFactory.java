@@ -25,6 +25,7 @@ import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.List;
 
@@ -40,18 +41,18 @@ public class WalletFactory {
     }
 
     private static ElementsdDaemon createElementsdDaemon(RpcConfig rpcConfig) {
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new ElementsdDaemon(rpcClient);
     }
 
     private static ElementsdWallet createElementsdWallet(RpcConfig rpcConfig, String walletName) {
-        WalletRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletName);
+        JsonRpcClient rpcClient = RpcClientFactory.createWalletRpcClient(rpcConfig, walletName);
         return new ElementsdWallet(rpcClient);
     }
 
     private static ZmqConnection initializeElementsdZeroMq(ElementsdDaemon elementsdDaemon, ElementsdWallet elementsdWallet) {
         var zmqConnection = ZmqConnectionFactory.createForElements(elementsdDaemon, elementsdWallet);
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = elementsdDaemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = elementsdDaemon.getZmqNotifications();
         zmqConnection.initialize(zmqNotifications);
         return zmqConnection;
     }

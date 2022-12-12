@@ -18,15 +18,13 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestEntry;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindImportDescriptorResponseEntry;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindImportDescriptorResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Arrays;
-
 public class BitcoindImportDescriptorsRpcCall
-        extends WalletRpcCall<BitcoindImportDescriptorsRpcCall.Request, BitcoindImportDescriptorResponseEntry[]> {
+        extends DaemonRpcCall<BitcoindImportDescriptorsRpcCall.Request, BitcoindImportDescriptorResponse> {
 
     @Getter
     @Setter
@@ -48,12 +46,12 @@ public class BitcoindImportDescriptorsRpcCall
     }
 
     @Override
-    public boolean isResponseValid(BitcoindImportDescriptorResponseEntry[] response) {
-        return Arrays.stream(response).allMatch(BitcoindImportDescriptorResponseEntry::isSuccess);
+    public boolean isResponseValid(BitcoindImportDescriptorResponse response) {
+        return response.getResult().stream().allMatch(BitcoindImportDescriptorResponse.Entry::isSuccess);
     }
 
     @Override
-    public Class<BitcoindImportDescriptorResponseEntry[]> getRpcResponseClass() {
-        return BitcoindImportDescriptorResponseEntry[].class;
+    public Class<BitcoindImportDescriptorResponse> getRpcResponseClass() {
+        return BitcoindImportDescriptorResponse.class;
     }
 }

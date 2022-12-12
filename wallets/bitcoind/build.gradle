@@ -12,6 +12,7 @@ dependencies {
     implementation("bisq:persistence")
 
     implementation project(':core')
+    implementation project(':json-rpc')
 
     implementation libs.google.guava
     implementation libs.jackson.databind

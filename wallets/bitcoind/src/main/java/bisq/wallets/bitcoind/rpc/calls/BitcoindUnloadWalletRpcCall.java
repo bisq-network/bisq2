@@ -18,8 +18,8 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindWarningResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -30,10 +30,10 @@ public class BitcoindUnloadWalletRpcCall extends DaemonRpcCall<BitcoindUnloadWal
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("wallet_name")
+        @Json(name = "wallet_name")
         private final String walletName;
 
-        public Request(@JsonProperty("wallet_name") String walletName) {
+        public Request(String walletName) {
             this.walletName = walletName;
         }
     }
@@ -49,7 +49,7 @@ public class BitcoindUnloadWalletRpcCall extends DaemonRpcCall<BitcoindUnloadWal
 
     @Override
     public boolean isResponseValid(BitcoindWarningResponse response) {
-        return !response.hasWarning();
+        return !response.getResult().hasWarning();
     }
 
     @Override

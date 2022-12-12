@@ -22,19 +22,18 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.exceptions.InvalidRpcCredentialsException;
-import bisq.wallets.core.exceptions.RpcCallFailureException;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.RpcCallFailureException;
+import bisq.wallets.json_rpc.exceptions.InvalidRpcCredentialsException;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class BitcoindDaemon {
-    private final DaemonRpcClient rpcClient;
+    private final JsonRpcClient rpcClient;
 
-    public BitcoindDaemon(DaemonRpcClient rpcClient) {
+    public BitcoindDaemon(JsonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
@@ -66,19 +65,19 @@ public class BitcoindDaemon {
     public String combinePsbt(List<String> txs) {
         var request = new BitcoindCombinePsbtRpcCall.Request(txs);
         var rpcCall = new BitcoindCombinePsbtRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public BitcoindDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
         var request = new BitcoindDecodeRawTransactionRpcCall.Request(txInHex);
         var rpcCall = new BitcoindDecodeRawTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public BitcoindFinalizePsbtResponse finalizePsbt(String psbt) {
         var request = new BitcoindFinalizePsbtRpcCall.Request(psbt);
         var rpcCall = new BitcoindFinalizePsbtRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public List<String> generateToAddress(int numberOfBlocksToMine, String addressOfMiner) {
@@ -87,58 +86,56 @@ public class BitcoindDaemon {
                 .address(addressOfMiner)
                 .build();
         var rpcCall = new BitcoindGenerateToAddressRpcCall(request);
-        String[] blockHashes = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(blockHashes);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String getRawTransaction(String txId) {
         var request = new BitcoindGetRawTransactionRpcCall.Request(txId);
         var rpcCall = new BitcoindGetRawTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String getTxOutProof(List<String> txIds) {
         var request = new BitcoindGetTxOutProofRpcCall.Request(txIds);
         var rpcCall = new BitcoindGetTxOutProofRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
-    public List<BitcoindGetZmqNotificationsResponse> getZmqNotifications() {
+    public List<BitcoindGetZmqNotificationsResponse.Entry> getZmqNotifications() {
         var rpcCall = new BitcoindGetZmqNotificationsRpcCall();
-        BitcoindGetZmqNotificationsResponse[] responses = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(responses);
+        BitcoindGetZmqNotificationsResponse responses = rpcClient.call(rpcCall);
+        return responses.getResult();
     }
 
     public List<String> listWallets() {
         return listWalletsWithRpcClient(rpcClient);
     }
 
-    private static List<String> listWalletsWithRpcClient(DaemonRpcClient rpcClient) {
+    private static List<String> listWalletsWithRpcClient(JsonRpcClient rpcClient) {
         var rpcCall = new BitcoindListWalletsRpcCall();
-        String[] wallets = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(wallets);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String sendRawTransaction(String hexString) {
         var request = new BitcoindSendRawTransactionRpcCall.Request(hexString);
         var rpcCall = new BitcoindSendRawTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public void stop() {
         var rpcCall = new BitcoindStopRpcCall();
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public void unloadWallet(String walletName) {
         var request = new BitcoindUnloadWalletRpcCall.Request(walletName);
         var rpcCall = new BitcoindUnloadWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public static boolean verifyRpcConfig(RpcConfig rpcConfig) {
         try {
-            DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+            JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
             listWalletsWithRpcClient(rpcClient); // Makes a listwallets RPC call
             return true;
         } catch (InvalidRpcCredentialsException e) {
@@ -147,7 +144,7 @@ public class BitcoindDaemon {
     }
 
     private boolean doesWalletExist(RpcCallFailureException e) {
-        return e.getCause().getMessage().contains("Database already exists.");
+        return e.getMessage().contains("Database already exists.");
     }
 
     private void createWallet(String walletName, String passphrase, boolean descriptors, boolean disablePrivateKeys, boolean blank) {
@@ -160,12 +157,12 @@ public class BitcoindDaemon {
                 .build();
 
         var rpcCall = new BitcoindCreateWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     private void loadWallet(String walletName) {
         var request = new BitcoindLoadWalletRpcCall.Request(walletName);
         var rpcCall = new BitcoindLoadWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 }

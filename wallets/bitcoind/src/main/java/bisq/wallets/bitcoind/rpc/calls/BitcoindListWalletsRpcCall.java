@@ -17,9 +17,11 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
 
-public class BitcoindListWalletsRpcCall extends DaemonRpcCall<Void, String[]> {
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringListResponse;
+
+public class BitcoindListWalletsRpcCall extends DaemonRpcCall<Void, JsonRpcStringListResponse> {
 
     public BitcoindListWalletsRpcCall() {
         super(null);
@@ -31,12 +33,12 @@ public class BitcoindListWalletsRpcCall extends DaemonRpcCall<Void, String[]> {
     }
 
     @Override
-    public boolean isResponseValid(String[] response) {
+    public boolean isResponseValid(JsonRpcStringListResponse response) {
         return true;
     }
 
     @Override
-    public Class<String[]> getRpcResponseClass() {
-        return String[].class;
+    public Class<JsonRpcStringListResponse> getRpcResponseClass() {
+        return JsonRpcStringListResponse.class;
     }
 }

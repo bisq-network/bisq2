@@ -17,19 +17,20 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSendRawTransactionRpcCall.Request, String> {
+public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSendRawTransactionRpcCall.Request, JsonRpcStringResponse> {
 
     @Getter
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("hexstring")
+        @Json(name = "hexstring")
         private final String hexString;
 
         public Request(String hexString) {
@@ -47,12 +48,12 @@ public class BitcoindSendRawTransactionRpcCall extends DaemonRpcCall<BitcoindSen
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(JsonRpcStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<JsonRpcStringResponse> getRpcResponseClass() {
+        return JsonRpcStringResponse.class;
     }
 }

@@ -19,6 +19,7 @@ package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.bitcoind.rpc.responses.AbstractVin;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,9 +28,9 @@ import java.util.List;
 @Getter
 @Setter
 public class ElementsdVin extends AbstractVin {
-    @JsonProperty("is_pegin")
+    @Json(name = "is_pegin")
     private boolean isPegin;
-    @JsonProperty("pegin_witness")
+    @Json(name = "pegin_witness")
     private List<String> peginWitnesses;
     private ElementsdIssuance issuance;
 }

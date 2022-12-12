@@ -18,9 +18,9 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class BitcoindGetZmqNotificationsRpcCall extends DaemonRpcCall<Void, BitcoindGetZmqNotificationsResponse[]> {
+public class BitcoindGetZmqNotificationsRpcCall extends DaemonRpcCall<Void, BitcoindGetZmqNotificationsResponse> {
 
     public BitcoindGetZmqNotificationsRpcCall() {
         super(null);
@@ -32,12 +32,12 @@ public class BitcoindGetZmqNotificationsRpcCall extends DaemonRpcCall<Void, Bitc
     }
 
     @Override
-    public boolean isResponseValid(BitcoindGetZmqNotificationsResponse[] response) {
+    public boolean isResponseValid(BitcoindGetZmqNotificationsResponse response) {
         return true;
     }
 
     @Override
-    public Class<BitcoindGetZmqNotificationsResponse[]> getRpcResponseClass() {
-        return BitcoindGetZmqNotificationsResponse[].class;
+    public Class<BitcoindGetZmqNotificationsResponse> getRpcResponseClass() {
+        return BitcoindGetZmqNotificationsResponse.class;
     }
 }

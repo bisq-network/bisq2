@@ -38,7 +38,7 @@ public class ElementsdRawTxProcessor implements ZmqRawTxProcessor {
     public void processRawTx(byte[] serializedTx, byte[] sequenceNumber) {
         String txInHex = Hex.encode(serializedTx);
         String unblindedTxInHex = wallet.unblindRawTransaction(txInHex);
-        ElementsdDecodeRawTransactionResponse rawTransaction = daemon.decodeRawTransaction(unblindedTxInHex);
+        ElementsdDecodeRawTransactionResponse.Result rawTransaction = daemon.decodeRawTransaction(unblindedTxInHex).getResult();
 
         listeners.fireTxOutputAddressesListeners(rawTransaction);
         listeners.fireTxIdInputListeners(rawTransaction);

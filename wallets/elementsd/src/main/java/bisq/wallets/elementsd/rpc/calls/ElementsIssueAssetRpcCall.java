@@ -17,20 +17,20 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdIssueAssetResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
 public class ElementsIssueAssetRpcCall
-        extends WalletRpcCall<ElementsIssueAssetRpcCall.Request, ElementsdIssueAssetResponse> {
+        extends DaemonRpcCall<ElementsIssueAssetRpcCall.Request, ElementsdIssueAssetResponse> {
     @Builder
     @Getter
     public static class Request {
-        @JsonProperty("assetamount")
+        @Json(name = "assetamount")
         private final double assetAmount;
-        @JsonProperty("tokenamount")
+        @Json(name = "tokenamount")
         private final double tokenAmount;
     }
 

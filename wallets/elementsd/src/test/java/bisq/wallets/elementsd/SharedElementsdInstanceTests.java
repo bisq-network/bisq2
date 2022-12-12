@@ -64,7 +64,7 @@ public abstract class SharedElementsdInstanceTests
     protected void peginBtc(double amount) throws InterruptedException {
         ElementsdGetPeginAddressResponse peginAddressResponse = elementsdMinerWallet.getPeginAddress();
 
-        String bitcoindTxId = bitcoindRegtestSetup.fundAddress(peginAddressResponse.getMainChainAddress(), amount);
+        String bitcoindTxId = bitcoindRegtestSetup.fundAddress(peginAddressResponse.getResult().getMainChainAddress(), amount);
         String rawBitcoindTx = bitcoindDaemon.getRawTransaction(bitcoindTxId);
 
         // main chain tx needs 102 confirmations for pegin (fundAddress mines one block automatically)

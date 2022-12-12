@@ -34,7 +34,7 @@ public class BitcoindRawTxProcessor implements ZmqRawTxProcessor {
     @Override
     public void processRawTx(byte[] serializedTx, byte[] sequenceNumber) {
         String txInHex = Hex.encode(serializedTx);
-        BitcoindDecodeRawTransactionResponse rawTransaction = daemon.decodeRawTransaction(txInHex);
+        BitcoindDecodeRawTransactionResponse.Result rawTransaction = daemon.decodeRawTransaction(txInHex).getResult();
         listeners.fireTxOutputAddressesListeners(rawTransaction);
         listeners.fireTxIdInputListeners(rawTransaction);
     }

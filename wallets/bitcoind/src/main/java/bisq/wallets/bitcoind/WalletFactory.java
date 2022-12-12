@@ -22,8 +22,8 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqConnectionFactory;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.List;
 
@@ -38,13 +38,13 @@ public class WalletFactory {
     }
 
     private static BitcoindDaemon createBitcoindDaemon(RpcConfig rpcConfig) {
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new BitcoindDaemon(rpcClient);
     }
 
     private static ZmqConnection initializeBitcoindZeroMq(BitcoindDaemon bitcoindDaemon) {
         var bitcoindZeroMq = ZmqConnectionFactory.createForBitcoind(bitcoindDaemon);
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = bitcoindDaemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = bitcoindDaemon.getZmqNotifications();
         bitcoindZeroMq.initialize(zmqNotifications);
         return bitcoindZeroMq;
     }

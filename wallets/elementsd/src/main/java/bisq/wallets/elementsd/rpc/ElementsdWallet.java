@@ -23,18 +23,17 @@ import bisq.wallets.bitcoind.rpc.calls.BitcoindSignMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindVerifyMessageRpcCall;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindWalletLockRpcCall;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.rpc.WalletRpcClient;
 import bisq.wallets.elementsd.rpc.calls.*;
 import bisq.wallets.elementsd.rpc.responses.*;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 public class ElementsdWallet {
-    private final WalletRpcClient rpcClient;
+    private final JsonRpcClient rpcClient;
 
-    public ElementsdWallet(WalletRpcClient rpcClient) {
+    public ElementsdWallet(JsonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
@@ -46,7 +45,7 @@ public class ElementsdWallet {
                 .txOutProof(txOutProof)
                 .build();
         var rpcCall = new ElementsdClaimPeginRpcCall(request);
-        String result = rpcClient.invokeAndValidate(rpcCall);
+        String result = rpcClient.call(rpcCall).getResult();
 
         walletLock();
         return result;
@@ -58,8 +57,8 @@ public class ElementsdWallet {
 
     public double getAssetBalance(String assetLabel) {
         var rpcCall = new ElementsdGetBalancesRpcCall();
-        ElementsdGetBalancesResponse response = rpcClient.invokeAndValidate(rpcCall);
-        ElementsdGetMineBalancesResponse mineBalancesResponse = response.getMine();
+        ElementsdGetBalancesResponse response = rpcClient.call(rpcCall);
+        ElementsdGetMineBalances mineBalancesResponse = response.getResult().getMine();
 
         double trustedBalance = mineBalancesResponse.getTrusted().getOrDefault(assetLabel, 0.);
         double pendingBalance = mineBalancesResponse.getUntrustedPending().getOrDefault(assetLabel, 0.);
@@ -69,7 +68,7 @@ public class ElementsdWallet {
     public ElementsdGetAddressInfoResponse getAddressInfo(String address) {
         var request = new ElementsdGetAddressInfoRpcCall.Request(address);
         var rpcCall = new ElementsdGetAddressInfoRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public String getNewAddress(AddressType addressType, String label) {
@@ -78,12 +77,12 @@ public class ElementsdWallet {
                 .label(label)
                 .build();
         var rpcCall = new BitcoindGetNewAddressRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public ElementsdGetPeginAddressResponse getPeginAddress() {
         var rpcCall = new ElementsdGetPeginAddressRpcCall();
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public ElementsdIssueAssetResponse issueAsset(Optional<String> passphrase, double assetAmount, double tokenAmount) {
@@ -94,25 +93,23 @@ public class ElementsdWallet {
                 .tokenAmount(tokenAmount)
                 .build();
         var rpcCall = new ElementsIssueAssetRpcCall(request);
-        ElementsdIssueAssetResponse response = rpcClient.invokeAndValidate(rpcCall);
+        ElementsdIssueAssetResponse response = rpcClient.call(rpcCall);
 
         walletLock();
         return response;
     }
 
-    public List<ElementsdListTransactionsResponseEntry> listTransactions(int count) {
+    public List<ElementsdListTransactionsResponse.Entry> listTransactions(int count) {
         var request = ElementsdListTransactionsRpcCall.Request.builder()
                 .count(count)
                 .build();
         var rpcCall = new ElementsdListTransactionsRpcCall(request);
-        ElementsdListTransactionsResponseEntry[] response = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(response);
+        return rpcClient.call(rpcCall).getResult();
     }
 
-    public List<ElementsdListUnspentResponseEntry> listUnspent() {
+    public List<ElementsdListUnspentResponse.Entry> listUnspent() {
         var rpcCall = new ElementsdListUnspentRpcCall();
-        ElementsdListUnspentResponseEntry[] response = rpcClient.invokeAndValidate(rpcCall);
-        return Arrays.asList(response);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public String sendLBtcToAddress(Optional<String> passphrase, String address, double amount) {
@@ -128,7 +125,7 @@ public class ElementsdWallet {
                 .amount(amount)
                 .build();
         var rpcCall = new ElementsdSendToAddressRpcCall(request);
-        String txId = rpcClient.invokeAndValidate(rpcCall);
+        String txId = rpcClient.call(rpcCall).getResult();
 
         walletLock();
         return txId;
@@ -142,7 +139,7 @@ public class ElementsdWallet {
                 .message(message)
                 .build();
         var rpcCall = new BitcoindSignMessageRpcCall(request);
-        String signature = rpcClient.invokeAndValidate(rpcCall);
+        String signature = rpcClient.call(rpcCall).getResult();
 
         walletLock();
         return signature;
@@ -151,7 +148,7 @@ public class ElementsdWallet {
     public String unblindRawTransaction(String rawTxInHex) {
         var request = new ElementsdUnblindRawTransactionRpcCall.Request(rawTxInHex);
         var rpcCall = new ElementsdUnblindRawTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall).getHex();
+        return rpcClient.call(rpcCall).getResult().getHex();
     }
 
     public boolean verifyMessage(String address, String signature, String message) {
@@ -161,12 +158,12 @@ public class ElementsdWallet {
                 .message(message)
                 .build();
         var rpcCall = new BitcoindVerifyMessageRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall).getResult();
     }
 
     public void walletLock() {
         var rpcCall = new BitcoindWalletLockRpcCall();
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     private void walletPassphrase(Optional<String> passphrase) {

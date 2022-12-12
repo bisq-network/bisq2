@@ -24,13 +24,11 @@ import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.Wallet;
-import bisq.wallets.core.exceptions.WalletInitializationFailedException;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
 
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,12 +49,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
                          ZmqConnection zmqConnection) {
         this.receiveAddresses = receiveAddresses;
         this.zmqConnection = zmqConnection;
-
-        try {
-            wallet = new BitcoindWallet(daemon, rpcConfig, walletName);
-        } catch (MalformedURLException e) {
-            throw new WalletInitializationFailedException("Couldn't initialize BitcoinWalletService", e);
-        }
+        this.wallet = new BitcoindWallet(daemon, rpcConfig, walletName);
     }
 
     @Override
