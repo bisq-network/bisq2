@@ -20,6 +20,7 @@ package bisq.wallets.electrum.rpc;
 import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.json_rpc.DaemonRpcCall;
 import bisq.wallets.json_rpc.JsonRpcClient;
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import bisq.wallets.json_rpc.RpcCall;
 
 public class DaemonRpcClient {
@@ -30,17 +31,17 @@ public class DaemonRpcClient {
         this.jsonRpcClient = jsonRpcClient;
     }
 
-    public <T, R> R invokeAndValidate(DaemonRpcCall<T, R> rpcCall) {
+    public <T, R extends JsonRpcResponse<?>> R invokeAndValidate(DaemonRpcCall<T, R> rpcCall) {
         R response = invoke(rpcCall);
         validateRpcCall(rpcCall, response);
         return response;
     }
 
-    private <T, R> R invoke(DaemonRpcCall<T, R> rpcCall) {
+    private <T, R extends JsonRpcResponse<?>> R invoke(DaemonRpcCall<T, R> rpcCall) {
         return invokeAndHandleExceptions(jsonRpcClient, rpcCall);
     }
 
-    private <T, R> void validateRpcCall(RpcCall<T, R> rpcCall, R response) {
+    private <T, R extends JsonRpcResponse<?>> void validateRpcCall(RpcCall<T, R> rpcCall, R response) {
         boolean isValid = rpcCall.isResponseValid(response);
         if (!isValid) {
             throw new RpcCallFailureException("RPC Call to '" + rpcCall.getRpcMethodName() + "' failed. " +
@@ -48,7 +49,7 @@ public class DaemonRpcClient {
         }
     }
 
-    private <T, R> R invokeAndHandleExceptions(JsonRpcClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
+    private <T, R extends JsonRpcResponse<?>> R invokeAndHandleExceptions(JsonRpcClient jsonRpcHttpClient, RpcCall<T, R> rpcCall) {
             return jsonRpcHttpClient.call(rpcCall);
     }
 }
