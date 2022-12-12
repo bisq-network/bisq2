@@ -17,17 +17,25 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Map;
+import java.util.List;
 
-@Getter
-@Setter
-public class ElementsdGetMineBalancesResponse {
-    private Map<String, Double> trusted;
-    @JsonProperty("untrusted_pending")
-    private Map<String, Double> untrustedPending;
-    private Map<String, Double> immature;
+public class ElementsdListUnspentResponse extends JsonRpcResponse<List<ElementsdListUnspentResponse.Entry>> {
+    @Getter
+    public static class Entry extends BitcoindListUnspentResponse.Entry {
+        @Json(name = "assetcommitment")
+        private String assetCommitment;
+        private String asset;
+        @Json(name = "amountcommitment")
+        private String amountCommitment;
+        @Json(name = "amountblinder")
+        private String amountBlinder;
+        @Json(name = "assetblinder")
+        private String assetBlinder;
+    }
 }

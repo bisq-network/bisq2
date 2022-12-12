@@ -17,7 +17,6 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.ConnectionFailureIntegrationTests;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
@@ -26,7 +25,7 @@ import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import java.io.IOException;
 
 public class BitcoindConnectionFailureIntegrationTests
-        extends ConnectionFailureIntegrationTests<MultiProcessCoordinator, BitcoindWallet> {
+        extends ConnectionFailureIntegrationTests<MultiProcessCoordinator> {
     @Override
     protected AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
         return new BitcoindRegtestSetup();

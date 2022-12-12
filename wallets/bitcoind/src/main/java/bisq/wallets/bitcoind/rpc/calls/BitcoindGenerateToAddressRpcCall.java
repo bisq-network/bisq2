@@ -17,11 +17,12 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringListResponse;
 import lombok.Builder;
 import lombok.Getter;
 
-public class BitcoindGenerateToAddressRpcCall extends DaemonRpcCall<BitcoindGenerateToAddressRpcCall.Request, String[]> {
+public class BitcoindGenerateToAddressRpcCall extends DaemonRpcCall<BitcoindGenerateToAddressRpcCall.Request, JsonRpcStringListResponse> {
 
     @Builder
     @Getter
@@ -40,12 +41,12 @@ public class BitcoindGenerateToAddressRpcCall extends DaemonRpcCall<BitcoindGene
     }
 
     @Override
-    public boolean isResponseValid(String[] response) {
+    public boolean isResponseValid(JsonRpcStringListResponse response) {
         return true;
     }
 
     @Override
-    public Class<String[]> getRpcResponseClass() {
-        return String[].class;
+    public Class<JsonRpcStringListResponse> getRpcResponseClass() {
+        return JsonRpcStringListResponse.class;
     }
 }

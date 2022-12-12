@@ -17,13 +17,14 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class BitcoindCreateMultiSigResponse {
-    private String address;
-    private String redeemScript;
-    private String descriptor;
+public class BitcoindCreateMultiSigResponse extends JsonRpcResponse<BitcoindCreateMultiSigResponse.Result> {
+    @Getter
+    public static class Result {
+        private String address;
+        private String redeemScript;
+        private String descriptor;
+    }
 }

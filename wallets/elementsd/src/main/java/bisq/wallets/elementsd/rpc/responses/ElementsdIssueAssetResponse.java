@@ -17,18 +17,20 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ElementsdIssueAssetResponse {
-    @JsonProperty("txid")
-    private String txId;
-    @JsonProperty("vin")
-    private String vIn;
-    private String entropy;
-    private String asset;
-    private String token;
+public class ElementsdIssueAssetResponse extends JsonRpcResponse<ElementsdIssueAssetResponse.Result> {
+    @Getter
+    public static class Result {
+        @Json(name = "txid")
+        private String txId;
+        @Json(name = "vin")
+        private String vIn;
+        private String entropy;
+        private String asset;
+        private String token;
+    }
 }

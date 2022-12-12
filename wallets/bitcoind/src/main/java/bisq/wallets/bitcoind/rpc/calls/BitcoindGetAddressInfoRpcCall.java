@@ -18,13 +18,13 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetAddressInfoResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 public class BitcoindGetAddressInfoRpcCall
-        extends WalletRpcCall<BitcoindGetAddressInfoRpcCall.Request, BitcoindGetAddressInfoResponse> {
+        extends DaemonRpcCall<BitcoindGetAddressInfoRpcCall.Request, BitcoindGetAddressInfoResponse> {
 
     @Getter
     @ToString

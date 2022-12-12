@@ -17,24 +17,21 @@
 
 package bisq.wallets.elementsd.rpc.responses;
 
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListTransactionsResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-public class ElementsdIssuance extends JsonRpcResponse<ElementsdIssuance.Result> {
+import java.util.List;
+
+public class ElementsdListTransactionsResponse extends JsonRpcResponse<List<ElementsdListTransactionsResponse.Entry>> {
     @Getter
-    public static class Result {
-        private String assetBlindingNonce;
-        private String assetEntropy;
-        @Json(name = "isreissuance")
-        private boolean isReissuance;
-        private String token;
+    public static class Entry extends BitcoindListTransactionsResponse.Entry {
+        @Json(name = "amountblinder")
+        private String amountBlinder;
         private String asset;
-        @Json(name = "assetamount")
-        private double assetAmount;
-        @Json(name = "tokenamountcommitment")
-        private String tokenAmountCommitment;
+        @Json(name = "assetblinder")
+        private String assetBlinder;
     }
 }

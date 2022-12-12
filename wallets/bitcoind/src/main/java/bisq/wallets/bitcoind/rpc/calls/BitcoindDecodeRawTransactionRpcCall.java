@@ -18,8 +18,8 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,10 +31,10 @@ public class BitcoindDecodeRawTransactionRpcCall
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("hexstring")
+        @Json(name = "hexstring")
         private final String hexString;
 
-        public Request(@JsonProperty("hexstring") String hexString) {
+        public Request(String hexString) {
             this.hexString = hexString;
         }
     }

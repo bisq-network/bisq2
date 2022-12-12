@@ -26,8 +26,8 @@ import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
 
@@ -110,7 +110,7 @@ public class RemoteBitcoind implements BisqProcess {
     }
 
     private BitcoindDaemon createBitcoindDaemon() {
-        DaemonRpcClient rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+        JsonRpcClient rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
         return new BitcoindDaemon(rpcClient);
     }
 
@@ -119,7 +119,7 @@ public class RemoteBitcoind implements BisqProcess {
         var bitcoindZmqTopicProcessors = new ZmqTopicProcessors(bitcoindRawTxProcessor, zmqListeners);
         bitcoindZeroMq = new ZmqConnection(bitcoindZmqTopicProcessors, zmqListeners);
 
-        List<BitcoindGetZmqNotificationsResponse> zmqNotifications = daemon.getZmqNotifications();
+        List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications = daemon.getZmqNotifications();
         bitcoindZeroMq.initialize(zmqNotifications);
     }
 

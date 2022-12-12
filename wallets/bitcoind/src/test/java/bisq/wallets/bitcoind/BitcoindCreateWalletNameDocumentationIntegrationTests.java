@@ -21,8 +21,8 @@ import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindCreateWalletRpcCall;
 import bisq.wallets.core.RpcConfig;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
@@ -41,14 +41,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(BitcoindExtension.class)
 public class BitcoindCreateWalletNameDocumentationIntegrationTests {
     private final Path dataDir;
-    private final DaemonRpcClient rpcClient;
+    private final JsonRpcClient rpcClient;
     private final BitcoindDaemon daemon;
 
     public BitcoindCreateWalletNameDocumentationIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.dataDir = regtestSetup.getDataDir();
         this.daemon = regtestSetup.getDaemon();
         RpcConfig rpcConfig = regtestSetup.getRpcConfig();
-        this.rpcClient = RpcClientFactory.createLegacyDaemonRpcClient(rpcConfig);
+        this.rpcClient = RpcClientFactory.createDaemonRpcClient(rpcConfig);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class BitcoindCreateWalletNameDocumentationIntegrationTests {
                 .build();
 
         var rpcCall = new BitcoindCreateWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
 
         File walletFile = walletPath.resolve("wallet.dat")
                 .toFile();
@@ -85,7 +85,7 @@ public class BitcoindCreateWalletNameDocumentationIntegrationTests {
                 .build();
 
         var rpcCall = new BitcoindCreateWalletRpcCall(request);
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
 
         File expectedWalletFile = newWalletDir.resolve("b")
                 .resolve("wallet.dat")

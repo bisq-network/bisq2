@@ -15,23 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.elementsd.rpc.responses;
+package bisq.wallets.json_rpc;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class ElementsdListUnspentResponseEntry extends BitcoindListUnspentResponseEntry {
-    @JsonProperty("assetcommitment")
-    private String assetCommitment;
-    private String asset;
-    @JsonProperty("amountcommitment")
-    private String amountCommitment;
-    @JsonProperty("amountblinder")
-    private String amountBlinder;
-    @JsonProperty("assetblinder")
-    private String assetBlinder;
+public class VoidJsonRpcResponse extends JsonRpcResponse<String> {
 }

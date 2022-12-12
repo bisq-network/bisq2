@@ -112,20 +112,20 @@ public class BitcoindPsbtMultiSigIntegrationTests {
 
         // Create PSBT (send to Alice without Alice)
         String aliceReceiveAddr = aliceWallet.getNewAddress(AddressType.BECH32, "");
-        BitcoindWalletCreateFundedPsbtResponse createFundedPsbtResponse = bobWatchOnlyWallet.walletCreateFundedPsbt(
+        BitcoindWalletCreateFundedPsbtResponse.Result createFundedPsbtResponse = bobWatchOnlyWallet.walletCreateFundedPsbt(
                 Collections.emptyList(),
                 Map.of(aliceReceiveAddr, 4.),
                 Map.of("feeRate", 0.00010)
-        );
+        ).getResult();
 
-        BitcoindWalletProcessPsbtResponse bobPsbtResponse = bobWallet.walletProcessPsbt(
+        BitcoindWalletProcessPsbtResponse.Result bobPsbtResponse = bobWallet.walletProcessPsbt(
                 Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE),
                 createFundedPsbtResponse.getPsbt()
-        );
-        BitcoindWalletProcessPsbtResponse charliePsbtResponse = charlieWallet.walletProcessPsbt(
+        ).getResult();
+        BitcoindWalletProcessPsbtResponse.Result charliePsbtResponse = charlieWallet.walletProcessPsbt(
                 Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE),
                 createFundedPsbtResponse.getPsbt()
-        );
+        ).getResult();
 
         // Combine PSBTs
         String combinedPsbt = daemon.combinePsbt(
@@ -133,7 +133,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
         );
 
         // Finalize PSBT
-        BitcoindFinalizePsbtResponse finalizePsbtResponse = daemon.finalizePsbt(combinedPsbt);
+        BitcoindFinalizePsbtResponse.Result finalizePsbtResponse = daemon.finalizePsbt(combinedPsbt).getResult();
         assertThat(finalizePsbtResponse.isComplete())
                 .isTrue();
 
@@ -146,7 +146,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     }
 
     private String getWalletXPub(BitcoindWallet wallet) {
-        List<BitcoindDescriptor> descriptors = wallet.listDescriptors().getDescriptors();
+        List<BitcoindDescriptor> descriptors = wallet.listDescriptors().getResult().getDescriptors();
         String xPub = descriptors.stream()
                 .map(BitcoindDescriptor::getDesc)
                 .filter(descriptor -> descriptor.startsWith("pkh"))
@@ -162,7 +162,7 @@ public class BitcoindPsbtMultiSigIntegrationTests {
     }
 
     private String appendChecksumToDescriptor(String descriptor) {
-        BitcoindGetDescriptorInfoResponse receiveDescriptorInfo = minerWallet.getDescriptorInfo(descriptor);
+        BitcoindGetDescriptorInfoResponse.Result receiveDescriptorInfo = minerWallet.getDescriptorInfo(descriptor).getResult();
         return receiveDescriptorInfo.getDescriptor();
     }
 }

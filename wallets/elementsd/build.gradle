@@ -13,6 +13,7 @@ dependencies {
 
     implementation project(':core')
     implementation project(':bitcoind')
+    implementation project(':json-rpc')
 
     implementation libs.google.guava
     implementation libs.jackson.databind

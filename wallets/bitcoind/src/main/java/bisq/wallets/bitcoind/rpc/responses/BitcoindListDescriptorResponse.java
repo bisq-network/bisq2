@@ -17,16 +17,17 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
-public class BitcoindListDescriptorResponse {
-    @JsonProperty("wallet_name")
-    private String walletName;
-    private List<BitcoindDescriptor> descriptors;
+public class BitcoindListDescriptorResponse extends JsonRpcResponse<BitcoindListDescriptorResponse.Result> {
+    @Getter
+    public static class Result {
+        @Json(name = "wallet_name")
+        private String walletName;
+        private List<BitcoindDescriptor> descriptors;
+    }
 }

@@ -18,15 +18,17 @@
 package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.bitcoind.rpc.responses.AbstractDecodeRawTransactionResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class ElementsdDecodeRawTransactionResponse extends AbstractDecodeRawTransactionResponse<ElementsdVin, ElementsdVout> {
-    @JsonProperty("wtxid")
-    private String wTxId;
-    @JsonProperty("withash")
-    private String withHash;
+public class ElementsdDecodeRawTransactionResponse extends JsonRpcResponse<ElementsdDecodeRawTransactionResponse.Result> {
+    @Getter
+    public static class Result extends AbstractDecodeRawTransactionResponse<ElementsdVin, ElementsdVout> {
+        @Json(name = "wtxid")
+        private String wTxId;
+        @Json(name = "withash")
+        private String withHash;
+    }
 }

@@ -17,13 +17,13 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListTransactionsResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Builder;
 import lombok.Getter;
 
 public class ElementsdListTransactionsRpcCall
-        extends WalletRpcCall<ElementsdListTransactionsRpcCall.Request, ElementsdListTransactionsResponseEntry[]> {
+        extends DaemonRpcCall<ElementsdListTransactionsRpcCall.Request, ElementsdListTransactionsResponse> {
     @Builder
     @Getter
     public static class Request {
@@ -41,12 +41,12 @@ public class ElementsdListTransactionsRpcCall
     }
 
     @Override
-    public boolean isResponseValid(ElementsdListTransactionsResponseEntry[] response) {
+    public boolean isResponseValid(ElementsdListTransactionsResponse response) {
         return true;
     }
 
     @Override
-    public Class<ElementsdListTransactionsResponseEntry[]> getRpcResponseClass() {
-        return ElementsdListTransactionsResponseEntry[].class;
+    public Class<ElementsdListTransactionsResponse> getRpcResponseClass() {
+        return ElementsdListTransactionsResponse.class;
     }
 }

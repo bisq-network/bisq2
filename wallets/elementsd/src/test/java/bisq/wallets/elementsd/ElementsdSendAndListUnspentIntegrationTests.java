@@ -17,9 +17,9 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponse;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -39,14 +39,14 @@ public class ElementsdSendAndListUnspentIntegrationTests extends SharedElementsd
         String secondTxId = elementsdRegtestSetup.sendBtcAndMineOneBlock(elementsdMinerWallet, receiverBackend, 1);
         String thirdTxId = elementsdRegtestSetup.sendBtcAndMineOneBlock(elementsdMinerWallet, receiverBackend, 1);
 
-        List<ElementsdListUnspentResponseEntry> utxos = receiverBackend.listUnspent();
+        List<ElementsdListUnspentResponse.Entry> utxos = receiverBackend.listUnspent();
         assertEquals(3, utxos.size());
 
-        Optional<ElementsdListUnspentResponseEntry> queryResult = elementsdRegtestSetup
+        Optional<ElementsdListUnspentResponse.Entry> queryResult = elementsdRegtestSetup
                 .filterUtxosByTxId(utxos, firstTxId);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry firstUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry firstUtxo = queryResult.get();
         assertEquals("", firstUtxo.getLabel());
         assertEquals(1, firstUtxo.getAmount());
         assertEquals(3, firstUtxo.getConfirmations());
@@ -57,7 +57,7 @@ public class ElementsdSendAndListUnspentIntegrationTests extends SharedElementsd
         queryResult = elementsdRegtestSetup.filterUtxosByTxId(utxos, secondTxId);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry secondUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry secondUtxo = queryResult.get();
         assertEquals("", secondUtxo.getLabel());
         assertEquals(1, secondUtxo.getAmount());
         assertEquals(2, secondUtxo.getConfirmations());
@@ -68,7 +68,7 @@ public class ElementsdSendAndListUnspentIntegrationTests extends SharedElementsd
         queryResult = elementsdRegtestSetup.filterUtxosByTxId(utxos, thirdTxId);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry thirdUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry thirdUtxo = queryResult.get();
         assertEquals("", thirdUtxo.getLabel());
         assertEquals(1, thirdUtxo.getAmount());
         assertEquals(1, thirdUtxo.getConfirmations());

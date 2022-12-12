@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponseEntry;
+import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,14 +50,14 @@ public class BitcoindSendAndListUnspentIntegrationTests {
         String secondTxReceiverAddress = regtestSetup.sendBtcAndMineOneBlock(minerWallet, receiverBackend, 1);
         String thirdTxReceiverAddress = regtestSetup.sendBtcAndMineOneBlock(minerWallet, receiverBackend, 1);
 
-        List<BitcoindListUnspentResponseEntry> utxos = receiverBackend.listUnspent();
+        List<BitcoindListUnspentResponse.Entry> utxos = receiverBackend.listUnspent();
         assertEquals(3, utxos.size());
 
-        Optional<BitcoindListUnspentResponseEntry> queryResult = regtestSetup
+        Optional<BitcoindListUnspentResponse.Entry> queryResult = regtestSetup
                 .filterUtxosByAddress(utxos, firstTxReceiverAddress);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry firstUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry firstUtxo = queryResult.get();
         assertEquals("", firstUtxo.getLabel());
         assertEquals(1, firstUtxo.getAmount());
         assertEquals(3, firstUtxo.getConfirmations());
@@ -68,7 +68,7 @@ public class BitcoindSendAndListUnspentIntegrationTests {
         queryResult = regtestSetup.filterUtxosByAddress(utxos, secondTxReceiverAddress);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry secondUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry secondUtxo = queryResult.get();
         assertEquals("", secondUtxo.getLabel());
         assertEquals(1, secondUtxo.getAmount());
         assertEquals(2, secondUtxo.getConfirmations());
@@ -79,7 +79,7 @@ public class BitcoindSendAndListUnspentIntegrationTests {
         queryResult = regtestSetup.filterUtxosByAddress(utxos, thirdTxReceiverAddress);
         assertTrue(queryResult.isPresent());
 
-        BitcoindListUnspentResponseEntry thirdUtxo = queryResult.get();
+        BitcoindListUnspentResponse.Entry thirdUtxo = queryResult.get();
         assertEquals("", thirdUtxo.getLabel());
         assertEquals(1, thirdUtxo.getAmount());
         assertEquals(1, thirdUtxo.getConfirmations());

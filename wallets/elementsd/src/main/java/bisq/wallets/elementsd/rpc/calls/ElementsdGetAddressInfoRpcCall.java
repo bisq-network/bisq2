@@ -17,14 +17,14 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetAddressInfoResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 public class ElementsdGetAddressInfoRpcCall
-        extends WalletRpcCall<ElementsdGetAddressInfoRpcCall.Request, ElementsdGetAddressInfoResponse> {
+        extends DaemonRpcCall<ElementsdGetAddressInfoRpcCall.Request, ElementsdGetAddressInfoResponse> {
 
     @Getter
     @ToString

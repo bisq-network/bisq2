@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc.calls.requests;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,11 +32,11 @@ public class BitcoindImportMultiRequest {
     private String desc;
     private Map<String, String> scriptPubKey;
     private final String timestamp = "now";
-    @JsonProperty("redeemscript")
+    @Json(name = "redeemscript")
     private String redeemScript;
-    @JsonProperty("witnessscript")
+    @Json(name = "witnessscript")
     private String witnessScript;
-    @JsonProperty("pubkeys")
+    @Json(name = "pubkeys")
     private List<String> pubKeys;
     private List<String> keys;
 }

@@ -17,14 +17,15 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class BitcoindGetBalancesResponse {
-    private BitcoindGetMineBalancesResponse mine;
-    @JsonProperty("watchonly")
-    private BitcoindGetMineBalancesResponse watchOnly;
+public class BitcoindGetBalancesResponse extends JsonRpcResponse<BitcoindGetBalancesResponse.Result> {
+    @Getter
+    public static class Result {
+        private BitcoindGetMineBalancesResponse mine;
+        @Json(name = "watchonly")
+        private BitcoindGetMineBalancesResponse watchOnly;
+    }
 }

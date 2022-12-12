@@ -17,10 +17,10 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponseEntry;
+import bisq.wallets.elementsd.rpc.responses.ElementsdListUnspentResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class ElementsdListUnspentRpcCall extends WalletRpcCall<Void, ElementsdListUnspentResponseEntry[]> {
+public class ElementsdListUnspentRpcCall extends DaemonRpcCall<Void, ElementsdListUnspentResponse> {
     public ElementsdListUnspentRpcCall() {
         super(null);
     }
@@ -31,12 +31,12 @@ public class ElementsdListUnspentRpcCall extends WalletRpcCall<Void, ElementsdLi
     }
 
     @Override
-    public boolean isResponseValid(ElementsdListUnspentResponseEntry[] response) {
+    public boolean isResponseValid(ElementsdListUnspentResponse response) {
         return true;
     }
 
     @Override
-    public Class<ElementsdListUnspentResponseEntry[]> getRpcResponseClass() {
-        return ElementsdListUnspentResponseEntry[].class;
+    public Class<ElementsdListUnspentResponse> getRpcResponseClass() {
+        return ElementsdListUnspentResponse.class;
     }
 }

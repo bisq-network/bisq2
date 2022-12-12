@@ -17,13 +17,16 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class BitcoindGetZmqNotificationsResponse {
-    private String type;
-    private String address;
-    private int hwm;
+import java.util.List;
+
+public class BitcoindGetZmqNotificationsResponse extends JsonRpcResponse<List<BitcoindGetZmqNotificationsResponse.Entry>> {
+    @Getter
+    public static class Entry {
+        private String type;
+        private String address;
+        private int hwm;
+    }
 }

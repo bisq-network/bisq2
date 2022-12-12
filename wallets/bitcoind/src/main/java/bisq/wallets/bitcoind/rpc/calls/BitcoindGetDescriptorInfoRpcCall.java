@@ -18,11 +18,11 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetDescriptorInfoResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Getter;
 
 public class BitcoindGetDescriptorInfoRpcCall
-        extends WalletRpcCall<BitcoindGetDescriptorInfoRpcCall.Request, BitcoindGetDescriptorInfoResponse> {
+        extends DaemonRpcCall<BitcoindGetDescriptorInfoRpcCall.Request, BitcoindGetDescriptorInfoResponse> {
 
     @Getter
     public static class Request {

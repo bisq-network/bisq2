@@ -17,7 +17,7 @@
 
 package bisq.wallets.bitcoind.rpc.calls.requests;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,9 +27,9 @@ import lombok.Setter;
 @Setter
 public class BitcoindImportDescriptorRequestEntry {
     private String desc;
-    @JsonProperty("active")
+    @Json(name = "active")
     private boolean isActive;
-    @JsonProperty("internal")
+    @Json(name = "internal")
     private boolean isInternal;
     private final String timestamp = "now";
 }

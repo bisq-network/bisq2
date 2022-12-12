@@ -18,23 +18,23 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindAddOrCreateMultiSigAddressResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
 
 public class BitcoindCreateMultiSigRpcCall
-        extends WalletRpcCall<BitcoindCreateMultiSigRpcCall.Request, BitcoindAddOrCreateMultiSigAddressResponse> {
+        extends DaemonRpcCall<BitcoindCreateMultiSigRpcCall.Request, BitcoindAddOrCreateMultiSigAddressResponse> {
 
     @Builder
     @Getter
     public static class Request {
-        @JsonProperty("nrequired")
+        @Json(name = "nrequired")
         private int nRequired;
         private List<String> keys;
-        @JsonProperty("address_type")
+        @Json(name = "address_type")
         private String addressType;
     }
 

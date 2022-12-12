@@ -49,7 +49,7 @@ public class ElementsdLiquidAssetsIntegrationTests extends SharedElementsdInstan
         ElementsdIssueAssetResponse issueAssetResponse = elementsdMinerWallet.issueAsset(
                 Optional.of(ElementsdRegtestSetup.WALLET_PASSPHRASE), 2, 1
         );
-        String assetLabel = issueAssetResponse.getAsset();
+        String assetLabel = issueAssetResponse.getResult().getAsset();
 
         var receiverBackend = elementsdRegtestSetup.createNewWallet("receiver_wallet");
 

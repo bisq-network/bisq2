@@ -18,13 +18,13 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindWalletProcessPsbtResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 public class BitcoindWalletProcessPsbtRpcCall
-        extends WalletRpcCall<BitcoindWalletProcessPsbtRpcCall.Request, BitcoindWalletProcessPsbtResponse> {
+        extends DaemonRpcCall<BitcoindWalletProcessPsbtRpcCall.Request, BitcoindWalletProcessPsbtResponse> {
 
     @Getter
     @ToString

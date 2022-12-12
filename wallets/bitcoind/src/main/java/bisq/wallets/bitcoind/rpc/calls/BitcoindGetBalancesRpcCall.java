@@ -18,9 +18,9 @@
 package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetBalancesResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class BitcoindGetBalancesRpcCall extends WalletRpcCall<Void, BitcoindGetBalancesResponse> {
+public class BitcoindGetBalancesRpcCall extends DaemonRpcCall<Void, BitcoindGetBalancesResponse> {
     public BitcoindGetBalancesRpcCall() {
         super(null);
     }

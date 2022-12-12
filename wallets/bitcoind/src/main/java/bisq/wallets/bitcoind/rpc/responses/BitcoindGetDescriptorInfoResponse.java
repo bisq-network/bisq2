@@ -17,19 +17,20 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class BitcoindGetDescriptorInfoResponse {
-    private String descriptor;
-    private String checksum;
-    @JsonProperty("isrange")
-    private boolean isRange;
-    @JsonProperty("issolvable")
-    private boolean isSolvable;
-    @JsonProperty("hasprivatekeys")
-    private boolean hasPrivateKeys;
+public class BitcoindGetDescriptorInfoResponse extends JsonRpcResponse<BitcoindGetDescriptorInfoResponse.Result> {
+    @Getter
+    public static class Result {
+        private String descriptor;
+        private String checksum;
+        @Json(name = "isrange")
+        private boolean isRange;
+        @Json(name = "issolvable")
+        private boolean isSolvable;
+        @Json(name = "hasprivatekeys")
+        private boolean hasPrivateKeys;
+    }
 }

@@ -19,6 +19,7 @@ package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.bitcoind.rpc.responses.AbstractVout;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,25 +31,25 @@ import java.util.List;
 public class ElementsdVout extends AbstractVout<ElementsdScriptPubKey> {
     private String asset;
 
-    @JsonProperty("value-minimum")
+    @Json(name = "value-minimum")
     private double valueMin;
-    @JsonProperty("value-maximum")
+    @Json(name = "value-maximum")
     private double valueMax;
-    @JsonProperty("ct-exponent")
+    @Json(name = "ct-exponent")
     private int ctExponent;
-    @JsonProperty("ct-bits")
+    @Json(name = "ct-bits")
     private int ctBits;
-    @JsonProperty("surjectionproof")
+    @Json(name = "surjectionproof")
     private String surjectionProof;
-    @JsonProperty("valuecommitment")
+    @Json(name = "valuecommitment")
     private String valueCommitment;
-    @JsonProperty("assetcommitment")
+    @Json(name = "assetcommitment")
     private String assetCommitment;
 
 
-    @JsonProperty("commitmentnonce")
+    @Json(name = "commitmentnonce")
     private String commitmentNonce;
-    @JsonProperty("commitmentnonce_fully_valid")
+    @Json(name = "commitmentnonce_fully_valid")
     private boolean isCommitmentNonceFullyValid;
 
     @Override

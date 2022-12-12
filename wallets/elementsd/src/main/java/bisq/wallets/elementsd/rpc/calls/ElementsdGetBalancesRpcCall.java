@@ -17,10 +17,10 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdGetBalancesResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-public class ElementsdGetBalancesRpcCall extends WalletRpcCall<Void, ElementsdGetBalancesResponse> {
+public class ElementsdGetBalancesRpcCall extends DaemonRpcCall<Void, ElementsdGetBalancesResponse> {
 
     public ElementsdGetBalancesRpcCall() {
         super(null);

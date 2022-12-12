@@ -17,14 +17,12 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-public class BitcoindCreateOrLoadWalletResponse extends BitcoindWarningResponse {
+public class BitcoindCreateOrLoadWalletResponse extends JsonRpcResponse<BitcoindCreateOrLoadWalletResponse.Result> {
     @Getter
-    @Setter
-    private String name;
-
-    public BitcoindCreateOrLoadWalletResponse() {
+    public static class Result extends BitcoindWarningResponse.Result {
+        private String name;
     }
 }

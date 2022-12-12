@@ -55,7 +55,7 @@ public class ZmqConnection implements AutoCloseable {
         this.listeners = listeners;
     }
 
-    public void initialize(List<BitcoindGetZmqNotificationsResponse> zmqConnectionEndpoints) {
+    public void initialize(List<BitcoindGetZmqNotificationsResponse.Entry> zmqConnectionEndpoints) {
         context = new ZContext();
         executorService.execute(() -> {
             String zmqAddress = findZmqAddress(zmqConnectionEndpoints);
@@ -108,7 +108,7 @@ public class ZmqConnection implements AutoCloseable {
         }
     }
 
-    private String findZmqAddress(List<BitcoindGetZmqNotificationsResponse> zmqNotifications) {
+    private String findZmqAddress(List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications) {
         if (!canSubscribeToAllTopics(zmqNotifications)) {
             throw new CannotFindZmqTopicException(
                     "ZeroMQ: Bitcoind hasn't publishing all topics (" +
@@ -124,21 +124,21 @@ public class ZmqConnection implements AutoCloseable {
         return zmqNotifications.get(0).getAddress();
     }
 
-    private boolean canSubscribeToAllTopics(List<BitcoindGetZmqNotificationsResponse> zmqNotifications) {
+    private boolean canSubscribeToAllTopics(List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications) {
         Set<String> allTopicNames = Arrays.stream(BitcoindZmqTopic.values())
                 .map(BitcoindZmqTopic::getTopicName)
                 .collect(Collectors.toSet());
 
-        long count = zmqNotifications.stream().map(BitcoindGetZmqNotificationsResponse::getType)
+        long count = zmqNotifications.stream().map(BitcoindGetZmqNotificationsResponse.Entry::getType)
                 .filter(allTopicNames::contains)
                 .count();
 
         return count != allTopicNames.size();
     }
 
-    private boolean allTopicsArePublishedToSameAddress(List<BitcoindGetZmqNotificationsResponse> zmqNotifications) {
+    private boolean allTopicsArePublishedToSameAddress(List<BitcoindGetZmqNotificationsResponse.Entry> zmqNotifications) {
         long count = zmqNotifications.stream()
-                .map(BitcoindGetZmqNotificationsResponse::getAddress)
+                .map(BitcoindGetZmqNotificationsResponse.Entry::getAddress)
                 .distinct()
                 .count();
         return count == 1;

@@ -17,10 +17,11 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class BitcoindDecodeRawTransactionResponse extends AbstractDecodeRawTransactionResponse<BitcoindVin, BitcoindVout> {
+public class BitcoindDecodeRawTransactionResponse extends JsonRpcResponse<BitcoindDecodeRawTransactionResponse.Result> {
+    @Getter
+    public static class Result extends AbstractDecodeRawTransactionResponse<BitcoindVin, BitcoindVout> {
+    }
 }

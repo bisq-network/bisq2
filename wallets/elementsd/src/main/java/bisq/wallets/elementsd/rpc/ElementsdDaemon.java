@@ -19,21 +19,20 @@ package bisq.wallets.elementsd.rpc;
 
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.core.rpc.DaemonRpcClient;
 import bisq.wallets.elementsd.rpc.calls.ElementsdDecodeRawTransactionRpcCall;
 import bisq.wallets.elementsd.rpc.calls.ElementsdStopRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdDecodeRawTransactionResponse;
+import bisq.wallets.json_rpc.JsonRpcClient;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
 public class ElementsdDaemon {
 
-    private final DaemonRpcClient rpcClient;
+    private final JsonRpcClient rpcClient;
     private final BitcoindDaemon bitcoindDaemon;
 
-    public ElementsdDaemon(DaemonRpcClient rpcClient) {
+    public ElementsdDaemon(JsonRpcClient rpcClient) {
         this.rpcClient = rpcClient;
         bitcoindDaemon = new BitcoindDaemon(rpcClient);
     }
@@ -45,7 +44,7 @@ public class ElementsdDaemon {
     public ElementsdDecodeRawTransactionResponse decodeRawTransaction(String txInHex) {
         var request = new ElementsdDecodeRawTransactionRpcCall.Request(txInHex);
         var rpcCall = new ElementsdDecodeRawTransactionRpcCall(request);
-        return rpcClient.invokeAndValidate(rpcCall);
+        return rpcClient.call(rpcCall);
     }
 
     public List<String> generateToAddress(int numberOfBlocksToMine, String addressOfMiner) {
@@ -60,7 +59,7 @@ public class ElementsdDaemon {
         return bitcoindDaemon.getTxOutProof(txIds);
     }
 
-    public List<BitcoindGetZmqNotificationsResponse> getZmqNotifications() {
+    public List<BitcoindGetZmqNotificationsResponse.Entry> getZmqNotifications() {
         return bitcoindDaemon.getZmqNotifications();
     }
 
@@ -74,7 +73,7 @@ public class ElementsdDaemon {
 
     public void stop() {
         var rpcCall = new ElementsdStopRpcCall();
-        rpcClient.invokeAndValidate(rpcCall);
+        rpcClient.call(rpcCall);
     }
 
     public void unloadWallet(String walletName) {

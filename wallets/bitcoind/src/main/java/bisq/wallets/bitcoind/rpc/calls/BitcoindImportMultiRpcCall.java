@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind.rpc.calls;
 
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportMultiRequest;
 import bisq.wallets.bitcoind.rpc.responses.BitcoinImportMultiEntryResponse;
-import bisq.wallets.core.rpc.call.WalletRpcCall;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BitcoindImportMultiRpcCall
-        extends WalletRpcCall<BitcoindImportMultiRpcCall.Request, BitcoinImportMultiEntryResponse[]> {
+        extends DaemonRpcCall<BitcoindImportMultiRpcCall.Request, BitcoinImportMultiEntryResponse> {
     @Builder
     @Getter
     public static class Request {
@@ -45,12 +45,12 @@ public class BitcoindImportMultiRpcCall
     }
 
     @Override
-    public boolean isResponseValid(BitcoinImportMultiEntryResponse[] response) {
+    public boolean isResponseValid(BitcoinImportMultiEntryResponse response) {
         return true;
     }
 
     @Override
-    public Class<BitcoinImportMultiEntryResponse[]> getRpcResponseClass() {
-        return BitcoinImportMultiEntryResponse[].class;
+    public Class<BitcoinImportMultiEntryResponse> getRpcResponseClass() {
+        return BitcoinImportMultiEntryResponse.class;
     }
 }

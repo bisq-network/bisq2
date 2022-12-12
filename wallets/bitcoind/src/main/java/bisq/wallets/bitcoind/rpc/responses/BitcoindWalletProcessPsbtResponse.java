@@ -17,13 +17,14 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.wallets.json_rpc.JsonRpcResponse;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 
-public class BitcoindWalletProcessPsbtResponse {
-    private String psbt;
-    private boolean complete;
+public class BitcoindWalletProcessPsbtResponse extends JsonRpcResponse<BitcoindWalletProcessPsbtResponse.Result> {
+    @Getter
+    public static class Result {
+        private String psbt;
+        private boolean complete;
+    }
 }

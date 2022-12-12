@@ -17,18 +17,19 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
-public class ElementsdClaimPeginRpcCall extends WalletRpcCall<ElementsdClaimPeginRpcCall.Request, String> {
+public class ElementsdClaimPeginRpcCall extends DaemonRpcCall<ElementsdClaimPeginRpcCall.Request, JsonRpcStringResponse> {
     @Builder
     @Getter
     public static class Request {
-        @JsonProperty("bitcoin_tx")
+        @Json(name = "bitcoin_tx")
         private final String bitcoinTxId;
-        @JsonProperty("txoutproof")
+        @Json(name = "txoutproof")
         private final String txOutProof;
     }
 
@@ -42,12 +43,12 @@ public class ElementsdClaimPeginRpcCall extends WalletRpcCall<ElementsdClaimPegi
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(JsonRpcStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<JsonRpcStringResponse> getRpcResponseClass() {
+        return JsonRpcStringResponse.class;
     }
 }

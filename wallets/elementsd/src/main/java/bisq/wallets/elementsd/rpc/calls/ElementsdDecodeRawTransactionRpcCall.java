@@ -17,9 +17,9 @@
 
 package bisq.wallets.elementsd.rpc.calls;
 
-import bisq.wallets.core.rpc.call.DaemonRpcCall;
 import bisq.wallets.elementsd.rpc.responses.ElementsdDecodeRawTransactionResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import com.squareup.moshi.Json;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -31,10 +31,10 @@ public class ElementsdDecodeRawTransactionRpcCall
     @ToString
     @EqualsAndHashCode
     public static final class Request {
-        @JsonProperty("hexstring")
+        @Json(name = "hexstring")
         private final String hexString;
 
-        public Request(@JsonProperty("hexstring") String hexString) {
+        public Request(String hexString) {
             this.hexString = hexString;
         }
     }

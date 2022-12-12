@@ -17,17 +17,18 @@
 
 package bisq.wallets.bitcoind.rpc.calls;
 
-import bisq.wallets.core.rpc.call.WalletRpcCall;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
+import com.squareup.moshi.Json;
 import lombok.Builder;
 import lombok.Getter;
 
-public class BitcoindGetNewAddressRpcCall extends WalletRpcCall<BitcoindGetNewAddressRpcCall.Request, String> {
+public class BitcoindGetNewAddressRpcCall extends DaemonRpcCall<BitcoindGetNewAddressRpcCall.Request, JsonRpcStringResponse> {
     @Builder
     @Getter
     public static class Request {
         private final String label;
-        @JsonProperty("address_type")
+        @Json(name = "address_type")
         private final String addressType;
     }
 
@@ -41,12 +42,12 @@ public class BitcoindGetNewAddressRpcCall extends WalletRpcCall<BitcoindGetNewAd
     }
 
     @Override
-    public boolean isResponseValid(String response) {
+    public boolean isResponseValid(JsonRpcStringResponse response) {
         return true;
     }
 
     @Override
-    public Class<String> getRpcResponseClass() {
-        return String.class;
+    public Class<JsonRpcStringResponse> getRpcResponseClass() {
+        return JsonRpcStringResponse.class;
     }
 }
