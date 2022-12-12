@@ -21,7 +21,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import lombok.Getter;
 
-public abstract class RpcCall<T, R> {
+public abstract class RpcCall<T, R extends JsonRpcResponse<?>> {
 
     @Getter
     protected final T request;

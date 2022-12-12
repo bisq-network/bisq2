@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.json_rpc;
+package bisq.wallets.json_rpc.exceptions;
 
-public class GetBlockChainInfoDummyResponse {
-    String chain;
+public class InvalidRpcCredentialsException extends RuntimeException {
+    public InvalidRpcCredentialsException() {
+    }
 }

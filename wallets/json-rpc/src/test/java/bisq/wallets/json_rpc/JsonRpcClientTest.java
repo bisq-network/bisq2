@@ -52,10 +52,10 @@ public class JsonRpcClientTest {
         JsonRpcClient jsonRpcClient = new JsonRpcClient(endpointSpec);
 
         var rpcCall = new DummyGetBlockChainInfoRpcCall();
-        DummyJsonRpcResponse dummyJsonRpcResponse = jsonRpcClient.call(rpcCall);
+        DummyJsonRpcResponse.Result dummyJsonRpcResponse = jsonRpcClient.call(rpcCall).getResult();
 
         assertThat(dummyJsonRpcResponse).isNotNull();
-        assertThat(dummyJsonRpcResponse.result.chain).isEqualTo("regtest");
+        assertThat(dummyJsonRpcResponse.chain).isEqualTo("regtest");
 
         RecordedRequest recordedRequest = server.takeRequest();
         assertThat("/").isEqualTo(recordedRequest.getPath());

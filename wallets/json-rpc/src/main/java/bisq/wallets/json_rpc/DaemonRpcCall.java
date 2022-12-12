@@ -17,7 +17,7 @@
 
 package bisq.wallets.json_rpc;
 
-public abstract class DaemonRpcCall<T, R> extends RpcCall<T, R> {
+public abstract class DaemonRpcCall<T, R extends JsonRpcResponse<?>> extends RpcCall<T, R> {
     public DaemonRpcCall(T request) {
         super(request);
     }

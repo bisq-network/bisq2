@@ -17,6 +17,7 @@
 
 package bisq.wallets.json_rpc;
 
+import bisq.wallets.json_rpc.exceptions.InvalidRpcCredentialsException;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import java.util.Objects;
 public class JsonRpcClient {
 
     public static final String AUTHORIZATION_HEADER_NAME = "Authorization";
+    private static final int HTTP_CODE_UNAUTHORIZED = 401;
 
     private final JsonRpcEndpointSpec rpcEndpointSpec;
 
@@ -51,23 +53,32 @@ public class JsonRpcClient {
                 .build();
     }
 
-    public <T, R> R call(RpcCall<T, R> rpcCall) {
+    public <T, R extends JsonRpcResponse<?>> R call(RpcCall<T, R> rpcCall) {
         JsonRpcCall jsonRpcCall = new JsonRpcCall(rpcCall.getRpcMethodName(), rpcCall.request);
         String jsonRequest = jsonRpcCallJsonAdapter.toJson(jsonRpcCall);
         Request request = buildRequest(jsonRequest);
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new RpcCallFailureException(
-                        "RPC Call to '" + rpcCall.getRpcMethodName() + "' failed: " + response
-                );
+            if (response.code() == HTTP_CODE_UNAUTHORIZED) {
+                throw new InvalidRpcCredentialsException();
             }
 
             ResponseBody responseBody = response.body();
             Objects.requireNonNull(responseBody);
 
             JsonAdapter<R> jsonAdapter = rpcCall.getJsonAdapter();
-            return jsonAdapter.fromJson(responseBody.source());
+            R parsedJsonResponse = jsonAdapter.fromJson(responseBody.source());
+
+            if (!rpcCall.isResponseValid(parsedJsonResponse)) {
+                String message = "RPC Call to '" + rpcCall.getRpcMethodName() + "' failed. ";
+                if (parsedJsonResponse != null && parsedJsonResponse.getError() != null) {
+                    message += parsedJsonResponse.getError().toString();
+                }
+                throw new RpcCallFailureException(message);
+            }
+
+            return parsedJsonResponse;
+
         } catch (IOException e) {
             throw new RpcCallFailureException(
                     "RPC Call to '" + rpcCall.getRpcMethodName() + "' failed. ",

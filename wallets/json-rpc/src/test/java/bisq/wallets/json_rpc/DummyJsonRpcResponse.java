@@ -17,6 +17,8 @@
 
 package bisq.wallets.json_rpc;
 
-public class DummyJsonRpcResponse {
-    GetBlockChainInfoDummyResponse result;
+public class DummyJsonRpcResponse extends JsonRpcResponse<DummyJsonRpcResponse.Result> {
+    public static class Result {
+        String chain;
+    }
 }
