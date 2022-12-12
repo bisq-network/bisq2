@@ -85,7 +85,7 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
             .redirectError(ProcessBuilder.Redirect.DISCARD)
             .start()
 
-        val isSuccess: Boolean = copyProcess.waitFor(CMD_TIMEOUT, TimeUnit.SECONDS)
+        val isSuccess: Boolean = copyProcess.waitFor(2, TimeUnit.MINUTES)
         if (!isSuccess) {
             throw IllegalStateException("Could not copy Electrum.app to output directory.")
         }
