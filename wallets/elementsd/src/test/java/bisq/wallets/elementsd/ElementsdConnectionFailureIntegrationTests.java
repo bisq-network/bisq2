@@ -17,17 +17,10 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.wallets.elementsd.regtest.ElementsdRegtestSetup;
-import bisq.wallets.regtest.AbstractRegtestSetup;
-import bisq.wallets.regtest.ConnectionFailureIntegrationTests;
-import bisq.wallets.regtest.process.MultiProcessCoordinator;
-
-import java.io.IOException;
-
 public class ElementsdConnectionFailureIntegrationTests
-        extends ConnectionFailureIntegrationTests<MultiProcessCoordinator> {
-    @Override
+        /* extends ConnectionFailureIntegrationTests<MultiProcessCoordinator> */ {
+    /* @Override
     protected AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
         return new ElementsdRegtestSetup();
-    }
+    } */
 }

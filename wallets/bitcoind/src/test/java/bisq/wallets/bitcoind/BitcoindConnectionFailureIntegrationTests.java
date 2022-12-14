@@ -17,17 +17,16 @@
 
 package bisq.wallets.bitcoind;
 
-import bisq.wallets.regtest.AbstractRegtestSetup;
+import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.regtest.ConnectionFailureIntegrationTests;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.io.IOException;
-
+@ExtendWith(BitcoindExtension.class)
 public class BitcoindConnectionFailureIntegrationTests
         extends ConnectionFailureIntegrationTests<MultiProcessCoordinator> {
-    @Override
-    protected AbstractRegtestSetup<MultiProcessCoordinator> createRegtestSetup() throws IOException {
-        return new BitcoindRegtestSetup();
+    public BitcoindConnectionFailureIntegrationTests(BitcoindRegtestSetup regtestSetup) {
+        super(regtestSetup);
     }
 }
