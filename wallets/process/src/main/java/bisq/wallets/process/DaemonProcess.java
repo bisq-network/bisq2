@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -68,7 +69,18 @@ public abstract class DaemonProcess implements BisqProcess {
     }
 
     private void waitUntilReady() {
-        boolean isSuccess = waitUntilLogContainsLines();
+        FutureTask<Boolean> waitingFuture = new FutureTask<>(this::waitUntilLogContainsLines);
+        Thread waitingThread = new Thread(waitingFuture);
+        waitingThread.start();
+
+        boolean isSuccess = false;
+        try {
+            isSuccess = waitingFuture.get(2, TimeUnit.MINUTES);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            String processName = process.info().command().orElse("<unknown process>");
+            log.error(processName + " didn't start after two minutes.", e);
+        }
+
         if (!isSuccess) {
             String processName = process.info().command().orElse("<unknown process>");
             throw new WalletStartupFailedException("Cannot start wallet process." + processName, null);
