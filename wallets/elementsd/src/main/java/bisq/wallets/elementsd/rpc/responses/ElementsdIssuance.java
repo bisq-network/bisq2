@@ -18,10 +18,8 @@
 package bisq.wallets.elementsd.rpc.responses;
 
 import bisq.wallets.json_rpc.JsonRpcResponse;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.squareup.moshi.Json;
 import lombok.Getter;
-import lombok.Setter;
 
 public class ElementsdIssuance extends JsonRpcResponse<ElementsdIssuance.Result> {
     @Getter

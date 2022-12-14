@@ -15,7 +15,6 @@ dependencies {
     implementation project(':json-rpc')
 
     implementation libs.google.guava
-    implementation libs.jackson.databind
     implementation libs.jeromq
 
     testImplementation project(':regtest')
