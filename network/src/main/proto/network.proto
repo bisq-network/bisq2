@@ -99,8 +99,9 @@ message Pong {
 }
 
 message ConfidentialMessage {
-  security.ConfidentialData confidentialData = 1;
-  string receiverKeyId = 2;
+  uint32 version = 1;
+  security.ConfidentialData confidentialData = 2;
+  string receiverKeyId = 3;
 }
 
 message InventoryRequest {
