@@ -60,7 +60,7 @@ public abstract class DaemonProcess implements BisqProcess {
     public void shutdown() {
         try {
             invokeStopRpcCall();
-            process.waitFor(30, TimeUnit.SECONDS);
+            process.waitFor(2, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             String processName = process.info().command().orElse("<unknown process>");
             throw new WalletShutdownFailedException("Cannot shutdown " + processName + ".", e);
