@@ -15,8 +15,5 @@ dependencies {
     implementation project(':bitcoind')
     implementation project(':json-rpc')
 
-    implementation libs.google.guava
-    implementation libs.jeromq
-
     testImplementation project(':regtest')
 }
