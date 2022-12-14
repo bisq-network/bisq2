@@ -24,30 +24,16 @@ import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.exceptions.InvalidRpcCredentialsException;
 import bisq.wallets.process.BisqProcess;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-import java.io.IOException;
-
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ConnectionFailureIntegrationTests<T extends BisqProcess> {
 
-    private AbstractRegtestSetup<T> regtestSetup;
+    private final AbstractRegtestSetup<T> regtestSetup;
 
-    protected abstract AbstractRegtestSetup<T> createRegtestSetup() throws IOException;
-
-    @BeforeAll
-    void setup() throws IOException, InterruptedException {
-        regtestSetup = createRegtestSetup();
-        regtestSetup.start();
+    public ConnectionFailureIntegrationTests(AbstractRegtestSetup<T> regtestSetup) {
+        this.regtestSetup = regtestSetup;
     }
 
-    @AfterAll
-    void cleanUp() {
-        regtestSetup.shutdown();
-    }
 
     @Test
     void wrongRpcCredentialsTest() {
