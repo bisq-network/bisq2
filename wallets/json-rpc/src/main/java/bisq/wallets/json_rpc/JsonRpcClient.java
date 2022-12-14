@@ -26,6 +26,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class JsonRpcClient {
@@ -50,6 +51,10 @@ public class JsonRpcClient {
 
         this.client = new OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .writeTimeout(1, TimeUnit.MINUTES)
+                .readTimeout(1, TimeUnit.MINUTES)
+                .callTimeout(1, TimeUnit.MINUTES)
                 .build();
     }
 
