@@ -84,9 +84,9 @@ jobs:
         with:
           arguments: build --scan
 
-      - name: Gradle Build Action (wallets)
-        uses: gradle/gradle-build-action@v2.3.3
-        with:
-          arguments: build --scan
-          build-root-directory: wallets
-          gradle-executable: ./gradlew
+#      - name: Gradle Build Action (wallets)
+#        uses: gradle/gradle-build-action@v2.3.3
+#        with:
+#          arguments: build --scan
+#          build-root-directory: wallets
+#          gradle-executable: ./gradlew
