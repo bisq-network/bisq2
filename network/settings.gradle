@@ -17,6 +17,7 @@ includeBuild('..')
 
 include 'i2p'
 include 'network'
+include 'socks5-socket-channel'
 include 'tor'
 
 rootProject.name = 'network'
