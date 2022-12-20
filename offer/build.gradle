@@ -10,8 +10,8 @@ dependencies {
     implementation project(':identity')
     implementation project(':account')
     implementation project(':oracle')
-    implementation project(':network')
 
+    implementation("network:network")
     implementation("wallets:api")
 
     implementation libs.google.gson
