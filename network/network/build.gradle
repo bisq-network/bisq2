@@ -1,0 +1,19 @@
+plugins {
+    id 'bisq.gradle.plugin.BisqPlugin'
+    id 'bisq.protobuf'
+}
+
+dependencies {
+    implementation 'bisq:security'
+    implementation 'bisq:persistence'
+
+    implementation project(':tor')
+    implementation project(':i2p')
+
+    implementation libs.failsafe
+    implementation libs.google.guava
+    implementation libs.typesafe.config
+
+    implementation libs.apache.httpcomponents.httpclient
+    implementation libs.chimp.jsocks
+}

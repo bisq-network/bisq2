@@ -26,7 +26,6 @@ dependencies {
     implementation project(':i18n')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':network')
     implementation project(':account')
     implementation project(':offer')
     implementation project(':contract')
@@ -37,6 +36,8 @@ dependencies {
     implementation project(':chat')
     implementation project(':presentation')
     implementation project(':application')
+
+    implementation 'network:network'
 
     implementation libs.bundles.glassfish.jersey
     implementation libs.bundles.jackson

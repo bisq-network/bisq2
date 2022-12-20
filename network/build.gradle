@@ -1,18 +1,6 @@
-plugins {
-    id 'bisq.gradle.plugin.BisqPlugin'
-    id 'bisq.protobuf'
-}
-
-dependencies {
-    implementation project(':tor')
-    implementation project(':i2p')
-    implementation project(':security')
-    implementation project(':persistence')
-
-    implementation libs.failsafe
-    implementation libs.google.guava
-    implementation libs.typesafe.config
-
-    implementation libs.apache.httpcomponents.httpclient
-    implementation libs.chimp.jsocks
+if (hasProperty('buildScan')) {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
+    }
 }

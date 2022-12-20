@@ -6,7 +6,6 @@ dependencies {
     implementation project(':i18n')
     implementation project(':persistence')
     implementation project(':security')
-    implementation project(':network')
     implementation project(':identity')
     implementation project(':account')
     implementation project(':contract')
@@ -19,6 +18,7 @@ dependencies {
     implementation project(':support')
     implementation project(':presentation')
 
+    implementation('network:network')
     implementation("wallets:api")
     implementation("wallets:electrum")
 

@@ -50,7 +50,6 @@ dependencies {
     implementation project(':i18n')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':network')
     implementation project(':account')
     implementation project(':offer')
     implementation project(':contract')
@@ -63,6 +62,7 @@ dependencies {
     implementation project(':application')
     implementation project(':desktop')
 
+    implementation("network:network")
     implementation("wallets:api")
 
     implementation libs.google.guava

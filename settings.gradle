@@ -23,7 +23,6 @@ include 'contract'
 include 'i2p'
 include 'identity'
 include 'i18n'
-include 'network'
 include 'offer'
 include 'oracle'
 include 'persistence'
@@ -37,4 +36,5 @@ include 'support'
 include 'tor'
 include 'user'
 
+includeBuild('network')
 includeBuild('wallets')

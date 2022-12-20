@@ -8,7 +8,7 @@ dependencies {
     implementation project(':persistence')
     implementation project(':security')
     implementation project(':identity')
-    implementation project(':network')
 
+    implementation 'network:network'
     implementation libs.google.guava
 }

@@ -8,9 +8,10 @@ dependencies {
     implementation project(':security')
     implementation project(':i18n')
     implementation project(':identity')
-    implementation project(':network')
     implementation project(':user')
     implementation project(':chat')
+
+    implementation 'network:network'
 
     implementation libs.google.gson
     implementation libs.google.guava
