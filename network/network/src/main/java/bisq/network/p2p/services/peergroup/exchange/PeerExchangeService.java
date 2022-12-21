@@ -116,7 +116,7 @@ public class PeerExchangeService implements Node.Listener {
 
                             log.info("Node {} completed peer exchange to {} candidates. {} requests successfully completed.",
                                     node, candidates.size(), numSuccess);
-                            if (peerExchangeStrategy.redoInitialPeerExchange(numSuccess.get(), candidates.size())) {
+                            if (peerExchangeStrategy.shouldRedoInitialPeerExchange(numSuccess.get(), candidates.size())) {
                                 log.info("Node {} repeats the initial peer exchange after {} sec as it has not reached sufficient connections " +
                                         "or received sufficient peers", node, doInitialPeerExchangeDelaySec);
                                 scheduler.ifPresent(Scheduler::stop);

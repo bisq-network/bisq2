@@ -120,7 +120,7 @@ public class PeerExchangeStrategy {
         peerGroup.addReportedPeers(filtered);
     }
 
-    boolean redoInitialPeerExchange(int numSuccess, int numRequests) {
+    boolean shouldRedoInitialPeerExchange(int numSuccess, int numRequests) {
         boolean moreThenHalfFailed = numRequests - numSuccess > numRequests / 2;
         return moreThenHalfFailed ||
                 !sufficientConnections() ||
