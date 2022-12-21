@@ -52,12 +52,12 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
                 signature);
     }
 
-    protected final MetaData metaData;
-    protected final byte[] hash;
-    protected final byte[] ownerPublicKeyBytes; // 442 bytes
-    transient protected final PublicKey ownerPublicKey;
-    protected final int sequenceNumber;
-    protected final byte[] signature;         // 47 bytes
+    private final MetaData metaData;
+    private final byte[] hash;
+    private final byte[] ownerPublicKeyBytes; // 442 bytes
+    transient private final PublicKey ownerPublicKey;
+    private final int sequenceNumber;
+    private final byte[] signature;         // 47 bytes
 
     public RefreshAuthenticatedDataRequest(MetaData metaData,
                                            byte[] hash,
@@ -72,12 +72,12 @@ public final class RefreshAuthenticatedDataRequest implements DataRequest {
                 signature);
     }
 
-    protected RefreshAuthenticatedDataRequest(MetaData metaData,
-                                              byte[] hash,
-                                              byte[] ownerPublicKeyBytes,
-                                              PublicKey ownerPublicKey,
-                                              int sequenceNumber,
-                                              byte[] signature) {
+    private RefreshAuthenticatedDataRequest(MetaData metaData,
+                                            byte[] hash,
+                                            byte[] ownerPublicKeyBytes,
+                                            PublicKey ownerPublicKey,
+                                            int sequenceNumber,
+                                            byte[] signature) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
