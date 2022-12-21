@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
 import bisq.network.p2p.services.data.DataRequest;
 import lombok.EqualsAndHashCode;
@@ -24,8 +25,10 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
@@ -33,12 +36,15 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 public final class Inventory implements Proto {
-    private final Set<? extends DataRequest> entries;
+    private final List<? extends DataRequest> entries;
     private final int numDropped;
 
-    public Inventory(Set<? extends DataRequest> entries, int numDropped) {
-        this.entries = entries;
+    public Inventory(Collection<? extends DataRequest> entries, int numDropped) {
+        this.entries = new ArrayList<>(entries);
         this.numDropped = numDropped;
+
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.entries.sort(Comparator.comparing((DataRequest o) -> new ByteArray(o.serialize())));
     }
 
     public bisq.network.protobuf.Inventory toProto() {
@@ -50,9 +56,9 @@ public final class Inventory implements Proto {
 
     public static Inventory fromProto(bisq.network.protobuf.Inventory proto) {
         List<bisq.network.protobuf.DataRequest> entriesList = proto.getEntriesList();
-        Set<DataRequest> entries = entriesList.stream()
+        List<DataRequest> entries = entriesList.stream()
                 .map(DataRequest::fromProto)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new Inventory(entries, proto.getNumDropped());
     }
 }
