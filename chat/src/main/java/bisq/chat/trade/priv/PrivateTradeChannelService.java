@@ -97,15 +97,14 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
                 .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                        channel.getTrader1().equals(trader1) &&
-                        channel.getTrader2().equals(trader1))
+                        channel.getPeerOrTrader1().equals(trader1) &&
+                        channel.getMyUserProfileOrTrader2().equals(trader1))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
         }
 
-        Optional<UserProfile> mediator = Optional.of(myUserIdentity.getUserProfile());
-        PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, trader1, trader2, mediator);
+        PrivateTradeChannel channel = PrivateTradeChannel.createByMediator(myUserIdentity, trader1, trader2);
         getChannels().add(channel);
         persist();
         return channel;
@@ -120,7 +119,7 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
             return existingChannel.get();
         }
 
-        PrivateTradeChannel channel = new PrivateTradeChannel(myUserIdentity, peersUserProfile, myUserIdentity.getUserProfile(), mediator);
+        PrivateTradeChannel channel = PrivateTradeChannel.createByTrader(myUserIdentity, peersUserProfile, mediator);
         getChannels().add(channel);
         persist();
         return channel;
@@ -157,11 +156,11 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
         // If mediation has been activated we send all messages to the 2 other peers
         UserProfile receiver1, receiver2;
         if (channel.isMediator()) {
-            receiver1 = channel.getTrader1();
-            receiver2 = channel.getTrader2();
+            receiver1 = channel.getPeerOrTrader1();
+            receiver2 = channel.getMyUserProfileOrTrader2();
         } else {
             receiver1 = channel.getPeer();
-            receiver2 = channel.getMediator().orElseThrow();
+            receiver2 = channel.getMediator().get();
         }
 
         UserProfile senderUserProfile = myUserIdentity.getUserProfile();

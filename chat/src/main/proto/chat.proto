@@ -103,10 +103,10 @@ message PublicTradeChatMessage {
 }
 
 message PrivateTradeChannel {
-  user.UserProfile trader1 = 1;
-  user.UserProfile trader2 = 2;
-  optional user.UserProfile mediator = 3;
-  user.UserIdentity myUserIdentity = 4;
+  user.UserProfile peerOrTrader1 = 1;
+  user.UserProfile myUserProfileOrTrader2 = 2;
+  user.UserIdentity myUserIdentity = 3;
+  optional user.UserProfile mediator = 4;
   repeated ChatMessage chatMessages = 5;
   bool inMediation = 6;
 }

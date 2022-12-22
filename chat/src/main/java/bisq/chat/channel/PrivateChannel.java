@@ -33,23 +33,6 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
-    protected final UserProfile peer;
-    protected final UserIdentity myUserIdentity;
-
-    // We persist the messages as they are NOT persisted in the P2P data store.
-    protected final ObservableArray<T> chatMessages = new ObservableArray<>();
-
-    public PrivateChannel(String id,
-                          UserProfile peer,
-                          UserIdentity myUserIdentity,
-                          List<T> chatMessages,
-                          ChannelNotificationType channelNotificationType) {
-        super(id, channelNotificationType);
-        this.peer = peer;
-        this.myUserIdentity = myUserIdentity;
-        this.chatMessages.addAll(chatMessages);
-        this.chatMessages.sort(Comparator.comparing((T e) -> new ByteArray(e.serialize())));
-    }
 
     public static String createChannelId(String peersId, String myId) {
         // Need to have an ordering here, otherwise there would be 2 channelIds for the same participants
@@ -60,8 +43,21 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
         }
     }
 
-    @Override
-    public String getDisplayString() {
-        return peer.getUserName() + " - " + myUserIdentity.getUserName();
+    protected final UserIdentity myUserIdentity;
+
+    // We persist the messages as they are NOT persisted in the P2P data store.
+    protected final ObservableArray<T> chatMessages = new ObservableArray<>();
+
+    public PrivateChannel(String id,
+                          UserIdentity myUserIdentity,
+                          List<T> chatMessages,
+                          ChannelNotificationType channelNotificationType) {
+        super(id, channelNotificationType);
+
+        this.myUserIdentity = myUserIdentity;
+        this.chatMessages.addAll(chatMessages);
+        this.chatMessages.sort(Comparator.comparing((T e) -> new ByteArray(e.serialize())));
     }
+
+    public abstract UserProfile getPeer();
 }
