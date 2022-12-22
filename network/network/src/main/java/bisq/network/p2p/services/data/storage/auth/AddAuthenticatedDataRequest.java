@@ -63,13 +63,13 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Getter
-    protected final AuthenticatedSequentialData authenticatedSequentialData;
+    private final AuthenticatedSequentialData authenticatedSequentialData;
     @Getter
-    protected final byte[] signature;         // 256 bytes
+    private final byte[] signature;         // 256 bytes
     @Getter
-    protected final byte[] ownerPublicKeyBytes; // 294 bytes
+    private final byte[] ownerPublicKeyBytes; // 294 bytes
     @Nullable
-    transient protected PublicKey ownerPublicKey;
+    transient private PublicKey ownerPublicKey;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData, byte[] signature, PublicKey ownerPublicKey) {
         this(authenticatedSequentialData,
@@ -78,10 +78,10 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
                 ownerPublicKey);
     }
 
-    protected AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
-                                          byte[] signature,
-                                          byte[] ownerPublicKeyBytes,
-                                          PublicKey ownerPublicKey) {
+    private AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
+                                        byte[] signature,
+                                        byte[] ownerPublicKeyBytes,
+                                        PublicKey ownerPublicKey) {
         this.authenticatedSequentialData = authenticatedSequentialData;
         this.signature = signature;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;

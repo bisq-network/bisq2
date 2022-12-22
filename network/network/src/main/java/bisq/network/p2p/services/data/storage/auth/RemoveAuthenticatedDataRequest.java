@@ -51,14 +51,14 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 signature);
     }
 
-    protected final MetaData metaData;
-    protected final byte[] hash;
-    protected final byte[] ownerPublicKeyBytes; // 442 bytes
+    private final MetaData metaData;
+    private final byte[] hash;
+    private final byte[] ownerPublicKeyBytes; // 442 bytes
     @Nullable
-    transient protected PublicKey ownerPublicKey;
-    protected final int sequenceNumber;
-    protected final byte[] signature;         // 47 bytes
-    protected final long created;
+    transient private PublicKey ownerPublicKey;
+    private final int sequenceNumber;
+    private final byte[] signature;         // 47 bytes
+    private final long created;
 
     public RemoveAuthenticatedDataRequest(MetaData metaData,
                                           byte[] hash,
@@ -73,12 +73,12 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 signature);
     }
 
-    protected RemoveAuthenticatedDataRequest(MetaData metaData,
-                                             byte[] hash,
-                                             byte[] ownerPublicKeyBytes,
-                                             PublicKey ownerPublicKey,
-                                             int sequenceNumber,
-                                             byte[] signature) {
+    private RemoveAuthenticatedDataRequest(MetaData metaData,
+                                           byte[] hash,
+                                           byte[] ownerPublicKeyBytes,
+                                           PublicKey ownerPublicKey,
+                                           int sequenceNumber,
+                                           byte[] signature) {
         this(metaData,
                 hash,
                 ownerPublicKeyBytes,
@@ -88,13 +88,13 @@ public final class RemoveAuthenticatedDataRequest implements AuthenticatedDataRe
                 System.currentTimeMillis());
     }
 
-    protected RemoveAuthenticatedDataRequest(MetaData metaData,
-                                             byte[] hash,
-                                             byte[] ownerPublicKeyBytes,
-                                             PublicKey ownerPublicKey,
-                                             int sequenceNumber,
-                                             byte[] signature,
-                                             long created) {
+    private RemoveAuthenticatedDataRequest(MetaData metaData,
+                                           byte[] hash,
+                                           byte[] ownerPublicKeyBytes,
+                                           PublicKey ownerPublicKey,
+                                           int sequenceNumber,
+                                           byte[] signature,
+                                           long created) {
         this.metaData = metaData;
         this.hash = hash;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;

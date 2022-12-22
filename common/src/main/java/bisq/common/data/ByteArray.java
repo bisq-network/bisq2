@@ -22,10 +22,11 @@ import bisq.common.proto.Proto;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 @Getter
-public final class ByteArray implements Proto {
+public final class ByteArray implements Proto, Comparable<ByteArray> {
     private final byte[] bytes;
 
     public ByteArray(byte[] bytes) {
@@ -56,5 +57,10 @@ public final class ByteArray implements Proto {
     @Override
     public String toString() {
         return Hex.encode(bytes);
+    }
+
+    @Override
+    public int compareTo(ByteArray o) {
+        return new BigInteger(this.getBytes()).compareTo(new BigInteger(o.getBytes()));
     }
 }
