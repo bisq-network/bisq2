@@ -255,7 +255,7 @@ public class ChatMessagesComponent {
                 }
                 publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
             } else if (channel instanceof PrivateTradeChannel) {
-                if (settingsService.getTradeRulesConfirmed().get()) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChannel) channel).isMediator()) {
                     privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
