@@ -74,7 +74,7 @@ public class AcademyOverviewView extends View<GridPane, AcademyOverviewModel, Ac
     private void addHeaderBox() {
         Label headlineLabel = new MultiLineLabel(Res.get("academy.overview.headline"));
         headlineLabel.getStyleClass().add("bisq-text-headline-4");
-        headlineLabel.setMinHeight(35);
+        headlineLabel.setMinHeight(55);
 
         Label contentLabel = new MultiLineLabel(Res.get("academy.overview.content"));
         contentLabel.getStyleClass().add("bisq-text-16");

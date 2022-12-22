@@ -87,8 +87,9 @@ public class MultiLineLabel extends Label {
 
         widthProperty().addListener(widthListener);
         heightProperty().addListener(heightListener);
-    }
 
+        UIThread.runOnNextRenderFrame(this::adjustMinHeight);
+    }
 
     private void adjustMinHeight() {
         if (getParent() instanceof Pane) {
