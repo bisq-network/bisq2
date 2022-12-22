@@ -39,11 +39,14 @@ import java.util.stream.Collectors;
 public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMessage> {
     private final UserProfile trader1;
     private final UserProfile trader2;
-    private final Optional<UserProfile> mediator;
     private final UserIdentity myUserIdentity;
-    private final Observable<Boolean> mediationActivated = new Observable<>(false);
+    private final Optional<UserProfile> mediator;
+    private final Observable<Boolean> inMediation = new Observable<>(false);
 
-    public PrivateTradeChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2, Optional<UserProfile> mediator) {
+    public PrivateTradeChannel(UserIdentity myUserIdentity,
+                               UserProfile trader1,
+                               UserProfile trader2,
+                               Optional<UserProfile> mediator) {
         super(PrivateChannel.createChannelId(trader1.getId(), trader2.getId()),
                 trader1,
                 myUserIdentity,
@@ -56,28 +59,30 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
     }
 
     private PrivateTradeChannel(String id,
-                                UserProfile peer,
+                                UserProfile trader1,
+                                UserProfile trader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator,
                                 List<PrivateTradeChatMessage> chatMessages,
                                 ChannelNotificationType channelNotificationType) {
-        super(id, peer, myUserIdentity, chatMessages, channelNotificationType);
+        super(id, trader1, myUserIdentity, chatMessages, channelNotificationType);
 
-        this.trader1 = peer;
-        this.trader2 = myUserIdentity.getUserProfile();
-        this.mediator = mediator;
+        this.trader1 = trader1;
+        this.trader2 = trader2;
         this.myUserIdentity = myUserIdentity;
+        this.mediator = mediator;
     }
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         bisq.chat.protobuf.PrivateTradeChannel.Builder builder = bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
-                .setPeer(peer.toProto())
+                .setTrader1(trader1.toProto())
+                .setTrader2(trader2.toProto())
                 .setMyUserIdentity(this.myUserIdentity.toProto())
                 .addAllChatMessages(chatMessages.stream()
                         .map(PrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()))
-                .setMediationActivated(mediationActivated.get());
+                .setInMediation(inMediation.get());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChannelBuilder().setPrivateTradeChannel(builder).build();
     }
@@ -86,14 +91,15 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                                 bisq.chat.protobuf.PrivateTradeChannel proto) {
         PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(
                 baseProto.getId(),
-                UserProfile.fromProto(proto.getPeer()),
+                UserProfile.fromProto(proto.getTrader1()),
+                UserProfile.fromProto(proto.getTrader2()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        privateTradeChannel.getMediationActivated().set(proto.getMediationActivated());
+        privateTradeChannel.getInMediation().set(proto.getInMediation());
         return privateTradeChannel;
     }
 
@@ -119,9 +125,23 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
     @Override
     public String getDisplayString() {
         String mediatorLabel = "";
-        if (mediator.isPresent() && mediationActivated.get()) {
+        if (mediator.isPresent() && inMediation.get()) {
             mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
         }
-        return peer.getUserName() + " - " + myUserIdentity.getUserName() + mediatorLabel;
+        if (isMediator()) {
+            return trader1.getUserName() + " - " + trader2.getUserName() + mediatorLabel;
+        } else {
+            return peer.getUserName() + " - " + myUserIdentity.getUserName() + mediatorLabel;
+        }
+    }
+
+    public String getChannelSelectionDisplayString() {
+        if (isMediator()) {
+            return trader1.getUserName() + ", " + trader2.getUserName();
+        } else if (mediator.isPresent() && inMediation.get()) {
+            return peer.getUserName() + ", " + mediator.get().getUserName();
+        } else {
+            return peer.getUserName();
+        }
     }
 }

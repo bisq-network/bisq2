@@ -55,7 +55,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final MediationService mediationService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
     private Pin offerOnlySettingsPin;
-    private Pin mediationActivatedPin;
+    private Pin inMediationPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelKind.TRADE, NavigationTarget.BISQ_EASY_CHAT);
@@ -86,8 +86,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         super.onDeactivate();
 
         offerOnlySettingsPin.unbind();
-        if (mediationActivatedPin != null) {
-            mediationActivatedPin.unbind();
+        if (inMediationPin != null) {
+            inMediationPin.unbind();
         }
         resetSelectedChildTarget();
     }
@@ -123,10 +123,10 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 PrivateTradeChannel privateChannel = (PrivateTradeChannel) channel;
                 applyPeersIcon(privateChannel);
 
-                if (mediationActivatedPin != null) {
-                    mediationActivatedPin.unbind();
+                if (inMediationPin != null) {
+                    inMediationPin.unbind();
                 }
-                mediationActivatedPin = privateChannel.getMediationActivated().addObserver(mediationActivated ->
+                inMediationPin = privateChannel.getInMediation().addObserver(mediationActivated ->
                         model.getActionButtonVisible().set(!mediationActivated &&
                                 !privateChannel.isMediator()));
 

@@ -87,7 +87,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final EventsChannelSelectionService eventsChannelSelectionService;
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
-        private Pin mediationActivatedPin;
+        private Pin inMediationPin;
 
         protected Controller(DefaultApplicationService applicationService, ChannelKind channelKind) {
             super(applicationService.getChatService());
@@ -131,10 +131,10 @@ public class PrivateChannelSelection extends ChannelSelection {
                             if (channel instanceof PrivateTradeChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
                                 userIdentityService.selectChatUserIdentity(((PrivateTradeChannel) channel).getMyUserIdentity());
-                                if (mediationActivatedPin != null) {
-                                    mediationActivatedPin.unbind();
+                                if (inMediationPin != null) {
+                                    inMediationPin.unbind();
                                 }
-                                mediationActivatedPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getMediationActivated());
+                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getInMediation());
                             }
                         });
             } else if (model.channelKind == ChannelKind.DISCUSSION) {
@@ -179,8 +179,8 @@ public class PrivateChannelSelection extends ChannelSelection {
         @Override
         public void onDeactivate() {
             super.onDeactivate();
-            if (mediationActivatedPin != null) {
-                mediationActivatedPin.unbind();
+            if (inMediationPin != null) {
+                inMediationPin.unbind();
             }
         }
 
@@ -247,9 +247,9 @@ public class PrivateChannelSelection extends ChannelSelection {
                 final HBox hBox = new HBox();
                 final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
-                final ImageView mediatorsRoboIcon = new ImageView();
+                final ImageView secondaryRoboIcon = new ImageView();
                 @Nullable
-                private Pin mediationActivatedPin;
+                private Pin inMediationPin;
 
                 {
                     setCursor(Cursor.HAND);
@@ -259,8 +259,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                     roboIcon.setFitWidth(35);
                     roboIcon.setFitHeight(35);
 
-                    mediatorsRoboIcon.setFitWidth(35);
-                    mediatorsRoboIcon.setFitHeight(35);
+                    secondaryRoboIcon.setFitWidth(35);
+                    secondaryRoboIcon.setFitHeight(35);
 
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
@@ -275,40 +275,35 @@ public class PrivateChannelSelection extends ChannelSelection {
                         Tooltip.install(this, tooltip);
                         if (item.getChannel() instanceof PrivateTradeChannel) {
                             PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) item.getChannel();
-                            if (mediationActivatedPin != null) {
-                                mediationActivatedPin.unbind();
+                            if (inMediationPin != null) {
+                                inMediationPin.unbind();
                             }
-                            mediationActivatedPin = privateTradeChannel.getMediationActivated().addObserver(e ->
+                            inMediationPin = privateTradeChannel.getInMediation().addObserver(e ->
                             {
                                 UIThread.run(() -> {
                                     hBox.getChildren().clear();
                                     hBox.getChildren().add(roboIcon);
 
-                                    boolean mediationActivated = privateTradeChannel.getMediator().isPresent() &&
-                                            privateTradeChannel.getMediationActivated().get();
-                                    if (mediationActivated) {
-                                        String displayString = privateTradeChannel.getPeer().getUserName() + ", " +
-                                                privateTradeChannel.getMediator().get().getUserName();
-                                        if (item.isHasMultipleProfiles()) {
-                                            // If we have more than 1 user profiles we add our profile as well
-                                            displayString += " [" + privateTradeChannel.getMyUserIdentity().getUserName() + "]";
+                                    if (privateTradeChannel.getMediator().isPresent() &&
+                                            privateTradeChannel.getInMediation().get()) {
+                                        if (privateTradeChannel.isMediator()) {
+                                            // We are the mediator
+                                            UserProfile trader1 = privateTradeChannel.getTrader1();
+                                            UserProfile trader2 = privateTradeChannel.getTrader2();
+                                            roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
+                                            secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
+                                            tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
+                                        } else {
+                                            UserProfile mediator = privateTradeChannel.getMediator().get();
+                                            secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                            tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                                    Res.get("mediator") + ":\n" + mediator.getTooltipString());
                                         }
-                                        label.setText(displayString);
-
-                                        UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
-                                        mediatorsRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
-                                        hBox.getChildren().add(mediatorsRoboIcon);
-                                        tooltip.setText(peer.getTooltipString() + "\n\n" +
-                                                Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                                        hBox.getChildren().add(secondaryRoboIcon);
                                     } else {
-                                        String displayString = privateTradeChannel.getPeer().getUserName();
-                                        if (item.isHasMultipleProfiles()) {
-                                            // If we have more than 1 user profiles we add our profile as well
-                                            displayString += " [" + privateTradeChannel.getMyUserIdentity().getUserName() + "]";
-                                        }
-                                        label.setText(displayString);
                                         tooltip.setText(peer.getTooltipString());
                                     }
+                                    label.setText(privateTradeChannel.getChannelSelectionDisplayString());
                                     hBox.getChildren().add(label);
 
                                     if (widthSubscription != null) {
@@ -316,7 +311,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                     }
                                     widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                                         if (w.doubleValue() > 0) {
-                                            if (mediatorsRoboIcon.getImage() != null) {
+                                            if (secondaryRoboIcon.getImage() != null) {
                                                 label.setMaxWidth(getWidth() - 120);
                                             } else {
                                                 label.setMaxWidth(getWidth() - 75);
@@ -345,8 +340,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
                         }
-                        if (mediationActivatedPin != null) {
-                            mediationActivatedPin.unbind();
+                        if (inMediationPin != null) {
+                            inMediationPin.unbind();
                         }
                     }
                 }
