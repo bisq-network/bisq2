@@ -44,7 +44,7 @@ public final class Inventory implements Proto {
         this.numDropped = numDropped;
 
         // We need to sort deterministically as the data is used in the proof of work check
-        this.entries.sort(Comparator.comparing((DataRequest o) -> new ByteArray(o.serialize())));
+        this.entries.sort(Comparator.comparing((DataRequest e) -> new ByteArray(e.serialize())));
     }
 
     public bisq.network.protobuf.Inventory toProto() {

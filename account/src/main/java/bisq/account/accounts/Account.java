@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.account.settlement.SettlementMethod;
 import bisq.common.currency.TradeCurrency;
+import bisq.common.data.ByteArray;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
@@ -27,6 +28,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -63,6 +65,8 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
         this.payload = payload;
         this.settlementMethod = settlementMethod;
         this.tradeCurrencies = tradeCurrencies;
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.tradeCurrencies.sort(Comparator.comparing((TradeCurrency e) -> new ByteArray(e.serialize())));
     }
 
 

@@ -45,6 +45,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -203,7 +204,7 @@ public class Node implements Connection.Handler {
 
     private void createServerAndListen(int port) {
         Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
-        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), config.getSupportedTransportTypes()));
+        myCapability = Optional.of(new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes())));
         server = Optional.of(new Server(serverSocketResult,
                 socket -> onClientSocket(socket, serverSocketResult, myCapability.get()),
                 exception -> {

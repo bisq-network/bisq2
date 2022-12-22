@@ -24,9 +24,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 
 @Getter
 @ToString(callSuper = true)
@@ -35,14 +36,14 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
     private final String channelName;
     private final String description;
     private final String channelAdminId;
-    private final Set<String> channelModeratorIds;
+    private final List<String> channelModeratorIds;
 
     public PublicDiscussionChannel(String id) {
         this(id,
                 Res.get("discussion." + id + ".name"),
                 Res.get("discussion." + id + ".description"),
                 "",
-                new HashSet<>(),
+                new ArrayList<>(),
                 ChannelNotificationType.MENTION);
     }
 
@@ -50,7 +51,7 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                                    String channelName,
                                    String description,
                                    String channelAdminId,
-                                   Set<String> channelModeratorIds) {
+                                   List<String> channelModeratorIds) {
         this(id,
                 channelName,
                 description,
@@ -63,7 +64,7 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                                     String channelName,
                                     String description,
                                     String channelAdminId,
-                                    Set<String> channelModeratorIds,
+                                    List<String> channelModeratorIds,
                                     ChannelNotificationType channelNotificationType) {
         super(id, channelNotificationType);
 
@@ -71,6 +72,8 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
         this.description = description;
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.channelModeratorIds.sort(Comparator.comparing((String e) -> e));
     }
 
     public bisq.chat.protobuf.Channel toProto() {
@@ -90,7 +93,7 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
-                new HashSet<>(proto.getChannelModeratorIdsList()),
+                new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 

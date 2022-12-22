@@ -17,13 +17,15 @@
 
 package bisq.network.p2p.services.peergroup.exchange;
 
+import bisq.common.data.ByteArray;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.Peer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
@@ -31,11 +33,13 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 public final class PeerExchangeResponse implements NetworkMessage {
     private final int nonce;
-    private final Set<Peer> peers;
+    private final List<Peer> peers;
 
-    public PeerExchangeResponse(int nonce, Set<Peer> peers) {
+    public PeerExchangeResponse(int nonce, List<Peer> peers) {
         this.nonce = nonce;
         this.peers = peers;
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.peers.sort(Comparator.comparing((Peer e) -> new ByteArray(e.serialize())));
     }
 
     @Override
@@ -43,12 +47,14 @@ public final class PeerExchangeResponse implements NetworkMessage {
         return getNetworkMessageBuilder().setPeerExchangeResponse(
                         bisq.network.protobuf.PeerExchangeResponse.newBuilder()
                                 .setNonce(nonce)
-                                .addAllPeers(peers.stream().map(Peer::toProto).collect(Collectors.toSet())))
+                                .addAllPeers(peers.stream()
+                                        .map(Peer::toProto)
+                                        .collect(Collectors.toList())))
                 .build();
     }
 
     public static PeerExchangeResponse fromProto(bisq.network.protobuf.PeerExchangeResponse proto) {
         return new PeerExchangeResponse(proto.getNonce(),
-                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toSet()));
+                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
     }
 }

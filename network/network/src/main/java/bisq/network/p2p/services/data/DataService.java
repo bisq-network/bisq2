@@ -42,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -292,11 +292,11 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     public void requestInventory(StorageService.StoreType storeType) {
-        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(storeType))));
+        requestInventory(new DataFilter(new ArrayList<>(storageService.getFilterEntries(storeType))));
     }
 
     public void requestInventory(String storeName) {
-        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(storeName))));
+        requestInventory(new DataFilter(new ArrayList<>(storageService.getFilterEntries(storeName))));
     }
 
     public void requestInventory(DataFilter dataFilter) {
@@ -372,6 +372,6 @@ public class DataService implements DataNetworkService.Listener {
     }
 
     private void doRequestInventory(DataNetworkService dataNetworkService) {
-        requestInventory(new DataFilter(new HashSet<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
+        requestInventory(new DataFilter(new ArrayList<>(storageService.getFilterEntries(StorageService.StoreType.ALL))), dataNetworkService);
     }
 }

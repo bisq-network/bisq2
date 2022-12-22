@@ -18,6 +18,7 @@
 package bisq.support;
 
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
+import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -30,7 +31,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -43,12 +45,15 @@ public final class MediationRequest implements MailboxMessage {
             MediationRequest.class.getSimpleName());
     private final UserProfile requester;
     private final UserProfile peer;
-    private final Set<PrivateTradeChatMessage> chatMessages;
+    private final List<PrivateTradeChatMessage> chatMessages;
 
-    public MediationRequest(Set<PrivateTradeChatMessage> chatMessages, UserProfile requester, UserProfile peer) {
+    public MediationRequest(List<PrivateTradeChatMessage> chatMessages, UserProfile requester, UserProfile peer) {
         this.chatMessages = chatMessages;
         this.requester = requester;
         this.peer = peer;
+
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.chatMessages.sort(Comparator.comparing((PrivateTradeChatMessage e) -> new ByteArray(e.serialize())));
     }
 
     @Override
@@ -72,7 +77,7 @@ public final class MediationRequest implements MailboxMessage {
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
         return new MediationRequest(proto.getChatMessagesList().stream()
                 .map(PrivateTradeChatMessage::fromProto)
-                .collect(Collectors.toSet()),
+                .collect(Collectors.toList()),
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()));
     }

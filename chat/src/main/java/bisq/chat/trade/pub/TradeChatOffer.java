@@ -14,8 +14,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 
 @ToString
 @EqualsAndHashCode
@@ -26,7 +26,7 @@ public final class TradeChatOffer implements Proto {
     private final long baseSideAmount;
     private final Market market;
     private final long quoteSideAmount;
-    private final Set<String> paymentMethods;
+    private final List<String> paymentMethods;
     private final String makersTradeTerms;
     private final long requiredTotalReputationScore;
 
@@ -36,7 +36,7 @@ public final class TradeChatOffer implements Proto {
                           Market market,
                           long baseSideAmount,
                           long quoteSideAmount,
-                          Set<String> paymentMethods,
+                          List<String> paymentMethods,
                           String makersTradeTerms,
                           long requiredTotalReputationScore) {
         this.direction = direction;
@@ -47,6 +47,8 @@ public final class TradeChatOffer implements Proto {
         this.makersTradeTerms = makersTradeTerms;
         this.requiredTotalReputationScore = requiredTotalReputationScore;
 
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.paymentMethods.sort(Comparator.comparing((String e) -> e));
         chatMessageText = Res.get("createOffer.tradeChatOffer.chatMessage",
                 Res.get(direction.name().toLowerCase()).toUpperCase(),
                 AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true),
@@ -60,7 +62,7 @@ public final class TradeChatOffer implements Proto {
                 .setMarket(market.toProto())
                 .setBaseSideAmount(baseSideAmount)
                 .setQuoteSideAmount(quoteSideAmount)
-                .addAllPaymentMethods(new ArrayList<>(paymentMethods))
+                .addAllPaymentMethods(paymentMethods)
                 .setMakersTradeTerms(makersTradeTerms)
                 .setRequiredTotalReputationScore(requiredTotalReputationScore)
                 .build();
@@ -71,7 +73,7 @@ public final class TradeChatOffer implements Proto {
                 Market.fromProto(proto.getMarket()),
                 proto.getBaseSideAmount(),
                 proto.getQuoteSideAmount(),
-                new HashSet<>(proto.getPaymentMethodsList()),
+                new ArrayList<>(proto.getPaymentMethodsList()),
                 proto.getMakersTradeTerms(),
                 proto.getRequiredTotalReputationScore());
     }
