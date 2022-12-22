@@ -19,6 +19,7 @@ package bisq.chat.trade.priv;
 
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
+import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -70,7 +71,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator) {
-        super(PrivateChannel.createChannelId(peerOrTrader1.getId(), myUserProfileOrTrader2.getId()),
+        super(PrivateChannel.createChannelId(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
                 myUserIdentity,
                 new ArrayList<>(),
                 ChannelNotificationType.ALL);
@@ -158,10 +159,12 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
     }
 
     public String getChannelSelectionDisplayString() {
-        if (isMediator()) {
-            return peerOrTrader1.getUserName() + ", " + myUserProfileOrTrader2.getUserName();
-        } else if (mediator.isPresent() && inMediation.get()) {
-            return peerOrTrader1.getUserName() + ", " + mediator.get().getUserName();
+        if (inMediation.get()) {
+            if (isMediator()) {
+                return peerOrTrader1.getUserName() + ", " + myUserProfileOrTrader2.getUserName();
+            } else {
+                return peerOrTrader1.getUserName() + ", " + mediator.orElseThrow().getUserName();
+            }
         } else {
             return peerOrTrader1.getUserName();
         }

@@ -19,6 +19,7 @@ package bisq.chat.trade.priv;
 
 import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.Quotation;
+import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -95,10 +96,9 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
+        String channelId = PrivateTradeChannel.createChannelId(new Pair<>(trader1.getId(), trader2.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                        channel.getPeerOrTrader1().equals(trader1) &&
-                        channel.getMyUserProfileOrTrader2().equals(trader1))
+                .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
@@ -111,9 +111,9 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
+        String channelId = PrivateTradeChannel.createChannelId(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                        channel.getPeer().equals(peersUserProfile))
+                .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();

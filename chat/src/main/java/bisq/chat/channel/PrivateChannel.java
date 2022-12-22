@@ -19,6 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.data.ByteArray;
+import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -34,12 +35,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
 
-    public static String createChannelId(String peersId, String myId) {
-        // Need to have an ordering here, otherwise there would be 2 channelIds for the same participants
-        if (peersId.compareTo(myId) < 0) {
-            return peersId + "-" + myId;
+    public static String createChannelId(Pair<String, String> userIds) {
+        String userId1 = userIds.getFirst();
+        String userId2 = userIds.getSecond();
+        if (userId1.compareTo(userId2) < 0) {
+            return userId1 + "-" + userId2;
         } else {
-            return myId + "-" + peersId;
+            return userId2 + "-" + userId1;
         }
     }
 

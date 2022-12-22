@@ -19,6 +19,7 @@ package bisq.chat.support.priv;
 
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
+import bisq.common.data.Pair;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -36,10 +37,10 @@ import java.util.stream.Collectors;
 public final class PrivateSupportChannel extends PrivateChannel<PrivateSupportChatMessage> {
     private final UserProfile peer;
 
-    public PrivateSupportChannel(UserProfile peer, UserIdentity myProfile) {
-        this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
+    public PrivateSupportChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        this(PrivateChannel.createChannelId(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
-                myProfile,
+                myUserIdentity,
                 new ArrayList<>(),
                 ChannelNotificationType.ALL);
     }
