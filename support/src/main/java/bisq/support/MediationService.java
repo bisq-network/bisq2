@@ -165,7 +165,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     private void processMediationResponse(MediationResponse mediationResponse) {
         privateTradeChannelService.findChannel(mediationResponse.getChannelId()).ifPresent(channel -> {
             // Requester had it activated at request time
-            if (!channel.getMediationActivated().get()) {
+            if (!channel.getInMediation().get()) {
                 // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                 privateTradeChannelService.setMediationActivated(channel, true);
                 //todo send messages as well

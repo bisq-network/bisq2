@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscussionChatMessage> {
+    private final UserProfile peer;
 
     public PrivateDiscussionChannel(UserProfile peer, UserIdentity myProfile) {
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
@@ -48,7 +49,9 @@ public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscus
                                      UserIdentity myProfile,
                                      List<PrivateDiscussionChatMessage> chatMessages,
                                      ChannelNotificationType channelNotificationType) {
-        super(id, peer, myProfile, chatMessages, channelNotificationType);
+        super(id, myProfile, chatMessages, channelNotificationType);
+
+        this.peer = peer;
     }
 
     @Override
