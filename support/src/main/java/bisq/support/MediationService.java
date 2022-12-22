@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -124,7 +123,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     public void requestMediation(UserIdentity myProfile, UserProfile peer, UserProfile mediator) {
         PrivateTradeChannel channel = (PrivateTradeChannel) tradeChannelSelectionService.getSelectedChannel().get();
-        MediationRequest networkMessage = new MediationRequest(new HashSet<>(channel.getChatMessages()),
+        MediationRequest networkMessage = new MediationRequest(new ArrayList<>(channel.getChatMessages()),
                 myProfile.getUserProfile(),
                 peer);
         networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myProfile.getNodeIdAndKeyPair());

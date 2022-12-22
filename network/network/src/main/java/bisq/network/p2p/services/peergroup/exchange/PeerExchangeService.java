@@ -29,9 +29,7 @@ import bisq.network.p2p.services.peergroup.PersistedPeersHandler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -181,8 +179,8 @@ public class PeerExchangeService implements Node.Listener {
             PeerExchangeRequest request = (PeerExchangeRequest) networkMessage;
             //log.debug("Node {} received PeerExchangeRequest with myPeers {}", node, request.peers());
             Address peerAddress = connection.getPeerAddress();
-            peerExchangeStrategy.addReportedPeers(request.getPeers(), peerAddress);
-            Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
+            peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
+            List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeers(peerAddress));
             NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }

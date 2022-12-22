@@ -135,7 +135,7 @@ public class ReviewOfferController implements Controller {
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
                 model.getQuoteSideAmount().getValue(),
-                new HashSet<>(model.getPaymentMethods()),
+                new ArrayList<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get());
         model.setMyOfferText(StringUtils.truncate(tradeChatOffer.getChatMessageText(), 100));
@@ -263,7 +263,7 @@ public class ReviewOfferController implements Controller {
                 return false;
             }
 
-            Set<String> paymentMethods = peersOffer.getPaymentMethods();
+            List<String> paymentMethods = peersOffer.getPaymentMethods();
             if (myChatOffer.getPaymentMethods().stream().noneMatch(paymentMethods::contains)) {
                 return false;
             }

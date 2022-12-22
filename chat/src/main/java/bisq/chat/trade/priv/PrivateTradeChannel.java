@@ -27,10 +27,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @ToString(callSuper = true)
@@ -47,7 +47,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
         super(PrivateChannel.createChannelId(trader1.getId(), trader2.getId()),
                 trader1,
                 myUserIdentity,
-                new HashSet<>(),
+                new ArrayList<>(),
                 ChannelNotificationType.ALL);
         this.trader1 = trader1;
         this.trader2 = trader2;
@@ -59,7 +59,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                 UserProfile peer,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator,
-                                Set<PrivateTradeChatMessage> chatMessages,
+                                List<PrivateTradeChatMessage> chatMessages,
                                 ChannelNotificationType channelNotificationType) {
         super(id, peer, myUserIdentity, chatMessages, channelNotificationType);
 
@@ -91,7 +91,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)
-                        .collect(Collectors.toSet()),
+                        .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
         privateTradeChannel.getMediationActivated().set(proto.getMediationActivated());
         return privateTradeChannel;

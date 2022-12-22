@@ -18,14 +18,16 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.observable.ObservableSet;
+import bisq.common.data.ByteArray;
+import bisq.common.observable.ObservableArray;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 
 @Getter
 @ToString(callSuper = true)
@@ -35,17 +37,18 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
     protected final UserIdentity myUserIdentity;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
-    protected final ObservableSet<T> chatMessages = new ObservableSet<>();
+    protected final ObservableArray<T> chatMessages = new ObservableArray<>();
 
     public PrivateChannel(String id,
                           UserProfile peer,
                           UserIdentity myUserIdentity,
-                          Set<T> chatMessages,
+                          List<T> chatMessages,
                           ChannelNotificationType channelNotificationType) {
         super(id, channelNotificationType);
         this.peer = peer;
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
+        this.chatMessages.sort(Comparator.comparing((T e) -> new ByteArray(e.serialize())));
     }
 
     public static String createChannelId(String peersId, String myId) {

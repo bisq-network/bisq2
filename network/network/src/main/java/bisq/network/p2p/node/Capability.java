@@ -24,7 +24,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
@@ -32,27 +33,28 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 public final class Capability implements Proto {
     private final Address address;
-    private final Set<Transport.Type> supportedTransportTypes;
+    private final List<Transport.Type> supportedTransportTypes;
 
-    public Capability(Address address, Set<Transport.Type> supportedTransportTypes) {
+    public Capability(Address address, List<Transport.Type> supportedTransportTypes) {
         this.address = address;
         this.supportedTransportTypes = supportedTransportTypes;
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.supportedTransportTypes.sort(Comparator.comparing(Enum::ordinal));
     }
 
     public bisq.network.protobuf.Capability toProto() {
         return bisq.network.protobuf.Capability.newBuilder()
                 .setAddress(address.toProto())
                 .addAllSupportedTransportTypes(supportedTransportTypes.stream()
-                        .sorted(Enum::compareTo)
                         .map(Enum::name)
                         .collect(Collectors.toList()))
                 .build();
     }
 
     public static Capability fromProto(bisq.network.protobuf.Capability proto) {
-        Set<Transport.Type> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
+        List<Transport.Type> supportedTransportTypes = proto.getSupportedTransportTypesList().stream()
                 .map(e -> ProtobufUtils.enumFromProto(Transport.Type.class, e))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         return new Capability(Address.fromProto(proto.getAddress()), supportedTransportTypes);
     }
 }

@@ -25,6 +25,8 @@ import bisq.network.p2p.services.peergroup.Peer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -51,7 +53,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
         ts = System.currentTimeMillis();
         try {
             // We get called from the IO thread, so we do not use the async send method
-            node.send(new PeerExchangeRequest(nonce, peersForPeerExchange), connection);
+            node.send(new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange)), connection);
         } catch (Throwable throwable) {
             future.completeExceptionally(throwable);
             dispose();
@@ -73,7 +75,7 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                         node, connection.getPeerAddress(), response.getPeers().size());
                 connection.getMetrics().addRtt(ts = System.currentTimeMillis() - ts);
                 removeListeners();
-                future.complete(response.getPeers());
+                future.complete(new HashSet<>(response.getPeers()));
             } else {
                 log.warn("Node {} received a PeerExchangeResponse from {} with an invalid nonce. response.nonce()={}, nonce={}",
                         node, connection.getPeerAddress(), response.getNonce(), nonce);

@@ -25,9 +25,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @ToString(callSuper = true)
@@ -39,14 +39,14 @@ public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscus
         this(PrivateChannel.createChannelId(peer.getId(), myProfile.getId()),
                 peer,
                 myProfile,
-                new HashSet<>(),
+                new ArrayList<>(),
                 ChannelNotificationType.ALL);
     }
 
     private PrivateDiscussionChannel(String id,
                                      UserProfile peer,
                                      UserIdentity myProfile,
-                                     Set<PrivateDiscussionChatMessage> chatMessages,
+                                     List<PrivateDiscussionChatMessage> chatMessages,
                                      ChannelNotificationType channelNotificationType) {
         super(id, peer, myProfile, chatMessages, channelNotificationType);
     }
@@ -70,7 +70,7 @@ public final class PrivateDiscussionChannel extends PrivateChannel<PrivateDiscus
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateDiscussionChatMessage::fromProto)
-                        .collect(Collectors.toSet()),
+                        .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 

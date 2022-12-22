@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Set;
+import java.util.List;
 
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -19,7 +19,7 @@ public final class PublicDiscussionChannelDto {
     private String channelName;
     private String description;
     private String channelAdminId;
-    private Set<String> channelModeratorIds;
+    private List<String> channelModeratorIds;
 
     public static PublicDiscussionChannelDto from(PublicDiscussionChannel publicDiscussionChannel) {
         PublicDiscussionChannelDto dto = new PublicDiscussionChannelDto();
