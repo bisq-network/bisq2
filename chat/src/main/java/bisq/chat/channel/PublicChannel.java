@@ -53,8 +53,7 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
                           String description,
                           String channelAdminId,
                           List<String> channelModeratorIds,
-                          ChannelNotificationType channelNotificationType
-    ) {
+                          ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
 
         this.displayName = displayName;
@@ -77,9 +76,8 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
 
     public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                           bisq.chat.protobuf.PublicChannel proto) {
-        return new PublicChannel(
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
-                baseProto.getId(),
+        return new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),

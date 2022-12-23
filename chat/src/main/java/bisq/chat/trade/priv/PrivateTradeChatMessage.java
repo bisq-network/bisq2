@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.priv;
 
+import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.MessageType;
-import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -34,7 +34,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTradeChatMessage extends PrivateChatMessage {
+public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
     private final Optional<UserProfile> mediator;
 
     public PrivateTradeChatMessage(String messageId,

@@ -81,8 +81,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateTwoPartyChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+        if (channel instanceof PrivateChannel) {
+            applyPeersIcon((BasePrivateChannel<?>) channel);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {
             applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);

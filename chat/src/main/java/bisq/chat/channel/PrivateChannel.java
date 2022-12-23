@@ -18,49 +18,86 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
-import bisq.common.observable.ObservableArray;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Getter
 @ToString(callSuper = true)
+@Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
+public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage> {
+    private final UserProfile peer;
 
-    public static String createChannelName(Pair<String, String> userIds) {
-        String userId1 = userIds.getFirst();
-        String userId2 = userIds.getSecond();
-        if (userId1.compareTo(userId2) < 0) {
-            return userId1 + "-" + userId2;
-        } else {
-            return userId2 + "-" + userId1;
-        }
+    public PrivateChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
+        this(channelDomain,
+                BasePrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
+                peer,
+                myUserIdentity,
+                new ArrayList<>(),
+                ChannelNotificationType.ALL
+        );
     }
 
-    protected final UserIdentity myUserIdentity;
+    private PrivateChannel(ChannelDomain channelDomain,
+                           String channelName,
+                           UserProfile peer,
+                           UserIdentity myProfile,
+                           List<PrivateChatMessage> chatMessages,
+                           ChannelNotificationType channelNotificationType) {
+        super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
-    // We persist the messages as they are NOT persisted in the P2P data store.
-    protected final ObservableArray<T> chatMessages = new ObservableArray<>();
-
-    public PrivateChannel(ChannelDomain channelDomain,
-                          String channelName,
-                          UserIdentity myUserIdentity,
-                          List<T> chatMessages,
-                          ChannelNotificationType channelNotificationType) {
-        super(channelDomain, channelName, channelNotificationType);
-
-        this.myUserIdentity = myUserIdentity;
-        this.chatMessages.addAll(chatMessages);
-        this.chatMessages.sort(Comparator.comparing((T e) -> new ByteArray(e.serialize())));
+        this.peer = peer;
     }
 
-    public abstract UserProfile getPeer();
+    @Override
+    public bisq.chat.protobuf.Channel toProto() {
+        return getChannelBuilder().setPrivateChannel(bisq.chat.protobuf.PrivateChannel.newBuilder()
+                        .setPeer(peer.toProto())
+                        .setMyUserIdentity(myUserIdentity.toProto())
+                        .addAllChatMessages(chatMessages.stream()
+                                .map(PrivateChatMessage::toChatMessageProto)
+                                .collect(Collectors.toList())))
+                .build();
+    }
+
+    public static PrivateChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                           bisq.chat.protobuf.PrivateChannel proto) {
+        return new PrivateChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
+                UserProfile.fromProto(proto.getPeer()),
+                UserIdentity.fromProto(proto.getMyUserIdentity()),
+                proto.getChatMessagesList().stream()
+                        .map(PrivateChatMessage::fromProto)
+                        .collect(Collectors.toList()),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
+        );
+    }
+
+    @Override
+    public void addChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessage(PrivateChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessages(Collection<PrivateChatMessage> removeMessages) {
+        chatMessages.removeAll(removeMessages);
+    }
+
+    @Override
+    public String getDisplayString() {
+        return peer.getUserName() + "-" + myUserIdentity.getUserName();
+    }
 }

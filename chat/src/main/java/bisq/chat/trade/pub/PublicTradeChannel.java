@@ -44,6 +44,7 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
         this.market = market;
     }
 
+
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
@@ -53,8 +54,7 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
 
     public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
-        return new PublicTradeChannel(baseProto.getId(),
-                Market.fromProto(proto.getMarket()));
+        return new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
     }
 
     @Override

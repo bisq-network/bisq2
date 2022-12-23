@@ -17,9 +17,9 @@
 
 package bisq.chat.trade.priv;
 
+import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PrivateChannel;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMessage> {
+public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeChatMessage> {
     public static PrivateTradeChannel createByTrader(UserIdentity myUserIdentity,
                                                      UserProfile peer,
                                                      Optional<UserProfile> mediator) {
@@ -72,7 +72,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator) {
-        this(PrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
+        this(BasePrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
                 peerOrTrader1,
                 myUserProfileOrTrader2,
                 myUserIdentity,
@@ -112,8 +112,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
 
     public static PrivateTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                 bisq.chat.protobuf.PrivateTradeChannel proto) {
-        PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(
-                baseProto.getId(),
+        PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeerOrTrader1()),
                 UserProfile.fromProto(proto.getMyUserProfileOrTrader2()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),

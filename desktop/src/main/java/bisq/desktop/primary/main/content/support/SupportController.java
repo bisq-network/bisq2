@@ -81,8 +81,8 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateTwoPartyChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+        if (channel instanceof PrivateChannel) {
+            applyPeersIcon((BasePrivateChannel<?>) channel);
             publicSupportChannelSelection.deSelectChannel();
         } else {
             applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);

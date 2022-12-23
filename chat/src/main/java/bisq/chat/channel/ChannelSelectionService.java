@@ -34,11 +34,11 @@ import java.util.concurrent.CompletableFuture;
 public class ChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
     private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
     private final Persistence<ChannelSelectionStore> persistence;
-    private final PrivateTwoPartyChannelService privateChannelService;
+    private final PrivateChannelService privateChannelService;
     private final PublicChannelService publicChannelService;
 
     public ChannelSelectionService(PersistenceService persistenceService,
-                                   PrivateTwoPartyChannelService privateChannelService,
+                                   PrivateChannelService privateChannelService,
                                    PublicChannelService publicChannelService,
                                    ChannelDomain channelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
@@ -61,8 +61,8 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateTwoPartyChannel) {
-            privateChannelService.removeExpiredMessages((PrivateTwoPartyChannel) channel);
+        if (channel instanceof PrivateChannel) {
+            privateChannelService.removeExpiredMessages((PrivateChannel) channel);
         }
 
         getSelectedChannel().set(channel);

@@ -110,17 +110,17 @@ public class ChatMessagesComponent {
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+        private final PrivateChannelService privateDiscussionChannelService;
         private final PublicChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
         private final PublicChannelService publicEventsChannelService;
-        private final PrivateTwoPartyChannelService privateEventsChannelService;
+        private final PrivateChannelService privateEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
         private final PublicChannelService publicSupportChannelService;
-        private final PrivateTwoPartyChannelService privateSupportChannelService;
+        private final PrivateChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private Pin selectedChannelPin;
@@ -258,18 +258,18 @@ public class ChatMessagesComponent {
                     }
                 }
 
-            } else if (channel instanceof PrivateTwoPartyChannel) {
+            } else if (channel instanceof PrivateChannel) {
                 switch (channel.getChannelDomain()) {
                     case TRADE -> {
                     }
                     case DISCUSSION -> {
-                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
                     }
                     case EVENTS -> {
-                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
                     }
                     case SUPPORT -> {
-                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
                     }
                 }
             }

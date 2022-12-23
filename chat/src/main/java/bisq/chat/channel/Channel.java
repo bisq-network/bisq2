@@ -52,7 +52,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
-                .setId(id)
+                .setChannelName(channelName)
                 .setChannelDomain(channelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
@@ -61,8 +61,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATETWOPARTYCHANNEL: {
-                return PrivateTwoPartyChannel.fromProto(proto, proto.getPrivateTwoPartyChannel());
+            case PRIVATECHANNEL: {
+                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
             }
 
             case PRIVATETRADECHANNEL: {

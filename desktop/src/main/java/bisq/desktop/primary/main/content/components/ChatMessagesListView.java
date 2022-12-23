@@ -145,7 +145,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+        private final PrivateChannelService privateDiscussionChannelService;
         private final PublicChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final UserIdentityService userIdentityService;
@@ -157,10 +157,10 @@ public class ChatMessagesListView {
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PrivateTwoPartyChannelService privateEventsChannelService;
+        private final PrivateChannelService privateEventsChannelService;
         private final PublicChannelService publicEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
-        private final PrivateTwoPartyChannelService privateSupportChannelService;
+        private final PrivateChannelService privateSupportChannelService;
         private final PublicChannelService publicSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
@@ -253,13 +253,13 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateTwoPartyChannel) {
+                    } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
+                                .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -274,13 +274,13 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateTwoPartyChannel) {
+                    } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
+                                .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -295,13 +295,13 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateTwoPartyChannel) {
+                    } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
+                                .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -1018,8 +1018,8 @@ public class ChatMessagesListView {
 
             if (chatMessage instanceof PrivateTradeChatMessage) {
                 senderUserProfile = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
-            } else if (chatMessage instanceof PrivateTwoPartyChatMessage) {
-                senderUserProfile = Optional.of(((PrivateTwoPartyChatMessage) chatMessage).getSender());
+            } else if (chatMessage instanceof PrivateChatMessage) {
+                senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
             } else {
                 senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             }

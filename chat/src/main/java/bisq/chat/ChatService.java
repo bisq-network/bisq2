@@ -38,15 +38,15 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
-    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+    private final PrivateChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final PublicChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final ChannelSelectionService discussionChannelSelectionService;
-    private final PrivateTwoPartyChannelService privateSupportChannelService;
+    private final PrivateChannelService privateSupportChannelService;
     private final PublicChannelService publicSupportChannelService;
     private final ChannelSelectionService supportChannelSelectionService;
-    private final PrivateTwoPartyChannelService privateEventsChannelService;
+    private final PrivateChannelService privateEventsChannelService;
     private final PublicChannelService publicEventsChannelService;
     private final ChannelSelectionService eventsChannelSelectionService;
 
@@ -68,7 +68,7 @@ public class ChatService implements Service {
                 publicTradeChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new PrivateTwoPartyChannelService(persistenceService,
+        privateDiscussionChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 proofOfWorkService,
@@ -89,7 +89,7 @@ public class ChatService implements Service {
                 ChannelDomain.DISCUSSION);
 
         // Events
-        privateEventsChannelService = new PrivateTwoPartyChannelService(persistenceService,
+        privateEventsChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 proofOfWorkService,
@@ -110,7 +110,7 @@ public class ChatService implements Service {
                 ChannelDomain.EVENTS);
 
         // Support
-        privateSupportChannelService = new PrivateTwoPartyChannelService(persistenceService,
+        privateSupportChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 proofOfWorkService,
