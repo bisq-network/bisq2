@@ -86,7 +86,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
             applyPeersIcon((PrivateChannel<?>) channel);
             publicEventsChannelSelection.deSelectChannel();
         } else {
-            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

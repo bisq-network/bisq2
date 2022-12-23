@@ -26,11 +26,11 @@ import lombok.ToString;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PublicChannel<M extends PublicChatMessage> extends Channel<M> {
-    // We do not persist the messages as they are persisted in the P2P data store.
+public abstract class BasePublicChannel<M extends PublicChatMessage> extends Channel<M> {
+    // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableArray<M> chatMessages = new ObservableArray<>();
 
-    public PublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+    public BasePublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
     }
 }

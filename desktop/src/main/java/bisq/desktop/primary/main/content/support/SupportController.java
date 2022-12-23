@@ -86,7 +86,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
             applyPeersIcon((PrivateChannel<?>) channel);
             publicSupportChannelSelection.deSelectChannel();
         } else {
-            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

@@ -86,7 +86,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
             applyPeersIcon((PrivateChannel<?>) channel);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {
-            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }
