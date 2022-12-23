@@ -18,20 +18,17 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannel;
-import bisq.chat.events.priv.PrivateEventsChannelService;
-import bisq.chat.events.priv.PrivateEventsChatMessage;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.events.pub.PublicEventsChatMessage;
@@ -39,9 +36,6 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannel;
-import bisq.chat.support.priv.PrivateSupportChannelService;
-import bisq.chat.support.priv.PrivateSupportChatMessage;
 import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.chat.support.pub.PublicSupportChatMessage;
@@ -119,12 +113,12 @@ public class ChatMessagesListView {
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
-                                ChannelKind channelKind) {
+                                ChatDomain chatDomain) {
         controller = new Controller(applicationService,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
-                channelKind);
+                chatDomain);
     }
 
     public Pane getRoot() {
@@ -169,7 +163,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateDiscussionChannelService privateDiscussionChannelService;
+        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
         private final PublicDiscussionChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final UserIdentityService userIdentityService;
@@ -181,10 +175,10 @@ public class ChatMessagesListView {
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PrivateEventsChannelService privateEventsChannelService;
+        private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final PublicEventsChannelService publicEventsChannelService;
         private final EventsChannelSelectionService eventsChannelSelectionService;
-        private final PrivateSupportChannelService privateSupportChannelService;
+        private final PrivateTwoPartyChannelService privateSupportChannelService;
         private final PublicSupportChannelService publicSupportChannelService;
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
@@ -195,7 +189,7 @@ public class ChatMessagesListView {
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
-                           ChannelKind channelKind) {
+                           ChatDomain chatDomain) {
             chatService = applicationService.getChatService();
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
@@ -225,7 +219,7 @@ public class ChatMessagesListView {
 
             model = new Model(chatService,
                     userIdentityService,
-                    channelKind);
+                    chatDomain);
             view = new View(model, this);
         }
 
@@ -243,7 +237,7 @@ public class ChatMessagesListView {
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            if (model.getChannelKind() == ChannelKind.TRADE) {
+            if (model.getChatDomain() == ChatDomain.TRADE) {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (chatMessagesPin != null) {
@@ -266,7 +260,7 @@ public class ChatMessagesListView {
                         model.chatMessages.clear();
                     }
                 });
-            } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
+            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
                 selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicDiscussionChannel) {
@@ -277,17 +271,17 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicDiscussionChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateDiscussionChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateDiscussionChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateDiscussionChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
-            } else if (model.getChannelKind() == ChannelKind.EVENTS) {
+            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
                 selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicEventsChannel) {
@@ -298,17 +292,17 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicEventsChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateEventsChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateEventsChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateEventsChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
-            } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
+            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicSupportChannel) {
@@ -319,13 +313,13 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicSupportChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                    } else if (channel instanceof PrivateSupportChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateSupportChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateSupportChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                     }
                 });
@@ -499,14 +493,14 @@ public class ChatMessagesListView {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChannelKind() == ChannelKind.TRADE) {
+            if (model.getChatDomain() == ChatDomain.TRADE) {
                 PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChannelKind() == ChannelKind.DISCUSSION) {
+            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
-            } else if (model.getChannelKind() == ChannelKind.EVENTS) {
+            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
-            } else if (model.getChannelKind() == ChannelKind.SUPPORT) {
+            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
         }
@@ -550,7 +544,7 @@ public class ChatMessagesListView {
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
-        private final ChannelKind channelKind;
+        private final ChatDomain chatDomain;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
@@ -559,10 +553,10 @@ public class ChatMessagesListView {
 
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
-                      ChannelKind channelKind) {
+                      ChatDomain chatDomain) {
             this.chatService = chatService;
             this.userIdentityService = userIdentityService;
-            this.channelKind = channelKind;
+            this.chatDomain = chatDomain;
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {
@@ -919,7 +913,7 @@ public class ChatMessagesListView {
                                 replyIcon.setOnMouseClicked(e -> controller.onReply(chatMessage));
                                 pmIcon.setOnMouseClicked(e -> controller.onOpenPrivateChannel(chatMessage));
                             }
-                              
+
                             replyIcon.setVisible(!isMyMessage);
                             replyIcon.setManaged(!isMyMessage);
 
@@ -1038,8 +1032,8 @@ public class ChatMessagesListView {
 
             if (chatMessage instanceof PrivateTradeChatMessage) {
                 senderUserProfile = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
-            } else if (chatMessage instanceof PrivateDiscussionChatMessage) {
-                senderUserProfile = Optional.of(((PrivateDiscussionChatMessage) chatMessage).getSender());
+            } else if (chatMessage instanceof PrivateTwoPartyChatMessage) {
+                senderUserProfile = Optional.of(((PrivateTwoPartyChatMessage) chatMessage).getSender());
             } else {
                 senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             }

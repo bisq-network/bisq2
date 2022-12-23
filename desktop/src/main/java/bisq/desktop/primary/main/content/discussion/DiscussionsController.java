@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
@@ -37,12 +37,12 @@ import java.util.Optional;
 
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
-    private final PublicDiscussionChannelService publicDiscussionChannelService;
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
+    private final PublicDiscussionChannelService publicDiscussionChannelService;
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelKind.DISCUSSION, NavigationTarget.NONE);
+        super(applicationService, ChatDomain.DISCUSSION, NavigationTarget.NONE);
 
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
         discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
@@ -69,8 +69,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     }
 
     @Override
-    public DiscussionsModel getChatModel(ChannelKind channelKind) {
-        return new DiscussionsModel(channelKind);
+    public DiscussionsModel getChatModel(ChatDomain chatDomain) {
+        return new DiscussionsModel(chatDomain);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateDiscussionChannel) {
+        if (channel instanceof PrivateTwoPartyChannel) {
             applyPeersIcon((PrivateChannel<?>) channel);
             publicDiscussionChannelSelection.deSelectChannel();
         } else {

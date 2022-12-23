@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
@@ -42,7 +42,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelKind.EVENTS, NavigationTarget.NONE);
+        super(applicationService, ChatDomain.EVENTS, NavigationTarget.NONE);
 
         publicEventsChannelService = chatService.getPublicEventsChannelService();
         eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
@@ -69,8 +69,8 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     }
 
     @Override
-    public EventsModel getChatModel(ChannelKind channelKind) {
-        return new EventsModel(channelKind);
+    public EventsModel getChatModel(ChatDomain chatDomain) {
+        return new EventsModel(chatDomain);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateEventsChannel) {
+        if (channel instanceof PrivateTwoPartyChannel) {
             applyPeersIcon((PrivateChannel<?>) channel);
             publicEventsChannelSelection.deSelectChannel();
         } else {

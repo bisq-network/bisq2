@@ -17,14 +17,12 @@
 
 package bisq.chat;
 
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannelService;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannelService;
 import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -45,15 +43,15 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
-    private final PrivateDiscussionChannelService privateDiscussionChannelService;
+    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final PublicDiscussionChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
-    private final PrivateSupportChannelService privateSupportChannelService;
+    private final PrivateTwoPartyChannelService privateSupportChannelService;
     private final PublicSupportChannelService publicSupportChannelService;
     private final SupportChannelSelectionService supportChannelSelectionService;
-    private final PrivateEventsChannelService privateEventsChannelService;
+    private final PrivateTwoPartyChannelService privateEventsChannelService;
     private final PublicEventsChannelService publicEventsChannelService;
     private final EventsChannelSelectionService eventsChannelSelectionService;
 
@@ -75,10 +73,11 @@ public class ChatService implements Service {
                 publicTradeChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new PrivateDiscussionChannelService(persistenceService,
+        privateDiscussionChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
+                proofOfWorkService,
+                ChatDomain.DISCUSSION);
         publicDiscussionChannelService = new PublicDiscussionChannelService(persistenceService,
                 networkService,
                 userIdentityService);
@@ -87,10 +86,11 @@ public class ChatService implements Service {
                 publicDiscussionChannelService);
 
         // Events
-        privateEventsChannelService = new PrivateEventsChannelService(persistenceService,
+        privateEventsChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
+                proofOfWorkService,
+                ChatDomain.EVENTS);
         publicEventsChannelService = new PublicEventsChannelService(persistenceService,
                 networkService,
                 userIdentityService);
@@ -99,10 +99,11 @@ public class ChatService implements Service {
                 publicEventsChannelService);
 
         // Support
-        privateSupportChannelService = new PrivateSupportChannelService(persistenceService,
+        privateSupportChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
+                proofOfWorkService,
+                ChatDomain.SUPPORT);
         publicSupportChannelService = new PublicSupportChannelService(persistenceService,
                 networkService,
                 userIdentityService);

@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
@@ -43,12 +44,15 @@ import java.util.stream.Collectors;
 public abstract class PrivateChannelService<M extends PrivateChatMessage, C extends PrivateChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
+    protected final ChatDomain chatDomain;
 
     public PrivateChannelService(NetworkService networkService,
                                  UserIdentityService userIdentityService,
-                                 ProofOfWorkService proofOfWorkService) {
+                                 ProofOfWorkService proofOfWorkService,
+                                 ChatDomain chatDomain) {
         super(networkService, userIdentityService);
         this.proofOfWorkService = proofOfWorkService;
+        this.chatDomain = chatDomain;
     }
 
 

@@ -17,14 +17,12 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChannelKind;
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
+import bisq.chat.ChatDomain;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.events.priv.PrivateEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
-import bisq.chat.support.priv.PrivateSupportChannel;
 import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -46,18 +44,19 @@ import java.util.stream.Collectors;
 public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     protected final String id;
-    private final ChannelKind channelKind;
+    private final ChatDomain chatDomain;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(String id, ChannelNotificationType channelNotificationType, ChannelKind channelKind) {
+    public Channel(String id, ChannelNotificationType channelNotificationType, ChatDomain chatDomain) {
         this.id = id;
-        this.channelKind = channelKind;
+        this.chatDomain = chatDomain;
         this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
                 .setId(id)
+                .setChatDomain(chatDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
 
@@ -65,6 +64,10 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
+            case PRIVATETWOPARTYCHANNEL: {
+                return PrivateTwoPartyChannel.fromProto(proto, proto.getPrivateTwoPartyChannel());
+            }
+
             case PRIVATETRADECHANNEL: {
                 return PrivateTradeChannel.fromProto(proto, proto.getPrivateTradeChannel());
             }
@@ -72,23 +75,15 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
             }
 
-            case PRIVATEDISCUSSIONCHANNEL: {
-                return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
-            }
+
             case PUBLICDISCUSSIONCHANNEL: {
                 return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());
             }
 
-            case PRIVATEEVENTSCHANNEL: {
-                return PrivateEventsChannel.fromProto(proto, proto.getPrivateEventsChannel());
-            }
             case PUBLICEVENTSCHANNEL: {
                 return PublicEventsChannel.fromProto(proto, proto.getPublicEventsChannel());
             }
 
-            case PRIVATESUPPORTCHANNEL: {
-                return PrivateSupportChannel.fromProto(proto, proto.getPrivateSupportChannel());
-            }
             case PUBLICSUPPORTCHANNEL: {
                 return PublicSupportChannel.fromProto(proto, proto.getPublicSupportChannel());
             }

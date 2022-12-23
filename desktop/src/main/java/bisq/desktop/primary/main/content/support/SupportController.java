@@ -18,13 +18,13 @@
 package bisq.desktop.primary.main.content.support;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannel;
 import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -42,7 +42,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     private PublicSupportChannelSelection publicSupportChannelSelection;
 
     public SupportController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelKind.SUPPORT, NavigationTarget.NONE);
+        super(applicationService, ChatDomain.SUPPORT, NavigationTarget.NONE);
 
         publicSupportChannelService = chatService.getPublicSupportChannelService();
         supportChannelSelectionService = chatService.getSupportChannelSelectionService();
@@ -69,8 +69,8 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     }
 
     @Override
-    public SupportModel getChatModel(ChannelKind channelKind) {
-        return new SupportModel(channelKind);
+    public SupportModel getChatModel(ChatDomain chatDomain) {
+        return new SupportModel(chatDomain);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateSupportChannel) {
+        if (channel instanceof PrivateTwoPartyChannel) {
             applyPeersIcon((PrivateChannel<?>) channel);
             publicSupportChannelSelection.deSelectChannel();
         } else {

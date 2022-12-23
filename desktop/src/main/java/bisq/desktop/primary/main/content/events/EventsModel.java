@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.events;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatModel;
 import lombok.Getter;
@@ -26,10 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class EventsModel extends ChatModel {
-    private final ChannelKind channelKind;
+    private final ChatDomain chatDomain;
 
-    public EventsModel(ChannelKind channelKind) {
-        this.channelKind = channelKind;
+    public EventsModel(ChatDomain chatDomain) {
+        this.chatDomain = chatDomain;
     }
 
     @Override

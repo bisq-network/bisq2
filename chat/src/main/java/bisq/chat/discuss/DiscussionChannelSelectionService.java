@@ -18,8 +18,8 @@
 package bisq.chat.discuss;
 
 import bisq.chat.channel.Channel;
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
 import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
@@ -37,11 +37,11 @@ import java.util.concurrent.CompletableFuture;
 public class DiscussionChannelSelectionService implements PersistenceClient<DiscussionChannelSelectionStore> {
     private final DiscussionChannelSelectionStore persistableStore = new DiscussionChannelSelectionStore();
     private final Persistence<DiscussionChannelSelectionStore> persistence;
-    private final PrivateDiscussionChannelService privateChannelService;
+    private final PrivateTwoPartyChannelService privateChannelService;
     private final PublicDiscussionChannelService publicChannelService;
 
     public DiscussionChannelSelectionService(PersistenceService persistenceService,
-                                             PrivateDiscussionChannelService privateChannelService,
+                                             PrivateTwoPartyChannelService privateChannelService,
                                              PublicDiscussionChannelService publicChannelService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.privateChannelService = privateChannelService;
@@ -60,8 +60,8 @@ public class DiscussionChannelSelectionService implements PersistenceClient<Disc
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateDiscussionChannel) {
-            privateChannelService.removeExpiredMessages((PrivateDiscussionChannel) channel);
+        if (channel instanceof PrivateTwoPartyChannel) {
+            privateChannelService.removeExpiredMessages((PrivateTwoPartyChannel) channel);
         }
 
         getSelectedChannel().set(channel);

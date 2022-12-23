@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
 import bisq.common.data.Pair;
@@ -88,7 +88,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                 Optional<UserProfile> mediator,
                                 List<PrivateTradeChatMessage> chatMessages,
                                 ChannelNotificationType channelNotificationType) {
-        super(id, myUserIdentity, chatMessages, channelNotificationType, ChannelKind.TRADE);
+        super(id, myUserIdentity, chatMessages, channelNotificationType, ChatDomain.TRADE);
 
         this.peerOrTrader1 = peerOrTrader1;
         this.myUserProfileOrTrader2 = myUserProfileOrTrader2;

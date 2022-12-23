@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.events.priv;
+package bisq.chat.channel.private_two_party;
 
 import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
@@ -28,35 +28,35 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PrivateEventsChannelStore implements PersistableStore<PrivateEventsChannelStore> {
-    private final ObservableArray<PrivateEventsChannel> channels = new ObservableArray<>();
+public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoPartyChannelStore> {
+    private final ObservableArray<PrivateTwoPartyChannel> channels = new ObservableArray<>();
 
-    public PrivateEventsChannelStore() {
+    public PrivateTwoPartyChannelStore() {
     }
 
-    private PrivateEventsChannelStore(List<PrivateEventsChannel> privateEventsChannels) {
-        setAll(privateEventsChannels);
+    private PrivateTwoPartyChannelStore(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
+        setAll(privateTwoPartyChannels);
     }
 
     @Override
-    public bisq.chat.protobuf.PrivateEventsChannelStore toProto() {
-        bisq.chat.protobuf.PrivateEventsChannelStore.Builder builder = bisq.chat.protobuf.PrivateEventsChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateEventsChannel::toProto).collect(Collectors.toList()));
+    public bisq.chat.protobuf.PrivateTwoPartyChannelStore toProto() {
+        bisq.chat.protobuf.PrivateTwoPartyChannelStore.Builder builder = bisq.chat.protobuf.PrivateTwoPartyChannelStore.newBuilder()
+                .addAllChannels(channels.stream().map(PrivateTwoPartyChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PrivateEventsChannelStore fromProto(bisq.chat.protobuf.PrivateEventsChannelStore proto) {
-        List<PrivateEventsChannel> privateEventsChannels = proto.getChannelsList().stream()
-                .map(e -> (PrivateEventsChannel) PrivateEventsChannel.fromProto(e))
+    public static PrivateTwoPartyChannelStore fromProto(bisq.chat.protobuf.PrivateTwoPartyChannelStore proto) {
+        List<PrivateTwoPartyChannel> privateTwoPartyChannels = proto.getChannelsList().stream()
+                .map(e -> (PrivateTwoPartyChannel) PrivateTwoPartyChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PrivateEventsChannelStore(privateEventsChannels);
+        return new PrivateTwoPartyChannelStore(privateTwoPartyChannels);
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PrivateEventsChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.PrivateTwoPartyChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -64,17 +64,17 @@ public class PrivateEventsChannelStore implements PersistableStore<PrivateEvents
     }
 
     @Override
-    public void applyPersisted(PrivateEventsChannelStore chatStore) {
+    public void applyPersisted(PrivateTwoPartyChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PrivateEventsChannelStore getClone() {
-        return new PrivateEventsChannelStore(channels);
+    public PrivateTwoPartyChannelStore getClone() {
+        return new PrivateTwoPartyChannelStore(channels);
     }
 
-    public void setAll(List<PrivateEventsChannel> privateEventsChannels) {
+    public void setAll(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
         this.channels.clear();
-        this.channels.addAll(privateEventsChannels);
+        this.channels.addAll(privateTwoPartyChannels);
     }
 }

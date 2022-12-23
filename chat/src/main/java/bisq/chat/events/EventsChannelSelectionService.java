@@ -18,8 +18,8 @@
 package bisq.chat.events;
 
 import bisq.chat.channel.Channel;
-import bisq.chat.events.priv.PrivateEventsChannel;
-import bisq.chat.events.priv.PrivateEventsChannelService;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
@@ -37,11 +37,11 @@ import java.util.concurrent.CompletableFuture;
 public class EventsChannelSelectionService implements PersistenceClient<EventsChannelSelectionStore> {
     private final EventsChannelSelectionStore persistableStore = new EventsChannelSelectionStore();
     private final Persistence<EventsChannelSelectionStore> persistence;
-    private final PrivateEventsChannelService privateChannelService;
+    private final PrivateTwoPartyChannelService privateChannelService;
     private final PublicEventsChannelService publicChannelService;
 
     public EventsChannelSelectionService(PersistenceService persistenceService,
-                                         PrivateEventsChannelService privateChannelService,
+                                         PrivateTwoPartyChannelService privateChannelService,
                                          PublicEventsChannelService publicChannelService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.privateChannelService = privateChannelService;
@@ -60,8 +60,8 @@ public class EventsChannelSelectionService implements PersistenceClient<EventsCh
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateEventsChannel) {
-            privateChannelService.removeExpiredMessages((PrivateEventsChannel) channel);
+        if (channel instanceof PrivateTwoPartyChannel) {
+            privateChannelService.removeExpiredMessages((PrivateTwoPartyChannel) channel);
         }
 
         getSelectedChannel().set(channel);

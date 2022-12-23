@@ -17,9 +17,21 @@
 
 package bisq.chat;
 
-public enum ChannelKind {
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
+
+public enum ChatDomain implements ProtoEnum {
     TRADE,
     DISCUSSION,
     EVENTS,
-    SUPPORT
+    SUPPORT;
+
+    @Override
+    public bisq.chat.protobuf.ChatDomain toProto() {
+        return bisq.chat.protobuf.ChatDomain.valueOf(name());
+    }
+
+    public static ChatDomain fromProto(bisq.chat.protobuf.ChatDomain proto) {
+        return ProtobufUtils.enumFromProto(ChatDomain.class, proto.name());
+    }
 }

@@ -17,7 +17,7 @@
 
 package bisq.chat.support.pub;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
 import bisq.i18n.Res;
@@ -67,7 +67,7 @@ public final class PublicSupportChannel extends PublicChannel<PublicSupportChatM
                                  String channelAdminId,
                                  List<String> channelModeratorIds,
                                  ChannelNotificationType channelNotificationType) {
-        super(id, channelNotificationType, ChannelKind.SUPPORT);
+        super(id, channelNotificationType, ChatDomain.SUPPORT);
 
         this.channelName = channelName;
         this.description = description;

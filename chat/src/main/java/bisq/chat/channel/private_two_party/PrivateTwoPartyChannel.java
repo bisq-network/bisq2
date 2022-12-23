@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.support.priv;
+package bisq.chat.channel.private_two_party;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
 import bisq.common.data.Pair;
@@ -35,62 +35,65 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateSupportChannel extends PrivateChannel<PrivateSupportChatMessage> {
+public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoPartyChatMessage> {
     private final UserProfile peer;
 
-    public PrivateSupportChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChatDomain chatDomain) {
         this(PrivateChannel.createChannelId(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),
-                ChannelNotificationType.ALL);
+                ChannelNotificationType.ALL,
+                chatDomain);
     }
 
-    private PrivateSupportChannel(String id,
-                                  UserProfile peer,
-                                  UserIdentity myProfile,
-                                  List<PrivateSupportChatMessage> chatMessages,
-                                  ChannelNotificationType channelNotificationType) {
-        super(id, myProfile, chatMessages, channelNotificationType, ChannelKind.SUPPORT);
+    private PrivateTwoPartyChannel(String id,
+                                   UserProfile peer,
+                                   UserIdentity myProfile,
+                                   List<PrivateTwoPartyChatMessage> chatMessages,
+                                   ChannelNotificationType channelNotificationType,
+                                   ChatDomain chatDomain) {
+        super(id, myProfile, chatMessages, channelNotificationType, chatDomain);
 
         this.peer = peer;
     }
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
-        return getChannelBuilder().setPrivateSupportChannel(bisq.chat.protobuf.PrivateSupportChannel.newBuilder()
+        return getChannelBuilder().setPrivateTwoPartyChannel(bisq.chat.protobuf.PrivateTwoPartyChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
-                                .map(PrivateSupportChatMessage::toChatMessageProto)
+                                .map(PrivateTwoPartyChatMessage::toChatMessageProto)
                                 .collect(Collectors.toList())))
                 .build();
     }
 
-    public static PrivateSupportChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                  bisq.chat.protobuf.PrivateSupportChannel proto) {
-        return new PrivateSupportChannel(
+    public static PrivateTwoPartyChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                   bisq.chat.protobuf.PrivateTwoPartyChannel proto) {
+        return new PrivateTwoPartyChannel(
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()
-                        .map(PrivateSupportChatMessage::fromProto)
+                        .map(PrivateTwoPartyChatMessage::fromProto)
                         .collect(Collectors.toList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
+                ChatDomain.fromProto(baseProto.getChatDomain()));
     }
 
     @Override
-    public void addChatMessage(PrivateSupportChatMessage chatMessage) {
+    public void addChatMessage(PrivateTwoPartyChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PrivateSupportChatMessage chatMessage) {
+    public void removeChatMessage(PrivateTwoPartyChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateSupportChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PrivateTwoPartyChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 

@@ -17,11 +17,9 @@
 
 package bisq.chat.message;
 
-import bisq.chat.discuss.priv.PrivateDiscussionChatMessage;
+import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
 import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
-import bisq.chat.events.priv.PrivateEventsChatMessage;
 import bisq.chat.events.pub.PublicEventsChatMessage;
-import bisq.chat.support.priv.PrivateSupportChatMessage;
 import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
@@ -98,6 +96,10 @@ public abstract class ChatMessage implements Proto {
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
+            case PRIVATETWOPARTYCHATMESSAGE: {
+                return PrivateTwoPartyChatMessage.fromProto(proto);
+            }
+
             case PUBLICTRADECHATMESSAGE: {
                 return PublicTradeChatMessage.fromProto(proto);
             }
@@ -108,22 +110,14 @@ public abstract class ChatMessage implements Proto {
             case PUBLICDISCUSSIONCHATMESSAGE: {
                 return PublicDiscussionChatMessage.fromProto(proto);
             }
-            case PRIVATEDISCUSSIONCHATMESSAGE: {
-                return PrivateDiscussionChatMessage.fromProto(proto);
-            }
+
 
             case PUBLICEVENTSCHATMESSAGE: {
                 return PublicEventsChatMessage.fromProto(proto);
             }
-            case PRIVATEEVENTSCHATMESSAGE: {
-                return PrivateEventsChatMessage.fromProto(proto);
-            }
 
             case PUBLICSUPPORTCHATMESSAGE: {
                 return PublicSupportChatMessage.fromProto(proto);
-            }
-            case PRIVATESUPPORTCHATMESSAGE: {
-                return PrivateSupportChatMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
@@ -166,18 +160,14 @@ public abstract class ChatMessage implements Proto {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
+                    case PRIVATETWOPARTYCHATMESSAGE: {
+                        return PrivateTwoPartyChatMessage.fromProto(proto);
+                    }
+
                     case PRIVATETRADECHATMESSAGE: {
                         return PrivateTradeChatMessage.fromProto(proto);
                     }
-                    case PRIVATEDISCUSSIONCHATMESSAGE: {
-                        return PrivateDiscussionChatMessage.fromProto(proto);
-                    }
-                    case PRIVATEEVENTSCHATMESSAGE: {
-                        return PrivateEventsChatMessage.fromProto(proto);
-                    }
-                    case PRIVATESUPPORTCHATMESSAGE: {
-                        return PrivateSupportChatMessage.fromProto(proto);
-                    }
+
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
                     }

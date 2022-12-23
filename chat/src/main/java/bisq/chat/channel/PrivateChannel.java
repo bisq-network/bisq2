@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
@@ -55,8 +55,8 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
                           UserIdentity myUserIdentity,
                           List<T> chatMessages,
                           ChannelNotificationType channelNotificationType,
-                          ChannelKind channelKind) {
-        super(id, channelNotificationType, channelKind);
+                          ChatDomain chatDomain) {
+        super(id, channelNotificationType, chatDomain);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);

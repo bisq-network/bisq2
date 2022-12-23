@@ -44,16 +44,13 @@ message ChatMessage {
   MessageType messageType = 8;
   network.MetaData metaData = 9;
   oneof message {
-    PrivateTradeChatMessage privateTradeChatMessage = 20;
-    PublicTradeChatMessage publicTradeChatMessage = 21;
+    PrivateTwoPartyChatMessage privateTwoPartyChatMessage = 20;
 
-    PrivateDiscussionChatMessage privateDiscussionChatMessage = 22;
-    PublicDiscussionChatMessage publicDiscussionChatMessage = 23;
+    PrivateTradeChatMessage privateTradeChatMessage = 22;
+    PublicTradeChatMessage publicTradeChatMessage = 23;
 
-    PrivateEventsChatMessage privateEventsChatMessage = 24;
+    PublicDiscussionChatMessage publicDiscussionChatMessage = 24;
     PublicEventsChatMessage publicEventsChatMessage = 25;
-
-    PrivateSupportChatMessage privateSupportChatMessage = 26;
     PublicSupportChatMessage publicSupportChatMessage = 27;
   }
 }
@@ -68,20 +65,25 @@ enum ChannelNotificationType {
   NEVER = 2;
 }
 
+enum ChatDomain {
+  TRADE = 0;
+  DISCUSSION = 1;
+  EVENTS = 2;
+  SUPPORT = 3;
+}
+
 message Channel {
   string id = 1;
   ChannelNotificationType channelNotificationType = 2;
+  ChatDomain chatDomain = 3;
   oneof message{
-    PrivateTradeChannel privateTradeChannel = 10;
-    PublicTradeChannel publicTradeChannel = 11;
+    PrivateTwoPartyChannel privateTwoPartyChannel = 10;
 
-    PrivateDiscussionChannel privateDiscussionChannel = 12;
-    PublicDiscussionChannel publicDiscussionChannel = 13;
+    PrivateTradeChannel privateTradeChannel = 12;
+    PublicTradeChannel publicTradeChannel = 13;
 
-    PrivateEventsChannel privateEventsChannel = 14;
+    PublicDiscussionChannel publicDiscussionChannel = 14;
     PublicEventsChannel publicEventsChannel = 15;
-
-    PrivateSupportChannel privateSupportChannel = 16;
     PublicSupportChannel publicSupportChannel = 17;
   }
 }
@@ -133,17 +135,22 @@ message PublicTradeChannelStore {
   repeated string visibleChannelIds = 2;
 }
 
-// Support
-message PrivateDiscussionChatMessage {
+// PrivateTwoParty
+message PrivateTwoPartyChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
 }
-message PublicDiscussionChatMessage {
-}
-message PrivateDiscussionChannel {
+message PrivateTwoPartyChannel {
   user.UserProfile peer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated ChatMessage chatMessages = 3;
+}
+message PrivateTwoPartyChannelStore {
+  repeated Channel channels = 1;
+}
+
+
+message PublicDiscussionChatMessage {
 }
 
 message PublicDiscussionChannel {
@@ -158,26 +165,16 @@ message DiscussionChannelSelectionStore {
   optional Channel selectedChannel = 1;
 }
 
-message PrivateDiscussionChannelStore {
-  repeated Channel channels = 1;
-}
+
 
 message PublicDiscussionChannelStore {
   repeated Channel channels = 1;
 }
 
 // Events
-message PrivateEventsChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
 message PublicEventsChatMessage {
 }
-message PrivateEventsChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
+
 
 message PublicEventsChannel {
   string channelName = 1;
@@ -189,26 +186,15 @@ message PublicEventsChannel {
 message EventsChannelSelectionStore {
   optional Channel selectedChannel = 1;
 }
-message PrivateEventsChannelStore {
-  repeated Channel channels = 1;
-}
 
 message PublicEventsChannelStore {
   repeated Channel channels = 1;
 }
 
 // Support
-message PrivateSupportChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
 message PublicSupportChatMessage {
 }
-message PrivateSupportChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
+
 
 message PublicSupportChannel {
   string channelName = 1;
@@ -220,9 +206,7 @@ message PublicSupportChannel {
 message SupportChannelSelectionStore {
   optional Channel selectedChannel = 1;
 }
-message PrivateSupportChannelStore {
-  repeated Channel channels = 1;
-}
+
 
 message PublicSupportChannelStore {
   repeated Channel channels = 1;

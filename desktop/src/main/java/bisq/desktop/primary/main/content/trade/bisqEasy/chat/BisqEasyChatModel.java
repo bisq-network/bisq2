@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
@@ -31,12 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
-    private final ChannelKind channelKind;
+    private final ChatDomain chatDomain;
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty actionButtonVisible = new SimpleBooleanProperty();
 
-    public BisqEasyChatModel(ChannelKind channelKind) {
-        this.channelKind = channelKind;
+    public BisqEasyChatModel(ChatDomain chatDomain) {
+        this.chatDomain = chatDomain;
     }
 
     @Override

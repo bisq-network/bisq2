@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
+import bisq.chat.ChatDomain;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
@@ -71,7 +71,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Subscription notificationSettingSubscription;
     private Subscription searchTextPin;
 
-    public ChatController(DefaultApplicationService applicationService, ChannelKind channelKind, NavigationTarget host) {
+    public ChatController(DefaultApplicationService applicationService, ChatDomain chatDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
@@ -79,8 +79,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, chatDomain);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, chatDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
@@ -88,13 +88,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createComponents();
-        model = getChatModel(channelKind);
+        model = getChatModel(chatDomain);
         view = getChatView();
     }
 
     public abstract void createComponents();
 
-    public abstract M getChatModel(ChannelKind channelKind);
+    public abstract M getChatModel(ChatDomain chatDomain);
 
     public abstract V getChatView();
 
