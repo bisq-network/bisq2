@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChatDomain;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
@@ -48,8 +47,8 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
     public PrivateChannelService(NetworkService networkService,
                                  UserIdentityService userIdentityService,
                                  ProofOfWorkService proofOfWorkService,
-                                 ChatDomain chatDomain) {
-        super(networkService, userIdentityService, chatDomain);
+                                 ChannelDomain channelDomain) {
+        super(networkService, userIdentityService, channelDomain);
         this.proofOfWorkService = proofOfWorkService;
     }
 

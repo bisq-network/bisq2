@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChatDomain;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
@@ -51,12 +50,12 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableArray<T> chatMessages = new ObservableArray<>();
 
-    public PrivateChannel(ChatDomain chatDomain,
+    public PrivateChannel(ChannelDomain channelDomain,
                           String channelName,
                           UserIdentity myUserIdentity,
                           List<T> chatMessages,
                           ChannelNotificationType channelNotificationType) {
-        super(chatDomain, channelName, channelNotificationType);
+        super(channelDomain, channelName, channelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);

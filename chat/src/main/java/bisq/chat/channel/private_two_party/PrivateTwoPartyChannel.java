@@ -17,7 +17,7 @@
 
 package bisq.chat.channel.private_two_party;
 
-import bisq.chat.ChatDomain;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
 import bisq.common.data.Pair;
@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoPartyChatMessage> {
     private final UserProfile peer;
 
-    public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChatDomain chatDomain) {
-        this(chatDomain,
+    public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
+        this(channelDomain,
                 PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
                 myUserIdentity,
@@ -48,13 +48,13 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoParty
         );
     }
 
-    private PrivateTwoPartyChannel(ChatDomain chatDomain,
+    private PrivateTwoPartyChannel(ChannelDomain channelDomain,
                                    String channelName,
                                    UserProfile peer,
                                    UserIdentity myProfile,
                                    List<PrivateTwoPartyChatMessage> chatMessages,
                                    ChannelNotificationType channelNotificationType) {
-        super(chatDomain, channelName, myProfile, chatMessages, channelNotificationType);
+        super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
         this.peer = peer;
     }
@@ -73,7 +73,7 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoParty
     public static PrivateTwoPartyChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                    bisq.chat.protobuf.PrivateTwoPartyChannel proto) {
         return new PrivateTwoPartyChannel(
-                ChatDomain.fromProto(baseProto.getChatDomain()),
+                ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),

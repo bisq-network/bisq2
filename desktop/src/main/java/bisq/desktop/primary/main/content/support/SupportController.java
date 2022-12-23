@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.support;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
@@ -42,7 +42,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     private PublicSupportChannelSelection publicSupportChannelSelection;
 
     public SupportController(DefaultApplicationService applicationService) {
-        super(applicationService, ChatDomain.SUPPORT, NavigationTarget.NONE);
+        super(applicationService, ChannelDomain.SUPPORT, NavigationTarget.NONE);
 
         publicSupportChannelService = chatService.getPublicSupportChannelService();
         supportChannelSelectionService = chatService.getSupportChannelSelectionService();
@@ -69,8 +69,8 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     }
 
     @Override
-    public SupportModel getChatModel(ChatDomain chatDomain) {
-        return new SupportModel(chatDomain);
+    public SupportModel getChatModel(ChannelDomain channelDomain) {
+        return new SupportModel(channelDomain);
     }
 
     @Override

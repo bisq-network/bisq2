@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChatDomain;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
@@ -37,8 +36,8 @@ import java.util.concurrent.CompletableFuture;
 public abstract class PublicChannelService<M extends PublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements DataService.Listener {
 
-    public PublicChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChatDomain chatDomain) {
-        super(networkService, userIdentityService, chatDomain);
+    public PublicChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChannelDomain channelDomain) {
+        super(networkService, userIdentityService, channelDomain);
     }
 
 

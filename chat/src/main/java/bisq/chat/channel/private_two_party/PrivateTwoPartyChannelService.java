@@ -17,7 +17,7 @@
 
 package bisq.chat.channel.private_two_party;
 
-import bisq.chat.ChatDomain;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
@@ -48,11 +48,11 @@ public class PrivateTwoPartyChannelService extends PrivateChannelService<Private
                                          NetworkService networkService,
                                          UserIdentityService userIdentityService,
                                          ProofOfWorkService proofOfWorkService,
-                                         ChatDomain chatDomain) {
-        super(networkService, userIdentityService, proofOfWorkService, chatDomain);
+                                         ChannelDomain channelDomain) {
+        super(networkService, userIdentityService, proofOfWorkService, channelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Private" + StringUtils.capitalize(chatDomain.name()) + "ChannelStore",
+                "Private" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
                 persistableStore);
     }
 
@@ -86,7 +86,7 @@ public class PrivateTwoPartyChannelService extends PrivateChannelService<Private
 
     @Override
     protected PrivateTwoPartyChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        return new PrivateTwoPartyChannel(peer, myUserIdentity, chatDomain);
+        return new PrivateTwoPartyChannel(peer, myUserIdentity, channelDomain);
     }
 
     @Override

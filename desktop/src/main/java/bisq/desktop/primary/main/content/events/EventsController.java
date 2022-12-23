@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
@@ -42,7 +42,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChatDomain.EVENTS, NavigationTarget.NONE);
+        super(applicationService, ChannelDomain.EVENTS, NavigationTarget.NONE);
 
         publicEventsChannelService = chatService.getPublicEventsChannelService();
         eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
@@ -69,8 +69,8 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     }
 
     @Override
-    public EventsModel getChatModel(ChatDomain chatDomain) {
-        return new EventsModel(chatDomain);
+    public EventsModel getChatModel(ChannelDomain channelDomain) {
+        return new EventsModel(channelDomain);
     }
 
     @Override

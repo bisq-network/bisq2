@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
@@ -42,7 +42,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChatDomain.DISCUSSION, NavigationTarget.NONE);
+        super(applicationService, ChannelDomain.DISCUSSION, NavigationTarget.NONE);
 
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
         discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
@@ -69,8 +69,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     }
 
     @Override
-    public DiscussionsModel getChatModel(ChatDomain chatDomain) {
-        return new DiscussionsModel(chatDomain);
+    public DiscussionsModel getChatModel(ChannelDomain channelDomain) {
+        return new DiscussionsModel(channelDomain);
     }
 
     @Override

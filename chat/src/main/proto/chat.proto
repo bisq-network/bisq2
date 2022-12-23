@@ -37,7 +37,7 @@ enum ChannelNotificationType {
   NEVER = 2;
 }
 
-enum ChatDomain {
+enum ChannelDomain {
   TRADE = 0;
   DISCUSSION = 1;
   EVENTS = 2;
@@ -73,7 +73,7 @@ message ChatMessage {
 message Channel {
   string id = 1;
   ChannelNotificationType channelNotificationType = 2;
-  ChatDomain chatDomain = 3;
+  ChannelDomain channelDomain = 3;
   oneof message{
     PrivateTwoPartyChannel privateTwoPartyChannel = 10;
     PublicModeratedChannel publicModeratedChannel = 11;

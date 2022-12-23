@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.ChatMessage;
@@ -68,7 +68,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Subscription notificationSettingSubscription;
     private Subscription searchTextPin;
 
-    public ChatController(DefaultApplicationService applicationService, ChatDomain chatDomain, NavigationTarget host) {
+    public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
@@ -76,8 +76,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, chatDomain);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, chatDomain);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, channelDomain);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
@@ -85,13 +85,13 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createComponents();
-        model = getChatModel(chatDomain);
+        model = getChatModel(channelDomain);
         view = getChatView();
     }
 
     public abstract void createComponents();
 
-    public abstract M getChatModel(ChatDomain chatDomain);
+    public abstract M getChatModel(ChannelDomain channelDomain);
 
     public abstract V getChatView();
 
@@ -207,7 +207,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
-        String domain = "-" + channel.getChatDomain().name().toLowerCase() + "-";
+        String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getId();
         model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
     }

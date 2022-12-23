@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
@@ -74,8 +74,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService, ChatDomain chatDomain) {
-        controller = new Controller(applicationService, chatDomain);
+    public ChatMessagesComponent(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
+        controller = new Controller(applicationService, channelDomain);
     }
 
     public Pane getRoot() {
@@ -136,7 +136,7 @@ public class ChatMessagesComponent {
         private Pin chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
-                           ChatDomain chatDomain) {
+                           ChannelDomain channelDomain) {
             ChatService chatService = applicationService.getChatService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
@@ -164,9 +164,9 @@ public class ChatMessagesComponent {
                     this::mentionUser,
                     this::showChatUserDetails,
                     this::onReply,
-                    chatDomain);
+                    channelDomain);
 
-            model = new Model(chatDomain);
+            model = new Model(channelDomain);
             view = new View(model, this,
                     chatMessagesListView.getRoot(),
                     quotedMessageBlock.getRoot(),
@@ -178,13 +178,13 @@ public class ChatMessagesComponent {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
             model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
-            if (model.getChatDomain() == ChatDomain.TRADE) {
+            if (model.getChannelDomain() == ChannelDomain.TRADE) {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
+            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
+            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
                 selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
+            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             }
 
@@ -253,7 +253,7 @@ public class ChatMessagesComponent {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
             } else if (channel instanceof PublicModeratedChannel) {
-                switch (channel.getChatDomain()) {
+                switch (channel.getChannelDomain()) {
                     case TRADE -> {
                     }
                     case DISCUSSION -> {
@@ -268,7 +268,7 @@ public class ChatMessagesComponent {
                 }
 
             } else if (channel instanceof PrivateTwoPartyChannel) {
-                switch (channel.getChatDomain()) {
+                switch (channel.getChannelDomain()) {
                     case TRADE -> {
                     }
                     case DISCUSSION -> {
@@ -306,16 +306,16 @@ public class ChatMessagesComponent {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatDomain() == ChatDomain.TRADE) {
+            if (model.getChannelDomain() == ChannelDomain.TRADE) {
                 privateTradeChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(tradeChannelSelectionService::selectChannel);
-            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
+            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(discussionChannelSelectionService::selectChannel);
-            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
+            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(eventsChannelSelectionService::selectChannel);
-            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
+            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(supportChannelSelectionService::selectChannel);
             }
@@ -383,13 +383,13 @@ public class ChatMessagesComponent {
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
         private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
-        private final ChatDomain chatDomain;
+        private final ChannelDomain channelDomain;
         @Nullable
         private ChatMessage selectedChatMessage;
         private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
 
-        private Model(ChatDomain chatDomain) {
-            this.chatDomain = chatDomain;
+        private Model(ChannelDomain channelDomain) {
+            this.channelDomain = channelDomain;
         }
     }
 

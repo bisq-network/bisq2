@@ -17,7 +17,7 @@
 
 package bisq.chat.channel.public_moderated;
 
-import bisq.chat.ChatDomain;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
 import bisq.i18n.Res;
@@ -39,17 +39,17 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicModeratedChannel(ChatDomain chatDomain, String channelName) {
-        this(chatDomain,
+    public PublicModeratedChannel(ChannelDomain channelDomain, String channelName) {
+        this(channelDomain,
                 channelName,
-                Res.get(chatDomain.name().toLowerCase() + "." + channelName + ".name"),
-                Res.get(chatDomain.name().toLowerCase() + "." + channelName + ".description"),
+                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
+                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
                 ChannelNotificationType.MENTION);
     }
 
-    private PublicModeratedChannel(ChatDomain chatDomain,
+    private PublicModeratedChannel(ChannelDomain channelDomain,
                                    String channelName,
                                    String displayName,
                                    String description,
@@ -57,7 +57,7 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
                                    List<String> channelModeratorIds,
                                    ChannelNotificationType channelNotificationType
     ) {
-        super(chatDomain, channelName, channelNotificationType);
+        super(channelDomain, channelName, channelNotificationType);
 
         this.displayName = displayName;
         this.description = description;
@@ -80,7 +80,7 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
     public static PublicModeratedChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                    bisq.chat.protobuf.PublicModeratedChannel proto) {
         return new PublicModeratedChannel(
-                ChatDomain.fromProto(baseProto.getChatDomain()),
+                ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),

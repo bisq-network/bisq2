@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatDomain;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
@@ -107,12 +107,12 @@ public class ChatMessagesListView {
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
-                                ChatDomain chatDomain) {
+                                ChannelDomain channelDomain) {
         controller = new Controller(applicationService,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
-                chatDomain);
+                channelDomain);
     }
 
     public Pane getRoot() {
@@ -183,7 +183,7 @@ public class ChatMessagesListView {
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
-                           ChatDomain chatDomain) {
+                           ChannelDomain channelDomain) {
             chatService = applicationService.getChatService();
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
@@ -213,7 +213,7 @@ public class ChatMessagesListView {
 
             model = new Model(chatService,
                     userIdentityService,
-                    chatDomain);
+                    channelDomain);
             view = new View(model, this);
         }
 
@@ -231,7 +231,7 @@ public class ChatMessagesListView {
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            if (model.getChatDomain() == ChatDomain.TRADE) {
+            if (model.getChannelDomain() == ChannelDomain.TRADE) {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (chatMessagesPin != null) {
@@ -254,7 +254,7 @@ public class ChatMessagesListView {
                         model.chatMessages.clear();
                     }
                 });
-            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
+            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicModeratedChannel) {
@@ -275,7 +275,7 @@ public class ChatMessagesListView {
                         model.allowEditing.set(false);
                     }
                 });
-            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
+            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
                 selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicModeratedChannel) {
@@ -296,7 +296,7 @@ public class ChatMessagesListView {
                         model.allowEditing.set(false);
                     }
                 });
-            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
+            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof PublicModeratedChannel) {
@@ -491,14 +491,14 @@ public class ChatMessagesListView {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatDomain() == ChatDomain.TRADE) {
+            if (model.getChannelDomain() == ChannelDomain.TRADE) {
                 PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChatDomain() == ChatDomain.DISCUSSION) {
+            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
-            } else if (model.getChatDomain() == ChatDomain.EVENTS) {
+            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
-            } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
+            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
         }
@@ -542,7 +542,7 @@ public class ChatMessagesListView {
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
-        private final ChatDomain chatDomain;
+        private final ChannelDomain channelDomain;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
@@ -551,10 +551,10 @@ public class ChatMessagesListView {
 
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
-                      ChatDomain chatDomain) {
+                      ChannelDomain channelDomain) {
             this.chatService = chatService;
             this.userIdentityService = userIdentityService;
-            this.chatDomain = chatDomain;
+            this.channelDomain = channelDomain;
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {

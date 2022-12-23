@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.ChatDomain;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.public_moderated.PublicModeratedChannel;
 import bisq.chat.message.ChatMessage;
@@ -40,23 +39,23 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
-    private final ChatDomain chatDomain;
+    private final ChannelDomain channelDomain;
     protected final String channelName;
     @EqualsAndHashCode.Include
     private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(ChatDomain chatDomain, String channelName, ChannelNotificationType channelNotificationType) {
-        this.chatDomain = chatDomain;
+    public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+        this.channelDomain = channelDomain;
         this.channelName = channelName;
-        this.id = chatDomain.name().toLowerCase() + "." + channelName;
+        this.id = channelDomain.name().toLowerCase() + "." + channelName;
         this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
                 .setId(id)
-                .setChatDomain(chatDomain.toProto())
+                .setChannelDomain(channelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
 

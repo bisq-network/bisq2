@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.pub;
 
-import bisq.chat.ChatDomain;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
@@ -53,7 +53,7 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
                                      UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService, ChatDomain.TRADE);
+        super(networkService, userIdentityService, ChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

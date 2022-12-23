@@ -17,7 +17,7 @@
 
 package bisq.chat.channel.public_moderated;
 
-import bisq.chat.ChatDomain;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
@@ -46,9 +46,9 @@ public class PublicModeratedChannelService extends PublicChannelService<PublicMo
     public PublicModeratedChannelService(PersistenceService persistenceService,
                                          NetworkService networkService,
                                          UserIdentityService userIdentityService,
-                                         ChatDomain chatDomain,
+                                         ChannelDomain channelDomain,
                                          List<PublicModeratedChannel> defaultChannels) {
-        super(networkService, userIdentityService, chatDomain);
+        super(networkService, userIdentityService, channelDomain);
 
         this.defaultChannels = defaultChannels;
 

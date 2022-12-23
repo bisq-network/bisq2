@@ -244,7 +244,7 @@ public abstract class ChannelSelection {
 
                 id = channel.getId();
 
-                String domain = "-" + channel.getChatDomain().name().toLowerCase() + "-";
+                String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
                 iconIdSelected = "channels" + domain + channel.getId();
                 iconIdHover = "channels" + domain + channel.getId() + "-white";
                 iconId = "channels" + domain + channel.getId() + "-grey";
