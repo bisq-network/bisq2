@@ -1,6 +1,6 @@
 package bisq.restApi.dto;
 
-import bisq.chat.channel.pub.PublicModeratedChannel;
+import bisq.chat.channel.public_moderated.PublicModeratedChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -19,8 +19,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.pub.PublicModeratedChannel;
-import bisq.chat.channel.pub.PublicModeratedChannelService;
+import bisq.chat.channel.public_moderated.PublicModeratedChannel;
+import bisq.chat.channel.public_moderated.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;

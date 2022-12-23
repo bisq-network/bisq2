@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.pub;
+package bisq.chat.channel.public_moderated;
 
 import bisq.chat.ChatDomain;
 import bisq.chat.channel.ChannelNotificationType;
