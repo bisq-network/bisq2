@@ -20,6 +20,7 @@ package bisq.chat.channel;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
+import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -51,7 +52,10 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
 
         this.defaultChannels = defaultChannels;
 
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+        persistence = persistenceService.getOrCreatePersistence(this,
+                "db",
+                "Public" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
+                persistableStore);
     }
 
 
@@ -90,7 +94,8 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
                                                   Optional<Quotation> quotedMessage,
                                                   PublicChannel publicChannel,
                                                   UserProfile userProfile) {
-        return new PublicChatMessage(publicChannel.getId(),
+        return new PublicChatMessage(publicChannel.getChannelDomain(),
+                publicChannel.getChannelName(),
                 userProfile.getId(),
                 text,
                 quotedMessage,
@@ -102,7 +107,8 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
     protected PublicChatMessage createEditedChatMessage(PublicChatMessage originalChatMessage,
                                                         String editedText,
                                                         UserProfile userProfile) {
-        return new PublicChatMessage(originalChatMessage.getChannelId(),
+        return new PublicChatMessage(originalChatMessage.getChannelDomain(),
+                originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 editedText,
                 originalChatMessage.getQuotation(),

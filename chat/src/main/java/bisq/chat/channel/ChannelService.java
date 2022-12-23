@@ -46,9 +46,19 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         persist();
     }
 
-    public Optional<C> findChannel(String channelId) {
+    public Optional<C> findChannelById(String id) {
         return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
+                .filter(channel -> channel.getId().equals(id))
+                .findAny();
+    }
+
+    public Optional<C> findChannelForMessage(ChatMessage chatMessage) {
+        return findChannel(chatMessage.getChannelDomain(), chatMessage.getChannelName());
+    }
+
+    public Optional<C> findChannel(ChannelDomain channelDomain, String channelName) {
+        return getChannels().stream()
+                .filter(channel -> channel.getChannelDomain().equals(channelDomain) && channel.getChannelName().equals(channelName))
                 .findAny();
     }
 

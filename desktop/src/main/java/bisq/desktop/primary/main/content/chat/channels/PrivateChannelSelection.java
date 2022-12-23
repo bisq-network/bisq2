@@ -397,7 +397,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), removeIcon);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
-                                label.setMaxWidth(getWidth() - 75);
+                                label.setMaxWidth(getWidth() - 95);
                             }
                         });
                     }

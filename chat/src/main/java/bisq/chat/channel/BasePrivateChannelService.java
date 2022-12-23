@@ -172,8 +172,12 @@ public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage
                                                      MessageType messageType);
 
     protected void processMessage(M message) {
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
-            findChannel(message.getChannelId())
+        if (message.getChannelDomain() != channelDomain) {
+            return;
+        }
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorId());
+        if (!isMyMessage) {
+            findChannelForMessage(message)
                     .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
                     .ifPresent(channel -> addMessage(message, channel));
         }

@@ -17,6 +17,7 @@
 
 package bisq.chat.message;
 
+import bisq.chat.channel.ChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
@@ -38,7 +39,8 @@ public abstract class BasePrivateChatMessage extends ChatMessage implements Mail
     protected final UserProfile sender;
 
     protected BasePrivateChatMessage(String messageId,
-                                     String channelId,
+                                     ChannelDomain channelDomain,
+                                     String channelName,
                                      UserProfile sender,
                                      String receiversId,
                                      String text,
@@ -48,7 +50,8 @@ public abstract class BasePrivateChatMessage extends ChatMessage implements Mail
                                      MessageType messageType,
                                      MetaData metaData) {
         super(messageId,
-                channelId,
+                channelDomain,
+                channelName,
                 sender.getId(),
                 Optional.of(text),
                 quotedMessage,

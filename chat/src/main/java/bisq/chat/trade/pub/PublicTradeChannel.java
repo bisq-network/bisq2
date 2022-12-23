@@ -80,7 +80,7 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
         return market.getMarketCodes();
     }
 
-    private static String getChannelName(Market market) {
+    public static String getChannelName(Market market) {
         return market.toString();
     }
 

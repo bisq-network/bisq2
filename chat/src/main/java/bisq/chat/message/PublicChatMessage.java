@@ -17,6 +17,7 @@
 
 package bisq.chat.message;
 
+import bisq.chat.channel.ChannelDomain;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -29,14 +30,16 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PublicChatMessage extends BasePublicChatMessage {
-    public PublicChatMessage(String channelId,
+    public PublicChatMessage(ChannelDomain channelDomain,
+                             String channelName,
                              String authorId,
                              String text,
                              Optional<Quotation> quotedMessage,
                              long date,
                              boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                channelId,
+                channelDomain,
+                channelName,
                 authorId,
                 Optional.of(text),
                 quotedMessage,
@@ -47,7 +50,8 @@ public final class PublicChatMessage extends BasePublicChatMessage {
     }
 
     private PublicChatMessage(String messageId,
-                              String channelId,
+                              ChannelDomain channelDomain,
+                              String channelName,
                               String authorId,
                               Optional<String> text,
                               Optional<Quotation> quotedMessage,
@@ -56,7 +60,8 @@ public final class PublicChatMessage extends BasePublicChatMessage {
                               MessageType messageType,
                               MetaData metaData) {
         super(messageId,
-                channelId,
+                channelDomain,
+                channelName,
                 authorId,
                 text,
                 quotedMessage,
@@ -76,7 +81,8 @@ public final class PublicChatMessage extends BasePublicChatMessage {
                 Optional.empty();
         return new PublicChatMessage(
                 baseProto.getMessageId(),
-                baseProto.getChannelId(),
+                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 Optional.of(baseProto.getText()),
                 quotedMessage,

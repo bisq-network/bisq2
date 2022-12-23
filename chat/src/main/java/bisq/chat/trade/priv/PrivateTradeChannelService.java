@@ -82,7 +82,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 sender,
                 receiversId,
                 text,
@@ -100,9 +100,9 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
     }
 
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
-        String channelId = PrivateTradeChannel.createChannelName(new Pair<>(trader1.getId(), trader2.getId()));
+        String channelName = PrivateTradeChannel.createChannelName(new Pair<>(trader1.getId(), trader2.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
+                .filter(channel -> channel.getChannelName().equals(channelName))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
@@ -115,9 +115,9 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
     }
 
     public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
-        String channelId = PrivateTradeChannel.createChannelName(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
+        String channelName = PrivateTradeChannel.createChannelName(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
+                .filter(channel -> channel.getChannelName().equals(channelName))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
@@ -149,7 +149,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
     protected void processMessage(PrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
-                    .flatMap(myUserIdentity -> findChannel(message.getChannelId())
+                    .flatMap(myUserIdentity -> findChannelForMessage(message)
                             .or(() -> {
                                 if (message.getMessageType() == MessageType.LEAVE) {
                                     return Optional.empty();
@@ -191,7 +191,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         PrivateTradeChatMessage message1 = new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 senderUserProfile,
                 receiver1.getId(),
                 text,
@@ -207,7 +207,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
 
         PrivateTradeChatMessage message2 = new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 senderUserProfile,
                 receiver2.getId(),
                 text,

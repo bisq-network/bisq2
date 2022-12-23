@@ -107,12 +107,11 @@ public abstract class BasePublicChannelService<M extends BasePublicChatMessage, 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void processAddedMessage(M message) {
-        findChannel(message.getChannelId())
-                .ifPresent(channel -> addMessage(message, channel));
+        findChannelForMessage(message).ifPresent(channel -> addMessage(message, channel));
     }
 
     protected void processRemovedMessage(M message) {
-        findChannel(message.getChannelId())
+        findChannelForMessage(message)
                 .ifPresent(channel -> removeMessage(message, channel));
     }
 

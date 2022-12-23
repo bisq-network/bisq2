@@ -92,9 +92,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     abstract public void removeChatMessages(Collection<T> removeMessages);
 
-    public String getDisplayString() {
-        return id;
-    }
+    abstract public String getDisplayString();
 
     public Set<String> getMembers() {
         Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();

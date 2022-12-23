@@ -53,14 +53,15 @@ message Quotation {
 
 message ChatMessage {
   string messageId = 1;
-  string channelId = 2;
-  optional string text = 3;
-  string authorId = 4;
-  optional Quotation quotation = 5;
-  uint64 date = 6;
-  bool wasEdited = 7;
-  MessageType messageType = 8;
-  network.MetaData metaData = 9;
+  ChannelDomain channelDomain = 2;
+  string channelName = 3;
+  optional string text = 4;
+  string authorId = 5;
+  optional Quotation quotation = 6;
+  uint64 date = 7;
+  bool wasEdited = 8;
+  MessageType messageType = 9;
+  network.MetaData metaData = 10;
   oneof message {
     PrivateChatMessage privateChatMessage = 20;
     PublicChatMessage publicChatMessage = 21;
@@ -160,7 +161,7 @@ message PrivateTradeChannelStore {
 
 message PublicTradeChannelStore {
   repeated Channel channels = 1;
-  repeated string visibleChannelIds = 2;
+  repeated string visibleChannelNames = 2;
 }
 
 

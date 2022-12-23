@@ -73,7 +73,8 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
                                                              boolean wasEdited,
                                                              MessageType messageType) {
         return new PrivateChatMessage(messageId,
-                channel.getId(),
+                channel.getChannelDomain(),
+                channel.getChannelName(),
                 sender,
                 receiversId,
                 text,

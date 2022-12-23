@@ -411,11 +411,11 @@ public class ChatMessagesListView {
 
                 //todo services dont do any domain specific here
                 // -> networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
-                publicDiscussionChannelService.findChannel(chatMessage.getChannelId())
+                publicDiscussionChannelService.findChannelForMessage(chatMessage)
                         .ifPresent(c -> publicDiscussionChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
-                publicEventsChannelService.findChannel(chatMessage.getChannelId())
+                publicEventsChannelService.findChannelForMessage(chatMessage)
                         .ifPresent(c -> publicEventsChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
-                publicSupportChannelService.findChannel(chatMessage.getChannelId())
+                publicSupportChannelService.findChannelForMessage(chatMessage)
                         .ifPresent(c -> publicSupportChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
             }
         }

@@ -17,6 +17,7 @@
 
 package bisq.chat.message;
 
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.proto.Proto;
@@ -43,7 +44,8 @@ public abstract class ChatMessage implements Proto {
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
     protected final String messageId;
-    protected final String channelId;
+    private final ChannelDomain channelDomain;
+    protected final String channelName;
     protected final Optional<String> optionalText;
     protected String authorId;
     protected final Optional<Quotation> quotation;
@@ -53,7 +55,8 @@ public abstract class ChatMessage implements Proto {
     protected final MetaData metaData;
 
     protected ChatMessage(String messageId,
-                          String channelId,
+                          ChannelDomain channelDomain,
+                          String channelName,
                           String authorId,
                           Optional<String> text,
                           Optional<Quotation> quotation,
@@ -62,7 +65,8 @@ public abstract class ChatMessage implements Proto {
                           MessageType messageType,
                           MetaData metaData) {
         this.messageId = messageId;
-        this.channelId = channelId;
+        this.channelDomain = channelDomain;
+        this.channelName = channelName;
         this.authorId = authorId;
         this.optionalText = text;
         this.quotation = quotation;
@@ -79,7 +83,8 @@ public abstract class ChatMessage implements Proto {
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setMessageId(messageId)
-                .setChannelId(channelId)
+                .setChannelDomain(channelDomain.toProto())
+                .setChannelName(channelName)
                 .setAuthorId(authorId)
                 .setDate(date)
                 .setWasEdited(wasEdited)

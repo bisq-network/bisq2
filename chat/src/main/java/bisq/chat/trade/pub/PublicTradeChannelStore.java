@@ -33,21 +33,21 @@ import java.util.stream.Collectors;
 @Getter
 public class PublicTradeChannelStore implements PersistableStore<PublicTradeChannelStore> {
     private final ObservableArray<PublicTradeChannel> channels = new ObservableArray<>();
-    private final ObservableSet<String> visibleChannelIds = new ObservableSet<>();
+    private final ObservableSet<String> visibleChannelNames = new ObservableSet<>();
 
     public PublicTradeChannelStore() {
     }
 
     private PublicTradeChannelStore(List<PublicTradeChannel> privateTradeChannels,
-                                    Set<String> visibleChannelIds) {
-        setAll(privateTradeChannels, visibleChannelIds);
+                                    Set<String> visibleChannelNames) {
+        setAll(privateTradeChannels, visibleChannelNames);
     }
 
     @Override
     public bisq.chat.protobuf.PublicTradeChannelStore toProto() {
         bisq.chat.protobuf.PublicTradeChannelStore.Builder builder = bisq.chat.protobuf.PublicTradeChannelStore.newBuilder()
                 .addAllChannels(channels.stream().map(PublicTradeChannel::toProto).collect(Collectors.toList()))
-                .addAllVisibleChannelIds(visibleChannelIds);
+                .addAllVisibleChannelNames(visibleChannelNames);
         return builder.build();
     }
 
@@ -55,7 +55,7 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
         List<PublicTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicTradeChannel) PublicTradeChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PublicTradeChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelIdsList()));
+        return new PublicTradeChannelStore(privateTradeChannels, new HashSet<>(proto.getVisibleChannelNamesList()));
     }
 
     @Override
@@ -71,18 +71,18 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
 
     @Override
     public void applyPersisted(PublicTradeChannelStore chatStore) {
-        setAll(chatStore.getChannels(), chatStore.getVisibleChannelIds());
+        setAll(chatStore.getChannels(), chatStore.getVisibleChannelNames());
     }
 
     @Override
     public PublicTradeChannelStore getClone() {
-        return new PublicTradeChannelStore(channels, visibleChannelIds);
+        return new PublicTradeChannelStore(channels, visibleChannelNames);
     }
 
     public void setAll(List<PublicTradeChannel> privateTradeChannels, Set<String> visibleChannelIds) {
         this.channels.clear();
         this.channels.addAll(privateTradeChannels);
-        this.visibleChannelIds.clear();
-        this.visibleChannelIds.addAll(visibleChannelIds);
+        this.visibleChannelNames.clear();
+        this.visibleChannelNames.addAll(visibleChannelIds);
     }
 }

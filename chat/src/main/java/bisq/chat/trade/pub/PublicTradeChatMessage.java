@@ -17,6 +17,7 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
@@ -37,7 +38,7 @@ import java.util.Optional;
 public final class PublicTradeChatMessage extends BasePublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
-    public PublicTradeChatMessage(String channelId,
+    public PublicTradeChatMessage(String channelName,
                                   String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
@@ -45,7 +46,8 @@ public final class PublicTradeChatMessage extends BasePublicChatMessage {
                                   long date,
                                   boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                channelId,
+                ChannelDomain.TRADE,
+                channelName,
                 authorId,
                 tradeChatOffer,
                 text,
@@ -57,7 +59,8 @@ public final class PublicTradeChatMessage extends BasePublicChatMessage {
     }
 
     private PublicTradeChatMessage(String messageId,
-                                   String channelId,
+                                   ChannelDomain channelDomain,
+                                   String channelName,
                                    String authorId,
                                    Optional<TradeChatOffer> tradeChatOffer,
                                    Optional<String> text,
@@ -67,7 +70,8 @@ public final class PublicTradeChatMessage extends BasePublicChatMessage {
                                    MessageType messageType,
                                    MetaData metaData) {
         super(messageId,
-                channelId,
+                channelDomain,
+                channelName,
                 authorId,
                 text,
                 quotedMessage,
@@ -96,7 +100,8 @@ public final class PublicTradeChatMessage extends BasePublicChatMessage {
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getMessageId(),
-                baseProto.getChannelId(),
+                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 tradeChatOffer,
                 text,

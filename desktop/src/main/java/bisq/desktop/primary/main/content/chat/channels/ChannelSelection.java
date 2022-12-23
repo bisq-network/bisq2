@@ -3,6 +3,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.chat.ChatService;
 import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
@@ -224,7 +225,9 @@ public abstract class ChannelSelection {
         @Getter
         static class ChannelItem {
             @EqualsAndHashCode.Include
-            private final String id;
+            private final String channelName;
+            @EqualsAndHashCode.Include
+            private final ChannelDomain channelDomain;
             private final Channel<?> channel;
             private String displayString;
             private final boolean hasMultipleProfiles;
@@ -240,14 +243,14 @@ public abstract class ChannelSelection {
 
             public ChannelItem(Channel<?> channel, @Nullable UserIdentityService userIdentityService) {
                 this.channel = channel;
+                channelDomain = channel.getChannelDomain();
+                channelName = channel.getChannelName();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
-                id = channel.getId();
-
-                String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
-                iconIdSelected = "channels" + domain + channel.getChannelName();
-                iconIdHover = "channels" + domain + channel.getChannelName() + "-white";
-                iconId = "channels" + domain + channel.getChannelName() + "-grey";
+                String domain = "-" + channelDomain.name().toLowerCase() + "-";
+                iconIdSelected = "channels" + domain + channelName;
+                iconIdHover = "channels" + domain + channelName + "-white";
+                iconId = "channels" + domain + channelName + "-grey";
 
                 if (channel instanceof BasePrivateChannel) {
                     BasePrivateChannel<?> privateChannel = (BasePrivateChannel<?>) channel;

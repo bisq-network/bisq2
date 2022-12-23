@@ -59,27 +59,27 @@ public class PublicTradeChannelService extends BasePublicChannelService<PublicTr
 
 
     public void showChannel(PublicTradeChannel channel) {
-        getVisibleChannelIds().add(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
+        getVisibleChannelNames().add(channel.getChannelName());
+        numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
     public void hidePublicTradeChannel(PublicTradeChannel channel) {
-        getVisibleChannelIds().remove(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
+        getVisibleChannelNames().remove(channel.getChannelName());
+        numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
     public boolean isVisible(PublicTradeChannel channel) {
-        return getVisibleChannelIds().contains(channel.getId());
+        return getVisibleChannelNames().contains(channel.getChannelName());
     }
 
-    public ObservableSet<String> getVisibleChannelIds() {
-        return persistableStore.getVisibleChannelIds();
+    public ObservableSet<String> getVisibleChannelNames() {
+        return persistableStore.getVisibleChannelNames();
     }
 
     public Set<PublicTradeChannel> getVisibleChannels() {
-        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
+        return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
     }
 
 
@@ -118,7 +118,7 @@ public class PublicTradeChannelService extends BasePublicChannelService<PublicTr
                                                        Optional<Quotation> quotedMessage,
                                                        PublicTradeChannel publicChannel,
                                                        UserProfile userProfile) {
-        return new PublicTradeChatMessage(publicChannel.getId(),
+        return new PublicTradeChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -131,7 +131,7 @@ public class PublicTradeChannelService extends BasePublicChannelService<PublicTr
     protected PublicTradeChatMessage createEditedChatMessage(PublicTradeChatMessage originalChatMessage,
                                                              String editedText,
                                                              UserProfile userProfile) {
-        return new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+        return new PublicTradeChatMessage(originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),
