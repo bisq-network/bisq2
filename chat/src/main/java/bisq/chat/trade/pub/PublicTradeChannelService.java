@@ -17,6 +17,7 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
@@ -52,7 +53,7 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
                                      UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+        super(networkService, userIdentityService, ChatDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -113,10 +114,10 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     }
 
     @Override
-    protected PublicTradeChatMessage createNewChatMessage(String text,
-                                                          Optional<Quotation> quotedMessage,
-                                                          PublicTradeChannel publicChannel,
-                                                          UserProfile userProfile) {
+    protected PublicTradeChatMessage createChatMessage(String text,
+                                                       Optional<Quotation> quotedMessage,
+                                                       PublicTradeChannel publicChannel,
+                                                       UserProfile userProfile) {
         return new PublicTradeChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
@@ -127,9 +128,9 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     }
 
     @Override
-    protected PublicTradeChatMessage createNewChatMessage(PublicTradeChatMessage originalChatMessage,
-                                                          String editedText,
-                                                          UserProfile userProfile) {
+    protected PublicTradeChatMessage createEditedChatMessage(PublicTradeChatMessage originalChatMessage,
+                                                             String editedText,
+                                                             UserProfile userProfile) {
         return new PublicTradeChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 Optional.empty(),

@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
@@ -36,9 +37,8 @@ import java.util.concurrent.CompletableFuture;
 public abstract class PublicChannelService<M extends PublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements DataService.Listener {
 
-    public PublicChannelService(NetworkService networkService,
-                                UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+    public PublicChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChatDomain chatDomain) {
+        super(networkService, userIdentityService, chatDomain);
     }
 
 
@@ -72,7 +72,7 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
                                                                                  Optional<Quotation> quotedMessage,
                                                                                  C publicChannel,
                                                                                  UserIdentity userIdentity) {
-        M chatMessage = createNewChatMessage(text, quotedMessage, publicChannel, userIdentity.getUserProfile());
+        M chatMessage = createChatMessage(text, quotedMessage, publicChannel, userIdentity.getUserProfile());
         return publishChatMessage(chatMessage, userIdentity);
     }
 
@@ -87,7 +87,7 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
         NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
                 .thenCompose(result -> {
-                    M chatMessage = createNewChatMessage(originalChatMessage, editedText, userIdentity.getUserProfile());
+                    M chatMessage = createEditedChatMessage(originalChatMessage, editedText, userIdentity.getUserProfile());
                     return publishChatMessage(chatMessage, userIdentity);
                 });
     }
@@ -124,12 +124,12 @@ public abstract class PublicChannelService<M extends PublicChatMessage, C extend
         persist();
     }
 
-    protected abstract M createNewChatMessage(String text,
-                                              Optional<Quotation> quotedMessage,
-                                              C publicChannel,
-                                              UserProfile userProfile);
+    protected abstract M createChatMessage(String text,
+                                           Optional<Quotation> quotedMessage,
+                                           C publicChannel,
+                                           UserProfile userProfile);
 
-    protected abstract M createNewChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
+    protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
 
     protected CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(UserIdentity userIdentity,
                                                                                     UserProfile userProfile,

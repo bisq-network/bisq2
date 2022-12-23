@@ -24,9 +24,9 @@ import bisq.chat.channel.Channel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
+import bisq.chat.channel.pub.PublicModeratedChannel;
+import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.events.pub.PublicEventsChannelService;
@@ -124,7 +124,7 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-        private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final PublicModeratedChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
@@ -256,8 +256,8 @@ public class ChatMessagesComponent {
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
-            } else if (channel instanceof PublicDiscussionChannel) {
-                publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicDiscussionChannel) channel, userIdentity);
+            } else if (channel instanceof PublicModeratedChannel) {
+                publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
             } else if (channel instanceof PrivateTwoPartyChannel) {
                 switch (channel.getChatDomain()) {
                     case TRADE -> {

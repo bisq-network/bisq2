@@ -17,6 +17,7 @@
 
 package bisq.chat.support.pub;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
@@ -43,7 +44,7 @@ public class PublicSupportChannelService extends PublicChannelService<PublicSupp
     public PublicSupportChannelService(PersistenceService persistenceService,
                                        NetworkService networkService,
                                        UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+        super(networkService, userIdentityService, ChatDomain.SUPPORT);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -80,10 +81,10 @@ public class PublicSupportChannelService extends PublicChannelService<PublicSupp
     }
 
     @Override
-    protected PublicSupportChatMessage createNewChatMessage(String text,
-                                                            Optional<Quotation> quotedMessage,
-                                                            PublicSupportChannel publicChannel,
-                                                            UserProfile userProfile) {
+    protected PublicSupportChatMessage createChatMessage(String text,
+                                                         Optional<Quotation> quotedMessage,
+                                                         PublicSupportChannel publicChannel,
+                                                         UserProfile userProfile) {
         return new PublicSupportChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 text,
@@ -93,9 +94,9 @@ public class PublicSupportChannelService extends PublicChannelService<PublicSupp
     }
 
     @Override
-    protected PublicSupportChatMessage createNewChatMessage(PublicSupportChatMessage originalChatMessage,
-                                                            String editedText,
-                                                            UserProfile userProfile) {
+    protected PublicSupportChatMessage createEditedChatMessage(PublicSupportChatMessage originalChatMessage,
+                                                               String editedText,
+                                                               UserProfile userProfile) {
         return new PublicSupportChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 editedText,

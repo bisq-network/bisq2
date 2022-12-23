@@ -3,7 +3,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
@@ -250,7 +250,7 @@ public abstract class ChannelSelection {
                 String type = null;
                 if (channel instanceof PublicEventsChannel) {
                     type = "-events-";
-                } else if (channel instanceof PublicDiscussionChannel) {
+                } else if (channel instanceof PublicModeratedChannel) {
                     type = "-discussion-";
                 } else if (channel instanceof PublicSupportChannel) {
                     type = "-support-";

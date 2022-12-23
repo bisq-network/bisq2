@@ -18,7 +18,7 @@
 package bisq.chat.message;
 
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
-import bisq.chat.discuss.pub.PublicDiscussionChatMessage;
+import bisq.chat.channel.pub.PublicModeratedChatMessage;
 import bisq.chat.events.pub.PublicEventsChatMessage;
 import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
@@ -108,7 +108,7 @@ public abstract class ChatMessage implements Proto {
             }
 
             case PUBLICDISCUSSIONCHATMESSAGE: {
-                return PublicDiscussionChatMessage.fromProto(proto);
+                return PublicModeratedChatMessage.fromProto(proto);
             }
 
 
@@ -136,7 +136,7 @@ public abstract class ChatMessage implements Proto {
                         return PublicTradeChatMessage.fromProto(proto);
                     }
                     case PUBLICDISCUSSIONCHATMESSAGE: {
-                        return PublicDiscussionChatMessage.fromProto(proto);
+                        return PublicModeratedChatMessage.fromProto(proto);
                     }
                     case PUBLICEVENTSCHATMESSAGE: {
                         return PublicEventsChatMessage.fromProto(proto);

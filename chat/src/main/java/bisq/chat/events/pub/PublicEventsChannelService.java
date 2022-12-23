@@ -17,6 +17,7 @@
 
 package bisq.chat.events.pub;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
@@ -43,7 +44,7 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
     public PublicEventsChannelService(PersistenceService persistenceService,
                                       NetworkService networkService,
                                       UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+        super(networkService, userIdentityService, ChatDomain.EVENTS);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -80,10 +81,10 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
     }
 
     @Override
-    protected PublicEventsChatMessage createNewChatMessage(String text,
-                                                           Optional<Quotation> quotedMessage,
-                                                           PublicEventsChannel publicChannel,
-                                                           UserProfile userProfile) {
+    protected PublicEventsChatMessage createChatMessage(String text,
+                                                        Optional<Quotation> quotedMessage,
+                                                        PublicEventsChannel publicChannel,
+                                                        UserProfile userProfile) {
         return new PublicEventsChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 text,
@@ -93,9 +94,9 @@ public class PublicEventsChannelService extends PublicChannelService<PublicEvent
     }
 
     @Override
-    protected PublicEventsChatMessage createNewChatMessage(PublicEventsChatMessage originalChatMessage,
-                                                           String editedText,
-                                                           UserProfile userProfile) {
+    protected PublicEventsChatMessage createEditedChatMessage(PublicEventsChatMessage originalChatMessage,
+                                                              String editedText,
+                                                              UserProfile userProfile) {
         return new PublicEventsChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 editedText,

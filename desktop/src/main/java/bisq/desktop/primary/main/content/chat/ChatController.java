@@ -23,7 +23,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.pub.PublicSupportChannel;
@@ -213,7 +213,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         String type = null;
         if (channel instanceof PublicEventsChannel) {
             type = "-events-";
-        } else if (channel instanceof PublicDiscussionChannel) {
+        } else if (channel instanceof PublicModeratedChannel) {
             type = "-discussion-";
         } else if (channel instanceof PublicSupportChannel) {
             type = "-support-";

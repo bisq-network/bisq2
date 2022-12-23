@@ -44,15 +44,13 @@ import java.util.stream.Collectors;
 public abstract class PrivateChannelService<M extends PrivateChatMessage, C extends PrivateChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
-    protected final ChatDomain chatDomain;
 
     public PrivateChannelService(NetworkService networkService,
                                  UserIdentityService userIdentityService,
                                  ProofOfWorkService proofOfWorkService,
                                  ChatDomain chatDomain) {
-        super(networkService, userIdentityService);
+        super(networkService, userIdentityService, chatDomain);
         this.proofOfWorkService = proofOfWorkService;
-        this.chatDomain = chatDomain;
     }
 
 

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss.pub;
+package bisq.chat.channel.pub;
 
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
@@ -32,13 +32,13 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicDiscussionChatMessage extends PublicChatMessage {
-    public PublicDiscussionChatMessage(String channelId,
-                                       String authorId,
-                                       String text,
-                                       Optional<Quotation> quotedMessage,
-                                       long date,
-                                       boolean wasEdited) {
+public final class PublicModeratedChatMessage extends PublicChatMessage {
+    public PublicModeratedChatMessage(String channelId,
+                                      String authorId,
+                                      String text,
+                                      Optional<Quotation> quotedMessage,
+                                      long date,
+                                      boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 channelId,
                 authorId,
@@ -47,18 +47,18 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
                 date,
                 wasEdited,
                 MessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, PublicDiscussionChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PublicModeratedChatMessage.class.getSimpleName()));
     }
 
-    private PublicDiscussionChatMessage(String messageId,
-                                        String channelId,
-                                        String authorId,
-                                        Optional<String> text,
-                                        Optional<Quotation> quotedMessage,
-                                        long date,
-                                        boolean wasEdited,
-                                        MessageType messageType,
-                                        MetaData metaData) {
+    private PublicModeratedChatMessage(String messageId,
+                                       String channelId,
+                                       String authorId,
+                                       Optional<String> text,
+                                       Optional<Quotation> quotedMessage,
+                                       long date,
+                                       boolean wasEdited,
+                                       MessageType messageType,
+                                       MetaData metaData) {
         super(messageId,
                 channelId,
                 authorId,
@@ -74,11 +74,11 @@ public final class PublicDiscussionChatMessage extends PublicChatMessage {
         return getChatMessageBuilder().setPublicDiscussionChatMessage(bisq.chat.protobuf.PublicDiscussionChatMessage.newBuilder()).build();
     }
 
-    public static PublicDiscussionChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static PublicModeratedChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        return new PublicDiscussionChatMessage(
+        return new PublicModeratedChatMessage(
                 baseProto.getMessageId(),
                 baseProto.getChannelId(),
                 baseProto.getAuthorId(),

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss.pub;
+package bisq.chat.channel.pub;
 
 import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
@@ -28,28 +28,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PublicDiscussionChannelStore implements PersistableStore<PublicDiscussionChannelStore> {
-    private final ObservableArray<PublicDiscussionChannel> channels = new ObservableArray<>();
+public class PublicModeratedChannelStore implements PersistableStore<PublicModeratedChannelStore> {
+    private final ObservableArray<PublicModeratedChannel> channels = new ObservableArray<>();
 
-    public PublicDiscussionChannelStore() {
+    public PublicModeratedChannelStore() {
     }
 
-    private PublicDiscussionChannelStore(List<PublicDiscussionChannel> privateDiscussionChannels) {
+    private PublicModeratedChannelStore(List<PublicModeratedChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PublicDiscussionChannelStore toProto() {
         bisq.chat.protobuf.PublicDiscussionChannelStore.Builder builder = bisq.chat.protobuf.PublicDiscussionChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PublicDiscussionChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(PublicModeratedChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PublicDiscussionChannelStore fromProto(bisq.chat.protobuf.PublicDiscussionChannelStore proto) {
-        List<PublicDiscussionChannel> privateDiscussionChannels = proto.getChannelsList().stream()
-                .map(e -> (PublicDiscussionChannel) PublicDiscussionChannel.fromProto(e))
+    public static PublicModeratedChannelStore fromProto(bisq.chat.protobuf.PublicDiscussionChannelStore proto) {
+        List<PublicModeratedChannel> privateDiscussionChannels = proto.getChannelsList().stream()
+                .map(e -> (PublicModeratedChannel) PublicModeratedChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PublicDiscussionChannelStore(privateDiscussionChannels);
+        return new PublicModeratedChannelStore(privateDiscussionChannels);
     }
 
     @Override
@@ -64,16 +64,16 @@ public class PublicDiscussionChannelStore implements PersistableStore<PublicDisc
     }
 
     @Override
-    public void applyPersisted(PublicDiscussionChannelStore chatStore) {
+    public void applyPersisted(PublicModeratedChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PublicDiscussionChannelStore getClone() {
-        return new PublicDiscussionChannelStore(channels);
+    public PublicModeratedChannelStore getClone() {
+        return new PublicModeratedChannelStore(channels);
     }
 
-    public void setAll(List<PublicDiscussionChannel> privateDiscussionChannels) {
+    public void setAll(List<PublicModeratedChannel> privateDiscussionChannels) {
         this.channels.clear();
         this.channels.addAll(privateDiscussionChannels);
     }

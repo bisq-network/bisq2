@@ -19,7 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.ChatDomain;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
@@ -77,7 +77,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
 
             case PUBLICDISCUSSIONCHANNEL: {
-                return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());
+                return PublicModeratedChannel.fromProto(proto, proto.getPublicDiscussionChannel());
             }
 
             case PUBLICEVENTSCHANNEL: {

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss.pub;
+package bisq.chat.channel.pub;
 
 import bisq.chat.ChatDomain;
 import bisq.chat.channel.ChannelNotificationType;
@@ -33,41 +33,45 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussionChatMessage> {
+public final class PublicModeratedChannel extends PublicChannel<PublicModeratedChatMessage> {
     private final String channelName;
     private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicDiscussionChannel(String id) {
+    public PublicModeratedChannel(String id, ChatDomain chatDomain) {
         this(id,
-                Res.get("discussion." + id + ".name"),
-                Res.get("discussion." + id + ".description"),
+                Res.get(chatDomain.name().toLowerCase() + "." + id + ".name"),
+                Res.get(chatDomain.name().toLowerCase() + "." + id + ".description"),
                 "",
                 new ArrayList<>(),
-                ChannelNotificationType.MENTION);
+                ChannelNotificationType.MENTION,
+                chatDomain);
     }
 
-    public PublicDiscussionChannel(String id,
-                                   String channelName,
-                                   String description,
-                                   String channelAdminId,
-                                   List<String> channelModeratorIds) {
+    public PublicModeratedChannel(String id,
+                                  String channelName,
+                                  String description,
+                                  String channelAdminId,
+                                  List<String> channelModeratorIds,
+                                  ChatDomain chatDomain) {
         this(id,
                 channelName,
                 description,
                 channelAdminId,
                 channelModeratorIds,
-                ChannelNotificationType.MENTION);
+                ChannelNotificationType.MENTION,
+                chatDomain);
     }
 
-    private PublicDiscussionChannel(String id,
-                                    String channelName,
-                                    String description,
-                                    String channelAdminId,
-                                    List<String> channelModeratorIds,
-                                    ChannelNotificationType channelNotificationType) {
-        super(id, channelNotificationType, ChatDomain.DISCUSSION);
+    private PublicModeratedChannel(String id,
+                                   String channelName,
+                                   String description,
+                                   String channelAdminId,
+                                   List<String> channelModeratorIds,
+                                   ChannelNotificationType channelNotificationType,
+                                   ChatDomain chatDomain) {
+        super(id, channelNotificationType, chatDomain);
 
         this.channelName = channelName;
         this.description = description;
@@ -87,29 +91,30 @@ public final class PublicDiscussionChannel extends PublicChannel<PublicDiscussio
                 .build();
     }
 
-    public static PublicDiscussionChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                    bisq.chat.protobuf.PublicDiscussionChannel proto) {
-        return new PublicDiscussionChannel(
+    public static PublicModeratedChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                   bisq.chat.protobuf.PublicDiscussionChannel proto) {
+        return new PublicModeratedChannel(
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
+                ChatDomain.fromProto(baseProto.getChatDomain()));
     }
 
     @Override
-    public void addChatMessage(PublicDiscussionChatMessage chatMessage) {
+    public void addChatMessage(PublicModeratedChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PublicDiscussionChatMessage chatMessage) {
+    public void removeChatMessage(PublicModeratedChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicDiscussionChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PublicModeratedChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 

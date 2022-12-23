@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.ObservableArray;
@@ -33,12 +34,12 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
+    protected final ChatDomain chatDomain;
 
-    public ChannelService(NetworkService networkService,
-                          UserIdentityService userIdentityService) {
-
+    public ChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChatDomain chatDomain) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
+        this.chatDomain = chatDomain;
     }
 
     public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {

@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss.pub;
+package bisq.chat.channel.pub;
 
+import bisq.chat.ChatDomain;
 import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
@@ -31,19 +32,25 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class PublicDiscussionChannelService extends PublicChannelService<PublicDiscussionChatMessage, PublicDiscussionChannel, PublicDiscussionChannelStore> {
+public class PublicModeratedChannelService extends PublicChannelService<PublicModeratedChatMessage, PublicModeratedChannel, PublicModeratedChannelStore> {
     @Getter
-    private final PublicDiscussionChannelStore persistableStore = new PublicDiscussionChannelStore();
+    private final PublicModeratedChannelStore persistableStore = new PublicModeratedChannelStore();
     @Getter
-    private final Persistence<PublicDiscussionChannelStore> persistence;
+    private final Persistence<PublicModeratedChannelStore> persistence;
+    private final List<PublicModeratedChannel> defaultChannels;
 
-    public PublicDiscussionChannelService(PersistenceService persistenceService,
-                                          NetworkService networkService,
-                                          UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+    public PublicModeratedChannelService(PersistenceService persistenceService,
+                                         NetworkService networkService,
+                                         UserIdentityService userIdentityService,
+                                         ChatDomain chatDomain,
+                                         List<PublicModeratedChannel> defaultChannels) {
+        super(networkService, userIdentityService, chatDomain);
+
+        this.defaultChannels = defaultChannels;
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -56,16 +63,16 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicDiscussionChatMessage) {
-            processAddedMessage((PublicDiscussionChatMessage) distributedData);
+        if (distributedData instanceof PublicModeratedChatMessage) {
+            processAddedMessage((PublicModeratedChatMessage) distributedData);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicDiscussionChatMessage) {
-            processRemovedMessage((PublicDiscussionChatMessage) distributedData);
+        if (distributedData instanceof PublicModeratedChatMessage) {
+            processRemovedMessage((PublicModeratedChatMessage) distributedData);
         }
     }
 
@@ -75,16 +82,16 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<PublicDiscussionChannel> getChannels() {
+    public ObservableArray<PublicModeratedChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
     @Override
-    protected PublicDiscussionChatMessage createNewChatMessage(String text,
-                                                               Optional<Quotation> quotedMessage,
-                                                               PublicDiscussionChannel publicChannel,
-                                                               UserProfile userProfile) {
-        return new PublicDiscussionChatMessage(publicChannel.getId(),
+    protected PublicModeratedChatMessage createChatMessage(String text,
+                                                           Optional<Quotation> quotedMessage,
+                                                           PublicModeratedChannel publicChannel,
+                                                           UserProfile userProfile) {
+        return new PublicModeratedChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 text,
                 quotedMessage,
@@ -93,10 +100,10 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
     }
 
     @Override
-    protected PublicDiscussionChatMessage createNewChatMessage(PublicDiscussionChatMessage originalChatMessage,
-                                                               String editedText,
-                                                               UserProfile userProfile) {
-        return new PublicDiscussionChatMessage(originalChatMessage.getChannelId(),
+    protected PublicModeratedChatMessage createEditedChatMessage(PublicModeratedChatMessage originalChatMessage,
+                                                                 String editedText,
+                                                                 UserProfile userProfile) {
+        return new PublicModeratedChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 editedText,
                 originalChatMessage.getQuotation(),
@@ -109,14 +116,8 @@ public class PublicDiscussionChannelService extends PublicChannelService<PublicD
         if (!getChannels().isEmpty()) {
             return;
         }
-        PublicDiscussionChannel defaultDiscussionChannel = new PublicDiscussionChannel("bisq");
-        ObservableArray<PublicDiscussionChannel> channels = getChannels();
-        channels.add(defaultDiscussionChannel);
-        channels.add(new PublicDiscussionChannel("bitcoin"));
-        // channels.add(new PublicDiscussionChannel("monero"));
-        channels.add(new PublicDiscussionChannel("markets"));
-        channels.add(new PublicDiscussionChannel("economy"));
-        channels.add(new PublicDiscussionChannel("offTopic"));
+
+        getChannels().addAll(defaultChannels);
         persist();
     }
 }

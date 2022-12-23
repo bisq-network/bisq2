@@ -18,8 +18,9 @@
 package bisq.chat;
 
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
+import bisq.chat.channel.pub.PublicModeratedChannel;
+import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.support.SupportChannelSelectionService;
@@ -37,6 +38,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -45,7 +47,7 @@ public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PrivateTwoPartyChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PublicDiscussionChannelService publicDiscussionChannelService;
+    private final PublicModeratedChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
     private final PrivateTwoPartyChannelService privateSupportChannelService;
@@ -78,9 +80,17 @@ public class ChatService implements Service {
                 userIdentityService,
                 proofOfWorkService,
                 ChatDomain.DISCUSSION);
-        publicDiscussionChannelService = new PublicDiscussionChannelService(persistenceService,
+        publicDiscussionChannelService = new PublicModeratedChannelService(persistenceService,
                 networkService,
-                userIdentityService);
+                userIdentityService,
+                ChatDomain.DISCUSSION,
+                List.of(new PublicModeratedChannel("bisq", ChatDomain.DISCUSSION),
+                        new PublicModeratedChannel("bitcoin", ChatDomain.DISCUSSION),
+                        /* new PublicModeratedChannel("monero", ChatDomain.DISCUSSION),*/
+                        new PublicModeratedChannel("markets", ChatDomain.DISCUSSION),
+                        new PublicModeratedChannel("economy", ChatDomain.DISCUSSION),
+                        new PublicModeratedChannel("offTopic", ChatDomain.DISCUSSION)));
+
         discussionChannelSelectionService = new DiscussionChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
                 publicDiscussionChannelService);

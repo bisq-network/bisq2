@@ -23,8 +23,8 @@ import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
+import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -38,7 +38,7 @@ import java.util.Optional;
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
-    private final PublicDiscussionChannelService publicDiscussionChannelService;
+    private final PublicModeratedChannelService publicDiscussionChannelService;
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {

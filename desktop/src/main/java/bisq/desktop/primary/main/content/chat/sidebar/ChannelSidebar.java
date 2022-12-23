@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
+import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.support.pub.PublicSupportChannel;
@@ -118,11 +118,11 @@ public class ChannelSidebar {
                     model.moderators.clear();
                 }
                 case DISCUSSION -> {
-                    PublicDiscussionChannel publicDiscussionChannel = (PublicDiscussionChannel) channel;
-                    model.description.set(publicDiscussionChannel.getDescription());
+                    PublicModeratedChannel publicModeratedChannel = (PublicModeratedChannel) channel;
+                    model.description.set(publicModeratedChannel.getDescription());
                     model.descriptionVisible.set(true);
-                    model.adminProfile = userProfileService.findUserProfile(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                    model.moderators.setAll(publicDiscussionChannel.getChannelModeratorIds().stream()
+                    model.adminProfile = userProfileService.findUserProfile(publicModeratedChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                    model.moderators.setAll(publicModeratedChannel.getChannelModeratorIds().stream()
                             .flatMap(id -> userProfileService.findUserProfile(id).stream())
                             .map(ChatUserOverview::new)
                             .sorted()
