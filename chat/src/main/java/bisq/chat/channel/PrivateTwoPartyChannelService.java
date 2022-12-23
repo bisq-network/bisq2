@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.private_two_party;
+package bisq.chat.channel;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.MessageType;
+import bisq.chat.message.PrivateTwoPartyChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
 import bisq.common.util.StringUtils;

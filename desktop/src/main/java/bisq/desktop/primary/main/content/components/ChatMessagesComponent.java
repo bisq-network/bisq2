@@ -19,13 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.PublicChannel;
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
-import bisq.chat.channel.public_moderated.PublicModeratedChannel;
-import bisq.chat.channel.public_moderated.PublicModeratedChannelService;
+import bisq.chat.channel.*;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.message.ChatMessage;

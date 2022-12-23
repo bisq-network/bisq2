@@ -15,12 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.private_two_party;
+package bisq.chat.message;
 
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
-import bisq.chat.message.PrivateChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;

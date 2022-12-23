@@ -18,9 +18,9 @@
 package bisq.chat.support;
 
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
-import bisq.chat.channel.public_moderated.PublicModeratedChannelService;
+import bisq.chat.channel.PrivateTwoPartyChannel;
+import bisq.chat.channel.PrivateTwoPartyChannelService;
+import bisq.chat.channel.PublicModeratedChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;

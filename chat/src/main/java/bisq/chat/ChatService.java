@@ -18,9 +18,9 @@
 package bisq.chat;
 
 import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
-import bisq.chat.channel.public_moderated.PublicModeratedChannel;
-import bisq.chat.channel.public_moderated.PublicModeratedChannelService;
+import bisq.chat.channel.PrivateTwoPartyChannelService;
+import bisq.chat.channel.PublicModeratedChannel;
+import bisq.chat.channel.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.support.SupportChannelSelectionService;

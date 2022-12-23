@@ -15,11 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel.public_moderated;
+package bisq.chat.channel;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PublicChannel;
+import bisq.chat.message.PublicModeratedChatMessage;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

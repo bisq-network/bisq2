@@ -17,8 +17,6 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
-import bisq.chat.channel.public_moderated.PublicModeratedChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.proto.Proto;

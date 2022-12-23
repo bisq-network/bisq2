@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.public_moderated.PublicModeratedChannel;
+import bisq.chat.channel.PublicModeratedChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
