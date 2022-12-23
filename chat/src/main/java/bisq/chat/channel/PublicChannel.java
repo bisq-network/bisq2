@@ -31,7 +31,7 @@ public abstract class PublicChannel<M extends PublicChatMessage> extends Channel
     // We do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableArray<M> chatMessages = new ObservableArray<>();
 
-    public PublicChannel(String id, ChannelNotificationType channelNotificationType, ChatDomain chatDomain) {
-        super(id, channelNotificationType, chatDomain);
+    public PublicChannel(ChatDomain chatDomain, String channelName, ChannelNotificationType channelNotificationType) {
+        super(chatDomain, channelName, channelNotificationType);
     }
 }

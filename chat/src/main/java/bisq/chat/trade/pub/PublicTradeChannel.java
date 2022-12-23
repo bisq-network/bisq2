@@ -35,11 +35,11 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
     private final Market market;
 
     public PublicTradeChannel(Market market) {
-        this(getId(market), market);
+        this(getChannelName(market), market);
     }
 
-    private PublicTradeChannel(String id, Market market) {
-        super(id, ChannelNotificationType.MENTION, ChatDomain.TRADE);
+    private PublicTradeChannel(String channelName, Market market) {
+        super(ChatDomain.TRADE, channelName, ChannelNotificationType.MENTION);
 
         this.market = market;
     }
@@ -80,7 +80,11 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
         return market.getMarketCodes();
     }
 
-    public static String getId(Market market) {
+    private static String getChannelName(Market market) {
         return market.toString();
+    }
+
+    public static String getChannelId(Market market) {
+        return ChatDomain.TRADE.name().toLowerCase() + "." + getChannelName(market);
     }
 }

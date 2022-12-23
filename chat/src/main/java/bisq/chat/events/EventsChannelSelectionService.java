@@ -20,7 +20,7 @@ package bisq.chat.events;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannelService;
-import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;
@@ -38,11 +38,11 @@ public class EventsChannelSelectionService implements PersistenceClient<EventsCh
     private final EventsChannelSelectionStore persistableStore = new EventsChannelSelectionStore();
     private final Persistence<EventsChannelSelectionStore> persistence;
     private final PrivateTwoPartyChannelService privateChannelService;
-    private final PublicEventsChannelService publicChannelService;
+    private final PublicModeratedChannelService publicChannelService;
 
     public EventsChannelSelectionService(PersistenceService persistenceService,
                                          PrivateTwoPartyChannelService privateChannelService,
-                                         PublicEventsChannelService publicChannelService) {
+                                         PublicModeratedChannelService publicChannelService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.privateChannelService = privateChannelService;
         this.publicChannelService = publicChannelService;

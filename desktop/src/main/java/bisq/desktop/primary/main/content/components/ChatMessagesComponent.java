@@ -28,13 +28,9 @@ import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.pub.PublicEventsChannel;
-import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.pub.PublicSupportChannel;
-import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -129,10 +125,10 @@ public class ChatMessagesComponent {
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PublicEventsChannelService publicEventsChannelService;
+        private final PublicModeratedChannelService publicEventsChannelService;
         private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final EventsChannelSelectionService eventsChannelSelectionService;
-        private final PublicSupportChannelService publicSupportChannelService;
+        private final PublicModeratedChannelService publicSupportChannelService;
         private final PrivateTwoPartyChannelService privateSupportChannelService;
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
@@ -257,7 +253,20 @@ public class ChatMessagesComponent {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
             } else if (channel instanceof PublicModeratedChannel) {
-                publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                switch (channel.getChatDomain()) {
+                    case TRADE -> {
+                    }
+                    case DISCUSSION -> {
+                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                    }
+                    case EVENTS -> {
+                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                    }
+                    case SUPPORT -> {
+                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                    }
+                }
+
             } else if (channel instanceof PrivateTwoPartyChannel) {
                 switch (channel.getChatDomain()) {
                     case TRADE -> {
@@ -272,10 +281,6 @@ public class ChatMessagesComponent {
                         privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                     }
                 }
-            } else if (channel instanceof PublicEventsChannel) {
-                publicEventsChannelService.publishChatMessage(text, quotation, (PublicEventsChannel) channel, userIdentity);
-            } else if (channel instanceof PublicSupportChannel) {
-                publicSupportChannelService.publishChatMessage(text, quotation, (PublicSupportChannel) channel, userIdentity);
             }
             quotedMessageBlock.close();
         }

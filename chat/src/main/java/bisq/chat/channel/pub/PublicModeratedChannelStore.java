@@ -39,13 +39,13 @@ public class PublicModeratedChannelStore implements PersistableStore<PublicModer
     }
 
     @Override
-    public bisq.chat.protobuf.PublicDiscussionChannelStore toProto() {
-        bisq.chat.protobuf.PublicDiscussionChannelStore.Builder builder = bisq.chat.protobuf.PublicDiscussionChannelStore.newBuilder()
+    public bisq.chat.protobuf.PublicModeratedChannelStore toProto() {
+        bisq.chat.protobuf.PublicModeratedChannelStore.Builder builder = bisq.chat.protobuf.PublicModeratedChannelStore.newBuilder()
                 .addAllChannels(channels.stream().map(PublicModeratedChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PublicModeratedChannelStore fromProto(bisq.chat.protobuf.PublicDiscussionChannelStore proto) {
+    public static PublicModeratedChannelStore fromProto(bisq.chat.protobuf.PublicModeratedChannelStore proto) {
         List<PublicModeratedChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicModeratedChannel) PublicModeratedChannel.fromProto(e))
                 .collect(Collectors.toList());
@@ -56,7 +56,7 @@ public class PublicModeratedChannelStore implements PersistableStore<PublicModer
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicDiscussionChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.PublicModeratedChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -3,9 +3,6 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.pub.PublicModeratedChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
@@ -247,19 +244,10 @@ public abstract class ChannelSelection {
 
                 id = channel.getId();
 
-                String type = null;
-                if (channel instanceof PublicEventsChannel) {
-                    type = "-events-";
-                } else if (channel instanceof PublicModeratedChannel) {
-                    type = "-discussion-";
-                } else if (channel instanceof PublicSupportChannel) {
-                    type = "-support-";
-                }
-                if (type != null) {
-                    iconIdSelected = "channels" + type + channel.getId();
-                    iconIdHover = "channels" + type + channel.getId() + "-white";
-                    iconId = "channels" + type + channel.getId() + "-grey";
-                }
+                String domain = "-" + channel.getChatDomain().name().toLowerCase() + "-";
+                iconIdSelected = "channels" + domain + channel.getId();
+                iconIdHover = "channels" + domain + channel.getId() + "-white";
+                iconId = "channels" + domain + channel.getId() + "-grey";
 
 
                 if (channel instanceof PrivateChannel) {

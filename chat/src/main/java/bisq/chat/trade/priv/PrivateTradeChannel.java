@@ -72,7 +72,7 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator) {
-        this(PrivateChannel.createChannelId(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
+        this(PrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
                 peerOrTrader1,
                 myUserProfileOrTrader2,
                 myUserIdentity,
@@ -81,14 +81,14 @@ public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMe
                 ChannelNotificationType.ALL);
     }
 
-    private PrivateTradeChannel(String id,
+    private PrivateTradeChannel(String channelName,
                                 UserProfile peerOrTrader1,
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator,
                                 List<PrivateTradeChatMessage> chatMessages,
                                 ChannelNotificationType channelNotificationType) {
-        super(id, myUserIdentity, chatMessages, channelNotificationType, ChatDomain.TRADE);
+        super(ChatDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
 
         this.peerOrTrader1 = peerOrTrader1;
         this.myUserProfileOrTrader2 = myUserProfileOrTrader2;

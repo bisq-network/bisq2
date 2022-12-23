@@ -23,10 +23,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
-import bisq.chat.channel.pub.PublicModeratedChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
@@ -210,18 +207,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     }
 
     protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
-        String type = null;
-        if (channel instanceof PublicEventsChannel) {
-            type = "-events-";
-        } else if (channel instanceof PublicModeratedChannel) {
-            type = "-discussion-";
-        } else if (channel instanceof PublicSupportChannel) {
-            type = "-support-";
-        }
-        if (type != null) {
-            //  String iconId = "channels" + type + channel.getId() + "-white";
-            String iconId = "channels" + type + channel.getId();
-            model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
-        }
+        String domain = "-" + channel.getChatDomain().name().toLowerCase() + "-";
+        String iconId = "channels" + domain + channel.getId();
+        model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
     }
 }

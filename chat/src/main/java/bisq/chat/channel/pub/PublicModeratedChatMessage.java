@@ -71,7 +71,7 @@ public final class PublicModeratedChatMessage extends PublicChatMessage {
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicDiscussionChatMessage(bisq.chat.protobuf.PublicDiscussionChatMessage.newBuilder()).build();
+        return getChatMessageBuilder().setPublicModeratedChatMessage(bisq.chat.protobuf.PublicModeratedChatMessage.newBuilder()).build();
     }
 
     public static PublicModeratedChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {

@@ -20,10 +20,8 @@ package bisq.chat.channel;
 import bisq.chat.ChatDomain;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
 import bisq.chat.channel.pub.PublicModeratedChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.data.Pair;
@@ -42,14 +40,16 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
-    @EqualsAndHashCode.Include
-    protected final String id;
     private final ChatDomain chatDomain;
+    protected final String channelName;
+    @EqualsAndHashCode.Include
+    private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(String id, ChannelNotificationType channelNotificationType, ChatDomain chatDomain) {
-        this.id = id;
+    public Channel(ChatDomain chatDomain, String channelName, ChannelNotificationType channelNotificationType) {
         this.chatDomain = chatDomain;
+        this.channelName = channelName;
+        this.id = chatDomain.name().toLowerCase() + "." + channelName;
         this.channelNotificationType.set(channelNotificationType);
     }
 
@@ -76,16 +76,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
             }
 
 
-            case PUBLICDISCUSSIONCHANNEL: {
-                return PublicModeratedChannel.fromProto(proto, proto.getPublicDiscussionChannel());
-            }
-
-            case PUBLICEVENTSCHANNEL: {
-                return PublicEventsChannel.fromProto(proto, proto.getPublicEventsChannel());
-            }
-
-            case PUBLICSUPPORTCHANNEL: {
-                return PublicSupportChannel.fromProto(proto, proto.getPublicSupportChannel());
+            case PUBLICMODERATEDCHANNEL: {
+                return PublicModeratedChannel.fromProto(proto, proto.getPublicModeratedChannel());
             }
 
             case MESSAGE_NOT_SET: {

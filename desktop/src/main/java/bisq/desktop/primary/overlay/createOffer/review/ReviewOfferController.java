@@ -124,7 +124,7 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        PublicTradeChannel channel = publicTradeChannelService.findChannel(PublicTradeChannel.getId(model.getMarket())).orElseThrow();
+        PublicTradeChannel channel = publicTradeChannelService.findChannel(PublicTradeChannel.getChannelId(model.getMarket())).orElseThrow();
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);

@@ -21,9 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.pub.PublicModeratedChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -110,71 +108,8 @@ public class ChannelSidebar {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            switch (channel.getChatDomain()) {
-                case TRADE -> {
-                    model.description.set(((PublicTradeChannel) channel).getDescription());
-                    model.descriptionVisible.set(true);
-                    model.adminProfile = Optional.empty();
-                    model.moderators.clear();
-                }
-                case DISCUSSION -> {
-                    PublicModeratedChannel publicModeratedChannel = (PublicModeratedChannel) channel;
-                    model.description.set(publicModeratedChannel.getDescription());
-                    model.descriptionVisible.set(true);
-                    model.adminProfile = userProfileService.findUserProfile(publicModeratedChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                    model.moderators.setAll(publicModeratedChannel.getChannelModeratorIds().stream()
-                            .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                            .map(ChatUserOverview::new)
-                            .sorted()
-                            .collect(Collectors.toList()));
-                }
-                case EVENTS -> {
-                    PublicEventsChannel publicEventsChannel = (PublicEventsChannel) channel;
-                    model.description.set(publicEventsChannel.getDescription());
-                    model.descriptionVisible.set(true);
-                    model.adminProfile = userProfileService.findUserProfile(publicEventsChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                    model.moderators.setAll(publicEventsChannel.getChannelModeratorIds().stream()
-                            .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                            .map(ChatUserOverview::new)
-                            .sorted()
-                            .collect(Collectors.toList()));
-                }
-                case SUPPORT -> {
-                    PublicSupportChannel publicSupportChannel = (PublicSupportChannel) channel;
-                    model.description.set(publicSupportChannel.getDescription());
-                    model.descriptionVisible.set(true);
-                    model.adminProfile = userProfileService.findUserProfile(publicSupportChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                    model.moderators.setAll(publicSupportChannel.getChannelModeratorIds().stream()
-                            .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                            .map(ChatUserOverview::new)
-                            .sorted()
-                            .collect(Collectors.toList()));
-                }
-                default -> {
-                    model.descriptionVisible.set(false);
-                    model.description.set(null);
-                    model.adminProfile = Optional.empty();
-                    model.moderators.clear();
-                }
-            }
-            
-           /* if (channel instanceof PublicTradeChannel) {
-                model.description.set(((PublicTradeChannel) channel).getDescription());
-                model.descriptionVisible.set(true);
-                model.adminProfile = Optional.empty();
-                model.moderators.clear();
-            } else if (channel instanceof PublicDiscussionChannel) {
-                PublicDiscussionChannel publicDiscussionChannel = (PublicDiscussionChannel) channel;
-                model.description.set(publicDiscussionChannel.getDescription());
-                model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(publicDiscussionChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                model.moderators.setAll(publicDiscussionChannel.getChannelModeratorIds().stream()
-                        .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                        .map(ChatUserOverview::new)
-                        .sorted()
-                        .collect(Collectors.toList()));
-            } else if (channel instanceof PublicEventsChannel) {
-                PublicEventsChannel publicEventsChannel = (PublicEventsChannel) channel;
+            if (channel instanceof PublicModeratedChannel) {
+                PublicModeratedChannel publicEventsChannel = (PublicModeratedChannel) channel;
                 model.description.set(publicEventsChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = userProfileService.findUserProfile(publicEventsChannel.getChannelAdminId()).map(ChatUserOverview::new);
@@ -183,22 +118,17 @@ public class ChannelSidebar {
                         .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));
-            } else if (channel instanceof PublicSupportChannel) {
-                PublicSupportChannel publicSupportChannel = (PublicSupportChannel) channel;
-                model.description.set(publicSupportChannel.getDescription());
+            } else if (channel instanceof PublicTradeChannel) {
+                model.description.set(((PublicTradeChannel) channel).getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(publicSupportChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                model.moderators.setAll(publicSupportChannel.getChannelModeratorIds().stream()
-                        .flatMap(id -> userProfileService.findUserProfile(id).stream())
-                        .map(ChatUserOverview::new)
-                        .sorted()
-                        .collect(Collectors.toList()));
+                model.adminProfile = Optional.empty();
+                model.moderators.clear();
             } else {
                 model.descriptionVisible.set(false);
                 model.description.set(null);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
-            }*/
+            }
 
             model.channel.set(channel);
         }

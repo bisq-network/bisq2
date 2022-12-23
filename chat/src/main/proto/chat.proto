@@ -26,6 +26,24 @@ import "security.proto";
 import "offer.proto";
 import "user.proto";
 
+enum MessageType {
+  TEXT = 0;
+  LEAVE = 1;
+}
+
+enum ChannelNotificationType {
+  ALL = 0;
+  MENTION = 1;
+  NEVER = 2;
+}
+
+enum ChatDomain {
+  TRADE = 0;
+  DISCUSSION = 1;
+  EVENTS = 2;
+  SUPPORT = 3;
+}
+
 message Quotation {
   string nym = 1;
   string nickName = 2;
@@ -45,31 +63,11 @@ message ChatMessage {
   network.MetaData metaData = 9;
   oneof message {
     PrivateTwoPartyChatMessage privateTwoPartyChatMessage = 20;
+    PublicModeratedChatMessage publicModeratedChatMessage = 21;
 
     PrivateTradeChatMessage privateTradeChatMessage = 22;
     PublicTradeChatMessage publicTradeChatMessage = 23;
-
-    PublicDiscussionChatMessage publicDiscussionChatMessage = 24;
-    PublicEventsChatMessage publicEventsChatMessage = 25;
-    PublicSupportChatMessage publicSupportChatMessage = 27;
   }
-}
-enum MessageType {
-  TEXT = 0;
-  LEAVE = 1;
-}
-
-enum ChannelNotificationType {
-  ALL = 0;
-  MENTION = 1;
-  NEVER = 2;
-}
-
-enum ChatDomain {
-  TRADE = 0;
-  DISCUSSION = 1;
-  EVENTS = 2;
-  SUPPORT = 3;
 }
 
 message Channel {
@@ -78,15 +76,54 @@ message Channel {
   ChatDomain chatDomain = 3;
   oneof message{
     PrivateTwoPartyChannel privateTwoPartyChannel = 10;
+    PublicModeratedChannel publicModeratedChannel = 11;
 
     PrivateTradeChannel privateTradeChannel = 12;
     PublicTradeChannel publicTradeChannel = 13;
-
-    PublicDiscussionChannel publicDiscussionChannel = 14;
-    PublicEventsChannel publicEventsChannel = 15;
-    PublicSupportChannel publicSupportChannel = 17;
   }
 }
+
+// PrivateTwoParty
+message PrivateTwoPartyChatMessage {
+  string receiversId = 1;
+  user.UserProfile sender = 2;
+}
+message PrivateTwoPartyChannel {
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+message PrivateTwoPartyChannelStore {
+  repeated Channel channels = 1;
+}
+
+
+// PublicModerated
+message PublicModeratedChatMessage {
+}
+
+message PublicModeratedChannel {
+  string channelName = 1;
+  string description = 2;
+  string channelAdminId = 3;
+  repeated string channelModeratorIds = 4;
+  bool isVisible = 5;
+}
+message PublicModeratedChannelStore {
+  repeated Channel channels = 1;
+}
+
+// SelectionStores
+message DiscussionChannelSelectionStore {
+  optional Channel selectedChannel = 1;
+}
+message EventsChannelSelectionStore {
+  optional Channel selectedChannel = 1;
+}
+message SupportChannelSelectionStore {
+  optional Channel selectedChannel = 1;
+}
+
 
 // Trade
 message PrivateTradeChatMessage {
@@ -135,79 +172,5 @@ message PublicTradeChannelStore {
   repeated string visibleChannelIds = 2;
 }
 
-// PrivateTwoParty
-message PrivateTwoPartyChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PrivateTwoPartyChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
-message PrivateTwoPartyChannelStore {
-  repeated Channel channels = 1;
-}
 
 
-message PublicDiscussionChatMessage {
-}
-
-message PublicDiscussionChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
-
-message DiscussionChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-
-
-
-message PublicDiscussionChannelStore {
-  repeated Channel channels = 1;
-}
-
-// Events
-message PublicEventsChatMessage {
-}
-
-
-message PublicEventsChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
-message EventsChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-
-message PublicEventsChannelStore {
-  repeated Channel channels = 1;
-}
-
-// Support
-message PublicSupportChatMessage {
-}
-
-
-message PublicSupportChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
-message SupportChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-
-
-message PublicSupportChannelStore {
-  repeated Channel channels = 1;
-}

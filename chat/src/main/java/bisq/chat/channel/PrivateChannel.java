@@ -36,7 +36,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends PrivateChatMessage> extends Channel<T> {
 
-    public static String createChannelId(Pair<String, String> userIds) {
+    public static String createChannelName(Pair<String, String> userIds) {
         String userId1 = userIds.getFirst();
         String userId2 = userIds.getSecond();
         if (userId1.compareTo(userId2) < 0) {
@@ -51,12 +51,12 @@ public abstract class PrivateChannel<T extends PrivateChatMessage> extends Chann
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableArray<T> chatMessages = new ObservableArray<>();
 
-    public PrivateChannel(String id,
+    public PrivateChannel(ChatDomain chatDomain,
+                          String channelName,
                           UserIdentity myUserIdentity,
                           List<T> chatMessages,
-                          ChannelNotificationType channelNotificationType,
-                          ChatDomain chatDomain) {
-        super(id, channelNotificationType, chatDomain);
+                          ChannelNotificationType channelNotificationType) {
+        super(chatDomain, channelName, channelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);

@@ -34,46 +34,32 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicModeratedChannel extends PublicChannel<PublicModeratedChatMessage> {
-    private final String channelName;
+    private final String displayName;
     private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicModeratedChannel(String id, ChatDomain chatDomain) {
-        this(id,
-                Res.get(chatDomain.name().toLowerCase() + "." + id + ".name"),
-                Res.get(chatDomain.name().toLowerCase() + "." + id + ".description"),
+    public PublicModeratedChannel(ChatDomain chatDomain, String channelName) {
+        this(chatDomain,
+                channelName,
+                Res.get(chatDomain.name().toLowerCase() + "." + channelName + ".name"),
+                Res.get(chatDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
-                ChannelNotificationType.MENTION,
-                chatDomain);
+                ChannelNotificationType.MENTION);
     }
 
-    public PublicModeratedChannel(String id,
-                                  String channelName,
-                                  String description,
-                                  String channelAdminId,
-                                  List<String> channelModeratorIds,
-                                  ChatDomain chatDomain) {
-        this(id,
-                channelName,
-                description,
-                channelAdminId,
-                channelModeratorIds,
-                ChannelNotificationType.MENTION,
-                chatDomain);
-    }
-
-    private PublicModeratedChannel(String id,
+    private PublicModeratedChannel(ChatDomain chatDomain,
                                    String channelName,
+                                   String displayName,
                                    String description,
                                    String channelAdminId,
                                    List<String> channelModeratorIds,
-                                   ChannelNotificationType channelNotificationType,
-                                   ChatDomain chatDomain) {
-        super(id, channelNotificationType, chatDomain);
+                                   ChannelNotificationType channelNotificationType
+    ) {
+        super(chatDomain, channelName, channelNotificationType);
 
-        this.channelName = channelName;
+        this.displayName = displayName;
         this.description = description;
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
@@ -83,8 +69,8 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
 
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder()
-                .setPublicDiscussionChannel(bisq.chat.protobuf.PublicDiscussionChannel.newBuilder()
-                        .setChannelName(channelName)
+                .setPublicModeratedChannel(bisq.chat.protobuf.PublicModeratedChannel.newBuilder()
+                        .setChannelName(displayName)
                         .setDescription(description)
                         .setChannelAdminId(channelAdminId)
                         .addAllChannelModeratorIds(channelModeratorIds))
@@ -92,15 +78,15 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
     }
 
     public static PublicModeratedChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                   bisq.chat.protobuf.PublicDiscussionChannel proto) {
+                                                   bisq.chat.protobuf.PublicModeratedChannel proto) {
         return new PublicModeratedChannel(
+                ChatDomain.fromProto(baseProto.getChatDomain()),
                 baseProto.getId(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
-                ChatDomain.fromProto(baseProto.getChatDomain()));
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
     }
 
     @Override
@@ -120,6 +106,6 @@ public final class PublicModeratedChannel extends PublicChannel<PublicModeratedC
 
     @Override
     public String getDisplayString() {
-        return channelName;
+        return displayName;
     }
 }

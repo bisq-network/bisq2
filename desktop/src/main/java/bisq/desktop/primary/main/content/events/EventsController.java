@@ -23,8 +23,8 @@ import bisq.chat.channel.Channel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChannel;
+import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
-    private final PublicEventsChannelService publicEventsChannelService;
+    private final PublicModeratedChannelService publicEventsChannelService;
     private final EventsChannelSelectionService eventsChannelSelectionService;
     private PublicEventsChannelSelection publicEventsChannelSelection;
 

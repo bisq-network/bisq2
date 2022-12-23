@@ -160,7 +160,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                publicTradeChannelService.findChannel(PublicTradeChannel.getId(marketListItem.market))
+                publicTradeChannelService.findChannel(PublicTradeChannel.getChannelId(marketListItem.market))
                         .ifPresent(channel -> {
                             publicTradeChannelService.showChannel(channel);
                             tradeChannelSelectionService.selectChannel(channel);
@@ -180,7 +180,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return publicTradeChannelService.findChannel(PublicTradeChannel.getId(market))
+            return publicTradeChannelService.findChannel(PublicTradeChannel.getChannelId(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }

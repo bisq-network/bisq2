@@ -19,8 +19,6 @@ package bisq.chat.message;
 
 import bisq.chat.channel.private_two_party.PrivateTwoPartyChatMessage;
 import bisq.chat.channel.pub.PublicModeratedChatMessage;
-import bisq.chat.events.pub.PublicEventsChatMessage;
-import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.proto.Proto;
@@ -107,17 +105,8 @@ public abstract class ChatMessage implements Proto {
                 return PrivateTradeChatMessage.fromProto(proto);
             }
 
-            case PUBLICDISCUSSIONCHATMESSAGE: {
+            case PUBLICMODERATEDCHATMESSAGE: {
                 return PublicModeratedChatMessage.fromProto(proto);
-            }
-
-
-            case PUBLICEVENTSCHATMESSAGE: {
-                return PublicEventsChatMessage.fromProto(proto);
-            }
-
-            case PUBLICSUPPORTCHATMESSAGE: {
-                return PublicSupportChatMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
@@ -135,14 +124,8 @@ public abstract class ChatMessage implements Proto {
                     case PUBLICTRADECHATMESSAGE: {
                         return PublicTradeChatMessage.fromProto(proto);
                     }
-                    case PUBLICDISCUSSIONCHATMESSAGE: {
+                    case PUBLICMODERATEDCHATMESSAGE: {
                         return PublicModeratedChatMessage.fromProto(proto);
-                    }
-                    case PUBLICEVENTSCHATMESSAGE: {
-                        return PublicEventsChatMessage.fromProto(proto);
-                    }
-                    case PUBLICSUPPORTCHATMESSAGE: {
-                        return PublicSupportChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

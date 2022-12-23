@@ -100,7 +100,7 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
-        String channelId = PrivateTradeChannel.createChannelId(new Pair<>(trader1.getId(), trader2.getId()));
+        String channelId = PrivateTradeChannel.createChannelName(new Pair<>(trader1.getId(), trader2.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
                 .filter(channel -> channel.getId().equals(channelId))
                 .findAny();
@@ -115,7 +115,7 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
-        String channelId = PrivateTradeChannel.createChannelId(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
+        String channelId = PrivateTradeChannel.createChannelName(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
                 .filter(channel -> channel.getId().equals(channelId))
                 .findAny();

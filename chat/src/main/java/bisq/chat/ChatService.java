@@ -22,9 +22,7 @@ import bisq.chat.channel.pub.PublicModeratedChannel;
 import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.pub.PublicEventsChannelService;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -51,10 +49,10 @@ public class ChatService implements Service {
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final DiscussionChannelSelectionService discussionChannelSelectionService;
     private final PrivateTwoPartyChannelService privateSupportChannelService;
-    private final PublicSupportChannelService publicSupportChannelService;
+    private final PublicModeratedChannelService publicSupportChannelService;
     private final SupportChannelSelectionService supportChannelSelectionService;
     private final PrivateTwoPartyChannelService privateEventsChannelService;
-    private final PublicEventsChannelService publicEventsChannelService;
+    private final PublicModeratedChannelService publicEventsChannelService;
     private final EventsChannelSelectionService eventsChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
@@ -84,12 +82,12 @@ public class ChatService implements Service {
                 networkService,
                 userIdentityService,
                 ChatDomain.DISCUSSION,
-                List.of(new PublicModeratedChannel("bisq", ChatDomain.DISCUSSION),
-                        new PublicModeratedChannel("bitcoin", ChatDomain.DISCUSSION),
-                        /* new PublicModeratedChannel("monero", ChatDomain.DISCUSSION),*/
-                        new PublicModeratedChannel("markets", ChatDomain.DISCUSSION),
-                        new PublicModeratedChannel("economy", ChatDomain.DISCUSSION),
-                        new PublicModeratedChannel("offTopic", ChatDomain.DISCUSSION)));
+                List.of(new PublicModeratedChannel(ChatDomain.DISCUSSION, "bisq"),
+                        new PublicModeratedChannel(ChatDomain.DISCUSSION, "bitcoin"),
+                        /* new PublicModeratedChannel(ChatDomain.DISCUSSION,"monero"),*/
+                        new PublicModeratedChannel(ChatDomain.DISCUSSION, "markets"),
+                        new PublicModeratedChannel(ChatDomain.DISCUSSION, "economy"),
+                        new PublicModeratedChannel(ChatDomain.DISCUSSION, "offTopic")));
 
         discussionChannelSelectionService = new DiscussionChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
@@ -101,9 +99,16 @@ public class ChatService implements Service {
                 userIdentityService,
                 proofOfWorkService,
                 ChatDomain.EVENTS);
-        publicEventsChannelService = new PublicEventsChannelService(persistenceService,
+        publicEventsChannelService = new PublicModeratedChannelService(persistenceService,
                 networkService,
-                userIdentityService);
+                userIdentityService,
+                ChatDomain.EVENTS,
+                List.of(new PublicModeratedChannel(ChatDomain.EVENTS, "conferences"),
+                        new PublicModeratedChannel(ChatDomain.EVENTS, "meetups"),
+                        new PublicModeratedChannel(ChatDomain.EVENTS, "podcasts"),
+                        new PublicModeratedChannel(ChatDomain.EVENTS, "noKyc"),
+                        new PublicModeratedChannel(ChatDomain.EVENTS, "nodes"),
+                        new PublicModeratedChannel(ChatDomain.EVENTS, "tradeEvents")));
         eventsChannelSelectionService = new EventsChannelSelectionService(persistenceService,
                 privateEventsChannelService,
                 publicEventsChannelService);
@@ -114,9 +119,13 @@ public class ChatService implements Service {
                 userIdentityService,
                 proofOfWorkService,
                 ChatDomain.SUPPORT);
-        publicSupportChannelService = new PublicSupportChannelService(persistenceService,
+        publicSupportChannelService = new PublicModeratedChannelService(persistenceService,
                 networkService,
-                userIdentityService);
+                userIdentityService,
+                ChatDomain.SUPPORT,
+                List.of(new PublicModeratedChannel(ChatDomain.SUPPORT, "support"),
+                        new PublicModeratedChannel(ChatDomain.SUPPORT, "questions"),
+                        new PublicModeratedChannel(ChatDomain.SUPPORT, "reports")));
         supportChannelSelectionService = new SupportChannelSelectionService(persistenceService,
                 privateSupportChannelService,
                 publicSupportChannelService);

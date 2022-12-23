@@ -39,21 +39,22 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoParty
     private final UserProfile peer;
 
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChatDomain chatDomain) {
-        this(PrivateChannel.createChannelId(new Pair<>(peer.getId(), myUserIdentity.getId())),
+        this(chatDomain,
+                PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),
-                ChannelNotificationType.ALL,
-                chatDomain);
+                ChannelNotificationType.ALL
+        );
     }
 
-    private PrivateTwoPartyChannel(String id,
+    private PrivateTwoPartyChannel(ChatDomain chatDomain,
+                                   String channelName,
                                    UserProfile peer,
                                    UserIdentity myProfile,
                                    List<PrivateTwoPartyChatMessage> chatMessages,
-                                   ChannelNotificationType channelNotificationType,
-                                   ChatDomain chatDomain) {
-        super(id, myProfile, chatMessages, channelNotificationType, chatDomain);
+                                   ChannelNotificationType channelNotificationType) {
+        super(chatDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
         this.peer = peer;
     }
@@ -72,14 +73,15 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateTwoParty
     public static PrivateTwoPartyChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                    bisq.chat.protobuf.PrivateTwoPartyChannel proto) {
         return new PrivateTwoPartyChannel(
+                ChatDomain.fromProto(baseProto.getChatDomain()),
                 baseProto.getId(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTwoPartyChatMessage::fromProto)
                         .collect(Collectors.toList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
-                ChatDomain.fromProto(baseProto.getChatDomain()));
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
+        );
     }
 
     @Override

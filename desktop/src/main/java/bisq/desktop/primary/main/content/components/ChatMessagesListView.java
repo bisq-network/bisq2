@@ -29,16 +29,10 @@ import bisq.chat.channel.pub.PublicModeratedChannelService;
 import bisq.chat.channel.pub.PublicModeratedChatMessage;
 import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.pub.PublicEventsChannel;
-import bisq.chat.events.pub.PublicEventsChannelService;
-import bisq.chat.events.pub.PublicEventsChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.pub.PublicSupportChannel;
-import bisq.chat.support.pub.PublicSupportChannelService;
-import bisq.chat.support.pub.PublicSupportChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -176,10 +170,10 @@ public class ChatMessagesListView {
         private final DiscussionChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
         private final PrivateTwoPartyChannelService privateEventsChannelService;
-        private final PublicEventsChannelService publicEventsChannelService;
+        private final PublicModeratedChannelService publicEventsChannelService;
         private final EventsChannelSelectionService eventsChannelSelectionService;
         private final PrivateTwoPartyChannelService privateSupportChannelService;
-        private final PublicSupportChannelService publicSupportChannelService;
+        private final PublicModeratedChannelService publicSupportChannelService;
         private final SupportChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
         private Pin selectedChannelPin, chatMessagesPin;
@@ -284,13 +278,13 @@ public class ChatMessagesListView {
             } else if (model.getChatDomain() == ChatDomain.EVENTS) {
                 selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicEventsChannel) {
+                    if (channel instanceof PublicModeratedChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicEventsChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PublicModeratedChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PublicEventsChannel) channel).getChatMessages());
+                                .to(((PublicModeratedChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
@@ -305,13 +299,13 @@ public class ChatMessagesListView {
             } else if (model.getChatDomain() == ChatDomain.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
-                    if (channel instanceof PublicSupportChannel) {
+                    if (channel instanceof PublicModeratedChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicSupportChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PublicModeratedChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PublicSupportChannel) channel).getChatMessages());
+                                .to(((PublicModeratedChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                     } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
@@ -426,11 +420,15 @@ public class ChatMessagesListView {
             if (chatMessage instanceof PublicTradeChatMessage) {
                 publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, messageAuthor);
             } else if (chatMessage instanceof PublicModeratedChatMessage) {
-                publicDiscussionChannelService.deleteChatMessage((PublicModeratedChatMessage) chatMessage, messageAuthor);
-            } else if (chatMessage instanceof PublicEventsChatMessage) {
-                publicEventsChannelService.deleteChatMessage((PublicEventsChatMessage) chatMessage, messageAuthor);
-            } else if (chatMessage instanceof PublicSupportChatMessage) {
-                publicSupportChannelService.deleteChatMessage((PublicSupportChatMessage) chatMessage, messageAuthor);
+
+                //todo services dont do any domain specific here
+                // -> networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
+                publicDiscussionChannelService.findChannel(chatMessage.getChannelId())
+                        .ifPresent(c -> publicDiscussionChannelService.deleteChatMessage((PublicModeratedChatMessage) chatMessage, messageAuthor));
+                publicEventsChannelService.findChannel(chatMessage.getChannelId())
+                        .ifPresent(c -> publicEventsChannelService.deleteChatMessage((PublicModeratedChatMessage) chatMessage, messageAuthor));
+                publicSupportChannelService.findChannel(chatMessage.getChannelId())
+                        .ifPresent(c -> publicSupportChannelService.deleteChatMessage((PublicModeratedChatMessage) chatMessage, messageAuthor));
             }
         }
 
