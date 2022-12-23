@@ -17,9 +17,9 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
-import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -34,7 +34,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends PublicChatMessage {
+public final class PublicTradeChatMessage extends BasePublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelId,

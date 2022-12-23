@@ -1,6 +1,6 @@
 package bisq.restApi.dto;
 
-import bisq.chat.channel.PublicModeratedChannel;
+import bisq.chat.channel.PublicChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,7 +21,7 @@ public final class PublicDiscussionChannelDto {
     private String channelAdminId;
     private List<String> channelModeratorIds;
 
-    public static PublicDiscussionChannelDto from(PublicModeratedChannel publicDiscussionChannel) {
+    public static PublicDiscussionChannelDto from(PublicChannel publicDiscussionChannel) {
         PublicDiscussionChannelDto dto = new PublicDiscussionChannelDto();
         dto.id = publicDiscussionChannel.getId();
         dto.channelName = publicDiscussionChannel.getChannelName();

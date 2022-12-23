@@ -28,35 +28,35 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PublicModeratedChannelStore implements PersistableStore<PublicModeratedChannelStore> {
-    private final ObservableArray<PublicModeratedChannel> channels = new ObservableArray<>();
+public class PublicChannelStore implements PersistableStore<PublicChannelStore> {
+    private final ObservableArray<PublicChannel> channels = new ObservableArray<>();
 
-    public PublicModeratedChannelStore() {
+    public PublicChannelStore() {
     }
 
-    private PublicModeratedChannelStore(List<PublicModeratedChannel> privateDiscussionChannels) {
+    private PublicChannelStore(List<PublicChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
     @Override
-    public bisq.chat.protobuf.PublicModeratedChannelStore toProto() {
-        bisq.chat.protobuf.PublicModeratedChannelStore.Builder builder = bisq.chat.protobuf.PublicModeratedChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PublicModeratedChannel::toProto).collect(Collectors.toList()));
+    public bisq.chat.protobuf.PublicChannelStore toProto() {
+        bisq.chat.protobuf.PublicChannelStore.Builder builder = bisq.chat.protobuf.PublicChannelStore.newBuilder()
+                .addAllChannels(channels.stream().map(PublicChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PublicModeratedChannelStore fromProto(bisq.chat.protobuf.PublicModeratedChannelStore proto) {
-        List<PublicModeratedChannel> privateDiscussionChannels = proto.getChannelsList().stream()
-                .map(e -> (PublicModeratedChannel) PublicModeratedChannel.fromProto(e))
+    public static PublicChannelStore fromProto(bisq.chat.protobuf.PublicChannelStore proto) {
+        List<PublicChannel> privateDiscussionChannels = proto.getChannelsList().stream()
+                .map(e -> (PublicChannel) PublicChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PublicModeratedChannelStore(privateDiscussionChannels);
+        return new PublicChannelStore(privateDiscussionChannels);
     }
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicModeratedChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.PublicChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -64,16 +64,16 @@ public class PublicModeratedChannelStore implements PersistableStore<PublicModer
     }
 
     @Override
-    public void applyPersisted(PublicModeratedChannelStore chatStore) {
+    public void applyPersisted(PublicChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PublicModeratedChannelStore getClone() {
-        return new PublicModeratedChannelStore(channels);
+    public PublicChannelStore getClone() {
+        return new PublicChannelStore(channels);
     }
 
-    public void setAll(List<PublicModeratedChannel> privateDiscussionChannels) {
+    public void setAll(List<PublicChannel> privateDiscussionChannels) {
         this.channels.clear();
         this.channels.addAll(privateDiscussionChannels);
     }

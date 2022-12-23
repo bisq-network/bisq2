@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PublicModeratedChannel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
@@ -108,8 +108,8 @@ public class ChannelSidebar {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            if (channel instanceof PublicModeratedChannel) {
-                PublicModeratedChannel publicEventsChannel = (PublicModeratedChannel) channel;
+            if (channel instanceof PublicChannel) {
+                PublicChannel publicEventsChannel = (PublicChannel) channel;
                 model.description.set(publicEventsChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = userProfileService.findUserProfile(publicEventsChannel.getChannelAdminId()).map(ChatUserOverview::new);

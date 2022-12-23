@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.*;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,8 +31,8 @@ import java.util.Optional;
 
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
-    private final DiscussionChannelSelectionService discussionChannelSelectionService;
-    private final PublicModeratedChannelService publicDiscussionChannelService;
+    private final ChannelSelectionService discussionChannelSelectionService;
+    private final PublicChannelService publicDiscussionChannelService;
     private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
 
     public DiscussionsController(DefaultApplicationService applicationService) {

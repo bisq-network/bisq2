@@ -15,14 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.discuss;
+package bisq.chat.channel;
 
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateTwoPartyChannel;
-import bisq.chat.channel.PrivateTwoPartyChannelService;
-import bisq.chat.channel.PublicModeratedChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
+import bisq.common.util.StringUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -34,16 +31,20 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class DiscussionChannelSelectionService implements PersistenceClient<DiscussionChannelSelectionStore> {
-    private final DiscussionChannelSelectionStore persistableStore = new DiscussionChannelSelectionStore();
-    private final Persistence<DiscussionChannelSelectionStore> persistence;
+public class ChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
+    private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
+    private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateTwoPartyChannelService privateChannelService;
-    private final PublicModeratedChannelService publicChannelService;
+    private final PublicChannelService publicChannelService;
 
-    public DiscussionChannelSelectionService(PersistenceService persistenceService,
-                                             PrivateTwoPartyChannelService privateChannelService,
-                                             PublicModeratedChannelService publicChannelService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    public ChannelSelectionService(PersistenceService persistenceService,
+                                   PrivateTwoPartyChannelService privateChannelService,
+                                   PublicChannelService publicChannelService,
+                                   ChannelDomain channelDomain) {
+        persistence = persistenceService.getOrCreatePersistence(this,
+                "db",
+                StringUtils.capitalize(channelDomain.name()) + "ChannelSelectionStore",
+                persistableStore);
         this.privateChannelService = privateChannelService;
         this.publicChannelService = publicChannelService;
     }

@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.*;
-import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -32,8 +31,8 @@ import java.util.Optional;
 
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
-    private final PublicModeratedChannelService publicEventsChannelService;
-    private final EventsChannelSelectionService eventsChannelSelectionService;
+    private final PublicChannelService publicEventsChannelService;
+    private final ChannelSelectionService eventsChannelSelectionService;
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {

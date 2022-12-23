@@ -19,124 +19,104 @@ package bisq.chat.channel;
 
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
-import bisq.network.NetworkIdWithKeyPair;
+import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.DataService;
-import bisq.persistence.PersistableStore;
-import bisq.user.identity.UserIdentity;
+import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.persistence.Persistence;
+import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class PublicChannelService<M extends PublicChatMessage, C extends BasePublicChannel<M>, S extends PersistableStore<S>>
-        extends ChannelService<M, C, S> implements DataService.Listener {
+public class PublicChannelService extends BasePublicChannelService<PublicChatMessage, PublicChannel, PublicChannelStore> {
+    @Getter
+    private final PublicChannelStore persistableStore = new PublicChannelStore();
+    @Getter
+    private final Persistence<PublicChannelStore> persistence;
+    private final List<PublicChannel> defaultChannels;
 
-    public PublicChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChannelDomain channelDomain) {
+    public PublicChannelService(PersistenceService persistenceService,
+                                NetworkService networkService,
+                                UserIdentityService userIdentityService,
+                                ChannelDomain channelDomain,
+                                List<PublicChannel> defaultChannels) {
         super(networkService, userIdentityService, channelDomain);
+
+        this.defaultChannels = defaultChannels;
+
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Service
+    // DataService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        networkService.addDataServiceListener(this);
-        networkService.getDataService().ifPresent(dataService ->
-                dataService.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
-        maybeAddDefaultChannels();
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        networkService.removeDataServiceListener(this);
-        return CompletableFuture.completedFuture(true);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(String text,
-                                                                                 Optional<Quotation> quotedMessage,
-                                                                                 C publicChannel,
-                                                                                 UserIdentity userIdentity) {
-        M chatMessage = createChatMessage(text, quotedMessage, publicChannel, userIdentity.getUserProfile());
-        return publishChatMessage(chatMessage, userIdentity);
-    }
-
-    public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M chatMessage,
-                                                                                 UserIdentity userIdentity) {
-        return publishChatMessage(userIdentity, userIdentity.getUserProfile(), chatMessage);
-    }
-
-    public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,
-                                                                                       String editedText,
-                                                                                       UserIdentity userIdentity) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return networkService.removeAuthenticatedData(originalChatMessage, nodeIdAndKeyPair)
-                .thenCompose(result -> {
-                    M chatMessage = createEditedChatMessage(originalChatMessage, editedText, userIdentity.getUserProfile());
-                    return publishChatMessage(chatMessage, userIdentity);
-                });
-    }
-
-    public CompletableFuture<DataService.BroadCastDataResult> deleteChatMessage(M chatMessage,
-                                                                                UserIdentity userIdentity) {
-        return networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
-    }
-
-    public Collection<C> getMentionableChannels() {
-        // TODO: implement logic
-        return getChannels();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void processAddedMessage(M message) {
-        findChannel(message.getChannelId())
-                .ifPresent(channel -> addMessage(message, channel));
-    }
-
-    protected void processRemovedMessage(M message) {
-        findChannel(message.getChannelId())
-                .ifPresent(channel -> removeMessage(message, channel));
-    }
-
-    protected void removeMessage(M message, C channel) {
-        synchronized (getPersistableStore()) {
-            channel.removeChatMessage(message);
+    public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof PublicChatMessage) {
+            processAddedMessage((PublicChatMessage) distributedData);
         }
+    }
+
+    @Override
+    public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
+        DistributedData distributedData = authenticatedData.getDistributedData();
+        if (distributedData instanceof PublicChatMessage) {
+            processRemovedMessage((PublicChatMessage) distributedData);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // PublicChannelService 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public ObservableArray<PublicChannel> getChannels() {
+        return persistableStore.getChannels();
+    }
+
+    @Override
+    protected PublicChatMessage createChatMessage(String text,
+                                                  Optional<Quotation> quotedMessage,
+                                                  PublicChannel publicChannel,
+                                                  UserProfile userProfile) {
+        return new PublicChatMessage(publicChannel.getId(),
+                userProfile.getId(),
+                text,
+                quotedMessage,
+                new Date().getTime(),
+                false);
+    }
+
+    @Override
+    protected PublicChatMessage createEditedChatMessage(PublicChatMessage originalChatMessage,
+                                                        String editedText,
+                                                        UserProfile userProfile) {
+        return new PublicChatMessage(originalChatMessage.getChannelId(),
+                userProfile.getId(),
+                editedText,
+                originalChatMessage.getQuotation(),
+                originalChatMessage.getDate(),
+                true);
+    }
+
+    @Override
+    protected void maybeAddDefaultChannels() {
+        if (!getChannels().isEmpty()) {
+            return;
+        }
+
+        getChannels().addAll(defaultChannels);
         persist();
     }
-
-    protected abstract M createChatMessage(String text,
-                                           Optional<Quotation> quotedMessage,
-                                           C publicChannel,
-                                           UserProfile userProfile);
-
-    protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
-
-    protected CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(UserIdentity userIdentity,
-                                                                                    UserProfile userProfile,
-                                                                                    M publicChatMessage) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userProfile, nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(publicChatMessage, nodeIdAndKeyPair));
-    }
-
-    protected abstract void maybeAddDefaultChannels();
 }

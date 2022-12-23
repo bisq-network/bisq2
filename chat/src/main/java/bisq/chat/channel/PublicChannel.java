@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.PublicModeratedChatMessage;
+import bisq.chat.message.PublicChatMessage;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,13 +31,13 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicModeratedChannel extends BasePublicChannel<PublicModeratedChatMessage> {
+public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicModeratedChannel(ChannelDomain channelDomain, String channelName) {
+    public PublicChannel(ChannelDomain channelDomain, String channelName) {
         this(channelDomain,
                 channelName,
                 Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
@@ -47,13 +47,13 @@ public final class PublicModeratedChannel extends BasePublicChannel<PublicModera
                 ChannelNotificationType.MENTION);
     }
 
-    private PublicModeratedChannel(ChannelDomain channelDomain,
-                                   String channelName,
-                                   String displayName,
-                                   String description,
-                                   String channelAdminId,
-                                   List<String> channelModeratorIds,
-                                   ChannelNotificationType channelNotificationType
+    private PublicChannel(ChannelDomain channelDomain,
+                          String channelName,
+                          String displayName,
+                          String description,
+                          String channelAdminId,
+                          List<String> channelModeratorIds,
+                          ChannelNotificationType channelNotificationType
     ) {
         super(channelDomain, channelName, channelNotificationType);
 
@@ -67,7 +67,7 @@ public final class PublicModeratedChannel extends BasePublicChannel<PublicModera
 
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder()
-                .setPublicModeratedChannel(bisq.chat.protobuf.PublicModeratedChannel.newBuilder()
+                .setPublicChannel(bisq.chat.protobuf.PublicChannel.newBuilder()
                         .setChannelName(displayName)
                         .setDescription(description)
                         .setChannelAdminId(channelAdminId)
@@ -75,9 +75,9 @@ public final class PublicModeratedChannel extends BasePublicChannel<PublicModera
                 .build();
     }
 
-    public static PublicModeratedChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                   bisq.chat.protobuf.PublicModeratedChannel proto) {
-        return new PublicModeratedChannel(
+    public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                          bisq.chat.protobuf.PublicChannel proto) {
+        return new PublicChannel(
                 ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getId(),
                 proto.getChannelName(),
@@ -88,17 +88,17 @@ public final class PublicModeratedChannel extends BasePublicChannel<PublicModera
     }
 
     @Override
-    public void addChatMessage(PublicModeratedChatMessage chatMessage) {
+    public void addChatMessage(PublicChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PublicModeratedChatMessage chatMessage) {
+    public void removeChatMessage(PublicChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicModeratedChatMessage> removeMessages) {
+    public void removeChatMessages(Collection<PublicChatMessage> removeMessages) {
         chatMessages.removeAll(removeMessages);
     }
 

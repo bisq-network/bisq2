@@ -19,9 +19,6 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.*;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.support.SupportChannelSelectionService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -82,11 +79,11 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final PrivateTradeChannelService privateTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-        private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final ChannelSelectionService discussionChannelSelectionService;
         private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final PrivateTwoPartyChannelService privateSupportChannelService;
-        private final EventsChannelSelectionService eventsChannelSelectionService;
-        private final SupportChannelSelectionService supportChannelSelectionService;
+        private final ChannelSelectionService eventsChannelSelectionService;
+        private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
 

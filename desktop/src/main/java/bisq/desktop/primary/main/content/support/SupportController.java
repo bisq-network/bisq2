@@ -20,7 +20,6 @@ package bisq.desktop.primary.main.content.support;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.SupportChannelSelectionService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
@@ -32,8 +31,8 @@ import java.util.Optional;
 
 @Slf4j
 public class SupportController extends ChatController<SupportView, SupportModel> implements Controller {
-    private final PublicModeratedChannelService publicSupportChannelService;
-    private final SupportChannelSelectionService supportChannelSelectionService;
+    private final PublicChannelService publicSupportChannelService;
+    private final ChannelSelectionService supportChannelSelectionService;
     private PublicSupportChannelSelection publicSupportChannelSelection;
 
     public SupportController(DefaultApplicationService applicationService) {

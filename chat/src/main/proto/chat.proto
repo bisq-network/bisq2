@@ -63,7 +63,7 @@ message ChatMessage {
   network.MetaData metaData = 9;
   oneof message {
     PrivateTwoPartyChatMessage privateTwoPartyChatMessage = 20;
-    PublicModeratedChatMessage publicModeratedChatMessage = 21;
+    PublicChatMessage publicChatMessage = 21;
 
     PrivateTradeChatMessage privateTradeChatMessage = 22;
     PublicTradeChatMessage publicTradeChatMessage = 23;
@@ -76,7 +76,7 @@ message Channel {
   ChannelDomain channelDomain = 3;
   oneof message{
     PrivateTwoPartyChannel privateTwoPartyChannel = 10;
-    PublicModeratedChannel publicModeratedChannel = 11;
+    PublicChannel publicChannel = 11;
 
     PrivateTradeChannel privateTradeChannel = 12;
     PublicTradeChannel publicTradeChannel = 13;
@@ -98,25 +98,27 @@ message PrivateTwoPartyChannelStore {
 }
 
 
-// PublicModerated
-message PublicModeratedChatMessage {
+// Public
+message PublicChatMessage {
 }
 
-message PublicModeratedChannel {
+message PublicChannel {
   string channelName = 1;
   string description = 2;
   string channelAdminId = 3;
   repeated string channelModeratorIds = 4;
   bool isVisible = 5;
 }
-message PublicModeratedChannelStore {
+message PublicChannelStore {
   repeated Channel channels = 1;
 }
 
-// SelectionStores
-message DiscussionChannelSelectionStore {
+message ChannelSelectionStore {
   optional Channel selectedChannel = 1;
 }
+
+
+
 message EventsChannelSelectionStore {
   optional Channel selectedChannel = 1;
 }

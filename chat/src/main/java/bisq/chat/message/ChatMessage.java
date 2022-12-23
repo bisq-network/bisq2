@@ -103,8 +103,8 @@ public abstract class ChatMessage implements Proto {
                 return PrivateTradeChatMessage.fromProto(proto);
             }
 
-            case PUBLICMODERATEDCHATMESSAGE: {
-                return PublicModeratedChatMessage.fromProto(proto);
+            case PUBLICCHATMESSAGE: {
+                return PublicChatMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
@@ -122,8 +122,8 @@ public abstract class ChatMessage implements Proto {
                     case PUBLICTRADECHATMESSAGE: {
                         return PublicTradeChatMessage.fromProto(proto);
                     }
-                    case PUBLICMODERATEDCHATMESSAGE: {
-                        return PublicModeratedChatMessage.fromProto(proto);
+                    case PUBLICCHATMESSAGE: {
+                        return PublicChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);

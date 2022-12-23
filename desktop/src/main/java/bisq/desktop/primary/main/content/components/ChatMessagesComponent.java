@@ -20,11 +20,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.*;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.events.EventsChannelSelectionService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Quotation;
-import bisq.chat.support.SupportChannelSelectionService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -114,17 +111,17 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-        private final PublicModeratedChannelService publicDiscussionChannelService;
+        private final PublicChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PublicModeratedChannelService publicEventsChannelService;
+        private final PublicChannelService publicEventsChannelService;
         private final PrivateTwoPartyChannelService privateEventsChannelService;
-        private final EventsChannelSelectionService eventsChannelSelectionService;
-        private final PublicModeratedChannelService publicSupportChannelService;
+        private final ChannelSelectionService eventsChannelSelectionService;
+        private final PublicChannelService publicSupportChannelService;
         private final PrivateTwoPartyChannelService privateSupportChannelService;
-        private final SupportChannelSelectionService supportChannelSelectionService;
+        private final ChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
@@ -246,18 +243,18 @@ public class ChatMessagesComponent {
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
-            } else if (channel instanceof PublicModeratedChannel) {
+            } else if (channel instanceof PublicChannel) {
                 switch (channel.getChannelDomain()) {
                     case TRADE -> {
                     }
                     case DISCUSSION -> {
-                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
                     }
                     case EVENTS -> {
-                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
                     }
                     case SUPPORT -> {
-                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicModeratedChannel) channel, userIdentity);
+                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
                     }
                 }
 
