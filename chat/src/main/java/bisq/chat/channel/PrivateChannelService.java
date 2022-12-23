@@ -17,9 +17,11 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -78,10 +80,24 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
                 .flatMap(myUserIdentity -> maybeCreateAndAddChannel(peer, myUserIdentity.getId()));
     }
 
+    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel) {
+        return sendPrivateChatMessage(Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
+                Optional.empty(),
+                channel,
+                MessageType.LEAVE);
+    }
+
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       C channel) {
-        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer());
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TEXT);
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      C channel,
+                                                                                      MessageType messageType) {
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), messageType);
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String messageId,
@@ -89,7 +105,8 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
                                                                                          Optional<Quotation> quotedMessage,
                                                                                          C channel,
                                                                                          UserIdentity senderIdentity,
-                                                                                         UserProfile receiver) {
+                                                                                         UserProfile receiver,
+                                                                                         MessageType messageType) {
         M chatMessage = createNewPrivateChatMessage(messageId,
                 channel,
                 senderIdentity.getUserProfile(),
@@ -97,7 +114,8 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
                 text,
                 quotedMessage,
                 new Date().getTime(),
-                false);
+                false,
+                messageType);
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
@@ -149,11 +167,11 @@ public abstract class PrivateChannelService<M extends PrivateChatMessage, C exte
                                                      String text,
                                                      Optional<Quotation> quotedMessage,
                                                      long time,
-                                                     boolean wasEdited);
+                                                     boolean wasEdited,
+                                                     MessageType messageType);
 
     protected void processMessage(M message) {
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
-                proofOfWorkService.verify(message.getSender().getProofOfWork())) {
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             findChannel(message.getChannelId())
                     .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
                     .ifPresent(channel -> addMessage(message, channel));

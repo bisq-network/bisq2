@@ -18,6 +18,7 @@
 package bisq.chat.discuss.priv;
 
 import bisq.chat.channel.PrivateChannelService;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.ObservableArray;
 import bisq.network.NetworkService;
@@ -64,7 +65,8 @@ public class PrivateDiscussionChannelService extends PrivateChannelService<Priva
                                                                        String text,
                                                                        Optional<Quotation> quotedMessage,
                                                                        long time,
-                                                                       boolean wasEdited) {
+                                                                       boolean wasEdited,
+                                                                       MessageType messageType) {
         return new PrivateDiscussionChatMessage(messageId,
                 channel.getId(),
                 sender,
@@ -72,7 +74,8 @@ public class PrivateDiscussionChannelService extends PrivateChannelService<Priva
                 text,
                 quotedMessage,
                 new Date().getTime(),
-                wasEdited);
+                wasEdited,
+                messageType);
     }
 
     @Override

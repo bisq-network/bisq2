@@ -17,6 +17,7 @@
 
 package bisq.chat.events.pub;
 
+import bisq.chat.ChannelKind;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
 import bisq.i18n.Res;
@@ -66,7 +67,7 @@ public final class PublicEventsChannel extends PublicChannel<PublicEventsChatMes
                                 String channelAdminId,
                                 List<String> channelModeratorIds,
                                 ChannelNotificationType channelNotificationType) {
-        super(id, channelNotificationType);
+        super(id, channelNotificationType, ChannelKind.EVENTS);
 
         this.channelName = channelName;
         this.description = description;

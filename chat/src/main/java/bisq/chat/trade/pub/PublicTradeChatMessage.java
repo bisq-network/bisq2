@@ -18,6 +18,7 @@
 package bisq.chat.trade.pub;
 
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
@@ -51,6 +52,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
+                MessageType.TEXT,
                 new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
@@ -62,6 +64,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited,
+                                   MessageType messageType,
                                    MetaData metaData) {
         super(messageId,
                 channelId,
@@ -70,6 +73,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
+                messageType,
                 metaData);
         this.tradeChatOffer = tradeChatOffer;
     }
@@ -99,6 +103,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
+                MessageType.fromProto(baseProto.getMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 

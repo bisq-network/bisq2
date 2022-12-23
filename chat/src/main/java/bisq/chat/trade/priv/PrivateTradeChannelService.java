@@ -18,6 +18,7 @@
 package bisq.chat.trade.priv;
 
 import bisq.chat.channel.PrivateChannelService;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
@@ -74,7 +75,8 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                                                                   String text,
                                                                   Optional<Quotation> quotedMessage,
                                                                   long time,
-                                                                  boolean wasEdited) {
+                                                                  boolean wasEdited,
+                                                                  MessageType messageType) {
         // We send the mediator only in the first message to the peer.
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new PrivateTradeChatMessage(
@@ -86,7 +88,8 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                 quotedMessage,
                 new Date().getTime(),
                 wasEdited,
-                mediator);
+                mediator,
+                messageType);
     }
 
     @Override
@@ -125,6 +128,17 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
         return channel;
     }
 
+    public void leaveChannel(PrivateTradeChannel channel) {
+        sendLeaveMessage(channel)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Sending leave channel message failed.");
+                    }
+                    getChannels().remove(channel);
+                    persist();
+                });
+    }
+
     @Override
     public ObservableArray<PrivateTradeChannel> getChannels() {
         return persistableStore.getChannels();
@@ -132,26 +146,33 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
 
     @Override
     protected void processMessage(PrivateTradeChatMessage message) {
-        //todo is proofOfWorkService.verify needed?
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
-                proofOfWorkService.verify(message.getSender().getProofOfWork())) {
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
                     .flatMap(myUserIdentity -> findChannel(message.getChannelId())
-                            .or(() -> Optional.of(traderCreatesNewChannel(myUserIdentity,
-                                    message.getSender(),
-                                    message.getMediator()))))
-                    .ifPresent(channel -> addMessage(message, channel));
+                            .or(() -> {
+                                if (message.getMessageType() == MessageType.LEAVE) {
+                                    return Optional.empty();
+                                } else {
+                                    return Optional.of(traderCreatesNewChannel(myUserIdentity,
+                                            message.getSender(),
+                                            message.getMediator()));
+                                }
+                            }))
+                    .ifPresent(channel -> {
+                        addMessage(message, channel);
+                    });
         }
     }
 
     @Override
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
-                                                                                      PrivateTradeChannel channel) {
+                                                                                      PrivateTradeChannel channel,
+                                                                                      MessageType messageType) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         String messageId = StringUtils.createShortUid();
         if (!channel.getInMediation().get() || channel.getMediator().isEmpty()) {
-            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer());
+            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer(), messageType);
         }
         // If mediation has been activated we send all messages to the 2 other peers
         UserProfile receiver1, receiver2;
@@ -176,7 +197,8 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                 quotedMessage,
                 date,
                 false,
-                mediator);
+                mediator,
+                messageType);
 
         CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
                 receiver1.getNetworkId(),
@@ -191,7 +213,8 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                 quotedMessage,
                 date,
                 false,
-                mediator);
+                mediator,
+                messageType);
         CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
                 receiver2.getNetworkId(),
                 senderNodeIdAndKeyPair);

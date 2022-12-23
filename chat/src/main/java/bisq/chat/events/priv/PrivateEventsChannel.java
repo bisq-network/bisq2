@@ -17,6 +17,7 @@
 
 package bisq.chat.events.priv;
 
+import bisq.chat.ChannelKind;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
 import bisq.common.data.Pair;
@@ -50,7 +51,7 @@ public final class PrivateEventsChannel extends PrivateChannel<PrivateEventsChat
                                  UserIdentity myProfile,
                                  List<PrivateEventsChatMessage> chatMessages,
                                  ChannelNotificationType channelNotificationType) {
-        super(id, myProfile, chatMessages, channelNotificationType);
+        super(id, myProfile, chatMessages, channelNotificationType, ChannelKind.EVENTS);
 
         this.peer = peer;
     }

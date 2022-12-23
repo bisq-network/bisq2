@@ -17,6 +17,7 @@
 
 package bisq.chat.trade.priv;
 
+import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -44,7 +45,8 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited,
-                                   Optional<UserProfile> mediator) {
+                                   Optional<UserProfile> mediator,
+                                   MessageType messageType) {
         this(messageId,
                 channelId,
                 sender,
@@ -54,20 +56,22 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 mediator,
+                messageType,
                 new MetaData(TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
-    private PrivateTradeChatMessage(String messageId,
-                                    String channelId,
-                                    UserProfile sender,
-                                    String receiversId,
-                                    String text,
-                                    Optional<Quotation> quotedMessage,
-                                    long date,
-                                    boolean wasEdited,
-                                    Optional<UserProfile> mediator,
-                                    MetaData metaData) {
-        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+    public PrivateTradeChatMessage(String messageId,
+                                   String channelId,
+                                   UserProfile sender,
+                                   String receiversId,
+                                   String text,
+                                   Optional<Quotation> quotedMessage,
+                                   long date,
+                                   boolean wasEdited,
+                                   Optional<UserProfile> mediator,
+                                   MessageType messageType,
+                                   MetaData metaData) {
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
         this.mediator = mediator;
     }
 
@@ -106,6 +110,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage {
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 mediator,
+                MessageType.fromProto(baseProto.getMessageType()),
                 MetaData.fromProto(baseProto.getMetaData())
         );
     }

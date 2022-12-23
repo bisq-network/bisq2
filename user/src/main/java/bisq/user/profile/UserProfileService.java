@@ -147,14 +147,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
     }
 
     private void processUserProfileAdded(UserProfile userProfile) {
-        if (proofOfWorkService.verify(userProfile.getProofOfWork())) {
-            Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
-            if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
-                log.info("We got a new or edited userProfile {}", userProfile);
-                getUserProfileById().put(userProfile.getId(), userProfile);
-                notifyObservers();
-                persist();
-            }
+        Optional<UserProfile> optionalChatUser = findUserProfile(userProfile.getId());
+        if (optionalChatUser.isEmpty() || !optionalChatUser.get().equals(userProfile)) {
+            log.info("We got a new or edited userProfile {}", userProfile);
+            getUserProfileById().put(userProfile.getId(), userProfile);
+            notifyObservers();
+            persist();
         }
     }
 

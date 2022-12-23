@@ -278,7 +278,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return new ListCell<>() {
                 private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
-
                 final Label label = new Label();
                 final HBox hBox = new HBox();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
@@ -365,10 +364,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             } else {
                                 icon.setEffect(nonSelectedEffect);
                             }
-
                         }
                     });
-
                 }
             };
         }

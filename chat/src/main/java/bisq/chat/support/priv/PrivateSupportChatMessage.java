@@ -18,6 +18,7 @@
 package bisq.chat.support.priv;
 
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -42,7 +43,8 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                                      String text,
                                      Optional<Quotation> quotedMessage,
                                      long date,
-                                     boolean wasEdited) {
+                                     boolean wasEdited,
+                                     MessageType messageType) {
         super(messageId,
                 channelId,
                 sender,
@@ -51,6 +53,7 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
+                messageType,
                 new MetaData(ChatMessage.TTL, 100000, PrivateSupportChatMessage.class.getSimpleName()));
     }
 
@@ -62,8 +65,9 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                                       Optional<Quotation> quotedMessage,
                                       long date,
                                       boolean wasEdited,
+                                      MessageType messageType,
                                       MetaData metaData) {
-        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, metaData);
+        super(messageId, channelId, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
     }
 
     @Override
@@ -95,6 +99,7 @@ public final class PrivateSupportChatMessage extends PrivateChatMessage {
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
+                MessageType.fromProto(baseProto.getMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 }

@@ -333,12 +333,16 @@ public class ChatMessagesComponent {
 
         private void applyUserProfileOrChannelChange() {
             boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
-            model.userProfileSelectionVisible.set(multipleProfiles && model.selectedChannel.get() instanceof PublicChannel);
+            Channel<?> selectedChannel = model.selectedChannel.get();
+            model.userProfileSelectionVisible.set(multipleProfiles && selectedChannel instanceof PublicChannel);
 
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
-            chatMessagesPin = model.selectedChannel.get().getChatMessages().addChangedListener(this::maybeSwitchUserProfile);
+
+            if (selectedChannel != null) {
+                chatMessagesPin = selectedChannel.getChatMessages().addChangedListener(this::maybeSwitchUserProfile);
+            }
         }
 
         private void maybeSwitchUserProfile() {
