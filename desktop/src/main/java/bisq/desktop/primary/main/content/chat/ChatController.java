@@ -39,6 +39,7 @@ import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
@@ -97,14 +98,14 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     @Override
     public void onActivate() {
-        chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
+        chatMessagesComponent.setOnShowChatUserDetails(userProfile -> {
             onCloseSideBar();
             model.getSideBarVisible().set(true);
 
             UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
                     chatService,
                     reputationService,
-                    chatUser,
+                    userProfile,
                     () -> {
                         onCloseSideBar();
                         chatMessagesComponent.resetSelectedChatMessage();
@@ -201,14 +202,18 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected void applyPeersIcon(BasePrivateChannel<?> privateChannel) {
         Image image = RoboHash.getImage(privateChannel.getPeer().getPubKeyHash());
         ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(42);
-        imageView.setFitHeight(42);
-        model.getChannelIcon().set(imageView);
+        imageView.setFitWidth(35);
+        imageView.setFitHeight(35);
+        model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
     }
 
     protected void applyDefaultPublicChannelIcon(BasePublicChannel<?> channel) {
         String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getChannelName();
-        model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
+        Button iconButton = BisqIconButton.createIconButton(iconId);
+        //todo get larger icons and dont use scaling
+        iconButton.setScaleX(1.25);
+        iconButton.setScaleY(1.25);
+        model.getChannelIcon().set(iconButton);
     }
 }

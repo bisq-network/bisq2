@@ -145,6 +145,10 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase()).getFirst();
+
+                //todo get larger icons and dont use scaling
+                marketsImage.setScaleX(1.25);
+                marketsImage.setScaleY(1.25);
                 model.getChannelIcon().set(marketsImage);
             }
         });

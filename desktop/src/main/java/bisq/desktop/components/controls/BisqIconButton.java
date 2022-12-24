@@ -56,6 +56,13 @@ public class BisqIconButton extends Button {
         return button;
     }
 
+    public static Button createIconButton(ImageView imageView) {
+        Button button = new Button();
+        button.setGraphic(imageView);
+        button.getStyleClass().add("icon-button");
+        return button;
+    }
+
     @Getter
     private final ImageView icon;
 
@@ -71,6 +78,7 @@ public class BisqIconButton extends Button {
         this();
         icon.setId(iconId);
     }
+
 
     public void setIcon(AwesomeIcon icon) {
         setGraphic(AwesomeDude.createIconLabel(icon));
