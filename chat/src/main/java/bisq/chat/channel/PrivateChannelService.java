@@ -30,6 +30,7 @@ import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,9 +47,10 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
     public PrivateChannelService(PersistenceService persistenceService,
                                  NetworkService networkService,
                                  UserIdentityService userIdentityService,
+                                 UserProfileService userProfileService,
                                  ProofOfWorkService proofOfWorkService,
                                  ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, proofOfWorkService, channelDomain);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 "Private" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",

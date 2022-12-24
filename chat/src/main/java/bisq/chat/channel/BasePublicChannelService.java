@@ -26,6 +26,7 @@ import bisq.persistence.PersistableStore;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
@@ -36,8 +37,11 @@ import java.util.concurrent.CompletableFuture;
 public abstract class BasePublicChannelService<M extends BasePublicChatMessage, C extends BasePublicChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements DataService.Listener {
 
-    public BasePublicChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, channelDomain);
+    public BasePublicChannelService(NetworkService networkService,
+                                    UserIdentityService userIdentityService,
+                                    UserProfileService userProfileService,
+                                    ChannelDomain channelDomain) {
+        super(networkService, userIdentityService, userProfileService, channelDomain);
     }
 
 

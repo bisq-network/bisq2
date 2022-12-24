@@ -28,6 +28,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,9 +47,10 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
     public PublicChannelService(PersistenceService persistenceService,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
+                                UserProfileService userProfileService,
                                 ChannelDomain channelDomain,
                                 List<PublicChannel> defaultChannels) {
-        super(networkService, userIdentityService, channelDomain);
+        super(networkService, userIdentityService, userProfileService, channelDomain);
 
         this.defaultChannels = defaultChannels;
 

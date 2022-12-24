@@ -31,6 +31,7 @@ import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -46,9 +47,10 @@ public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage
 
     public BasePrivateChannelService(NetworkService networkService,
                                      UserIdentityService userIdentityService,
+                                     UserProfileService userProfileService,
                                      ProofOfWorkService proofOfWorkService,
                                      ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, channelDomain);
+        super(networkService, userIdentityService, userProfileService, channelDomain);
         this.proofOfWorkService = proofOfWorkService;
     }
 

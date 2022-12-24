@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -33,11 +34,16 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
+    protected final UserProfileService userProfileService;
     protected final ChannelDomain channelDomain;
 
-    public ChannelService(NetworkService networkService, UserIdentityService userIdentityService, ChannelDomain channelDomain) {
+    public ChannelService(NetworkService networkService,
+                          UserIdentityService userIdentityService,
+                          UserProfileService userProfileService,
+                          ChannelDomain channelDomain) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
+        this.userProfileService = userProfileService;
         this.channelDomain = channelDomain;
     }
 

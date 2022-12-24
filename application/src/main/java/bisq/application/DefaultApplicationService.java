@@ -109,7 +109,8 @@ public class DefaultApplicationService extends ApplicationService {
         chatService = new ChatService(persistenceService,
                 securityService.getProofOfWorkService(),
                 networkService,
-                userService.getUserIdentityService());
+                userService.getUserIdentityService(),
+                userService.getUserProfileService());
 
         supportService = new SupportService(networkService, chatService, userService);
 

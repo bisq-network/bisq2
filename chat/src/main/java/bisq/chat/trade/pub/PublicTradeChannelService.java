@@ -32,6 +32,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,8 +53,9 @@ public class PublicTradeChannelService extends BasePublicChannelService<PublicTr
 
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
-                                     UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService, ChannelDomain.TRADE);
+                                     UserIdentityService userIdentityService,
+                                     UserProfileService userProfileService) {
+        super(networkService, userIdentityService, userProfileService, ChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

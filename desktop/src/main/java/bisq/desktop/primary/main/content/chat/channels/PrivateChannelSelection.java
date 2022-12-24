@@ -225,11 +225,11 @@ public class PrivateChannelSelection extends ChannelSelection {
                     //todo
                 }
             }
-            if (!model.sortedList.isEmpty()) {
-                tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
-            } else {
-                tradeChannelSelectionService.selectChannel(null);
-            }
+
+            model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    .findFirst()
+                    .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
+                            () -> tradeChannelSelectionService.selectChannel(null));
         }
     }
 

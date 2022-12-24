@@ -28,6 +28,7 @@ import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,16 +54,19 @@ public class ChatService implements Service {
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
-                       UserIdentityService userIdentityService) {
+                       UserIdentityService userIdentityService,
+                       UserProfileService userProfileService) {
 
         // Trade
         privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 proofOfWorkService);
         publicTradeChannelService = new PublicTradeChannelService(persistenceService,
                 networkService,
-                userIdentityService);
+                userIdentityService,
+                userProfileService);
         tradeChannelSelectionService = new TradeChannelSelectionService(persistenceService,
                 privateTradeChannelService,
                 publicTradeChannelService);
@@ -71,11 +75,13 @@ public class ChatService implements Service {
         privateDiscussionChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 proofOfWorkService,
                 ChannelDomain.DISCUSSION);
         publicDiscussionChannelService = new PublicChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 ChannelDomain.DISCUSSION,
                 List.of(new PublicChannel(ChannelDomain.DISCUSSION, "bisq"),
                         new PublicChannel(ChannelDomain.DISCUSSION, "bitcoin"),
@@ -92,11 +98,13 @@ public class ChatService implements Service {
         privateEventsChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 proofOfWorkService,
                 ChannelDomain.EVENTS);
         publicEventsChannelService = new PublicChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 ChannelDomain.EVENTS,
                 List.of(new PublicChannel(ChannelDomain.EVENTS, "conferences"),
                         new PublicChannel(ChannelDomain.EVENTS, "meetups"),
@@ -113,11 +121,13 @@ public class ChatService implements Service {
         privateSupportChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 proofOfWorkService,
                 ChannelDomain.SUPPORT);
         publicSupportChannelService = new PublicChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 ChannelDomain.SUPPORT,
                 List.of(new PublicChannel(ChannelDomain.SUPPORT, "support"),
                         new PublicChannel(ChannelDomain.SUPPORT, "questions"),

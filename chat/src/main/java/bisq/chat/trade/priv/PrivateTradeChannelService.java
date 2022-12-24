@@ -34,6 +34,7 @@ import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,8 +52,9 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
     public PrivateTradeChannelService(PersistenceService persistenceService,
                                       NetworkService networkService,
                                       UserIdentityService userIdentityService,
+                                      UserProfileService userProfileService,
                                       ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService, proofOfWorkService, ChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -152,6 +154,8 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
                     .flatMap(myUserIdentity -> findChannelForMessage(message)
                             .or(() -> {
                                 if (message.getMessageType() == MessageType.LEAVE) {
+                                    return Optional.empty();
+                                } else if (userProfileService.isChatUserIgnored(message.getSender())) {
                                     return Optional.empty();
                                 } else {
                                     return Optional.of(traderCreatesNewChannel(myUserIdentity,
