@@ -20,6 +20,8 @@ package bisq.chat.trade.priv;
 import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.MessageType;
 import bisq.common.data.Pair;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
@@ -29,10 +31,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -157,12 +156,48 @@ public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeCh
         }
     }
 
+    @Override
+    public Set<String> getMembers() {
+        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
+        getChatMessages().forEach(chatMessage -> {
+            String authorId = chatMessage.getAuthorId();
+            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
+            chatMessagesByAuthor.get(authorId).add(chatMessage);
+
+            String receiversId = chatMessage.getReceiversId();
+            if (chatMessage.getMessageType() != MessageType.LEAVE) {
+                chatMessagesByAuthor.putIfAbsent(receiversId, new ArrayList<>());
+                chatMessagesByAuthor.get(receiversId).add(chatMessage);
+            }
+
+            chatMessage.getMediator().ifPresent(mediator -> {
+                if (inMediation.get()) {
+                    String mediatorId = mediator.getId();
+                    chatMessagesByAuthor.putIfAbsent(mediatorId, new ArrayList<>());
+                    chatMessagesByAuthor.get(mediatorId).add(chatMessage);
+                }
+            });
+        });
+
+        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
+                    List<ChatMessage> chatMessages = entry.getValue();
+                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
+                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
+                    return new Pair<>(entry.getKey(), lastChatMessage);
+                })
+                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
+                .map(Pair::getFirst)
+                .collect(Collectors.toSet());
+    }
+
     public String getChannelSelectionDisplayString() {
         if (inMediation.get()) {
             if (isMediator()) {
                 return peerOrTrader1.getUserName() + ", " + myUserProfileOrTrader2.getUserName();
+            } else if (mediator.isPresent()) {
+                return peerOrTrader1.getUserName() + ", " + mediator.get().getUserName();
             } else {
-                return peerOrTrader1.getUserName() + ", " + mediator.orElseThrow().getUserName();
+                return peerOrTrader1.getUserName();
             }
         } else {
             return peerOrTrader1.getUserName();

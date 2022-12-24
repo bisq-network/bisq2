@@ -100,6 +100,15 @@ public class ChannelSidebar {
         }
 
         void setChannel(Channel<? extends ChatMessage> channel) {
+            if (channel == null) {
+                model.descriptionVisible.set(false);
+                model.description.set(null);
+                model.adminProfile = Optional.empty();
+                model.moderators.clear();
+                model.channel.set(null);
+                return;
+            }
+
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
             model.channelName.set(channel.getDisplayString());
             model.members.setAll(channel.getMembers().stream()
@@ -109,11 +118,11 @@ public class ChannelSidebar {
                     .collect(Collectors.toList()));
 
             if (channel instanceof PublicChannel) {
-                PublicChannel publicEventsChannel = (PublicChannel) channel;
-                model.description.set(publicEventsChannel.getDescription());
+                PublicChannel publicChannel = (PublicChannel) channel;
+                model.description.set(publicChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(publicEventsChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                model.moderators.setAll(publicEventsChannel.getChannelModeratorIds().stream()
+                model.adminProfile = userProfileService.findUserProfile(publicChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.moderators.setAll(publicChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
                         .map(ChatUserOverview::new)
                         .sorted()

@@ -18,10 +18,16 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.BasePublicChatMessage;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.MessageType;
+import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString(callSuper = true)
@@ -32,5 +38,25 @@ public abstract class BasePublicChannel<M extends BasePublicChatMessage> extends
 
     public BasePublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
+    }
+
+    @Override
+    public Set<String> getMembers() {
+        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
+        getChatMessages().forEach(chatMessage -> {
+            String authorId = chatMessage.getAuthorId();
+            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
+            chatMessagesByAuthor.get(authorId).add(chatMessage);
+        });
+
+        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
+                    List<ChatMessage> chatMessages = entry.getValue();
+                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
+                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
+                    return new Pair<>(entry.getKey(), lastChatMessage);
+                })
+                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
+                .map(Pair::getFirst)
+                .collect(Collectors.toSet());
     }
 }
