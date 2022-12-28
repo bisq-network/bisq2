@@ -62,7 +62,7 @@ public class PublicTradeChannelStore implements PersistableStore<PublicTradeChan
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicTradeChannelStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.PublicTradeChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

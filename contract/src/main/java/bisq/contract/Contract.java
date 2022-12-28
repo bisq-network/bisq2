@@ -20,9 +20,9 @@ package bisq.contract;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.monetary.Monetary;
 import bisq.common.proto.Proto;
+import com.google.protobuf.MessageLite;
 import bisq.network.NetworkId;
 import bisq.offer.Offer;
-import com.google.protobuf.Message;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +57,7 @@ public final class Contract implements Proto {
     }
 
     @Override
-    public Message toProto() {
+    public MessageLite toProto() {
         log.error("Not impl yet");
         return null;
     }

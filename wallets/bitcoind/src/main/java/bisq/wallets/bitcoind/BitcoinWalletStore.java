@@ -67,7 +67,7 @@ public final class BitcoinWalletStore implements PersistableStore<BitcoinWalletS
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.wallets.protobuf.BitcoinWalletStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.wallets.protobuf.BitcoinWalletStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

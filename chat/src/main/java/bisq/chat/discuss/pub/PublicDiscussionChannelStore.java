@@ -56,7 +56,7 @@ public class PublicDiscussionChannelStore implements PersistableStore<PublicDisc
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicDiscussionChannelStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.PublicDiscussionChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

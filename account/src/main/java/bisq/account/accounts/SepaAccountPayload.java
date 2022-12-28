@@ -17,7 +17,7 @@
 
 package bisq.account.accounts;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -40,7 +40,7 @@ public final class SepaAccountPayload extends CountryBasedAccountPayload {
     }
 
     @Override
-    public Message toProto() {
+    public MessageLite toProto() {
         return null;
     }
 }

@@ -60,7 +60,7 @@ public final class SignedWitnessStore implements PersistableStore<SignedWitnessS
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.SignedWitnessStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.user.protobuf.SignedWitnessStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -28,7 +28,10 @@ public interface DistributedData extends Proto {
     }
 
     default Any toAny() {
-        return Any.pack(toProto());
+        return Any.newBuilder()
+                .setTypeUrl("type.googleapis.com/bisq.network.p2p.services.data.storage.DistributedData")
+                .setValue(toProto().toByteString())
+                .build();
     }
 
     MetaData getMetaData();

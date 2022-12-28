@@ -68,7 +68,7 @@ public final class DataStore<T extends DataRequest> implements PersistableStore<
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.network.protobuf.DataStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.network.protobuf.DataStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -60,7 +60,7 @@ public final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> 
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.ProfileAgeStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.user.protobuf.ProfileAgeStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

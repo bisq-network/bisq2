@@ -100,7 +100,7 @@ public final class UserProfile implements DistributedData {
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.UserProfile.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.user.protobuf.UserProfile.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -71,7 +71,7 @@ public final class AuthorizedAccountAgeData implements AuthorizedDistributedData
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedAccountAgeData.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizedAccountAgeData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

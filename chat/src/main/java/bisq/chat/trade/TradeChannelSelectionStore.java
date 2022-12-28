@@ -57,7 +57,7 @@ public final class TradeChannelSelectionStore implements PersistableStore<TradeC
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.TradeChannelSelectionStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.TradeChannelSelectionStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

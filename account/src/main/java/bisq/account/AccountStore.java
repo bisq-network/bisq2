@@ -61,7 +61,7 @@ public final class AccountStore implements PersistableStore<AccountStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.account.protobuf.AccountStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.account.protobuf.AccountStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

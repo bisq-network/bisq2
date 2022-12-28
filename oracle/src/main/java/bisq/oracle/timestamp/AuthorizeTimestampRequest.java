@@ -19,6 +19,7 @@ package bisq.oracle.timestamp;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -47,7 +48,7 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeTimestampRequestProto())))
+                        .setAny(ProtobufUtils.pack(toAuthorizeTimestampRequestProto())))
                 .build();
     }
 
@@ -64,7 +65,7 @@ public final class AuthorizeTimestampRequest implements MailboxMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.oracle.protobuf.AuthorizeTimestampRequest proto = any.unpack(bisq.oracle.protobuf.AuthorizeTimestampRequest.class);
+                bisq.oracle.protobuf.AuthorizeTimestampRequest proto = bisq.common.util.ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizeTimestampRequest.class);
                 return AuthorizeTimestampRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

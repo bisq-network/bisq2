@@ -55,7 +55,7 @@ public final class OpenOfferStore implements PersistableStore<OpenOfferStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.offer.protobuf.OpenOfferStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.offer.protobuf.OpenOfferStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

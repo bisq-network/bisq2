@@ -62,7 +62,7 @@ public final class TimestampStore implements PersistableStore<TimestampStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.TimestampStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.oracle.protobuf.TimestampStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

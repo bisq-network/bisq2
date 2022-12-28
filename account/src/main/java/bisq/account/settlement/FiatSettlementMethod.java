@@ -22,7 +22,7 @@ import bisq.common.currency.FiatCurrencyRepository;
 import bisq.common.currency.TradeCurrency;
 import bisq.common.locale.Country;
 import bisq.common.locale.CountryRepository;
-import com.google.protobuf.ProtocolMessageEnum;
+import com.google.protobuf.Internal.EnumLite;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -122,7 +122,7 @@ public enum FiatSettlementMethod implements SettlementMethod {
     }
 
     @Override
-    public ProtocolMessageEnum toProto() {
+    public EnumLite toProto() {
         return null;
     }
 }

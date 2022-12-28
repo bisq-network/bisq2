@@ -17,13 +17,13 @@
 
 package bisq.protocol.liquidswap;
 
+import com.google.protobuf.MessageLite;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistenceClient;
 import bisq.protocol.MakerProtocolModel;
 import bisq.protocol.ProtocolStore;
 import bisq.protocol.SellerProtocol;
-import com.google.protobuf.Message;
 
 public class LiquidSwapMakerAsSellerProtocol extends LiquidSwapMakerProtocol implements SellerProtocol {
 
@@ -38,7 +38,7 @@ public class LiquidSwapMakerAsSellerProtocol extends LiquidSwapMakerProtocol imp
     }
 
     @Override
-    public Message toProto() {
+    public MessageLite toProto() {
         //todo
         return null;
     }

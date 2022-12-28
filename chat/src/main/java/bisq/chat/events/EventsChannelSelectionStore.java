@@ -57,7 +57,7 @@ public final class EventsChannelSelectionStore implements PersistableStore<Event
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.EventsChannelSelectionStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.EventsChannelSelectionStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

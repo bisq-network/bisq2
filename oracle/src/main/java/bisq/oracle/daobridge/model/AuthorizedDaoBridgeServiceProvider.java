@@ -66,7 +66,7 @@ public final class AuthorizedDaoBridgeServiceProvider implements AuthorizedDistr
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizedDaoBridgeServiceProvider.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

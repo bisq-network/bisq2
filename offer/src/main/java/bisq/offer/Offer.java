@@ -182,7 +182,7 @@ public final class Offer implements DistributedData {
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.offer.protobuf.Offer.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.offer.protobuf.Offer.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

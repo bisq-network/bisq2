@@ -56,7 +56,7 @@ public class PublicEventsChannelStore implements PersistableStore<PublicEventsCh
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicEventsChannelStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.PublicEventsChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

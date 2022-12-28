@@ -17,13 +17,13 @@
 
 package bisq.common.proto;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 
 /**
  * Interface for any object which gets serialized using protobuf
  */
 public interface Proto {
-    Message toProto();
+    MessageLite toProto();
 
     default byte[] serialize() {
         return toProto().toByteArray();

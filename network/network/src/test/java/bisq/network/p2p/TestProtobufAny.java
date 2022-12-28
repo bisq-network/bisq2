@@ -32,7 +32,7 @@ public class TestProtobufAny {
 
         public static bisq.network.protobuf.MockOffer unpack(Any any)
                 throws InvalidProtocolBufferException {
-            return any.unpack( bisq.network.protobuf.MockOffer.class);
+            return bisq.common.util.ProtobufUtils.unpack(any,  bisq.network.protobuf.MockOffer.class);
         }
 
         public static MockOffer fromProto(bisq.network.protobuf.MockOffer proto) {
@@ -79,7 +79,7 @@ public class TestProtobufAny {
         String type = mockOfferProtoAsAny.getTypeUrl();
         log.error("type {}", type);
         try {
-            bisq.network.protobuf.MockOffer unpacked = mockOfferProtoAsAny.unpack(bisq.network.protobuf.MockOffer.class);
+            bisq.network.protobuf.MockOffer unpacked = mockOfferProtoAsbisq.common.util.ProtobufUtils.unpack(any, bisq.network.protobuf.MockOffer.class);
             MockOffer resolved = MockOffer.fromProto(unpacked);
             assertEquals(mockOffer.text, resolved.text);
 

@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.util.ProtobufUtils;
 import com.google.protobuf.Any;
 
 /**
@@ -30,7 +31,7 @@ public interface PersistableStore<T> extends Proto {
     }
 
     default Any toAny() {
-        return Any.pack(toProto());
+        return ProtobufUtils.pack(toProto());
     }
 
     T getClone();

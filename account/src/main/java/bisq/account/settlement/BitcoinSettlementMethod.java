@@ -18,7 +18,7 @@
 package bisq.account.settlement;
 
 import bisq.account.protocol.SwapProtocolType;
-import com.google.protobuf.ProtocolMessageEnum;
+import com.google.protobuf.Internal.EnumLite;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public enum BitcoinSettlementMethod implements SettlementMethod {
     }
 
     @Override
-    public ProtocolMessageEnum toProto() {
+    public EnumLite toProto() {
         return null;
     }
 }

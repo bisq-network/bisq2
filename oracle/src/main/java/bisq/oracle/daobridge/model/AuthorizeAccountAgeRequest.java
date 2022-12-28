@@ -19,6 +19,7 @@ package bisq.oracle.daobridge.model;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -59,7 +60,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeAccountAgeRequestProto())))
+                        .setAny(ProtobufUtils.pack(toAuthorizeAccountAgeRequestProto())))
                 .build();
     }
 
@@ -84,7 +85,7 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.oracle.protobuf.AuthorizeAccountAgeRequest proto = any.unpack(bisq.oracle.protobuf.AuthorizeAccountAgeRequest.class);
+                bisq.oracle.protobuf.AuthorizeAccountAgeRequest proto = ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizeAccountAgeRequest.class);
                 return AuthorizeAccountAgeRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

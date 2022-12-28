@@ -76,7 +76,7 @@ public final class AuthorizedRoleRegistrationData implements AuthorizedDistribut
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.user.protobuf.AuthorizedRoleRegistrationData.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.user.protobuf.AuthorizedRoleRegistrationData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

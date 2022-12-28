@@ -72,7 +72,7 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     public static ProtoResolver<DistributedData> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.oracle.protobuf.AuthorizedTimestampData.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizedTimestampData.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

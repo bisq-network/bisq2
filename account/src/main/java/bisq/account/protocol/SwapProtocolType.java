@@ -18,7 +18,7 @@
 package bisq.account.protocol;
 
 import bisq.common.util.ProtobufUtils;
-import com.google.protobuf.ProtocolMessageEnum;
+import com.google.protobuf.Internal.EnumLite;
 
 // Versioning is handled by adding new entries. That way we could support multiple versions of the same protocol 
 // if needed.
@@ -34,7 +34,7 @@ public enum SwapProtocolType implements ProtocolType {
     }
 
     @Override
-    public ProtocolMessageEnum toProto() {
+    public EnumLite toProto() {
         return null;
     }
 }

@@ -117,7 +117,7 @@ logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
 
-protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
+protobuf-java = { module = 'com.google.protobuf:protobuf-javalite', version.ref = 'protobuf-java-lib' }
 protobuf-gradle-plugin = { module = 'gradle.plugin.com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
 protobuf-java-util = { module = 'com.google.protobuf:protobuf-java-util', version.ref = 'protobuf-java-lib' }
 

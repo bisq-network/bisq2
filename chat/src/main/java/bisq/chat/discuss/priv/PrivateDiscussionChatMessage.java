@@ -69,7 +69,7 @@ public final class PrivateDiscussionChatMessage extends PrivateChatMessage {
     @Override
     public NetworkMessage toProto() {
         return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
+                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(bisq.common.util.ProtobufUtils.pack(toChatMessageProto())))
                 .build();
     }
 

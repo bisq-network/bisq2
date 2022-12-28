@@ -63,7 +63,7 @@ public final class KeyPairStore implements PersistableStore<KeyPairStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.security.protobuf.KeyPairStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.security.protobuf.KeyPairStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

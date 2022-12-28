@@ -19,6 +19,7 @@ package bisq.oracle.daobridge.model;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import com.google.protobuf.Any;
@@ -56,7 +57,7 @@ public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toAuthorizeSignedWitnessRequestProto())))
+                        .setAny(ProtobufUtils.pack(toAuthorizeSignedWitnessRequestProto())))
                 .build();
     }
 
@@ -83,7 +84,7 @@ public final class AuthorizeSignedWitnessRequest implements NetworkMessage {
     public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.oracle.protobuf.AuthorizeSignedWitnessRequest proto = any.unpack(bisq.oracle.protobuf.AuthorizeSignedWitnessRequest.class);
+                bisq.oracle.protobuf.AuthorizeSignedWitnessRequest proto = ProtobufUtils.unpack(any, bisq.oracle.protobuf.AuthorizeSignedWitnessRequest.class);
                 return AuthorizeSignedWitnessRequest.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

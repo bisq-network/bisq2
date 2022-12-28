@@ -17,11 +17,11 @@
 
 package bisq.common.proto;
 
-import com.google.protobuf.ProtocolMessageEnum;
+import com.google.protobuf.Internal;
 
 /**
  * Interface for any enum which gets serialized using protobuf
  */
 public interface ProtoEnum {
-    ProtocolMessageEnum toProto();
+    Internal.EnumLite toProto();
 }

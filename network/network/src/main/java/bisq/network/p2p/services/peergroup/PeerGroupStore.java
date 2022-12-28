@@ -57,7 +57,7 @@ public final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.network.protobuf.PeerGroupStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.network.protobuf.PeerGroupStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

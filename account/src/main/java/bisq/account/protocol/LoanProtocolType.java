@@ -17,14 +17,14 @@
 
 package bisq.account.protocol;
 
-import com.google.protobuf.ProtocolMessageEnum;
+import com.google.protobuf.Internal.EnumLite;
 
 public enum LoanProtocolType implements ProtocolType {
     COLLATERALIZED,
     REPUTATION;
 
     @Override
-    public ProtocolMessageEnum toProto() {
+    public EnumLite toProto() {
         return null;
     }
 }

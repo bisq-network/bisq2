@@ -58,7 +58,7 @@ public final class ProtocolStore implements PersistableStore<ProtocolStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.protocol.protobuf.ProtocolStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.protocol.protobuf.ProtocolStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

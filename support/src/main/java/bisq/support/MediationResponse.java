@@ -19,6 +19,7 @@ package bisq.support;
 
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ProtobufUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.network.protobuf.ExternalNetworkMessage;
@@ -49,7 +50,7 @@ public final class MediationResponse implements MailboxMessage {
     public bisq.network.protobuf.NetworkMessage toProto() {
         return getNetworkMessageBuilder()
                 .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder()
-                        .setAny(Any.pack(toMediationResponseProto())))
+                        .setAny(ProtobufUtils.pack(toMediationResponseProto())))
                 .build();
     }
 
@@ -67,7 +68,7 @@ public final class MediationResponse implements MailboxMessage {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.support.protobuf.MediationResponse proto = any.unpack(bisq.support.protobuf.MediationResponse.class);
+                bisq.support.protobuf.MediationResponse proto = bisq.common.util.ProtobufUtils.unpack(any, bisq.support.protobuf.MediationResponse.class);
                 return MediationResponse.fromProto(proto);
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);

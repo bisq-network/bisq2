@@ -19,12 +19,12 @@ package bisq.common.proto;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
+import com.google.protobuf.MessageLite;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UnresolvableProtobufMessageException extends RuntimeException {
-    public UnresolvableProtobufMessageException(Message proto) {
+    public UnresolvableProtobufMessageException(MessageLite proto) {
         super("Message case not found for proto message: \n" + proto.toString());
     }
 

@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.message;
 
+import bisq.common.util.ProtobufUtils;
 import com.google.protobuf.Any;
 
 // Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
@@ -30,7 +31,7 @@ public final class ExternalNetworkMessage {
 
     public bisq.network.protobuf.ExternalNetworkMessage toProto() {
         return bisq.network.protobuf.ExternalNetworkMessage.newBuilder()
-                .setAny(Any.pack(networkMessage.toProto()))
+                .setAny(ProtobufUtils.pack(networkMessage.toProto()))
                 .build();
     }
 

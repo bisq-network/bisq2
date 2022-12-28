@@ -57,7 +57,7 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.network.protobuf.NetworkServiceStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.network.protobuf.NetworkServiceStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

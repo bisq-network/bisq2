@@ -31,7 +31,13 @@ protobuf {
         artifact = "com.google.protobuf:protoc:3.19.4${osxArch}"
     }
     generateProtoTasks {
-        all()*.plugins {}
+        all().each { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
     }
     generatedFilesBaseDir = "$projectDir/build/generated/source"
 }

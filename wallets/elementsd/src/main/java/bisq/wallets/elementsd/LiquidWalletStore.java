@@ -65,7 +65,7 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.wallets.protobuf.LiquidWalletStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.wallets.protobuf.LiquidWalletStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

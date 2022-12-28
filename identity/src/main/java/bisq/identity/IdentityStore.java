@@ -67,7 +67,7 @@ public final class IdentityStore implements PersistableStore<IdentityStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.identity.protobuf.IdentityStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.identity.protobuf.IdentityStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

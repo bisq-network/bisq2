@@ -104,7 +104,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.settings.protobuf.SettingsStore.class));
+                return fromProto(bisq.common.util.ProtobufUtils.unpack(any, bisq.settings.protobuf.SettingsStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

@@ -18,8 +18,8 @@
 package bisq.persistence;
 
 import bisq.common.proto.Proto;
+import com.google.protobuf.MessageLite;
 import bisq.common.util.OsUtils;
-import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +36,7 @@ public class PersistenceIntegrationTest {
         }
 
         @Override
-        public Message toProto() {
+        public MessageLite toProto() {
             return null;
         }
     }

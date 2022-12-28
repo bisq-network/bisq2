@@ -132,7 +132,7 @@ public abstract class ChatMessage implements Proto {
     public static ProtoResolver<DistributedData> getDistributedDataResolver() {
         return any -> {
             try {
-                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
+                bisq.chat.protobuf.ChatMessage proto = bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
                     case PUBLICTRADECHATMESSAGE: {
                         return PublicTradeChatMessage.fromProto(proto);
@@ -160,7 +160,7 @@ public abstract class ChatMessage implements Proto {
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
-                bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
+                bisq.chat.protobuf.ChatMessage proto = bisq.common.util.ProtobufUtils.unpack(any, bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
                     case PRIVATETRADECHATMESSAGE: {
                         return PrivateTradeChatMessage.fromProto(proto);
