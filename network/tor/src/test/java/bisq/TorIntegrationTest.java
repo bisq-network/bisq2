@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -39,7 +40,12 @@ public class TorIntegrationTest {
     public void testShutdownDuringStartup() {
         String torDirPath = OsUtils.getUserDataDir() + "/TorifyIntegrationTest";
         File versionFile = new File(torDirPath + "/" + Constants.VERSION);
-        FileUtils.deleteDirectory(new File(torDirPath));
+        try {
+            FileUtils.deleteFileOrDirectory(torDirPath);
+        } catch (IOException e) {
+            log.error("Could not delete " + torDirPath, e);
+            throw new RuntimeException(e);
+        }
         assertFalse(versionFile.exists());
         Tor tor = Tor.getTor(torDirPath);
         new Thread(() -> {

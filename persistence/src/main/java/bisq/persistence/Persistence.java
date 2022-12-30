@@ -151,7 +151,11 @@ public class Persistence<T extends PersistableStore<T>> {
                     log.error("Error closing stream " + ioe.getMessage(), ioe); // swallow
                 }
                 if (tempFile != null) {
-                    FileUtils.releaseTempFile(tempFile);
+                    try {
+                        FileUtils.releaseTempFile(tempFile);
+                    } catch (IOException e) {
+                        log.error("Could not delete " + tempFile, e);
+                    }
                 }
             }
             return success;

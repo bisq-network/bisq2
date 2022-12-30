@@ -70,33 +70,36 @@ public class FileUtils {
     /**
      * @param file The file to delete and to get removed from the `DeleteOnExitHook`.
      */
-    public static void releaseTempFile(File file) {
+    public static void releaseTempFile(File file) throws IOException {
         if (!DeleteOnExitHook.isShutdownInProgress()) {
             DeleteOnExitHook.remove(file.getPath());
         }
         deleteFile(file);
     }
 
-    public static void deleteDirectory(String dirPath) {
-        deleteDirectory(new File(dirPath));
+    public static void deleteFileOrDirectory(String dirPath) throws IOException {
+        deleteFileOrDirectory(new File(dirPath));
     }
 
-    public static void deleteDirectory(File dir) {
+    public static void deleteFileOrDirectory(Path path) throws IOException {
+        deleteFileOrDirectory(path.toFile());
+    }
+
+    public static void deleteFileOrDirectory(File dir) throws IOException {
         File[] files = dir.listFiles();
         if (files != null) {
-            for (final File file : files) {
-                deleteDirectory(file);
+            for (File file : files) {
+                deleteFileOrDirectory(file);
             }
         }
-        //noinspection ResultOfMethodCallIgnored
-        dir.delete();
+        if (dir.exists()) {
+            Files.delete(dir.toPath());
+        }
     }
 
-    public static void deleteFile(File file) {
-        if (file != null && file.exists()) {
-            if (!file.delete()) {
-                log.error("Cannot delete file {}", file);
-            }
+    public static void deleteFile(File file) throws IOException {
+        if (file.exists()) {
+            Files.delete(file.toPath());
         }
     }
 
