@@ -125,7 +125,13 @@ public class DefaultApplicationService extends ApplicationService {
     public CompletableFuture<Boolean> initialize() {
         return securityService.initialize()
                 .thenCompose(result -> walletService.initialize())
-                .whenComplete((r, t) -> setState(State.START_NETWORK))
+                .whenComplete((result, throwable) -> {
+                    if (throwable == null) {
+                        setState(State.START_NETWORK);
+                    } else {
+                        log.error("Error at walletService.initialize", throwable);
+                    }
+                })
                 .thenCompose(result -> networkService.initialize())
                 .whenComplete((r, t) -> setState(State.NETWORK_STARTED))
                 .thenCompose(result -> identityService.initialize())

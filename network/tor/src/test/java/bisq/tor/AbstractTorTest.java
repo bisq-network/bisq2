@@ -51,7 +51,12 @@ abstract class AbstractTorTest {
         File torDir = new File(torDirPathSpec);
         if (torDir.exists()) {
             log.info("Cleaning tor install dir {}", torDirPathSpec);
-            FileUtils.deleteDirectory(torDir);
+            try {
+                FileUtils.deleteFileOrDirectory(torDir);
+            } catch (IOException e) {
+                log.error("Could not delete " + torDir, e);
+                throw new RuntimeException(e);
+            }
         }
         File versionFile = new File(torDir, VERSION);
         assertFalse(versionFile.exists());

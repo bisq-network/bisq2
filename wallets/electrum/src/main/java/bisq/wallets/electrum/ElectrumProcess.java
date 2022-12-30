@@ -45,8 +45,8 @@ public class ElectrumProcess implements BisqProcess {
     @Override
     public void start() {
         unpackArchive();
-        if (isRunningOnLinux()) {
-            makeBinaryExecutable();
+        if (OsUtils.isLinux()) {
+            OsUtils.makeBinaryExecutable(binaryPath.orElseThrow());
         }
         createAndStartProcess();
     }
@@ -68,21 +68,6 @@ public class ElectrumProcess implements BisqProcess {
         }
 
         binaryPath = Optional.of(extractedFilePath);
-    }
-
-    private boolean isRunningOnLinux() {
-        String osName = System.getProperty("os.name");
-        return osName.equals("Linux");
-    }
-
-    private void makeBinaryExecutable() {
-        Path binaryPath = this.binaryPath.orElseThrow();
-        boolean isSuccess = binaryPath.toFile().setExecutable(true);
-        if (!isSuccess) {
-            throw new IllegalStateException(
-                    String.format("Couldn't make `%s` executable.", binaryPath)
-            );
-        }
     }
 
     private void createAndStartProcess() {

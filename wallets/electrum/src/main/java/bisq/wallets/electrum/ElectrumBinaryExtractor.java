@@ -19,6 +19,7 @@ package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@Slf4j
 public class ElectrumBinaryExtractor {
 
     public static final String LINUX_BINARY_SUFFIX = "AppImage";
@@ -113,9 +115,11 @@ public class ElectrumBinaryExtractor {
     private void deleteElectrumAppFileIfExisting() {
         File electrumAppInDataDir = new File(destDir, "Electrum.app");
         if (electrumAppInDataDir.exists()) {
-            boolean isSuccess = electrumAppInDataDir.delete();
-            if (!isSuccess) {
-                throw new IllegalStateException("Couldn't delete old Electrum.app");
+            try {
+                FileUtils.deleteFileOrDirectory(electrumAppInDataDir);
+            } catch (IOException e) {
+                log.error("Could not delete " + electrumAppInDataDir, e);
+                throw new IllegalStateException("Couldn't delete old Electrum.app", e);
             }
         }
     }
@@ -126,19 +130,19 @@ public class ElectrumBinaryExtractor {
             Files.copy(inputStream, zipFileInDataDir.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new ElectrumExtractionFailedException(
-                    "Couldn't copy Electrum binaries zip file from resources to the data directory."
+                    "Couldn't copy Electrum binaries zip file from resources to the data directory.", e
             );
         }
     }
 
     private void unpackZipFileWithUnzipCommand() {
         try {
-            Process extractProcess = new ProcessBuilder("unzip", ARCHIVE_FILENAME)
+            Process extractProcess = new ProcessBuilder("unzip", "-o", ARCHIVE_FILENAME)
                     .directory(destDir)
                     .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                    .redirectError(ProcessBuilder.Redirect.DISCARD)
+                    .redirectError(ProcessBuilder.Redirect.INHERIT)
                     .start();
-            boolean isSuccess = extractProcess.waitFor(1, TimeUnit.MINUTES);
+            boolean isSuccess = extractProcess.waitFor(30, TimeUnit.SECONDS);
             if (!isSuccess) {
                 throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
             }
