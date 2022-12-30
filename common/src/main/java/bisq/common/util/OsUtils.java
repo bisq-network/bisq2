@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +95,15 @@ public class OsUtils {
 
     public static String getOSName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
+    }
+
+    public static void makeBinaryExecutable(Path binaryPath) {
+        boolean isSuccess = binaryPath.toFile().setExecutable(true);
+        if (!isSuccess) {
+            throw new IllegalStateException(
+                    String.format("Couldn't make `%s` executable.", binaryPath)
+            );
+        }
     }
 
     public static boolean open(File file) {
