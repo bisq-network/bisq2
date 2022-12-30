@@ -52,7 +52,7 @@ public class ElectrumBinaryExtractor {
             createDestDirIfNotPresent();
 
             try (InputStream inputStream = openBinariesZipAsStream()) {
-                if (OsUtils.isOSX()) {
+                if (OsUtils.isMac()) {
                     extractElectrumAppFileToDataDir(inputStream);
                     return destDir.toPath().resolve("Electrum.app");
 

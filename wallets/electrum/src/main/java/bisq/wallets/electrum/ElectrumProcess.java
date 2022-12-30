@@ -22,10 +22,12 @@ import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import bisq.wallets.process.BisqProcess;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
+@Slf4j
 public class ElectrumProcess implements BisqProcess {
 
     private final Path electrumRootDataDir;
@@ -63,7 +65,7 @@ public class ElectrumProcess implements BisqProcess {
         String binarySuffix = getBinarySuffix();
         Path extractedFilePath = binaryExtractor.extractFileWithSuffix(binarySuffix);
 
-        if (OsUtils.isOSX()) {
+        if (OsUtils.isMac()) {
             extractedFilePath = extractedFilePath.resolve("Contents/MacOS/run_electrum");
         }
 
@@ -72,8 +74,10 @@ public class ElectrumProcess implements BisqProcess {
 
     private void createAndStartProcess() {
         Path path = binaryPath.orElseThrow();
+        long ts = System.currentTimeMillis();
         var process = new ElectrumRegtestProcess(path, processConfig);
         process.start();
+        log.info("Starting electrum took {} ms.", System.currentTimeMillis() - ts);
         electrumRegtestProcess = Optional.of(process);
     }
 
@@ -88,7 +92,8 @@ public class ElectrumProcess implements BisqProcess {
 
             // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
             String secondPart = fileName.split("-")[1];
-            secondPart = secondPart.replace(".dmg", "");
+            secondPart = secondPart.replace(".dmg", "")
+                    .replace(".exe", "");
             electrumVersion = Optional.of(secondPart);
         }
 
@@ -96,15 +101,16 @@ public class ElectrumProcess implements BisqProcess {
     }
 
     public static String getBinarySuffix() {
-        if (OsUtils.isLinux()) {
-            return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
-        } else if (OsUtils.isOSX()) {
-            return ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
-        } else if (OsUtils.isWindows()) {
-            return ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
+        switch (OsUtils.getOperatingSystem()) {
+            case LINUX:
+                return ElectrumBinaryExtractor.LINUX_BINARY_SUFFIX;
+            case MAC:
+                return ElectrumBinaryExtractor.MAC_OS_BINARY_SUFFIX;
+            case WIN:
+                return ElectrumBinaryExtractor.WINDOWS_BINARY_SUFFIX;
+            default:
+                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
         }
-
-        throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
     }
 
     public Path getDataDir() {

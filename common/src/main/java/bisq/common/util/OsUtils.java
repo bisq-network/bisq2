@@ -37,7 +37,7 @@ public class OsUtils {
             return new File(System.getenv("APPDATA"));
         }
 
-        if (isOSX()) {
+        if (isMac()) {
             return Paths.get(System.getProperty("user.home"), "Library", "Application Support").toFile();
         }
 
@@ -53,7 +53,7 @@ public class OsUtils {
         return getOSName().contains("win");
     }
 
-    public static boolean isOSX() {
+    public static boolean isMac() {
         return getOSName().contains("mac") || getOSName().contains("darwin");
     }
 
@@ -97,6 +97,19 @@ public class OsUtils {
         return System.getProperty("os.name").toLowerCase(Locale.US);
     }
 
+    public static OperatingSystem getOperatingSystem() {
+        if (isLinux()) {
+            return OperatingSystem.LINUX;
+        } else if (isMac()) {
+            return OperatingSystem.MAC;
+        } else if (isWindows()) {
+            return OperatingSystem.WIN;
+        } else {
+            throw new UnsupportedOperationException("Unsupported operating system: " + OsUtils.getOSName());
+        }
+    }
+
+
     public static void makeBinaryExecutable(Path binaryPath) {
         boolean isSuccess = binaryPath.toFile().setExecutable(true);
         if (!isSuccess) {
@@ -117,7 +130,7 @@ public class OsUtils {
             if (runCommand("xdg-open", "%s", fileName)) return true;
         }
 
-        if (isOSX()) {
+        if (isMac()) {
             if (runCommand("open", "%s", fileName)) return true;
         }
 

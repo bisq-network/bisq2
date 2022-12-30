@@ -35,7 +35,7 @@ public enum OsType {
     public static OsType getOsType() {
         if (OsUtils.isWindows()) {
             return WIN;
-        } else if (OsUtils.isOSX()) {
+        } else if (OsUtils.isMac()) {
             return OSX;
         } else if (OsUtils.isLinux32()) {
             return LINUX_32;
