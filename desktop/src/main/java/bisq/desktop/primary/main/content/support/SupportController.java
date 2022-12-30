@@ -18,14 +18,8 @@
 package bisq.desktop.primary.main.content.support;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannel;
-import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
@@ -37,12 +31,12 @@ import java.util.Optional;
 
 @Slf4j
 public class SupportController extends ChatController<SupportView, SupportModel> implements Controller {
-    private final PublicSupportChannelService publicSupportChannelService;
-    private final SupportChannelSelectionService supportChannelSelectionService;
+    private final PublicChannelService publicSupportChannelService;
+    private final ChannelSelectionService supportChannelSelectionService;
     private PublicSupportChannelSelection publicSupportChannelSelection;
 
     public SupportController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelKind.SUPPORT, NavigationTarget.NONE);
+        super(applicationService, ChannelDomain.SUPPORT, NavigationTarget.NONE);
 
         publicSupportChannelService = chatService.getPublicSupportChannelService();
         supportChannelSelectionService = chatService.getSupportChannelSelectionService();
@@ -69,8 +63,8 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     }
 
     @Override
-    public SupportModel getChatModel(ChannelKind channelKind) {
-        return new SupportModel(channelKind);
+    public SupportModel getChatModel(ChannelDomain channelDomain) {
+        return new SupportModel(channelDomain);
     }
 
     @Override
@@ -87,11 +81,11 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateSupportChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+        if (channel instanceof PrivateChannel) {
+            applyPeersIcon((BasePrivateChannel<?>) channel);
             publicSupportChannelSelection.deSelectChannel();
         } else {
-            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

@@ -18,28 +18,23 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannel;
-import bisq.chat.events.priv.PrivateEventsChannelService;
-import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannel;
-import bisq.chat.support.priv.PrivateSupportChannelService;
+import bisq.chat.channel.*;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Icons;
+import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
@@ -48,6 +43,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -57,13 +53,15 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PrivateChannelSelection(DefaultApplicationService applicationService, ChannelKind channelKind) {
-        controller = new Controller(applicationService, channelKind);
+    public PrivateChannelSelection(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
+        controller = new Controller(applicationService, channelDomain);
     }
 
     public Pane getRoot() {
@@ -80,16 +78,16 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final View view;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final PrivateDiscussionChannelService privateDiscussionChannelService;
-        private final DiscussionChannelSelectionService discussionChannelSelectionService;
-        private final PrivateEventsChannelService privateEventsChannelService;
-        private final PrivateSupportChannelService privateSupportChannelService;
-        private final EventsChannelSelectionService eventsChannelSelectionService;
-        private final SupportChannelSelectionService supportChannelSelectionService;
+        private final PrivateChannelService privateDiscussionChannelService;
+        private final ChannelSelectionService discussionChannelSelectionService;
+        private final PrivateChannelService privateEventsChannelService;
+        private final PrivateChannelService privateSupportChannelService;
+        private final ChannelSelectionService eventsChannelSelectionService;
+        private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
 
-        protected Controller(DefaultApplicationService applicationService, ChannelKind channelKind) {
+        protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
             super(applicationService.getChatService());
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
@@ -106,7 +104,7 @@ public class PrivateChannelSelection extends ChannelSelection {
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
-            model = new Model(channelKind);
+            model = new Model(channelDomain);
             view = new View(model, this);
 
             model.filteredList.setPredicate(item -> true);
@@ -121,7 +119,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            if (model.channelKind == ChannelKind.TRADE) {
+            if (model.channelDomain == ChannelDomain.TRADE) {
                 channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateTradeChannelService.getChannels());
@@ -137,40 +135,40 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getInMediation());
                             }
                         });
-            } else if (model.channelKind == ChannelKind.DISCUSSION) {
-                channelsPin = FxBindings.<PrivateDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
+                channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateDiscussionChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateDiscussionChannel) {
+                            if (channel instanceof PrivateChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateDiscussionChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((PrivateChannel) channel).getMyUserIdentity());
                             }
                         });
-            } else if (model.channelKind == ChannelKind.EVENTS) {
-                channelsPin = FxBindings.<PrivateEventsChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            } else if (model.channelDomain == ChannelDomain.EVENTS) {
+                channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateEventsChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateEventsChannel) {
+                            if (channel instanceof PrivateChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateEventsChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((PrivateChannel) channel).getMyUserIdentity());
                             }
                         });
-            } else if (model.channelKind == ChannelKind.SUPPORT) {
-                channelsPin = FxBindings.<PrivateSupportChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            } else if (model.channelDomain == ChannelDomain.SUPPORT) {
+                channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(privateSupportChannelService.getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateSupportChannel) {
+                            if (channel instanceof PrivateChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateSupportChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((PrivateChannel) channel).getMyUserIdentity());
                             }
                         });
             }
@@ -189,13 +187,13 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (channelItem == null) {
                 return;
             }
-            if (model.channelKind == ChannelKind.TRADE) {
+            if (model.channelDomain == ChannelDomain.TRADE) {
                 tradeChannelSelectionService.selectChannel(channelItem.getChannel());
-            } else if (model.channelKind == ChannelKind.DISCUSSION) {
+            } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
                 discussionChannelSelectionService.selectChannel(channelItem.getChannel());
-            } else if (model.channelKind == ChannelKind.EVENTS) {
+            } else if (model.channelDomain == ChannelDomain.EVENTS) {
                 eventsChannelSelectionService.selectChannel(channelItem.getChannel());
-            } else if (model.channelKind == ChannelKind.SUPPORT) {
+            } else if (model.channelDomain == ChannelDomain.SUPPORT) {
                 supportChannelSelectionService.selectChannel(channelItem.getChannel());
             }
         }
@@ -203,14 +201,44 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void deSelectChannel() {
             model.selectedChannelItem.set(null);
         }
+
+        public void onLeaveChannel(BasePrivateChannel<?> privateChannel) {
+            new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChannel.getMyUserIdentity().getUserName()))
+                    .closeButtonText(Res.get("cancel"))
+                    .actionButtonText(Res.get("social.privateChannel.leave"))
+                    .onAction(() -> doLeaveChannel(privateChannel))
+                    .show();
+        }
+
+        public void doLeaveChannel(BasePrivateChannel<?> privateChannel) {
+            switch (privateChannel.getChannelDomain()) {
+                case TRADE -> {
+                    privateTradeChannelService.leaveChannel((PrivateTradeChannel) privateChannel);
+                }
+                case DISCUSSION -> {
+                    //todo
+                }
+                case EVENTS -> {
+                    //todo
+                }
+                case SUPPORT -> {
+                    //todo
+                }
+            }
+
+            model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    .findFirst()
+                    .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
+                            () -> tradeChannelSelectionService.selectChannel(null));
+        }
     }
 
     protected static class Model extends ChannelSelection.Model {
-        private final ChannelKind channelKind;
+        private final ChannelDomain channelDomain;
         private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
 
-        public Model(ChannelKind channelKind) {
-            this.channelKind = channelKind;
+        public Model(ChannelDomain channelDomain) {
+            this.channelDomain = channelDomain;
         }
     }
 
@@ -243,11 +271,14 @@ public class PrivateChannelSelection extends ChannelSelection {
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
                 private Subscription widthSubscription;
+                final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
                 final HBox hBox = new HBox();
                 final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
                 final ImageView secondaryRoboIcon = new ImageView();
+                final ColorAdjust nonSelectedEffect = new ColorAdjust();
+                final ColorAdjust hoverEffect = new ColorAdjust();
                 @Nullable
                 private Pin inMediationPin;
 
@@ -261,89 +292,144 @@ public class PrivateChannelSelection extends ChannelSelection {
 
                     secondaryRoboIcon.setFitWidth(35);
                     secondaryRoboIcon.setFitHeight(35);
+                    HBox.setMargin(secondaryRoboIcon, new Insets(0, 0, 0, -20));
 
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
+
+                    removeIcon.setCursor(Cursor.HAND);
+                    removeIcon.setId("icon-label-grey");
+                    HBox.setMargin(removeIcon, new Insets(0, 12, 0, -20));
+
+                    nonSelectedEffect.setSaturation(-0.4);
+                    nonSelectedEffect.setBrightness(-0.6);
+
+                    hoverEffect.setSaturation(0.2);
+                    hoverEffect.setBrightness(0.2);
                 }
 
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PrivateChannel) {
-                        UserProfile peer = ((PrivateChannel<?>) item.getChannel()).getPeer();
-                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                        Tooltip.install(this, tooltip);
-                        if (item.getChannel() instanceof PrivateTradeChannel) {
-                            PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) item.getChannel();
-                            if (inMediationPin != null) {
-                                inMediationPin.unbind();
-                            }
-                            inMediationPin = privateTradeChannel.getInMediation().addObserver(e ->
-                            {
-                                UIThread.run(() -> {
-                                    hBox.getChildren().clear();
-                                    hBox.getChildren().add(roboIcon);
 
-                                    if (privateTradeChannel.getMediator().isPresent() &&
-                                            privateTradeChannel.getInMediation().get()) {
-                                        if (privateTradeChannel.isMediator()) {
-                                            // We are the mediator
-                                            UserProfile trader1 = privateTradeChannel.getPeerOrTrader1();
-                                            UserProfile trader2 = privateTradeChannel.getMyUserProfileOrTrader2();
-                                            roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
-                                            secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
-                                            tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
-                                        } else {
-                                            UserProfile mediator = privateTradeChannel.getMediator().get();
-                                            secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
-                                            tooltip.setText(peer.getTooltipString() + "\n\n" +
-                                                    Res.get("mediator") + ":\n" + mediator.getTooltipString());
-                                        }
-                                        hBox.getChildren().add(secondaryRoboIcon);
-                                    } else {
-                                        tooltip.setText(peer.getTooltipString());
-                                    }
-                                    label.setText(privateTradeChannel.getChannelSelectionDisplayString());
-                                    hBox.getChildren().add(label);
-
-                                    if (widthSubscription != null) {
-                                        widthSubscription.unsubscribe();
-                                    }
-                                    widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                                        if (w.doubleValue() > 0) {
-                                            if (secondaryRoboIcon.getImage() != null) {
-                                                label.setMaxWidth(getWidth() - 120);
-                                            } else {
-                                                label.setMaxWidth(getWidth() - 75);
-                                            }
-                                        }
-                                    });
-                                });
-                            });
-                        } else {
-                            hBox.getChildren().clear();
-                            hBox.getChildren().add(roboIcon);
-                            label.setText(item.getDisplayString());
-                            tooltip.setText(peer.getTooltipString());
-                            hBox.getChildren().add(label);
-                            widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                                if (w.doubleValue() > 0) {
-                                    label.setMaxWidth(getWidth() - 75);
-                                }
-                            });
-                        }
-                        setGraphic(hBox);
-                    } else {
-                        setGraphic(null);
+                    if (item == null || empty) {
+                        label.setGraphic(null);
+                        removeIcon.setOnMouseClicked(null);
+                        hBox.setOnMouseClicked(null);
+                        hBox.setOnMouseEntered(null);
+                        hBox.setOnMouseExited(null);
                         hBox.getChildren().clear();
-                        Tooltip.install(this, null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
                         }
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
                         }
+                        Tooltip.install(this, null);
+                        setGraphic(null);
+                        return;
                     }
+
+                    Channel<?> channel = item.getChannel();
+                    if (!(channel instanceof BasePrivateChannel)) {
+                        return;
+                    }
+
+                    BasePrivateChannel<?> privateChannel = (BasePrivateChannel<?>) item.getChannel();
+                    UserProfile peer = privateChannel.getPeer();
+                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                    Tooltip.install(this, tooltip);
+                    List<ImageView> icons = new ArrayList<>();
+                    icons.add(roboIcon);
+
+                    if (privateChannel instanceof PrivateTradeChannel) {
+                        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) privateChannel;
+                        if (inMediationPin != null) {
+                            inMediationPin.unbind();
+                        }
+                        inMediationPin = privateTradeChannel.getInMediation().addObserver(e ->
+                        {
+                            UIThread.run(() -> {
+                                hBox.getChildren().clear();
+                                hBox.getChildren().add(roboIcon);
+
+                                if (privateTradeChannel.getMediator().isPresent() &&
+                                        privateTradeChannel.getInMediation().get()) {
+                                    if (privateTradeChannel.isMediator()) {
+                                        // We are the mediator
+                                        UserProfile trader1 = privateTradeChannel.getPeerOrTrader1();
+                                        UserProfile trader2 = privateTradeChannel.getMyUserProfileOrTrader2();
+                                        roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
+                                        secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
+                                        tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
+                                    } else {
+                                        UserProfile mediator = privateTradeChannel.getMediator().get();
+                                        secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                        tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                                Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                                    }
+                                    hBox.getChildren().add(secondaryRoboIcon);
+                                    icons.add(secondaryRoboIcon);
+                                } else {
+                                    tooltip.setText(peer.getTooltipString());
+                                }
+                                label.setText(privateTradeChannel.getChannelSelectionDisplayString());
+                                hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
+
+                                if (widthSubscription != null) {
+                                    widthSubscription.unsubscribe();
+                                }
+                                widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                                    if (w.doubleValue() > 0) {
+                                        if (secondaryRoboIcon.getImage() != null) {
+                                            label.setMaxWidth(getWidth() - 120);
+                                        } else {
+                                            label.setMaxWidth(getWidth() - 95);
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    } else {
+                        hBox.getChildren().clear();
+                        label.setText(item.getDisplayString());
+                        tooltip.setText(peer.getTooltipString());
+                        hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), removeIcon);
+                        widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                            if (w.doubleValue() > 0) {
+                                label.setMaxWidth(getWidth() - 95);
+                            }
+                        });
+                    }
+                    removeIcon.setOpacity(0);
+                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChannel));
+                    setOnMouseClicked(e -> {
+                        Transitions.fadeIn(removeIcon);
+                    });
+                    setOnMouseEntered(e -> {
+                        Transitions.fadeIn(removeIcon);
+                        applyEffect(icons, item.isSelected(), true);
+                    });
+                    setOnMouseExited(e -> {
+                        Transitions.fadeOut(removeIcon);
+                        applyEffect(icons, item.isSelected(), false);
+                    });
+                    applyEffect(icons, item.isSelected(), false);
+                    setGraphic(hBox);
+                }
+
+                private void applyEffect(List<ImageView> icons, boolean isSelected, boolean isHover) {
+                    icons.forEach(icon -> {
+                        if (isSelected) {
+                            icon.setEffect(null);
+                        } else {
+                            if (isHover) {
+                                icon.setEffect(hoverEffect);
+                            } else {
+                                icon.setEffect(nonSelectedEffect);
+                            }
+                        }
+                    });
                 }
             };
         }

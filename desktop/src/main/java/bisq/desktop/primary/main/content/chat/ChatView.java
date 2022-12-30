@@ -137,7 +137,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         channelIconPin = EasyBind.subscribe(model.getChannelIcon(), icon -> {
             if (icon != null) {
                 headline.setGraphic(icon);
-                headline.setGraphicTextGap(8);
+                headline.setGraphicTextGap(10);
                 icon.setStyle("-fx-cursor: hand;");
                 icon.setOnMouseClicked(e -> controller.onToggleChannelInfo());
             }

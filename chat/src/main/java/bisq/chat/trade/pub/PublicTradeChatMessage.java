@@ -17,8 +17,10 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.chat.channel.ChannelDomain;
+import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -33,10 +35,10 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends PublicChatMessage {
+public final class PublicTradeChatMessage extends BasePublicChatMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
-    public PublicTradeChatMessage(String channelId,
+    public PublicTradeChatMessage(String channelName,
                                   String authorId,
                                   Optional<TradeChatOffer> tradeChatOffer,
                                   Optional<String> text,
@@ -44,32 +46,38 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                                   long date,
                                   boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                channelId,
+                ChannelDomain.TRADE,
+                channelName,
                 authorId,
                 tradeChatOffer,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
+                MessageType.TEXT,
                 new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
     }
 
     private PublicTradeChatMessage(String messageId,
-                                   String channelId,
+                                   ChannelDomain channelDomain,
+                                   String channelName,
                                    String authorId,
                                    Optional<TradeChatOffer> tradeChatOffer,
                                    Optional<String> text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
                                    boolean wasEdited,
+                                   MessageType messageType,
                                    MetaData metaData) {
         super(messageId,
-                channelId,
+                channelDomain,
+                channelName,
                 authorId,
                 text,
                 quotedMessage,
                 date,
                 wasEdited,
+                messageType,
                 metaData);
         this.tradeChatOffer = tradeChatOffer;
     }
@@ -92,13 +100,15 @@ public final class PublicTradeChatMessage extends PublicChatMessage {
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getMessageId(),
-                baseProto.getChannelId(),
+                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 tradeChatOffer,
                 text,
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
+                MessageType.fromProto(baseProto.getMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 

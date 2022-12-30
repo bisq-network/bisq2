@@ -44,9 +44,9 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
     public TradeChannelSelectionService(PersistenceService persistenceService,
                                         PrivateTradeChannelService privateTradeChannelService,
                                         PublicTradeChannelService publicTradeChannelService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
         this.privateTradeChannelService = privateTradeChannelService;
         this.publicTradeChannelService = publicTradeChannelService;
+        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
     public CompletableFuture<Boolean> initialize() {

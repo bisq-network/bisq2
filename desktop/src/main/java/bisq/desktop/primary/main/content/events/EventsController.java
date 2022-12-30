@@ -18,13 +18,7 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.PublicChannel;
-import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannel;
-import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -37,12 +31,12 @@ import java.util.Optional;
 
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
-    private final PublicEventsChannelService publicEventsChannelService;
-    private final EventsChannelSelectionService eventsChannelSelectionService;
+    private final PublicChannelService publicEventsChannelService;
+    private final ChannelSelectionService eventsChannelSelectionService;
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelKind.EVENTS, NavigationTarget.NONE);
+        super(applicationService, ChannelDomain.EVENTS, NavigationTarget.NONE);
 
         publicEventsChannelService = chatService.getPublicEventsChannelService();
         eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
@@ -69,8 +63,8 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     }
 
     @Override
-    public EventsModel getChatModel(ChannelKind channelKind) {
-        return new EventsModel(channelKind);
+    public EventsModel getChatModel(ChannelDomain channelDomain) {
+        return new EventsModel(channelDomain);
     }
 
     @Override
@@ -87,11 +81,11 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateEventsChannel) {
-            applyPeersIcon((PrivateChannel<?>) channel);
+        if (channel instanceof PrivateChannel) {
+            applyPeersIcon((BasePrivateChannel<?>) channel);
             publicEventsChannelSelection.deSelectChannel();
         } else {
-            applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
             privateChannelSelection.deSelectChannel();
         }
     }

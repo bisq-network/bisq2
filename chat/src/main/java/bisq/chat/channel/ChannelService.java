@@ -24,6 +24,7 @@ import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -33,12 +34,17 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
+    protected final UserProfileService userProfileService;
+    protected final ChannelDomain channelDomain;
 
     public ChannelService(NetworkService networkService,
-                          UserIdentityService userIdentityService) {
-
+                          UserIdentityService userIdentityService,
+                          UserProfileService userProfileService,
+                          ChannelDomain channelDomain) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
+        this.userProfileService = userProfileService;
+        this.channelDomain = channelDomain;
     }
 
     public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
@@ -46,9 +52,19 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         persist();
     }
 
-    public Optional<C> findChannel(String channelId) {
+    public Optional<C> findChannelById(String id) {
         return getChannels().stream()
-                .filter(channel -> channel.getId().equals(channelId))
+                .filter(channel -> channel.getId().equals(id))
+                .findAny();
+    }
+
+    public Optional<C> findChannelForMessage(ChatMessage chatMessage) {
+        return findChannel(chatMessage.getChannelDomain(), chatMessage.getChannelName());
+    }
+
+    public Optional<C> findChannel(ChannelDomain channelDomain, String channelName) {
+        return getChannels().stream()
+                .filter(channel -> channel.getChannelDomain().equals(channelDomain) && channel.getChannelName().equals(channelName))
                 .findAny();
     }
 

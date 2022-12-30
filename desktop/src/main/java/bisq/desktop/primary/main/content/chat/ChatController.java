@@ -18,15 +18,12 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChannelKind;
 import bisq.chat.ChatService;
+import bisq.chat.channel.BasePrivateChannel;
+import bisq.chat.channel.BasePublicChannel;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.PublicChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
@@ -42,6 +39,7 @@ import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import lombok.Getter;
@@ -71,7 +69,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected Subscription notificationSettingSubscription;
     private Subscription searchTextPin;
 
-    public ChatController(DefaultApplicationService applicationService, ChannelKind channelKind, NavigationTarget host) {
+    public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
@@ -79,8 +77,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, channelKind);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelKind);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, channelDomain);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
@@ -88,26 +86,26 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createComponents();
-        model = getChatModel(channelKind);
+        model = getChatModel(channelDomain);
         view = getChatView();
     }
 
     public abstract void createComponents();
 
-    public abstract M getChatModel(ChannelKind channelKind);
+    public abstract M getChatModel(ChannelDomain channelDomain);
 
     public abstract V getChatView();
 
     @Override
     public void onActivate() {
-        chatMessagesComponent.setOnShowChatUserDetails(chatUser -> {
+        chatMessagesComponent.setOnShowChatUserDetails(userProfile -> {
             onCloseSideBar();
             model.getSideBarVisible().set(true);
 
             UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
                     chatService,
                     reputationService,
-                    chatUser,
+                    userProfile,
                     () -> {
                         onCloseSideBar();
                         chatMessagesComponent.resetSelectedChatMessage();
@@ -201,27 +199,21 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 
-    protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
+    protected void applyPeersIcon(BasePrivateChannel<?> privateChannel) {
         Image image = RoboHash.getImage(privateChannel.getPeer().getPubKeyHash());
         ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(42);
-        imageView.setFitHeight(42);
-        model.getChannelIcon().set(imageView);
+        imageView.setFitWidth(35);
+        imageView.setFitHeight(35);
+        model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
     }
 
-    protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
-        String type = null;
-        if (channel instanceof PublicEventsChannel) {
-            type = "-events-";
-        } else if (channel instanceof PublicDiscussionChannel) {
-            type = "-discussion-";
-        } else if (channel instanceof PublicSupportChannel) {
-            type = "-support-";
-        }
-        if (type != null) {
-            //  String iconId = "channels" + type + channel.getId() + "-white";
-            String iconId = "channels" + type + channel.getId();
-            model.getChannelIcon().set(BisqIconButton.createIconButton(iconId));
-        }
+    protected void applyDefaultPublicChannelIcon(BasePublicChannel<?> channel) {
+        String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
+        String iconId = "channels" + domain + channel.getChannelName();
+        Button iconButton = BisqIconButton.createIconButton(iconId);
+        //todo get larger icons and dont use scaling
+        iconButton.setScaleX(1.25);
+        iconButton.setScaleY(1.25);
+        model.getChannelIcon().set(iconButton);
     }
 }

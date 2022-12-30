@@ -15,14 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.support;
+package bisq.chat.channel;
 
-import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.priv.PrivateSupportChannel;
-import bisq.chat.support.priv.PrivateSupportChannelService;
-import bisq.chat.support.pub.PublicSupportChannelService;
 import bisq.common.observable.Observable;
+import bisq.common.util.StringUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
@@ -34,16 +31,20 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
-public class SupportChannelSelectionService implements PersistenceClient<SupportChannelSelectionStore> {
-    private final SupportChannelSelectionStore persistableStore = new SupportChannelSelectionStore();
-    private final Persistence<SupportChannelSelectionStore> persistence;
-    private final PrivateSupportChannelService privateChannelService;
-    private final PublicSupportChannelService publicChannelService;
+public class ChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
+    private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
+    private final Persistence<ChannelSelectionStore> persistence;
+    private final PrivateChannelService privateChannelService;
+    private final PublicChannelService publicChannelService;
 
-    public SupportChannelSelectionService(PersistenceService persistenceService,
-                                          PrivateSupportChannelService privateChannelService,
-                                          PublicSupportChannelService publicChannelService) {
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+    public ChannelSelectionService(PersistenceService persistenceService,
+                                   PrivateChannelService privateChannelService,
+                                   PublicChannelService publicChannelService,
+                                   ChannelDomain channelDomain) {
+        persistence = persistenceService.getOrCreatePersistence(this,
+                "db",
+                StringUtils.capitalize(channelDomain.name()) + "ChannelSelectionStore",
+                persistableStore);
         this.privateChannelService = privateChannelService;
         this.publicChannelService = publicChannelService;
     }
@@ -60,8 +61,8 @@ public class SupportChannelSelectionService implements PersistenceClient<Support
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateSupportChannel) {
-            privateChannelService.removeExpiredMessages((PrivateSupportChannel) channel);
+        if (channel instanceof PrivateChannel) {
+            privateChannelService.removeExpiredMessages((PrivateChannel) channel);
         }
 
         getSelectedChannel().set(channel);

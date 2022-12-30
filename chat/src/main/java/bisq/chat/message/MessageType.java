@@ -15,26 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.support;
+package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.ChatModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
 
-@Slf4j
-@Getter
-public class SupportModel extends ChatModel {
-    private final ChannelDomain channelDomain;
-
-    public SupportModel(ChannelDomain channelDomain) {
-        this.channelDomain = channelDomain;
-    }
+public enum MessageType implements ProtoEnum {
+    TEXT,
+    LEAVE;
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+    public bisq.chat.protobuf.MessageType toProto() {
+        return bisq.chat.protobuf.MessageType.valueOf(name());
+    }
+
+    public static MessageType fromProto(bisq.chat.protobuf.MessageType proto) {
+        return ProtobufUtils.enumFromProto(MessageType.class, proto.name());
     }
 
 }

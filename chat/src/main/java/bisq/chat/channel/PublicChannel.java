@@ -18,19 +18,90 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.PublicChatMessage;
-import bisq.common.observable.ObservableArray;
+import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PublicChannel<M extends PublicChatMessage> extends Channel<M> {
-    // We do not persist the messages as they are persisted in the P2P data store.
-    protected transient final ObservableArray<M> chatMessages = new ObservableArray<>();
+public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
+    private final String displayName;
+    private final String description;
+    private final String channelAdminId;
+    private final List<String> channelModeratorIds;
 
-    public PublicChannel(String id, ChannelNotificationType channelNotificationType) {
-        super(id, channelNotificationType);
+    public PublicChannel(ChannelDomain channelDomain, String channelName) {
+        this(channelDomain,
+                channelName,
+                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
+                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".description"),
+                "",
+                new ArrayList<>(),
+                ChannelNotificationType.MENTION);
+    }
+
+    private PublicChannel(ChannelDomain channelDomain,
+                          String channelName,
+                          String displayName,
+                          String description,
+                          String channelAdminId,
+                          List<String> channelModeratorIds,
+                          ChannelNotificationType channelNotificationType) {
+        super(channelDomain, channelName, channelNotificationType);
+
+        this.displayName = displayName;
+        this.description = description;
+        this.channelAdminId = channelAdminId;
+        this.channelModeratorIds = channelModeratorIds;
+        // We need to sort deterministically as the data is used in the proof of work check
+        this.channelModeratorIds.sort(Comparator.comparing((String e) -> e));
+    }
+
+    public bisq.chat.protobuf.Channel toProto() {
+        return getChannelBuilder()
+                .setPublicChannel(bisq.chat.protobuf.PublicChannel.newBuilder()
+                        .setChannelName(displayName)
+                        .setDescription(description)
+                        .setChannelAdminId(channelAdminId)
+                        .addAllChannelModeratorIds(channelModeratorIds))
+                .build();
+    }
+
+    public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                          bisq.chat.protobuf.PublicChannel proto) {
+        return new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                baseProto.getChannelName(),
+                proto.getChannelName(),
+                proto.getDescription(),
+                proto.getChannelAdminId(),
+                new ArrayList<>(proto.getChannelModeratorIdsList()),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
+    }
+
+    @Override
+    public void addChatMessage(PublicChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessage(PublicChatMessage chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    @Override
+    public void removeChatMessages(Collection<PublicChatMessage> removeMessages) {
+        chatMessages.removeAll(removeMessages);
+    }
+
+    @Override
+    public String getDisplayString() {
+        return displayName;
     }
 }

@@ -1,11 +1,9 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.chat.ChatService;
+import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
-import bisq.chat.support.pub.PublicSupportChannel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
@@ -227,7 +225,9 @@ public abstract class ChannelSelection {
         @Getter
         static class ChannelItem {
             @EqualsAndHashCode.Include
-            private final String id;
+            private final String channelName;
+            @EqualsAndHashCode.Include
+            private final ChannelDomain channelDomain;
             private final Channel<?> channel;
             private String displayString;
             private final boolean hasMultipleProfiles;
@@ -243,27 +243,17 @@ public abstract class ChannelSelection {
 
             public ChannelItem(Channel<?> channel, @Nullable UserIdentityService userIdentityService) {
                 this.channel = channel;
+                channelDomain = channel.getChannelDomain();
+                channelName = channel.getChannelName();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
-                id = channel.getId();
+                String domain = "-" + channelDomain.name().toLowerCase() + "-";
+                iconIdSelected = "channels" + domain + channelName;
+                iconIdHover = "channels" + domain + channelName + "-white";
+                iconId = "channels" + domain + channelName + "-grey";
 
-                String type = null;
-                if (channel instanceof PublicEventsChannel) {
-                    type = "-events-";
-                } else if (channel instanceof PublicDiscussionChannel) {
-                    type = "-discussion-";
-                } else if (channel instanceof PublicSupportChannel) {
-                    type = "-support-";
-                }
-                if (type != null) {
-                    iconIdSelected = "channels" + type + channel.getId();
-                    iconIdHover = "channels" + type + channel.getId() + "-white";
-                    iconId = "channels" + type + channel.getId() + "-grey";
-                }
-
-
-                if (channel instanceof PrivateChannel) {
-                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
+                if (channel instanceof BasePrivateChannel) {
+                    BasePrivateChannel<?> privateChannel = (BasePrivateChannel<?>) channel;
                     displayString = privateChannel.getPeer().getUserName();
                     // PrivateTradeChannel is handled in ListCell code
                     if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {

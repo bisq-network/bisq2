@@ -87,4 +87,14 @@ public class StringUtils {
         }
         return null;
     }
+
+    public static String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        } else if (value.length() == 1) {
+            return value.toUpperCase();
+        } else {
+            return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+        }
+    }
 }

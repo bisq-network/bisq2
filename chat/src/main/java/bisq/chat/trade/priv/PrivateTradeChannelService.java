@@ -17,8 +17,11 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.chat.channel.PrivateChannelService;
+import bisq.chat.channel.BasePrivateChannelService;
+import bisq.chat.channel.ChannelDomain;
+import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
+import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -31,6 +34,7 @@ import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
+public class PrivateTradeChannelService extends BasePrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
     @Getter
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
     @Getter
@@ -48,8 +52,9 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     public PrivateTradeChannelService(PersistenceService persistenceService,
                                       NetworkService networkService,
                                       UserIdentityService userIdentityService,
+                                      UserProfileService userProfileService,
                                       ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService, proofOfWorkService);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -73,19 +78,21 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
                                                                   String text,
                                                                   Optional<Quotation> quotedMessage,
                                                                   long time,
-                                                                  boolean wasEdited) {
+                                                                  boolean wasEdited,
+                                                                  MessageType messageType) {
         // We send the mediator only in the first message to the peer.
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 sender,
                 receiversId,
                 text,
                 quotedMessage,
                 new Date().getTime(),
                 wasEdited,
-                mediator);
+                mediator,
+                messageType);
     }
 
     @Override
@@ -95,10 +102,9 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel mediatorCreatesNewChannel(UserIdentity myUserIdentity, UserProfile trader1, UserProfile trader2) {
+        String channelName = PrivateTradeChannel.createChannelName(new Pair<>(trader1.getId(), trader2.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                        channel.getPeerOrTrader1().equals(trader1) &&
-                        channel.getMyUserProfileOrTrader2().equals(trader1))
+                .filter(channel -> channel.getChannelName().equals(channelName))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
@@ -111,9 +117,9 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
     }
 
     public PrivateTradeChannel traderCreatesNewChannel(UserIdentity myUserIdentity, UserProfile peersUserProfile, Optional<UserProfile> mediator) {
+        String channelName = PrivateTradeChannel.createChannelName(new Pair<>(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId()));
         Optional<PrivateTradeChannel> existingChannel = getChannels().stream()
-                .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                        channel.getPeer().equals(peersUserProfile))
+                .filter(channel -> channel.getChannelName().equals(channelName))
                 .findAny();
         if (existingChannel.isPresent()) {
             return existingChannel.get();
@@ -125,6 +131,17 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
         return channel;
     }
 
+    public void leaveChannel(PrivateTradeChannel channel) {
+        sendLeaveMessage(channel)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Sending leave channel message failed.");
+                    }
+                    getChannels().remove(channel);
+                    persist();
+                });
+    }
+
     @Override
     public ObservableArray<PrivateTradeChannel> getChannels() {
         return persistableStore.getChannels();
@@ -132,26 +149,35 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
 
     @Override
     protected void processMessage(PrivateTradeChatMessage message) {
-        //todo is proofOfWorkService.verify needed?
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId()) &&
-                proofOfWorkService.verify(message.getSender().getProofOfWork())) {
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
-                    .flatMap(myUserIdentity -> findChannel(message.getChannelId())
-                            .or(() -> Optional.of(traderCreatesNewChannel(myUserIdentity,
-                                    message.getSender(),
-                                    message.getMediator()))))
-                    .ifPresent(channel -> addMessage(message, channel));
+                    .flatMap(myUserIdentity -> findChannelForMessage(message)
+                            .or(() -> {
+                                if (message.getMessageType() == MessageType.LEAVE) {
+                                    return Optional.empty();
+                                } else if (userProfileService.isChatUserIgnored(message.getSender())) {
+                                    return Optional.empty();
+                                } else {
+                                    return Optional.of(traderCreatesNewChannel(myUserIdentity,
+                                            message.getSender(),
+                                            message.getMediator()));
+                                }
+                            }))
+                    .ifPresent(channel -> {
+                        addMessage(message, channel);
+                    });
         }
     }
 
     @Override
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
-                                                                                      PrivateTradeChannel channel) {
+                                                                                      PrivateTradeChannel channel,
+                                                                                      MessageType messageType) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         String messageId = StringUtils.createShortUid();
         if (!channel.getInMediation().get() || channel.getMediator().isEmpty()) {
-            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer());
+            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer(), messageType);
         }
         // If mediation has been activated we send all messages to the 2 other peers
         UserProfile receiver1, receiver2;
@@ -169,14 +195,15 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         PrivateTradeChatMessage message1 = new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 senderUserProfile,
                 receiver1.getId(),
                 text,
                 quotedMessage,
                 date,
                 false,
-                mediator);
+                mediator,
+                messageType);
 
         CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
                 receiver1.getNetworkId(),
@@ -184,14 +211,15 @@ public class PrivateTradeChannelService extends PrivateChannelService<PrivateTra
 
         PrivateTradeChatMessage message2 = new PrivateTradeChatMessage(
                 messageId,
-                channel.getId(),
+                channel.getChannelName(),
                 senderUserProfile,
                 receiver2.getId(),
                 text,
                 quotedMessage,
                 date,
                 false,
-                mediator);
+                mediator,
+                messageType);
         CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
                 receiver2.getNetworkId(),
                 senderNodeIdAndKeyPair);

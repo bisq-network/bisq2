@@ -58,7 +58,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.costs.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.speed.info.LIQUID_SWAP"),
-                        "Q4/22",
+                        "Q1/23",
                         "protocol-liquid"
                 ),
                 /* new ProtocolListItem(SwapProtocol.Type.MONERO_SWAP,
@@ -86,7 +86,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.BISQ_MULTISIG"),
                         Res.get("trade.protocols.costs.info.BISQ_MULTISIG"),
                         Res.get("trade.protocols.speed.info.BISQ_MULTISIG"),
-                        "Q2/23",
+                        "Q3/23",
                         "protocol-bisq"
                 ),
                 /* new ProtocolListItem(SwapProtocol.Type.LIGHTNING_X,
@@ -114,7 +114,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
                         Res.get("trade.protocols.costs.info.BSQ_SWAP"),
                         Res.get("trade.protocols.speed.info.BSQ_SWAP"),
-                        "Q3/23",
+                        "Q4/23",
                         "protocol-bsq"
                 )
         );

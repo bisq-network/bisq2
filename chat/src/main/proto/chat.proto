@@ -26,6 +26,24 @@ import "security.proto";
 import "offer.proto";
 import "user.proto";
 
+enum MessageType {
+  TEXT = 0;
+  LEAVE = 1;
+}
+
+enum ChannelNotificationType {
+  ALL = 0;
+  MENTION = 1;
+  NEVER = 2;
+}
+
+enum ChannelDomain {
+  TRADE = 0;
+  DISCUSSION = 1;
+  EVENTS = 2;
+  SUPPORT = 3;
+}
+
 message Quotation {
   string nym = 1;
   string nickName = 2;
@@ -35,51 +53,69 @@ message Quotation {
 
 message ChatMessage {
   string messageId = 1;
-  string channelId = 2;
-  optional string text = 3;
-  string authorId = 4;
-  optional Quotation quotation = 5;
-  uint64 date = 6;
-  bool wasEdited = 7;
-  network.MetaData metaData = 8;
+  ChannelDomain channelDomain = 2;
+  string channelName = 3;
+  optional string text = 4;
+  string authorId = 5;
+  optional Quotation quotation = 6;
+  uint64 date = 7;
+  bool wasEdited = 8;
+  MessageType messageType = 9;
+  network.MetaData metaData = 10;
   oneof message {
-    PrivateTradeChatMessage privateTradeChatMessage = 20;
-    PublicTradeChatMessage publicTradeChatMessage = 21;
-
-    PrivateDiscussionChatMessage privateDiscussionChatMessage = 22;
-    PublicDiscussionChatMessage publicDiscussionChatMessage = 23;
-
-    PrivateEventsChatMessage privateEventsChatMessage = 24;
-    PublicEventsChatMessage publicEventsChatMessage = 25;
-
-    PrivateSupportChatMessage privateSupportChatMessage = 26;
-    PublicSupportChatMessage publicSupportChatMessage = 27;
+    PrivateChatMessage privateChatMessage = 20;
+    PublicChatMessage publicChatMessage = 21;
+    PrivateTradeChatMessage privateTradeChatMessage = 22;
+    PublicTradeChatMessage publicTradeChatMessage = 23;
   }
-}
-
-enum ChannelNotificationType {
-  ALL = 0;
-  MENTION = 1;
-  NEVER = 2;
 }
 
 message Channel {
-  string id = 1;
-  ChannelNotificationType channelNotificationType = 2;
+  ChannelDomain channelDomain = 1;
+  string channelName = 2;
+  ChannelNotificationType channelNotificationType = 3;
   oneof message{
-    PrivateTradeChannel privateTradeChannel = 10;
-    PublicTradeChannel publicTradeChannel = 11;
-
-    PrivateDiscussionChannel privateDiscussionChannel = 12;
-    PublicDiscussionChannel publicDiscussionChannel = 13;
-
-    PrivateEventsChannel privateEventsChannel = 14;
-    PublicEventsChannel publicEventsChannel = 15;
-
-    PrivateSupportChannel privateSupportChannel = 16;
-    PublicSupportChannel publicSupportChannel = 17;
+    PrivateChannel privateChannel = 10;
+    PublicChannel publicChannel = 11;
+    PrivateTradeChannel privateTradeChannel = 12;
+    PublicTradeChannel publicTradeChannel = 13;
   }
 }
+
+// Private
+message PrivateChatMessage {
+  string receiversId = 1;
+  user.UserProfile sender = 2;
+}
+message PrivateChannel {
+  user.UserProfile peer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated ChatMessage chatMessages = 3;
+}
+message PrivateChannelStore {
+  repeated Channel channels = 1;
+}
+
+
+// Public
+message PublicChatMessage {
+}
+
+message PublicChannel {
+  string channelName = 1;
+  string description = 2;
+  string channelAdminId = 3;
+  repeated string channelModeratorIds = 4;
+  bool isVisible = 5;
+}
+message PublicChannelStore {
+  repeated Channel channels = 1;
+}
+
+message ChannelSelectionStore {
+  optional Channel selectedChannel = 1;
+}
+
 
 // Trade
 message PrivateTradeChatMessage {
@@ -125,100 +161,8 @@ message PrivateTradeChannelStore {
 
 message PublicTradeChannelStore {
   repeated Channel channels = 1;
-  repeated string visibleChannelIds = 2;
+  repeated string visibleChannelNames = 2;
 }
 
-// Support
-message PrivateDiscussionChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PublicDiscussionChatMessage {
-}
-message PrivateDiscussionChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
 
-message PublicDiscussionChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
 
-message DiscussionChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-
-message PrivateDiscussionChannelStore {
-  repeated Channel channels = 1;
-}
-
-message PublicDiscussionChannelStore {
-  repeated Channel channels = 1;
-}
-
-// Events
-message PrivateEventsChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PublicEventsChatMessage {
-}
-message PrivateEventsChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
-
-message PublicEventsChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
-message EventsChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-message PrivateEventsChannelStore {
-  repeated Channel channels = 1;
-}
-
-message PublicEventsChannelStore {
-  repeated Channel channels = 1;
-}
-
-// Support
-message PrivateSupportChatMessage {
-  string receiversId = 1;
-  user.UserProfile sender = 2;
-}
-message PublicSupportChatMessage {
-}
-message PrivateSupportChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
-  repeated ChatMessage chatMessages = 3;
-}
-
-message PublicSupportChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
-}
-message SupportChannelSelectionStore {
-  optional Channel selectedChannel = 1;
-}
-message PrivateSupportChannelStore {
-  repeated Channel channels = 1;
-}
-
-message PublicSupportChannelStore {
-  repeated Channel channels = 1;
-}

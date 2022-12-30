@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.events;
+package bisq.chat.channel;
 
-import bisq.chat.channel.Channel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
@@ -31,25 +30,25 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public final class EventsChannelSelectionStore implements PersistableStore<EventsChannelSelectionStore> {
+public final class ChannelSelectionStore implements PersistableStore<ChannelSelectionStore> {
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
-    public EventsChannelSelectionStore() {
+    public ChannelSelectionStore() {
     }
 
-    private EventsChannelSelectionStore(Channel<? extends ChatMessage> selectedChannel) {
+    private ChannelSelectionStore(Channel<? extends ChatMessage> selectedChannel) {
         this.selectedChannel.set(selectedChannel);
     }
 
     @Override
-    public bisq.chat.protobuf.EventsChannelSelectionStore toProto() {
-        bisq.chat.protobuf.EventsChannelSelectionStore.Builder builder = bisq.chat.protobuf.EventsChannelSelectionStore.newBuilder();
+    public bisq.chat.protobuf.ChannelSelectionStore toProto() {
+        bisq.chat.protobuf.ChannelSelectionStore.Builder builder = bisq.chat.protobuf.ChannelSelectionStore.newBuilder();
         Optional.ofNullable(selectedChannel.get()).ifPresent(selectedChannel -> builder.setSelectedChannel(selectedChannel.toProto()));
         return builder.build();
     }
 
-    public static EventsChannelSelectionStore fromProto(bisq.chat.protobuf.EventsChannelSelectionStore proto) {
-        return new EventsChannelSelectionStore(proto.hasSelectedChannel() ? Channel.fromProto(proto.getSelectedChannel()) : null);
+    public static ChannelSelectionStore fromProto(bisq.chat.protobuf.ChannelSelectionStore proto) {
+        return new ChannelSelectionStore(proto.hasSelectedChannel() ? Channel.fromProto(proto.getSelectedChannel()) : null);
     }
 
 
@@ -57,7 +56,7 @@ public final class EventsChannelSelectionStore implements PersistableStore<Event
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.EventsChannelSelectionStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.ChannelSelectionStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
@@ -65,12 +64,12 @@ public final class EventsChannelSelectionStore implements PersistableStore<Event
     }
 
     @Override
-    public void applyPersisted(EventsChannelSelectionStore persisted) {
+    public void applyPersisted(ChannelSelectionStore persisted) {
         this.selectedChannel.set(persisted.selectedChannel.get());
     }
 
     @Override
-    public EventsChannelSelectionStore getClone() {
-        return new EventsChannelSelectionStore(selectedChannel.get());
+    public ChannelSelectionStore getClone() {
+        return new ChannelSelectionStore(selectedChannel.get());
     }
 }

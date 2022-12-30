@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -114,6 +115,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     channel -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                        } else if (channel == null && !model.channelItems.isEmpty()) {
+                            model.selectedChannelItem.set(model.channelItems.get(0));
                         } else {
                             model.selectedChannelItem.set(null);
                         }
@@ -160,7 +163,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                publicTradeChannelService.findChannel(PublicTradeChannel.getId(marketListItem.market))
+                publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(marketListItem.market))
                         .ifPresent(channel -> {
                             publicTradeChannelService.showChannel(channel);
                             tradeChannelSelectionService.selectChannel(channel);
@@ -180,7 +183,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return publicTradeChannelService.findChannel(PublicTradeChannel.getId(market))
+            return publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }
@@ -278,7 +281,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             return new ListCell<>() {
                 private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
-
                 final Label label = new Label();
                 final HBox hBox = new HBox();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
@@ -365,10 +367,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             } else {
                                 icon.setEffect(nonSelectedEffect);
                             }
-
                         }
                     });
-
                 }
             };
         }

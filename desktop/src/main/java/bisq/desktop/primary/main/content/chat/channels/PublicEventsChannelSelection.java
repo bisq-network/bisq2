@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.pub.PublicEventsChannel;
-import bisq.chat.events.pub.PublicEventsChannelService;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.PublicChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
@@ -54,9 +54,9 @@ public class PublicEventsChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicEventsChannelService publicEventsChannelService;
+        private final PublicChannelService publicEventsChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final EventsChannelSelectionService eventsChannelSelectionService;
+        private final ChannelSelectionService eventsChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
@@ -80,13 +80,13 @@ public class PublicEventsChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicEventsChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<PublicChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicEventsChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                     channel -> {
-                        if (channel instanceof PublicEventsChannel) {
+                        if (channel instanceof PublicChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
@@ -134,7 +134,7 @@ public class PublicEventsChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicEventsChannel) {
+                    if (item != null && !empty && item.getChannel() instanceof PublicChannel) {
                         widthSubscription = setupCellBinding(this, item, label, iconImageView);
                         updateCell(this, item, label, iconImageView);
                         setGraphic(hBox);

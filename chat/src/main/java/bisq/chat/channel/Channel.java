@@ -17,13 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.discuss.priv.PrivateDiscussionChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.events.priv.PrivateEventsChannel;
-import bisq.chat.events.pub.PublicEventsChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.support.priv.PrivateSupportChannel;
-import bisq.chat.support.pub.PublicSupportChannel;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Observable;
@@ -35,23 +29,29 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
+import java.util.Set;
 
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class Channel<T extends ChatMessage> implements Proto {
+    private final ChannelDomain channelDomain;
+    protected final String channelName;
     @EqualsAndHashCode.Include
-    protected final String id;
+    private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
 
-    public Channel(String id, ChannelNotificationType channelNotificationType) {
-        this.id = id;
+    public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+        this.channelDomain = channelDomain;
+        this.channelName = channelName;
+        this.id = channelDomain.name().toLowerCase() + "." + channelName;
         this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.Channel.newBuilder()
-                .setId(id)
+                .setChannelName(channelName)
+                .setChannelDomain(channelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto());
     }
 
@@ -59,6 +59,10 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
+            case PRIVATECHANNEL: {
+                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
+            }
+
             case PRIVATETRADECHANNEL: {
                 return PrivateTradeChannel.fromProto(proto, proto.getPrivateTradeChannel());
             }
@@ -66,25 +70,9 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
             }
 
-            case PRIVATEDISCUSSIONCHANNEL: {
-                return PrivateDiscussionChannel.fromProto(proto, proto.getPrivateDiscussionChannel());
-            }
-            case PUBLICDISCUSSIONCHANNEL: {
-                return PublicDiscussionChannel.fromProto(proto, proto.getPublicDiscussionChannel());
-            }
 
-            case PRIVATEEVENTSCHANNEL: {
-                return PrivateEventsChannel.fromProto(proto, proto.getPrivateEventsChannel());
-            }
-            case PUBLICEVENTSCHANNEL: {
-                return PublicEventsChannel.fromProto(proto, proto.getPublicEventsChannel());
-            }
-
-            case PRIVATESUPPORTCHANNEL: {
-                return PrivateSupportChannel.fromProto(proto, proto.getPrivateSupportChannel());
-            }
-            case PUBLICSUPPORTCHANNEL: {
-                return PublicSupportChannel.fromProto(proto, proto.getPublicSupportChannel());
+            case PUBLICCHANNEL: {
+                return PublicChannel.fromProto(proto, proto.getPublicChannel());
             }
 
             case MESSAGE_NOT_SET: {
@@ -102,7 +90,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     abstract public void removeChatMessages(Collection<T> removeMessages);
 
-    public String getDisplayString() {
-        return id;
-    }
+    abstract public Set<String> getMembers();
+
+    abstract public String getDisplayString();
 }

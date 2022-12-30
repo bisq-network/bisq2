@@ -15,11 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat;
+package bisq.chat.channel;
 
-public enum ChannelKind {
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
+
+public enum ChannelDomain implements ProtoEnum {
     TRADE,
     DISCUSSION,
     EVENTS,
-    SUPPORT
+    SUPPORT;
+
+    @Override
+    public bisq.chat.protobuf.ChannelDomain toProto() {
+        return bisq.chat.protobuf.ChannelDomain.valueOf(name());
+    }
+
+    public static ChannelDomain fromProto(bisq.chat.protobuf.ChannelDomain proto) {
+        return ProtobufUtils.enumFromProto(ChannelDomain.class, proto.name());
+    }
 }

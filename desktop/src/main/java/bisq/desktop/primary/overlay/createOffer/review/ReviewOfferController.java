@@ -19,6 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
@@ -124,7 +125,7 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        PublicTradeChannel channel = publicTradeChannelService.findChannel(PublicTradeChannel.getId(model.getMarket())).orElseThrow();
+        PublicTradeChannel channel = publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(model.getMarket())).orElseThrow();
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);
@@ -143,7 +144,7 @@ public class ReviewOfferController implements Controller {
         publicTradeChannelService.showChannel(channel);
         tradeChannelSelectionService.selectChannel(channel);
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getId(),
+        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getChannelName(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(tradeChatOffer),
                 Optional.empty(),

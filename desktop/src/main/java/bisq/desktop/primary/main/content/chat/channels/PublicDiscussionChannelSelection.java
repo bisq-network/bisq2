@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.pub.PublicDiscussionChannel;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.PublicChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
@@ -54,9 +54,9 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicDiscussionChannelService publicDiscussionChannelService;
+        private final PublicChannelService publicDiscussionChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final DiscussionChannelSelectionService discussionChannelSelectionService;
+        private final ChannelSelectionService discussionChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
@@ -80,13 +80,13 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicDiscussionChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<PublicChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicDiscussionChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                     channel -> {
-                        if (channel instanceof PublicDiscussionChannel) {
+                        if (channel instanceof PublicChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         }
                     });
@@ -134,7 +134,7 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicDiscussionChannel) {
+                    if (item != null && !empty && item.getChannel() instanceof PublicChannel) {
                         widthSubscription = setupCellBinding(this, item, label, iconImageView);
                         updateCell(this, item, label, iconImageView);
 

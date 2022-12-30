@@ -17,15 +17,7 @@
 
 package bisq.chat;
 
-import bisq.chat.discuss.DiscussionChannelSelectionService;
-import bisq.chat.discuss.priv.PrivateDiscussionChannelService;
-import bisq.chat.discuss.pub.PublicDiscussionChannelService;
-import bisq.chat.events.EventsChannelSelectionService;
-import bisq.chat.events.priv.PrivateEventsChannelService;
-import bisq.chat.events.pub.PublicEventsChannelService;
-import bisq.chat.support.SupportChannelSelectionService;
-import bisq.chat.support.priv.PrivateSupportChannelService;
-import bisq.chat.support.pub.PublicSupportChannelService;
+import bisq.chat.channel.*;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -36,79 +28,114 @@ import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Getter
 public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
-    private final PrivateDiscussionChannelService privateDiscussionChannelService;
+    private final PrivateChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PublicDiscussionChannelService publicDiscussionChannelService;
+    private final PublicChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
-    private final DiscussionChannelSelectionService discussionChannelSelectionService;
-    private final PrivateSupportChannelService privateSupportChannelService;
-    private final PublicSupportChannelService publicSupportChannelService;
-    private final SupportChannelSelectionService supportChannelSelectionService;
-    private final PrivateEventsChannelService privateEventsChannelService;
-    private final PublicEventsChannelService publicEventsChannelService;
-    private final EventsChannelSelectionService eventsChannelSelectionService;
+    private final ChannelSelectionService discussionChannelSelectionService;
+    private final PrivateChannelService privateSupportChannelService;
+    private final PublicChannelService publicSupportChannelService;
+    private final ChannelSelectionService supportChannelSelectionService;
+    private final PrivateChannelService privateEventsChannelService;
+    private final PublicChannelService publicEventsChannelService;
+    private final ChannelSelectionService eventsChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
                        NetworkService networkService,
-                       UserIdentityService userIdentityService) {
+                       UserIdentityService userIdentityService,
+                       UserProfileService userProfileService) {
 
         // Trade
         privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
                 networkService,
                 userIdentityService,
+                userProfileService,
                 proofOfWorkService);
         publicTradeChannelService = new PublicTradeChannelService(persistenceService,
                 networkService,
-                userIdentityService);
+                userIdentityService,
+                userProfileService);
         tradeChannelSelectionService = new TradeChannelSelectionService(persistenceService,
                 privateTradeChannelService,
                 publicTradeChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new PrivateDiscussionChannelService(persistenceService,
+        privateDiscussionChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
-        publicDiscussionChannelService = new PublicDiscussionChannelService(persistenceService,
+                userProfileService,
+                proofOfWorkService,
+                ChannelDomain.DISCUSSION);
+        publicDiscussionChannelService = new PublicChannelService(persistenceService,
                 networkService,
-                userIdentityService);
-        discussionChannelSelectionService = new DiscussionChannelSelectionService(persistenceService,
+                userIdentityService,
+                userProfileService,
+                ChannelDomain.DISCUSSION,
+                List.of(new PublicChannel(ChannelDomain.DISCUSSION, "bisq"),
+                        new PublicChannel(ChannelDomain.DISCUSSION, "bitcoin"),
+                        new PublicChannel(ChannelDomain.DISCUSSION, "markets"),
+                        new PublicChannel(ChannelDomain.DISCUSSION, "economy"),
+                        new PublicChannel(ChannelDomain.DISCUSSION, "offTopic")));
+
+        discussionChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
-                publicDiscussionChannelService);
+                publicDiscussionChannelService,
+                ChannelDomain.DISCUSSION);
 
         // Events
-        privateEventsChannelService = new PrivateEventsChannelService(persistenceService,
+        privateEventsChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
-        publicEventsChannelService = new PublicEventsChannelService(persistenceService,
+                userProfileService,
+                proofOfWorkService,
+                ChannelDomain.EVENTS);
+        publicEventsChannelService = new PublicChannelService(persistenceService,
                 networkService,
-                userIdentityService);
-        eventsChannelSelectionService = new EventsChannelSelectionService(persistenceService,
+                userIdentityService,
+                userProfileService,
+                ChannelDomain.EVENTS,
+                List.of(new PublicChannel(ChannelDomain.EVENTS, "conferences"),
+                        new PublicChannel(ChannelDomain.EVENTS, "meetups"),
+                        new PublicChannel(ChannelDomain.EVENTS, "podcasts"),
+                        new PublicChannel(ChannelDomain.EVENTS, "noKyc"),
+                        new PublicChannel(ChannelDomain.EVENTS, "nodes"),
+                        new PublicChannel(ChannelDomain.EVENTS, "tradeEvents")));
+        eventsChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateEventsChannelService,
-                publicEventsChannelService);
+                publicEventsChannelService,
+                ChannelDomain.EVENTS);
 
         // Support
-        privateSupportChannelService = new PrivateSupportChannelService(persistenceService,
+        privateSupportChannelService = new PrivateChannelService(persistenceService,
                 networkService,
                 userIdentityService,
-                proofOfWorkService);
-        publicSupportChannelService = new PublicSupportChannelService(persistenceService,
+                userProfileService,
+                proofOfWorkService,
+                ChannelDomain.SUPPORT);
+        publicSupportChannelService = new PublicChannelService(persistenceService,
                 networkService,
-                userIdentityService);
-        supportChannelSelectionService = new SupportChannelSelectionService(persistenceService,
+                userIdentityService,
+                userProfileService,
+                ChannelDomain.SUPPORT,
+                List.of(new PublicChannel(ChannelDomain.SUPPORT, "support"),
+                        new PublicChannel(ChannelDomain.SUPPORT, "questions"),
+                        new PublicChannel(ChannelDomain.SUPPORT, "reports")));
+        supportChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateSupportChannelService,
-                publicSupportChannelService);
+                publicSupportChannelService,
+                ChannelDomain.SUPPORT);
     }
 
     @Override

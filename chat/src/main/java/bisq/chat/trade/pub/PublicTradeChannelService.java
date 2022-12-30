@@ -17,7 +17,8 @@
 
 package bisq.chat.trade.pub;
 
-import bisq.chat.channel.PublicChannelService;
+import bisq.chat.channel.BasePublicChannelService;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -31,6 +32,7 @@ import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +43,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PublicTradeChannelService extends PublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
+public class PublicTradeChannelService extends BasePublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
     @Getter
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
@@ -51,34 +53,35 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
 
     public PublicTradeChannelService(PersistenceService persistenceService,
                                      NetworkService networkService,
-                                     UserIdentityService userIdentityService) {
-        super(networkService, userIdentityService);
+                                     UserIdentityService userIdentityService,
+                                     UserProfileService userProfileService) {
+        super(networkService, userIdentityService, userProfileService, ChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
 
     public void showChannel(PublicTradeChannel channel) {
-        getVisibleChannelIds().add(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
+        getVisibleChannelNames().add(channel.getChannelName());
+        numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
     public void hidePublicTradeChannel(PublicTradeChannel channel) {
-        getVisibleChannelIds().remove(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
+        getVisibleChannelNames().remove(channel.getChannelName());
+        numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
     public boolean isVisible(PublicTradeChannel channel) {
-        return getVisibleChannelIds().contains(channel.getId());
+        return getVisibleChannelNames().contains(channel.getChannelName());
     }
 
-    public ObservableSet<String> getVisibleChannelIds() {
-        return persistableStore.getVisibleChannelIds();
+    public ObservableSet<String> getVisibleChannelNames() {
+        return persistableStore.getVisibleChannelNames();
     }
 
     public Set<PublicTradeChannel> getVisibleChannels() {
-        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
+        return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
     }
 
 
@@ -113,11 +116,11 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     }
 
     @Override
-    protected PublicTradeChatMessage createNewChatMessage(String text,
-                                                          Optional<Quotation> quotedMessage,
-                                                          PublicTradeChannel publicChannel,
-                                                          UserProfile userProfile) {
-        return new PublicTradeChatMessage(publicChannel.getId(),
+    protected PublicTradeChatMessage createChatMessage(String text,
+                                                       Optional<Quotation> quotedMessage,
+                                                       PublicTradeChannel publicChannel,
+                                                       UserProfile userProfile) {
+        return new PublicTradeChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -127,10 +130,10 @@ public class PublicTradeChannelService extends PublicChannelService<PublicTradeC
     }
 
     @Override
-    protected PublicTradeChatMessage createNewChatMessage(PublicTradeChatMessage originalChatMessage,
-                                                          String editedText,
-                                                          UserProfile userProfile) {
-        return new PublicTradeChatMessage(originalChatMessage.getChannelId(),
+    protected PublicTradeChatMessage createEditedChatMessage(PublicTradeChatMessage originalChatMessage,
+                                                             String editedText,
+                                                             UserProfile userProfile) {
+        return new PublicTradeChatMessage(originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),

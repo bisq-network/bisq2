@@ -17,8 +17,9 @@
 
 package bisq.chat.trade.pub;
 
+import bisq.chat.channel.BasePublicChannel;
+import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PublicChannel;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -30,18 +31,19 @@ import java.util.Collection;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
+public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatMessage> {
     private final Market market;
 
     public PublicTradeChannel(Market market) {
-        this(getId(market), market);
+        this(getChannelName(market), market);
     }
 
-    private PublicTradeChannel(String id, Market market) {
-        super(id, ChannelNotificationType.MENTION);
+    private PublicTradeChannel(String channelName, Market market) {
+        super(ChannelDomain.TRADE, channelName, ChannelNotificationType.MENTION);
 
         this.market = market;
     }
+
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
@@ -52,8 +54,7 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
 
     public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
-        return new PublicTradeChannel(baseProto.getId(),
-                Market.fromProto(proto.getMarket()));
+        return new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
     }
 
     @Override
@@ -79,7 +80,11 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
         return market.getMarketCodes();
     }
 
-    public static String getId(Market market) {
+    public static String getChannelName(Market market) {
         return market.toString();
+    }
+
+    public static String getChannelId(Market market) {
+        return ChannelDomain.TRADE.name().toLowerCase() + "." + getChannelName(market);
     }
 }
