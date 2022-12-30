@@ -26,3 +26,10 @@ Now you can run Electrum commands with
 ```
 electrum --regtest <command>
 ```
+
+## Alternative Setup using Docker (Experimental)
+1. Navigate to docker/electrumx directory.
+2. Run `docker build -t bisq:electrumx .`
+3. Run `docker run --rm -p 7771:7771 -p 50001:50001 bisq:electrumx`
+
+You can run Bitcoin Core RPC calls with `docker exec <container_name> bitcoin-cli -regtest -rpcuser=bisq -rpcpassword=bisq help`
