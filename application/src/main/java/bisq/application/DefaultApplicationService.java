@@ -21,6 +21,7 @@ import bisq.account.AccountService;
 import bisq.chat.ChatService;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -56,11 +57,12 @@ public class DefaultApplicationService extends ApplicationService {
     public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
 
     public enum State {
-        NEW,
-        START_NETWORK,
-        NETWORK_STARTED,
-        INITIALIZE_COMPLETED,
-        INITIALIZE_FAILED
+        INITIALIZE_APP,
+        INITIALIZE_NETWORK,
+        INITIALIZE_WALLET,
+        INITIALIZE_SERVICES,
+        APP_INITIALIZED,
+        FAILED
     }
 
     private final SecurityService securityService;
@@ -76,7 +78,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final ProtocolService protocolService;
     private final SupportService supportService;
 
-    private final Observable<State> state = new Observable<>(State.NEW);
+    private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public DefaultApplicationService(String[] args) {
         super("default", args);
@@ -119,21 +121,35 @@ public class DefaultApplicationService extends ApplicationService {
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
     }
 
-
-    // At the moment we do not initialize in parallel to keep thing simple, but can be optimized later
     @Override
     public CompletableFuture<Boolean> initialize() {
+        setState(State.INITIALIZE_APP);
         return securityService.initialize()
-                .thenCompose(result -> walletService.initialize())
-                .whenComplete((result, throwable) -> {
+                .thenCompose(result -> {
+                    setState(State.INITIALIZE_NETWORK);
+
+                    CompletableFuture<Boolean> networkFuture = networkService.initialize();
+                    CompletableFuture<Boolean> walletFuture = walletService.initialize();
+
+                    networkFuture.whenComplete((r, throwable) -> {
+                        if (throwable != null) {
+                            log.error("Error at networkFuture.initialize", throwable);
+                        } else if (!walletFuture.isDone()) {
+                            setState(State.INITIALIZE_WALLET);
+                        }
+                    });
+                    walletFuture.whenComplete((r, throwable) -> {
+                        if (throwable != null) {
+                            log.error("Error at walletService.initialize", throwable);
+                        }
+                    });
+                    return CompletableFutureUtils.allOf(walletFuture, networkFuture).thenApply(list -> true);
+                })
+                .whenComplete((r, throwable) -> {
                     if (throwable == null) {
-                        setState(State.START_NETWORK);
-                    } else {
-                        log.error("Error at walletService.initialize", throwable);
+                        setState(State.INITIALIZE_SERVICES);
                     }
                 })
-                .thenCompose(result -> networkService.initialize())
-                .whenComplete((r, t) -> setState(State.NETWORK_STARTED))
                 .thenCompose(result -> identityService.initialize())
                 .thenCompose(result -> oracleService.initialize())
                 .thenCompose(result -> accountService.initialize())
@@ -145,12 +161,17 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> protocolService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
-                    if (success) {
-                        setState(State.INITIALIZE_COMPLETED);
-                        log.info("NetworkApplicationService initialized");
+                    if (throwable == null) {
+                        if (success) {
+                            setState(State.APP_INITIALIZED);
+                            log.info("ApplicationService initialized");
+                        } else {
+                            setState(State.FAILED);
+                            log.error("Initializing applicationService failed");
+                        }
                     } else {
-                        setState(State.INITIALIZE_FAILED);
-                        log.error("Initializing networkApplicationService failed", throwable);
+                        setState(State.FAILED);
+                        log.error("Initializing applicationService failed", throwable);
                     }
                 });
     }
