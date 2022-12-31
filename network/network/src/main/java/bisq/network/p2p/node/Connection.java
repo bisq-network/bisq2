@@ -28,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -69,11 +67,10 @@ public abstract class Connection {
     @Getter
     private final Metrics metrics;
 
-    private final Socket socket;
+    private NetworkEnvelopeSocket networkEnvelopeSocket;
+
     private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    private OutputStream outputStream;
-    private InputStream inputStream;
     @Nullable
     private Future<?> future;
 
@@ -90,15 +87,13 @@ public abstract class Connection {
                          Metrics metrics,
                          Handler handler,
                          BiConsumer<Connection, Exception> errorHandler) {
-        this.socket = socket;
         this.peersCapability = peersCapability;
         this.peersLoad = peersLoad;
         this.handler = handler;
         this.metrics = metrics;
 
         try {
-            outputStream = socket.getOutputStream();
-            inputStream = socket.getInputStream();
+            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
         } catch (IOException exception) {
             log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
             errorHandler.accept(this, exception);
@@ -110,7 +105,7 @@ public abstract class Connection {
             Thread.currentThread().setName("Connection.read-" + getThreadNameId());
             try {
                 while (isInputStreamActive()) {
-                    var proto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+                    var proto = networkEnvelopeSocket.receiveNextEnvelope();
                     // parsing might need some time wo we check again if connection is still active
                     if (isInputStreamActive()) {
                         checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
@@ -153,10 +148,7 @@ public abstract class Connection {
             boolean sent = false;
             synchronized (writeLock) {
                 try {
-                    bisq.network.protobuf.NetworkEnvelope proto = checkNotNull(networkEnvelope.toProto(),
-                            "networkEnvelope.toProto() must not be null");
-                    proto.writeDelimitedTo(outputStream);
-                    outputStream.flush();
+                    networkEnvelopeSocket.send(networkEnvelope);
                     sent = true;
                 } catch (Throwable throwable) {
                     if (!isStopped) {
@@ -201,7 +193,7 @@ public abstract class Connection {
             future.cancel(true);
         }
         try {
-            socket.close();
+            networkEnvelopeSocket.close();
         } catch (IOException ignore) {
         }
         NetworkService.DISPATCHER.submit(() -> {
@@ -248,7 +240,7 @@ public abstract class Connection {
     @Override
     public String toString() {
         return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
-                ", socket=" + socket +
+                ", socket=" + networkEnvelopeSocket +
                 ", keyId=" + getId() + "]'";
     }
 

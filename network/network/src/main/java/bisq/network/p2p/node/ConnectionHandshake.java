@@ -29,10 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.UUID;
 
 /**
@@ -44,10 +41,11 @@ import java.util.UUID;
 public final class ConnectionHandshake {
     @Getter
     private final String id = StringUtils.createUid();
-    private final Socket socket;
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
+
+    private NetworkEnvelopeSocket networkEnvelopeSocket;
 
     @Getter
     @ToString
@@ -123,7 +121,6 @@ public final class ConnectionHandshake {
                         int socketTimeout,
                         Capability capability,
                         AuthorizationService authorizationService) {
-        this.socket = socket;
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
@@ -132,7 +129,9 @@ public final class ConnectionHandshake {
             // socket.setTcpNoDelay(true);
             // socket.setSoLinger(true, 100);
             socket.setSoTimeout(socketTimeout);
-        } catch (SocketException e) {
+
+            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -141,7 +140,6 @@ public final class ConnectionHandshake {
     Result start(Load myLoad, Address peerAddress) {
         try {
             Metrics metrics = new Metrics();
-            OutputStream outputStream = socket.getOutputStream();
             Request request = new Request(capability, myLoad);
             AuthorizationToken token = authorizationService.createToken(request,
                     Load.INITIAL_LOAD,
@@ -149,13 +147,11 @@ public final class ConnectionHandshake {
                     0);
             NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
             long ts = System.currentTimeMillis();
-            bisq.network.protobuf.NetworkEnvelope requestProto = requestNetworkEnvelope.toProto();
-            requestProto.writeDelimitedTo(outputStream);
-            outputStream.flush();
+
+            networkEnvelopeSocket.send(requestNetworkEnvelope);
             metrics.onSent(requestNetworkEnvelope);
 
-            InputStream inputStream = socket.getInputStream();
-            bisq.network.protobuf.NetworkEnvelope responseProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+            bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (responseProto == null) {
                 throw new ConnectionException("Response NetworkEnvelope protobuf is null");
             }
@@ -191,7 +187,7 @@ public final class ConnectionHandshake {
             return new Result(response.getCapability(), response.getLoad(), metrics);
         } catch (Exception e) {
             try {
-                socket.close();
+                networkEnvelopeSocket.close();
             } catch (IOException ignore) {
             }
             if (e instanceof ConnectionException) {
@@ -206,8 +202,7 @@ public final class ConnectionHandshake {
     Result onSocket(Load myLoad) {
         try {
             Metrics metrics = new Metrics();
-            InputStream inputStream = socket.getInputStream();
-            bisq.network.protobuf.NetworkEnvelope requestProto = bisq.network.protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
             if (requestProto == null) {
                 throw new ConnectionException("Request NetworkEnvelope protobuf is null");
             }
@@ -241,20 +236,17 @@ public final class ConnectionHandshake {
             log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
             metrics.onReceived(requestNetworkEnvelope);
 
-            OutputStream outputStream = socket.getOutputStream();
             Response response = new Response(capability, myLoad);
             AuthorizationToken token = authorizationService.createToken(response, request.getLoad(), peerAddress.getFullAddress(), 0);
             NetworkEnvelope responseNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
-            bisq.network.protobuf.NetworkEnvelope responseProto = responseNetworkEnvelope.toProto();
-            responseProto.writeDelimitedTo(outputStream);
-            outputStream.flush();
+            networkEnvelopeSocket.send(responseNetworkEnvelope);
 
             metrics.onSent(responseNetworkEnvelope);
             metrics.addRtt(System.currentTimeMillis() - ts);
             return new Result(request.getCapability(), request.getLoad(), metrics);
         } catch (Exception e) {
             try {
-                socket.close();
+                networkEnvelopeSocket.close();
             } catch (IOException ignore) {
             }
             if (e instanceof ConnectionException) {
