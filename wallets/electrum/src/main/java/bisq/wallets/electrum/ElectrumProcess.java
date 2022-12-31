@@ -34,7 +34,7 @@ public class ElectrumProcess implements BisqProcess {
     private final ElectrumProcessConfig processConfig;
 
     @Getter
-    private Optional<Path> binaryPath = Optional.empty();
+    private final Path binaryPath;
     private Optional<ElectrumRegtestProcess> electrumRegtestProcess = Optional.empty();
     private Optional<String> electrumVersion = Optional.empty();
 
@@ -42,13 +42,16 @@ public class ElectrumProcess implements BisqProcess {
     public ElectrumProcess(Path electrumRootDataDir, ElectrumProcessConfig processConfig) {
         this.electrumRootDataDir = electrumRootDataDir;
         this.processConfig = processConfig;
+        binaryPath = resolveBinaryPath();
     }
 
     @Override
     public void start() {
-        unpackArchive();
-        if (OsUtils.isLinux()) {
-            OsUtils.makeBinaryExecutable(binaryPath.orElseThrow());
+        if (!binaryPath.toFile().exists()) {
+            unpackArchive();
+            if (OsUtils.isLinux()) {
+                OsUtils.makeBinaryExecutable(binaryPath);
+            }
         }
         createAndStartProcess();
     }
@@ -61,23 +64,13 @@ public class ElectrumProcess implements BisqProcess {
     private void unpackArchive() {
         Path destDirPath = electrumRootDataDir.resolve("bin");
         var binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
-
         String binarySuffix = getBinarySuffix();
-        Path extractedFilePath = binaryExtractor.extractFileWithSuffix(binarySuffix);
-
-        if (OsUtils.isMac()) {
-            extractedFilePath = extractedFilePath.resolve("Contents/MacOS/run_electrum");
-        }
-
-        binaryPath = Optional.of(extractedFilePath);
+        binaryExtractor.extractFileWithSuffix(binarySuffix);
     }
 
     private void createAndStartProcess() {
-        Path path = binaryPath.orElseThrow();
-        long ts = System.currentTimeMillis();
-        var process = new ElectrumRegtestProcess(path, processConfig);
+        var process = new ElectrumRegtestProcess(binaryPath, processConfig);
         process.start();
-        log.info("Starting electrum took {} ms.", System.currentTimeMillis() - ts);
         electrumRegtestProcess = Optional.of(process);
     }
 
@@ -86,16 +79,13 @@ public class ElectrumProcess implements BisqProcess {
             return electrumVersion;
         }
 
-        if (binaryPath.isPresent()) {
-            Path path = binaryPath.get();
-            String fileName = path.getFileName().toString();
+        String fileName = binaryPath.getFileName().toString();
 
-            // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
-            String secondPart = fileName.split("-")[1];
-            secondPart = secondPart.replace(".dmg", "")
-                    .replace(".exe", "");
-            electrumVersion = Optional.of(secondPart);
-        }
+        // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
+        String secondPart = fileName.split("-")[1];
+        secondPart = secondPart.replace(".dmg", "")
+                .replace(".exe", "");
+        electrumVersion = Optional.of(secondPart);
 
         return Optional.empty();
     }
@@ -119,5 +109,15 @@ public class ElectrumProcess implements BisqProcess {
 
     public ElectrumDaemon getElectrumDaemon() {
         return electrumRegtestProcess.orElseThrow().getElectrumDaemon();
+    }
+
+    private Path resolveBinaryPath() {
+        Path destDirPath = electrumRootDataDir.resolve("bin");
+        String binarySuffix = getBinarySuffix();
+        Path extractedFilePath = destDirPath.resolve("Electrum." + binarySuffix);
+        if (OsUtils.isMac()) {
+            extractedFilePath = extractedFilePath.resolve("Contents/MacOS/run_electrum");
+        }
+        return extractedFilePath;
     }
 }

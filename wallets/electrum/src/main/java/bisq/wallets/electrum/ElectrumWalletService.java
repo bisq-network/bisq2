@@ -63,6 +63,7 @@ public class ElectrumWalletService implements Service {
 
         log.info("initialize");
         return CompletableFuture.supplyAsync(() -> {
+            long ts = System.currentTimeMillis();
             electrumProcess.start();
 
             electrumWallet = new ElectrumWallet(
@@ -73,7 +74,10 @@ public class ElectrumWalletService implements Service {
                     electrumProcess.getElectrumDaemon(),
                     new ObservableSet<>()
             );
+
+            // TODO pw support
             electrumWallet.initialize(Optional.empty());
+            log.info("Electrum wallet initialized after {} ms.", System.currentTimeMillis() - ts);
 
             updateBalance();
             return true;
@@ -97,6 +101,8 @@ public class ElectrumWalletService implements Service {
     public CompletableFuture<String> getNewAddress() {
         return CompletableFuture.supplyAsync(() -> {
             String receiveAddress = electrumWallet.getNewAddress();
+
+            // Do we need persistence?
             receiveAddresses.add(receiveAddress);
             return receiveAddress;
         });
