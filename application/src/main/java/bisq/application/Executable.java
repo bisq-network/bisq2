@@ -22,8 +22,12 @@ public abstract class Executable<T extends ApplicationService> {
     protected void onApplicationLaunched() {
         applicationService.initialize()
                 .whenComplete((success, throwable) -> {
-                    if (success) {
-                        onDomainInitialized();
+                    if (throwable == null) {
+                        if (success) {
+                            onDomainInitialized();
+                        } else {
+                            log.error("Initialize applicationService failed", throwable);
+                        }
                     } else {
                         onInitializeDomainFailed(throwable);
                     }
@@ -31,7 +35,7 @@ public abstract class Executable<T extends ApplicationService> {
     }
 
     protected void onInitializeDomainFailed(Throwable throwable) {
-        throwable.printStackTrace();
+        log.error("Initialize domain failed", throwable);
     }
 
     abstract protected void onDomainInitialized();

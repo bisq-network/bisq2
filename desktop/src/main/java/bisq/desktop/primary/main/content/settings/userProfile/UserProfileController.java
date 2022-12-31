@@ -156,7 +156,7 @@ public class UserProfileController implements Controller {
         return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity().get())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
-                        new Popup().error(throwable.getMessage()).show();
+                        UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
                     } else {
                         if (!model.getUserIdentities().isEmpty()) {
                             UIThread.runOnNextRenderFrame(() -> {
