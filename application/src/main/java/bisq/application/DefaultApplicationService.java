@@ -123,7 +123,6 @@ public class DefaultApplicationService extends ApplicationService {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        setState(State.INITIALIZE_APP);
         return securityService.initialize()
                 .thenCompose(result -> {
                     setState(State.INITIALIZE_NETWORK);
