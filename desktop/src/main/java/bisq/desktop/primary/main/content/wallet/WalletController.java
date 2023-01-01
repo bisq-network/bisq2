@@ -35,7 +35,7 @@ public class WalletController implements Controller {
     private Pin balancePin;
 
     public WalletController(DefaultApplicationService applicationService) {
-        walletService = applicationService.getWalletService();
+        walletService = applicationService.getElectrumWalletService();
         walletWithdrawFundsPopup = new WalletWithdrawFundsPopup(walletService);
     }
 

@@ -66,7 +66,7 @@ public class DefaultApplicationService extends ApplicationService {
     }
 
     private final SecurityService securityService;
-    private final ElectrumWalletService walletService;
+    private final ElectrumWalletService electrumWalletService;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final OracleService oracleService;
@@ -83,7 +83,8 @@ public class DefaultApplicationService extends ApplicationService {
     public DefaultApplicationService(String[] args) {
         super("default", args);
         securityService = new SecurityService(persistenceService);
-        walletService = new ElectrumWalletService(config.isWalletEnabled(), Path.of(config.getBaseDir()));
+        electrumWalletService = new ElectrumWalletService(ElectrumWalletService.Config.from(getConfig("electrumWallet")),
+                Path.of(config.getBaseDir()));
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
                 persistenceService,
@@ -128,7 +129,7 @@ public class DefaultApplicationService extends ApplicationService {
                     setState(State.INITIALIZE_NETWORK);
 
                     CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = walletService.initialize();
+                    CompletableFuture<Boolean> walletFuture = electrumWalletService.initialize();
 
                     networkFuture.whenComplete((r, throwable) -> {
                         if (throwable != null) {
@@ -188,7 +189,7 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> oracleService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())
-                        .thenCompose(result -> walletService.shutdown())
+                        .thenCompose(result -> electrumWalletService.shutdown())
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)

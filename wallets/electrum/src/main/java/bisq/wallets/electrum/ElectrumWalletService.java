@@ -37,23 +37,34 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ElectrumWalletService implements Service {
+    @Getter
+    public static class Config {
+        private final boolean enabled;
 
-    private static final String CURRENCY_CODE = "BTC";
+        public Config(boolean enabled) {
+            this.enabled = enabled;
+        }
 
-    private final boolean isWalletEnabled;
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getBoolean("enabled"));
+        }
+    }
+
+    private final Config config;
     private final Path electrumRootDataDir;
     private final ElectrumProcess electrumProcess;
     private final ElectrumNotifyWebServer electrumNotifyWebServer = new ElectrumNotifyWebServer(NetworkUtils.findFreeSystemPort());
 
     @Getter
-    private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, CURRENCY_CODE));
+    private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.asBtc(0));
     @Getter
     private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
 
     private ElectrumWallet electrumWallet;
 
-    public ElectrumWalletService(boolean isWalletEnabled, Path bisqDataDir) {
-        this.isWalletEnabled = isWalletEnabled;
+    public ElectrumWalletService(Config config, Path bisqDataDir) {
+        this.config = config;
+
         electrumRootDataDir = bisqDataDir.resolve("wallets")
                 .resolve("electrum");
         this.electrumProcess = createElectrumProcess();
@@ -61,7 +72,7 @@ public class ElectrumWalletService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!isWalletEnabled) {
+        if (!config.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
 
@@ -92,7 +103,7 @@ public class ElectrumWalletService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (!isWalletEnabled) {
+        if (!config.isEnabled()) {
             return CompletableFuture.completedFuture(true);
         }
 
@@ -164,7 +175,7 @@ public class ElectrumWalletService implements Service {
     private void updateBalance() {
         CompletableFuture.runAsync(() -> {
             double balance = electrumWallet.getBalance();
-            Coin coin = Coin.of(balance, CURRENCY_CODE);
+            Coin coin = Coin.asBtc(balance);
 
             // Balance changed?
             if (!observableBalanceAsCoin.get().equals(coin)) {

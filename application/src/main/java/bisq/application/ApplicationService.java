@@ -63,7 +63,6 @@ public abstract class ApplicationService {
             }
 
             boolean devMode = config.getBoolean("devMode");
-            boolean isWalletEnabled = config.getBoolean("wallet.enabled");
 
             String dataDir = null;
             for (String arg : args) {
@@ -81,25 +80,22 @@ public abstract class ApplicationService {
 
             String version = config.getString("version");
 
-            return new Config(appDir, appName, version, devMode, isWalletEnabled);
+            return new Config(appDir, appName, version, devMode);
         }
 
         private final String baseDir;
         private final String appName;
         private final String version;
         private final boolean devMode;
-        private final boolean isWalletEnabled;
 
         public Config(String baseDir,
                       String appName,
                       String version,
-                      boolean devMode,
-                      boolean isWalletEnabled) {
+                      boolean devMode) {
             this.baseDir = baseDir;
             this.appName = appName;
             this.version = version;
             this.devMode = devMode;
-            this.isWalletEnabled = isWalletEnabled;
         }
     }
 
