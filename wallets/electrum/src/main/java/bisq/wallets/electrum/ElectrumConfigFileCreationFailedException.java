@@ -17,8 +17,8 @@
 
 package bisq.wallets.electrum;
 
-public class ElectrumConfigFileCreationFailed extends RuntimeException {
-    public ElectrumConfigFileCreationFailed(Throwable cause) {
+public class ElectrumConfigFileCreationFailedException extends RuntimeException {
+    public ElectrumConfigFileCreationFailedException(Throwable cause) {
         super(cause);
     }
 }

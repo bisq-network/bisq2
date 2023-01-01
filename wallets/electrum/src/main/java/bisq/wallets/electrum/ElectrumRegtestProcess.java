@@ -140,7 +140,7 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
             Files.writeString(configFilePath, configAsString);
         } catch (IOException e) {
-            throw new ElectrumConfigFileCreationFailed(e);
+            throw new ElectrumConfigFileCreationFailedException(e);
         }
     }
 }

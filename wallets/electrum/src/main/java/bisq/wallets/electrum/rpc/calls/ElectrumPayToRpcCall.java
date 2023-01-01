@@ -17,8 +17,8 @@
 
 package bisq.wallets.electrum.rpc.calls;
 
-import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
 import bisq.wallets.json_rpc.DaemonRpcCall;
+import bisq.wallets.json_rpc.reponses.JsonRpcStringResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -43,7 +43,8 @@ public class ElectrumPayToRpcCall extends DaemonRpcCall<ElectrumPayToRpcCall.Req
 
     @Override
     public boolean isResponseValid(JsonRpcStringResponse response) {
-        return !response.getResult().isEmpty();
+        String result = response.getResult();
+        return result != null && !result.isEmpty();
     }
 
     @Override

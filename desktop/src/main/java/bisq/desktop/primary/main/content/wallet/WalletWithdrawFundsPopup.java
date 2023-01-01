@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+@Slf4j
 public class WalletWithdrawFundsPopup extends Popup {
     private final Controller controller;
 
@@ -69,9 +70,15 @@ public class WalletWithdrawFundsPopup extends Popup {
         public void onWithdraw() {
             String passphraseString = model.passphraseProperty.get();
             Optional<String> passphrase = Optional.ofNullable(passphraseString);
-            walletService.sendToAddress(
-                    passphrase, model.addressProperty.get(), Double.parseDouble(model.amountProperty.get())
-            );
+            walletService.sendToAddress(passphrase, model.addressProperty.get(),
+                            Double.parseDouble(model.amountProperty.get()))
+                    .whenComplete((response, throwable) -> {
+                        if (throwable == null) {
+                            log.error(response);
+                        } else {
+                            log.error(throwable.toString());
+                        }
+                    });
         }
 
         private void addContent() {
