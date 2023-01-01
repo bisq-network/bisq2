@@ -15,8 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
-
+package bisq.desktop.primary.main.content.wallet.dashboard;
 
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
@@ -26,12 +25,17 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
-public class TopPanelModel implements Model {
+public class WalletDashboardModel implements Model {
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
     private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
             () -> AmountFormatter.formatAmount(balanceAsCoinProperty.get(), true),
             balanceAsCoinProperty
     );
+
+    public WalletDashboardModel() {
+    }
 }

@@ -15,24 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet;
+package bisq.desktop.primary.main.content.wallet.txs;
 
-import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.common.view.TabView;
-import bisq.i18n.Res;
+import bisq.desktop.common.view.View;
+import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
 
-public class WalletView extends TabView<WalletModel, WalletController> {
+@Slf4j
+public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
 
-    public WalletView(WalletModel model, WalletController controller) {
-        super(model, controller);
-
-        addTab(Res.get("wallet.dashboard"), NavigationTarget.WALLET_DASHBOARD);
-        addTab(Res.get("wallet.send"), NavigationTarget.WALLET_SEND);
-        addTab(Res.get("wallet.receive"), NavigationTarget.WALLET_RECEIVE);
-        addTab(Res.get("wallet.txs"), NavigationTarget.WALLET_TXS);
-        addTab(Res.get("wallet.settings"), NavigationTarget.WALLET_SETTINGS);
-
-        headLine.setText(Res.get("wallet"));
+    public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
+        super(new VBox(20), model, controller);
     }
 
     @Override

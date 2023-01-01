@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet;
+package bisq.desktop.primary.main.content.wallet.old;
 
 import bisq.desktop.components.containers.BisqGridPane;
 import bisq.desktop.components.overlay.Popup;
