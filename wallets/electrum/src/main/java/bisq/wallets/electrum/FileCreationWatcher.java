@@ -17,6 +17,8 @@
 
 package bisq.wallets.electrum;
 
+import com.sun.nio.file.SensitivityWatchEventModifier;
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.concurrent.ExecutorService;
@@ -38,8 +40,9 @@ public class FileCreationWatcher {
 
     private Path waitForNewFile() throws IOException, InterruptedException {
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            directoryToWatch.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
-
+            directoryToWatch.register(watchService,
+                    new WatchEvent.Kind[]{StandardWatchEventKinds.ENTRY_CREATE},
+                    SensitivityWatchEventModifier.HIGH);
             WatchKey watchKey = watchService.poll(1, TimeUnit.MINUTES);
             for (WatchEvent<?> event : watchKey.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();

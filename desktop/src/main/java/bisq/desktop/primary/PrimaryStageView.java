@@ -119,7 +119,7 @@ public class PrimaryStageView extends NavigationView<AnchorPane, PrimaryStageMod
 
     private Image getApplicationIconImage() {
         String iconPath;
-        if (OsUtils.isOSX())
+        if (OsUtils.isMac())
             iconPath = ImageUtil.isRetina() ? "images/window_icon@2x.png" : "images/window_icon.png";
         else if (OsUtils.isWindows())
             iconPath = "images/task_bar_icon_windows.png";

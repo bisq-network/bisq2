@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.application.Executable;
 import bisq.common.annotations.LateInit;
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.PrimaryStageController;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -80,7 +81,12 @@ public class JavaFxExecutable extends Executable<DefaultApplicationService> {
     @Override
     protected void onInitializeDomainFailed(Throwable throwable) {
         super.onInitializeDomainFailed(throwable);
-        requireNonNull(primaryStageController).onInitializeDomainFailed();
+
+        if (primaryStageController == null) {
+            UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
+        } else {
+            UIThread.run(() -> primaryStageController.onInitializeDomainFailed(throwable));
+        }
     }
 
     @Override

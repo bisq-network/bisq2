@@ -20,6 +20,7 @@ package bisq.desktop.primary;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.Browser;
 import bisq.desktop.common.JavaFxApplicationData;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
@@ -27,10 +28,14 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Notification;
 import bisq.desktop.components.overlay.Overlay;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
-import bisq.settings.*;
+import bisq.settings.Cookie;
+import bisq.settings.CookieKey;
+import bisq.settings.DontShowAgainService;
+import bisq.settings.SettingsService;
 import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.layout.AnchorPane;
@@ -148,15 +153,17 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onUncaughtException(Thread thread, Throwable throwable) {
-        // todo show error popup
+        log.error("Uncaught exception from thread {}", thread);
+        log.error("Uncaught exception", throwable);
+        UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
     }
 
     public void onQuit() {
         shutdown();
     }
 
-    public void onInitializeDomainFailed() {
-        //todo show error popup
+    public void onInitializeDomainFailed(Throwable throwable) {
+        new Popup().error(throwable.getMessage()).show();
     }
 
     public void shutdown() {

@@ -51,7 +51,6 @@ public abstract class DaemonProcess implements BisqProcess {
             FileUtils.makeDirs(dataDir.toFile());
             process = createAndStartProcess();
             waitUntilReady();
-
         } catch (IOException e) {
             throw new WalletStartupFailedException("Cannot start wallet process.", e);
         }
