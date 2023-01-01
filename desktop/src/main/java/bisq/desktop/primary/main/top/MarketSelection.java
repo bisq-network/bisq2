@@ -171,14 +171,20 @@ public class MarketSelection {
         protected ListCell<ListItem> getListCell() {
             return new ListCell<>() {
                 private final Label price, codes;
+                private final HBox hBox;
 
                 {
                     codes = new Label();
                     codes.setMouseTransparent(true);
                     codes.getStyleClass().add("bisq-text-18");
+                    HBox.setMargin(codes, new Insets(0, 0, 0, -10));
+
                     price = new Label();
                     price.setMouseTransparent(true);
                     price.setId("bisq-text-20");
+
+                    hBox = new HBox(12, codes, price);
+                    hBox.setAlignment(Pos.CENTER_LEFT);
                 }
 
                 @Override
@@ -188,9 +194,7 @@ public class MarketSelection {
                     if (item != null && !empty) {
                         price.setText(item.price);
                         codes.setText(item.codes);
-                        HBox.setMargin(codes, new Insets(0, 0, 0, -10));
-                        HBox hBox = new HBox(12, codes, price);
-                        hBox.setAlignment(Pos.CENTER_LEFT);
+
                         setGraphic(hBox);
                     } else {
                         setGraphic(null);

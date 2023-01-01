@@ -18,26 +18,38 @@
 package bisq.desktop.primary.main.top;
 
 import bisq.application.DefaultApplicationService;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 
 public class TopPanelController implements Controller {
+    private final ElectrumWalletService electrumWalletService;
     @Getter
     private final TopPanelView view;
+    private final TopPanelModel model;
+    private Pin balancePin;
 
     public TopPanelController(DefaultApplicationService applicationService) {
-        TopPanelModel model = new TopPanelModel();
+        electrumWalletService = applicationService.getElectrumWalletService();
+
+        model = new TopPanelModel();
         UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
         MarketSelection marketSelection = new MarketSelection(applicationService.getOracleService().getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection, marketSelection.getRoot());
+
     }
 
     @Override
     public void onActivate() {
+        balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
+                .to(electrumWalletService.getObservableBalanceAsCoin());
     }
 
     @Override
     public void onDeactivate() {
+        balancePin.unbind();
     }
 }

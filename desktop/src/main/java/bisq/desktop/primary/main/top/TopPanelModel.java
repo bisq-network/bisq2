@@ -18,9 +18,20 @@
 package bisq.desktop.primary.main.top;
 
 
+import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
+import bisq.presentation.formatters.AmountFormatter;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import lombok.Getter;
 
 @Getter
 public class TopPanelModel implements Model {
+    private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
+    private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
+            () -> AmountFormatter.formatAmount(balanceAsCoinProperty.get()),
+            balanceAsCoinProperty
+    );
 }

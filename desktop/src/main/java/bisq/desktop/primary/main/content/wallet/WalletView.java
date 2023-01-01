@@ -84,7 +84,7 @@ public class WalletView extends View<VBox, WalletModel, WalletController> {
         Label valueLabel = new Label();
         valueLabel.getStyleClass().add("bisq-text-headline-3");
 
-        Label codeLabel = new Label(Res.get("wallet.btc"));
+        Label codeLabel = new Label("BTC");
         codeLabel.getStyleClass().addAll("bisq-text-12");
 
         HBox hBox = new HBox(9, valueLabel, codeLabel);
