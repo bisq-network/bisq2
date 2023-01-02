@@ -23,6 +23,7 @@ import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class ElectrumDaemon {
     private final JsonRpcClient rpcClient;
@@ -37,8 +38,8 @@ public class ElectrumDaemon {
         return rpcClient.call(rpcCall).getResult();
     }
 
-    public ElectrumCreateResponse create(String password) {
-        var request = new ElectrumCreateRpcCall.Request(password);
+    public ElectrumCreateResponse create(Optional<String> password) {
+        var request = new ElectrumCreateRpcCall.Request(password.orElse(null));
         var rpcCall = new ElectrumCreateRpcCall(request);
         return rpcClient.call(rpcCall);
     }
@@ -65,8 +66,8 @@ public class ElectrumDaemon {
         return rpcClient.call(rpcCall);
     }
 
-    public String getSeed(String password) {
-        var request = new ElectrumGetSeedRpcCall.Request(password);
+    public String getSeed(Optional<String> password) {
+        var request = new ElectrumGetSeedRpcCall.Request(password.orElse(null));
         var rpcCall = new ElectrumGetSeedRpcCall(request);
         return rpcClient.call(rpcCall).getResult();
     }
@@ -87,8 +88,8 @@ public class ElectrumDaemon {
         return Arrays.asList(rpcClient.call(rpcCall));
     }
 
-    public void loadWallet(String password) {
-        var request = new ElectrumLoadWalletRpcCall.Request(password);
+    public void loadWallet(Optional<String> password) {
+        var request = new ElectrumLoadWalletRpcCall.Request(password.orElse(null));
         var rpcCall = new ElectrumLoadWalletRpcCall(request);
         rpcClient.call(rpcCall);
     }
@@ -104,28 +105,28 @@ public class ElectrumDaemon {
         return rpcClient.call(rpcCall);
     }
 
-    public void password(String password, String newPassword) {
+    public void password(Optional<String> password, String newPassword) {
         var request = ElectrumPasswordRpcCall.Request.builder()
-                .password(password)
+                .password(password.orElse(null))
                 .newPassword(newPassword)
                 .build();
         var rpcCall = new ElectrumPasswordRpcCall(request);
         rpcClient.call(rpcCall);
     }
 
-    public String payTo(String password, String destination, double amount) {
+    public String payTo(Optional<String> password, String destination, double amount) {
         var request = ElectrumPayToRpcCall.Request.builder()
                 .destination(destination)
                 .amount(amount)
-                .password(password)
+                .password(password.orElse(null))
                 .build();
         var rpcCall = new ElectrumPayToRpcCall(request);
         return rpcClient.call(rpcCall).getResult();
     }
 
-    public String signMessage(String password, String address, String message) {
+    public String signMessage(Optional<String> password, String address, String message) {
         var request = ElectrumSignMessageRpcCall.Request.builder()
-                .password(password)
+                .password(password.orElse(null))
                 .address(address)
                 .message(message)
                 .build();
@@ -133,8 +134,8 @@ public class ElectrumDaemon {
         return rpcClient.call(rpcCall).getResult();
     }
 
-    public String signTransaction(String password, String tx) {
-        var request = new ElectrumSignTransactionRpcCall.Request(tx, password);
+    public String signTransaction(Optional<String> password, String tx) {
+        var request = new ElectrumSignTransactionRpcCall.Request(tx, password.orElse(null));
         var rpcCall = new ElectrumSignTransactionRpcCall(request);
         return rpcClient.call(rpcCall).getResult();
     }
