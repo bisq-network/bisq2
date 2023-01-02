@@ -46,12 +46,11 @@ public class ElectrumWallet implements Wallet {
 
     @Override
     public void initialize(Optional<String> walletPassphrase) {
-        String password = walletPassphrase.orElse("");
         if (!doesWalletExist(walletPath)) {
-            daemon.create(password);
+            daemon.create(walletPassphrase);
         }
 
-        daemon.loadWallet(password);
+        daemon.loadWallet(walletPassphrase);
     }
 
     @Override
@@ -86,16 +85,14 @@ public class ElectrumWallet implements Wallet {
 
     @Override
     public String sendToAddress(Optional<String> passphrase, String address, double amount) {
-        String password = passphrase.orElse("");
-        String unsignedTx = daemon.payTo(password, address, amount);
-        String signedTx = daemon.signTransaction(password, unsignedTx);
+        String unsignedTx = daemon.payTo(passphrase, address, amount);
+        String signedTx = daemon.signTransaction(passphrase, unsignedTx);
         return daemon.broadcast(signedTx);
     }
 
     @Override
     public String signMessage(Optional<String> passphrase, String address, String message) {
-        String password = passphrase.orElse("");
-        return daemon.signMessage(password, address, message);
+        return daemon.signMessage(passphrase, address, message);
     }
 
     private boolean doesWalletExist(Path walletPath) {
