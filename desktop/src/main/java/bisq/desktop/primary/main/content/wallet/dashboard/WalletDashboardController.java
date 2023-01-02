@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.wallet.dashboard;
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
@@ -45,6 +46,12 @@ public class WalletDashboardController implements Controller {
     public void onActivate() {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(electrumWalletService.getObservableBalanceAsCoin());
+
+        electrumWalletService.getBalance().whenComplete((balance, throwable) -> {
+            if (throwable == null) {
+                UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
+            }
+        });
     }
 
     @Override

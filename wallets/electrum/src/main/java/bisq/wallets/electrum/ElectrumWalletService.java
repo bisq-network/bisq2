@@ -149,6 +149,16 @@ public class ElectrumWalletService implements Service {
         return CompletableFuture.supplyAsync(() -> true);
     }
 
+    public CompletableFuture<Coin> getBalance() {
+        return CompletableFuture.supplyAsync(() -> {
+            double balance = electrumWallet.getBalance();
+            Coin balanceAsCoin = Coin.asBtc(electrumWallet.getBalance());
+            observableBalanceAsCoin.set(balanceAsCoin);
+            return balanceAsCoin;
+
+        });
+    }
+
     private ElectrumProcess createElectrumProcess() {
         var processConfig = ElectrumProcessConfig.builder()
                 .dataDir(electrumRootDataDir.resolve("wallet"))
