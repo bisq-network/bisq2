@@ -152,10 +152,9 @@ public class ElectrumWalletService implements Service {
     public CompletableFuture<Coin> getBalance() {
         return CompletableFuture.supplyAsync(() -> {
             double balance = electrumWallet.getBalance();
-            Coin balanceAsCoin = Coin.asBtc(electrumWallet.getBalance());
+            Coin balanceAsCoin = Coin.asBtc(balance);
             observableBalanceAsCoin.set(balanceAsCoin);
             return balanceAsCoin;
-
         });
     }
 
