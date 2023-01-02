@@ -31,6 +31,7 @@ import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ElectrumRegtest implements BisqProcess {
 
@@ -56,8 +57,8 @@ public class ElectrumRegtest implements BisqProcess {
 
         electrumDaemon = electrumProcess.getElectrumDaemon();
         if (doCreateWallet) {
-            walletInfo = electrumDaemon.create(AbstractRegtestSetup.WALLET_PASSPHRASE);
-            electrumDaemon.loadWallet(AbstractRegtestSetup.WALLET_PASSPHRASE);
+            walletInfo = electrumDaemon.create(Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE));
+            electrumDaemon.loadWallet(Optional.of(AbstractRegtestSetup.WALLET_PASSPHRASE));
         }
     }
 

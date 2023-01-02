@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -91,8 +92,8 @@ public class ElectrumUnconfirmedSendIntegrationTests {
         addressToLatchMap.put(newAddress, electrumTxLatch);
         electrumDaemon.notify(newAddress, electrumNotifyWebServer.getNotifyEndpointUrl());
 
-        String unsignedTx = electrumDaemon.payTo(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, newAddress, 5);
-        String signedTx = electrumDaemon.signTransaction(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
+        String unsignedTx = electrumDaemon.payTo(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), newAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), unsignedTx);
 
         String txId = electrumDaemon.broadcast(signedTx);
         assertThat(txId).isNotEmpty();

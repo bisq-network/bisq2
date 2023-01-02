@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,7 +59,7 @@ public class ElectrumSetupIntegrationTests {
 
     @Test
     void createAndLoadWalletTest() {
-        ElectrumCreateResponse createResponse = electrumDaemon.create(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
+        ElectrumCreateResponse createResponse = electrumDaemon.create(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE));
 
         Path electrumDataDir = electrumRegtestSetup.getElectrumDataDir();
         String absoluteDataDirPath = electrumDataDir.toAbsolutePath().toString();
@@ -67,7 +68,7 @@ public class ElectrumSetupIntegrationTests {
         String[] seedWords = createResponse.getResult().getSeed().split(" ");
         assertThat(seedWords.length).isEqualTo(12);
 
-        electrumDaemon.loadWallet(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
+        electrumDaemon.loadWallet(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE));
     }
 
     @Test

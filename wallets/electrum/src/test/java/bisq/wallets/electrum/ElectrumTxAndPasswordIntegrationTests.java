@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -64,16 +65,16 @@ public class ElectrumTxAndPasswordIntegrationTests {
 
     @Test
     void changePasswordTest() {
-        String expectedSeed = electrumDaemon.getSeed(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
+        String expectedSeed = electrumDaemon.getSeed(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE));
 
         String newPassword = "My new password.";
-        electrumDaemon.password(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, newPassword);
+        electrumDaemon.password(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), newPassword);
 
-        String seed = electrumDaemon.getSeed(newPassword);
+        String seed = electrumDaemon.getSeed(Optional.of(newPassword));
         assertThat(seed).isEqualTo(expectedSeed);
 
         // Change back otherwise other tests could fail.
-        electrumDaemon.password(newPassword, MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
+        electrumDaemon.password(Optional.of(newPassword), MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
     }
 
     @Test
@@ -147,8 +148,8 @@ public class ElectrumTxAndPasswordIntegrationTests {
         BitcoindWallet minerWallet = remoteBitcoind.getMinerWallet();
         String receiverAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
 
-        String unsignedTx = electrumDaemon.payTo(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, receiverAddress, 5);
-        String signedTx = electrumDaemon.signTransaction(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
+        String unsignedTx = electrumDaemon.payTo(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), unsignedTx);
 
         electrumDaemon.broadcast(signedTx);
         electrumNotifyWebServer.stopServer();

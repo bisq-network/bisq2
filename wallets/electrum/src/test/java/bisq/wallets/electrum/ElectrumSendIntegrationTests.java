@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -85,8 +86,8 @@ public class ElectrumSendIntegrationTests {
         double balanceBefore = minerWallet.getBalance();
         String receiverAddress = minerWallet.getNewAddress(AddressType.BECH32, "");
 
-        String unsignedTx = electrumDaemon.payTo(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, receiverAddress, 5);
-        String signedTx = electrumDaemon.signTransaction(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, unsignedTx);
+        String unsignedTx = electrumDaemon.payTo(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), receiverAddress, 5);
+        String signedTx = electrumDaemon.signTransaction(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), unsignedTx);
 
         String txId = electrumDaemon.broadcast(signedTx);
         assertThat(txId).isNotEmpty();
