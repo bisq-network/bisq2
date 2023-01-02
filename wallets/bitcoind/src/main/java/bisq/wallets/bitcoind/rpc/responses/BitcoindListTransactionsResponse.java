@@ -17,11 +17,13 @@
 
 package bisq.wallets.bitcoind.rpc.responses;
 
+import bisq.common.monetary.Coin;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 
+import java.util.Date;
 import java.util.List;
 
 public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<BitcoindListTransactionsResponse.Entry>> {
@@ -50,5 +52,15 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
         @Json(name = "bip125-replaceable")
         private String bip125Replaceable;
         private boolean abandoned;
+
+        @Override
+        public Coin getAmount() {
+            return Coin.asBtc(amount);
+        }
+
+        @Override
+        public Date getDate() {
+            return new Date(time * 1000L);
+        }
     }
 }
