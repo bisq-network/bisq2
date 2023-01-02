@@ -18,10 +18,17 @@
 package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.desktop.common.view.Controller;
+import bisq.desktop.components.overlay.Popup;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
+
+import java.util.Optional;
 
 @Slf4j
 public class WalletSendController implements Controller {
@@ -29,18 +36,45 @@ public class WalletSendController implements Controller {
     private final WalletSendView view;
     private final WalletSendModel model;
     private final ElectrumWalletService electrumWalletService;
+    private final MonetaryValidator amountValidator = new MonetaryValidator();
+    private Subscription addressPin;
+    private Subscription amountPin;
 
     public WalletSendController(DefaultApplicationService applicationService) {
         electrumWalletService = applicationService.getElectrumWalletService();
         model = new WalletSendModel();
-        view = new WalletSendView(model, this);
+        view = new WalletSendView(model, this, amountValidator);
     }
 
     @Override
     public void onActivate() {
+        addressPin = EasyBind.subscribe(model.getAddress(), customMethod -> {
+
+        });
+        amountPin = EasyBind.subscribe(model.getAmount(), customMethod -> {
+
+        });
+
+        //todo check if wallet is encrypted
+        electrumWalletService.isWalletEncrypted()
+                .thenAccept(isWalletEncrypted -> UIThread.run(() -> model.getIsPasswordVisible().set(isWalletEncrypted)));
     }
 
     @Override
     public void onDeactivate() {
+        addressPin.unsubscribe();
+        amountPin.unsubscribe();
+    }
+
+    void onSend() {
+        //todo
+        double amount = Double.parseDouble(model.getAmount().get());
+        String address = model.getAddress().get();
+        electrumWalletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
+                .whenComplete((response, throwable) -> {
+                    if (throwable != null) {
+                        UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
+                    }
+                });
     }
 }

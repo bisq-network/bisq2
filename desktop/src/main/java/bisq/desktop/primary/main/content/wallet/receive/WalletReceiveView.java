@@ -18,21 +18,45 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MaterialTextField;
+import bisq.i18n.Res;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.geometry.Insets;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletReceiveView extends View<VBox, WalletReceiveModel, WalletReceiveController> {
 
+    private final MaterialTextField address;
+    private final Button copyButton;
+
     public WalletReceiveView(WalletReceiveModel model, WalletReceiveController controller) {
         super(new VBox(20), model, controller);
+
+        root.setPadding(new Insets(40, 0, 0, 0));
+
+        address = new MaterialTextField(Res.get("wallet.receive.address"));
+        address.setEditable(false);
+        address.setIcon(AwesomeIcon.COPY);
+
+        copyButton = new Button(Res.get("wallet.receive.copy"));
+        copyButton.setDefaultButton(true);
+
+        root.getChildren().addAll(address, copyButton);
     }
 
     @Override
     protected void onViewAttached() {
+        address.textProperty().bind(model.getReceiveAddress());
+        copyButton.setOnAction(e -> controller.onCopyToClipboard());
+        address.getIconButton().setOnAction(e -> controller.onCopyToClipboard());
     }
 
     @Override
     protected void onViewDetached() {
+        address.textProperty().unbind();
+        copyButton.setOnAction(null);
     }
 }

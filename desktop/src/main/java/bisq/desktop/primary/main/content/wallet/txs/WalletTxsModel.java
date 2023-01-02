@@ -18,12 +18,18 @@
 package bisq.desktop.primary.main.content.wallet.txs;
 
 import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class WalletTxsModel implements Model {
+    private final ObservableList<WalletTransactionListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<WalletTransactionListItem> sortedList = new SortedList<>(listItems);
+
     public WalletTxsModel() {
     }
 }

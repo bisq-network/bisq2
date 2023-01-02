@@ -18,12 +18,21 @@
 package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class WalletSendModel implements Model {
+    private final StringProperty address = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty password = new SimpleStringProperty();
+    private final BooleanProperty isPasswordVisible = new SimpleBooleanProperty();
+
     public WalletSendModel() {
     }
 }

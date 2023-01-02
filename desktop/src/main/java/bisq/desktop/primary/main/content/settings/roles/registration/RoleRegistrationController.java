@@ -88,8 +88,6 @@ public class RoleRegistrationController implements Controller {
             }
 
             updateRegistrationState();
-
-            model.getPrivateKeyDisplay().set("•••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••");
         });
     }
 
@@ -147,9 +145,5 @@ public class RoleRegistrationController implements Controller {
 
     void onCopy() {
         ClipboardUtil.copyToClipboard(model.getPublicKey().get());
-    }
-
-    void onShowPrivateKey() {
-        model.getPrivateKeyDisplay().set(model.getPrivateKey().get());
     }
 }

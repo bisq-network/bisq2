@@ -18,14 +18,29 @@
 package bisq.desktop.primary.main.content.wallet.txs;
 
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.table.BisqTableColumn;
+import bisq.desktop.components.table.BisqTableView;
+import bisq.i18n.Res;
+import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
+    private final BisqTableView<WalletTransactionListItem> tableView;
 
     public WalletTxsView(WalletTxsModel model, WalletTxsController controller) {
         super(new VBox(20), model, controller);
+
+        root.setPadding(new Insets(40, 0, 0, 0));
+
+        tableView = new BisqTableView<>(model.getSortedList());
+        tableView.setMinHeight(300);
+        // Triggers to fill the available height
+        tableView.setPrefHeight(2000);
+        configTableView();
+
+        root.getChildren().add(tableView);
     }
 
     @Override
@@ -34,5 +49,34 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
 
     @Override
     protected void onViewDetached() {
+    }
+
+    private void configTableView() {
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+                .title(Res.get("date"))
+                .minWidth(200)
+                .valueSupplier(WalletTransactionListItem::getDate)
+                .isSortable(true)
+                .isFirst()
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+                .title(Res.get("wallet.txs.txId"))
+                .minWidth(200)
+                .valueSupplier(WalletTransactionListItem::getTxId)
+                .isSortable(true)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+                .title(Res.get("wallet.txs.amount"))
+                .minWidth(120)
+                .valueSupplier(WalletTransactionListItem::getAmount)
+                .isSortable(true)
+                .build());
+        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+                .title(Res.get("wallet.txs.confirmations"))
+                .minWidth(120)
+                .valueSupplier(WalletTransactionListItem::getConfirmations)
+                .isSortable(true)
+                .isLast()
+                .build());
     }
 }

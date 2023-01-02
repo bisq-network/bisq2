@@ -36,7 +36,6 @@ public class RoleRegistrationModel implements Model {
     private final StringProperty selectedProfileUserName = new SimpleStringProperty();
     private final StringProperty privateKey = new SimpleStringProperty();
     private final StringProperty publicKey = new SimpleStringProperty();
-    private final StringProperty privateKeyDisplay = new SimpleStringProperty();
     private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
     private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
     private final RoleType roleType;

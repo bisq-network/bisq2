@@ -18,6 +18,8 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
@@ -38,9 +40,15 @@ public class WalletReceiveController implements Controller {
 
     @Override
     public void onActivate() {
+        electrumWalletService.getNewAddress().
+                thenAccept(receiveAddress -> UIThread.run(() -> model.getReceiveAddress().setValue(receiveAddress)));
     }
 
     @Override
     public void onDeactivate() {
+    }
+
+    void onCopyToClipboard() {
+        ClipboardUtil.copyToClipboard(model.getReceiveAddress().get());
     }
 }

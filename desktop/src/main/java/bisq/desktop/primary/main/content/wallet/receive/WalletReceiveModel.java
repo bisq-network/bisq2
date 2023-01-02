@@ -18,12 +18,15 @@
 package bisq.desktop.primary.main.content.wallet.receive;
 
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class WalletReceiveModel implements Model {
+    private final StringProperty receiveAddress = new SimpleStringProperty();
     public WalletReceiveModel() {
     }
 }

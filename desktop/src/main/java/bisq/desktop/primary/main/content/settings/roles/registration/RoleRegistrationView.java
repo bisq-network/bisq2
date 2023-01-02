@@ -19,11 +19,10 @@ package bisq.desktop.primary.main.content.settings.roles.registration;
 
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
-import bisq.desktop.components.controls.BisqIconButton;
+import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.MultiLineLabel;
 import bisq.i18n.Res;
-import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -38,8 +37,9 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
     private final Button copyButton, registrationButton, removeRegistrationButton;
     private final Hyperlink learnMore;
     private final Label info;
-    private final MaterialTextField selectedProfile, privateKey, publicKey;
-    private final BisqIconButton showPrivateKeyIcon;
+    private final MaterialTextField selectedProfile, publicKey;
+    private final MaterialPasswordField privateKey;
+
 
     public RoleRegistrationView(RoleRegistrationModel model,
                                 RoleRegistrationController controller) {
@@ -55,10 +55,8 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         selectedProfile = new MaterialTextField(Res.get("roles.registration.selectedProfile"));
         selectedProfile.setEditable(false);
 
-        privateKey = new MaterialTextField(Res.get("roles.registration.privateKey"));
+        privateKey = new MaterialPasswordField(Res.get("roles.registration.privateKey"));
         privateKey.setEditable(false);
-        privateKey.setIcon(AwesomeIcon.EYE_OPEN);
-        showPrivateKeyIcon = privateKey.getIconButton();
 
         publicKey = new MaterialTextField(Res.get("roles.registration.publicKey"));
         publicKey.setEditable(false);
@@ -81,8 +79,8 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
     @Override
     protected void onViewAttached() {
         selectedProfile.textProperty().bind(model.getSelectedProfileUserName());
-        privateKey.textProperty().bind(model.getPrivateKeyDisplay());
-        publicKey.textProperty().bind(model.getPublicKey());
+        privateKey.textProperty().bindBidirectional(model.getPrivateKey());
+        publicKey.textProperty().bindBidirectional(model.getPublicKey());
         registrationButton.disableProperty().bind(model.getRegistrationDisabled());
         removeRegistrationButton.managedProperty().bind(model.getRemoveRegistrationVisible());
         removeRegistrationButton.visibleProperty().bind(model.getRemoveRegistrationVisible());
@@ -91,18 +89,13 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         removeRegistrationButton.setOnAction(e -> controller.onRemoveRegistration());
         learnMore.setOnAction(e -> controller.onLearnMore());
         copyButton.setOnAction(e -> controller.onCopy());
-        showPrivateKeyIcon.setOnAction(e -> {
-            controller.onShowPrivateKey();
-            showPrivateKeyIcon.setVisible(false);
-        });
-        showPrivateKeyIcon.setVisible(true);
     }
 
     @Override
     protected void onViewDetached() {
         selectedProfile.textProperty().unbind();
-        privateKey.textProperty().unbind();
-        publicKey.textProperty().unbind();
+        privateKey.textProperty().unbindBidirectional(model.getPrivateKey());
+        publicKey.textProperty().unbindBidirectional(model.getPublicKey());
         registrationButton.disableProperty().unbind();
         removeRegistrationButton.managedProperty().unbind();
         removeRegistrationButton.visibleProperty().unbind();
@@ -111,6 +104,5 @@ public class RoleRegistrationView extends View<VBox, RoleRegistrationModel, Role
         removeRegistrationButton.setOnAction(null);
         learnMore.setOnAction(null);
         copyButton.setOnAction(null);
-        showPrivateKeyIcon.setOnAction(null);
     }
 }

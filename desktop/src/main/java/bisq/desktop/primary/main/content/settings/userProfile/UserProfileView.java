@@ -52,9 +52,8 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
     private Subscription reputationScorePin, selectedChatUserIdentityPin;
 
     public UserProfileView(UserProfileModel model, UserProfileController controller) {
-        super(new HBox(), model, controller);
+        super(new HBox(20), model, controller);
 
-        root.setSpacing(20);
         root.setPadding(new Insets(40, 0, 0, 0));
 
         roboIconImageView = new ImageView();

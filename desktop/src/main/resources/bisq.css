@@ -1697,7 +1697,7 @@ tree-table-view:focused {
 /* column-header */
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-pref-height: 54px;
+    -fx-pref-height: 34px;
 }
 
 .table-view .column-header-background {
@@ -1707,6 +1707,7 @@ tree-table-view:focused {
 .table-view .column-header .label {
     -fx-alignment: center;
     -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 0.9em;
     -fx-label-padding: 0 10 0 10;
 }

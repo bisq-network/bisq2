@@ -37,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class ElectrumWalletService implements Service {
+
     @Getter
     public static class Config {
         private final boolean enabled;
@@ -141,6 +142,11 @@ public class ElectrumWalletService implements Service {
             updateBalance();
             return txId;
         });
+    }
+
+    public CompletableFuture<Boolean> isWalletEncrypted() {
+        //todo implement 
+        return CompletableFuture.supplyAsync(() -> true);
     }
 
     private ElectrumProcess createElectrumProcess() {

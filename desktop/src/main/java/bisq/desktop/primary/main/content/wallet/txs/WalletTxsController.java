@@ -18,10 +18,13 @@
 package bisq.desktop.primary.main.content.wallet.txs;
 
 import bisq.application.DefaultApplicationService;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletTxsController implements Controller {
@@ -38,6 +41,12 @@ public class WalletTxsController implements Controller {
 
     @Override
     public void onActivate() {
+        electrumWalletService.listTransactions()
+                .thenAccept(transactions -> UIThread.run(() -> {
+                    model.getListItems().setAll(transactions.stream()
+                            .map(WalletTransactionListItem::new)
+                            .collect(Collectors.toList()));
+                }));
     }
 
     @Override

@@ -81,6 +81,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -1026,7 +1027,7 @@ public class ChatMessagesListView {
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
             quotedMessage = chatMessage.getQuotation();
-            date = DateFormatter.formatDateTimeV2(new Date(chatMessage.getDate()));
+            date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("at") + " ");
 
             nym = senderUserProfile.map(UserProfile::getNym).orElse("");
             nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
