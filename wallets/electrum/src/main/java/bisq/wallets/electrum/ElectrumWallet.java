@@ -83,6 +83,10 @@ public class ElectrumWallet implements Wallet {
                 .collect(Collectors.toList());
     }
 
+    public void notify(String address, String endpointUrl) {
+        daemon.notify(address, endpointUrl);
+    }
+
     @Override
     public String sendToAddress(Optional<String> passphrase, String address, double amount) {
         String unsignedTx = daemon.payTo(passphrase, address, amount);
