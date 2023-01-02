@@ -21,8 +21,11 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.Utxo;
+import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
+import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,7 @@ public class ElectrumWalletService implements Service {
     private final boolean isWalletEnabled;
     private final Path electrumRootDataDir;
     private final ElectrumProcess electrumProcess;
+    private final ElectrumNotifyWebServer electrumNotifyWebServer = new ElectrumNotifyWebServer(NetworkUtils.findFreeSystemPort());
 
     @Getter
     private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.of(0, CURRENCY_CODE));
@@ -79,7 +83,9 @@ public class ElectrumWalletService implements Service {
             electrumWallet.initialize(Optional.empty());
             log.info("Electrum wallet initialized after {} ms.", System.currentTimeMillis() - ts);
 
+            initializeReceiveAddressMonitor();
             updateBalance();
+
             return true;
         });
     }
@@ -94,6 +100,7 @@ public class ElectrumWalletService implements Service {
         return CompletableFuture.supplyAsync(() -> {
             electrumWallet.shutdown();
             electrumProcess.shutdown();
+            electrumNotifyWebServer.stopServer();
             return true;
         });
     }
@@ -101,6 +108,7 @@ public class ElectrumWalletService implements Service {
     public CompletableFuture<String> getNewAddress() {
         return CompletableFuture.supplyAsync(() -> {
             String receiveAddress = electrumWallet.getNewAddress();
+            monitorAddress(receiveAddress);
 
             // Do we need persistence?
             receiveAddresses.add(receiveAddress);
@@ -117,7 +125,11 @@ public class ElectrumWalletService implements Service {
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
-        return CompletableFuture.supplyAsync(() -> electrumWallet.sendToAddress(passphrase, address, amount));
+        return CompletableFuture.supplyAsync(() -> {
+            String txId = electrumWallet.sendToAddress(passphrase, address, amount);
+            updateBalance();
+            return txId;
+        });
     }
 
     private ElectrumProcess createElectrumProcess() {
@@ -129,6 +141,24 @@ public class ElectrumWalletService implements Service {
                 .build();
 
         return new ElectrumProcess(electrumRootDataDir, processConfig);
+    }
+
+    private void initializeReceiveAddressMonitor() {
+        ElectrumNotifyApi.registerListener((address, status) -> {
+            if (status != null) {
+                receiveAddresses.remove(address);
+                updateBalance();
+            }
+        });
+
+        electrumNotifyWebServer.startServer();
+        receiveAddresses.forEach(address ->
+                electrumWallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl())
+        );
+    }
+
+    private void monitorAddress(String address) {
+        electrumWallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl());
     }
 
     private void updateBalance() {
