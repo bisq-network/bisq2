@@ -17,6 +17,7 @@
 
 package bisq.wallets.core;
 
+import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 
@@ -35,6 +36,8 @@ public interface Wallet {
     List<String> getWalletAddresses();
 
     List<? extends TransactionInfo> listTransactions();
+
+    List<Transaction> getTransactions();
 
     List<? extends Utxo> listUnspent();
 

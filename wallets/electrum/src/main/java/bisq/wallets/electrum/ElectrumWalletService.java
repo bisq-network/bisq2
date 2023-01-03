@@ -23,6 +23,7 @@ import bisq.common.observable.ObservableSet;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.WalletService;
+import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
@@ -71,6 +72,8 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     @Getter
     private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
+    @Getter
+    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
     @Getter
     private boolean isWalletReady;
     private ElectrumWallet wallet;
@@ -169,6 +172,14 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public CompletableFuture<List<? extends TransactionInfo>> listTransactions() {
         return CompletableFuture.supplyAsync(() -> wallet.listTransactions());
+    }
+
+    @Override
+    public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
+        return CompletableFuture.supplyAsync(() -> {
+            transactions.addAll(wallet.getTransactions());
+            return transactions;
+        });
     }
 
     @Override

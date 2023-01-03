@@ -21,6 +21,7 @@ import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
+import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 
@@ -51,4 +52,8 @@ public interface WalletService extends Service {
     CompletableFuture<Coin> requestBalance();
 
     Observable<Coin> getBalance();
+
+    ObservableSet<Transaction> getTransactions();
+
+    CompletableFuture<ObservableSet<Transaction>> requestTransactions();
 }

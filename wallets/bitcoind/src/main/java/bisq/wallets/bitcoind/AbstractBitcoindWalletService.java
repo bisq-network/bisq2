@@ -29,6 +29,7 @@ import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.exceptions.WalletNotInitializedException;
+import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
@@ -69,6 +70,8 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     protected final Set<String> utxoTxIds = new HashSet<>();
     @Getter
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
 
     public AbstractBitcoindWalletService(String currencyCode,
                                          Optional<RpcConfig> optionalRpcConfig,
@@ -192,6 +195,15 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             return wallet.sendToAddress(passphrase, address, amount);
+        });
+    }
+
+    @Override
+    public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
+        return CompletableFuture.supplyAsync(() -> {
+            //todo implement 
+            // transactions.addAll(getWalletOrThrowException().getTransactions());
+            return transactions;
         });
     }
 

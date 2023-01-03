@@ -19,10 +19,11 @@ package bisq.wallets.electrum;
 
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.Wallet;
-import bisq.wallets.core.model.TransactionInfo;
-import bisq.wallets.core.model.Utxo;
+import bisq.wallets.core.model.*;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
+import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeResponse;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainHistoryResponse;
+import bisq.wallets.electrum.rpc.responses.ElectrumOnChainTransactionResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 
 import java.nio.file.Path;
@@ -94,6 +95,36 @@ public class ElectrumWallet implements Wallet {
     @Override
     public List<String> getWalletAddresses() {
         return daemon.listAddresses();
+    }
+
+
+    public ElectrumDeserializeResponse.Result getElectrumTransaction(String txId) {
+        String txAsHex = daemon.getTransaction(txId);
+        return daemon.deserialize(txAsHex).getResult();
+    }
+
+    @Override
+    public List<Transaction> getTransactions() {
+        ElectrumOnChainHistoryResponse onChainHistoryResponse = daemon.onChainHistory();
+        List<ElectrumOnChainTransactionResponse> responses = onChainHistoryResponse.getResult().getTransactions();
+        return responses.stream().map(response -> {
+            String txId = response.getTxId();
+            ElectrumDeserializeResponse.Result deserializedTx = getElectrumTransaction(txId);
+            List<TransactionInput> inputs = deserializedTx.getInputs().stream()
+                    .map(inputResponse -> new TransactionInput(inputResponse.getPrevOutHash(), inputResponse.getPrevOutN(), inputResponse.getNSequence(), inputResponse.getScriptSig(), inputResponse.getWitness()))
+                    .collect(Collectors.toList());
+            List<TransactionOutput> outputs = deserializedTx.getOutputs().stream()
+                    .map(outputResponse -> new TransactionOutput(outputResponse.getValueSats(), outputResponse.getAddress(), outputResponse.getScriptPubKey()))
+                    .collect(Collectors.toList());
+            return new Transaction(txId,
+                    inputs,
+                    outputs,
+                    deserializedTx.getLockTime(),
+                    response.getHeight(),
+                    response.getDate(),
+                    response.getConfirmations())
+                    ;
+        }).collect(Collectors.toList());
     }
 
     void notify(String address, String endpointUrl) {
