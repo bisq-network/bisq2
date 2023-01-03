@@ -15,18 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.desktop.primary.main.content.wallet.txs;
 
-import bisq.common.monetary.Coin;
+import bisq.desktop.common.view.Model;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
+@Slf4j
+@Getter
+public class WalletTxsModel implements Model {
+    private final ObservableList<WalletTransactionListItem> listItems = FXCollections.observableArrayList();
+    private final SortedList<WalletTransactionListItem> sortedList = new SortedList<>(listItems);
 
-public interface Transaction {
-    String getTxId();
-
-    Coin getAmount();
-
-    int getConfirmations();
-
-    Date getDate();
+    public WalletTxsModel() {
+    }
 }

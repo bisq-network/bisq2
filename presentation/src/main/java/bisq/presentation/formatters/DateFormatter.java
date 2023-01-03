@@ -21,6 +21,7 @@ import bisq.common.locale.LocaleRepository;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public class DateFormatter {
@@ -29,24 +30,21 @@ public class DateFormatter {
     }
 
     public static String formatDateTime(Date date) {
-        return formatDateTime(date, DateFormat.SHORT, DateFormat.SHORT, true, " ");
+        return formatDateTime(date, DateFormat.DEFAULT, DateFormat.DEFAULT, true, " ");
     }
 
-    public static String formatDateTimeV2(Date date) {
-        return formatDateTime(date, DateFormat.MEDIUM, DateFormat.SHORT, true, " at ");
-    }
-
-    private static String formatDateTime(Date date,
-                                         int dateFormat,
-                                         int timeFormat,
-                                         boolean useLocalTimezone,
-                                         String delimiter) {
+    public static String formatDateTime(Date date,
+                                        int dateFormat,
+                                        int timeFormat,
+                                        boolean useLocalTimezone,
+                                        String delimiter) {
         if (date == null) {
             return "";
         }
 
-        DateFormat dateFormatter = DateFormat.getDateInstance(dateFormat, LocaleRepository.getDefaultLocale());
-        DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, LocaleRepository.getDefaultLocale());
+        Locale defaultLocale = LocaleRepository.getDefaultLocale();
+        DateFormat dateFormatter = DateFormat.getDateInstance(dateFormat, defaultLocale);
+        DateFormat timeFormatter = DateFormat.getTimeInstance(timeFormat, defaultLocale);
         if (!useLocalTimezone) {
             dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
             timeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));

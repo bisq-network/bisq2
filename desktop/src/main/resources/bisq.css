@@ -1240,6 +1240,39 @@
 
 /*******************************************************************************
  *                                                                             *
+ * Card button                                                                *
+ *                                                                             *
+ ******************************************************************************/
+
+.grey-card-button {
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-grey-3;
+    -fx-background-radius: 4;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.grey-card-button:hover {
+    -fx-background-color: -bisq-grey-18;
+}
+
+.green-card-button {
+    -fx-font-size: 1.46em;
+    -fx-background-color: -bisq-green;
+    -fx-background-radius: 4;
+    -fx-text-fill: -bisq-white;
+    -fx-cursor: hand;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.green-card-button:hover {
+    -fx-background-color: -bisq-green-lighter;
+}
+
+
+/*******************************************************************************
+ *                                                                             *
  * Hyperlink                                                                  *
  *                                                                             *
  ******************************************************************************/
@@ -1664,7 +1697,7 @@ tree-table-view:focused {
 /* column-header */
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-pref-height: 54px;
+    -fx-pref-height: 34px;
 }
 
 .table-view .column-header-background {
@@ -1674,6 +1707,7 @@ tree-table-view:focused {
 .table-view .column-header .label {
     -fx-alignment: center;
     -fx-text-fill: -bisq-grey-dimmed;
+    -fx-font-family: "IBM Plex Sans Light";
     -fx-font-size: 0.9em;
     -fx-label-padding: 0 10 0 10;
 }

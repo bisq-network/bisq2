@@ -15,33 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.wallet;
+package bisq.desktop.primary.main.content.wallet.txs;
 
 import bisq.desktop.components.table.TableItem;
+import bisq.presentation.formatters.AmountFormatter;
+import bisq.presentation.formatters.DateFormatter;
 import bisq.wallets.core.model.Transaction;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Getter
 public class WalletTransactionListItem implements TableItem {
-    private final StringProperty description = new SimpleStringProperty(this, "wallet.transaction.history.description");
-    private final StringProperty amount = new SimpleStringProperty(this, "amount");
-    private final StringProperty confirmations = new SimpleStringProperty(this, "wallet.column.confirmations");
+    private final String date;
+    private final String txId;
+    private final String amount;
+    private final String confirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
-        description.set(transaction.getTxId());
-        amount.set(String.valueOf(transaction.getAmount()));
-        confirmations.set(String.valueOf(transaction.getConfirmations()));
+        date = DateFormatter.formatDateTime(transaction.getDate());
+        txId = transaction.getTxId();
+        amount = AmountFormatter.formatAmount(transaction.getAmount());
+        confirmations = String.valueOf(transaction.getConfirmations());
     }
 
-    public StringProperty descriptionProperty() {
-        return description;
-    }
-
-    public StringProperty amountProperty() {
-        return amount;
-    }
-
-    public StringProperty confirmationsProperty() {
-        return confirmations;
-    }
 }

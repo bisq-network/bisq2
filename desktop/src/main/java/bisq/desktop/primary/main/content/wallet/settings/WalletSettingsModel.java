@@ -15,18 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.desktop.primary.main.content.wallet.settings;
 
-import bisq.common.monetary.Coin;
+import bisq.desktop.common.view.Model;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
-
-public interface Transaction {
-    String getTxId();
-
-    Coin getAmount();
-
-    int getConfirmations();
-
-    Date getDate();
+@Slf4j
+@Getter
+public class WalletSettingsModel implements Model {
+    public WalletSettingsModel() {
+    }
 }

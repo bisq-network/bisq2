@@ -144,7 +144,12 @@ public enum NavigationTarget {
     REGISTER_MODERATOR(ROLES_TABS, false),
     REGISTER_ORACLE(ROLES_TABS, false),
 
-    WALLET(CONTENT);
+    WALLET(CONTENT),
+    WALLET_DASHBOARD(WALLET),
+    WALLET_SEND(WALLET),
+    WALLET_RECEIVE(WALLET),
+    WALLET_TXS(WALLET),
+    WALLET_SETTINGS(WALLET);
 
     @Getter
     private final Optional<NavigationTarget> parent;

@@ -15,41 +15,55 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.top;
+package bisq.desktop.primary.main.content.wallet.dashboard;
 
 import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
-import bisq.desktop.primary.main.content.components.UserProfileSelection;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationTarget;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-public class TopPanelController implements Controller {
-    private final ElectrumWalletService electrumWalletService;
+@Slf4j
+public class WalletDashboardController implements Controller {
     @Getter
-    private final TopPanelView view;
-    private final TopPanelModel model;
+    private final WalletDashboardView view;
+    private final WalletDashboardModel model;
+    private final ElectrumWalletService electrumWalletService;
     private Pin balancePin;
 
-    public TopPanelController(DefaultApplicationService applicationService) {
+    public WalletDashboardController(DefaultApplicationService applicationService) {
         electrumWalletService = applicationService.getElectrumWalletService();
-
-        model = new TopPanelModel();
-        UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
-        MarketSelection marketSelection = new MarketSelection(applicationService.getOracleService().getMarketPriceService());
-        view = new TopPanelView(model, this, userProfileSelection, marketSelection.getRoot());
-
+        model = new WalletDashboardModel();
+        view = new WalletDashboardView(model, this);
     }
 
     @Override
     public void onActivate() {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
                 .to(electrumWalletService.getObservableBalanceAsCoin());
+
+        electrumWalletService.getBalance().whenComplete((balance, throwable) -> {
+            if (throwable == null) {
+                UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
         balancePin.unbind();
+    }
+
+    void onSend() {
+        Navigation.navigateTo(NavigationTarget.WALLET_SEND);
+    }
+
+    void onReceive() {
+        Navigation.navigateTo(NavigationTarget.WALLET_RECEIVE);
     }
 }

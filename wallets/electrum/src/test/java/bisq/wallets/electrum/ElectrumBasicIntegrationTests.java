@@ -25,6 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(ElectrumExtension.class)
@@ -49,7 +51,7 @@ public class ElectrumBasicIntegrationTests {
 
     @Test
     void getSeedTest() {
-        String seed = electrumDaemon.getSeed(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE);
+        String seed = electrumDaemon.getSeed(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE));
         String expectedSeed = electrumRegtestSetup.getWalletInfo().getResult().getSeed();
         assertThat(seed).isEqualTo(expectedSeed);
     }
@@ -64,7 +66,7 @@ public class ElectrumBasicIntegrationTests {
     void signAndVerifyMessageTest() {
         String address = electrumDaemon.getUnusedAddress();
         String message = "My proof that I own " + address;
-        String signature = electrumDaemon.signMessage(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE, address, message);
+        String signature = electrumDaemon.signMessage(Optional.of(MacLinuxElectrumRegtestSetup.WALLET_PASSPHRASE), address, message);
 
         boolean isValid = electrumDaemon.verifyMessage(address, signature, message);
         assertThat(isValid).isTrue();

@@ -15,10 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.electrum;
+package bisq.desktop.primary.main.content.wallet.settings;
 
-public class ElectrumConfigFileCreationFailed extends RuntimeException {
-    public ElectrumConfigFileCreationFailed(Throwable cause) {
-        super(cause);
+import bisq.desktop.common.view.View;
+import javafx.scene.layout.VBox;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class WalletSettingsView extends View<VBox, WalletSettingsModel, WalletSettingsController> {
+
+    public WalletSettingsView(WalletSettingsModel model, WalletSettingsController controller) {
+        super(new VBox(20), model, controller);
+    }
+
+    @Override
+    protected void onViewAttached() {
+    }
+
+    @Override
+    protected void onViewDetached() {
     }
 }

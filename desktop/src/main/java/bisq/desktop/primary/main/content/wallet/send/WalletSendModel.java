@@ -15,36 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.roles.registration;
+package bisq.desktop.primary.main.content.wallet.send;
 
 import bisq.desktop.common.view.Model;
-import bisq.user.identity.UserIdentity;
-import bisq.user.role.RoleType;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.security.KeyPair;
 
 @Slf4j
 @Getter
-public class RoleRegistrationModel implements Model {
-    private final StringProperty selectedProfileUserName = new SimpleStringProperty();
-    private final StringProperty privateKey = new SimpleStringProperty();
-    private final StringProperty publicKey = new SimpleStringProperty();
-    private final BooleanProperty registrationDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty removeRegistrationVisible = new SimpleBooleanProperty();
-    private final RoleType roleType;
-    @Setter
-    private UserIdentity userIdentity;
-    @Setter
-    private KeyPair keyPair;
+public class WalletSendModel implements Model {
+    private final StringProperty address = new SimpleStringProperty();
+    private final StringProperty amount = new SimpleStringProperty();
+    private final StringProperty password = new SimpleStringProperty();
+    private final BooleanProperty isPasswordVisible = new SimpleBooleanProperty();
 
-    public RoleRegistrationModel(RoleType roleType) {
-        this.roleType = roleType;
+    public WalletSendModel() {
     }
 }

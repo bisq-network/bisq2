@@ -15,18 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.wallets.electrum;
 
-import bisq.common.monetary.Coin;
-
-import java.util.Date;
-
-public interface Transaction {
-    String getTxId();
-
-    Coin getAmount();
-
-    int getConfirmations();
-
-    Date getDate();
+public class ElectrumConfigFileCreationFailedException extends RuntimeException {
+    public ElectrumConfigFileCreationFailedException(Throwable cause) {
+        super(cause);
+    }
 }

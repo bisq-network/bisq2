@@ -25,7 +25,8 @@ dependencies {
     implementation project(':core')
     implementation project(':json-rpc')
     implementation project(':process')
-
+    
+    implementation libs.typesafe.config
     implementation libs.bundles.glassfish.jersey
 
     testImplementation project(':bitcoind')

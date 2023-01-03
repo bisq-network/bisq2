@@ -17,48 +17,16 @@
 
 package bisq.desktop.primary.main.content.wallet;
 
-import bisq.common.monetary.Coin;
-import bisq.desktop.common.view.Model;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.wallets.core.model.Transaction;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.common.view.TabModel;
 
-import java.util.List;
-
-@Slf4j
-@Getter
-public class WalletModel implements Model {
-
-    private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.of(0, "BTC"));
-    private final ObservableValue<String> formattedBalanceProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatAmount(balanceAsCoinProperty.get()),
-            balanceAsCoinProperty
-    );
-
-    @Getter
-    private final ObservableList<WalletTransactionListItem> transactionHistoryList = FXCollections.observableArrayList();
-
-    private final StringProperty receiveAddressProperty = new SimpleStringProperty(this, "receiveAddress");
+public class WalletModel extends TabModel {
 
     public WalletModel() {
     }
 
-    public void addTransactions(List<? extends Transaction> transactions) {
-        transactions.stream()
-                .map(WalletTransactionListItem::new)
-                .forEach(transactionHistoryList::add);
-    }
-
-    public String getReceiveAddress() {
-        return receiveAddressProperty.get();
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.WALLET_DASHBOARD;
     }
 }
