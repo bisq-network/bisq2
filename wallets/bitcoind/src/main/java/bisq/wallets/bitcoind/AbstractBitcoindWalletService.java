@@ -147,10 +147,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public CompletableFuture<String> getNewAddress() {
+    public CompletableFuture<String> getUnusedAddress() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            String receiveAddress = wallet.getNewAddress();
+            String receiveAddress = wallet.getUnusedAddress();
 
             // getNewAddress updates the receive adresses set
             persist();

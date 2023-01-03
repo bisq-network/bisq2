@@ -50,6 +50,7 @@ public class ElectrumWallet implements Wallet {
 
     @Override
     public void shutdown() {
+        daemon.stop();
         // Electrum does not provide an unload wallet rpc call.
     }
 
@@ -59,7 +60,7 @@ public class ElectrumWallet implements Wallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         return daemon.getUnusedAddress();
     }
 
@@ -78,10 +79,6 @@ public class ElectrumWallet implements Wallet {
                 .collect(Collectors.toList());
     }
 
-    public void notify(String address, String endpointUrl) {
-        daemon.notify(address, endpointUrl);
-    }
-
     @Override
     public String sendToAddress(Optional<String> passphrase, String address, double amount) {
         String unsignedTx = daemon.payTo(passphrase, address, amount);
@@ -94,12 +91,16 @@ public class ElectrumWallet implements Wallet {
         return daemon.signMessage(passphrase, address, message);
     }
 
-    private boolean doesWalletExist(Path walletPath) {
-        return walletPath.toFile().exists();
-    }
-
     @Override
     public List<String> getWalletAddresses() {
         return daemon.listAddresses();
+    }
+
+    void notify(String address, String endpointUrl) {
+        daemon.notify(address, endpointUrl);
+    }
+
+    private boolean doesWalletExist(Path walletPath) {
+        return walletPath.toFile().exists();
     }
 }

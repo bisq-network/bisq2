@@ -71,7 +71,7 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         String newAddress = wallet.getNewAddress(AddressType.BECH32, "");
         liquidWalletStore.getWalletAddresses().add(newAddress);
         return newAddress;

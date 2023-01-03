@@ -68,7 +68,7 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         String newAddress = wallet.getNewAddress(AddressType.BECH32, "");
         receiveAddresses.add(newAddress);
         return newAddress;

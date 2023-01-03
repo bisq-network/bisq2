@@ -40,7 +40,7 @@ public class WalletReceiveController implements Controller {
 
     @Override
     public void onActivate() {
-        electrumWalletService.getNewAddress().
+        electrumWalletService.getUnusedAddress().
                 thenAccept(receiveAddress -> UIThread.run(() -> model.getReceiveAddress().setValue(receiveAddress)));
     }
 

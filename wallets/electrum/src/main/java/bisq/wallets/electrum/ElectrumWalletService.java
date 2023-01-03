@@ -144,9 +144,9 @@ public class ElectrumWalletService implements WalletService {
     }
 
     @Override
-    public CompletableFuture<String> getNewAddress() {
+    public CompletableFuture<String> getUnusedAddress() {
         return CompletableFuture.supplyAsync(() -> {
-            String receiveAddress = wallet.getNewAddress();
+            String receiveAddress = wallet.getUnusedAddress();
             monitorAddress(receiveAddress);
             return receiveAddress;
         });

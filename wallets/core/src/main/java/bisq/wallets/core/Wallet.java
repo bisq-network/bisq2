@@ -30,7 +30,7 @@ public interface Wallet {
 
     double getBalance();
 
-    String getNewAddress();
+    String getUnusedAddress();
 
     List<String> getWalletAddresses();
 
