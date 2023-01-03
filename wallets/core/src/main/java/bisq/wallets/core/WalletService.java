@@ -18,8 +18,10 @@
 package bisq.wallets.core;
 
 import bisq.common.application.Service;
-import bisq.common.observable.ObservableSet;
-import bisq.wallets.core.model.Transaction;
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
+import bisq.common.observable.ObservableArray;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 
 import java.util.List;
@@ -34,13 +36,19 @@ public interface WalletService extends Service {
 
     CompletableFuture<String> getNewAddress();
 
-    ObservableSet<String> getReceiveAddresses();
+    ObservableArray<String> getWalletAddresses();
 
-    CompletableFuture<String> signMessage(Optional<String> passphrase, String address, String message);
+    CompletableFuture<ObservableArray<String>> requestWalletAddresses();
 
-    CompletableFuture<List<? extends Transaction>> listTransactions();
+    CompletableFuture<List<? extends TransactionInfo>> listTransactions();
 
     CompletableFuture<List<? extends Utxo>> listUnspent();
 
     CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount);
+
+    CompletableFuture<Boolean> isWalletEncrypted();
+
+    CompletableFuture<Coin> requestBalance();
+
+    Observable<Coin> getBalance();
 }

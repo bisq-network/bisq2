@@ -17,7 +17,7 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
@@ -26,30 +26,30 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public final class LiquidWalletStore implements PersistableStore<LiquidWalletStore> {
     @Getter
     @Setter
     private Optional<RpcConfig> rpcConfig = Optional.empty();
     @Getter
-    private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
+    private final ObservableArray<String> walletAddresses = new ObservableArray<>();
 
     public LiquidWalletStore() {
     }
 
-    private LiquidWalletStore(Optional<RpcConfig> rpcConfig, Set<String> receiveAddresses) {
+    private LiquidWalletStore(Optional<RpcConfig> rpcConfig, List<String> walletAddresses) {
         this.rpcConfig = rpcConfig;
-        this.receiveAddresses.addAll(receiveAddresses);
+        this.walletAddresses.addAll(walletAddresses);
     }
 
     @Override
     public bisq.wallets.protobuf.LiquidWalletStore toProto() {
         bisq.wallets.protobuf.LiquidWalletStore.Builder builder =
                 bisq.wallets.protobuf.LiquidWalletStore.newBuilder()
-                        .addAllReceiveAddresses(receiveAddresses);
+                        .addAllWalletAddresses(walletAddresses);
 
         rpcConfig.ifPresent(config -> builder.setRpcConfig(config.toProto()));
         return builder.build();
@@ -58,7 +58,7 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
     public static LiquidWalletStore fromProto(bisq.wallets.protobuf.LiquidWalletStore proto) {
         Optional<RpcConfig> rpcConfig = proto.hasRpcConfig() ? Optional.of(RpcConfig.fromProto(proto.getRpcConfig()))
                 : Optional.empty();
-        return new LiquidWalletStore(rpcConfig, new HashSet<>(proto.getReceiveAddressesList()));
+        return new LiquidWalletStore(rpcConfig, new ArrayList<>(proto.getWalletAddressesList()));
     }
 
     @Override
@@ -74,13 +74,13 @@ public final class LiquidWalletStore implements PersistableStore<LiquidWalletSto
 
     @Override
     public LiquidWalletStore getClone() {
-        return new LiquidWalletStore(rpcConfig, receiveAddresses);
+        return new LiquidWalletStore(rpcConfig, walletAddresses);
     }
 
     @Override
     public void applyPersisted(LiquidWalletStore persisted) {
         rpcConfig = persisted.rpcConfig;
-        receiveAddresses.clear();
-        receiveAddresses.addAll(persisted.getReceiveAddresses());
+        walletAddresses.clear();
+        walletAddresses.addAll(persisted.getWalletAddresses());
     }
 }

@@ -25,7 +25,7 @@ import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
 
@@ -75,12 +75,17 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
+    public List<String> getWalletAddresses() {
+        return wallet.listAddressGroupings();
+    }
+
+    @Override
     public String signMessage(Optional<String> passphrase, String address, String message) {
         return wallet.signMessage(passphrase, address, message);
     }
 
     @Override
-    public List<? extends Transaction> listTransactions() {
+    public List<? extends TransactionInfo> listTransactions() {
         return wallet.listTransactions(1000);
     }
 

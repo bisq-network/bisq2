@@ -17,10 +17,16 @@
 
 package bisq.wallets.core.model;
 
-public interface Utxo {
+import bisq.common.monetary.Coin;
+
+import java.util.Date;
+
+public interface TransactionInfo {
     String getTxId();
 
-    String getAddress();
+    Coin getAmount();
 
-    double getAmount();
+    int getConfirmations();
+
+    Date getDate();
 }

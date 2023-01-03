@@ -17,6 +17,8 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.core.RpcConfig;
@@ -24,6 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinWallet, BitcoinWalletStore> {
@@ -32,6 +35,8 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     private final BitcoinWalletStore persistableStore = new BitcoinWalletStore();
     @Getter
     private final Persistence<BitcoinWalletStore> persistence;
+    @Getter
+    private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
 
     public BitcoinWalletService(PersistenceService persistenceService,
                                 boolean isRegtest) {
@@ -44,7 +49,6 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
         return WalletFactory.createBitcoinWallet(rpcConfig, walletName, persistableStore);
     }
 
-
     @Override
     protected void persistRpcConfig(RpcConfig rpcConfig) {
         persistableStore.setRpcConfig(Optional.of(rpcConfig));
@@ -54,5 +58,19 @@ public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinW
     @Override
     protected Optional<RpcConfig> getRpcConfigFromPersistableStore() {
         return persistableStore.getRpcConfig();
+    }
+
+    @Override
+    public CompletableFuture<Coin> requestBalance() {
+        if (wallet.isEmpty()) {
+            return CompletableFuture.completedFuture(Coin.asBtc(0));
+        } else {
+            return CompletableFuture.supplyAsync(() -> {
+                double balance = wallet.get().getBalance();
+                Coin balanceAsCoin = Coin.asBtc(balance);
+                this.balance.set(balanceAsCoin);
+                return balanceAsCoin;
+            });
+        }
     }
 }

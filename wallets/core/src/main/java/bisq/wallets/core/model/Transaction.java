@@ -17,16 +17,37 @@
 
 package bisq.wallets.core.model;
 
-import bisq.common.monetary.Coin;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.Date;
+import java.util.List;
 
-public interface Transaction {
-    String getTxId();
+@Getter
+@EqualsAndHashCode
+public class Transaction {
+    private final String txId;
+    private final List<TransactionInput> inputs;
+    private final List<TransactionOutput> outputs;
+    private final int lockTime;
+    private final int height;
+    private final Date date;
+    private final int confirmations;
 
-    Coin getAmount();
+    public Transaction(String txId,
+                       List<TransactionInput> inputs,
+                       List<TransactionOutput> outputs,
+                       int lockTime,
+                       int height,
+                       Date date,
+                       int confirmations) {
 
-    int getConfirmations();
-
-    Date getDate();
+        this.txId = txId;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.lockTime = lockTime;
+        this.height = height;
+        this.date = date;
+        this.confirmations = confirmations;
+    }
 }

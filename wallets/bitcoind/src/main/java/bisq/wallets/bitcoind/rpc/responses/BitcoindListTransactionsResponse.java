@@ -18,7 +18,7 @@
 package bisq.wallets.bitcoind.rpc.responses;
 
 import bisq.common.monetary.Coin;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.json_rpc.JsonRpcResponse;
 import com.squareup.moshi.Json;
 import lombok.Getter;
@@ -28,7 +28,7 @@ import java.util.List;
 
 public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<BitcoindListTransactionsResponse.Entry>> {
     @Getter
-    public static class Entry implements Transaction {
+    public static class Entry implements TransactionInfo {
         private boolean involvesWatchonly;
         private String address;
         private String category;

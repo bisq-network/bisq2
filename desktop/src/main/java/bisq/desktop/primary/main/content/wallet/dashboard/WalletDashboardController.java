@@ -45,9 +45,9 @@ public class WalletDashboardController implements Controller {
     @Override
     public void onActivate() {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(electrumWalletService.getObservableBalanceAsCoin());
+                .to(electrumWalletService.getBalance());
 
-        electrumWalletService.getBalance().whenComplete((balance, throwable) -> {
+        electrumWalletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
                 UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
             }

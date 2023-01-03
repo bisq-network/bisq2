@@ -19,12 +19,11 @@ package bisq.wallets.electrum;
 
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.Wallet;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainHistoryResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
-import lombok.Getter;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -35,13 +34,9 @@ public class ElectrumWallet implements Wallet {
     private final Path walletPath;
     private final ElectrumDaemon daemon;
 
-    @Getter
-    private final ObservableSet<String> receiveAddresses;
-
     public ElectrumWallet(Path walletPath, ElectrumDaemon daemon, ObservableSet<String> receiveAddresses) {
         this.walletPath = walletPath;
         this.daemon = daemon;
-        this.receiveAddresses = receiveAddresses;
     }
 
     @Override
@@ -69,7 +64,7 @@ public class ElectrumWallet implements Wallet {
     }
 
     @Override
-    public List<? extends Transaction> listTransactions() {
+    public List<? extends TransactionInfo> listTransactions() {
         ElectrumOnChainHistoryResponse onChainHistoryResponse = daemon.onChainHistory();
         return onChainHistoryResponse.getResult().getTransactions();
     }
@@ -101,5 +96,10 @@ public class ElectrumWallet implements Wallet {
 
     private boolean doesWalletExist(Path walletPath) {
         return walletPath.toFile().exists();
+    }
+
+    @Override
+    public List<String> getWalletAddresses() {
+        return daemon.listAddresses();
     }
 }

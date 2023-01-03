@@ -45,7 +45,7 @@ public class TopPanelController implements Controller {
     @Override
     public void onActivate() {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(electrumWalletService.getObservableBalanceAsCoin());
+                .to(electrumWalletService.getBalance());
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package bisq.wallets.elementsd;
 
+import bisq.common.monetary.Coin;
+import bisq.common.observable.Observable;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.wallets.bitcoind.AbstractBitcoindWalletService;
@@ -25,6 +27,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWallet, LiquidWalletStore> {
@@ -33,6 +36,8 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     private final LiquidWalletStore persistableStore = new LiquidWalletStore();
     @Getter
     private final Persistence<LiquidWalletStore> persistence;
+    @Getter
+    private final Observable<Coin> balance = new Observable<>(Coin.of(0, "L-BTC"));
 
     public LiquidWalletService(PersistenceService persistenceService,
                                boolean isRegtest) {
@@ -54,5 +59,11 @@ public class LiquidWalletService extends AbstractBitcoindWalletService<LiquidWal
     @Override
     protected Optional<RpcConfig> getRpcConfigFromPersistableStore() {
         return persistableStore.getRpcConfig();
+    }
+
+    @Override
+    public CompletableFuture<Coin> requestBalance() {
+        //todo impl wallet.getBalance request
+        return CompletableFuture.completedFuture(balance.get());
     }
 }

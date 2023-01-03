@@ -18,7 +18,7 @@
 package bisq.wallets.electrum.rpc.responses;
 
 import bisq.common.monetary.Coin;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,7 +27,7 @@ import java.util.Date;
 
 @ToString
 @Getter
-public class ElectrumOnChainTransactionResponse implements Transaction {
+public class ElectrumOnChainTransactionResponse implements TransactionInfo {
     @Json(name = "bc_balance")
     private String bcBalance;
     @Json(name = "bc_value")

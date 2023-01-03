@@ -17,8 +17,7 @@
 
 package bisq.wallets.core;
 
-import bisq.common.observable.ObservableSet;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 
 import java.util.List;
@@ -33,9 +32,9 @@ public interface Wallet {
 
     String getNewAddress();
 
-    ObservableSet<String> getReceiveAddresses();
+    List<String> getWalletAddresses();
 
-    List<? extends Transaction> listTransactions();
+    List<? extends TransactionInfo> listTransactions();
 
     List<? extends Utxo> listUnspent();
 

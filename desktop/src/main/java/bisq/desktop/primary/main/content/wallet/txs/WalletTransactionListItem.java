@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.wallet.txs;
 import bisq.desktop.components.table.TableItem;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +32,7 @@ public class WalletTransactionListItem implements TableItem {
     private final String amount;
     private final String confirmations;
 
-    public WalletTransactionListItem(Transaction transaction) {
+    public WalletTransactionListItem(TransactionInfo transaction) {
         date = DateFormatter.formatDateTime(transaction.getDate());
         txId = transaction.getTxId();
         amount = AmountFormatter.formatAmount(transaction.getAmount());
