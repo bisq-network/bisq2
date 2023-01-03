@@ -154,4 +154,10 @@ public class ElectrumDaemon {
         var rpcCall = new ElectrumVerifyMessageRpcCall(request);
         return rpcClient.call(rpcCall).getResult();
     }
+
+    public List<String> listAddresses() {
+        var rpcCall = new ElectrumListAddressesRpcCall();
+        ElectrumListAddressesResponse call = rpcClient.call(rpcCall);
+        return call.getResult();
+    }
 }
