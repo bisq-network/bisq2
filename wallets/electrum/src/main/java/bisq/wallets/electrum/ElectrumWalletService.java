@@ -146,7 +146,8 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
             log.info("Electrum wallet initialized after {} ms.", System.currentTimeMillis() - ts);
 
             initializeReceiveAddressMonitor();
-            updateBalance();
+            requestBalance();
+            requestTransactions();
             isWalletReady = true;
             return true;
         });
@@ -191,7 +192,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
         return CompletableFuture.supplyAsync(() -> {
             String txId = wallet.sendToAddress(passphrase, address, amount);
-            updateBalance();
+            // requestBalance();
             return txId;
         });
     }
@@ -212,6 +213,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
         });
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     //  ElectrumNotifyApi.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +221,8 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     @Override
     public void onAddressStatusChanged(String address, String status) {
         if (status != null) {
-            updateBalance();
+            requestBalance();
+            requestTransactions();
         }
     }
 
@@ -242,11 +245,5 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
         wallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl());
     }
 
-    private void updateBalance() {
-        CompletableFuture.runAsync(() -> {
-            double balance = wallet.getBalance();
-            Coin coin = Coin.asBtc(balance);
-            this.balance.set(coin);
-        });
-    }
+
 }

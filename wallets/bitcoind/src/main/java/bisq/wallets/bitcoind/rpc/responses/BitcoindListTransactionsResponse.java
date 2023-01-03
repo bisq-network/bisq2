@@ -25,6 +25,7 @@ import lombok.Getter;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<BitcoindListTransactionsResponse.Entry>> {
     @Getter
@@ -59,8 +60,8 @@ public class BitcoindListTransactionsResponse extends JsonRpcResponse<List<Bitco
         }
 
         @Override
-        public Date getDate() {
-            return new Date(time * 1000L);
+        public Optional<Date> getDate() {
+            return Optional.of(new Date(time * 1000L));
         }
     }
 }

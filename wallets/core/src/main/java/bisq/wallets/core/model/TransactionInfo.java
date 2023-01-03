@@ -20,6 +20,7 @@ package bisq.wallets.core.model;
 import bisq.common.monetary.Coin;
 
 import java.util.Date;
+import java.util.Optional;
 
 public interface TransactionInfo {
     String getTxId();
@@ -28,5 +29,5 @@ public interface TransactionInfo {
 
     int getConfirmations();
 
-    Date getDate();
+    Optional<Date> getDate();
 }

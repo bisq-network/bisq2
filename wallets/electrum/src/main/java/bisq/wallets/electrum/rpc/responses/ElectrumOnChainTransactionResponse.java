@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Date;
+import java.util.Optional;
 
 @ToString
 @Getter
@@ -60,7 +61,7 @@ public class ElectrumOnChainTransactionResponse implements TransactionInfo {
     }
 
     @Override
-    public Date getDate() {
-        return timestamp != null ? new Date(timestamp * 1000L) : new Date(0);
+    public Optional<Date> getDate() {
+        return timestamp != null ? Optional.of(new Date(timestamp * 1000L)) : Optional.empty();
     }
 }

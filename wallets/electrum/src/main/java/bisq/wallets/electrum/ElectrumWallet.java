@@ -25,12 +25,14 @@ import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeResponse;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainHistoryResponse;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainTransactionResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ElectrumWallet implements Wallet {
     private final Path walletPath;
     private final ElectrumDaemon daemon;
@@ -122,8 +124,10 @@ public class ElectrumWallet implements Wallet {
                     deserializedTx.getLockTime(),
                     response.getHeight(),
                     response.getDate(),
-                    response.getConfirmations())
-                    ;
+                    response.getConfirmations(),
+                    response.getAmount(),
+                    response.isIncoming()
+            );
         }).collect(Collectors.toList());
     }
 

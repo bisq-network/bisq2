@@ -17,11 +17,13 @@
 
 package bisq.wallets.core.model;
 
+import bisq.common.monetary.Coin;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode
@@ -31,16 +33,20 @@ public class Transaction {
     private final List<TransactionOutput> outputs;
     private final int lockTime;
     private final int height;
-    private final Date date;
+    private final Optional<Date> date;
     private final int confirmations;
+    private final Coin amount;
+    private final boolean incoming;
 
     public Transaction(String txId,
                        List<TransactionInput> inputs,
                        List<TransactionOutput> outputs,
                        int lockTime,
                        int height,
-                       Date date,
-                       int confirmations) {
+                       Optional<Date> date,
+                       int confirmations,
+                       Coin amount,
+                       boolean incoming) {
 
         this.txId = txId;
         this.inputs = inputs;
@@ -49,5 +55,7 @@ public class Transaction {
         this.height = height;
         this.date = date;
         this.confirmations = confirmations;
+        this.amount = amount;
+        this.incoming = incoming;
     }
 }

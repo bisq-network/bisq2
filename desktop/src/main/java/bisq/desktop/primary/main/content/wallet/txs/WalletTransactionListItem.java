@@ -20,23 +20,26 @@ package bisq.desktop.primary.main.content.wallet.txs;
 import bisq.desktop.components.table.TableItem;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
-import bisq.wallets.core.model.TransactionInfo;
+import bisq.wallets.core.model.Transaction;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+
 @Slf4j
 @Getter
+@EqualsAndHashCode
 public class WalletTransactionListItem implements TableItem {
     private final String date;
     private final String txId;
     private final String amount;
     private final String confirmations;
 
-    public WalletTransactionListItem(TransactionInfo transaction) {
-        date = DateFormatter.formatDateTime(transaction.getDate());
+    public WalletTransactionListItem(Transaction transaction) {
+        date = DateFormatter.formatDateTime(transaction.getDate().orElse(new Date()));
         txId = transaction.getTxId();
         amount = AmountFormatter.formatAmount(transaction.getAmount());
         confirmations = String.valueOf(transaction.getConfirmations());
     }
-
 }
