@@ -19,7 +19,6 @@ package bisq.wallets.electrum;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableArray;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.core.RpcConfig;
@@ -36,11 +35,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
-public class ElectrumWalletService implements WalletService {
+public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.Listener {
 
-    private ElectrumProcessConfig processConfig;
 
     @Getter
     public static class Config {
@@ -57,10 +56,11 @@ public class ElectrumWalletService implements WalletService {
 
     private final Config config;
     private final Path electrumRootDataDir;
+    private final ElectrumProcessConfig processConfig;
     private final ElectrumProcess electrumProcess;
     private final ElectrumNotifyWebServer electrumNotifyWebServer = new ElectrumNotifyWebServer(NetworkUtils.findFreeSystemPort());
     @Getter
-    private final ObservableArray<String> walletAddresses = new ObservableArray<>();
+    private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     @Getter
     private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
     @Getter
@@ -153,7 +153,7 @@ public class ElectrumWalletService implements WalletService {
     }
 
     @Override
-    public CompletableFuture<ObservableArray<String>> requestWalletAddresses() {
+    public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
         return CompletableFuture.supplyAsync(() -> {
             walletAddresses.addAll(wallet.getWalletAddresses());
             return walletAddresses;
@@ -195,25 +195,30 @@ public class ElectrumWalletService implements WalletService {
         });
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    //  ElectrumNotifyApi.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAddressStatusChanged(String address, String status) {
+        if (status != null) {
+            updateBalance();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeReceiveAddressMonitor() {
-        ElectrumNotifyApi.registerListener((address, status) -> {
-            if (status != null) {
-                updateBalance();
-            }
-        });
-
+        ElectrumNotifyApi.addListener(this);
         electrumNotifyWebServer.startServer();
-
-        requestWalletAddresses().whenComplete((addresses, throwable) -> {
-            if (throwable == null) {
-                addresses.forEach(this::monitorAddress);
-            }
-        });
+        try {
+            requestWalletAddresses().get().forEach(this::monitorAddress);
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("requestWalletAddresses failed. ", e);
+        }
     }
 
     private void monitorAddress(String address) {

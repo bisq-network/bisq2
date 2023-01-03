@@ -20,7 +20,7 @@ package bisq.wallets.core;
 import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 
@@ -36,9 +36,9 @@ public interface WalletService extends Service {
 
     CompletableFuture<String> getUnusedAddress();
 
-    ObservableArray<String> getWalletAddresses();
+    ObservableSet<String> getWalletAddresses();
 
-    CompletableFuture<ObservableArray<String>> requestWalletAddresses();
+    CompletableFuture<ObservableSet<String>> requestWalletAddresses();
 
     CompletableFuture<List<? extends TransactionInfo>> listTransactions();
 

@@ -35,7 +35,6 @@ public class ElectrumNotifyWebServer extends ResourceConfig {
         this.baseUrl = "http://localhost:" + port + "/";
     }
 
-
     public void startServer() {
         ResourceConfig app = register(ElectrumNotifyApi.class);
         URI uri = URI.create(baseUrl);

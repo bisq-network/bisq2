@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.ObservableSet;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
@@ -68,7 +68,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     protected Optional<ZmqConnection> zmqConnection = Optional.empty();
     protected final Set<String> utxoTxIds = new HashSet<>();
     @Getter
-    protected final ObservableArray<String> walletAddresses = new ObservableArray<>();
+    protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
 
     public AbstractBitcoindWalletService(String currencyCode,
                                          Optional<RpcConfig> optionalRpcConfig,
@@ -160,7 +160,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public CompletableFuture<ObservableArray<String>> requestWalletAddresses() {
+    public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
         if (wallet.isEmpty()) {
             return CompletableFuture.completedFuture(walletAddresses);
         } else {
@@ -201,7 +201,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         return CompletableFuture.supplyAsync(() -> true);
     }
 
-    protected void initializeZmqListeners(ZmqConnection zmqConnection, List<String> walletAddresses) {
+    protected void initializeZmqListeners(ZmqConnection zmqConnection, Set<String> walletAddresses) {
         // Update balance when new block gets mined
         zmqConnection.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
 
