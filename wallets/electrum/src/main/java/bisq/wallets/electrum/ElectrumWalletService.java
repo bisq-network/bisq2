@@ -39,18 +39,25 @@ import java.util.concurrent.ExecutionException;
 
 @Slf4j
 public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.Listener {
-
-
     @Getter
     public static class Config {
         private final boolean enabled;
+        private final String network;
+        private final String electrumXServerHost;
+        private final int electrumXServerPort;
 
-        public Config(boolean enabled) {
+        public Config(boolean enabled, String network, String electrumXServerHost, int electrumXServerPort) {
             this.enabled = enabled;
+            this.network = network;
+            this.electrumXServerHost = electrumXServerHost;
+            this.electrumXServerPort = electrumXServerPort;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getBoolean("enabled"));
+            return new Config(config.getBoolean("enabled"),
+                    config.getString("network"),
+                    config.getString("electrumXServerHost"),
+                    config.getInt("electrumXServerPort"));
         }
     }
 
@@ -59,25 +66,24 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
     private final ElectrumProcessConfig processConfig;
     private final ElectrumProcess electrumProcess;
     private final ElectrumNotifyWebServer electrumNotifyWebServer = new ElectrumNotifyWebServer(NetworkUtils.findFreeSystemPort());
+
     @Getter
     private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     @Getter
     private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
     @Getter
     private boolean isWalletReady;
-
     private ElectrumWallet wallet;
 
     public ElectrumWalletService(Config config, Path bisqDataDir) {
         this.config = config;
-
         electrumRootDataDir = bisqDataDir.resolve("wallets")
                 .resolve("electrum");
 
         processConfig = ElectrumProcessConfig.builder()
                 .dataDir(electrumRootDataDir.resolve("wallet"))
-                .electrumXServerHost("127.0.0.1")
-                .electrumXServerPort(50001)
+                .electrumXServerHost(config.getElectrumXServerHost())
+                .electrumXServerPort(config.getElectrumXServerPort())
                 .electrumConfig(ElectrumConfig.Generator.generate())
                 .build();
         electrumProcess = new ElectrumProcess(electrumRootDataDir, processConfig);
@@ -126,7 +132,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
 
             wallet = new ElectrumWallet(
                     electrumRootDataDir.resolve("wallet")
-                            .resolve("regtest")
+                            .resolve(config.getNetwork())
                             .resolve("wallets")
                             .resolve("default_wallet"),
                     electrumProcess.getElectrumDaemon(),
