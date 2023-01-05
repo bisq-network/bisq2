@@ -20,13 +20,14 @@ package bisq.socks5_socket_channel;
 import bisq.socks5_socket_channel.messages.Socks5ConnectMessage;
 import bisq.socks5_socket_channel.messages.Socks5RequestMessage;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class Socks5SocketChannel implements AutoCloseable, ReadableByteChannel, WritableByteChannel {
+public class Socks5SocketChannel implements Closeable, ReadableByteChannel, WritableByteChannel {
     private final SocketChannel socketChannel;
 
     private Socks5SocketChannel() throws IOException {
@@ -37,7 +38,7 @@ public class Socks5SocketChannel implements AutoCloseable, ReadableByteChannel, 
         return new Socks5SocketChannel();
     }
 
-    public void connect(Socks5ConnectionData connectionData, ByteBuffer byteBuffer) throws IOException {
+    public SocketChannel connect(Socks5ConnectionData connectionData, ByteBuffer byteBuffer) throws IOException {
         socketChannel.connect(connectionData.getSocks5ProxySocketAddress());
 
         negotiateProtocol(byteBuffer);
@@ -48,6 +49,7 @@ public class Socks5SocketChannel implements AutoCloseable, ReadableByteChannel, 
         );
 
         byteBuffer.clear();
+        return socketChannel;
     }
 
     private void negotiateProtocol(ByteBuffer byteBuffer) throws IOException {

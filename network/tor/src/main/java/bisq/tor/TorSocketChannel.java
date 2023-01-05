@@ -20,25 +20,27 @@ package bisq.tor;
 import bisq.socks5_socket_channel.Socks5ConnectionData;
 import bisq.socks5_socket_channel.Socks5SocketChannel;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class TorSocketChannel implements AutoCloseable, ReadableByteChannel, WritableByteChannel {
-    private final Socks5SocketChannel socketChannel;
+public class TorSocketChannel implements Closeable, ReadableByteChannel, WritableByteChannel {
+    private final Socks5SocketChannel socks5SocketChannel;
 
     private TorSocketChannel() throws IOException {
-        socketChannel = Socks5SocketChannel.open();
+        socks5SocketChannel = Socks5SocketChannel.open();
     }
 
     public static TorSocketChannel open() throws IOException {
         return new TorSocketChannel();
     }
 
-    public void connect(TorSocksConnectionData torSocksConnectionData, ByteBuffer byteBuffer) throws IOException {
+    public SocketChannel connect(TorSocksConnectionData torSocksConnectionData, ByteBuffer byteBuffer) throws IOException {
         InetSocketAddress torSocketAddress = new InetSocketAddress(
                 InetAddress.getLocalHost(),
                 torSocksConnectionData.getTorSocksProxyPort()
@@ -49,27 +51,29 @@ public class TorSocketChannel implements AutoCloseable, ReadableByteChannel, Wri
                 torSocksConnectionData.getDestinationPort()
         );
 
-        socketChannel.connect(connectionData, byteBuffer);
+        SocketChannel socketChannel = socks5SocketChannel.connect(connectionData, byteBuffer);
         byteBuffer.clear();
+
+        return socketChannel;
     }
 
     @Override
     public void close() throws IOException {
-        socketChannel.close();
+        socks5SocketChannel.close();
     }
 
     @Override
     public boolean isOpen() {
-        return socketChannel.isOpen();
+        return socks5SocketChannel.isOpen();
     }
 
     @Override
     public int read(ByteBuffer byteBuffer) throws IOException {
-        return socketChannel.read(byteBuffer);
+        return socks5SocketChannel.read(byteBuffer);
     }
 
     @Override
     public int write(ByteBuffer byteBuffer) throws IOException {
-        return socketChannel.write(byteBuffer);
+        return socks5SocketChannel.write(byteBuffer);
     }
 }
