@@ -104,7 +104,7 @@ public final class ConnectionHandshake {
     @Getter
     @ToString
     @EqualsAndHashCode
-    static final class Result {
+    public static final class Result {
         private final Capability capability;
         private final Load load;
         private final Metrics metrics;
