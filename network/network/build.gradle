@@ -16,4 +16,6 @@ dependencies {
 
     implementation libs.apache.httpcomponents.httpclient
     implementation libs.chimp.jsocks
+
+    testImplementation "org.mockito:mockito-core:4.11.0"
 }
