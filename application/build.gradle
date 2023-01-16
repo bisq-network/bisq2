@@ -19,7 +19,6 @@ dependencies {
     implementation project(':presentation')
 
     implementation('network:network')
-    implementation("wallets:api")
     implementation("wallets:electrum")
 
     implementation libs.google.guava

@@ -1,9 +1,0 @@
-plugins {
-    id 'bisq.gradle.plugin.BisqPlugin'
-}
-
-dependencies {
-    api project(":core")
-    api project(":bitcoind")
-    api project(":elementsd")
-}

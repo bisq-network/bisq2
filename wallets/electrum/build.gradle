@@ -21,8 +21,9 @@ sourceSets {
 }
 
 dependencies {
+    api project(':core')
+
     implementation("bisq:persistence")
-    implementation project(':core')
     implementation project(':json-rpc')
     implementation project(':process')
     

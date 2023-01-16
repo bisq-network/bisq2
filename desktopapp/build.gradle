@@ -63,7 +63,6 @@ dependencies {
     implementation project(':desktop')
 
     implementation("network:network")
-    implementation("wallets:api")
 
     implementation libs.google.guava
     implementation libs.bundles.fontawesomefx

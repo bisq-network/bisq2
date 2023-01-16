@@ -30,7 +30,6 @@ dependencies {
     implementation project(':application')
 
     implementation("network:network")
-    implementation("wallets:api")
     implementation("wallets:electrum")
 
     implementation libs.google.guava

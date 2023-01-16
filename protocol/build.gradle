@@ -13,7 +13,6 @@ dependencies {
     implementation project(':oracle')
 
     implementation("network:network")
-    implementation("wallets:api")
 
     implementation libs.google.guava
     implementation libs.typesafe.config
