@@ -18,4 +18,5 @@ dependencies {
     implementation libs.jeromq
 
     testImplementation project(':regtest')
+    integrationTestImplementation project(':regtest')
 }
