@@ -14,7 +14,6 @@ dependencyResolutionManagement {
 }
 
 includeBuild('..')
-include 'api'
 include 'core'
 
 include 'bitcoind'
