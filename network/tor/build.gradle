@@ -2,18 +2,6 @@ plugins {
     id 'bisq.gradle.plugin.BisqPlugin'
 }
 
-sourceSets {
-    integrationTest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
-    }
-}
-
-configurations {
-    integrationTestImplementation.extendsFrom implementation
-    integrationTestRuntimeOnly.extendsFrom runtimeOnly
-}
-
 dependencies {
     implementation project(':socks5-socket-channel')
 
@@ -26,22 +14,4 @@ dependencies {
     implementation libs.chimp.jtorctl
 
     implementation libs.bundles.bisq.tor.binaries
-
-    integrationTestImplementation libs.junit.jupiter
-    integrationTestImplementation libs.assertj.core
-}
-
-tasks.register('integrationTest', Test) {
-    description = 'Runs integration tests.'
-    group = 'verification'
-
-    testClassesDirs = sourceSets.intTest.output.classesDirs
-    classpath = sourceSets.intTest.runtimeClasspath
-    shouldRunAfter test
-
-    useJUnitPlatform()
-
-    testLogging {
-        events "passed"
-    }
 }
