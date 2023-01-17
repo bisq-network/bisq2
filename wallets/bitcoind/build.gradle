@@ -17,6 +17,5 @@ dependencies {
     implementation libs.google.guava
     implementation libs.jeromq
 
-    testImplementation project(':regtest')
     integrationTestImplementation project(':regtest')
 }
