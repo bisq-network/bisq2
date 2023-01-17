@@ -3,11 +3,6 @@ plugins {
     id 'bisq.protobuf'
 }
 
-bisq {
-    runIntegrationTests = true
-    neededBinariesToRunIntegrationTests = ['bitcoind']
-}
-
 dependencies {
     implementation("bisq:persistence")
 
