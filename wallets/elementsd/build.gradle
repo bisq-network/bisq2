@@ -15,5 +15,5 @@ dependencies {
     implementation project(':bitcoind')
     implementation project(':json-rpc')
 
-    testImplementation project(':regtest')
+    integrationTestImplementation project(':regtest')
 }
