@@ -6,7 +6,6 @@ dependencyResolutionManagement {
     }
 }
 
-include 'bisq-plugin'
 include 'commons'
 include 'desktop-regtest'
 include 'electrum-binaries'
