@@ -2,6 +2,7 @@ plugins {
     id 'bisq.java-library'
     id 'bisq.protobuf'
     id 'bisq.gradle.electrum.BisqElectrumPlugin'
+    id 'bisq.java-integration-tests'
 }
 
 electrum {
