@@ -30,6 +30,8 @@ dependencies {
     implementation libs.typesafe.config
     implementation libs.bundles.glassfish.jersey
 
-    testImplementation project(':bitcoind')
-    testImplementation project(':regtest')
+    integrationTestAnnotationProcessor libs.lombok
+    integrationTestCompileOnly libs.lombok
+    integrationTestImplementation project(':bitcoind')
+    integrationTestImplementation project(':regtest')
 }
