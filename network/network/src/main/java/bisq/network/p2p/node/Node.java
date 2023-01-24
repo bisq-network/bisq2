@@ -254,6 +254,20 @@ public class Node implements Connection.Handler {
         }
     }
 
+    public void onNewIncomingConnection(InboundConnectionChannel inboundConnectionChannel) {
+        try {
+            // inboundConnectionsByAddress.put(inboundConnectionChannel.getPeerAddress(), inboundConnectionChannel);
+            // DISPATCHER.submit(() -> listeners.forEach(listener -> listener.onConnection(inboundConnectionChannel)));
+        } catch (Throwable throwable) {
+            try {
+                inboundConnectionChannel.getNetworkEnvelopeSocketChannel().close();
+            } catch (IOException ignore) {
+            }
+
+            handleException(throwable);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Send
@@ -410,6 +424,32 @@ public class Node implements Connection.Handler {
                 // We got called from Connection on the dispatcher thread, so no mapping needed here.
                 connection.notifyListeners(networkMessage);
                 listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
+            }
+        } else {
+            //todo handle
+            log.warn("Message authorization failed. authorizedMessage={}", StringUtils.truncate(networkMessage.toString()));
+        }
+    }
+
+    public void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connection) {
+        if (isShutdown()) {
+            return;
+        }
+        String myAddress = findMyAddress().orElseThrow().getFullAddress();
+        boolean isAuthorized = authorizationService.isAuthorized(networkMessage,
+                authorizationToken,
+                getMyLoad(),
+                connection.getId(),
+                myAddress);
+        if (isAuthorized) {
+            if (networkMessage instanceof CloseConnectionMessage) {
+                CloseConnectionMessage closeConnectionMessage = (CloseConnectionMessage) networkMessage;
+                log.debug("Node {} received CloseConnectionMessage from {} with reason: {}", this, connection.getPeerAddress(), closeConnectionMessage.getCloseReason());
+                // closeConnection(connection, CloseReason.CLOSE_MSG_RECEIVED.details(closeConnectionMessage.getCloseReason().name()));
+            } else {
+                // We got called from Connection on the dispatcher thread, so no mapping needed here.
+                connection.notifyListeners(networkMessage);
+                // listeners.forEach(listener -> listener.onMessage(networkMessage, connection, nodeId));
             }
         } else {
             //todo handle
