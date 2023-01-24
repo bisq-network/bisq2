@@ -17,87 +17,70 @@
 
 package bisq.network.p2p.node;
 
+import bisq.common.data.Pair;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
 public class ConnectionHandshakeResponder {
 
-    private final NetworkEnvelopeSocket networkEnvelopeSocket;
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
 
-    public ConnectionHandshakeResponder(NetworkEnvelopeSocket networkEnvelopeSocket,
-                                        BanList banList,
+    public ConnectionHandshakeResponder(BanList banList,
                                         Capability capability,
                                         AuthorizationService authorizationService) {
-        this.networkEnvelopeSocket = networkEnvelopeSocket;
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
     }
 
-    public ConnectionHandshake.Result verifyPoW(Load myLoad) {
-        try {
-            Metrics metrics = new Metrics();
-
-            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope();
-            NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
-
-            long ts = System.currentTimeMillis();
-
-            ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
-            verifyPeerIsNotBanned(request);
-
-            String myAddress = capability.getAddress().getFullAddress();
-            boolean isAuthorized = authorizationService.isAuthorized(request,
-                    requestNetworkEnvelope.getAuthorizationToken(),
-                    Load.INITIAL_LOAD,
-                    UUID.randomUUID().toString(),
-                    myAddress);
-            if (!isAuthorized) {
-                throw new ConnectionException("Request authorization failed. request=" + request);
-            }
-
-            log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
-            metrics.onReceived(requestNetworkEnvelope);
-
-            Address peerAddress = request.getCapability().getAddress();
-            NetworkEnvelope responseNetworkEnvelope = createResponseEnvelope(myLoad, request.getLoad(), peerAddress);
-            networkEnvelopeSocket.send(responseNetworkEnvelope);
-
-            metrics.onSent(responseNetworkEnvelope);
-            metrics.addRtt(System.currentTimeMillis() - ts);
-            return new ConnectionHandshake.Result(request.getCapability(), request.getLoad(), metrics);
-        } catch (Exception e) {
-            try {
-                networkEnvelopeSocket.close();
-            } catch (IOException ignore) {
-            }
-            if (e instanceof ConnectionException) {
-                throw (ConnectionException) e;
-            } else {
-                throw new ConnectionException(e);
-            }
+    public Pair<ConnectionHandshake.Request, NetworkEnvelope> verifyPoW(List<NetworkEnvelope> receivedNetworkEnvelopes, Load myLoad) {
+        if (receivedNetworkEnvelopes.isEmpty()) {
+            throw new ConnectionException("Received empty requests.");
         }
+
+        if (receivedNetworkEnvelopes.size() > 1) {
+            throw new ConnectionException("Received multiple requests from client. requests=" + receivedNetworkEnvelopes);
+        }
+
+        NetworkEnvelope requestProto = receivedNetworkEnvelopes.get(0);
+        NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
+
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
+        verifyPeerIsNotBanned(request);
+
+        String myAddress = capability.getAddress().getFullAddress();
+        boolean isAuthorized = authorizationService.isAuthorized(request,
+                requestNetworkEnvelope.getAuthorizationToken(),
+                Load.INITIAL_LOAD,
+                UUID.randomUUID().toString(),
+                myAddress);
+
+        if (isAuthorized) {
+            log.debug("Peer {} passed PoW authorization.",
+                    ((ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage()).getCapability().getAddress());
+        } else {
+            throw new ConnectionException("Request authorization failed. request=" + request);
+        }
+
+        log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
+
+        Address peerAddress = request.getCapability().getAddress();
+        NetworkEnvelope responseNetworkEnvelope = createResponseEnvelope(myLoad, request.getLoad(), peerAddress);
+        return new Pair<>(request, responseNetworkEnvelope);
     }
 
-    private NetworkEnvelope parseAndValidateRequest(bisq.network.protobuf.NetworkEnvelope requestProto) {
-        if (requestProto == null) {
-            throw new ConnectionException("Request NetworkEnvelope protobuf is null");
-        }
-        NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
-
+    private NetworkEnvelope parseAndValidateRequest(NetworkEnvelope requestNetworkEnvelope) {
         validateEnvelopeVersion(requestNetworkEnvelope);
         validateNetworkMessage(requestNetworkEnvelope);
-
         return requestNetworkEnvelope;
     }
 
