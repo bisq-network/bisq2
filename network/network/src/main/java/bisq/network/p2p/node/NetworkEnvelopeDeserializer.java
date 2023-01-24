@@ -34,7 +34,7 @@ public class NetworkEnvelopeDeserializer {
     private int parsedMessageLength = 0;
     private byte[] currentProtobufMessage;
 
-    private final Queue<NetworkEnvelope> parsedNetworkEnvelopes = new LinkedList<>();
+    private final Queue<bisq.network.p2p.message.NetworkEnvelope> parsedNetworkEnvelopes = new LinkedList<>();
 
     public NetworkEnvelopeDeserializer(ByteBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
@@ -92,7 +92,9 @@ public class NetworkEnvelopeDeserializer {
     private void tryToParseProtoBufMessage() {
         try {
             NetworkEnvelope message = NetworkEnvelope.parseFrom(currentProtobufMessage);
-            parsedNetworkEnvelopes.add(message);
+            bisq.network.p2p.message.NetworkEnvelope
+                    networkEnvelope = bisq.network.p2p.message.NetworkEnvelope.fromProto(message);
+            parsedNetworkEnvelopes.add(networkEnvelope);
 
         } catch (InvalidProtocolBufferException e) {
             log.error("Couldn't parse protocol buffer message.", e);
@@ -131,12 +133,12 @@ public class NetworkEnvelopeDeserializer {
         currentProtobufMessage = null;
     }
 
-    public List<NetworkEnvelope> getAllNetworkEnvelopes() {
+    public List<bisq.network.p2p.message.NetworkEnvelope> getAllNetworkEnvelopes() {
         if (parsedNetworkEnvelopes.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<NetworkEnvelope> networkEnvelopes = new ArrayList<>(parsedNetworkEnvelopes.size());
+        List<bisq.network.p2p.message.NetworkEnvelope> networkEnvelopes = new ArrayList<>(parsedNetworkEnvelopes.size());
         networkEnvelopes.addAll(parsedNetworkEnvelopes);
 
         parsedNetworkEnvelopes.clear();
