@@ -11,6 +11,13 @@ configurations {
 }
 
 dependencies {
+    integrationTestAnnotationProcessor libs.lombok
+    integrationTestCompileOnly libs.lombok
+
+    integrationTestImplementation libs.slf4j.api
+    integrationTestImplementation libs.logback.core
+    integrationTestImplementation libs.logback.classic
+
     integrationTestImplementation libs.junit.jupiter
     integrationTestImplementation libs.assertj.core
 }
