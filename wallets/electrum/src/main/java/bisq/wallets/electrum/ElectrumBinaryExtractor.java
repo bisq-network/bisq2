@@ -55,7 +55,13 @@ public class ElectrumBinaryExtractor {
                 if (OsUtils.isMac()) {
                     extractElectrumAppFileToDataDir(inputStream);
                     return destDir.toPath().resolve("Electrum.app");
-
+                } else if (OsUtils.isLinux()) {
+                    File extractedFile = extractFileWithSuffixFromStream(inputStream, fileNameSuffix);
+                    Path symLink = extractedFile.toPath().getParent().resolve("Electrum." + fileNameSuffix);
+                    if (Files.exists(symLink)) {
+                        Files.delete(symLink);
+                    }
+                    return Files.createSymbolicLink(symLink, extractedFile.toPath());
                 } else {
                     File extractedFile = extractFileWithSuffixFromStream(inputStream, fileNameSuffix);
                     return extractedFile.toPath();
