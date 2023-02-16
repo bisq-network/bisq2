@@ -92,28 +92,24 @@ public class InboundConnectionsManager {
         if (inboundHandshakeChannels.contains(socketChannel)) {
             NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = new NetworkEnvelopeSocketChannel(socketChannel);
 
-            try {
-                String localAddress = socketChannel.getLocalAddress().toString();
-                String remoteAddress = socketChannel.getRemoteAddress().toString();
+            log.debug("Inbound handshake request at: {}", myCapability.getAddress());
+            Optional<InboundConnectionChannel> inboundConnectionOptional = performHandshake(networkEnvelopeSocketChannel);
 
-                log.debug("Inbound handshake request at: {}", localAddress);
-                Optional<InboundConnectionChannel> inboundConnection = performHandshake(networkEnvelopeSocketChannel);
-                log.debug("Inbound handshake completed: Initiated by {} to {}", remoteAddress, localAddress);
+            if (inboundConnectionOptional.isPresent()) {
+                InboundConnectionChannel inboundConnection = inboundConnectionOptional.get();
+                log.debug("Inbound handshake completed: Initiated by {} to {}",
+                        inboundConnection.getPeerAddress(), myCapability.getAddress());
 
-                if (inboundConnection.isPresent()) {
-                    connectionByChannel.put(socketChannel, inboundConnection.get());
-                    verifiedConnections.add(socketChannel);
+                connectionByChannel.put(socketChannel, inboundConnection);
+                verifiedConnections.add(socketChannel);
 
-                    log.info("Calling node.onNewIncomingConnection for peer {}", inboundConnection.get().getPeerAddress().getFullAddress());
-                    node.onNewIncomingConnection(inboundConnection.get());
-                } else {
-                    closeChannel(networkEnvelopeSocketChannel);
-                }
-
-                inboundHandshakeChannels.remove(socketChannel);
-            } catch (IOException e) {
-                log.warn("Handshake failed: ", e);
+                log.info("Calling node.onNewIncomingConnection for peer {}", inboundConnection.getPeerAddress().getFullAddress());
+                node.onNewIncomingConnection(inboundConnection);
+            } else {
+                closeChannel(networkEnvelopeSocketChannel);
             }
+
+            inboundHandshakeChannels.remove(socketChannel);
 
         } else if (verifiedConnections.contains(socketChannel)) {
             InboundConnectionChannel inboundConnection = connectionByChannel.get(socketChannel);
