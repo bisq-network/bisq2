@@ -97,14 +97,21 @@ public class InboundConnectionsManager {
 
             if (inboundConnectionOptional.isPresent()) {
                 InboundConnectionChannel inboundConnection = inboundConnectionOptional.get();
+                Address peerAddress = inboundConnection.getPeerAddress();
                 log.debug("Inbound handshake completed: Initiated by {} to {}",
-                        inboundConnection.getPeerAddress(), myCapability.getAddress());
+                        peerAddress, myCapability.getAddress());
 
-                connectionByChannel.put(socketChannel, inboundConnection);
-                verifiedConnections.add(socketChannel);
+                if (isAlreadyConnectedToPeer(peerAddress)) {
+                    log.warn("Node {} have already an InboundConnection from {}. This can happen when a " + "handshake was in progress while we received a new connection from that address. " + "We will close the socket of that new connection and use the existing instead.", this, peerAddress);
+                    closeChannel(networkEnvelopeSocketChannel);
+                } else {
+                    connectionByChannel.put(socketChannel, inboundConnection);
+                    verifiedConnections.add(socketChannel);
 
-                log.info("Calling node.onNewIncomingConnection for peer {}", inboundConnection.getPeerAddress().getFullAddress());
-                node.onNewIncomingConnection(inboundConnection);
+                    log.info("Calling node.onNewIncomingConnection for peer {}", peerAddress.getFullAddress());
+                    node.onNewIncomingConnection(inboundConnection);
+                }
+
             } else {
                 closeChannel(networkEnvelopeSocketChannel);
             }
@@ -166,6 +173,13 @@ public class InboundConnectionsManager {
         }
 
         return Optional.empty();
+    }
+
+    private boolean isAlreadyConnectedToPeer(Address peerAddress) {
+        return connectionByChannel.values()
+                .stream()
+                .map(ConnectionChannel::getPeerAddress)
+                .anyMatch(address -> address.equals(peerAddress));
     }
 
     private void closeChannel(NetworkEnvelopeSocketChannel networkEnvelopeSocket) {
