@@ -19,6 +19,8 @@ package bisq.network.p2p.node;
 
 import bisq.common.data.Pair;
 import bisq.network.p2p.message.NetworkEnvelope;
+import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -27,21 +29,29 @@ import java.util.*;
 
 @Slf4j
 public class InboundConnectionsManager {
+
+    private final BanList banList;
+    private final Capability myCapability;
+    private final AuthorizationService authorizationService;
+
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
-    private final ConnectionHandshakeResponder handshakeResponder;
     private final Node node;
     private final List<SocketChannel> inboundHandshakeChannels = Collections.synchronizedList(new ArrayList<>());
     private final List<SocketChannel> verifiedConnections = Collections.synchronizedList(new ArrayList<>());
     private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = Collections.synchronizedMap(new HashMap<>());
 
-    public InboundConnectionsManager(ServerSocketChannel serverSocketChannel,
+    public InboundConnectionsManager(BanList banList,
+                                     Capability myCapability,
+                                     AuthorizationService authorizationService,
+                                     ServerSocketChannel serverSocketChannel,
                                      Selector selector,
-                                     ConnectionHandshakeResponder handshakeResponder,
                                      Node node) {
+        this.banList = banList;
+        this.myCapability = myCapability;
+        this.authorizationService = authorizationService;
         this.serverSocketChannel = serverSocketChannel;
         this.selector = selector;
-        this.handshakeResponder = handshakeResponder;
         this.node = node;
     }
 
@@ -81,18 +91,30 @@ public class InboundConnectionsManager {
     public void handleInboundConnection(SocketChannel socketChannel, List<NetworkEnvelope> networkEnvelopes) {
         if (inboundHandshakeChannels.contains(socketChannel)) {
             NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = new NetworkEnvelopeSocketChannel(socketChannel);
-            Optional<InboundConnectionChannel> inboundConnection = performHandshake(networkEnvelopeSocketChannel, networkEnvelopes);
-            inboundHandshakeChannels.remove(socketChannel);
 
-            if (inboundConnection.isPresent()) {
-                connectionByChannel.put(socketChannel, inboundConnection.get());
-                verifiedConnections.add(socketChannel);
+            try {
+                String localAddress = socketChannel.getLocalAddress().toString();
+                String remoteAddress = socketChannel.getRemoteAddress().toString();
 
-                log.info("Calling node.onNewIncomingConnection for peer {}", inboundConnection.get().getPeerAddress().getFullAddress());
-                node.onNewIncomingConnection(inboundConnection.get());
-            } else {
-                closeChannel(networkEnvelopeSocketChannel);
+                log.debug("Inbound handshake request at: {}", localAddress);
+                Optional<InboundConnectionChannel> inboundConnection = performHandshake(networkEnvelopeSocketChannel);
+                log.debug("Inbound handshake completed: Initiated by {} to {}", remoteAddress, localAddress);
+
+                if (inboundConnection.isPresent()) {
+                    connectionByChannel.put(socketChannel, inboundConnection.get());
+                    verifiedConnections.add(socketChannel);
+
+                    log.info("Calling node.onNewIncomingConnection for peer {}", inboundConnection.get().getPeerAddress().getFullAddress());
+                    node.onNewIncomingConnection(inboundConnection.get());
+                } else {
+                    closeChannel(networkEnvelopeSocketChannel);
+                }
+
+                inboundHandshakeChannels.remove(socketChannel);
+            } catch (IOException e) {
+                log.warn("Handshake failed: ", e);
             }
+
         } else if (verifiedConnections.contains(socketChannel)) {
             InboundConnectionChannel inboundConnection = connectionByChannel.get(socketChannel);
             Address peerAddress = inboundConnection.getPeerAddress();
@@ -110,11 +132,16 @@ public class InboundConnectionsManager {
         return inboundHandshakeChannels.contains(socketChannel) || verifiedConnections.contains(socketChannel);
     }
 
-    private Optional<InboundConnectionChannel> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                                                List<NetworkEnvelope> initialMessages) {
+    private Optional<InboundConnectionChannel> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         try {
+            var handshakeResponder = new ConnectionHandshakeResponder(
+                    banList,
+                    myCapability,
+                    authorizationService,
+                    networkEnvelopeSocketChannel
+            );
             Pair<ConnectionHandshake.Request, NetworkEnvelope>
-                    requestAndResponseNetworkEnvelopes = handshakeResponder.verifyPoW(initialMessages, Load.INITIAL_LOAD);
+                    requestAndResponseNetworkEnvelopes = handshakeResponder.verifyAndBuildRespond();
 
             ConnectionHandshake.Request handshakeRequest = requestAndResponseNetworkEnvelopes.getFirst();
             Address peerAddress = handshakeRequest.getCapability().getAddress();

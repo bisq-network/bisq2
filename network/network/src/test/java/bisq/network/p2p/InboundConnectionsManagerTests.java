@@ -41,13 +41,10 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @Slf4j
 public class InboundConnectionsManagerTests {
@@ -72,17 +69,11 @@ public class InboundConnectionsManagerTests {
         serverSocketChannel.socket().bind(socketAddress);
 
         Capability myCapability = new Capability(myAddress, supportedTransportTypes);
-        ConnectionHandshakeResponder handshakeResponder = new ConnectionHandshakeResponder(
-                mock(BanList.class),
-                myCapability,
-                authorizationService
-        );
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                serverSocketChannel,
+                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
                 selector,
-                handshakeResponder,
                 mock(Node.class)
         );
 
@@ -104,17 +95,10 @@ public class InboundConnectionsManagerTests {
 
                         if (selectionKey.isReadable()) {
                             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-
-                            NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = new NetworkEnvelopeSocketChannel(socketChannel);
-                            List<NetworkEnvelope> networkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
-                            if (networkEnvelopes.isEmpty()) {
-                                continue;
-                            }
-
                             log.info("Received message from {}", socketChannel.getRemoteAddress());
 
                             if (inboundConnectionsManager.isInboundConnection(socketChannel)) {
-                                inboundConnectionsManager.handleInboundConnection(socketChannel, networkEnvelopes);
+                                inboundConnectionsManager.handleInboundConnection(socketChannel, Collections.emptyList());
                             }
                         }
                     }
@@ -170,17 +154,11 @@ public class InboundConnectionsManagerTests {
         serverSocketChannel.socket().bind(socketAddress);
 
         Capability myCapability = new Capability(myAddress, supportedTransportTypes);
-        ConnectionHandshakeResponder handshakeResponder = new ConnectionHandshakeResponder(
-                mock(BanList.class),
-                myCapability,
-                authorizationService
-        );
 
         Selector selector = SelectorProvider.provider().openSelector();
         InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                serverSocketChannel,
+                mock(BanList.class), myCapability, authorizationService, serverSocketChannel,
                 selector,
-                handshakeResponder,
                 mock(Node.class)
         );
 

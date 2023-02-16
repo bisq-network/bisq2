@@ -47,6 +47,7 @@ public class ConnectionHandshakeResponderTest {
     private final List<Transport.Type> supportedTransportTypes = new ArrayList<>(1);
     private final Capability responderCapability;
     private final AuthorizationService authorizationService;
+    private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = mock(NetworkEnvelopeSocketChannel.class);
     private final ConnectionHandshakeResponder handshakeResponder;
 
     public ConnectionHandshakeResponderTest() throws IOException {
@@ -56,8 +57,8 @@ public class ConnectionHandshakeResponderTest {
         this.handshakeResponder = new ConnectionHandshakeResponder(
                 banList,
                 responderCapability,
-                authorizationService
-        );
+                authorizationService,
+                networkEnvelopeSocketChannel);
     }
 
     private AuthorizationService createAuthorizationService() {
@@ -71,30 +72,26 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void emptyInitialEnvelopes() {
-        Exception exception = assertThrows(
-                ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(Collections.emptyList(), Load.INITIAL_LOAD)
-        );
+    void emptyInitialEnvelopes() throws IOException {
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(Collections.emptyList());
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
         assertThat(exception.getMessage()).contains("empty");
     }
 
     @Test
-    void tooManyInitialEnvelopes() {
+    void tooManyInitialEnvelopes() throws IOException {
         NetworkEnvelope requestNetworkEnvelope = createValidRequest();
         List<NetworkEnvelope> initialMessages = List.of(requestNetworkEnvelope, requestNetworkEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(initialMessages);
 
-        Exception exception = assertThrows(
-                ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(initialMessages, Load.INITIAL_LOAD)
-        );
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
         assertThat(exception.getMessage())
                 .contains("multiple")
                 .contains("requests");
     }
 
     @Test
-    void wrongEnvelopeVersion() {
+    void wrongEnvelopeVersion() throws IOException {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
                 Load.INITIAL_LOAD,
@@ -102,14 +99,14 @@ public class ConnectionHandshakeResponderTest {
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION + 1000, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        Exception exception = assertThrows(ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(allEnvelopesToReceive, Load.INITIAL_LOAD));
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
         assertThat(exception.getMessage()).containsIgnoringCase("Invalid version");
     }
 
     @Test
-    void wrongNetworkMessage() {
+    void wrongNetworkMessage() throws IOException {
         ConnectionHandshake.Response response = new ConnectionHandshake.Response(responderCapability, Load.INITIAL_LOAD);
         AuthorizationToken token = authorizationService.createToken(
                 response,
@@ -118,11 +115,9 @@ public class ConnectionHandshakeResponderTest {
                 0);
         NetworkEnvelope responseEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, response);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(responseEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        Exception exception = assertThrows(
-                ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(allEnvelopesToReceive, Load.INITIAL_LOAD)
-        );
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
 
         assertThat(exception.getMessage())
                 .containsIgnoringCase("not")
@@ -130,7 +125,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void bannedPeer() {
+    void bannedPeer() throws IOException {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
                 Load.INITIAL_LOAD,
@@ -138,13 +133,11 @@ public class ConnectionHandshakeResponderTest {
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
         when(banList.isBanned(Address.localHost(1234))).thenReturn(true);
 
-        Exception exception = assertThrows(
-                ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(allEnvelopesToReceive, Load.INITIAL_LOAD)
-        );
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
 
         assertThat(exception.getMessage())
                 .containsIgnoringCase("Peer")
@@ -152,7 +145,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void invalidPoW() {
+    void invalidPoW() throws IOException {
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(responderCapability, Load.INITIAL_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
                 Load.INITIAL_LOAD,
@@ -160,11 +153,9 @@ public class ConnectionHandshakeResponderTest {
                 5);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        Exception exception = assertThrows(
-                ConnectionException.class,
-                () -> handshakeResponder.verifyPoW(allEnvelopesToReceive, Load.INITIAL_LOAD)
-        );
+        Exception exception = assertThrows(ConnectionException.class, handshakeResponder::verifyAndBuildRespond);
 
         assertThat(exception.getMessage())
                 .containsIgnoringCase("authorization")
@@ -172,7 +163,7 @@ public class ConnectionHandshakeResponderTest {
     }
 
     @Test
-    void correctPoW() {
+    void correctPoW() throws IOException {
         Capability peerCapability = new Capability(Address.localHost(2345), supportedTransportTypes);
         ConnectionHandshake.Request request = new ConnectionHandshake.Request(peerCapability, Load.INITIAL_LOAD);
         AuthorizationToken token = authorizationService.createToken(request,
@@ -181,8 +172,9 @@ public class ConnectionHandshakeResponderTest {
                 0);
         NetworkEnvelope requestNetworkEnvelope = new NetworkEnvelope(NetworkEnvelope.VERSION, token, request);
         List<NetworkEnvelope> allEnvelopesToReceive = List.of(requestNetworkEnvelope);
+        when(networkEnvelopeSocketChannel.receiveNetworkEnvelopes()).thenReturn(allEnvelopesToReceive);
 
-        NetworkEnvelope responseNetworkEnvelope = handshakeResponder.verifyPoW(allEnvelopesToReceive, Load.INITIAL_LOAD).getSecond();
+        NetworkEnvelope responseNetworkEnvelope = handshakeResponder.verifyAndBuildRespond().getSecond();
 
         ConnectionHandshake.Response response = (ConnectionHandshake.Response) responseNetworkEnvelope.getNetworkMessage();
         assertThat(response.getCapability()).isEqualTo(responderCapability);
