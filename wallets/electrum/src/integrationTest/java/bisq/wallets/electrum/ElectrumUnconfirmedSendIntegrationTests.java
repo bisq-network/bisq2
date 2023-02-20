@@ -60,7 +60,7 @@ public class ElectrumUnconfirmedSendIntegrationTests {
     void unconfirmedBalanceTest() throws InterruptedException {
         double balanceBeforeTest = electrumDaemon.getBalance();
         Map<String, CountDownLatch> addressToLatchMap = new ConcurrentHashMap<>();
-        ElectrumNotifyApi.registerListener((address, status) -> {
+        ElectrumNotifyApi.addListener((address, status) -> {
             CountDownLatch latch = addressToLatchMap.get(address);
             if (status != null) {
                 latch.countDown();

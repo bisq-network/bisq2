@@ -56,7 +56,7 @@ public class ContentController extends NavigationController {
         super(NavigationTarget.CONTENT);
 
         this.applicationService = applicationService;
-        model = new ContentModel();
+        model = new ContentModel(applicationService.getWalletService().isPresent());
         view = new ContentView(model, this);
     }
 
@@ -70,6 +70,9 @@ public class ContentController extends NavigationController {
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        if (navigationTarget == NavigationTarget.WALLET && !model.isWalletEnabled()) {
+            navigationTarget = NavigationTarget.DASHBOARD;
+        }
         switch (navigationTarget) {
             case DASHBOARD: {
                 return Optional.of(new DashboardController(applicationService));

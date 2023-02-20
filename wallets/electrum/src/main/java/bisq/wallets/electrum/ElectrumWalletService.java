@@ -17,12 +17,14 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.NetworkUtils;
+import bisq.wallets.core.RpcConfig;
+import bisq.wallets.core.WalletService;
 import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
@@ -34,168 +36,203 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
-public class ElectrumWalletService implements Service {
-
+public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.Listener {
     @Getter
     public static class Config {
-        private final boolean enabled;
+        private final String network;
+        private final String electrumXServerHost;
+        private final int electrumXServerPort;
 
-        public Config(boolean enabled) {
-            this.enabled = enabled;
+        public Config(String network, String electrumXServerHost, int electrumXServerPort) {
+            this.network = network;
+            this.electrumXServerHost = electrumXServerHost;
+            this.electrumXServerPort = electrumXServerPort;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getBoolean("enabled"));
+            return new Config(config.getString("network"),
+                    config.getString("electrumXServerHost"),
+                    config.getInt("electrumXServerPort"));
         }
     }
 
     private final Config config;
     private final Path electrumRootDataDir;
+    private final ElectrumProcessConfig processConfig;
     private final ElectrumProcess electrumProcess;
     private final ElectrumNotifyWebServer electrumNotifyWebServer = new ElectrumNotifyWebServer(NetworkUtils.findFreeSystemPort());
 
     @Getter
-    private final Observable<Coin> observableBalanceAsCoin = new Observable<>(Coin.asBtc(0));
+    private final ObservableSet<String> walletAddresses = new ObservableSet<>();
     @Getter
-    private final ObservableSet<String> receiveAddresses = new ObservableSet<>();
-
-    private ElectrumWallet electrumWallet;
+    private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
+    @Getter
+    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
+    @Getter
+    private boolean isWalletReady;
+    private ElectrumWallet wallet;
 
     public ElectrumWalletService(Config config, Path bisqDataDir) {
         this.config = config;
-
         electrumRootDataDir = bisqDataDir.resolve("wallets")
                 .resolve("electrum");
-        this.electrumProcess = createElectrumProcess();
+
+        processConfig = ElectrumProcessConfig.builder()
+                .dataDir(electrumRootDataDir.resolve("wallet"))
+                .electrumXServerHost(config.getElectrumXServerHost())
+                .electrumXServerPort(config.getElectrumXServerPort())
+                .electrumConfig(ElectrumConfig.Generator.generate())
+                .build();
+        electrumProcess = new ElectrumProcess(electrumRootDataDir, processConfig);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!config.isEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
         log.info("initialize");
-        return CompletableFuture.supplyAsync(() -> {
-            long ts = System.currentTimeMillis();
-            electrumProcess.start();
-
-            electrumWallet = new ElectrumWallet(
-                    electrumRootDataDir.resolve("wallet")
-                            .resolve("regtest")
-                            .resolve("wallets")
-                            .resolve("default_wallet"),
-                    electrumProcess.getElectrumDaemon(),
-                    new ObservableSet<>()
-            );
-
-            // TODO pw support
-            electrumWallet.initialize(Optional.empty());
-            log.info("Electrum wallet initialized after {} ms.", System.currentTimeMillis() - ts);
-
-            initializeReceiveAddressMonitor();
-            updateBalance();
-
-            return true;
-        });
+        return initializeWallet(processConfig.getElectrumConfig().toRpcConfig(), Optional.empty());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (!config.isEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
-            electrumWallet.shutdown();
+            wallet.shutdown();
             electrumProcess.shutdown();
             electrumNotifyWebServer.stopServer();
             return true;
         });
     }
 
-    public CompletableFuture<String> getNewAddress() {
-        return CompletableFuture.supplyAsync(() -> {
-            String receiveAddress = electrumWallet.getNewAddress();
-            monitorAddress(receiveAddress);
 
-            // Do we need persistence?
-            receiveAddresses.add(receiveAddress);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // WalletService
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public CompletableFuture<Boolean> initializeWallet(RpcConfig rpcConfig, Optional<String> walletPassphrase) {
+        return CompletableFuture.supplyAsync(() -> {
+            long ts = System.currentTimeMillis();
+            electrumProcess.start();
+
+            wallet = new ElectrumWallet(
+                    electrumRootDataDir.resolve("wallet")
+                            .resolve(config.getNetwork())
+                            .resolve("wallets")
+                            .resolve("default_wallet"),
+                    electrumProcess.getElectrumDaemon(),
+                    new ObservableSet<>()
+            );
+
+            wallet.initialize(Optional.empty());
+            log.info("Electrum wallet initialized after {} ms.", System.currentTimeMillis() - ts);
+
+            initializeReceiveAddressMonitor();
+            requestBalance();
+            requestTransactions();
+            isWalletReady = true;
+            return true;
+        });
+    }
+
+    @Override
+    public CompletableFuture<String> getUnusedAddress() {
+        return CompletableFuture.supplyAsync(() -> {
+            String receiveAddress = wallet.getUnusedAddress();
+            monitorAddress(receiveAddress);
             return receiveAddress;
         });
     }
 
-    public CompletableFuture<List<? extends Transaction>> listTransactions() {
-        return CompletableFuture.supplyAsync(() -> electrumWallet.listTransactions());
+    @Override
+    public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
+        return CompletableFuture.supplyAsync(() -> {
+            walletAddresses.addAll(wallet.getWalletAddresses());
+            return walletAddresses;
+        });
     }
 
+    @Override
+    public CompletableFuture<List<? extends TransactionInfo>> listTransactions() {
+        return CompletableFuture.supplyAsync(() -> wallet.listTransactions());
+    }
+
+    @Override
+    public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
+        return CompletableFuture.supplyAsync(() -> {
+            transactions.addAll(wallet.getTransactions());
+            return transactions;
+        });
+    }
+
+    @Override
     public CompletableFuture<List<? extends Utxo>> listUnspent() {
-        return CompletableFuture.supplyAsync(() -> electrumWallet.listUnspent());
+        return CompletableFuture.supplyAsync(() -> wallet.listUnspent());
     }
 
+    @Override
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, double amount) {
         return CompletableFuture.supplyAsync(() -> {
-            String txId = electrumWallet.sendToAddress(passphrase, address, amount);
-            updateBalance();
+            String txId = wallet.sendToAddress(passphrase, address, amount);
+            // requestBalance();
             return txId;
         });
     }
 
+    @Override
     public CompletableFuture<Boolean> isWalletEncrypted() {
         //todo implement 
         return CompletableFuture.supplyAsync(() -> true);
     }
 
-    public CompletableFuture<Coin> getBalance() {
+    @Override
+    public CompletableFuture<Coin> requestBalance() {
         return CompletableFuture.supplyAsync(() -> {
-            double balance = electrumWallet.getBalance();
+            double balance = wallet.getBalance();
             Coin balanceAsCoin = Coin.asBtc(balance);
-            observableBalanceAsCoin.set(balanceAsCoin);
+            this.balance.set(balanceAsCoin);
             return balanceAsCoin;
         });
     }
 
-    private ElectrumProcess createElectrumProcess() {
-        var processConfig = ElectrumProcessConfig.builder()
-                .dataDir(electrumRootDataDir.resolve("wallet"))
-                .electrumXServerHost("127.0.0.1")
-                .electrumXServerPort(50001)
-                .electrumConfig(ElectrumConfig.Generator.generate())
-                .build();
 
-        return new ElectrumProcess(electrumRootDataDir, processConfig);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    //  ElectrumNotifyApi.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onAddressStatusChanged(String address, String status) {
+        if (status != null) {
+            requestBalance();
+            requestTransactions();
+        }
     }
 
-    private void initializeReceiveAddressMonitor() {
-        ElectrumNotifyApi.registerListener((address, status) -> {
-            if (status != null) {
-                receiveAddresses.remove(address);
-                updateBalance();
-            }
-        });
 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private void initializeReceiveAddressMonitor() {
+        ElectrumNotifyApi.addListener(this);
         electrumNotifyWebServer.startServer();
-        receiveAddresses.forEach(address ->
-                electrumWallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl())
-        );
+        try {
+            requestWalletAddresses().get().forEach(this::monitorAddress);
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("requestWalletAddresses failed. ", e);
+        }
     }
 
     private void monitorAddress(String address) {
-        electrumWallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl());
+        wallet.notify(address, electrumNotifyWebServer.getNotifyEndpointUrl());
     }
 
-    private void updateBalance() {
-        CompletableFuture.runAsync(() -> {
-            double balance = electrumWallet.getBalance();
-            Coin coin = Coin.asBtc(balance);
 
-            // Balance changed?
-            if (!observableBalanceAsCoin.get().equals(coin)) {
-                observableBalanceAsCoin.set(coin);
-            }
-        });
-    }
 }

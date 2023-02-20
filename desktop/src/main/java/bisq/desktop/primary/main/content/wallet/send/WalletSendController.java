@@ -22,7 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.validation.MonetaryValidator;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -35,13 +35,13 @@ public class WalletSendController implements Controller {
     @Getter
     private final WalletSendView view;
     private final WalletSendModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
     private final MonetaryValidator amountValidator = new MonetaryValidator();
     private Subscription addressPin;
     private Subscription amountPin;
 
     public WalletSendController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletSendModel();
         view = new WalletSendView(model, this, amountValidator);
     }
@@ -56,7 +56,7 @@ public class WalletSendController implements Controller {
         });
 
         //todo check if wallet is encrypted
-        electrumWalletService.isWalletEncrypted()
+        walletService.isWalletEncrypted()
                 .thenAccept(isWalletEncrypted -> UIThread.run(() -> model.getIsPasswordVisible().set(isWalletEncrypted)));
     }
 
@@ -70,7 +70,7 @@ public class WalletSendController implements Controller {
         //todo
         double amount = Double.parseDouble(model.getAmount().get());
         String address = model.getAddress().get();
-        electrumWalletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
+        walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount)
                 .whenComplete((response, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable.getMessage()).show());

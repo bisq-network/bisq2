@@ -15,12 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.application;
 
-public interface Utxo {
-    String getTxId();
-
-    String getAddress();
-
-    double getAmount();
+enum BitcoinWalletSelection {
+    BITCOIND,
+    ELECTRUM,
+    NONE
 }

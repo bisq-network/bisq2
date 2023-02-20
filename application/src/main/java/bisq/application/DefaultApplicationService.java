@@ -19,6 +19,7 @@ package bisq.application;
 
 import bisq.account.AccountService;
 import bisq.chat.ChatService;
+import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
@@ -33,11 +34,14 @@ import bisq.security.SecurityService;
 import bisq.settings.SettingsService;
 import bisq.support.SupportService;
 import bisq.user.UserService;
+import bisq.wallets.bitcoind.BitcoinWalletService;
+import bisq.wallets.core.WalletService;
 import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +70,7 @@ public class DefaultApplicationService extends ApplicationService {
     }
 
     private final SecurityService securityService;
-    private final ElectrumWalletService electrumWalletService;
+    private final Optional<WalletService> walletService;
     private final NetworkService networkService;
     private final IdentityService identityService;
     private final OracleService oracleService;
@@ -83,8 +87,20 @@ public class DefaultApplicationService extends ApplicationService {
     public DefaultApplicationService(String[] args) {
         super("default", args);
         securityService = new SecurityService(persistenceService);
-        electrumWalletService = new ElectrumWalletService(ElectrumWalletService.Config.from(getConfig("electrumWallet")),
-                Path.of(config.getBaseDir()));
+        com.typesafe.config.Config bitcoinWalletConfig = getConfig("bitcoinWallet");
+        BitcoinWalletSelection bitcoinWalletSelection = bitcoinWalletConfig.getEnum(BitcoinWalletSelection.class, "bitcoinWalletSelection");
+        switch (bitcoinWalletSelection) {
+            case BITCOIND:
+                walletService = Optional.of(new BitcoinWalletService(BitcoinWalletService.Config.from(bitcoinWalletConfig.getConfig("bitcoind")), getPersistenceService()));
+                break;
+            case ELECTRUM:
+                walletService = Optional.of(new ElectrumWalletService(ElectrumWalletService.Config.from(bitcoinWalletConfig.getConfig("electrum")), Path.of(config.getBaseDir())));
+                break;
+            case NONE:
+            default:
+                walletService = Optional.empty();
+                break;
+        }
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getBaseDir(), getConfig("network")),
                 persistenceService,
@@ -129,7 +145,8 @@ public class DefaultApplicationService extends ApplicationService {
                     setState(State.INITIALIZE_NETWORK);
 
                     CompletableFuture<Boolean> networkFuture = networkService.initialize();
-                    CompletableFuture<Boolean> walletFuture = electrumWalletService.initialize();
+                    CompletableFuture<Boolean> walletFuture = walletService.map(Service::initialize)
+                            .orElse(CompletableFuture.completedFuture(true));
 
                     networkFuture.whenComplete((r, throwable) -> {
                         if (throwable != null) {
@@ -189,7 +206,10 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> oracleService.shutdown())
                         .thenCompose(result -> identityService.shutdown())
                         .thenCompose(result -> networkService.shutdown())
-                        .thenCompose(result -> electrumWalletService.shutdown())
+                        .thenCompose(result -> {
+                            return walletService.map(Service::shutdown)
+                                    .orElse(CompletableFuture.completedFuture(true));
+                        })
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)

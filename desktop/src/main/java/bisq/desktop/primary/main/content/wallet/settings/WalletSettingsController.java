@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.wallet.settings;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,10 +28,10 @@ public class WalletSettingsController implements Controller {
     @Getter
     private final WalletSettingsView view;
     private final WalletSettingsModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
 
     public WalletSettingsController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletSettingsModel();
         view = new WalletSettingsView(model, this);
     }

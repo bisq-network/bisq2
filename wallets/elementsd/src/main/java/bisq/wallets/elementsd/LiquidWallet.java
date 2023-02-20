@@ -17,21 +17,22 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.ObservableArray;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import lombok.Getter;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+// todo should we use the Wallet interface here? It is not a common wallet for the app but a trade protocol specific one
 public class LiquidWallet implements Wallet, ZmqWallet {
     private final String walletName;
 
@@ -72,15 +73,15 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         String newAddress = wallet.getNewAddress(AddressType.BECH32, "");
-        liquidWalletStore.getReceiveAddresses().add(newAddress);
+        liquidWalletStore.getWalletAddresses().add(newAddress);
         return newAddress;
     }
 
     @Override
-    public ObservableSet<String> getReceiveAddresses() {
-        return liquidWalletStore.getReceiveAddresses();
+    public ObservableArray<String> getWalletAddresses() {
+        return liquidWalletStore.getWalletAddresses();
     }
 
     @Override
@@ -89,8 +90,14 @@ public class LiquidWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public List<? extends Transaction> listTransactions() {
+    public List<? extends TransactionInfo> listTransactions() {
         return wallet.listTransactions(1000);
+    }
+
+    @Override
+    public List<Transaction> getTransactions() {
+        //todo impl
+        return null;
     }
 
     @Override

@@ -22,8 +22,11 @@ import bisq.desktop.components.table.BisqTableColumn;
 import bisq.desktop.components.table.BisqTableView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
+import javafx.scene.control.TableColumn;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Comparator;
 
 @Slf4j
 public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsController> {
@@ -52,31 +55,44 @@ public class WalletTxsView extends View<VBox, WalletTxsModel, WalletTxsControlle
     }
 
     private void configTableView() {
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+        BisqTableColumn<WalletTransactionListItem> column = new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("date"))
                 .minWidth(200)
-                .valueSupplier(WalletTransactionListItem::getDate)
+                .valueSupplier(WalletTransactionListItem::getDateAsString)
                 .isSortable(true)
                 .isFirst()
-                .build());
+                .build();
+        column.setComparator(Comparator.comparing(WalletTransactionListItem::getDateAsString));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(column);
+        tableView.getColumns().add(column);
+
         tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.txId"))
                 .minWidth(200)
                 .valueSupplier(WalletTransactionListItem::getTxId)
                 .isSortable(true)
                 .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+
+        column = new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.amount"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getAmount)
+                .valueSupplier(WalletTransactionListItem::getAmountAsString)
                 .isSortable(true)
-                .build());
-        tableView.getColumns().add(new BisqTableColumn.Builder<WalletTransactionListItem>()
+                .build();
+        column.setComparator(Comparator.comparing(WalletTransactionListItem::getAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getColumns().add(column);
+
+        column = new BisqTableColumn.Builder<WalletTransactionListItem>()
                 .title(Res.get("wallet.txs.confirmations"))
                 .minWidth(120)
-                .valueSupplier(WalletTransactionListItem::getConfirmations)
+                .valueSupplier(WalletTransactionListItem::getConfirmationsAsString)
                 .isSortable(true)
                 .isLast()
-                .build());
+                .build();
+        column.setComparator(Comparator.comparing(WalletTransactionListItem::getConfirmations));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getColumns().add(column);
     }
 }

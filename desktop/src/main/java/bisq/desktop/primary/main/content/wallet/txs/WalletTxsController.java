@@ -18,38 +18,39 @@
 package bisq.desktop.primary.main.content.wallet.txs;
 
 import bisq.application.DefaultApplicationService;
-import bisq.desktop.common.threading.UIThread;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
+import bisq.wallets.core.model.Transaction;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletTxsController implements Controller {
     @Getter
     private final WalletTxsView view;
     private final WalletTxsModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
+    private Pin transactionsPin;
 
     public WalletTxsController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletTxsModel();
         view = new WalletTxsView(model, this);
     }
 
     @Override
     public void onActivate() {
-        electrumWalletService.listTransactions()
-                .thenAccept(transactions -> UIThread.run(() -> {
-                    model.getListItems().setAll(transactions.stream()
-                            .map(WalletTransactionListItem::new)
-                            .collect(Collectors.toList()));
-                }));
+        transactionsPin = FxBindings.<Transaction, WalletTransactionListItem>bind(model.getListItems())
+                .map(WalletTransactionListItem::new)
+                .to(walletService.getTransactions());
+
+        walletService.requestTransactions();
     }
 
     @Override
     public void onDeactivate() {
+        transactionsPin.unbind();
     }
 }

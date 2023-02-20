@@ -30,6 +30,7 @@ import bisq.wallets.core.Wallet;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.exceptions.WalletNotInitializedException;
 import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -67,6 +68,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     protected Optional<T> wallet = Optional.empty();
     protected Optional<ZmqConnection> zmqConnection = Optional.empty();
     protected final Set<String> utxoTxIds = new HashSet<>();
+    @Getter
+    protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
+    @Getter
+    private final ObservableSet<Transaction> transactions = new ObservableSet<>();
 
     public AbstractBitcoindWalletService(String currencyCode,
                                          Optional<RpcConfig> optionalRpcConfig,
@@ -128,8 +133,8 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
         wallet.initialize(walletPassphrase);
 
         ZmqConnection zmqConnection = wallet.getZmqConnection();
-        ObservableSet<String> receiveAddresses = wallet.getReceiveAddresses();
-        initializeZmqListeners(zmqConnection, receiveAddresses);
+        walletAddresses.addAll(wallet.getWalletAddresses());
+        initializeZmqListeners(zmqConnection, walletAddresses);
 
         this.zmqConnection = Optional.of(zmqConnection);
         log.info("Successfully created/loaded wallet at {}", walletName);
@@ -145,10 +150,10 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public CompletableFuture<String> getNewAddress() {
+    public CompletableFuture<String> getUnusedAddress() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
-            String receiveAddress = wallet.getNewAddress();
+            String receiveAddress = wallet.getUnusedAddress();
 
             // getNewAddress updates the receive adresses set
             persist();
@@ -158,15 +163,19 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public ObservableSet<String> getReceiveAddresses() {
+    public CompletableFuture<ObservableSet<String>> requestWalletAddresses() {
         if (wallet.isEmpty()) {
-            return new ObservableSet<>();
+            return CompletableFuture.completedFuture(walletAddresses);
+        } else {
+            return CompletableFuture.supplyAsync(() -> {
+                walletAddresses.addAll(wallet.get().getWalletAddresses());
+                return walletAddresses;
+            });
         }
-        return wallet.get().getReceiveAddresses();
     }
 
     @Override
-    public CompletableFuture<List<? extends Transaction>> listTransactions() {
+    public CompletableFuture<List<? extends TransactionInfo>> listTransactions() {
         return CompletableFuture.supplyAsync(() -> {
             Wallet wallet = getWalletOrThrowException();
             return wallet.listTransactions();
@@ -190,14 +199,21 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
     }
 
     @Override
-    public CompletableFuture<String> signMessage(Optional<String> passphrase, String address, String message) {
+    public CompletableFuture<ObservableSet<Transaction>> requestTransactions() {
         return CompletableFuture.supplyAsync(() -> {
-            Wallet wallet = getWalletOrThrowException();
-            return wallet.signMessage(passphrase, address, message);
+            //todo implement 
+            // transactions.addAll(getWalletOrThrowException().getTransactions());
+            return transactions;
         });
     }
 
-    protected void initializeZmqListeners(ZmqConnection zmqConnection, ObservableSet<String> receiveAddresses) {
+    @Override
+    public CompletableFuture<Boolean> isWalletEncrypted() {
+        //todo implement 
+        return CompletableFuture.supplyAsync(() -> true);
+    }
+
+    protected void initializeZmqListeners(ZmqConnection zmqConnection, Set<String> walletAddresses) {
         // Update balance when new block gets mined
         zmqConnection.getListeners().registerNewBlockMinedListener(unused -> updateBalance());
 
@@ -210,7 +226,7 @@ public abstract class AbstractBitcoindWalletService<T extends Wallet & ZmqWallet
 
         // Update balance if a receive address is in tx output
         zmqConnection.getListeners().registerTxOutputAddressesListener(addresses -> {
-            boolean receiveAddressInTxOutput = addresses.stream().anyMatch(receiveAddresses::contains);
+            boolean receiveAddressInTxOutput = addresses.stream().anyMatch(walletAddresses::contains);
             if (receiveAddressInTxOutput) {
                 updateBalance();
             }

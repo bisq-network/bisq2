@@ -162,10 +162,14 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems, wallet,
+        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,
                 learn, learnSubMenuItems,
                 chat, events, support,
                 settings);
+        if (model.isWalletEnabled()) {
+            mainMenuItems.getChildren().add(3, wallet);
+        }
+
         mainMenuItems.setLayoutY(menuTop);
         root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
     }

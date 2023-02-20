@@ -15,24 +15,28 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.wallets.electrum.rpc.calls;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.wallets.electrum.rpc.responses.ElectrumListAddressesResponse;
+import bisq.wallets.json_rpc.DaemonRpcCall;
 
-@Slf4j
-@Getter
-public class ContentModel extends NavigationModel {
-    private final boolean isWalletEnabled;
-
-    public ContentModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
+public class ElectrumListAddressesRpcCall extends DaemonRpcCall<Void, ElectrumListAddressesResponse> {
+    public ElectrumListAddressesRpcCall() {
+        super(null);
     }
 
     @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.DASHBOARD;
+    public String getRpcMethodName() {
+        return "listaddresses";
+    }
+
+    @Override
+    public boolean isResponseValid(ElectrumListAddressesResponse response) {
+        return true;
+    }
+
+    @Override
+    public Class<ElectrumListAddressesResponse> getRpcResponseClass() {
+        return ElectrumListAddressesResponse.class;
     }
 }

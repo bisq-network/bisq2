@@ -18,16 +18,17 @@
 package bisq.wallets.electrum.rpc.responses;
 
 import bisq.common.monetary.Coin;
-import bisq.wallets.core.model.Transaction;
+import bisq.wallets.core.model.TransactionInfo;
 import com.squareup.moshi.Json;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Date;
+import java.util.Optional;
 
 @ToString
 @Getter
-public class ElectrumOnChainTransactionResponse implements Transaction {
+public class ElectrumOnChainTransactionResponse implements TransactionInfo {
     @Json(name = "bc_balance")
     private String bcBalance;
     @Json(name = "bc_value")
@@ -60,7 +61,7 @@ public class ElectrumOnChainTransactionResponse implements Transaction {
     }
 
     @Override
-    public Date getDate() {
-        return timestamp != null ? new Date(timestamp * 1000L) : new Date(0);
+    public Optional<Date> getDate() {
+        return timestamp != null ? Optional.of(new Date(timestamp * 1000L)) : Optional.empty();
     }
 }

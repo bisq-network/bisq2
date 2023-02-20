@@ -17,10 +17,23 @@
 
 package bisq.wallets.core.model;
 
-public interface Utxo {
-    String getTxId();
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-    String getAddress();
+@Getter
+@EqualsAndHashCode
+public class TransactionInput {
+    private final String prevOutTxId;
+    private final int prevOutIndex;
+    private final long sequence;
+    private final String scriptSig;
+    private final String witness;
 
-    double getAmount();
+    public TransactionInput(String prevOutTxId, int prevOutIndex, long sequence, String scriptSig, String witness) {
+        this.prevOutTxId = prevOutTxId;
+        this.prevOutIndex = prevOutIndex;
+        this.sequence = sequence;
+        this.scriptSig = scriptSig;
+        this.witness = witness;
+    }
 }

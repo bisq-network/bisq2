@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ClipboardUtil;
 import bisq.desktop.common.view.Controller;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +30,17 @@ public class WalletReceiveController implements Controller {
     @Getter
     private final WalletReceiveView view;
     private final WalletReceiveModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
 
     public WalletReceiveController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletReceiveModel();
         view = new WalletReceiveView(model, this);
     }
 
     @Override
     public void onActivate() {
-        electrumWalletService.getNewAddress().
+        walletService.getUnusedAddress().
                 thenAccept(receiveAddress -> UIThread.run(() -> model.getReceiveAddress().setValue(receiveAddress)));
     }
 

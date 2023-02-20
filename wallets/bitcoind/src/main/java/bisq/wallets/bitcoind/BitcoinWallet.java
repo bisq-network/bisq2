@@ -17,6 +17,7 @@
 
 package bisq.wallets.bitcoind;
 
+import bisq.common.monetary.Coin;
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
@@ -24,13 +25,14 @@ import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.core.Wallet;
-import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.model.Transaction;
-import bisq.wallets.core.model.Utxo;
+import bisq.wallets.core.model.*;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class BitcoinWallet implements Wallet, ZmqWallet {
 
@@ -68,10 +70,15 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         String newAddress = wallet.getNewAddress(AddressType.BECH32, "");
         receiveAddresses.add(newAddress);
         return newAddress;
+    }
+
+    @Override
+    public List<String> getWalletAddresses() {
+        return wallet.listAddressGroupings();
     }
 
     @Override
@@ -80,8 +87,32 @@ public class BitcoinWallet implements Wallet, ZmqWallet {
     }
 
     @Override
-    public List<? extends Transaction> listTransactions() {
+    public List<? extends TransactionInfo> listTransactions() {
         return wallet.listTransactions(1000);
+    }
+
+    @Override
+    public List<Transaction> getTransactions() {
+        return wallet.listTransactions(1000).stream()
+                .map(tx -> {
+                    //todo add getrawtransaction with verbose = 1 flag to get full tx data
+                    // BitcoindGetRawTransactionRpcCall does not support verbose
+                    List<TransactionInput> inputs = new ArrayList<>();
+                    List<TransactionOutput> outputs = new ArrayList<>();
+                    int lockTime = 0;
+                    Coin amount = Coin.asBtc(0);
+                    boolean incoming = true;
+                    return new Transaction(tx.getTxId(),
+                            inputs,
+                            outputs,
+                            lockTime,
+                            tx.getBlockheight(),
+                            Optional.of(new Date(tx.getTime() * 1000L)),
+                            tx.getConfirmations(),
+                            amount,
+                            incoming);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

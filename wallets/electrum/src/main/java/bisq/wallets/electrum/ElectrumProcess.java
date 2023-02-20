@@ -114,10 +114,20 @@ public class ElectrumProcess implements BisqProcess {
     private Path resolveBinaryPath() {
         Path destDirPath = electrumRootDataDir.resolve("bin");
         String binarySuffix = getBinarySuffix();
-        Path extractedFilePath = destDirPath.resolve("Electrum." + binarySuffix);
-        if (OsUtils.isMac()) {
-            extractedFilePath = extractedFilePath.resolve("Contents/MacOS/run_electrum");
+
+        //todo defined in gradle, we could let gradle write the version to a file which we read
+        String version = "4.2.2";
+        // File name: electrum-4.2.2.dmg / electrum-4.2.2.exe / electrum-4.2.2-x86_64.AppImage
+        switch (OsUtils.getOperatingSystem()) {
+            case LINUX:
+                return destDirPath.resolve("electrum-" + version + "-x86_64." + binarySuffix);
+            case MAC:
+                return destDirPath.resolve("Electrum." + binarySuffix)
+                        .resolve("Contents/MacOS/run_electrum");
+            case WIN:
+                return destDirPath.resolve("electrum-" + version + "." + binarySuffix);
+            default:
+                throw new UnsupportedOperationException("Bisq is running on an unsupported OS: " + OsUtils.getOSName());
         }
-        return extractedFilePath;
     }
 }

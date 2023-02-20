@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.wallets.electrum.rpc.responses;
 
-public interface Utxo {
-    String getTxId();
+import bisq.wallets.json_rpc.JsonRpcResponse;
+import lombok.Getter;
 
-    String getAddress();
+import java.util.List;
 
-    double getAmount();
+@Getter
+public class ElectrumListAddressesResponse extends JsonRpcResponse<List<String>> {
 }

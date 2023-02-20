@@ -99,6 +99,11 @@ public class BitcoindWallet {
         return rpcClient.call(rpcCall).getResult();
     }
 
+    public List<String> listAddressGroupings() {
+        var call = new BitcoindListAddressGroupingsRpcCall();
+        return rpcClient.call(call).getResult();
+    }
+
     public List<BitcoindImportDescriptorResponse.Entry> importDescriptors(
             List<BitcoindImportDescriptorRequestEntry> requests
     ) {

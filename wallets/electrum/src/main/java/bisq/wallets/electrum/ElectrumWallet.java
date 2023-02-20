@@ -19,29 +19,27 @@ package bisq.wallets.electrum;
 
 import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.Wallet;
-import bisq.wallets.core.model.Transaction;
-import bisq.wallets.core.model.Utxo;
+import bisq.wallets.core.model.*;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
+import bisq.wallets.electrum.rpc.responses.ElectrumDeserializeResponse;
 import bisq.wallets.electrum.rpc.responses.ElectrumOnChainHistoryResponse;
+import bisq.wallets.electrum.rpc.responses.ElectrumOnChainTransactionResponse;
 import bisq.wallets.json_rpc.JsonRpcResponse;
-import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ElectrumWallet implements Wallet {
     private final Path walletPath;
     private final ElectrumDaemon daemon;
 
-    @Getter
-    private final ObservableSet<String> receiveAddresses;
-
     public ElectrumWallet(Path walletPath, ElectrumDaemon daemon, ObservableSet<String> receiveAddresses) {
         this.walletPath = walletPath;
         this.daemon = daemon;
-        this.receiveAddresses = receiveAddresses;
     }
 
     @Override
@@ -55,6 +53,7 @@ public class ElectrumWallet implements Wallet {
 
     @Override
     public void shutdown() {
+        daemon.stop();
         // Electrum does not provide an unload wallet rpc call.
     }
 
@@ -64,12 +63,12 @@ public class ElectrumWallet implements Wallet {
     }
 
     @Override
-    public String getNewAddress() {
+    public String getUnusedAddress() {
         return daemon.getUnusedAddress();
     }
 
     @Override
-    public List<? extends Transaction> listTransactions() {
+    public List<? extends TransactionInfo> listTransactions() {
         ElectrumOnChainHistoryResponse onChainHistoryResponse = daemon.onChainHistory();
         return onChainHistoryResponse.getResult().getTransactions();
     }
@@ -83,10 +82,6 @@ public class ElectrumWallet implements Wallet {
                 .collect(Collectors.toList());
     }
 
-    public void notify(String address, String endpointUrl) {
-        daemon.notify(address, endpointUrl);
-    }
-
     @Override
     public String sendToAddress(Optional<String> passphrase, String address, double amount) {
         String unsignedTx = daemon.payTo(passphrase, address, amount);
@@ -97,6 +92,47 @@ public class ElectrumWallet implements Wallet {
     @Override
     public String signMessage(Optional<String> passphrase, String address, String message) {
         return daemon.signMessage(passphrase, address, message);
+    }
+
+    @Override
+    public List<String> getWalletAddresses() {
+        return daemon.listAddresses();
+    }
+
+
+    public ElectrumDeserializeResponse.Result getElectrumTransaction(String txId) {
+        String txAsHex = daemon.getTransaction(txId);
+        return daemon.deserialize(txAsHex).getResult();
+    }
+
+    @Override
+    public List<Transaction> getTransactions() {
+        ElectrumOnChainHistoryResponse onChainHistoryResponse = daemon.onChainHistory();
+        List<ElectrumOnChainTransactionResponse> responses = onChainHistoryResponse.getResult().getTransactions();
+        return responses.stream().map(response -> {
+            String txId = response.getTxId();
+            ElectrumDeserializeResponse.Result deserializedTx = getElectrumTransaction(txId);
+            List<TransactionInput> inputs = deserializedTx.getInputs().stream()
+                    .map(inputResponse -> new TransactionInput(inputResponse.getPrevOutHash(), inputResponse.getPrevOutN(), inputResponse.getNSequence(), inputResponse.getScriptSig(), inputResponse.getWitness()))
+                    .collect(Collectors.toList());
+            List<TransactionOutput> outputs = deserializedTx.getOutputs().stream()
+                    .map(outputResponse -> new TransactionOutput(outputResponse.getValueSats(), outputResponse.getAddress(), outputResponse.getScriptPubKey()))
+                    .collect(Collectors.toList());
+            return new Transaction(txId,
+                    inputs,
+                    outputs,
+                    deserializedTx.getLockTime(),
+                    response.getHeight(),
+                    response.getDate(),
+                    response.getConfirmations(),
+                    response.getAmount(),
+                    response.isIncoming()
+            );
+        }).collect(Collectors.toList());
+    }
+
+    void notify(String address, String endpointUrl) {
+        daemon.notify(address, endpointUrl);
     }
 
     private boolean doesWalletExist(Path walletPath) {

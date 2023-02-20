@@ -54,7 +54,11 @@ public class TopPanelView extends View<HBox, TopPanelModel, TopPanelController> 
         balanceLabel = balanceTriple.getSecond();
         HBox.setMargin(balanceBox, new Insets(0, 0, 0, 30));
 
-        root.getChildren().addAll(balanceBox, Spacer.fillHBox(), marketPriceBox, userProfileSelectionRoot);
+        root.getChildren().addAll(Spacer.fillHBox(), marketPriceBox, userProfileSelectionRoot);
+
+        if (model.isWalletEnabled()) {
+            root.getChildren().add(0, balanceBox);
+        }
     }
 
     @Override

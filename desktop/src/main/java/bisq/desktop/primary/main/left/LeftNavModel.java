@@ -40,6 +40,7 @@ import java.util.Set;
 @Slf4j
 @Getter
 public class LeftNavModel implements Model {
+    private final boolean isWalletEnabled;
     private final NetworkService networkService;
     private final Set<NavigationTarget> navigationTargets = new HashSet<>();
     private final List<LeftNavButton> leftNavButtons = new ArrayList<>();
@@ -56,6 +57,7 @@ public class LeftNavModel implements Model {
 
 
     public LeftNavModel(DefaultApplicationService applicationService) {
+        isWalletEnabled = applicationService.getWalletService().isPresent();
         networkService = applicationService.getNetworkService();
 
         torEnabled.set(networkService.isTransportTypeSupported(Transport.Type.TOR));

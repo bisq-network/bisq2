@@ -126,7 +126,7 @@ public class ElectrumTxAndPasswordIntegrationTests {
 
     private void fundElectrumWallet() throws InterruptedException {
         var electrumProcessedTxLatch = new CountDownLatch(1);
-        ElectrumNotifyApi.registerListener((address, status) -> {
+        ElectrumNotifyApi.addListener((address, status) -> {
             if (status != null) {
                 electrumProcessedTxLatch.countDown();
             }

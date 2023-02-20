@@ -15,12 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.model;
+package bisq.wallets.bitcoind.rpc.responses;
 
-public interface Utxo {
-    String getTxId();
+import bisq.wallets.json_rpc.JsonRpcResponse;
 
-    String getAddress();
+import java.util.List;
 
-    double getAmount();
+public class BitcoindListAddressGroupingsResponse extends JsonRpcResponse<List<String>> {
 }
