@@ -122,6 +122,10 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
         });
     }
 
+    public boolean isWalletEnabled() {
+        return config.isEnabled();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // WalletService

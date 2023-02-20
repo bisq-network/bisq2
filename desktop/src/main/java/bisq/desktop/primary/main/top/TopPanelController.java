@@ -35,7 +35,7 @@ public class TopPanelController implements Controller {
     public TopPanelController(DefaultApplicationService applicationService) {
         electrumWalletService = applicationService.getElectrumWalletService();
 
-        model = new TopPanelModel();
+        model = new TopPanelModel(applicationService);
         UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
         MarketSelection marketSelection = new MarketSelection(applicationService.getOracleService().getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection, marketSelection.getRoot());
