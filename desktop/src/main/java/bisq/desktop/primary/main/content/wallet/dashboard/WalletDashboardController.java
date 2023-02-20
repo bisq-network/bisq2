@@ -24,7 +24,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,11 +33,11 @@ public class WalletDashboardController implements Controller {
     @Getter
     private final WalletDashboardView view;
     private final WalletDashboardModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
     private Pin balancePin;
 
     public WalletDashboardController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletDashboardModel();
         view = new WalletDashboardView(model, this);
     }
@@ -45,9 +45,9 @@ public class WalletDashboardController implements Controller {
     @Override
     public void onActivate() {
         balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(electrumWalletService.getBalance());
+                .to(walletService.getBalance());
 
-        electrumWalletService.requestBalance().whenComplete((balance, throwable) -> {
+        walletService.requestBalance().whenComplete((balance, throwable) -> {
             if (throwable == null) {
                 UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
             }

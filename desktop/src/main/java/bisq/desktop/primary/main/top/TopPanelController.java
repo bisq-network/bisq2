@@ -22,20 +22,24 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.primary.main.content.components.UserProfileSelection;
-import bisq.wallets.electrum.ElectrumWalletService;
+import bisq.wallets.core.WalletService;
 import lombok.Getter;
 
+import javax.annotation.Nullable;
+import java.util.Optional;
+
 public class TopPanelController implements Controller {
-    private final ElectrumWalletService electrumWalletService;
     @Getter
     private final TopPanelView view;
     private final TopPanelModel model;
+    private final Optional<WalletService> walletService;
+    @Nullable
     private Pin balancePin;
 
     public TopPanelController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService();
 
-        model = new TopPanelModel(applicationService);
+        model = new TopPanelModel(applicationService.getWalletService().isPresent());
         UserProfileSelection userProfileSelection = new UserProfileSelection(applicationService.getUserService().getUserIdentityService());
         MarketSelection marketSelection = new MarketSelection(applicationService.getOracleService().getMarketPriceService());
         view = new TopPanelView(model, this, userProfileSelection, marketSelection.getRoot());
@@ -44,12 +48,16 @@ public class TopPanelController implements Controller {
 
     @Override
     public void onActivate() {
-        balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(electrumWalletService.getBalance());
+        walletService.ifPresent(walletService -> {
+            balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
+                    .to(walletService.getBalance());
+        });
     }
 
     @Override
     public void onDeactivate() {
-        balancePin.unbind();
+        if (balancePin != null) {
+            balancePin.unbind();
+        }
     }
 }

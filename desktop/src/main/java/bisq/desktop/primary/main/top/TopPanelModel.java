@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.top;
 
 
-import bisq.application.DefaultApplicationService;
 import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
 import bisq.presentation.formatters.AmountFormatter;
@@ -37,7 +36,7 @@ public class TopPanelModel implements Model {
             balanceAsCoinProperty
     );
 
-    public TopPanelModel(DefaultApplicationService applicationService) {
-        isWalletEnabled = applicationService.getElectrumWalletService().isWalletEnabled();
+    public TopPanelModel(boolean isWalletEnabled) {
+        this.isWalletEnabled = isWalletEnabled;
     }
 }

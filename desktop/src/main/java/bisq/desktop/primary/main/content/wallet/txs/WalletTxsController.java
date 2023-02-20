@@ -21,8 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.wallets.core.WalletService;
 import bisq.wallets.core.model.Transaction;
-import bisq.wallets.electrum.ElectrumWalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,11 +31,11 @@ public class WalletTxsController implements Controller {
     @Getter
     private final WalletTxsView view;
     private final WalletTxsModel model;
-    private final ElectrumWalletService electrumWalletService;
+    private final WalletService walletService;
     private Pin transactionsPin;
 
     public WalletTxsController(DefaultApplicationService applicationService) {
-        electrumWalletService = applicationService.getElectrumWalletService();
+        walletService = applicationService.getWalletService().orElseThrow();
         model = new WalletTxsModel();
         view = new WalletTxsView(model, this);
     }
@@ -44,9 +44,9 @@ public class WalletTxsController implements Controller {
     public void onActivate() {
         transactionsPin = FxBindings.<Transaction, WalletTransactionListItem>bind(model.getListItems())
                 .map(WalletTransactionListItem::new)
-                .to(electrumWalletService.getTransactions());
+                .to(walletService.getTransactions());
 
-        electrumWalletService.requestTransactions();
+        walletService.requestTransactions();
     }
 
     @Override

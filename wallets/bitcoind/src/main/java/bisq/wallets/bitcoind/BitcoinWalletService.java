@@ -29,18 +29,34 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
+@Getter
 public class BitcoinWalletService extends AbstractBitcoindWalletService<BitcoinWallet, BitcoinWalletStore> {
+    @Getter
+    public static class Config {
+        private final String network;
 
-    @Getter
+        public Config(String network) {
+            this.network = network;
+        }
+
+        public static Config from(com.typesafe.config.Config config) {
+            return new Config(config.getString("network"));
+        }
+
+        public boolean isRegtest() {
+            return network.equals("regtest");
+        }
+    }
+
+    private final Config config;
     private final BitcoinWalletStore persistableStore = new BitcoinWalletStore();
-    @Getter
     private final Persistence<BitcoinWalletStore> persistence;
-    @Getter
     private final Observable<Coin> balance = new Observable<>(Coin.asBtc(0));
 
-    public BitcoinWalletService(PersistenceService persistenceService,
-                                boolean isRegtest) {
-        super("BTC", getOptionalRegtestConfig(isRegtest, 18443), "bisq_bitcoind_default_wallet");
+    public BitcoinWalletService(Config config,
+                                PersistenceService persistenceService) {
+        super("BTC", getOptionalRegtestConfig(config.isRegtest(), 18443), "bisq_bitcoind_default_wallet");
+        this.config = config;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

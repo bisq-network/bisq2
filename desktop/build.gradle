@@ -31,6 +31,7 @@ dependencies {
 
     implementation("network:network")
     implementation("wallets:electrum")
+    implementation("wallets:bitcoind")
 
     implementation libs.google.guava
     implementation libs.bundles.fontawesomefx

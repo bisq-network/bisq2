@@ -15,24 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content;
+package bisq.application;
 
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.common.view.NavigationTarget;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-@Getter
-public class ContentModel extends NavigationModel {
-    private final boolean isWalletEnabled;
-
-    public ContentModel(boolean isWalletEnabled) {
-        this.isWalletEnabled = isWalletEnabled;
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.DASHBOARD;
-    }
+enum BitcoinWalletSelection {
+    BITCOIND,
+    ELECTRUM,
+    NONE
 }

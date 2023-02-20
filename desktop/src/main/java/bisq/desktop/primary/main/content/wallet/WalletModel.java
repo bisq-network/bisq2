@@ -21,7 +21,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabModel;
 
 public class WalletModel extends TabModel {
-
     public WalletModel() {
     }
 

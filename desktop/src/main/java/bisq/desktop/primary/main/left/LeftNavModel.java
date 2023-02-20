@@ -57,7 +57,7 @@ public class LeftNavModel implements Model {
 
 
     public LeftNavModel(DefaultApplicationService applicationService) {
-        isWalletEnabled = applicationService.getElectrumWalletService().isWalletEnabled();
+        isWalletEnabled = applicationService.getWalletService().isPresent();
         networkService = applicationService.getNetworkService();
 
         torEnabled.set(networkService.isTransportTypeSupported(Transport.Type.TOR));

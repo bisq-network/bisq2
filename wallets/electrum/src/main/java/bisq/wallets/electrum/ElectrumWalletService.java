@@ -42,21 +42,18 @@ import java.util.concurrent.ExecutionException;
 public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.Listener {
     @Getter
     public static class Config {
-        private final boolean enabled;
         private final String network;
         private final String electrumXServerHost;
         private final int electrumXServerPort;
 
-        public Config(boolean enabled, String network, String electrumXServerHost, int electrumXServerPort) {
-            this.enabled = enabled;
+        public Config(String network, String electrumXServerHost, int electrumXServerPort) {
             this.network = network;
             this.electrumXServerHost = electrumXServerHost;
             this.electrumXServerPort = electrumXServerPort;
         }
 
         public static Config from(com.typesafe.config.Config config) {
-            return new Config(config.getBoolean("enabled"),
-                    config.getString("network"),
+            return new Config(config.getString("network"),
                     config.getString("electrumXServerHost"),
                     config.getInt("electrumXServerPort"));
         }
@@ -99,20 +96,12 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (!config.isEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
         log.info("initialize");
         return initializeWallet(processConfig.getElectrumConfig().toRpcConfig(), Optional.empty());
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        if (!config.isEnabled()) {
-            return CompletableFuture.completedFuture(true);
-        }
-
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
             wallet.shutdown();
@@ -120,10 +109,6 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
             electrumNotifyWebServer.stopServer();
             return true;
         });
-    }
-
-    public boolean isWalletEnabled() {
-        return config.isEnabled();
     }
 
 
