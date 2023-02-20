@@ -24,6 +24,7 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,36 +34,56 @@ public class ConnectionHandshakeResponder {
     private final BanList banList;
     private final Capability capability;
     private final AuthorizationService authorizationService;
+    private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
 
     public ConnectionHandshakeResponder(BanList banList,
                                         Capability capability,
-                                        AuthorizationService authorizationService) {
+                                        AuthorizationService authorizationService,
+                                        NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
+        this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
     }
 
-    public Pair<ConnectionHandshake.Request, NetworkEnvelope> verifyPoW(List<NetworkEnvelope> receivedNetworkEnvelopes, Load myLoad) {
-        if (receivedNetworkEnvelopes.isEmpty()) {
-            throw new ConnectionException("Received empty requests.");
-        }
+    public Pair<ConnectionHandshake.Request, NetworkEnvelope> verifyAndBuildRespond() throws IOException {
+        List<NetworkEnvelope> requestEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
+        validateRequestEnvelopes(requestEnvelopes);
 
-        if (receivedNetworkEnvelopes.size() > 1) {
-            throw new ConnectionException("Received multiple requests from client. requests=" + receivedNetworkEnvelopes);
-        }
-
-        NetworkEnvelope requestProto = receivedNetworkEnvelopes.get(0);
+        NetworkEnvelope requestProto = requestEnvelopes.get(0);
         NetworkEnvelope requestNetworkEnvelope = parseAndValidateRequest(requestProto);
 
         ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         verifyPeerIsNotBanned(request);
 
+        verifyPoW(requestNetworkEnvelope);
+
+        Address peerAddress = request.getCapability().getAddress();
+        NetworkEnvelope responseEnvelope = createResponseEnvelope(Load.INITIAL_LOAD, request.getLoad(), peerAddress);
+
+        return new Pair<>(request, responseEnvelope);
+    }
+
+    private void validateRequestEnvelopes(List<NetworkEnvelope> requestEnvelopes) {
+        if (requestEnvelopes.isEmpty()) {
+            throw new ConnectionException("Received empty requests.");
+        }
+
+        if (requestEnvelopes.size() > 1) {
+            throw new ConnectionException("Received multiple requests from client. requests=" + requestEnvelopes);
+        }
+    }
+
+    private void verifyPoW(NetworkEnvelope requestNetworkEnvelope) {
+        ConnectionHandshake.Request request = (ConnectionHandshake.Request) requestNetworkEnvelope.getNetworkMessage();
         String myAddress = capability.getAddress().getFullAddress();
-        boolean isAuthorized = authorizationService.isAuthorized(request,
+        boolean isAuthorized = authorizationService.isAuthorized(
+                request,
                 requestNetworkEnvelope.getAuthorizationToken(),
                 Load.INITIAL_LOAD,
                 UUID.randomUUID().toString(),
-                myAddress);
+                myAddress
+        );
 
         if (isAuthorized) {
             log.debug("Peer {} passed PoW authorization.",
@@ -72,10 +93,6 @@ public class ConnectionHandshakeResponder {
         }
 
         log.debug("Clients capability {}, load={}", request.getCapability(), request.getLoad());
-
-        Address peerAddress = request.getCapability().getAddress();
-        NetworkEnvelope responseNetworkEnvelope = createResponseEnvelope(myLoad, request.getLoad(), peerAddress);
-        return new Pair<>(request, responseNetworkEnvelope);
     }
 
     private NetworkEnvelope parseAndValidateRequest(NetworkEnvelope requestNetworkEnvelope) {
