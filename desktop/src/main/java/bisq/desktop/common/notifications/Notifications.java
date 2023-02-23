@@ -35,7 +35,7 @@ import bisq.desktop.common.notifications.osx.OsxNotifications;
 public class Notifications {
     private static Notifications instance;
 
-    public static Notifications getInstance() {
+    private static Notifications getInstance() {
         if (instance == null) {
             instance = new Notifications();
         }
