@@ -41,15 +41,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class Notification extends Overlay<Notification> {
+// TODO might get removed as we use OS native notifications, but lets keep it until we know for sure...
+
+public class JfxNotifications extends Overlay<JfxNotifications> {
     private static Region owner;
     private static SettingsService settingsService;
 
     protected final static double DEFAULT_WIDTH = 668;
 
     public static void init(Region owner, SettingsService settingsService) {
-        Notification.owner = owner;
-        Notification.settingsService = settingsService;
+        JfxNotifications.owner = owner;
+        JfxNotifications.settingsService = settingsService;
     }
 
 
@@ -57,7 +59,7 @@ public class Notification extends Overlay<Notification> {
     private boolean autoClose;
     private UIScheduler autoCloseTimer;
 
-    public Notification() {
+    public JfxNotifications() {
         width = 413; // 320 visible bg because of insets
         type = Type.Notification;
     }
@@ -87,11 +89,11 @@ public class Notification extends Overlay<Notification> {
         Manager.onHidden(this);
     }
 
-    public Notification tradeHeadLine(String tradeId) {
+    public JfxNotifications tradeHeadLine(String tradeId) {
         return headLine(Res.get("notification.trade.headline", tradeId));
     }
 
-    public Notification disputeHeadLine(String tradeId) {
+    public JfxNotifications disputeHeadLine(String tradeId) {
         return headLine(Res.get("notification.ticket.headline", tradeId));
     }
 
@@ -102,7 +104,7 @@ public class Notification extends Overlay<Notification> {
     }
 
 
-    public Notification autoClose() {
+    public JfxNotifications autoClose() {
         autoClose = true;
         return this;
     }
@@ -220,10 +222,10 @@ public class Notification extends Overlay<Notification> {
 
     @Slf4j
     private static class Manager {
-        private static final Queue<Notification> popups = new LinkedBlockingQueue<>(5);
-        private static Notification displayedPopup;
+        private static final Queue<JfxNotifications> popups = new LinkedBlockingQueue<>(5);
+        private static JfxNotifications displayedPopup;
 
-        private static void queueForDisplay(Notification popup) {
+        private static void queueForDisplay(JfxNotifications popup) {
             boolean result = popups.offer(popup);
             if (!result) {
                 log.warn("The capacity is full with popups in the queue.\n\t" +
@@ -232,7 +234,7 @@ public class Notification extends Overlay<Notification> {
             displayNext();
         }
 
-        private static void onHidden(Notification popup) {
+        private static void onHidden(JfxNotifications popup) {
             if (displayedPopup == null || displayedPopup == popup) {
                 displayedPopup = null;
                 displayNext();
