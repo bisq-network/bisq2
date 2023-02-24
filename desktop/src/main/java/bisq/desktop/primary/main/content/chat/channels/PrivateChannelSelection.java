@@ -212,18 +212,18 @@ public class PrivateChannelSelection extends ChannelSelection {
 
         public void doLeaveChannel(BasePrivateChannel<?> privateChannel) {
             switch (privateChannel.getChannelDomain()) {
-                case TRADE -> {
+                case TRADE:
                     privateTradeChannelService.leaveChannel((PrivateTradeChannel) privateChannel);
-                }
-                case DISCUSSION -> {
+                    break;
+                case DISCUSSION:
                     //todo
-                }
-                case EVENTS -> {
+                    break;
+                case EVENTS:
                     //todo
-                }
-                case SUPPORT -> {
+                    break;
+                case SUPPORT:
                     //todo
-                }
+                    break;
             }
 
             model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))

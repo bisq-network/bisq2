@@ -69,6 +69,14 @@ public class OsUtils {
         return getOSName().contains("linux") && getOSArchitecture().equals("64");
     }
 
+    public static String getVersionString() {
+        return System.getProperty("os.version");
+    }
+
+    public static Version getVersion() {
+        return new Version(getVersionString());
+    }
+
     public static String getOSArchitecture() {
         if (isWindows()) {
             // See: Like always windows needs extra treatment

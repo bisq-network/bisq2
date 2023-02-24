@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -245,32 +246,32 @@ public class ChatMessagesComponent {
                 }
             } else if (channel instanceof PublicChannel) {
                 switch (channel.getChannelDomain()) {
-                    case TRADE -> {
-                    }
-                    case DISCUSSION -> {
+                    case TRADE:
+                        break;
+                    case DISCUSSION:
                         publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
-                    }
-                    case EVENTS -> {
+                        break;
+                    case EVENTS:
                         publicEventsChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
-                    }
-                    case SUPPORT -> {
+                        break;
+                    case SUPPORT:
                         publicSupportChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
-                    }
+                        break;
                 }
 
             } else if (channel instanceof PrivateChannel) {
                 switch (channel.getChannelDomain()) {
-                    case TRADE -> {
-                    }
-                    case DISCUSSION -> {
+                    case TRADE:
+                        break;
+                    case DISCUSSION:
                         privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
-                    }
-                    case EVENTS -> {
+                        break;
+                    case EVENTS:
                         privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
-                    }
-                    case SUPPORT -> {
+                        break;
+                    case SUPPORT:
                         privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
-                    }
+                        break;
                 }
             }
             quotedMessageBlock.close();
@@ -362,7 +363,7 @@ public class ChatMessagesComponent {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .distinct()
-                    .toList();
+                    .collect(Collectors.toList());
         }
     }
 
