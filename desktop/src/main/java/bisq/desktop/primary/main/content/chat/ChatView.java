@@ -38,7 +38,7 @@ import org.fxmisc.easybind.Subscription;
 @Slf4j
 public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatController<?, ?>> {
     private final Label headline;
-    private final Button helpButton;
+    private final Button helpButton, channelInfoButton;
     protected final VBox left;
     private final VBox sideBar;
     protected final Pane chatMessagesComponent;
@@ -83,13 +83,16 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         searchBox = new SearchBox();
         searchBox.setPrefWidth(200);
         helpButton = BisqIconButton.createIconButton("icon-help", Res.get("help"));
+        channelInfoButton = BisqIconButton.createIconButton("icon-info", Res.get("chat.channelInfo"));
+        HBox.setMargin(channelInfoButton, new Insets(0, 0, 0, -5));
 
         centerToolbar = new HBox(
                 10,
                 headline,
                 Spacer.fillHBox(),
                 searchBox,
-                helpButton
+                helpButton,
+                channelInfoButton
         );
         centerToolbar.setAlignment(Pos.CENTER);
         centerToolbar.setMinHeight(64);
@@ -119,6 +122,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
         helpButton.setOnAction(e -> controller.onToggleHelp());
+        channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
@@ -153,6 +157,7 @@ public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatContr
         sideBar.managedProperty().unbind();
 
         helpButton.setOnAction(null);
+        channelInfoButton.setOnAction(null);
 
         searchBox.textProperty().unbindBidirectional(model.getSearchText());
 
