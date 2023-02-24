@@ -27,6 +27,7 @@ import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.oracle.OracleService;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
@@ -78,6 +79,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
     private final SupportService supportService;
+    private final NotificationsService notificationsService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -133,6 +135,8 @@ public class DefaultApplicationService extends ApplicationService {
         settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
+
+        notificationsService = new NotificationsService(persistenceService);
     }
 
     @Override
