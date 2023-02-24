@@ -17,22 +17,11 @@
 
 package bisq.presentation.offer;
 
-import bisq.account.protocol.SwapProtocolType;
-import bisq.account.settlement.SettlementMethod;
-import bisq.common.monetary.Monetary;
-import bisq.offer.options.FiatSettlementOption;
-import bisq.offer.options.ReputationOption;
-import bisq.presentation.formatters.AmountFormatter;
-import bisq.presentation.formatters.DateFormatter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 class OfferFormatter {
-    static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount, boolean useMinPrecision) {
+   /* static String formatAmountWithMinAmount(Monetary amount, Optional<Long> optionalMinAmount, boolean useMinPrecision) {
         return AmountFormatter.formatMinAmount(optionalMinAmount, amount, useMinPrecision) +
                 AmountFormatter.formatAmountWithCode(amount, useMinPrecision);
     }
@@ -55,5 +44,5 @@ class OfferFormatter {
 
     static String formatTransferTypes(List<SettlementMethod> settlementMethods) {
         return settlementMethods.toString();
-    }
+    }*/
 }
