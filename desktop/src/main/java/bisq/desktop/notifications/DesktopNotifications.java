@@ -32,6 +32,9 @@ public class DesktopNotifications {
     private final ChatNotifications chatNotifications;
 
     private DesktopNotifications(DefaultApplicationService applicationService) {
-        chatNotifications = new ChatNotifications(applicationService);
+        chatNotifications = new ChatNotifications(applicationService.getChatService(),
+                applicationService.getUserService(),
+                applicationService.getSettingsService(),
+                applicationService.getNotificationsService());
     }
 }

@@ -29,8 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Optional;
 
-import static bisq.desktop.primary.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
-
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -50,8 +48,7 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
         }
-        String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
-        message = chatMessage.getText() + editPostFix;
+        message = chatMessage.getText();
 
         userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
     }

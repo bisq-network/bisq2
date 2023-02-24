@@ -17,7 +17,6 @@
 
 package bisq.desktop.notifications.chat;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PrivateChannelService;
@@ -36,7 +35,9 @@ import bisq.common.observable.ObservableArray;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.notifications.Notifications;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.SettingsService;
+import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.collections.FXCollections;
@@ -53,10 +54,10 @@ import java.util.function.Predicate;
 
 @Slf4j
 public class ChatNotifications {
-    private final ChatService chatService;
+    private final NotificationsService notificationsService;
+    private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final SettingsService settingsService;
 
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
@@ -74,8 +75,12 @@ public class ChatNotifications {
     @Setter
     private Predicate<? super ChatNotification<? extends ChatMessage>> predicate = e -> true;
 
-    public ChatNotifications(DefaultApplicationService applicationService) {
-        chatService = applicationService.getChatService();
+    public ChatNotifications(ChatService chatService,
+                             UserService userService,
+                             SettingsService settingsService,
+                             NotificationsService notificationsService) {
+        this.notificationsService = notificationsService;
+        this.settingsService = settingsService;
 
         privateTradeChannelService = chatService.getPrivateTradeChannelService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
@@ -89,9 +94,8 @@ public class ChatNotifications {
         privateSupportChannelService = chatService.getPrivateSupportChannelService();
         publicSupportChannelService = chatService.getPublicSupportChannelService();
 
-        userIdentityService = applicationService.getUserService().getUserIdentityService();
-        userProfileService = applicationService.getUserService().getUserProfileService();
-        settingsService = applicationService.getSettingsService();
+        userIdentityService = userService.getUserIdentityService();
+        userProfileService = userService.getUserProfileService();
 
         chatMessages.addListener((ListChangeListener<ChatNotification<? extends ChatMessage>>) c -> {
             c.next();
@@ -123,13 +127,13 @@ public class ChatNotifications {
                 onPublicChannelsChanged(publicSupportChannelService.getChannels()));
     }
 
+
     private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
         boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatNotification.getChatMessage().getAuthorId());
         if (isMyMessage) {
             return;
         }
 
-        String message = chatNotification.getMessage();
         boolean doNotify;
         switch (chatNotification.getChannel().getChannelNotificationType().get()) {
             case ALL:
@@ -145,7 +149,11 @@ public class ChatNotifications {
                 break;
         }
         if (doNotify) {
-            Notifications.notify(chatNotification.getUserName(), message);
+            String id = chatNotification.getChatMessage().getMessageId();
+            if (!notificationsService.wasDisplayed(id)) {
+                notificationsService.add(id);
+                Notifications.notify(chatNotification.getUserName(), chatNotification.getMessage());
+            }
         }
     }
 
