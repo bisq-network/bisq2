@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.notifications;
+package bisq.presentation.notifications;
 
 public interface NotificationsDelegate {
    void notify(String title, String message);

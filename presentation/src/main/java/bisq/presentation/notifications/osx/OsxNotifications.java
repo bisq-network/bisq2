@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.desktop.common.notifications.osx;
+package bisq.presentation.notifications.osx;
 
 import bisq.common.util.OsUtils;
-import bisq.desktop.common.notifications.NotificationsDelegate;
-import bisq.desktop.common.notifications.osx.foundation.Foundation;
-import bisq.desktop.common.notifications.osx.foundation.ID;
+import bisq.presentation.notifications.NotificationsDelegate;
+import bisq.presentation.notifications.osx.foundation.Foundation;
+import bisq.presentation.notifications.osx.foundation.ID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

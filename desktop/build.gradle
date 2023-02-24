@@ -33,10 +33,6 @@ dependencies {
     implementation("wallets:electrum")
     implementation("wallets:bitcoind")
 
-    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.13.0'
-
-    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.13.0'
-
     implementation libs.google.guava
     implementation libs.bundles.fontawesomefx
     implementation libs.bundles.fxmisc.libs

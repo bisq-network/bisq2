@@ -177,6 +177,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> notificationsService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -197,7 +198,8 @@ public class DefaultApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> protocolService.shutdown()
+        return supplyAsync(() -> notificationsService.shutdown()
+                        .thenCompose(result -> protocolService.shutdown())
                         .thenCompose(result -> settingsService.shutdown())
                         .thenCompose(result -> supportService.shutdown())
                         .thenCompose(result -> chatService.shutdown())

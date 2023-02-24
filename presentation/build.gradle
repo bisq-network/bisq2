@@ -8,4 +8,5 @@ dependencies {
     implementation project(':i18n')
 
     implementation libs.google.guava
+    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.13.0'
 }

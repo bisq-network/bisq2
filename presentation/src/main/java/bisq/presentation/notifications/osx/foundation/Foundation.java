@@ -30,7 +30,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package bisq.desktop.common.notifications.osx.foundation;
+package bisq.presentation.notifications.osx.foundation;
 
 import com.sun.jna.*;
 

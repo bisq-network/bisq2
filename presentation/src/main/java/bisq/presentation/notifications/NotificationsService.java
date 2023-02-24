@@ -19,9 +19,12 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
+import bisq.common.util.OsUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.presentation.notifications.linux.LinuxNotifications;
+import bisq.presentation.notifications.osx.OsxNotifications;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,32 +36,55 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
     private final NotificationsStore persistableStore = new NotificationsStore();
     @Getter
     private final Persistence<NotificationsStore> persistence;
+    private NotificationsDelegate delegate;
 
     public NotificationsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
         return CompletableFuture.completedFuture(true);
     }
 
-    public boolean wasDisplayed(String id) {
+    public void notify(String title, String message) {
+        getNotificationsDelegate().notify(title, message);
+    }
+
+    public boolean contains(String id) {
         return persistableStore.getDateByMessageId().containsKey(id);
     }
 
     public void add(String id) {
         persistableStore.getDateByMessageId().put(id, System.currentTimeMillis());
         persist();
+    }
+
+    private NotificationsDelegate getNotificationsDelegate() {
+        if (delegate == null) {
+            switch (OsUtils.getOperatingSystem()) {
+                case LINUX:
+                    if (LinuxNotifications.isSupported()) {
+                        delegate = new LinuxNotifications();
+                        break;
+                    }
+                case MAC:
+                    if (OsxNotifications.isSupported()) {
+                        delegate = new OsxNotifications();
+                        break;
+                    }
+                case WIN:
+                default:
+                    delegate = new AwtNotifications();
+            }
+        }
+        return delegate;
     }
 }

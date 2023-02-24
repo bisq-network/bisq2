@@ -18,10 +18,7 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.PrivateChannelService;
-import bisq.chat.channel.PublicChannel;
-import bisq.chat.channel.PublicChannelService;
+import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.PublicChatMessage;
@@ -33,8 +30,8 @@ import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.observable.ObservableArray;
 import bisq.common.observable.Pin;
-import bisq.desktop.common.notifications.Notifications;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
@@ -129,32 +126,49 @@ public class ChatNotifications {
 
 
     private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatNotification.getChatMessage().getAuthorId());
+        ChatMessage chatMessage = chatNotification.getChatMessage();
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         if (isMyMessage) {
             return;
         }
 
-        boolean doNotify;
-        switch (chatNotification.getChannel().getChannelNotificationType().get()) {
+        String id = chatMessage.getMessageId();
+        if (notificationsService.contains(id)) {
+            return;
+        }
+
+        notificationsService.add(id);
+
+        Channel<? extends ChatMessage> channel = chatNotification.getChannel();
+        switch (channel.getChannelNotificationType().get()) {
             case ALL:
-                doNotify = true;
                 break;
             case MENTION:
-                doNotify = userIdentityService.getUserIdentities().stream()
-                        .anyMatch(userIdentity -> chatNotification.getChatMessage().wasMentioned(userIdentity));
+                if (userIdentityService.getUserIdentities().stream()
+                        .noneMatch(chatMessage::wasMentioned)) {
+                    return;
+                }
                 break;
             case NEVER:
             default:
-                doNotify = false;
-                break;
+                return;
         }
-        if (doNotify) {
-            String id = chatNotification.getChatMessage().getMessageId();
-            if (!notificationsService.wasDisplayed(id)) {
-                notificationsService.add(id);
-                Notifications.notify(chatNotification.getUserName(), chatNotification.getMessage());
+
+        String title;
+        if (chatMessage instanceof PublicTradeChatMessage) {
+            PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
+            if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.isOfferMessage()) {
+                return;
             }
+            title = channel.getChannelName();
+        } else {
+            title = Res.get(channel.getChannelDomain().name().toLowerCase() + "."
+                    + channel.getChannelName() + ".name");
         }
+
+        String message = chatNotification.getUserName() + ": "
+                + chatNotification.getMessage();
+        notificationsService.notify(title, message);
     }
 
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
