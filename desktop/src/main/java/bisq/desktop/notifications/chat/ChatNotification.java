@@ -18,9 +18,8 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.channel.Channel;
+import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.PrivateChatMessage;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.EqualsAndHashCode;
@@ -40,25 +39,21 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
     private final T chatMessage;
     private final String message;
     private final Optional<UserProfile> senderUserProfile;
-    private final String nym;
-    private final String nickName;
+    private final String userName;
 
     public ChatNotification(Channel<? extends ChatMessage> channel, T chatMessage, UserProfileService userProfileService) {
         this.channel = channel;
         this.chatMessage = chatMessage;
 
-        if (chatMessage instanceof PrivateTradeChatMessage) {
-            senderUserProfile = Optional.of(((PrivateTradeChatMessage) chatMessage).getSender());
-        } else if (chatMessage instanceof PrivateChatMessage) {
-            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
+        if (chatMessage instanceof BasePrivateChatMessage) {
+            senderUserProfile = Optional.of(((BasePrivateChatMessage) chatMessage).getSender());
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
         }
         String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
         message = chatMessage.getText() + editPostFix;
 
-        nym = senderUserProfile.map(UserProfile::getNym).orElse("");
-        nickName = senderUserProfile.map(UserProfile::getNickName).orElse("");
+        userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
     }
 
     @Override

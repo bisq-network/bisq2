@@ -96,7 +96,7 @@ public class ChatNotifications {
         chatMessages.addListener((ListChangeListener<ChatNotification<? extends ChatMessage>>) c -> {
             c.next();
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(this::onChatMessageNotificationAdded);
+                c.getAddedSubList().forEach(this::onChatNotificationAdded);
             }
         });
 
@@ -123,21 +123,21 @@ public class ChatNotifications {
                 onPublicChannelsChanged(publicSupportChannelService.getChannels()));
     }
 
-    private void onChatMessageNotificationAdded(ChatNotification<? extends ChatMessage> listItem) {
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(listItem.getChatMessage().getAuthorId());
+    private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatNotification.getChatMessage().getAuthorId());
         if (isMyMessage) {
             return;
         }
 
-        String message = listItem.getMessage();
+        String message = chatNotification.getMessage();
         boolean doNotify;
-        switch (listItem.getChannel().getChannelNotificationType().get()) {
+        switch (chatNotification.getChannel().getChannelNotificationType().get()) {
             case ALL:
                 doNotify = true;
                 break;
             case MENTION:
                 doNotify = userIdentityService.getUserIdentities().stream()
-                        .anyMatch(userIdentity -> listItem.getChatMessage().wasMentioned(userIdentity));
+                        .anyMatch(userIdentity -> chatNotification.getChatMessage().wasMentioned(userIdentity));
                 break;
             case NEVER:
             default:
@@ -145,7 +145,7 @@ public class ChatNotifications {
                 break;
         }
         if (doNotify) {
-            Notifications.notify(listItem.getNickName(), message);
+            Notifications.notify(chatNotification.getUserName(), message);
         }
     }
 
