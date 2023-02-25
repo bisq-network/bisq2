@@ -140,7 +140,24 @@ public class ChatNotifications {
         notificationsService.add(id);
 
         Channel<? extends ChatMessage> channel = chatNotification.getChannel();
-        switch (channel.getChannelNotificationType().get()) {
+        ChannelNotificationType channelNotificationType = channel.getChannelNotificationType().get();
+        if (channelNotificationType == ChannelNotificationType.GLOBAL_DEFAULT) {
+            // Map from global settings enums
+            switch (settingsService.getChatNotificationType().get()) {
+                case ALL:
+                    channelNotificationType = ChannelNotificationType.ALL;
+                    break;
+                case MENTION:
+                    channelNotificationType = ChannelNotificationType.MENTION;
+                    break;
+                case OFF:
+                    channelNotificationType = ChannelNotificationType.OFF;
+                    break;
+            }
+        }
+        switch (channelNotificationType) {
+            case GLOBAL_DEFAULT:
+                throw new RuntimeException("GLOBAL_DEFAULT not possible here");
             case ALL:
                 break;
             case MENTION:
@@ -149,7 +166,7 @@ public class ChatNotifications {
                     return;
                 }
                 break;
-            case NEVER:
+            case OFF:
             default:
                 return;
         }

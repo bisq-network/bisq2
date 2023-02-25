@@ -75,6 +75,10 @@ public class ChannelSidebar {
         return controller.notificationsSidebar.getSelected();
     }
 
+    public void setSelectedNotificationType(ChannelNotificationType type) {
+        controller.notificationsSidebar.setSelected(type);
+    }
+
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter

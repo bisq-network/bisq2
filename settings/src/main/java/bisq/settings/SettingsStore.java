@@ -43,6 +43,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Long> requiredTotalReputationScore = new Observable<>(1000L);
     final Observable<Boolean> offersOnly = new Observable<>(true);
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
+    final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
 
     public SettingsStore() {
         this(new Cookie(),
@@ -52,7 +53,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 MarketRepository.getDefault(),
                 1000,
                 true,
-                false);
+                false,
+                ChatNotificationType.MENTION);
     }
 
     public SettingsStore(Cookie cookie,
@@ -62,7 +64,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          Market selectedMarket,
                          long requiredTotalReputationScore,
                          boolean offersOnly,
-                         boolean tradeRulesConfirmed) {
+                         boolean tradeRulesConfirmed,
+                         ChatNotificationType chatNotificationType) {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -72,6 +75,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.requiredTotalReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
+        this.chatNotificationType.set(chatNotificationType);
     }
 
     @Override
@@ -85,6 +89,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
+                .setChatNotificationType(chatNotificationType.get().toProto())
                 .build();
     }
 
@@ -97,7 +102,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 Market.fromProto(proto.getSelectedMarket()),
                 proto.getRequiredTotalReputationScore(),
                 proto.getOffersOnly(),
-                proto.getTradeRulesConfirmed());
+                proto.getTradeRulesConfirmed(),
+                ChatNotificationType.fromProto(proto.getChatNotificationType()));
     }
 
     @Override
@@ -120,7 +126,8 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 selectedMarket.get(),
                 requiredTotalReputationScore.get(),
                 offersOnly.get(),
-                tradeRulesConfirmed.get());
+                tradeRulesConfirmed.get(),
+                chatNotificationType.get());
     }
 
     @Override
@@ -134,5 +141,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         requiredTotalReputationScore.set(persisted.requiredTotalReputationScore.get());
         offersOnly.set(persisted.offersOnly.get());
         tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
+        chatNotificationType.set(persisted.chatNotificationType.get());
     }
 }

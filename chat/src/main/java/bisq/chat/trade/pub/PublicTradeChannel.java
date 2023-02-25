@@ -39,7 +39,7 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
     }
 
     private PublicTradeChannel(String channelName, Market market) {
-        super(ChannelDomain.TRADE, channelName, ChannelNotificationType.MENTION);
+        super(ChannelDomain.TRADE, channelName, ChannelNotificationType.GLOBAL_DEFAULT);
 
         this.market = market;
     }

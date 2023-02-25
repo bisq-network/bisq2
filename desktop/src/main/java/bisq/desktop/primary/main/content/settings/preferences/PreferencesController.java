@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.view.Controller;
+import bisq.settings.ChatNotificationType;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
 import lombok.Getter;
@@ -32,7 +33,7 @@ public class PreferencesController implements Controller {
     private final PreferencesView view;
     private final SettingsService settingsService;
     private final PreferencesModel model;
-    private Pin useAnimationsPin;
+    private Pin useAnimationsPin, chatNotificationTypePin;
 
     public PreferencesController(DefaultApplicationService applicationService) {
         settingsService = applicationService.getSettingsService();
@@ -43,16 +44,22 @@ public class PreferencesController implements Controller {
     @Override
     public void onActivate() {
         useAnimationsPin = FxBindings.bindBiDir(model.getUseAnimations()).to(settingsService.getUseAnimations());
+        chatNotificationTypePin = FxBindings.bindBiDir(model.getChatNotificationType()).to(settingsService.getChatNotificationType());
     }
 
     @Override
     public void onDeactivate() {
         useAnimationsPin.unbind();
+        chatNotificationTypePin.unbind();
     }
 
-    public void onResetDontShowAgain(boolean isSelected) {
+    void onResetDontShowAgain(boolean isSelected) {
         if (isSelected) {
             DontShowAgainService.resetDontShowAgain();
         }
+    }
+
+    void onSetChatNotificationType(ChatNotificationType type) {
+        model.getChatNotificationType().set(type);
     }
 }

@@ -60,6 +60,10 @@ public class FxBindings {
         return new BooleanBiDirPropertyBindings(observer);
     }
 
+    public static <T> ObjectBiDirPropertyBindings<T> bindBiDir(ObjectProperty<T> observer) {
+        return new ObjectBiDirPropertyBindings<>(observer);
+    }
+
     public static StringPropertyBindings bind(StringProperty observer) {
         return new StringPropertyBindings(observer);
     }
@@ -168,6 +172,28 @@ public class FxBindings {
             ChangeListener<Boolean> listener = (o, oldValue, newValue) -> observable.set(newValue);
             observer.addListener(listener);
             Pin pin = observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
+            return () -> {
+                observer.removeListener(listener);
+                pin.unbind();
+            };
+        }
+    }
+
+    public static final class ObjectBiDirPropertyBindings<T> {
+        private final ObjectProperty<T> observer;
+
+        public ObjectBiDirPropertyBindings(ObjectProperty<T> observer) {
+            this.observer = observer;
+        }
+
+        public Pin to(Observable<T> observable) {
+            ChangeListener<T> listener = (o, oldValue, newValue) -> {
+                observable.set(newValue);
+            };
+            observer.addListener(listener);
+            Pin pin = observable.addObserver(e -> UIThread.run(() -> {
+                observer.set(e);
+            }));
             return () -> {
                 observer.removeListener(listener);
                 pin.unbind();

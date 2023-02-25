@@ -46,6 +46,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     public void onActivate() {
         super.onActivate();
 
+        channelSidebar.setSelectedNotificationType(discussionChannelSelectionService.getSelectedChannel().get().getChannelNotificationType().get());
         notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
                 value -> {
                     Channel<? extends ChatMessage> channel = discussionChannelSelectionService.getSelectedChannel().get();

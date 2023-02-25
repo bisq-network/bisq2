@@ -30,6 +30,12 @@ message Cookie {
   repeated CookieMapEntry cookieMapEntries = 1;
 }
 
+enum ChatNotificationType {
+  ALL = 0;
+  MENTION = 1;
+  OFF = 2;
+}
+
 message SettingsStore {
   Cookie cookie = 1;
   map<string, bool> dontShowAgainMap = 2;
@@ -39,4 +45,5 @@ message SettingsStore {
   uint64 requiredTotalReputationScore = 6;
   bool offersOnly = 7;
   bool tradeRulesConfirmed = 8;
+  ChatNotificationType chatNotificationType = 9;
 }

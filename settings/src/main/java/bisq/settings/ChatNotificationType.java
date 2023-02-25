@@ -15,23 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.channel;
+package bisq.settings;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum ChannelNotificationType implements ProtoEnum {
-    GLOBAL_DEFAULT,
+public enum ChatNotificationType implements ProtoEnum {
     ALL,
     MENTION,
     OFF;
 
     @Override
-    public bisq.chat.protobuf.ChannelNotificationType toProto() {
-        return bisq.chat.protobuf.ChannelNotificationType.valueOf(name());
+    public bisq.settings.protobuf.ChatNotificationType toProto() {
+        return bisq.settings.protobuf.ChatNotificationType.valueOf(name());
     }
 
-    public static ChannelNotificationType fromProto(bisq.chat.protobuf.ChannelNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChannelNotificationType.class, proto.name());
+    public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto) {
+        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name());
     }
 }

@@ -44,7 +44,7 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
                 Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
-                ChannelNotificationType.MENTION);
+                ChannelNotificationType.GLOBAL_DEFAULT);
     }
 
     private PublicChannel(ChannelDomain channelDomain,
