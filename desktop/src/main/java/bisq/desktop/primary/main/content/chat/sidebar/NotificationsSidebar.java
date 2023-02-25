@@ -17,12 +17,14 @@
 
 package bisq.desktop.primary.main.content.chat.sidebar;
 
+import bisq.chat.ChatService;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.message.ChatMessage;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -42,20 +44,12 @@ public class NotificationsSidebar {
 
     private final Controller controller;
 
-    public NotificationsSidebar() {
-        controller = new Controller();
+    public NotificationsSidebar(ChatService chatService) {
+        controller = new Controller(chatService);
     }
 
     public void setChannel(Channel<? extends ChatMessage> channel) {
         controller.model.setChannel(channel);
-    }
-
-    public ReadOnlyObjectProperty<ChannelNotificationType> getSelected() {
-        return controller.model.selected;
-    }
-
-    public void setSelected(ChannelNotificationType type) {
-        controller.model.selected.set(type);
     }
 
     public Pane getRoot() {
@@ -66,18 +60,43 @@ public class NotificationsSidebar {
         private final Model model;
         @Getter
         private final View view;
+        private final ChatService chatService;
+        private Pin tradeChannelSelectionPin, discussionChannelSelectionPin, eventsChannelSelectionPin, supportChannelSelectionPin;
+        private Pin notificationTypePin;
 
-        private Controller() {
+        private Controller(ChatService chatService) {
+            this.chatService = chatService;
             model = new Model();
             view = new View(model, this);
         }
 
         @Override
         public void onActivate() {
+            tradeChannelSelectionPin = chatService.getTradeChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            discussionChannelSelectionPin = chatService.getDiscussionChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            eventsChannelSelectionPin = chatService.getEventsChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            supportChannelSelectionPin = chatService.getSupportChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
         }
+
 
         @Override
         public void onDeactivate() {
+            tradeChannelSelectionPin.unbind();
+            discussionChannelSelectionPin.unbind();
+            eventsChannelSelectionPin.unbind();
+            supportChannelSelectionPin.unbind();
+            if (notificationTypePin != null) {
+                notificationTypePin.unbind();
+            }
+        }
+
+        private void onChannelChanged(Channel<? extends ChatMessage> channel) {
+            if (notificationTypePin != null) {
+                notificationTypePin.unbind();
+            }
+            if (channel != null) {
+                notificationTypePin = FxBindings.bindBiDir(model.selected).to(channel.getChannelNotificationType());
+            }
         }
 
         void onSelected(ChannelNotificationType type) {

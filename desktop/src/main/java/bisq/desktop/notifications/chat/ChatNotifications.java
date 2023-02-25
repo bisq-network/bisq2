@@ -19,9 +19,7 @@ package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
 import bisq.chat.channel.*;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.PrivateChatMessage;
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.*;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
@@ -30,6 +28,7 @@ import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.observable.ObservableArray;
 import bisq.common.observable.Pin;
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
@@ -170,22 +169,37 @@ public class ChatNotifications {
             default:
                 return;
         }
-
-        String title;
-        if (chatMessage instanceof PublicTradeChatMessage) {
-            PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
-            if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.isOfferMessage()) {
+        String channelInfo = null;
+        String title = null;
+        if (chatMessage instanceof PrivateTradeChatMessage) {
+            PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
+            if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
+                PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
+                String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
+                title = Res.get("takeOfferMessage");
+                notificationsService.notify(title, msg);
                 return;
             }
-            title = channel.getChannelName();
-        } else {
-            title = Res.get(channel.getChannelDomain().name().toLowerCase() + "."
-                    + channel.getChannelName() + ".name");
         }
 
-        String message = chatNotification.getUserName() + ": "
-                + chatNotification.getMessage();
-        notificationsService.notify(title, message);
+        if (chatMessage instanceof BasePublicChatMessage) {
+            if (chatMessage instanceof PublicTradeChatMessage) {
+                PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.isOfferMessage()) {
+                    return;
+                }
+                PublicTradeChannel publicTradeChannel = (PublicTradeChannel) channel;
+                if (!publicTradeChannelService.isVisible(publicTradeChannel)) {
+                    return;
+                }
+            }
+            channelInfo = channel.getDisplayString();
+        } else {
+            // All PrivateChatMessages excluding PrivateTradeChatMessage
+            channelInfo = Res.get(channel.getChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
+        }
+        title = StringUtils.abbreviate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
+        notificationsService.notify(title, chatNotification.getMessage());
     }
 
     // Failed to use generics for Channel and ChatMessage with FxBindings, 

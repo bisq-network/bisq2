@@ -29,6 +29,7 @@ import "user.proto";
 enum MessageType {
   TEXT = 0;
   LEAVE = 1;
+  TAKE_OFFER = 2;
 }
 
 enum ChannelNotificationType {

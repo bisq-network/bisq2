@@ -25,34 +25,23 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
-    private final PublicChannelService publicEventsChannelService;
     private final ChannelSelectionService eventsChannelSelectionService;
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
     public EventsController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.EVENTS, NavigationTarget.NONE);
 
-        publicEventsChannelService = chatService.getPublicEventsChannelService();
         eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
-
-        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
-                value -> {
-                    Channel<? extends ChatMessage> channel = eventsChannelSelectionService.getSelectedChannel().get();
-                    if (channel != null) {
-                        publicEventsChannelService.setNotificationSetting(channel, value);
-                    }
-                });
 
         selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }

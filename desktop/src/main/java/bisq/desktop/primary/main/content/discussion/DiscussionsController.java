@@ -25,7 +25,6 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
@@ -45,15 +44,6 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     @Override
     public void onActivate() {
         super.onActivate();
-
-        channelSidebar.setSelectedNotificationType(discussionChannelSelectionService.getSelectedChannel().get().getChannelNotificationType().get());
-        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
-                value -> {
-                    Channel<? extends ChatMessage> channel = discussionChannelSelectionService.getSelectedChannel().get();
-                    if (channel != null) {
-                        publicDiscussionChannelService.setNotificationSetting(channel, value);
-                    }
-                });
 
         selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }

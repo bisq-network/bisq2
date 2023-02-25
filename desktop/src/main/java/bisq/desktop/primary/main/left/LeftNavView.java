@@ -110,7 +110,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 createSubmenuNavigationButton(Res.get("academy.foss"), NavigationTarget.FOSS_ACADEMY, learn)
         );
 
-        LeftNavButton chat = createNavigationButton(Res.get("chat"),
+        LeftNavButton chat = createNavigationButton(Res.get("discussion"),
                 "nav-chat",
                 NavigationTarget.DISCUSS, false);
 

@@ -58,6 +58,8 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
                 "db",
                 "Public" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
                 persistableStore);
+
+        this.defaultChannels.forEach(channel -> channel.getChannelNotificationType().addObserver(value -> persist()));
     }
 
 

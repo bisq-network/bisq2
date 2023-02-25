@@ -45,6 +45,7 @@ public class Res {
             if (defaultBundle.containsKey(key)) {
                 return defaultBundle.getString(key);
             } else if (DevMode.isDevMode()) {
+                log.error("Missing resource for key: {}", key);
                 return "MISSING: " + key;
             } else {
                 return "[" + key + "]";

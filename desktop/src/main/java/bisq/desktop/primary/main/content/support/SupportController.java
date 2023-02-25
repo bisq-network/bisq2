@@ -25,34 +25,23 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicSupportChannelSelection;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
 @Slf4j
 public class SupportController extends ChatController<SupportView, SupportModel> implements Controller {
-    private final PublicChannelService publicSupportChannelService;
     private final ChannelSelectionService supportChannelSelectionService;
     private PublicSupportChannelSelection publicSupportChannelSelection;
 
     public SupportController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.SUPPORT, NavigationTarget.NONE);
 
-        publicSupportChannelService = chatService.getPublicSupportChannelService();
         supportChannelSelectionService = chatService.getSupportChannelSelectionService();
     }
 
     @Override
     public void onActivate() {
         super.onActivate();
-
-        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
-                value -> {
-                    Channel<? extends ChatMessage> channel = supportChannelSelectionService.getSelectedChannel().get();
-                    if (channel != null) {
-                        publicSupportChannelService.setNotificationSetting(channel, value);
-                    }
-                });
 
         selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }

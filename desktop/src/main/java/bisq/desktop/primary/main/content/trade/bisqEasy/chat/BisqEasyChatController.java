@@ -24,7 +24,6 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -43,13 +42,11 @@ import bisq.settings.SettingsService;
 import bisq.support.MediationService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 
 @Slf4j
 public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
-    private final PublicTradeChannelService publicTradeChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final SettingsService settingsService;
     private final MediationService mediationService;
@@ -60,7 +57,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
 
-        publicTradeChannelService = chatService.getPublicTradeChannelService();
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
@@ -70,13 +66,6 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public void onActivate() {
         super.onActivate();
 
-        notificationSettingSubscription = EasyBind.subscribe(channelSidebar.getSelectedNotificationType(),
-                value -> {
-                    Channel<? extends ChatMessage> channel = tradeChannelSelectionService.getSelectedChannel().get();
-                    if (channel != null) {
-                        publicTradeChannelService.setNotificationSetting(channel, value);
-                    }
-                });
         selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
     }

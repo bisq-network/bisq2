@@ -158,6 +158,7 @@ public class PublicTradeChannelService extends BasePublicChannelService<PublicTr
 
     private void maybeAddPublicTradeChannel(PublicTradeChannel channel) {
         if (!getChannels().contains(channel)) {
+            channel.getChannelNotificationType().addObserver(value -> persist());
             getChannels().add(channel);
         }
     }
