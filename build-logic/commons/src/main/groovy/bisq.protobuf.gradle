@@ -8,12 +8,18 @@ dependencies {
     implementation libs.protobuf.java
 }
 
-ext {
-    generatedProtoSrcDir = 'build/generated/source/main/java'
-}
+sourceSets {
+    main {
+        java {
+            srcDirs += ['build/generated/source/main/java']
+        }
+    }
 
-sourceSets.main {
-    java.srcDirs += [generatedProtoSrcDir]
+    test {
+        java {
+            srcDirs += ['build/generated/source/test/java']
+        }
+    }
 }
 
 ext {
