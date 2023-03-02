@@ -46,10 +46,15 @@ public class PersistableStoreFileManager {
         }
     }
 
-    public void backupCurrentStoreFile() throws IOException {
+    public void tryToBackupCurrentStoreFile() throws IOException {
         String backupFileName = BACKUP_FILE_PREFIX + storeFilePath.getFileName();
         Path backupFilePath = parentDirectoryPath.resolve(backupFileName);
         File backupFile = backupFilePath.toFile();
+
+        File storeFile = storeFilePath.toFile();
+        if (!storeFile.exists()) {
+            return;
+        }
 
         if (backupFile.exists()) {
             Files.delete(backupFilePath);

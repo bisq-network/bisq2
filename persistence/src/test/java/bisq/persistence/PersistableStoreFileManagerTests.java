@@ -52,7 +52,7 @@ public class PersistableStoreFileManagerTests {
         createEmptyFile(storePath);
 
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        storeFileManager.backupCurrentStoreFile();
+        storeFileManager.tryToBackupCurrentStoreFile();
 
         Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
         assertThat(backupFilePath).exists();
@@ -68,8 +68,21 @@ public class PersistableStoreFileManagerTests {
         boolean isSuccess = backupFilePath.toFile().createNewFile();
         assertThat(isSuccess).isTrue();
 
-        storeFileManager.backupCurrentStoreFile();
+        storeFileManager.tryToBackupCurrentStoreFile();
         assertThat(backupFilePath).exists();
+    }
+
+    @Test
+    void backupNotExistingStore(@TempDir Path tempDir) throws IOException {
+        Path storePath = tempDir.resolve("store");
+        var storeFileManager = new PersistableStoreFileManager(storePath);
+
+        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        createEmptyFile(backupFilePath);
+
+        storeFileManager.tryToBackupCurrentStoreFile();
+        assertThat(backupFilePath).exists();
+        assertThat(storePath).doesNotExist();
     }
 
     @Test
