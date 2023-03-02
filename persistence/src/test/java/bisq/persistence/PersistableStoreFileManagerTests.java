@@ -147,7 +147,7 @@ public class PersistableStoreFileManagerTests {
         assertThrows(NoSuchFileException.class, storeFileManager::renameTempFileToCurrentFile);
     }
 
-    private void createEmptyFile(Path path) throws IOException {
+    public static void createEmptyFile(Path path) throws IOException {
         boolean isSuccess = path.toFile().createNewFile();
         assertThat(isSuccess).isTrue();
     }
