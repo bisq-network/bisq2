@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PersistableStoreFileManagerTests {
     @Test
-    void createParentDirIfExisting(@TempDir Path tempDir) throws IOException {
+    void createParentDirIfExisting(@TempDir Path tempDir) {
         Path storePath = tempDir.resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 
@@ -38,7 +38,7 @@ public class PersistableStoreFileManagerTests {
     }
 
     @Test
-    void createParentDirIfNotExisting(@TempDir Path tempDir) throws IOException {
+    void createParentDirIfNotExisting(@TempDir Path tempDir) {
         Path storePath = tempDir.resolve("parent_dir").resolve("store");
         var storeFileManager = new PersistableStoreFileManager(storePath);
 

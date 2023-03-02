@@ -36,12 +36,12 @@ public class PersistableStoreFileManager {
         this.parentDirectoryPath = storeFilePath.getParent();
     }
 
-    public void createParentDirectoriesIfNotExisting() throws IOException {
-        File parentDir = storeFilePath.getParent().toFile();
+    public void createParentDirectoriesIfNotExisting() {
+        File parentDir = parentDirectoryPath.toFile();
         if (!parentDir.exists()) {
             boolean isSuccess = parentDir.mkdirs();
             if (!isSuccess) {
-                throw new IOException("Couldn't create " + parentDir);
+                throw new CouldNotCreateParentDirs("Couldn't create " + parentDir);
             }
         }
     }
