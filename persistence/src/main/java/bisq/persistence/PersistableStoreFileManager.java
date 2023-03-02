@@ -64,7 +64,7 @@ public class PersistableStoreFileManager {
     public void renameTempFileToCurrentFile() throws IOException {
         File storeFile = storeFilePath.toFile();
         if (storeFile.exists()) {
-            throw new PersistableStoreFileBackupFailed();
+            throw new IOException(storeFilePath + " does already exist.");
         }
 
         String tempFileName = TEMP_FILE_PREFIX + storeFilePath.getFileName();
