@@ -41,7 +41,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         this.parentDirectoryPath = storeFilePath.getParent();
     }
 
-    public Optional<T> read() {
+    public synchronized Optional<T> read() {
         File storeFile = storeFilePath.toFile();
         if (!storeFile.exists()) {
             return Optional.empty();
@@ -60,7 +60,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
         return Optional.empty();
     }
 
-    public void write(T persistableStore) {
+    public synchronized void write(T persistableStore) {
         storeFileManager.createParentDirectoriesIfNotExisting();
 
         try {
