@@ -95,7 +95,7 @@ public class PersistableStoreFileManagerTests {
         createEmptyFile(storePath);
 
         var storeFileManager = new PersistableStoreFileManager(storePath);
-        assertThrows(PersistableStoreFileBackupFailed.class, storeFileManager::renameTempFileToCurrentFile);
+        assertThrows(IOException.class, storeFileManager::renameTempFileToCurrentFile);
     }
 
     @Test
