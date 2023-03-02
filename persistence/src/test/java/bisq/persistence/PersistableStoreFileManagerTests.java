@@ -86,6 +86,35 @@ public class PersistableStoreFileManagerTests {
     }
 
     @Test
+    void restoreBackupIfCurrentFileNotExisting(@TempDir Path tempDir) throws IOException {
+        Path storePath = tempDir.resolve("store");
+        var storeFileManager = new PersistableStoreFileManager(storePath);
+
+        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        boolean isSuccess = backupFilePath.toFile().createNewFile();
+        assertThat(isSuccess).isTrue();
+
+        storeFileManager.restoreBackupFileIfCurrentFileNotExisting();
+        assertThat(storePath).exists();
+        assertThat(backupFilePath).doesNotExist();
+    }
+
+    @Test
+    void restoreBackupIfCurrentFileExists(@TempDir Path tempDir) throws IOException {
+        Path storePath = tempDir.resolve("store");
+        createEmptyFile(storePath);
+        var storeFileManager = new PersistableStoreFileManager(storePath);
+
+        Path backupFilePath = tempDir.resolve(PersistableStoreFileManager.BACKUP_FILE_PREFIX + "store");
+        boolean isSuccess = backupFilePath.toFile().createNewFile();
+        assertThat(isSuccess).isTrue();
+
+        storeFileManager.restoreBackupFileIfCurrentFileNotExisting();
+        assertThat(storePath).exists();
+        assertThat(backupFilePath).exists();
+    }
+
+    @Test
     void renameTempFileToCurrentFileIfCurrentNotExisting(@TempDir Path tempDir) throws IOException {
         Path tmpFilePath = tempDir.resolve(PersistableStoreFileManager.TEMP_FILE_PREFIX + "store");
         createEmptyFile(tmpFilePath);

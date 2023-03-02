@@ -17,23 +17,33 @@
 
 package bisq.persistence;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 
+@Slf4j
 public class PersistableStoreFileManager {
 
     public static final String BACKUP_FILE_PREFIX = "backup_";
     public static final String TEMP_FILE_PREFIX = "temp_";
 
+    @Getter
     private final Path storeFilePath;
     private final Path parentDirectoryPath;
+
+    private final Path backupFilePath;
+    private final Path tempFilePath;
 
     public PersistableStoreFileManager(Path storeFilePath) {
         this.storeFilePath = storeFilePath;
         this.parentDirectoryPath = storeFilePath.getParent();
+        this.backupFilePath = createBackupFilePath();
+        this.tempFilePath = createTempFilePath();
     }
 
     public void createParentDirectoriesIfNotExisting() {
@@ -47,15 +57,12 @@ public class PersistableStoreFileManager {
     }
 
     public void tryToBackupCurrentStoreFile() throws IOException {
-        String backupFileName = BACKUP_FILE_PREFIX + storeFilePath.getFileName();
-        Path backupFilePath = parentDirectoryPath.resolve(backupFileName);
-        File backupFile = backupFilePath.toFile();
-
         File storeFile = storeFilePath.toFile();
         if (!storeFile.exists()) {
             return;
         }
 
+        File backupFile = backupFilePath.toFile();
         if (backupFile.exists()) {
             Files.delete(backupFilePath);
         }
@@ -66,15 +73,25 @@ public class PersistableStoreFileManager {
         }
     }
 
+    public void restoreBackupFileIfCurrentFileNotExisting() {
+        File storeFile = storeFilePath.toFile();
+        if (!storeFile.exists()) {
+            File backupFile = backupFilePath.toFile();
+            boolean isSuccess = backupFile.renameTo(storeFile);
+
+            if (!isSuccess) {
+                log.error("Couldn't rename " + backupFile + " to " + storeFilePath);
+            }
+        }
+    }
+
     public void renameTempFileToCurrentFile() throws IOException {
         File storeFile = storeFilePath.toFile();
         if (storeFile.exists()) {
             throw new IOException(storeFilePath + " does already exist.");
         }
 
-        String tempFileName = TEMP_FILE_PREFIX + storeFilePath.getFileName();
-        File tempFile = parentDirectoryPath.resolve(tempFileName).toFile();
-
+        File tempFile = tempFilePath.toFile();
         if (!tempFile.exists()) {
             throw new NoSuchFileException(tempFile.getAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
@@ -83,5 +100,15 @@ public class PersistableStoreFileManager {
         if (!isSuccess) {
             throw new IOException("Couldn't rename " + tempFile + " to " + storeFilePath);
         }
+    }
+
+    private Path createBackupFilePath() {
+        String backupFileName = BACKUP_FILE_PREFIX + storeFilePath.getFileName();
+        return parentDirectoryPath.resolve(backupFileName);
+    }
+
+    private Path createTempFilePath() {
+        String tempFileName = TEMP_FILE_PREFIX + storeFilePath.getFileName();
+        return parentDirectoryPath.resolve(tempFileName);
     }
 }
