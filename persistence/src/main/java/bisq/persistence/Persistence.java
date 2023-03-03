@@ -26,7 +26,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -37,8 +36,6 @@ public class Persistence<T extends PersistableStore<T>> {
     private final String fileName;
     @Getter
     private final String storagePath;
-    private final Object lock = new Object();
-    private final AtomicReference<T> candidateToPersist = new AtomicReference<>();
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
@@ -60,12 +57,9 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
-        synchronized (lock) {
-            candidateToPersist.set(serializable);
-        }
         return CompletableFuture.runAsync(() -> {
             Thread.currentThread().setName("Persistence.persist-" + fileName);
-            persist(candidateToPersist.get());
+            persist(serializable);
         }, PERSISTENCE_IO_POOL);
     }
 
