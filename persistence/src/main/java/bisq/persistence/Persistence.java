@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class Persistence<T extends PersistableStore<T>> {
-    public static final ExecutorService PERSISTENCE_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence-io-pool");
+    private static final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("Persistence-io-pool");
 
     @Getter
     private final Path storePath;
@@ -47,14 +47,14 @@ public class Persistence<T extends PersistableStore<T>> {
     }
 
     public CompletableFuture<Optional<T>> readAsync() {
-        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, PERSISTENCE_IO_POOL);
+        return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, executorService);
     }
 
     public CompletableFuture<Void> persistAsync(T serializable) {
         return CompletableFuture.runAsync(() -> {
             Thread.currentThread().setName("Persistence.persist-" + storePath);
             persist(serializable);
-        }, PERSISTENCE_IO_POOL);
+        }, executorService);
     }
 
     protected void persist(T persistableStore) {
