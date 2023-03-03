@@ -57,7 +57,7 @@ public class Persistence<T extends PersistableStore<T>> {
         }, PERSISTENCE_IO_POOL);
     }
 
-    public void persist(T persistableStore) {
+    protected void persist(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
     }
 }
