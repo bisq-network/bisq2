@@ -59,18 +59,17 @@ public class Persistence<T extends PersistableStore<T>> {
         return CompletableFuture.supplyAsync(persistableStoreReaderWriter::read, PERSISTENCE_IO_POOL);
     }
 
-    public CompletableFuture<Boolean> persistAsync(T serializable) {
+    public CompletableFuture<Void> persistAsync(T serializable) {
         synchronized (lock) {
             candidateToPersist.set(serializable);
         }
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             Thread.currentThread().setName("Persistence.persist-" + fileName);
-            return persist(candidateToPersist.get());
+            persist(candidateToPersist.get());
         }, PERSISTENCE_IO_POOL);
     }
 
-    public boolean persist(T persistableStore) {
+    public void persist(T persistableStore) {
         persistableStoreReaderWriter.write(persistableStore);
-        return true;
     }
 }
