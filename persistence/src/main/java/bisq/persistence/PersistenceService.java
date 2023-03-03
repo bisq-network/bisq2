@@ -65,7 +65,8 @@ public class PersistenceService {
         return CompletableFutureUtils.allOf(clients.stream()
                         .map(persistenceClient -> persistenceClient.readPersisted()
                                 .whenComplete((optionalResult, throwable) -> {
-                                    String storagePath = persistenceClient.getPersistence().getStoragePath();
+                                    String storagePath = persistenceClient.getPersistence().getStorePath()
+                                            .toAbsolutePath().toString();
                                     if (throwable == null) {
                                         if (optionalResult.isPresent()) {
                                             log.info("Read persisted data from {}", storagePath);

@@ -21,7 +21,6 @@ import bisq.common.threading.ExecutorFactory;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -33,17 +32,12 @@ public class Persistence<T extends PersistableStore<T>> {
     public static final ExecutorService PERSISTENCE_IO_POOL = ExecutorFactory.newFixedThreadPool("Persistence-io-pool");
 
     @Getter
-    private final String fileName;
-    @Getter
-    private final String storagePath;
+    private final Path storePath;
 
     private final PersistableStoreReaderWriter<T> persistableStoreReaderWriter;
 
     public Persistence(String directory, String fileName) {
-        this.fileName = fileName;
-        storagePath = directory + File.separator + fileName;
-
-        Path storePath = Path.of(directory, fileName);
+        storePath = Path.of(directory, fileName);
         var storeFileManager = new PersistableStoreFileManager(storePath);
         persistableStoreReaderWriter = new PersistableStoreReaderWriter<>(storeFileManager);
     }
@@ -58,7 +52,7 @@ public class Persistence<T extends PersistableStore<T>> {
 
     public CompletableFuture<Void> persistAsync(T serializable) {
         return CompletableFuture.runAsync(() -> {
-            Thread.currentThread().setName("Persistence.persist-" + fileName);
+            Thread.currentThread().setName("Persistence.persist-" + storePath);
             persist(serializable);
         }, PERSISTENCE_IO_POOL);
     }

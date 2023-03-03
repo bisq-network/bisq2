@@ -39,7 +39,7 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
 
     public RateLimitedPersistenceClient() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("RateLimitedPersistenceClient-shutdownHook-" + getPersistence().getFileName());
+            Thread.currentThread().setName("RateLimitedPersistenceClient-shutdownHook-" + getPersistence().getStorePath());
             persistOnShutdown();
         }));
     }
