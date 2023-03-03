@@ -54,7 +54,12 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
             lastWrite = System.currentTimeMillis();
             writeInProgress = true;
             dropped = false;
-            return getPersistence().persistAsync(getPersistableStore().getClone()).whenComplete((r, t) -> writeInProgress = false);
+            return getPersistence()
+                    .persistAsync(getPersistableStore().getClone())
+                    .handle((r, t) -> {
+                        writeInProgress = false;
+                        return true;
+                    });
         }
     }
 
