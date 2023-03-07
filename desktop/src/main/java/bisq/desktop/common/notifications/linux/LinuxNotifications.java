@@ -33,12 +33,11 @@ public class LinuxNotifications implements NotificationsDelegate {
 
     @Override
     public void notify(String title, String message) {
-        List<String> command = new ArrayList<String>();
+        List<String> command = new ArrayList<>();
         command.add("notify-send");
 
-        // todo add icon support
-        //command.add("-i");
-        //command.add("...");
+        command.add("-i");
+        command.add(System.getProperty("java.home") + "/../Bisq_2.png");
 
         command.add("--app-name");
         command.add("Bisq");
@@ -46,7 +45,7 @@ public class LinuxNotifications implements NotificationsDelegate {
         command.add(title);
         command.add(message);
         try {
-            Runtime.getRuntime().exec(command.toArray(new String[command.size()]));
+            Runtime.getRuntime().exec(command.toArray(new String[0]));
         } catch (IOException e) {
             throw new RuntimeException("Unable to notify with Notify OSD", e);
         }
