@@ -43,6 +43,7 @@ junit-jupiter-lib = { strictly = '5.8.2' }
 kotlindsl-plugin = { strictly = '2.1.7' }
 logback-lib = { strictly = '1.2.11' }
 lombok-lib = { strictly = '1.18.22' }
+mockito-lib = { strictly = '4.11.0' }
 openjfx-plugin = { strictly = '0.0.12' }
 
 protobuf-java-lib = { strictly = '3.19.4' }
@@ -116,6 +117,8 @@ junit-jupiter = { module = 'org.junit.jupiter:junit-jupiter', version.ref = 'jun
 logback-core = { module = 'ch.qos.logback:logback-core', version.ref = 'logback-lib' }
 logback-classic = { module = 'ch.qos.logback:logback-classic', version.ref = 'logback-lib' }
 lombok = { module = 'org.projectlombok:lombok', version.ref = 'lombok-lib' }
+
+mockito = { module = 'org.mockito:mockito-core', version.ref = 'mockito-lib' }
 
 protobuf-java = { module = 'com.google.protobuf:protobuf-java', version.ref = 'protobuf-java-lib' }
 protobuf-gradle-plugin = { module = 'gradle.plugin.com.google.protobuf:protobuf-gradle-plugin', version.ref = 'protobuf-gradle-plugin-lib' }
