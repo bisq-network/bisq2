@@ -72,6 +72,16 @@ public class ExecutorFactory {
         return executorService;
     }
 
+    public static ExecutorService newCachedThreadPool(String name, int maxPoolSize, long keepAliveInSeconds) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(getNameWithThreadNum(name))
+                .build();
+        ExecutorService executorService = Executors.newCachedThreadPool(threadFactory);
+        ((ThreadPoolExecutor) executorService).setKeepAliveTime(keepAliveInSeconds, TimeUnit.SECONDS);
+        ((ThreadPoolExecutor) executorService).setMaximumPoolSize(maxPoolSize);
+        return executorService;
+    }
+
     /**
      * Used when queuing is desired.
      */
