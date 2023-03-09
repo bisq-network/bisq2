@@ -38,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -59,6 +60,7 @@ public class DaoBridgeHttpService implements Service {
         }
     }
 
+    private final ExecutorService executorService = ExecutorFactory.newCachedThreadPool("dao-bridge-http-thread", 4, 60);
     private final AtomicInteger lastRequestedProofOfBurnBlockHeight = new AtomicInteger(0);
     private final AtomicInteger lastRequestedBondedReputationBlockHeight = new AtomicInteger(0);
     private final NetworkService networkService;
@@ -89,6 +91,7 @@ public class DaoBridgeHttpService implements Service {
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        executorService.shutdownNow();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -107,7 +110,7 @@ public class DaoBridgeHttpService implements Service {
                         e.printStackTrace();
                         return new ArrayList<ProofOfBurnDto>();
                     }
-                }, ExecutorFactory.newSingleThreadExecutor("Request-proof-of-burn-thread"))
+                }, executorService)
                 .whenComplete((list, throwable) -> {
                     if (throwable == null && !list.isEmpty()) {
                         lastRequestedProofOfBurnBlockHeight.set(list.stream()
@@ -133,7 +136,7 @@ public class DaoBridgeHttpService implements Service {
                         e.printStackTrace();
                         return new ArrayList<BondedReputationDto>();
                     }
-                }, ExecutorFactory.newSingleThreadExecutor("Request-bonded-reputation-thread"))
+                }, executorService)
                 .whenComplete((list, throwable) -> {
                     if (throwable == null && !list.isEmpty()) {
                         lastRequestedBondedReputationBlockHeight.set(list.stream()
@@ -159,7 +162,7 @@ public class DaoBridgeHttpService implements Service {
                 e.printStackTrace();
                 return Optional.empty();
             }
-        }, ExecutorFactory.newSingleThreadExecutor("Request-account-age-thread"));
+        }, executorService);
     }
 
     public CompletableFuture<Optional<Long>> requestSignedWitnessDate(String hashAsHex) {
@@ -177,6 +180,6 @@ public class DaoBridgeHttpService implements Service {
                 e.printStackTrace();
                 return Optional.empty();
             }
-        }, ExecutorFactory.newSingleThreadExecutor("Request-signed-witness-thread"));
+        }, executorService);
     }
 }
