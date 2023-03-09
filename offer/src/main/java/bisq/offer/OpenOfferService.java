@@ -51,7 +51,6 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 
 @Slf4j
 public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
-    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("OpenOfferService.dispatcher");
 
     public interface Listener {
         void onOpenOfferAdded(OpenOffer openOffer);
@@ -61,6 +60,7 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
 
     private final NetworkService networkService;
     private final IdentityService identityService;
+    private final ExecutorService executorService = ExecutorFactory.newSingleThreadExecutor("OpenOfferService.dispatcher");
     @Getter
     private final OpenOfferStore persistableStore = new OpenOfferStore();
     @Getter
@@ -85,7 +85,11 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
     public CompletableFuture<List<BroadCastDataResult>> shutdown() {
         log.info("shutdown");
         return CompletableFutureUtils.allOf(getOpenOffers().stream()
-                .map(openOffer -> removeFromNetwork(openOffer.getOffer())));
+                .map(openOffer -> removeFromNetwork(openOffer.getOffer())))
+                .thenApply(removeOfferBroadCastDataResults -> {
+                    executorService.shutdownNow();
+                    return removeOfferBroadCastDataResults;
+                });
     }
 
     public ObservableSet<OpenOffer> getOpenOffers() {
@@ -95,14 +99,14 @@ public class OpenOfferService implements PersistenceClient<OpenOfferStore> {
     public void add(Offer offer) {
         OpenOffer openOffer = new OpenOffer(offer);
         persistableStore.add(openOffer);
-        runAsync(() -> listeners.forEach(l -> l.onOpenOfferAdded(openOffer)), DISPATCHER);
+        runAsync(() -> listeners.forEach(l -> l.onOpenOfferAdded(openOffer)), executorService);
         persist();
     }
 
     public void remove(Offer offer) {
         OpenOffer openOffer = new OpenOffer(offer);
         persistableStore.remove(openOffer);
-        runAsync(() -> listeners.forEach(l -> l.onOpenOfferRemoved(openOffer)), DISPATCHER);
+        runAsync(() -> listeners.forEach(l -> l.onOpenOfferRemoved(openOffer)), executorService);
         persist();
     }
 
