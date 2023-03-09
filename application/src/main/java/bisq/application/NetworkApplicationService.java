@@ -17,7 +17,6 @@
 
 package bisq.application;
 
-import bisq.common.threading.ExecutorFactory;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.security.SecurityService;
@@ -75,7 +74,6 @@ public class NetworkApplicationService extends ApplicationService {
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
-                        .join(),
-                ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+                        .join());
     }
 }

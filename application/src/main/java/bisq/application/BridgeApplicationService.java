@@ -17,7 +17,6 @@
 
 package bisq.application;
 
-import bisq.common.threading.ExecutorFactory;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
@@ -102,7 +101,6 @@ public class BridgeApplicationService extends ApplicationService {
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(2, TimeUnit.MINUTES)
                         .handle((result, throwable) -> throwable == null)
-                        .join(),
-                ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+                        .join());
     }
 }

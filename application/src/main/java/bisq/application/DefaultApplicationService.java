@@ -21,7 +21,6 @@ import bisq.account.AccountService;
 import bisq.chat.ChatService;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
-import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -43,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -58,7 +56,6 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Getter
 @Slf4j
 public class DefaultApplicationService extends ApplicationService {
-    public static final ExecutorService DISPATCHER = ExecutorFactory.newSingleThreadExecutor("DefaultApplicationService.dispatcher");
 
     public enum State {
         INITIALIZE_APP,
@@ -213,8 +210,7 @@ public class DefaultApplicationService extends ApplicationService {
                         .thenCompose(result -> securityService.shutdown())
                         .orTimeout(10, TimeUnit.SECONDS)
                         .handle((result, throwable) -> throwable == null)
-                        .join(),
-                ExecutorFactory.newSingleThreadExecutor("Shutdown"));
+                        .join());
     }
 
     public KeyPairService getKeyPairService() {
