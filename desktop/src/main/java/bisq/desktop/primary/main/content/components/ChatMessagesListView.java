@@ -30,6 +30,7 @@ import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.chat.trade.pub.TradeChatOffer;
 import bisq.common.monetary.Coin;
+import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -374,8 +375,11 @@ public class ChatMessagesListView {
                                 peersUserProfile.getPubKeyHash(),
                                 text));
                         String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
-                        String amount = AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
-                                tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+                        String amount = (tradeChatOffer.getMarket().isFiat() ?
+                                AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
+                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true) :
+                                AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
+                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true));
                         String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
                         String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
                                 direction, amount, methods);
