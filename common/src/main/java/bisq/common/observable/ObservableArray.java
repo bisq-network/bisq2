@@ -28,7 +28,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
-    public interface Observer<M, L> {
+    public interface Observer<M> {
         void add(M element);
 
         void addAll(Collection<? extends M> values);
@@ -42,7 +42,7 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
 
     @EqualsAndHashCode
     @ToString
-    private static final class ChangeListener<M, L> implements Observer<M, L> {
+    private static final class ChangeListener<M> implements Observer<M> {
         private final Runnable handler;
 
         public ChangeListener(Runnable handler) {
@@ -77,7 +77,7 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
 
     @EqualsAndHashCode
     @ToString
-    private static final class ObservableListMapper<M, L> implements Observer<M, L> {
+    private static final class ObservableListMapper<M, L> implements Observer<M> {
         private final Collection<L> collection;
         private final Function<M, L> mapFunction;
         private final Consumer<Runnable> executor;
@@ -126,7 +126,7 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
     }
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private final List<Observer<T, ?>> observableListMappers = new CopyOnWriteArrayList<>();
+    private final List<Observer<T>> observableListMappers = new CopyOnWriteArrayList<>();
 
     public ObservableArray() {
     }
@@ -135,12 +135,12 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
         addAll(values);
     }
 
-    private List<Observer<T, ?>> getObservers() {
+    private List<Observer<T>> getObservers() {
         return observableListMappers;
     }
 
-    public <L> Pin addChangedListener(Runnable handler) {
-        ChangeListener<T, L> changedListener = new ChangeListener<>(handler);
+    public Pin addChangedListener(Runnable handler) {
+        ChangeListener<T> changedListener = new ChangeListener<>(handler);
         getObservers().add(changedListener);
         handler.run();
         return () -> getObservers().remove(changedListener);
@@ -156,11 +156,9 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
 
     @Override
     public boolean add(T element) {
-        boolean result = super.add(element);
-        if (result) {
-            getObservers().forEach(observer -> observer.add(element));
-        }
-        return result;
+        super.add(element);
+        getObservers().forEach(observer -> observer.add(element));
+        return true;
     }
 
     public boolean addAll(Collection<? extends T> values) {
