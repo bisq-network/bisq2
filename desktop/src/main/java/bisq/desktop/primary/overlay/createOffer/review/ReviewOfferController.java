@@ -27,7 +27,7 @@ import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.chat.trade.pub.TradeChatOffer;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;

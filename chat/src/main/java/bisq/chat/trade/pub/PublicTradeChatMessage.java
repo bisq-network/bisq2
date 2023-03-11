@@ -22,6 +22,7 @@ import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
