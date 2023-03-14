@@ -509,7 +509,7 @@ public class ChatMessagesListView {
                 boolean offerOnlyPredicate = true;
                 if (item.getChatMessage() instanceof PublicTradeChatMessage) {
                     PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
-                    offerOnlyPredicate = !offerOnly || publicTradeChatMessage.isOfferMessage();
+                    offerOnlyPredicate = !offerOnly || publicTradeChatMessage.hasTradeChatOffer();
                 }
                 return offerOnlyPredicate &&
                         item.getSenderUserProfile().isPresent() &&
@@ -556,7 +556,7 @@ public class ChatMessagesListView {
 
         boolean isOfferMessage(ChatMessage chatMessage) {
             return chatMessage instanceof PublicTradeChatMessage &&
-                    ((PublicTradeChatMessage) chatMessage).isOfferMessage();
+                    ((PublicTradeChatMessage) chatMessage).hasTradeChatOffer();
         }
     }
 

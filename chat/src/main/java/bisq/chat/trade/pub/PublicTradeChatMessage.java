@@ -23,6 +23,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChatOffer;
+import bisq.chat.trade.TradeChatOfferMessage;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -36,7 +37,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends BasePublicChatMessage {
+public final class PublicTradeChatMessage extends BasePublicChatMessage implements TradeChatOfferMessage {
     private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PublicTradeChatMessage(String channelName,
@@ -123,7 +124,8 @@ public final class PublicTradeChatMessage extends BasePublicChatMessage {
         return metaData;
     }
 
-    public boolean isOfferMessage() {
+    @Override
+    public boolean hasTradeChatOffer() {
         return tradeChatOffer.isPresent();
     }
 }
