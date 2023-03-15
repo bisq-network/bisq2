@@ -98,6 +98,10 @@ public class ChatMessagesComponent {
         controller.createAndSelectPrivateChannel(peer);
     }
 
+    public ChannelDomain getChannelDomain() {
+        return controller.model.getChannelDomain();
+    }
+
     public void refreshMessages() {
         controller.chatMessagesListView.refreshMessages();
     }

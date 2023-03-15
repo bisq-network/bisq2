@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
+import bisq.chat.channel.ChannelDomain;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -73,6 +74,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
     public void setIgnoreUserStateHandler(Runnable handler) {
         controller.model.ignoreUserStateHandler = Optional.ofNullable(handler);
+    }
+
+    public void setChannelDomain(ChannelDomain channelDomain) {
+        controller.model.isTradeChannel.set(channelDomain == ChannelDomain.TRADE);
     }
 
     @Override
@@ -175,6 +180,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
+        private final BooleanProperty isTradeChannel = new SimpleBooleanProperty();
 
         private Model(ChatService chatService, UserProfile userProfile) {
             this.chatService = chatService;
@@ -231,6 +237,8 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             VBox.setMargin(nym, new Insets(0, 0, 25, 0));
 
             privateMsgButton = new Button(Res.get("social.sendPrivateMessage"));
+            privateMsgButton.disableProperty().bind(model.isTradeChannel);
+
             VBox.setMargin(privateMsgButton, new Insets(0, 0, 13, 0));
 
             statementBox = getInfoBox(Res.get("social.chatUser.statement"), false);

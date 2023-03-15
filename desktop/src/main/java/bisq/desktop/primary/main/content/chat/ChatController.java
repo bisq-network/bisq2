@@ -116,6 +116,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
             model.setChatUserDetails(Optional.of(userProfileSidebar));
             model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
+            userProfileSidebar.setChannelDomain(chatMessagesComponent.getChannelDomain());
         });
 
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
