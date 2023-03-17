@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.notifications;
 
+import bisq.common.util.OperatingSystem;
 import bisq.common.util.OsUtils;
 import bisq.desktop.common.notifications.linux.LinuxNotifications;
 import bisq.desktop.common.notifications.osx.OsxNotifications;
@@ -48,20 +49,16 @@ public class Notifications {
     private final NotificationsDelegate delegate;
 
     private Notifications() {
-        switch (OsUtils.getOperatingSystem()) {
-            case LINUX:
-                if (LinuxNotifications.isSupported()) {
-                    delegate = new LinuxNotifications();
-                    break;
-                }
-            case MAC:
-                if (OsxNotifications.isSupported()) {
-                    delegate = new OsxNotifications();
-                    break;
-                }
-            case WIN:
-            default:
-                delegate = new AwtNotifications();
+        if (OsUtils.getOperatingSystem() == OperatingSystem.LINUX &&
+                LinuxNotifications.isSupported()) {
+            delegate = new LinuxNotifications();
+            return;
         }
+        if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
+                OsxNotifications.isSupported()) {
+            delegate = new OsxNotifications();
+            return;
+        }
+        delegate = new AwtNotifications();
     }
 }

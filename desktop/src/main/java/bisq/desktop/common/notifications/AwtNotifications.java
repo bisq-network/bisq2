@@ -36,6 +36,8 @@ public class AwtNotifications implements NotificationsDelegate {
             // With MessageType.NONE the line for the application (would be likely Bisq.exe in binary) 
             // should not be displayed on windows
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.NONE);
+            // Trayicon does not remove itself in all cases for Linux
+            trayIcon.addActionListener(l -> systemTray.remove(trayIcon));
         } catch (AWTException e) {
             throw new RuntimeException(e);
         }
