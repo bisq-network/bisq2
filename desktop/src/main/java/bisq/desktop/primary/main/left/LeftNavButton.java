@@ -35,10 +35,13 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import javax.annotation.Nullable;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -63,21 +66,25 @@ class LeftNavButton extends Pane implements Toggle {
     @Nullable
     protected final ImageView iconHover;
     @Nullable
-    private Node arrowDownIcon;
+    private Node expandIcon, collapseIcon;
+    @Nullable
+    private VBox expandCollapseIcon;
 
     @Getter
-    private BooleanProperty wasSelected = new SimpleBooleanProperty();
+    private final BooleanProperty isSubMenuExpanded = new SimpleBooleanProperty();
 
     LeftNavButton(String title,
                   @Nullable String iconId,
                   ToggleGroup toggleGroup,
                   NavigationTarget navigationTarget,
-                  boolean hasSubmenu) {
+                  boolean hasSubmenu,
+                  Consumer<NavigationTarget> expandCollapse) {
         this.icon = iconId != null ? ImageUtil.getImageViewById(iconId) : null;
         this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
         this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
         this.navigationTarget = navigationTarget;
         this.hasSubmenu = hasSubmenu;
+        isSubMenuExpanded.set(false);
 
         setMinHeight(calculateHeight());
         setMaxHeight(calculateHeight());
@@ -104,13 +111,38 @@ class LeftNavButton extends Pane implements Toggle {
         getChildren().add(label);
 
         if (hasSubmenu) {
-            arrowDownIcon = BisqIconButton.createIconButton("nav-arrow-down");
-            arrowDownIcon.setOpacity(0.4);
+            expandIcon = BisqIconButton.createIconButton("nav-arrow-right");
+            collapseIcon = BisqIconButton.createIconButton("nav-arrow-down");
+            expandIcon.setOnMouseClicked(e -> {
+                getIsSubMenuExpanded().set(true);
+                if (expandCollapse != null) {
+                    expandCollapse.accept(this.navigationTarget);
+                }
+            });
+            collapseIcon.setOnMouseClicked(e -> {
+                getIsSubMenuExpanded().set(false);
+                if (expandCollapse != null) {
+                    expandCollapse.accept(this.navigationTarget);
+                }
+            });
 
-            arrowDownIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
-            arrowDownIcon.setLayoutY(10);
+            expandCollapseIcon = new VBox();
+            expandCollapseIcon.setOpacity(0.4);
 
-            getChildren().addAll(arrowDownIcon);
+            expandCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
+            expandCollapseIcon.setLayoutY(10);
+            expandCollapseIcon.getChildren().setAll(expandIcon);
+
+            getChildren().addAll(expandCollapseIcon);
+
+            EasyBind.subscribe(getIsSubMenuExpanded(), isExpanded -> {
+                assert expandCollapseIcon != null;
+                if (isExpanded) {
+                    expandCollapseIcon.getChildren().setAll(collapseIcon);
+                } else {
+                    expandCollapseIcon.getChildren().setAll(expandIcon);
+                }
+            });
         }
 
         applyStyle();
@@ -147,12 +179,12 @@ class LeftNavButton extends Pane implements Toggle {
             label.setManaged(true);
             Transitions.fadeIn(label, duration);
             if (hasSubmenu) {
-                Transitions.fadeIn(arrowDownIcon, 3 * duration, 0.4, null);
+                Transitions.fadeIn(expandCollapseIcon, 3 * duration, 0.4, null);
             }
         } else {
             Tooltip.install(this, tooltip);
             if (hasSubmenu) {
-                Transitions.fadeOut(arrowDownIcon, duration / 2);
+                Transitions.fadeOut(expandCollapseIcon, duration / 2);
             }
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);
@@ -208,6 +240,7 @@ class LeftNavButton extends Pane implements Toggle {
     public void setHighlighted(boolean highlighted) {
         highlightedProperty.set(highlighted);
         applyStyle();
-        arrowDownIcon.setOpacity(highlighted ? 1 : 0.4);
+        assert expandCollapseIcon != null;
+        expandCollapseIcon.setOpacity(highlighted ? 1 : 0.4);
     }
 }
