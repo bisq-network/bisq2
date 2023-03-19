@@ -374,7 +374,7 @@ public class ChatMessagesListView {
                                 peersUserProfile.getNickName(),
                                 peersUserProfile.getPubKeyHash(),
                                 text));
-                        String direction = Res.get(tradeChatOffer.getDirection().name().toLowerCase()).toUpperCase();
+                        String takerDirection = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
                         String amount = (tradeChatOffer.getMarket().isFiat() ?
                                 AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
                                         tradeChatOffer.getMarket().getQuoteCurrencyCode()), true) :
@@ -382,7 +382,7 @@ public class ChatMessagesListView {
                                         tradeChatOffer.getMarket().getQuoteCurrencyCode()), true));
                         String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
                         String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
-                                direction, amount, methods);
+                                takerDirection, amount, methods);
                         privateTradeChannelService.sendPrivateChatMessage(replyText,
                                         quotation,
                                         privateTradeChannel)
