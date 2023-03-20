@@ -27,6 +27,7 @@ import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -112,7 +113,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
-                    channel -> {
+                    channel -> UIThread.runOnNextRenderFrame(() -> {
                         if (channel instanceof PublicTradeChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         } else if (channel == null && !model.channelItems.isEmpty()) {
@@ -120,7 +121,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         } else {
                             model.selectedChannelItem.set(null);
                         }
-                    });
+                    }
+                ));
 
             numVisibleChannelsPin = publicTradeChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
@@ -309,8 +311,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
-                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
+                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
                         Market market = publicTradeChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
@@ -331,9 +332,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                         removeIcon.setOpacity(0);
                         removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicTradeChannel));
-                        setOnMouseClicked(e -> {
-                            Transitions.fadeIn(removeIcon);
-                        });
+                        setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseEntered(e -> {
                             Transitions.fadeIn(removeIcon);
                             applyEffect(icons, item.isSelected(), true);
