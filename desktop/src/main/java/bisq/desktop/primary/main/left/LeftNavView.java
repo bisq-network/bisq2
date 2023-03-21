@@ -281,7 +281,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                                  String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, target -> expandCollapseHandler((NavigationTarget) target));
+        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, this::expandCollapseHandler);
         setupButtonHandler(navigationTarget, button);
         return button;
     }
@@ -330,7 +330,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
                 for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
                     Node item = mainMenuItems.getChildren().get(i);
-                    if (item instanceof VBox submenu) {
+                    if (item instanceof VBox) {
+                        VBox submenu = (VBox) item;
                         if (submenu.getChildren().contains(selectedLeftNavButton)) {
                             targetY += submenu.getLayoutY();
                             break;
@@ -347,7 +348,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
             Node item = mainMenuItems.getChildren().get(i);
-            if (item instanceof VBox submenu) {
+            if (item instanceof VBox) {
+                VBox submenu = (VBox) item;
                 LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
 
                 parentMenuItem.setHighlighted(submenu.getChildren().contains(selectedLeftNavButton));

@@ -44,6 +44,8 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 class LeftNavButton extends Pane implements Toggle {
     protected final static double LABEL_X_POS_EXPANDED = 56;
@@ -136,7 +138,7 @@ class LeftNavButton extends Pane implements Toggle {
             getChildren().addAll(expandCollapseIcon);
 
             EasyBind.subscribe(getIsSubMenuExpanded(), isExpanded -> {
-                assert expandCollapseIcon != null;
+                checkNotNull(expandCollapseIcon);
                 if (isExpanded) {
                     expandCollapseIcon.getChildren().setAll(collapseIcon);
                 } else {
@@ -240,7 +242,7 @@ class LeftNavButton extends Pane implements Toggle {
     public void setHighlighted(boolean highlighted) {
         highlightedProperty.set(highlighted);
         applyStyle();
-        assert expandCollapseIcon != null;
+        checkNotNull(expandCollapseIcon);
         expandCollapseIcon.setOpacity(highlighted ? 1 : 0.4);
     }
 }
