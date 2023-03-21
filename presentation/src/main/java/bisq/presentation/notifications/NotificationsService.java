@@ -19,6 +19,7 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
+import bisq.common.util.OperatingSystem;
 import bisq.common.util.OsUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
@@ -69,20 +70,14 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
 
     private NotificationsDelegate getNotificationsDelegate() {
         if (delegate == null) {
-            switch (OsUtils.getOperatingSystem()) {
-                case LINUX:
-                    if (LinuxNotifications.isSupported()) {
-                        delegate = new LinuxNotifications();
-                        break;
-                    }
-                case MAC:
-                    if (OsxNotifications.isSupported()) {
-                        delegate = new OsxNotifications();
-                        break;
-                    }
-                case WIN:
-                default:
-                    delegate = new AwtNotifications();
+            if (OsUtils.getOperatingSystem() == OperatingSystem.LINUX &&
+                    LinuxNotifications.isSupported()) {
+                delegate = new LinuxNotifications();
+            } else if (OsUtils.getOperatingSystem() == OperatingSystem.MAC &&
+                    OsxNotifications.isSupported()) {
+                delegate = new OsxNotifications();
+            } else {
+                delegate = new AwtNotifications();
             }
         }
         return delegate;
