@@ -114,15 +114,15 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     .to(publicTradeChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof PublicTradeChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                        } else if (channel == null && !model.channelItems.isEmpty()) {
-                            model.selectedChannelItem.set(model.channelItems.get(0));
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
-                    }
-                ));
+                                if (channel instanceof PublicTradeChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                                } else {
+                                    model.selectedChannelItem.set(null);
+                                }
+                            }
+                    ));
 
             numVisibleChannelsPin = publicTradeChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
@@ -311,7 +311,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel publicTradeChannel) {
+                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
+                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
                         Market market = publicTradeChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
