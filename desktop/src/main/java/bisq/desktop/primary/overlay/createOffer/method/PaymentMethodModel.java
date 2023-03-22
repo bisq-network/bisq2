@@ -17,11 +17,9 @@
 
 package bisq.desktop.primary.overlay.createOffer.method;
 
+import bisq.common.currency.Market;
 import bisq.desktop.common.view.Model;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
@@ -34,4 +32,5 @@ public class PaymentMethodModel implements Model {
     private final StringProperty customMethod = new SimpleStringProperty();
     private final BooleanProperty paymentMethodsEmpty = new SimpleBooleanProperty();
     private final BooleanProperty addCustomMethodIconEnabled = new SimpleBooleanProperty();
+    private final ObjectProperty<Market> selectedMarket = new SimpleObjectProperty<>();
 }

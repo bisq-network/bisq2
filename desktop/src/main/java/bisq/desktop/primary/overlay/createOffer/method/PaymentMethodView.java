@@ -122,7 +122,6 @@ public class PaymentMethodView extends View<VBox, PaymentMethodModel, PaymentMet
         flowPane.visibleProperty().unbind();
         flowPane.managedProperty().unbind();
         addButton.disableProperty().unbind();
-        ;
 
         addButton.setOnAction(null);
 

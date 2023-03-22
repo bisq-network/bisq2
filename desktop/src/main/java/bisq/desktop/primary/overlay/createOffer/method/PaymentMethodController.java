@@ -37,6 +37,7 @@ public class PaymentMethodController implements Controller {
     public PaymentMethodController(DefaultApplicationService applicationService) {
         model = new PaymentMethodModel();
         view = new PaymentMethodView(model, this);
+        model.getSelectedMarket().addListener((observable, oldValue, newValue) -> model.getSelectedPaymentMethods().clear());
     }
 
     public ObservableList<String> getPaymentMethods() {
@@ -47,6 +48,7 @@ public class PaymentMethodController implements Controller {
         if (market == null) {
             return;
         }
+        model.getSelectedMarket().set(market);
         model.getAllPaymentMethods().setAll(PaymentMethodRepository.getPaymentMethodsForMarket(market));
         model.getAllPaymentMethods().addAll(model.getAddedCustomMethods());
         model.getPaymentMethodsEmpty().set(model.getAllPaymentMethods().isEmpty());
