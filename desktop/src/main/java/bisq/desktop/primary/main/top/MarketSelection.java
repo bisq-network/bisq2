@@ -88,16 +88,14 @@ public class MarketSelection {
                 }
             });
 
-            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> {
-                UIThread.run(() -> {
-                    List<MarketSelection.ListItem> list = MarketRepository.getAllFiatMarkets().stream()
-                            .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
-                            .filter(Objects::nonNull)
-                            .map(MarketSelection.ListItem::new)
-                            .collect(Collectors.toList());
-                    model.items.setAll(list);
-                });
-            });
+            marketPriceUpdateFlagPin = marketPriceService.getMarketPriceUpdateFlag().addObserver(__ -> UIThread.run(() -> {
+                List<ListItem> list = MarketRepository.getAllFiatMarkets().stream()
+                        .map(market -> marketPriceService.getMarketPriceByCurrencyMap().get(market))
+                        .filter(Objects::nonNull)
+                        .map(ListItem::new)
+                        .collect(Collectors.toList());
+                model.items.setAll(list);
+            }));
         }
 
         @Override
@@ -126,7 +124,6 @@ public class MarketSelection {
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<HBox, Model, Controller> {
         private final Label codes, price;
-        private final Node arrow;
 
         private View(Model model, Controller controller) {
             super(new HBox(7), model, controller);
@@ -141,7 +138,7 @@ public class MarketSelection {
             price.setMouseTransparent(true);
             price.getStyleClass().add("bisq-text-19");
 
-            arrow = ImageUtil.getImageViewById("arrow-down");
+            Node arrow = ImageUtil.getImageViewById("arrow-down");
             arrow.setMouseTransparent(true);
             HBox.setMargin(codes, new Insets(0, 5, 0, 0));
             root.getChildren().addAll(codes, price, arrow);
@@ -151,15 +148,18 @@ public class MarketSelection {
         protected void onViewAttached() {
             codes.textProperty().bind(model.codes);
             price.textProperty().bind(model.price);
-            root.setOnMouseClicked(e ->
-                    new ComboBoxOverlay<>(root,
-                            model.items,
-                            c -> getListCell(),
-                            controller::onSelected,
-                            Res.get("search"),
-                            null,
-                            250, 30, 20, 125)
-                            .show());
+            root.setOnMouseClicked(e -> {
+                if (model.items.isEmpty()) return;
+
+                new ComboBoxOverlay<>(root,
+                        model.items,
+                        c -> getListCell(),
+                        controller::onSelected,
+                        Res.get("search"),
+                        null,
+                        250, 30, 20, 125)
+                        .show();
+            });
         }
 
         @Override
