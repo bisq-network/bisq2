@@ -231,6 +231,10 @@
     -fx-image: url("images/navigation/nav-arrow-down.png");
 }
 
+#nav-arrow-right {
+    -fx-image: url("images/navigation/nav-arrow-right.png");
+}
+
 #nav-auto-collapse {
     -fx-image: url("images/navigation/nav-auto-collapse.png");
 }

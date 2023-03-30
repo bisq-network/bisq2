@@ -281,7 +281,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                                  String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu);
+        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, this::expandCollapseHandler);
         setupButtonHandler(navigationTarget, button);
         return button;
     }
@@ -306,9 +306,21 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private void setupButtonHandler(NavigationTarget navigationTarget, LeftNavButton button) {
         button.setOnAction(() -> {
             controller.onNavigationTargetSelected(navigationTarget);
+            if (button.isHasSubmenu()) {
+                // Always expand menu when header button is clicked
+                button.getIsSubMenuExpanded().set(true);
+            }
             maybeAnimateMark();
         });
         controller.onNavigationButtonCreated(button);
+    }
+
+    private void expandCollapseHandler(NavigationTarget navigationTarget) {
+        if (model.getSelectedNavigationButton().get() == null) {
+            // There is no button selected on startup
+            controller.onNavigationTargetSelected(navigationTarget);
+        }
+        maybeAnimateMark();
     }
 
     private void maybeAnimateMark() {
@@ -339,15 +351,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             if (item instanceof VBox) {
                 VBox submenu = (VBox) item;
                 LeftNavButton parentMenuItem = (LeftNavButton) mainMenuItems.getChildren().get(i - 1);
-                boolean isSubmenuActive = submenu.getChildren().contains(selectedLeftNavButton)
-                        || selectedLeftNavButton.navigationTarget == parentMenuItem.navigationTarget;
-                parentMenuItem.setHighlighted(isSubmenuActive);
 
-                if (isSubmenuActive) {
-                    parentMenuItem.getWasSelected().set(true);
-                }
+                parentMenuItem.setHighlighted(submenu.getChildren().contains(selectedLeftNavButton));
+
                 UIThread.runOnNextRenderFrame(parentMenuItem::applyStyle);
-                int targetHeight = isSubmenuActive || (parentMenuItem.getWasSelected().get()) ?
+                int targetHeight = parentMenuItem.getIsSubMenuExpanded().get() ?
                         (LeftNavSubButton.HEIGHT + 2) * submenu.getChildren().size() : 0;
                 Transitions.animateHeight(submenu, targetHeight);
             }
