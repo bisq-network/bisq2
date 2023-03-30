@@ -27,7 +27,6 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -288,7 +287,6 @@ public class UserProfileSelection {
         private final static int TEXT_PADDING = 6;
         private final Label label;
         private final ImageView imageView;
-        private final ChangeListener<Number> userNameLabelWidthListener;
         private boolean isLeftAligned;
 
         public UserProfileSkin(ComboBox<ListItem> control, String description, String prompt) {
@@ -324,13 +322,9 @@ public class UserProfileSelection {
             }).get());
 
             UserProfileComboBox userProfileComboBox = (UserProfileComboBox) control;
-            userNameLabelWidthListener = new ChangeListener<>() {
-                @Override
-                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                    if (newValue.doubleValue() > 0) {
-                        userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(label));
-                        label.widthProperty().removeListener(userNameLabelWidthListener);
-                    }
+            ChangeListener<Number> userNameLabelWidthListener = (observable, oldValue, newValue) -> {
+                if (newValue.doubleValue() > 0) {
+                    userProfileComboBox.setComboBoxWidth(userProfileComboBox.calculateWidth(label));
                 }
             };
             label.widthProperty().addListener(userNameLabelWidthListener);
