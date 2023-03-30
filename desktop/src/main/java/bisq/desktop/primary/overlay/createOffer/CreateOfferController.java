@@ -219,6 +219,7 @@ public class CreateOfferController extends NavigationController implements InitW
     public void onSkip() {
         Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
+        reset();
     }
 
     public void onQuit() {
