@@ -55,6 +55,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         // If used with FxBindings.bindBiDir we need to trigger persist call
         getOffersOnly().addObserver(value -> persist());
         getUseAnimations().addObserver(value -> persist());
+        getChatNotificationType().addObserver(value -> persist());
         return CompletableFuture.completedFuture(true);
     }
 
@@ -95,6 +96,10 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.tradeRulesConfirmed;
     }
 
+    public Observable<ChatNotificationType> getChatNotificationType() {
+        return persistableStore.chatNotificationType;
+    }
+
     public void setCookie(CookieKey key, boolean value) {
         getCookie().putAsBoolean(key, value);
         persist();
@@ -127,6 +132,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
 
     public void setTradeRulesConfirmed(boolean value) {
         persistableStore.tradeRulesConfirmed.set(value);
+        persist();
+    }
+
+    public void setChatNotificationType(ChatNotificationType value) {
+        persistableStore.chatNotificationType.set(value);
         persist();
     }
 }

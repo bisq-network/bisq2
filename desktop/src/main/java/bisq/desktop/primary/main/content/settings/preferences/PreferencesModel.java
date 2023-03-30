@@ -18,8 +18,11 @@
 package bisq.desktop.primary.main.content.settings.preferences;
 
 import bisq.desktop.common.view.Model;
+import bisq.settings.ChatNotificationType;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class PreferencesModel implements Model {
     private final BooleanProperty useAnimations = new SimpleBooleanProperty();
-
+    private final ObjectProperty<ChatNotificationType> chatNotificationType = new SimpleObjectProperty<>(ChatNotificationType.MENTION);
     public PreferencesModel() {
     }
 }

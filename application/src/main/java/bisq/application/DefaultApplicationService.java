@@ -27,6 +27,7 @@ import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
 import bisq.offer.OfferService;
 import bisq.oracle.OracleService;
+import bisq.presentation.notifications.NotificationsService;
 import bisq.protocol.ProtocolService;
 import bisq.security.KeyPairService;
 import bisq.security.SecurityService;
@@ -78,6 +79,7 @@ public class DefaultApplicationService extends ApplicationService {
     private final SettingsService settingsService;
     private final ProtocolService protocolService;
     private final SupportService supportService;
+    private final NotificationsService notificationsService;
 
     private final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
@@ -133,6 +135,8 @@ public class DefaultApplicationService extends ApplicationService {
         settingsService = new SettingsService(persistenceService);
 
         protocolService = new ProtocolService(networkService, identityService, persistenceService, offerService.getOpenOfferService());
+
+        notificationsService = new NotificationsService(persistenceService);
     }
 
     @Override
@@ -173,6 +177,7 @@ public class DefaultApplicationService extends ApplicationService {
                 .thenCompose(result -> supportService.initialize())
                 .thenCompose(result -> settingsService.initialize())
                 .thenCompose(result -> protocolService.initialize())
+                .thenCompose(result -> notificationsService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
                     if (throwable == null) {
@@ -193,7 +198,8 @@ public class DefaultApplicationService extends ApplicationService {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> protocolService.shutdown()
+        return supplyAsync(() -> notificationsService.shutdown()
+                        .thenCompose(result -> protocolService.shutdown())
                         .thenCompose(result -> settingsService.shutdown())
                         .thenCompose(result -> supportService.shutdown())
                         .thenCompose(result -> chatService.shutdown())

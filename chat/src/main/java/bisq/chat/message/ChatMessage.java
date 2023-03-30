@@ -26,6 +26,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.user.identity.UserIdentity;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -78,6 +79,10 @@ public abstract class ChatMessage implements Proto {
 
     public String getText() {
         return optionalText.orElse(Res.get("na"));
+    }
+
+    public boolean wasMentioned(UserIdentity userIdentity) {
+        return getText().contains("@" + userIdentity.getUserName());
     }
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {

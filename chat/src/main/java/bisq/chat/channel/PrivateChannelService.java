@@ -88,7 +88,9 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
 
     @Override
     protected PrivateChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        return new PrivateChannel(peer, myUserIdentity, channelDomain);
+        PrivateChannel privateChannel = new PrivateChannel(peer, myUserIdentity, channelDomain);
+        privateChannel.getChannelNotificationType().addObserver(value -> persist());
+        return privateChannel;
     }
 
     @Override

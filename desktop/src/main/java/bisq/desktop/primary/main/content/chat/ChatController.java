@@ -66,7 +66,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
     protected Pin selectedChannelPin;
-    protected Subscription notificationSettingSubscription;
     private Subscription searchTextPin;
 
     public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
@@ -129,9 +128,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     @Override
     public void onDeactivate() {
-        if (notificationSettingSubscription != null) {
-            notificationSettingSubscription.unsubscribe();
-        }
         selectedChannelPin.unbind();
         searchTextPin.unsubscribe();
     }

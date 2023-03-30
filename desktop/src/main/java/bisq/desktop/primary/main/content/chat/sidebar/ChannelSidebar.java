@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -71,22 +70,17 @@ public class ChannelSidebar {
         controller.model.undoIgnoreChatUserHandler = Optional.ofNullable(handler);
     }
 
-    public ReadOnlyObjectProperty<ChannelNotificationType> getSelectedNotificationType() {
-        return controller.notificationsSidebar.getSelected();
-    }
-
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final Model model;
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
         private final Runnable closeHandler;
-        private final NotificationsSidebar notificationsSidebar;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
             this.closeHandler = closeHandler;
             userProfileService = applicationService.getUserService().getUserProfileService();
-            notificationsSidebar = new NotificationsSidebar();
+            NotificationsSidebar notificationsSidebar = new NotificationsSidebar(applicationService.getChatService());
             model = new Model();
             view = new View(model, this, notificationsSidebar.getRoot());
         }

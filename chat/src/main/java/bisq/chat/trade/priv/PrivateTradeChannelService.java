@@ -111,6 +111,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         }
 
         PrivateTradeChannel channel = PrivateTradeChannel.createByMediator(myUserIdentity, trader1, trader2);
+        channel.getChannelNotificationType().addObserver(value -> persist());
         getChannels().add(channel);
         persist();
         return channel;
@@ -126,6 +127,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         }
 
         PrivateTradeChannel channel = PrivateTradeChannel.createByTrader(myUserIdentity, peersUserProfile, mediator);
+        channel.getChannelNotificationType().addObserver(value -> persist());
         getChannels().add(channel);
         persist();
         return channel;
@@ -169,6 +171,12 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         }
     }
 
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(String text,
+                                                                                    Optional<Quotation> quotedMessage,
+                                                                                    PrivateTradeChannel channel) {
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TAKE_OFFER);
+    }
+
     @Override
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
@@ -179,6 +187,7 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         if (!channel.getInMediation().get() || channel.getMediator().isEmpty()) {
             return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer(), messageType);
         }
+
         // If mediation has been activated we send all messages to the 2 other peers
         UserProfile receiver1, receiver2;
         if (channel.isMediator()) {

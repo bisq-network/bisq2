@@ -15,8 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.common.notifications;
+package bisq.settings;
 
-public interface NotificationsDelegate {
-   void notify(String title, String message);
+import bisq.common.proto.ProtoEnum;
+import bisq.common.util.ProtobufUtils;
+
+public enum ChatNotificationType implements ProtoEnum {
+    ALL,
+    MENTION,
+    OFF;
+
+    @Override
+    public bisq.settings.protobuf.ChatNotificationType toProto() {
+        return bisq.settings.protobuf.ChatNotificationType.valueOf(name());
+    }
+
+    public static ChatNotificationType fromProto(bisq.settings.protobuf.ChatNotificationType proto) {
+        return ProtobufUtils.enumFromProto(ChatNotificationType.class, proto.name());
+    }
 }

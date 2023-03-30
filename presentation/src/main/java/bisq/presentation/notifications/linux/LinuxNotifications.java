@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-package bisq.desktop.common.notifications.linux;
+package bisq.presentation.notifications.linux;
 
-import bisq.desktop.common.notifications.NotificationsDelegate;
+import bisq.presentation.notifications.NotificationsDelegate;
 
 import java.io.IOException;
 import java.util.ArrayList;
