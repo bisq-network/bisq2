@@ -137,7 +137,13 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         deletedButton.setOnAction(e -> controller.onDelete());
         saveButton.setOnAction(e -> controller.onSave());
         createNewProfileButton.setOnAction(e -> controller.onAddNewChatUser());
-        comboBox.setOnChangeConfirmed(e -> controller.onSelected(comboBox.getSelectionModel().getSelectedItem()));
+        comboBox.setOnChangeConfirmed(e -> {
+            if (comboBox.getSelectionModel().getSelectedItem() == null) {
+                comboBox.getSelectionModel().select(model.getSelectedUserIdentity().get());
+                return;
+            }
+            controller.onSelected(comboBox.getSelectionModel().getSelectedItem());
+        });
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
                 userIdentity -> {
