@@ -21,6 +21,8 @@ import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
+import bisq.chat.trade.TradeChatOffer;
+import bisq.chat.trade.TradeChatOfferMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -35,8 +37,9 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
+public final class PrivateTradeChatMessage extends BasePrivateChatMessage implements TradeChatOfferMessage {
     private final Optional<UserProfile> mediator;
+    private final Optional<TradeChatOffer> tradeChatOffer;
 
     public PrivateTradeChatMessage(String messageId,
                                    String channelName,
@@ -47,7 +50,8 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
                                    long date,
                                    boolean wasEdited,
                                    Optional<UserProfile> mediator,
-                                   MessageType messageType) {
+                                   MessageType messageType,
+                                   Optional<TradeChatOffer> tradeChatOffer) {
         this(messageId,
                 ChannelDomain.TRADE,
                 channelName,
@@ -59,6 +63,7 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
                 wasEdited,
                 mediator,
                 messageType,
+                tradeChatOffer,
                 new MetaData(TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
     }
 
@@ -73,9 +78,16 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
                                     boolean wasEdited,
                                     Optional<UserProfile> mediator,
                                     MessageType messageType,
+                                    Optional<TradeChatOffer> tradeChatOffer,
                                     MetaData metaData) {
         super(messageId, channelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
         this.mediator = mediator;
+        this.tradeChatOffer = tradeChatOffer;
+    }
+
+    @Override
+    public boolean hasTradeChatOffer() {
+        return tradeChatOffer.isPresent();
     }
 
     @Override
@@ -90,6 +102,7 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
                 .setReceiversId(receiversId)
                 .setSender(sender.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
+        tradeChatOffer.ifPresent(offer -> builder.setTradeChatOffer(offer.toProto()));
         return getChatMessageBuilder()
                 .setPrivateTradeChatMessage(builder)
                 .build();
@@ -103,6 +116,9 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
         Optional<UserProfile> mediator = privateTradeChatMessage.hasMediator() ?
                 Optional.of(UserProfile.fromProto(privateTradeChatMessage.getMediator())) :
                 Optional.empty();
+        Optional<TradeChatOffer> tradeChatOffer = baseProto.getPrivateTradeChatMessage().hasTradeChatOffer() ?
+                Optional.of(TradeChatOffer.fromProto(baseProto.getPrivateTradeChatMessage().getTradeChatOffer())) :
+                Optional.empty();
         return new PrivateTradeChatMessage(
                 baseProto.getMessageId(),
                 ChannelDomain.fromProto(baseProto.getChannelDomain()),
@@ -115,6 +131,7 @@ public final class PrivateTradeChatMessage extends BasePrivateChatMessage {
                 baseProto.getWasEdited(),
                 mediator,
                 MessageType.fromProto(baseProto.getMessageType()),
+                tradeChatOffer,
                 MetaData.fromProto(baseProto.getMetaData())
         );
     }
