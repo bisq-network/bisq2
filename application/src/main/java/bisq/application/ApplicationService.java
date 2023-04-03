@@ -45,6 +45,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.channels.FileLock;
 import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -105,12 +107,16 @@ public abstract class ApplicationService {
     @Getter
     protected final PersistenceService persistenceService;
 
+    private FileLock instanceLock;
+
     public ApplicationService(String configFileName, String[] args) {
         com.typesafe.config.Config typesafeConfig = ConfigFactory.load(configFileName);
         typesafeConfig.checkValid(ConfigFactory.defaultReference(), configFileName);
 
         typesafeAppConfig = typesafeConfig.getConfig("application");
         config = Config.from(typesafeAppConfig, args);
+
+        checkInstanceLock();
 
         LogSetup.setup(Paths.get(config.getBaseDir(), "bisq").toString());
         LogSetup.setLevel(Level.INFO);
@@ -150,6 +156,19 @@ public abstract class ApplicationService {
                 MediationResponse.getNetworkMessageResolver());
 
         persistenceService = new PersistenceService(config.getBaseDir());
+    }
+
+    private void checkInstanceLock() {
+        // Acquire exclusive lock on file basedir/lock, throw if locks fails
+        // to avoid running multiple instances using the same basedir
+        try {
+            instanceLock = new FileOutputStream(Paths.get(config.getBaseDir(), "lock").toString()).getChannel().tryLock();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (instanceLock == null) {
+            throw new NoFileLockException("Another instance might be running", new Throwable("Unable to acquire lock file lock"));
+        }
     }
 
     public CompletableFuture<Boolean> readAllPersisted() {
