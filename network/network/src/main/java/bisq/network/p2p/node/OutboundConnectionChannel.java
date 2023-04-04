@@ -26,15 +26,14 @@ public class OutboundConnectionChannel extends ConnectionChannel {
     @Getter
     private final Address address;
 
-    public OutboundConnectionChannel(Address address,
-                                     Capability peersCapability,
+    public OutboundConnectionChannel(Capability peersCapability,
                                      Load peersLoad,
                                      NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
                                      Metrics metrics) {
         super(peersCapability, peersLoad, networkEnvelopeSocketChannel, metrics);
 
-        this.address = address;
-        log.debug("Create outboundConnection to {}", address);
+        this.address = peersCapability.getAddress();
+        log.debug("Create outboundConnection to {}", this.address);
     }
 
     @Override
