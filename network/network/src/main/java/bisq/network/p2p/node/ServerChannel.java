@@ -19,6 +19,7 @@ package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.services.peergroup.BanList;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -31,10 +32,16 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
 public class ServerChannel {
+
+    public interface Listener {
+        void onServerReady();
+    }
+
     private final Capability myCapability;
     private final BanList banList;
     private final AuthorizationService authorizationService;
@@ -43,6 +50,9 @@ public class ServerChannel {
     private final ServerSocketChannel serverSocketChannel;
 
     private Thread serverThread;
+
+    @Setter
+    private Optional<Listener> onServerReadyListener = Optional.empty();
 
     public ServerChannel(Capability myCapability,
                          BanList banList,
@@ -81,6 +91,7 @@ public class ServerChannel {
                 );
 
                 inboundConnectionsManager.registerOpAccept();
+                onServerReadyListener.ifPresent(Listener::onServerReady);
 
                 while (selector.select() > 0) {
                     if (isServerStopped()) {
