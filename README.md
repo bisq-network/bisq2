@@ -14,7 +14,7 @@ You might find it helpful to read through [this doc](./docs/motivations.md) on t
 
 ### Network module
 
-The network layer is already functional to a large extent. [See the spec here](https://github.com/bisq-network/bisq2/blob/main/network/src/main/java/bisq/network/specification.md).
+The network layer is already functional to a large extent. [See the spec here](https://github.com/bisq-network/bisq2/blob/main/network/network/src/main/java/bisq/network/specification.md).
 
 It supports:
 - Multiple transport types (Clearnet, Tor, I2P)
