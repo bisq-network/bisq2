@@ -72,13 +72,13 @@ public class ServerChannel {
 
         serverThread = new Thread(() -> {
             try {
-                serverSocketChannel.configureBlocking(false);
-
                 InetSocketAddress socketAddress = new InetSocketAddress(
                         InetAddress.getLocalHost(),
                         myAddress.getPort()
                 );
                 serverSocketChannel.socket().bind(socketAddress);
+
+                serverSocketChannel.configureBlocking(false);
 
                 Selector selector = SelectorProvider.provider().openSelector();
                 InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
