@@ -37,7 +37,7 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
     private final OutboundConnectionManager outboundConnectionManager;
 
     private Optional<Thread> workerThread = Optional.empty();
-    private final Map<Capability, CompletableFuture<OutboundConnectionChannel>> completableFutureByPeerCapability = new ConcurrentHashMap<>();
+    private final Map<Address, CompletableFuture<OutboundConnectionChannel>> completableFutureByPeerAddress = new ConcurrentHashMap<>();
 
 
     public OutboundConnectionMultiplexer(OutboundConnectionManager outboundConnectionManager) {
@@ -57,9 +57,9 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         workerThread.ifPresent(Thread::interrupt);
     }
 
-    public CompletableFuture<OutboundConnectionChannel> getConnection(Capability peerCapability) {
+    public CompletableFuture<OutboundConnectionChannel> getConnection(Address address) {
         Optional<OutboundConnectionChannel> optionalConnectionChannel =
-                outboundConnectionManager.getConnection(peerCapability);
+                outboundConnectionManager.getConnection(address);
 
         if (optionalConnectionChannel.isPresent()) {
             return CompletableFuture.completedFuture(
@@ -68,8 +68,8 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         }
 
         var completableFuture = new CompletableFuture<OutboundConnectionChannel>();
-        completableFutureByPeerCapability.put(peerCapability, completableFuture);
-        outboundConnectionManager.createNewConnection(peerCapability);
+        completableFutureByPeerAddress.put(address, completableFuture);
+        outboundConnectionManager.createNewConnection(address);
 
         synchronized (this) {
             notify();
@@ -80,9 +80,9 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
 
     @Override
     public void onNewConnection(OutboundConnectionChannel outboundConnectionChannel) {
-        Capability peerCapability = outboundConnectionChannel.getPeersCapability();
+        Address peerAddress = outboundConnectionChannel.getPeerAddress();
         CompletableFuture<OutboundConnectionChannel> completableFuture =
-                completableFutureByPeerCapability.get(peerCapability);
+                completableFutureByPeerAddress.get(peerAddress);
         completableFuture.complete(outboundConnectionChannel);
     }
 

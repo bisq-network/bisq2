@@ -93,7 +93,7 @@ public class OutboundConnectionsMultiplexerTest {
                 var connectionMultiplexer = new OutboundConnectionMultiplexer(outboundConnectionManager);
                 connectionMultiplexer.start();
 
-                CompletableFuture<OutboundConnectionChannel> connection = connectionMultiplexer.getConnection(serverCapability);
+                CompletableFuture<OutboundConnectionChannel> connection = connectionMultiplexer.getConnection(address);
                 return connection.get(1, TimeUnit.MINUTES);
 
 

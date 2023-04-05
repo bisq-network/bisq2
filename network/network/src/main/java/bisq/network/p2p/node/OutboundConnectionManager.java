@@ -48,7 +48,6 @@ public class OutboundConnectionManager {
     private final Selector selector;
 
     private final List<SocketChannel> connectingChannels = new CopyOnWriteArrayList<>();
-    private final Map<SocketChannel, Capability> peerCapabilityByChannel = new ConcurrentHashMap<>();
     private final Map<SocketChannel, Address> addressByChannel = new ConcurrentHashMap<>();
     private final Map<Address, SocketChannel> channelByAddress = new ConcurrentHashMap<>();
     private final Map<SocketChannel, ConnectionHandshakeInitiator> handshakeInitiatorByChannel = new ConcurrentHashMap<>();
@@ -56,7 +55,6 @@ public class OutboundConnectionManager {
     private final List<SocketChannel> outboundHandshakeChannels = new CopyOnWriteArrayList<>();
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
 
-    private final Map<Capability, OutboundConnectionChannel> connectionChannelByCapability = new ConcurrentHashMap<>();
     private final Map<SocketChannel, OutboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
@@ -72,24 +70,22 @@ public class OutboundConnectionManager {
         return !connectingChannels.isEmpty() || !outboundHandshakeChannels.isEmpty();
     }
 
-    public void createNewConnection(Capability peerCapability) {
+    public void createNewConnection(Address address) {
         try {
             SocketChannel socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
-            Address address = peerCapability.getAddress();
             InetSocketAddress socketAddress = new InetSocketAddress(address.getHost(), address.getPort());
             socketChannel.connect(socketAddress);
 
             connectingChannels.add(socketChannel);
-            peerCapabilityByChannel.put(socketChannel, peerCapability);
 
             addressByChannel.put(socketChannel, address);
             channelByAddress.put(address, socketChannel);
 
         } catch (IOException e) {
-            log.warn("Couldn't create connection to " + peerCapability, e);
+            log.warn("Couldn't create connection to " + address.getFullAddress(), e);
         }
     }
 
@@ -103,14 +99,12 @@ public class OutboundConnectionManager {
 
     public void handleWritableChannel(SocketChannel socketChannel) throws IOException {
         if (outboundHandshakeChannels.contains(socketChannel)) {
-            Capability peerCapability = peerCapabilityByChannel.get(socketChannel);
-
             var handshakeInitiator = new ConnectionHandshakeInitiator(
                     myCapability,
                     authorizationService,
                     banList,
                     myLoad,
-                    peerCapability.getAddress()
+                    addressByChannel.get(socketChannel)
             );
             handshakeInitiatorByChannel.put(socketChannel, handshakeInitiator);
 
@@ -144,15 +138,19 @@ public class OutboundConnectionManager {
                     new Metrics()
             );
 
-            connectionChannelByCapability.put(peerCapability, outboundConnectionChannel);
             connectionByChannel.put(socketChannel, outboundConnectionChannel);
             listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
         }
     }
 
-    public Optional<OutboundConnectionChannel> getConnection(Capability peerCapability) {
-        OutboundConnectionChannel connectionChannel = connectionChannelByCapability.get(peerCapability);
-        return Optional.ofNullable(connectionChannel);
+    public Optional<OutboundConnectionChannel> getConnection(Address address) {
+        if (channelByAddress.containsKey(address)) {
+            SocketChannel socketChannel = channelByAddress.get(address);
+            OutboundConnectionChannel connectionChannel = connectionByChannel.get(socketChannel);
+            return Optional.ofNullable(connectionChannel);
+        }
+
+        return Optional.empty();
     }
 
     public void registerListener(Listener l) {
