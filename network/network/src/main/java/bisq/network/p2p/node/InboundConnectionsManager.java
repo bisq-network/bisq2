@@ -142,6 +142,11 @@ public class InboundConnectionsManager {
         return inboundHandshakeChannels.contains(socketChannel) || verifiedConnections.contains(socketChannel);
     }
 
+    public Optional<InboundConnectionChannel> getConnectionByAddress(Address address) {
+        InboundConnectionChannel inboundConnection = connectionByAddress.get(address);
+        return Optional.ofNullable(inboundConnection);
+    }
+
     private Optional<InboundConnectionChannel> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         try {
             var handshakeResponder = new ConnectionHandshakeResponder(
