@@ -49,6 +49,8 @@ public class OutboundConnectionManager {
 
     private final List<SocketChannel> connectingChannels = new CopyOnWriteArrayList<>();
     private final Map<SocketChannel, Capability> peerCapabilityByChannel = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, Address> addressByChannel = new ConcurrentHashMap<>();
+    private final Map<Address, SocketChannel> channelByAddress = new ConcurrentHashMap<>();
     private final Map<SocketChannel, ConnectionHandshakeInitiator> handshakeInitiatorByChannel = new ConcurrentHashMap<>();
 
     private final List<SocketChannel> outboundHandshakeChannels = new CopyOnWriteArrayList<>();
@@ -81,6 +83,9 @@ public class OutboundConnectionManager {
 
             connectingChannels.add(socketChannel);
             peerCapabilityByChannel.put(socketChannel, peerCapability);
+
+            addressByChannel.put(socketChannel, address);
+            channelByAddress.put(address, socketChannel);
 
         } catch (IOException e) {
             log.warn("Couldn't create connection to " + peerCapability, e);
