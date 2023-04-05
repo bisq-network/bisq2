@@ -183,10 +183,7 @@ public class InboundConnectionsManager {
     }
 
     private boolean isAlreadyConnectedToPeer(Address peerAddress) {
-        return connectionByChannel.values()
-                .stream()
-                .map(ConnectionChannel::getPeerAddress)
-                .anyMatch(address -> address.equals(peerAddress));
+        return connectionByAddress.containsKey(peerAddress);
     }
 
     private void closeChannel(NetworkEnvelopeSocketChannel networkEnvelopeSocket) {
