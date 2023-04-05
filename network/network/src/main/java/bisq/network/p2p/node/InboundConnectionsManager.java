@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.channels.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class InboundConnectionsManager {
@@ -37,9 +39,9 @@ public class InboundConnectionsManager {
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
     private final Node node;
-    private final List<SocketChannel> inboundHandshakeChannels = Collections.synchronizedList(new ArrayList<>());
-    private final List<SocketChannel> verifiedConnections = Collections.synchronizedList(new ArrayList<>());
-    private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = Collections.synchronizedMap(new HashMap<>());
+    private final List<SocketChannel> inboundHandshakeChannels = new CopyOnWriteArrayList<>();
+    private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
+    private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
 
     public InboundConnectionsManager(BanList banList,
                                      Capability myCapability,
