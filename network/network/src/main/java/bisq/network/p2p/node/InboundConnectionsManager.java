@@ -25,7 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -42,6 +45,7 @@ public class InboundConnectionsManager {
     private final List<SocketChannel> inboundHandshakeChannels = new CopyOnWriteArrayList<>();
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
     private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
+    private final Map<Address, InboundConnectionChannel> connectionByAddress = new ConcurrentHashMap<>();
 
     public InboundConnectionsManager(BanList banList,
                                      Capability myCapability,
@@ -108,6 +112,7 @@ public class InboundConnectionsManager {
                     closeChannel(networkEnvelopeSocketChannel);
                 } else {
                     connectionByChannel.put(socketChannel, inboundConnection);
+                    connectionByAddress.put(peerAddress, inboundConnection);
                     verifiedConnections.add(socketChannel);
 
                     log.info("Calling node.onNewIncomingConnection for peer {}", peerAddress.getFullAddress());
