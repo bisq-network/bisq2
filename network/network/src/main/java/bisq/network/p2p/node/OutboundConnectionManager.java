@@ -57,6 +57,7 @@ public class OutboundConnectionManager {
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
 
     private final Map<Capability, OutboundConnectionChannel> connectionChannelByCapability = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, OutboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     public OutboundConnectionManager(AuthorizationService authorizationService, BanList banList, Load myLoad, Capability myCapability, Selector selector) {
@@ -144,6 +145,7 @@ public class OutboundConnectionManager {
             );
 
             connectionChannelByCapability.put(peerCapability, outboundConnectionChannel);
+            connectionByChannel.put(socketChannel, outboundConnectionChannel);
             listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
         }
     }
