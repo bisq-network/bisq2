@@ -147,6 +147,10 @@ public class InboundConnectionsManager {
         return Optional.ofNullable(inboundConnection);
     }
 
+    public Collection<InboundConnectionChannel> getAllInboundConnections() {
+        return connectionByAddress.values();
+    }
+
     private Optional<InboundConnectionChannel> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         try {
             var handshakeResponder = new ConnectionHandshakeResponder(
