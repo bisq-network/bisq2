@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -76,13 +77,15 @@ public class OutboundConnectionManager {
             socketChannel.configureBlocking(false);
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
-            InetSocketAddress socketAddress = new InetSocketAddress(address.getHost(), address.getPort());
-            socketChannel.connect(socketAddress);
-
             connectingChannels.add(socketChannel);
-
             addressByChannel.put(socketChannel, address);
             channelByAddress.put(address, socketChannel);
+
+            InetSocketAddress socketAddress = new InetSocketAddress(address.getHost(), address.getPort());
+            boolean isConnectedImmediately = socketChannel.connect(socketAddress);
+            if (isConnectedImmediately) {
+                handleConnectedChannel(socketChannel);
+            }
 
         } catch (IOException e) {
             log.warn("Couldn't create connection to " + address.getFullAddress(), e);
@@ -91,10 +94,7 @@ public class OutboundConnectionManager {
 
     public void handleConnectableChannel(SocketChannel socketChannel) throws IOException {
         socketChannel.finishConnect();
-        socketChannel.register(selector, SelectionKey.OP_WRITE);
-
-        connectingChannels.remove(socketChannel);
-        outboundHandshakeChannels.add(socketChannel);
+        handleConnectedChannel(socketChannel);
     }
 
     public void handleWritableChannel(SocketChannel socketChannel) throws IOException {
@@ -159,6 +159,25 @@ public class OutboundConnectionManager {
 
     public void removeListener(Listener l) {
         listeners.remove(l);
+    }
+
+    private void handleConnectedChannel(SocketChannel socketChannel) {
+        try {
+            socketChannel.register(selector, SelectionKey.OP_WRITE);
+
+            connectingChannels.remove(socketChannel);
+            outboundHandshakeChannels.add(socketChannel);
+
+            Address address = addressByChannel.get(socketChannel);
+            log.info("Created outbound connection to {}", address.getFullAddress());
+        } catch (ClosedChannelException e) {
+            // Connection closed.
+            Address address = addressByChannel.get(socketChannel);
+            channelByAddress.remove(address);
+
+            connectingChannels.remove(socketChannel);
+            addressByChannel.remove(socketChannel);
+        }
     }
 
     private ByteBuffer wrapPayloadInByteBuffer(NetworkEnvelope networkEnvelope) {
