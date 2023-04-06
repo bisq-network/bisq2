@@ -52,10 +52,13 @@ public abstract class BasePublicChannelService<M extends BasePublicChatMessage, 
     @Override
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
+
+        maybeAddDefaultChannels();
+
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
                 dataService.getAllAuthenticatedPayload().forEach(this::onAuthenticatedDataAdded));
-        maybeAddDefaultChannels();
+
         return CompletableFuture.completedFuture(true);
     }
 
