@@ -216,13 +216,13 @@ public class PrivateChannelSelection extends ChannelSelection {
                     privateTradeChannelService.leaveChannel((PrivateTradeChannel) privateChannel);
                     break;
                 case DISCUSSION:
-                    //todo
+                    privateDiscussionChannelService.leaveChannel((PrivateChannel) privateChannel);
                     break;
                 case EVENTS:
-                    //todo
+                    privateEventsChannelService.leaveChannel((PrivateChannel) privateChannel);
                     break;
                 case SUPPORT:
-                    //todo
+                    privateSupportChannelService.leaveChannel((PrivateChannel) privateChannel);
                     break;
             }
 
