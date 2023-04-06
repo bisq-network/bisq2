@@ -88,6 +88,7 @@ public class OutboundConnectionsMultiplexerTest {
                         mock(BanList.class),
                         Load.INITIAL_LOAD,
                         outboundCapability,
+                        mock(Node.class),
                         selector
                 );
                 var connectionMultiplexer = new OutboundConnectionMultiplexer(outboundConnectionManager);

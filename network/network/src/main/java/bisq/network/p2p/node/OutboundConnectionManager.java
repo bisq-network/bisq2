@@ -49,6 +49,7 @@ public class OutboundConnectionManager {
     private final BanList banList;
     private final Load myLoad;
     private final Capability myCapability;
+    private final Node node;
     @Getter
     private final Selector selector;
 
@@ -63,11 +64,17 @@ public class OutboundConnectionManager {
     private final Map<SocketChannel, OutboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
-    public OutboundConnectionManager(AuthorizationService authorizationService, BanList banList, Load myLoad, Capability myCapability, Selector selector) {
+    public OutboundConnectionManager(AuthorizationService authorizationService,
+                                     BanList banList,
+                                     Load myLoad,
+                                     Capability myCapability,
+                                     Node node,
+                                     Selector selector) {
         this.authorizationService = authorizationService;
         this.banList = banList;
         this.myLoad = myLoad;
         this.myCapability = myCapability;
+        this.node = node;
         this.selector = selector;
     }
 
@@ -154,6 +161,19 @@ public class OutboundConnectionManager {
 
             connectionByChannel.put(socketChannel, outboundConnectionChannel);
             listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
+        } else if (verifiedConnections.contains(socketChannel)) {
+            OutboundConnectionChannel connectionChannel = connectionByChannel.get(socketChannel);
+
+            NetworkEnvelopeSocketChannel envelopeSocketChannel = connectionChannel.getNetworkEnvelopeSocketChannel();
+            List<NetworkEnvelope> networkEnvelopes = envelopeSocketChannel.receiveNetworkEnvelopes();
+            log.debug("Received {} messages from peer {}.",
+                    networkEnvelopes.size(), connectionChannel.getPeerAddress().getFullAddress());
+
+            networkEnvelopes.forEach(networkEnvelope -> node.handleNetworkMessage(
+                    networkEnvelope.getNetworkMessage(),
+                    networkEnvelope.getAuthorizationToken(),
+                    connectionChannel
+            ));
         }
     }
 
