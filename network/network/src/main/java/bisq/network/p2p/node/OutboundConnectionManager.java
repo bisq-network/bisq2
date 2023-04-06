@@ -32,7 +32,10 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -162,6 +165,10 @@ public class OutboundConnectionManager {
         }
 
         return Optional.empty();
+    }
+
+    public Collection<OutboundConnectionChannel> getAllOutboundConnections() {
+        return connectionByChannel.values();
     }
 
     public void registerListener(Listener l) {
