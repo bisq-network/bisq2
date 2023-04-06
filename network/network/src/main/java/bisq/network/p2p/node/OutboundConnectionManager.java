@@ -25,6 +25,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -93,8 +94,18 @@ public class OutboundConnectionManager {
     }
 
     public void handleConnectableChannel(SocketChannel socketChannel) throws IOException {
-        socketChannel.finishConnect();
-        handleConnectedChannel(socketChannel);
+        try {
+            socketChannel.finishConnect();
+            handleConnectedChannel(socketChannel);
+
+        } catch (ConnectException e) {
+            // Couldn't connect to peer, nothing we can do.
+            Address address = addressByChannel.get(socketChannel);
+            channelByAddress.remove(address);
+
+            connectingChannels.remove(socketChannel);
+            addressByChannel.remove(socketChannel);
+        }
     }
 
     public void handleWritableChannel(SocketChannel socketChannel) throws IOException {
