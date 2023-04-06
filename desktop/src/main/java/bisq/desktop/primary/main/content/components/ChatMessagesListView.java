@@ -502,12 +502,10 @@ public class ChatMessagesListView {
 
                             privateTradeChannelService.findChannelForMessage(chatMessage).ifPresent(channel -> {
                                         UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-                                        var formattedAmount = AmountFormatter.formatAmount(Coin.of(offer.getBaseSideAmount(), offer.getMarket().getBaseCurrencyCode()));
                                         String bitcoinUri = "bitcoin:" + receiveAddress +
-                                                "?amount=" + formattedAmount +
                                                 "?label=" + myUserIdentity.getUserProfile().getNickName();
                                         // TODO: Make bitcoiUri a clickable link
-                                        String message = Res.get("bisqEasy.completeOffer.sendRequest", formattedAmount, receiveAddress, /*bitcoinUri*/"");
+                                        String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress, /*bitcoinUri*/"");
                                         privateTradeChannelService.sendPrivateChatMessage(message,
                                                 Optional.empty(),
                                                 channel);
