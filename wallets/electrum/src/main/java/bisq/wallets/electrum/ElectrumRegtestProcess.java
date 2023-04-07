@@ -31,13 +31,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class ElectrumRegtestProcess extends DaemonProcess {
@@ -63,12 +67,45 @@ public class ElectrumRegtestProcess extends DaemonProcess {
 
     @Override
     public void start() {
+        // Stop any old running electrum daemon before deleting the old config file.
+        stopOld();
+
         createElectrumConfigFile();
         logFilePath = findNewLogFile();
         super.start();
         rpcConfig = electrumProcessConfig.getElectrumConfig()
                 .toRpcConfig();
     }
+
+    public void stopOld() {
+        var config = ProcessConfig.builder()
+                .name(binaryPath.toAbsolutePath().toString())
+                .args(List.of(
+                        "--regtest",
+                        "--dir",
+                        dataDir.toAbsolutePath().toString(),
+                        "stop"
+                ))
+                .environmentVars(Collections.emptyMap())
+                .build();
+        List<String> args = config.toCommandList();
+
+        var processBuilder = new ProcessBuilder(args);
+        processBuilder.redirectErrorStream(true);
+
+        Map<String, String> environment = processBuilder.environment();
+        environment.putAll(config.getEnvironmentVars());
+
+        try {
+            Process process = processBuilder.start();
+            String input = new BufferedReader(new InputStreamReader(process.getInputStream()))
+                    .lines().collect(Collectors.joining("\n"));
+            log.info("Trying to stop old process: " + input);
+        } catch (IOException e) {
+            log.warn("Exception when stopping old wallet process", e);
+        }
+    }
+
 
     @Override
     public ProcessConfig createProcessConfig() {
