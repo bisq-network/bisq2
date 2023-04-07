@@ -39,19 +39,24 @@ public class LeftNavController implements Controller {
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
-        Optional<NavigationTarget> supportedNavigationTarget;
+        NavigationTarget supportedNavigationTarget;
         Set<NavigationTarget> navigationTargets = model.getNavigationTargets();
         if (navigationTargets.contains(navigationTarget)) {
-            supportedNavigationTarget = Optional.of(navigationTarget);
+            supportedNavigationTarget = navigationTarget;
         } else {
+            // We get NavigationTarget.CONTENT sometimes due to some timing issues at startup. 
+            // If that happens we use the persisted target if present or the default NavigationTarget 
+            // otherwise.
             supportedNavigationTarget = navigationTarget.getPath().stream()
                     .filter(navigationTargets::contains)
-                    .findAny();
+                    .findAny()
+                    .orElse(Navigation.getPersistedNavigationTarget()
+                            .orElse(NavigationTarget.DASHBOARD));
         }
-        supportedNavigationTarget.ifPresent(target -> {
-            findNavButton(target).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
-            model.getSelectedNavigationTarget().set(target);
-        });
+
+        findNavButton(supportedNavigationTarget)
+                .ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
+        model.getSelectedNavigationTarget().set(supportedNavigationTarget);
     }
 
     @Override
