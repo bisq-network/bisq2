@@ -153,4 +153,11 @@ public class ServerChannel {
     public Address getAddress() {
         return myCapability.getAddress();
     }
+
+    public Optional<InboundConnectionChannel> getConnectionByAddress(Address address) {
+        if (inboundConnectionsManager.isPresent()) {
+            return inboundConnectionsManager.get().getConnectionByAddress(address);
+        }
+        return Optional.empty();
+    }
 }
