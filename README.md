@@ -67,15 +67,15 @@ a `run config` in `Run/Edit Configurations`.
 The desktop app also requires JVM args (the typesafe config lib we use does not support overriding program args, so you
 have to use JVM args).
 - For clearnet use
-  `-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
+  `-Dapplication.network.supportedTransportTypes.0=CLEAR`
 
 - For clearnet, Tor, and I2P use
-  `-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR -Dbisq.networkServiceConfig.supportedTransportTypes.1=TOR -Dbisq.networkServiceConfig.supportedTransportTypes.2=I2P`
+  `-Dapplication.network.supportedTransportTypes.0=CLEAR -Dapplication.network.supportedTransportTypes.1=TOR -Dapplication.network.supportedTransportTypes.2=I2P`
 
 ## Running the Prototype with a local network
 If you want to use the network, you have to start at least one seed node with the appropriate JVM arguments (see instructions below) as there are no public seed nodes available at that stage. You can run clear net, Tor and I2P or any combination of those.
 You specify the network by:
-`-Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR`
+`-Dapplication.network.supportedTransportTypes.0=CLEAR`
 Where you need to use a different index for adding more. Values are: CLEAR, TOR, I2P.
 
 When you use I2P, you need to install I2P and start the router application. The web console opens automatically. There you  need to navigate to [Clients](http://127.0.0.1:7657/configclients) and start the `SAM application bridge`. It will take about 2 minutes to be ready.
@@ -85,33 +85,33 @@ Please note that the I2P integration is not very stable yet.
 
 To start 2 seed nodes on ports 8000 and 8001 connecting to each other use those JVM arguments.
 ```
--Dbisq.application.appName=bisq2_seed1 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8000 
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 
+-Dapplication.appName=bisq2_seed1 
+-Dapplication.network.defaultNodePortByTransportType.clear=8000 
+-Dapplication.network.supportedTransportTypes.0=CLEAR 
+-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001 
 
--Dbisq.application.appName=bisq2_seed2 
--Dbisq.networkServiceConfig.defaultNodePortByTransportType.clear=8001 
--Dbisq.networkServiceConfig.supportedTransportTypes.0=CLEAR 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001 
+-Dapplication.appName=bisq2_seed2 
+-Dapplication.network.defaultNodePortByTransportType.clear=8001 
+-Dapplication.network.supportedTransportTypes.0=CLEAR 
+-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001 
 ```
-Data directory is defined by `bisq.application.appName` in the example here `bisq2_seed1`.
+Data directory is defined by `application.appName` in the example here `bisq2_seed1`.
 
 Using other network types or multiple network types use one or multiple of those:
 ```
--Dbisq.networkServiceConfig.supportedTransportTypes.0=TOR 
--Dbisq.networkServiceConfig.supportedTransportTypes.1=I2P 
--Dbisq.networkServiceConfig.supportedTransportTypes.2=CLEAR 
+-Dapplication.network.supportedTransportTypes.0=TOR 
+-Dapplication.network.supportedTransportTypes.1=I2P 
+-Dapplication.network.supportedTransportTypes.2=CLEAR 
 ```
 
 You have to provide then the seed addresses for the supported network types
 To add multiple seeds add more lines of the same network type with other index (`.1`).
 ```
--Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=TOR_SEED_ADDRESS:8000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=I2P_SEED_ADDRESS:5000 
--Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000 
+-Dapplication.network.seedAddressByTransportType.tor.0=TOR_SEED_ADDRESS:8000 
+-Dapplication.network.seedAddressByTransportType.i2p.0=I2P_SEED_ADDRESS:5000 
+-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 
 ```
 
 To set up your local tor hidden service addresses and I2P addresses for the seed nodes you need to start once to get
@@ -135,10 +135,10 @@ On Linux:
 Copy those addresses and add it to the JVM args as following:
 
 ```
--Dbisq.networkServiceConfig.seedAddressByTransportType.tor.0=[onion address for node 1000]:1000
--Dbisq.networkServiceConfig.seedAddressByTransportType.tor.1=[onion address for node 1001]:1001
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.0=[I2P address for node 5000]:5000
--Dbisq.networkServiceConfig.seedAddressByTransportType.i2p.1=[I2P address for node 5001]:5001
+-Dapplication.network.seedAddressByTransportType.tor.0=[onion address for node 1000]:1000
+-Dapplication.network.seedAddressByTransportType.tor.1=[onion address for node 1001]:1001
+-Dapplication.network.seedAddressByTransportType.i2p.0=[I2P address for node 5000]:5000
+-Dapplication.network.seedAddressByTransportType.i2p.1=[I2P address for node 5001]:5001
 ```
 
 If you want to use more seed nodes repeat it and fill in more but 1-2 is usually sufficient for dev testing.

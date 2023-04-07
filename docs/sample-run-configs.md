@@ -112,7 +112,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 ```
 # Seed 1
 ./gradlew seed:run \
-    -Dbisq.application.appName=bisq2_seed1 \
+    -Dapplication.appName=bisq2_seed1 \
     -Dapplication.network.defaultNodePortByTransportType.clear=8000 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -120,7 +120,7 @@ For example, to start two local seeds, `bisq2_seed1` and `bisq2_seed2`, reachabl
 
 # Seed 2
 ./gradlew seed:run \
-    -Dbisq.application.appName=bisq2_seed2 \
+    -Dapplication.appName=bisq2_seed2 \
     -Dapplication.network.defaultNodePortByTransportType.clear=8001 \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
@@ -139,7 +139,7 @@ To start a custom desktopapp client connecting only to clearnet:
 ```
 # Local client on clearnet only
 ./gradlew desktopapp:run \
-    -Dbisq.application.appName=bisq_Alice_clear \
+    -Dapplication.appName=bisq_Alice_clear \
     -Dapplication.network.supportedTransportTypes.0=CLEAR \
     -Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000 \
     -Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001
