@@ -24,6 +24,7 @@ import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.locale.LocaleRepository;
 import bisq.common.logging.LogSetup;
+import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.message.NetworkMessageResolver;
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileLock;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -116,6 +118,11 @@ public abstract class ApplicationService {
         typesafeAppConfig = typesafeConfig.getConfig("application");
         config = Config.from(typesafeAppConfig, args);
 
+        try {
+            FileUtils.makeDirs(config.getBaseDir());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         checkInstanceLock();
 
         LogSetup.setup(Paths.get(config.getBaseDir(), "bisq").toString());
