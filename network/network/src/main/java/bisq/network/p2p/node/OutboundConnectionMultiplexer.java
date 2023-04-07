@@ -20,6 +20,7 @@ package bisq.network.p2p.node;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -130,6 +131,8 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
             }
         } catch (IOException e) {
             log.warn("IOException in OutboundConnectionMultiplexer selector.", e);
+        } catch (CancelledKeyException e) {
+            // Connection attempt failed. Nothing we can do here.
         }
     }
 }
