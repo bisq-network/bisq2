@@ -23,10 +23,7 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,6 +81,10 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         CompletableFuture<OutboundConnectionChannel> completableFuture =
                 completableFutureByPeerAddress.get(peerAddress);
         completableFuture.complete(outboundConnectionChannel);
+    }
+
+    public Collection<OutboundConnectionChannel> getAllOutboundConnections() {
+        return outboundConnectionManager.getAllOutboundConnections();
     }
 
     private void workerLoop() {
