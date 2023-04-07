@@ -160,4 +160,11 @@ public class ServerChannel {
         }
         return Optional.empty();
     }
+
+    public Collection<InboundConnectionChannel> getAllInboundConnections() {
+        if (inboundConnectionsManager.isPresent()) {
+            return inboundConnectionsManager.get().getAllInboundConnections();
+        }
+        return Collections.emptyList();
+    }
 }
