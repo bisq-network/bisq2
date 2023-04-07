@@ -30,10 +30,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 public class ServerChannel {
@@ -50,6 +47,7 @@ public class ServerChannel {
     private final ServerSocketChannel serverSocketChannel;
 
     private Thread serverThread;
+    private Optional<InboundConnectionsManager> inboundConnectionsManager = Optional.empty();
 
     @Setter
     private Optional<Listener> onServerReadyListener = Optional.empty();
@@ -81,14 +79,16 @@ public class ServerChannel {
                 serverSocketChannel.configureBlocking(false);
 
                 Selector selector = SelectorProvider.provider().openSelector();
-                InboundConnectionsManager inboundConnectionsManager = new InboundConnectionsManager(
-                        banList,
-                        myCapability,
-                        authorizationService,
-                        serverSocketChannel,
-                        selector,
-                        node
-                );
+                InboundConnectionsManager inboundConnectionsManager =
+                        new InboundConnectionsManager(
+                                banList,
+                                myCapability,
+                                authorizationService,
+                                serverSocketChannel,
+                                selector,
+                                node
+                        );
+                this.inboundConnectionsManager = Optional.of(inboundConnectionsManager);
 
                 inboundConnectionsManager.registerOpAccept();
                 onServerReadyListener.ifPresent(Listener::onServerReady);
