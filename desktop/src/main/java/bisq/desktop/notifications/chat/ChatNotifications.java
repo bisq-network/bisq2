@@ -185,7 +185,7 @@ public class ChatNotifications {
         if (chatMessage instanceof BasePublicChatMessage) {
             if (chatMessage instanceof PublicTradeChatMessage) {
                 PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.isOfferMessage()) {
+                if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.hasTradeChatOffer()) {
                     return;
                 }
                 PublicTradeChannel publicTradeChannel = (PublicTradeChannel) channel;

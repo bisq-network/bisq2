@@ -21,10 +21,12 @@ import bisq.chat.channel.BasePrivateChannelService;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.common.data.Pair;
 import bisq.common.observable.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
+import bisq.network.NetworkId;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
@@ -80,6 +82,29 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
                                                                   long time,
                                                                   boolean wasEdited,
                                                                   MessageType messageType) {
+        return createNewPrivateTradeChatMessage(
+                messageId,
+                channel,
+                sender,
+                receiversId,
+                text,
+                quotedMessage,
+                time,
+                wasEdited,
+                messageType,
+                Optional.empty());
+    }
+
+    protected PrivateTradeChatMessage createNewPrivateTradeChatMessage(String messageId,
+                                                                       PrivateTradeChannel channel,
+                                                                       UserProfile sender,
+                                                                       String receiversId,
+                                                                       String text,
+                                                                       Optional<Quotation> quotedMessage,
+                                                                       long time,
+                                                                       boolean wasEdited,
+                                                                       MessageType messageType,
+                                                                       Optional<TradeChatOffer> tradeChatOffer) {
         // We send the mediator only in the first message to the peer.
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new PrivateTradeChatMessage(
@@ -89,10 +114,11 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
                 receiversId,
                 text,
                 quotedMessage,
-                new Date().getTime(),
+                time,
                 wasEdited,
                 mediator,
-                messageType);
+                messageType,
+                tradeChatOffer);
     }
 
     @Override
@@ -212,7 +238,8 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
                 date,
                 false,
                 mediator,
-                messageType);
+                messageType,
+                Optional.empty());
 
         CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
                 receiver1.getNetworkId(),
@@ -228,7 +255,8 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
                 date,
                 false,
                 mediator,
-                messageType);
+                messageType,
+                Optional.empty());
         CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
                 receiver2.getNetworkId(),
                 senderNodeIdAndKeyPair);
@@ -240,5 +268,26 @@ public class PrivateTradeChannelService extends BasePrivateChannelService<Privat
         // If it becomes relevant we would need to change the API of the method.
         return CompletableFutureUtils.allOf(sendFuture1, sendFuture2)
                 .thenApply(list -> list.get(0));
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      PrivateTradeChannel channel,
+                                                                                      Optional<TradeChatOffer> tradeChatOffer) {
+        PrivateTradeChatMessage chatMessage = createNewPrivateTradeChatMessage(
+                StringUtils.createShortUid(),
+                channel,
+                channel.getMyUserIdentity().getUserProfile(),
+                channel.getPeer().getId(),
+                text,
+                quotedMessage,
+                new Date().getTime(),
+                false,
+                MessageType.TEXT,
+                tradeChatOffer);
+        addMessage(chatMessage, channel);
+        NetworkId receiverNetworkId = channel.getPeer().getNetworkId();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = channel.getMyUserIdentity().getNodeIdAndKeyPair();
+        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 }

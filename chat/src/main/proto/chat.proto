@@ -123,6 +123,8 @@ message PrivateTradeChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
+  optional TradeChatOffer tradeChatOffer = 4;
+
 }
 
 message TradeChatOffer {
