@@ -19,13 +19,13 @@ package bisq.desktop.primary.main.content.discussion;
 
 import bisq.chat.channel.ChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.ChatModel;
+import bisq.desktop.primary.main.content.chat.BaseChatModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class DiscussionsModel extends ChatModel {
+public class DiscussionsModel extends BaseChatModel {
     private final ChannelDomain channelDomain;
 
     public DiscussionsModel(ChannelDomain channelDomain) {

@@ -23,14 +23,14 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.BaseChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
+public class EventsController extends BaseChatController<EventsView, EventsModel> implements Controller {
     private final ChannelSelectionService eventsChannelSelectionService;
     private PublicEventsChannelSelection publicEventsChannelSelection;
 
