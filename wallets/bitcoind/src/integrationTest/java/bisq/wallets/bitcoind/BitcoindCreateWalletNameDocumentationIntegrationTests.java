@@ -20,7 +20,7 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.calls.BitcoindCreateWalletRpcCall;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.regtest.AbstractRegtestSetup;

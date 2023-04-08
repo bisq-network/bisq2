@@ -18,7 +18,7 @@
 package bisq.wallets.elementsd;
 
 
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

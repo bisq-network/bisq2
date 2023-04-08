@@ -19,7 +19,7 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import org.junit.jupiter.api.Test;

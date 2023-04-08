@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core;
+package bisq.wallets.json_rpc;
 
 import bisq.common.proto.Proto;
 import lombok.Builder;

@@ -17,7 +17,7 @@
 
 package bisq.wallets.core.rpc;
 
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.JsonRpcEndpointSpec;
 

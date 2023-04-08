@@ -23,7 +23,7 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
 import bisq.wallets.bitcoind.zmq.ZmqTopicProcessors;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.elementsd.ElementsdConfig;

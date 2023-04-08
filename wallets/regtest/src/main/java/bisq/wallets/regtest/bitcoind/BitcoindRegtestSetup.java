@@ -22,7 +22,7 @@ import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindListUnspentResponse;
 import bisq.wallets.bitcoind.zmq.ZmqListeners;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;
 import lombok.Getter;
