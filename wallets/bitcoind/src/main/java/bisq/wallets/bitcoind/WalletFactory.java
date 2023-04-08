@@ -22,7 +22,7 @@ import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqConnectionFactory;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.List;

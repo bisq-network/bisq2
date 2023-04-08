@@ -24,7 +24,7 @@ import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.responses.*;
 import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.model.AddressType;
-import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 
 import java.util.List;

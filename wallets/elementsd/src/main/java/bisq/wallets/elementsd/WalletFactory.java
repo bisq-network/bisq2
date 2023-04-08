@@ -20,7 +20,7 @@ package bisq.wallets.elementsd;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.core.rpc.RpcClientFactory;
+import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.elementsd.rpc.ElementsdDaemon;
 import bisq.wallets.elementsd.rpc.ElementsdWallet;
 import bisq.wallets.json_rpc.JsonRpcClient;

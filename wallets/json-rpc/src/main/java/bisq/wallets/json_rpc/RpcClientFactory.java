@@ -15,11 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.wallets.core.rpc;
-
-import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.json_rpc.JsonRpcClient;
-import bisq.wallets.json_rpc.JsonRpcEndpointSpec;
+package bisq.wallets.json_rpc;
 
 import java.util.Optional;
 
