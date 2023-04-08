@@ -19,8 +19,8 @@ package bisq.wallets.regtest.bitcoind;
 
 import bisq.common.util.NetworkUtils;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
+import bisq.wallets.json_rpc.RpcCallFailureException;
 import bisq.wallets.json_rpc.RpcConfig;
-import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.json_rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.process.DaemonProcess;

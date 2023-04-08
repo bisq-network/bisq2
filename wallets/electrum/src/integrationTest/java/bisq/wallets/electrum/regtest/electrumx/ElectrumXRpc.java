@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.regtest.electrumx;
 
-import bisq.wallets.core.exceptions.RpcCallFailureException;
+import bisq.wallets.json_rpc.RpcCallFailureException;
 import bisq.wallets.process.cli.AbstractRpcCliProcess;
 import bisq.wallets.process.cli.CliProcessConfig;
 
