@@ -35,8 +35,8 @@ object ApplicationRunTaskFactory {
             descriptionText = description,
             cmdLineArgs = cmdLineArgs,
             jvmArgs = listOf(
-                "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.0=127.0.0.1:8000",
-                "-Dbisq.networkServiceConfig.seedAddressByTransportType.clear.1=127.0.0.1:8001"
+                "-Dapplication.network.seedAddressByTransportType.clear.0=127.0.0.1:8000",
+                "-Dapplication.network.seedAddressByTransportType.clear.1=127.0.0.1:8001"
             ),
             dataDir = dataDir,
             dependentTask = dependentTask
