@@ -18,7 +18,7 @@
 package bisq.wallets.electrum;
 
 import bisq.common.util.FileUtils;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;

@@ -22,7 +22,7 @@ import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportDescriptorRequestE
 import bisq.wallets.bitcoind.rpc.calls.requests.BitcoindImportMultiRequest;
 import bisq.wallets.bitcoind.rpc.psbt.BitcoindPsbtInput;
 import bisq.wallets.bitcoind.rpc.responses.*;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.model.AddressType;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;

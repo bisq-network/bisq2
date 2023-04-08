@@ -21,7 +21,7 @@ import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ObservableSet;
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;

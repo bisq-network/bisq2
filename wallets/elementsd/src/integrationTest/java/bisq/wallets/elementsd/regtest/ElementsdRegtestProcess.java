@@ -18,7 +18,7 @@
 package bisq.wallets.elementsd.regtest;
 
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.exceptions.RpcCallFailureException;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.elementsd.ElementsdConfig;

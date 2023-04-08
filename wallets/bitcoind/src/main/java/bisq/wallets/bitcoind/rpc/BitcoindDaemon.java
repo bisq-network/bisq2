@@ -21,7 +21,7 @@ import bisq.wallets.bitcoind.rpc.calls.*;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindDecodeRawTransactionResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindFinalizePsbtResponse;
 import bisq.wallets.bitcoind.rpc.responses.BitcoindGetZmqNotificationsResponse;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.rpc.RpcClientFactory;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.RpcCallFailureException;

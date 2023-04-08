@@ -19,7 +19,7 @@ package bisq.wallets.electrum.regtest.electrumx;
 
 import bisq.common.util.FileUtils;
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.AbstractRegtestSetup;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;

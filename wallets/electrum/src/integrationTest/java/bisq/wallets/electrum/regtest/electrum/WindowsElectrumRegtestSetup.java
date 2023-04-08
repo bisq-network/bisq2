@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.regtest.electrum;
 
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import bisq.wallets.regtest.process.MultiProcessCoordinator;

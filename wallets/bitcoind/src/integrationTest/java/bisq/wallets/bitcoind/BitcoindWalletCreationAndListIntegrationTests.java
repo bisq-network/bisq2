@@ -20,7 +20,7 @@ package bisq.wallets.bitcoind;
 import bisq.wallets.bitcoind.regtest.BitcoindExtension;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 import bisq.wallets.regtest.bitcoind.RemoteBitcoind;
 import org.junit.jupiter.api.Test;

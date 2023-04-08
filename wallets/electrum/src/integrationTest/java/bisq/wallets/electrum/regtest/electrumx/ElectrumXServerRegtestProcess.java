@@ -17,7 +17,7 @@
 
 package bisq.wallets.electrum.regtest.electrumx;
 
-import bisq.wallets.core.RpcConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.process.DaemonProcess;
 import bisq.wallets.process.ProcessConfig;
 import bisq.wallets.process.scanner.InputStreamScanner;
