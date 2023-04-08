@@ -5,9 +5,4 @@ plugins {
 
 dependencies {
     implementation project(':json-rpc')
-
-    implementation(libs.bisq.jsonrpc4j) {
-        exclude(module: 'base64')
-        exclude(module: 'httpcore-nio')
-    }
 }
