@@ -39,13 +39,11 @@ public class BitcoindWalletCreationAndListIntegrationTests {
     private final Path dataDir;
     private final RpcConfig rpcConfig;
     private final BitcoindDaemon daemon;
-    private final BitcoindWallet minerWallet;
 
     public BitcoindWalletCreationAndListIntegrationTests(BitcoindRegtestSetup regtestSetup) {
         this.dataDir = regtestSetup.getDataDir();
         this.rpcConfig = regtestSetup.getRpcConfig();
         this.daemon = regtestSetup.getDaemon();
-        this.minerWallet = regtestSetup.getMinerWallet();
     }
 
     @Test
