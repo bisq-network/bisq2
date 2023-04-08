@@ -127,8 +127,7 @@ public class ElectrumWalletService implements WalletService, ElectrumNotifyApi.L
                             .resolve(config.getNetwork())
                             .resolve("wallets")
                             .resolve("default_wallet"),
-                    electrumProcess.getElectrumDaemon(),
-                    new ObservableSet<>()
+                    electrumProcess.getElectrumDaemon()
             );
 
             wallet.initialize(Optional.empty());

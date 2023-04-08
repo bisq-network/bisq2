@@ -37,7 +37,7 @@ public class ElectrumWallet implements Wallet {
     private final Path walletPath;
     private final ElectrumDaemon daemon;
 
-    public ElectrumWallet(Path walletPath, ElectrumDaemon daemon, ObservableSet<String> receiveAddresses) {
+    public ElectrumWallet(Path walletPath, ElectrumDaemon daemon) {
         this.walletPath = walletPath;
         this.daemon = daemon;
     }
