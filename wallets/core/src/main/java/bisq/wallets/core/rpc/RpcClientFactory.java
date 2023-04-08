@@ -17,33 +17,16 @@
 
 package bisq.wallets.core.rpc;
 
-import bisq.common.encoding.Base64;
 import bisq.wallets.core.RpcConfig;
 import bisq.wallets.json_rpc.JsonRpcClient;
 import bisq.wallets.json_rpc.JsonRpcEndpointSpec;
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class RpcClientFactory {
 
     public static JsonRpcClient createDaemonRpcClient(RpcConfig rpcConfig) {
         return createJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty());
-    }
-
-    public static DaemonRpcClient createLegacyDaemonRpcClient(RpcConfig rpcConfig) {
-        try {
-            return new DaemonRpcClient(
-                    createLegacyJsonRpcClientWithUrlSuffix(rpcConfig, Optional.empty())
-            );
-        } catch (MalformedURLException e) {
-            throw new RpcClientCreationFailureException("Couldn't create RpcClient with config: " + rpcConfig, e);
-        }
     }
 
     public static JsonRpcClient createWalletRpcClient(RpcConfig rpcConfig, String walletName) {
@@ -57,12 +40,6 @@ public class RpcClientFactory {
         return new JsonRpcClient(endpointSpec);
     }
 
-    private static JsonRpcHttpClient createLegacyJsonRpcClientWithUrlSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix)
-            throws MalformedURLException {
-        String url = createRpcUrlWithWithSuffix(rpcConfig, urlSuffix);
-        return new JsonRpcHttpClient(new URL(url), createAuthHeader(rpcConfig));
-    }
-
     private static String createRpcUrlWithWithSuffix(RpcConfig rpcConfig, Optional<String> urlSuffix) {
         String hostname = rpcConfig.getHostname();
         int port = rpcConfig.getPort();
@@ -71,14 +48,5 @@ public class RpcClientFactory {
             url += urlSuffix.get();
         }
         return url;
-    }
-
-    private static Map<String, String> createAuthHeader(RpcConfig rpcConfig) {
-        String auth = rpcConfig.getUser() + ":" + rpcConfig.getPassword();
-        String base64Auth = Base64.encode(auth.getBytes(StandardCharsets.UTF_8));
-
-        Map<String, String> map = new HashMap<>();
-        map.put("Authorization", "Basic " + base64Auth);
-        return map;
     }
 }
