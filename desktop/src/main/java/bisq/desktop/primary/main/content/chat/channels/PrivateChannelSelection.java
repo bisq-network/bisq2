@@ -81,8 +81,8 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final PrivateChannelService privateDiscussionChannelService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final PrivateChannelService privateEventsChannelService;
-        private final PrivateChannelService privateSupportChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
+        private final PrivateChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
@@ -214,22 +214,33 @@ public class PrivateChannelSelection extends ChannelSelection {
             switch (privateChannel.getChannelDomain()) {
                 case TRADE:
                     privateTradeChannelService.leaveChannel((PrivateTradeChannel) privateChannel);
+                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                            .findFirst()
+                            .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
+                                    () -> tradeChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
                     privateDiscussionChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                            .findFirst()
+                            .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChannel()),
+                                    () -> discussionChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
                     privateEventsChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                            .findFirst()
+                            .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChannel()),
+                                    () -> eventsChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
                     privateSupportChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                            .findFirst()
+                            .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChannel()),
+                                    () -> supportChannelSelectionService.selectChannel(null));
                     break;
             }
-
-            model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
-                    .findFirst()
-                    .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
-                            () -> tradeChannelSelectionService.selectChannel(null));
         }
     }
 
