@@ -65,7 +65,7 @@ public class BitcoindWalletCreationAndListIntegrationTests {
     }
 
     @Test
-    public void loadWalletIfExisting() throws MalformedURLException {
+    public void loadWalletIfExisting() {
         String walletName = "wallet_load_if_existing";
 
         Path walletFilePath = dataDir.resolve("regtest")
