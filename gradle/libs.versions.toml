@@ -13,7 +13,6 @@ apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
 
 assertj-core-lib = { strictly = '3.22.0' }
 bisq-tor-binary-lib = { strictly = '787183b147286d783a6392bb9ffcd8ba920d6fff' }
-bisq-jsonrpc4j-lib = { strictly = '1.6.0.bisq.2' }
 bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
 
 chimp-jsocks-lib = { strictly = '567e1cd6' }
@@ -72,7 +71,6 @@ apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpcli
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
-bisq-jsonrpc4j = { module = 'com.github.bisq-network:jsonrpc4j', version.ref = 'bisq-jsonrpc4j-lib' }
 
 bisq-tor-binary-geoip = { module = 'com.github.bisq-network.tor-binary:tor-binary-geoip', version.ref = 'bisq-tor-binary-lib' }
 bisq-tor-binary-macos = { module = 'com.github.bisq-network.tor-binary:tor-binary-macos', version.ref = 'bisq-tor-binary-lib' }
