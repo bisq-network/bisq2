@@ -171,7 +171,6 @@ public class ChatMessagesListView {
         private final PublicChannelService publicSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
-        private final Optional<WalletService> walletService;
         private Pin selectedChannelPin, chatMessagesPin;
         private Pin offerOnlySettingsPin;
 
@@ -203,7 +202,6 @@ public class ChatMessagesListView {
             reputationService = applicationService.getUserService().getReputationService();
             mediationService = applicationService.getSupportService().getMediationService();
             settingsService = applicationService.getSettingsService();
-            walletService = applicationService.getWalletService();
             this.mentionUserHandler = mentionUserHandler;
             this.showChatUserDetailsHandler = showChatUserDetailsHandler;
             this.replyHandler = replyHandler;
@@ -487,38 +485,6 @@ public class ChatMessagesListView {
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
 
-        private void onCompleteTrade(PrivateTradeChatMessage chatMessage) {
-            var offer = chatMessage.getTradeChatOffer().orElse(null);
-            if (offer == null) return;
-
-            if (model.isMyMessage(chatMessage) == offer.getDirection().isSell()) {
-                if (walletService.isEmpty()) return;
-
-                // I'm buying BTC, send unused address
-                // Format: bitcoin:<address>[?amount=<amount>][?label=<label>][?message=<message>]
-                walletService.get().getUnusedAddress().
-                        thenAccept(receiveAddress -> UIThread.run(() -> {
-                            if (receiveAddress == null) return;
-
-                            privateTradeChannelService.findChannelForMessage(chatMessage).ifPresent(channel -> {
-                                        UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-                                        String bitcoinUri = "bitcoin:" + receiveAddress +
-                                                "?label=" + myUserIdentity.getUserProfile().getNickName();
-                                        // TODO: Make bitcoiUri a clickable link
-                                        String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress, /*bitcoinUri*/"");
-                                        privateTradeChannelService.sendPrivateChatMessage(message,
-                                                Optional.empty(),
-                                                channel);
-                                    }
-                            );
-                        }));
-            } else {
-                // I'm selling BTC, send fiat info
-                log.info("Send fiat info");
-                // TODO: Implement fiat info profile
-            }
-        }
-
         private boolean isMyMessage(ChatMessage chatMessage) {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         }
@@ -649,12 +615,12 @@ public class ChatMessagesListView {
                 public ListCell<ChatMessageListItem<? extends ChatMessage>> call(ListView<ChatMessageListItem<? extends ChatMessage>> list) {
                     return new ListCell<>() {
                         private final ReputationScoreDisplay reputationScoreDisplay;
-                        private final Button takeOfferButton, removeOfferButton, completeTradeButton;
+                        private final Button takeOfferButton, removeOfferButton;
                         private final Label message, userName, dateTime, replyIcon, pmIcon, editIcon, deleteIcon, copyIcon, moreOptionsIcon;
                         private final Text quotedMessageField;
                         private final BisqTextArea editInputField;
                         private final Button saveEditButton, cancelEditButton;
-                        private final VBox mainVBox, quotedMessageVBox, completeTradeButtonWrapper;
+                        private final VBox mainVBox, quotedMessageVBox;
                         private final HBox cellHBox, messageHBox, messageBgHBox, reactionsHBox, editButtonsHBox;
                         private final UserProfileIcon userProfileIcon = new UserProfileIcon(60);
 
@@ -671,10 +637,6 @@ public class ChatMessagesListView {
 
                             removeOfferButton = new Button(Res.get("deleteOffer"));
                             removeOfferButton.getStyleClass().addAll("red-small-button", "no-background");
-
-                            completeTradeButton = new Button(Res.get("completeTrade"));
-                            completeTradeButton.getStyleClass().add("default-button");
-                            completeTradeButtonWrapper = new VBox(completeTradeButton);
 
                             // quoted message
                             quotedMessageField = new Text();
@@ -755,7 +717,6 @@ public class ChatMessagesListView {
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
                                 boolean isPublicOfferMessage = chatMessage instanceof PublicTradeChatMessage && isOfferMessage;
-                                boolean isPrivateOfferMessage = chatMessage instanceof PrivateTradeChatMessage && isOfferMessage;
                                 boolean myMessage = model.isMyMessage(chatMessage);
 
                                 dateTime.setVisible(false);
@@ -810,8 +771,6 @@ public class ChatMessagesListView {
                                     mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, editButtonsHBox, reactionsHBox);
 
                                     messageBgHBox.getChildren().setAll(messageVBox, userProfileIconVbox);
-                                    if (isPrivateOfferMessage)
-                                        addOfferButton(messageBgHBox, (PrivateTradeChatMessage) chatMessage);
 
                                     messageHBox.getChildren().setAll(Spacer.fillHBox(), messageBgHBox);
 
@@ -863,8 +822,6 @@ public class ChatMessagesListView {
 
                                         VBox.setMargin(userNameAndDateHBox, new Insets(-5, 0, -5, 30));
                                         mainVBox.getChildren().setAll(userNameAndDateHBox, messageHBox, reactionsHBox);
-                                        if (isPrivateOfferMessage)
-                                            addOfferButton(messageBgHBox, (PrivateTradeChatMessage) chatMessage);
                                     }
                                 }
 
@@ -904,7 +861,6 @@ public class ChatMessagesListView {
                                 editInputField.maxWidthProperty().unbind();
                                 removeOfferButton.setOnAction(null);
                                 takeOfferButton.setOnAction(null);
-                                completeTradeButton.setOnAction(null);
 
                                 saveEditButton.setOnAction(null);
                                 cancelEditButton.setOnAction(null);
@@ -927,26 +883,6 @@ public class ChatMessagesListView {
 
                                 setGraphic(null);
                             }
-                        }
-
-                        private void addOfferButton(Pane pane, PrivateTradeChatMessage chatMessage) {
-                            // Don't show button for BTC sellers
-                            checkArgument(chatMessage.getTradeChatOffer().isPresent());
-                            var offer = chatMessage.getTradeChatOffer().get();
-                            if (model.isMyMessage(chatMessage) == offer.getDirection().isBuy()) return;
-
-                            // Wrap button in a VBox to be able to show tooltip for disabled button
-                            if (controller.walletService.isEmpty()) {
-                                completeTradeButton.setDisable(true);
-                                Tooltip.install(completeTradeButtonWrapper, new Tooltip(Res.get("wallet.unavailable")));
-                            } else {
-                                completeTradeButton.setDisable(false);
-                                completeTradeButton.setTooltip(new Tooltip(Res.get("bisqEasy.completeOffer.tooltip")));
-                                completeTradeButton.setOnAction(e -> controller.onCompleteTrade(chatMessage));
-                            }
-                            HBox.setMargin(completeTradeButton, new Insets(0, 10, 0, 0));
-                            completeTradeButtonWrapper.setMaxHeight(completeTradeButton.getHeight());
-                            pane.getChildren().add(completeTradeButtonWrapper);
                         }
 
                         private void handleEditBox(ChatMessage chatMessage) {

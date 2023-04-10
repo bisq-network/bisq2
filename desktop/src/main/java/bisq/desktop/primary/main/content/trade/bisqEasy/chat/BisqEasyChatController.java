@@ -22,7 +22,9 @@ import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.priv.PrivateTradeChannel;
+import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
@@ -40,19 +42,28 @@ import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
+import bisq.user.identity.UserIdentity;
+import bisq.wallets.core.WalletService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyChatController extends BaseChatController<BisqEasyChatView, BisqEasyChatModel> {
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final SettingsService settingsService;
     private final MediationService mediationService;
+    private final Optional<WalletService> walletService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
+    PrivateTradeChatMessage lastOfferMessage;
+
     private Pin offerOnlySettingsPin;
     private Pin inMediationPin;
+    private Pin chatMessagesPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
@@ -60,6 +71,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
+        walletService = applicationService.getWalletService();
     }
 
     @Override
@@ -105,6 +117,9 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
+        if (chatMessagesPin != null) {
+            chatMessagesPin.unbind();
+        }
         UIThread.run(() -> {
             if (channel == null) {
                 return;
@@ -117,17 +132,22 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                     inMediationPin.unbind();
                 }
                 inMediationPin = privateChannel.getInMediation().addObserver(mediationActivated ->
-                        model.getActionButtonVisible().set(!mediationActivated &&
-                                !privateChannel.isMediator()));
+                        model.getOpenDisputeDisabled().set(mediationActivated ||
+                                privateChannel.isMediator()));
 
 
                 publicTradeChannelSelection.deSelectChannel();
-                model.getActionButtonText().set(Res.get("bisqEasy.openDispute"));
+                model.getCreateOfferButtonVisible().set(false);
+                model.getTradeHelpersVisible().set(true);
+
+                chatMessagesPin = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().addChangedListener(this::updateLastOfferMessage);
+                updateLastOfferMessage();
 
                 Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
             } else {
                 resetSelectedChildTarget();
-                model.getActionButtonVisible().set(true);
+                model.getTradeHelpersVisible().set(false);
+                model.getCreateOfferButtonVisible().set(true);
                 model.getActionButtonText().set(Res.get("createOffer"));
                 privateChannelSelection.deSelectChannel();
 
@@ -144,6 +164,45 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         });
     }
 
+    private void updateLastOfferMessage() {
+        PrivateTradeChatMessage newLastOfferMessage = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
+                .filter(chatMessage -> chatMessage instanceof PrivateTradeChatMessage)
+                .map(chatMessage -> (PrivateTradeChatMessage) chatMessage)
+                .filter(message -> message.getChannelName().equals(tradeChannelSelectionService.getSelectedChannel().get().getChannelName()))
+                .filter(PrivateTradeChatMessage::hasTradeChatOffer)
+                .max(Comparator.comparing(PrivateTradeChatMessage::getDate))
+                .orElse(null);
+
+        if (newLastOfferMessage == lastOfferMessage) return;
+
+        lastOfferMessage = newLastOfferMessage;
+        updateTradeHelper();
+    }
+
+    private void updateTradeHelper() {
+        UIThread.runOnNextRenderFrame(() -> {
+            // Don't show complete trade button for BTC sellers or chat with no offers
+            if (lastOfferMessage == null) {
+                model.getCompleteTradeDisabled().set(true);
+                return;
+            }
+
+            checkArgument(lastOfferMessage.getTradeChatOffer().isPresent());
+            var offer = lastOfferMessage.getTradeChatOffer().get();
+
+            boolean isBtcSeller = isMyMessage(lastOfferMessage) == offer.getDirection().isBuy();
+            boolean noWallet = walletService.isEmpty();
+            boolean isDisabled = isBtcSeller || noWallet;
+            model.getCompleteTradeDisabled().set(isDisabled);
+
+            String tooltip = isBtcSeller ? "Coming soon" :
+                    noWallet ?
+                            Res.get("wallet.unavailable") :
+                            Res.get("bisqEasy.completeOffer.tooltip");
+            view.updateCompleteTradeTooltip(isDisabled, tooltip);
+        });
+    }
+
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
         switch (navigationTarget) {
@@ -157,26 +216,70 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         }
     }
 
-    void onActionButtonClicked() {
+    void onCreateOfferButtonClicked() {
         Channel<? extends ChatMessage> channel = model.getSelectedChannel().get();
-        if (channel instanceof PrivateTradeChannel) {
-            PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
-            if (privateTradeChannel.getMediator().isPresent()) {
-                new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
-                        .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
-                        .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
-                        .onAction(() -> {
-                            mediationService.requestMediation(privateTradeChannel.getMyUserIdentity(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
-                            new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
-                                    .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
-                        })
-                        .closeButtonText(Res.get("cancel"))
-                        .show();
-            } else {
-                new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
-            }
+        if (channel instanceof PrivateTradeChannel) return;
+
+        Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
+    }
+
+    void onOpenMediation() {
+        Channel<? extends ChatMessage> channel = model.getSelectedChannel().get();
+        if (!(channel instanceof PrivateTradeChannel)) return;
+
+        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
+        if (privateTradeChannel.getMediator().isPresent()) {
+            new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
+                    .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
+                    .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
+                    .onAction(() -> {
+                        mediationService.requestMediation(privateTradeChannel.getMyUserIdentity(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                        new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
+                                .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
+                    })
+                    .closeButtonText(Res.get("cancel"))
+                    .show();
         } else {
-            Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
+            new Popup().warning(Res.get("bisqEasy.requestMediation.popup.noMediatorAvailable")).show();
         }
+    }
+
+    void onCompleteTrade() {
+        PrivateTradeChatMessage chatMessage = lastOfferMessage;
+        if (chatMessage == null) return;
+
+        TradeChatOffer offer = chatMessage.getTradeChatOffer().orElse(null);
+        if (offer == null) return;
+
+        if (isMyMessage(chatMessage) == offer.getDirection().isSell()) {
+            if (walletService.isEmpty()) return;
+
+            // I'm buying BTC, send unused address
+            // Format: bitcoin:<address>[?amount=<amount>][?label=<label>][?message=<message>]
+            walletService.get().getUnusedAddress().
+                    thenAccept(receiveAddress -> UIThread.run(() -> {
+                        if (receiveAddress == null) return;
+
+                        chatService.getPrivateTradeChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
+                                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                                    String bitcoinUri = "bitcoin:" + receiveAddress +
+                                            "?label=" + myUserIdentity.getUserProfile().getNickName();
+                                    // TODO: Make bitcoiUri a clickable link
+                                    String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress, /*bitcoinUri*/"");
+                                    chatService.getPrivateTradeChannelService().sendPrivateChatMessage(message,
+                                            Optional.empty(),
+                                            channel);
+                                }
+                        );
+                    }));
+        } else {
+            // I'm selling BTC, send fiat info
+            log.info("Send fiat info");
+            // TODO: Implement fiat info profile
+        }
+    }
+
+    boolean isMyMessage(ChatMessage chatMessage) {
+        return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
     }
 }
