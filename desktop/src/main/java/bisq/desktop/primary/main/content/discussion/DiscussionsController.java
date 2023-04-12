@@ -18,40 +18,35 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.*;
-import bisq.chat.message.ChatMessage;
-import bisq.desktop.common.threading.UIThread;
+import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.PublicChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.BaseChatController;
+import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
 import bisq.desktop.primary.main.content.chat.channels.PublicDiscussionChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
-public class DiscussionsController extends BaseChatController<DiscussionsView, DiscussionsModel> implements Controller {
-    private final ChannelSelectionService discussionChannelSelectionService;
-    private final PublicChannelService publicDiscussionChannelService;
-    private PublicDiscussionChannelSelection publicDiscussionChannelSelection;
-
+public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
     public DiscussionsController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.DISCUSSION, NavigationTarget.NONE);
-
-        publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-        discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
     }
 
     @Override
-    public void onActivate() {
-        super.onActivate();
-
-        selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+    public ChannelSelectionService getChannelSelectionService() {
+        return chatService.getDiscussionChannelSelectionService();
     }
 
     @Override
-    public void createComponents() {
-        publicDiscussionChannelSelection = new PublicDiscussionChannelSelection(applicationService);
+    public PublicChannelService getPublicChannelService() {
+        return chatService.getPublicDiscussionChannelService();
+    }
+
+    @Override
+    public PublicChannelSelection getPublicChannelSelection() {
+        return new PublicDiscussionChannelSelection(applicationService);
     }
 
     @Override
@@ -63,33 +58,9 @@ public class DiscussionsController extends BaseChatController<DiscussionsView, D
     public DiscussionsView getChatView() {
         return new DiscussionsView(model,
                 this,
-                publicDiscussionChannelSelection.getRoot(),
+                publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
-    }
-
-    @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
-
-        UIThread.run(() -> {
-            if (channel == null) {
-                return;
-            }
-
-            if (channel instanceof PrivateChannel) {
-                applyPeersIcon((BasePrivateChannel<?>) channel);
-                publicDiscussionChannelSelection.deSelectChannel();
-            } else {
-                applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
-                privateChannelSelection.deSelectChannel();
-            }
-        });
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
     }
 }

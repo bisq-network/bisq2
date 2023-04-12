@@ -22,7 +22,6 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.PublicChannelService;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
@@ -36,17 +35,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PublicDiscussionChannelSelection extends ChannelSelection {
+public class PublicDiscussionChannelSelection extends PublicChannelSelection {
     private final Controller controller;
 
     public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService.getChatService());
     }
 
+    @Override
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
+    @Override
     public void deSelectChannel() {
         controller.deSelectChannel();
     }
@@ -56,14 +57,12 @@ public class PublicDiscussionChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PublicChannelService publicDiscussionChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
 
             model = new Model();

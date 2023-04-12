@@ -82,7 +82,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     @Override
-    public void createComponents() {
+    public void createDependencies() {
         publicTradeChannelSelection = new PublicTradeChannelSelection(applicationService);
     }
 

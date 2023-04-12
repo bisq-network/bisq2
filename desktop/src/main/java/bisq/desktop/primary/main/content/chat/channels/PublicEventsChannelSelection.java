@@ -36,17 +36,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public class PublicEventsChannelSelection extends ChannelSelection {
+public class PublicEventsChannelSelection extends PublicChannelSelection {
     private final Controller controller;
 
     public PublicEventsChannelSelection(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService.getChatService());
     }
 
+    @Override
     public Pane getRoot() {
         return controller.view.getRoot();
     }
 
+    @Override
     public void deSelectChannel() {
         controller.deSelectChannel();
     }

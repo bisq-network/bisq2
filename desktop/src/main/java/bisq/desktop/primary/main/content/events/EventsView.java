@@ -17,12 +17,12 @@
 
 package bisq.desktop.primary.main.content.events;
 
-import bisq.desktop.primary.main.content.chat.BaseChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EventsView extends BaseChatView {
+public class EventsView extends ChatView {
     public EventsView(EventsModel model,
                       EventsController controller,
                       Pane marketChannelSelection,

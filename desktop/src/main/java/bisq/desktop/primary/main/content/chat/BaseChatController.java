@@ -84,12 +84,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         });
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
-        createComponents();
+        createDependencies();
+
         model = getChatModel(channelDomain);
         view = getChatView();
     }
 
-    public abstract void createComponents();
+    public abstract void createDependencies();
 
     public abstract M getChatModel(ChannelDomain channelDomain);
 

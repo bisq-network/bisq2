@@ -17,12 +17,12 @@
 
 package bisq.desktop.primary.main.content.discussion;
 
-import bisq.desktop.primary.main.content.chat.BaseChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DiscussionsView extends BaseChatView {
+public class DiscussionsView extends ChatView {
     public DiscussionsView(DiscussionsModel model,
                            DiscussionsController controller,
                            Pane marketChannelSelection,
