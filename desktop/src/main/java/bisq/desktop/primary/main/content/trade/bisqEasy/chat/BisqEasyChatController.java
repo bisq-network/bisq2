@@ -104,6 +104,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     @Override
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
+
         UIThread.run(() -> {
             if (channel == null) {
                 return;

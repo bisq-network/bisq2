@@ -20,6 +20,7 @@ package bisq.desktop.primary.main.content.events;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
@@ -70,13 +71,19 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         super.handleChannelChange(channel);
 
-        if (channel instanceof PrivateChannel) {
-            applyPeersIcon((BasePrivateChannel<?>) channel);
-            publicEventsChannelSelection.deSelectChannel();
-        } else {
-            applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
-            privateChannelSelection.deSelectChannel();
-        }
+        UIThread.run(() -> {
+            if (channel == null) {
+                return;
+            }
+
+            if (channel instanceof PrivateChannel) {
+                applyPeersIcon((BasePrivateChannel<?>) channel);
+                publicEventsChannelSelection.deSelectChannel();
+            } else {
+                applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
+                privateChannelSelection.deSelectChannel();
+            }
+        });
     }
 
     @Override

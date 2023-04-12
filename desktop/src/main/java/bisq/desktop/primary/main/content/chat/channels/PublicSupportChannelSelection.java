@@ -22,8 +22,8 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.PublicChannelService;
-import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -55,14 +55,12 @@ public class PublicSupportChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PublicChannelService publicSupportChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService supportChannelSelectionService;
 
         protected Controller(ChatService chatService) {
             super(chatService);
 
             publicSupportChannelService = chatService.getPublicSupportChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
             supportChannelSelectionService = chatService.getSupportChannelSelectionService();
 
             model = new Model();
@@ -85,11 +83,16 @@ public class PublicSupportChannelSelection extends ChannelSelection {
                     .to(publicSupportChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
-                    channel -> {
-                        if (channel instanceof PublicChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                        }
-                    });
+                    channel -> UIThread.runOnNextRenderFrame(() -> {
+                                if (channel instanceof PublicChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                                } else {
+                                    model.selectedChannelItem.set(null);
+                                }
+                            }
+                    ));
         }
 
         @Override
