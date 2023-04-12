@@ -325,6 +325,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
     private void maybeAnimateMark() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        if (selectedLeftNavButton == null) return;
+        
         UIThread.runOnNextRenderFrame(() -> {
             double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
             if (selectedLeftNavButton instanceof LeftNavSubButton) {
