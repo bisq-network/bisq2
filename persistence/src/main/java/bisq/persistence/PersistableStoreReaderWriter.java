@@ -52,7 +52,7 @@ public class PersistableStoreReaderWriter<T extends PersistableStore<T>> {
             //noinspection unchecked,rawtypes
             return (Optional) Optional.of(persistableStore);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Couldn't read " + storeFilePath + " from file.", e);
             tryToBackupCorruptedStoreFile();
         }
