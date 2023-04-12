@@ -72,6 +72,36 @@ have to use JVM args).
 - For clearnet, Tor, and I2P use
   `-Dapplication.network.supportedTransportTypes.0=CLEAR -Dapplication.network.supportedTransportTypes.1=TOR -Dapplication.network.supportedTransportTypes.2=I2P`
 
+## Running Bisq using the Makefile targets with Unix environments
+
+Makefile requires `make` and `GNU Screen` packages installed on your Unix system.
+For reference, screen (https://savannah.gnu.org/projects/screen) is a command that give you the ability to launch and use multiple shells from a single shell instance. It' s imperative to use the `make` targets that you understand how to work with `screen`.
+
+For Debian/Ubuntu environments:
+- `# apt-get install screen make`
+
+For Redhat/Fedora environments:
+- `# yum install screen make -y`
+
+After installing the packages, check the comments on the `USAGE` section of the `Makefile` for a quick introduction on how to use screen.
+
+The `Makefile` allows you to start local seed nodes and desktop apps and full environments of Bisq 2. It's possible to start nodes with `clearnet`, `tor` and `i2p` scenarios.
+
+Starting full environment scenarios are as simple as running:
+- `make start-clearnet-full-env` will start a full clearnet environment with 2 seeds and 2 desktop apps.
+- `make start-tor-full-env` will start a full tor environment with clearnet composed of 2 seeds and 2 desktop apps.
+- `make start-i2p-full-env` will start a full i2p environment with clearnet composed of 2 seeds and 2 desktop apps.
+
+Another example is starting just seed nodes:
+- `make start-clearnet-seeds` will start 2 seed nodes using clearnet.
+- `make start-tor-seeds` will start 2 seed nodes using tor and clearnet.
+- `make start-i2p-seeds` will start 2 seed nodes using i2p and clearnet.
+
+Notice that to start the `tor` and `i2p` desktop applications, you need to point to an existing seed. So if you only start seeds using `Makefile` you need to ensure the parameters to the seeds of the `tor` and `i2p` environments are correct.
+
+It's also possible to specify how many desktop apps you want to spawn with the n parameter, see bellow:
+- `make start-clearnet-full-env n=4` starts a clearnet environment composed of 2 seeds and 4 clients
+
 ## Running the Prototype with a local network
 If you want to use the network, you have to start at least one seed node with the appropriate JVM arguments (see instructions below) as there are no public seed nodes available at that stage. You can run clear net, Tor and I2P or any combination of those.
 You specify the network by:
