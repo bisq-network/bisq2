@@ -79,6 +79,7 @@ bisq-tor-binary-linux64 = { module = 'com.github.bisq-network.tor-binary:tor-bin
 bisq-tor-binary-windows = { module = 'com.github.bisq-network.tor-binary:tor-binary-windows', version.ref = 'bisq-tor-binary-lib' }
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
+bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
 
 chimp-jsocks = { module = 'com.github.chimp1984:jsocks', version.ref = 'chimp-jsocks-lib'  }
 chimp-jtorctl = { module = 'com.github.chimp1984:jtorctl', version.ref = 'chimp-jtorctl-lib' }
