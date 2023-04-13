@@ -17,38 +17,22 @@
 
 package bisq.desktop.primary.main.content.chat;
 
-import bisq.chat.channel.Channel;
-import bisq.chat.message.ChatMessage;
-import bisq.desktop.common.view.NavigationModel;
-import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
-import javafx.beans.property.*;
-import javafx.scene.Node;
-import javafx.scene.layout.Pane;
+import bisq.chat.channel.ChannelDomain;
+import bisq.desktop.common.view.NavigationTarget;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Getter
-public abstract class ChatModel extends NavigationModel {
-    private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
-    private final StringProperty selectedChatMessages = new SimpleStringProperty("");
-    private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
-    private final ObjectProperty<Channel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
-    private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
-    private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
-    private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
-    private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
-    private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
-    private final ObjectProperty<Node> channelIcon = new SimpleObjectProperty<>();
-    private final StringProperty searchText = new SimpleStringProperty();
-    @Setter
-    private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
+public abstract class ChatModel extends BaseChatModel {
+    protected final ChannelDomain channelDomain;
 
-    public ChatModel() {
+    public ChatModel(ChannelDomain channelDomain) {
+        this.channelDomain = channelDomain;
+    }
+
+    @Override
+    public NavigationTarget getDefaultNavigationTarget() {
+        return NavigationTarget.NONE;
     }
 }

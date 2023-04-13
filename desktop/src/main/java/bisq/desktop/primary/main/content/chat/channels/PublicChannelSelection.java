@@ -15,17 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.support;
+package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.desktop.primary.main.content.chat.ChatModel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import javafx.scene.layout.Pane;
 
-@Slf4j
-@Getter
-public class SupportModel extends ChatModel {
-    public SupportModel(ChannelDomain channelDomain) {
-        super(channelDomain);
-    }
+public abstract class PublicChannelSelection extends ChannelSelection {
+
+    abstract public void deSelectChannel();
+
+    abstract public Pane getRoot();
 }

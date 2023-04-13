@@ -18,38 +18,35 @@
 package bisq.desktop.primary.main.content.support;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.*;
-import bisq.chat.message.ChatMessage;
-import bisq.desktop.common.threading.UIThread;
+import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.PublicChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
 import bisq.desktop.primary.main.content.chat.channels.PublicSupportChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 public class SupportController extends ChatController<SupportView, SupportModel> implements Controller {
-    private final ChannelSelectionService supportChannelSelectionService;
-    private PublicSupportChannelSelection publicSupportChannelSelection;
-
     public SupportController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.SUPPORT, NavigationTarget.NONE);
-
-        supportChannelSelectionService = chatService.getSupportChannelSelectionService();
     }
 
     @Override
-    public void onActivate() {
-        super.onActivate();
-
-        selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+    public ChannelSelectionService getChannelSelectionService() {
+        return chatService.getSupportChannelSelectionService();
     }
 
     @Override
-    public void createComponents() {
-        publicSupportChannelSelection = new PublicSupportChannelSelection(applicationService);
+    public PublicChannelService getPublicChannelService() {
+        return chatService.getPublicSupportChannelService();
+    }
+
+    @Override
+    public PublicChannelSelection getPublicChannelSelection() {
+        return new PublicSupportChannelSelection(applicationService);
     }
 
     @Override
@@ -61,33 +58,9 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     public SupportView getChatView() {
         return new SupportView(model,
                 this,
-                publicSupportChannelSelection.getRoot(),
+                publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
-    }
-
-    @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
-
-        UIThread.run(() -> {
-            if (channel == null) {
-                return;
-            }
-
-            if (channel instanceof PrivateChannel) {
-                applyPeersIcon((BasePrivateChannel<?>) channel);
-                publicSupportChannelSelection.deSelectChannel();
-            } else {
-                applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
-                privateChannelSelection.deSelectChannel();
-            }
-        });
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
     }
 }

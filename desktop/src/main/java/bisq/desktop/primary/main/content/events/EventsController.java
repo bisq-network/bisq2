@@ -18,39 +18,37 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.*;
-import bisq.chat.message.ChatMessage;
-import bisq.desktop.common.threading.UIThread;
+import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.PublicChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
 import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
-    private final ChannelSelectionService eventsChannelSelectionService;
-    private PublicEventsChannelSelection publicEventsChannelSelection;
-
     public EventsController(DefaultApplicationService applicationService) {
         super(applicationService, ChannelDomain.EVENTS, NavigationTarget.NONE);
-
-        eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
     }
 
     @Override
-    public void onActivate() {
-        super.onActivate();
-
-        selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+    public ChannelSelectionService getChannelSelectionService() {
+        return chatService.getEventsChannelSelectionService();
     }
 
     @Override
-    public void createComponents() {
-        publicEventsChannelSelection = new PublicEventsChannelSelection(applicationService);
+    public PublicChannelService getPublicChannelService() {
+        return chatService.getPublicEventsChannelService();
     }
+
+    @Override
+    public PublicChannelSelection getPublicChannelSelection() {
+        return new PublicEventsChannelSelection(applicationService);
+    }
+
 
     @Override
     public EventsModel getChatModel(ChannelDomain channelDomain) {
@@ -61,33 +59,9 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     public EventsView getChatView() {
         return new EventsView(model,
                 this,
-                publicEventsChannelSelection.getRoot(),
+                publicChannelSelection.getRoot(),
                 privateChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
-    }
-
-    @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
-
-        UIThread.run(() -> {
-            if (channel == null) {
-                return;
-            }
-
-            if (channel instanceof PrivateChannel) {
-                applyPeersIcon((BasePrivateChannel<?>) channel);
-                publicEventsChannelSelection.deSelectChannel();
-            } else {
-                applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);
-                privateChannelSelection.deSelectChannel();
-            }
-        });
-    }
-
-    @Override
-    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
-        return Optional.empty();
     }
 }

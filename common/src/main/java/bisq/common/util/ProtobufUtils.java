@@ -38,6 +38,7 @@ public class ProtobufUtils {
     }
 
     public static String getProtoType(Any any) {
-        return any.getTypeUrl().split("/")[1];
+        String[] tokens = any.getTypeUrl().split("/");
+        return tokens.length > 1 ? tokens[1] : "";
     }
 }
