@@ -209,6 +209,8 @@ public class OutboundConnectionManager {
             Address address = addressByChannel.get(socketChannel);
             log.info("Created outbound connection to {}", address.getFullAddress());
         } catch (ClosedChannelException e) {
+            log.error("Couldn't connect to channel.", e);
+
             // Connection closed.
             Address address = addressByChannel.get(socketChannel);
             channelByAddress.remove(address);
