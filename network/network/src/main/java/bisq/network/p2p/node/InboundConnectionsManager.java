@@ -46,6 +46,7 @@ public class InboundConnectionsManager {
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
     private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
     private final Map<Address, InboundConnectionChannel> connectionByAddress = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, NetworkEnvelopeSocketChannel> networkEnvelopeChannelBySocketChannel = new ConcurrentHashMap<>();
 
     public InboundConnectionsManager(BanList banList,
                                      Capability myCapability,
@@ -94,9 +95,10 @@ public class InboundConnectionsManager {
         }
     }
 
-    public void handleInboundConnection(SocketChannel socketChannel, List<NetworkEnvelope> networkEnvelopes) {
+    public void handleInboundConnection(SocketChannel socketChannel) {
         if (inboundHandshakeChannels.contains(socketChannel)) {
             NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = new NetworkEnvelopeSocketChannel(socketChannel);
+            networkEnvelopeChannelBySocketChannel.put(socketChannel, networkEnvelopeSocketChannel);
 
             log.debug("Inbound handshake request at: {}", myCapability.getAddress());
             Optional<InboundConnectionChannel> inboundConnectionOptional = performHandshake(networkEnvelopeSocketChannel);
@@ -128,13 +130,20 @@ public class InboundConnectionsManager {
         } else if (verifiedConnections.contains(socketChannel)) {
             InboundConnectionChannel inboundConnection = connectionByChannel.get(socketChannel);
             Address peerAddress = inboundConnection.getPeerAddress();
-            log.debug("Received {} messages from peer {}.", networkEnvelopes.size(), peerAddress.getFullAddress());
 
-            networkEnvelopes.forEach(networkEnvelope -> node.handleNetworkMessage(
-                    networkEnvelope.getNetworkMessage(),
-                    networkEnvelope.getAuthorizationToken(),
-                    inboundConnection
-            ));
+            NetworkEnvelopeSocketChannel networkEnvelopeChannel = networkEnvelopeChannelBySocketChannel.get(socketChannel);
+            try {
+                List<NetworkEnvelope> networkEnvelopes = networkEnvelopeChannel.receiveNetworkEnvelopes();
+                log.debug("Received {} messages from peer {}.", networkEnvelopes.size(), peerAddress.getFullAddress());
+
+                networkEnvelopes.forEach(networkEnvelope -> node.handleNetworkMessage(
+                        networkEnvelope.getNetworkMessage(),
+                        networkEnvelope.getAuthorizationToken(),
+                        inboundConnection
+                ));
+            } catch (IOException e) {
+                log.error("Couldn't receive messages from socketChannel", e);
+            }
         }
     }
 
