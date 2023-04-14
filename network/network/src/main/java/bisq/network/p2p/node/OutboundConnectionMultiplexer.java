@@ -90,7 +90,7 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
 
     private void workerLoop() {
         try {
-            while (!outboundConnectionManager.areConnectionsInProgress()) {
+            while (!outboundConnectionManager.isActive()) {
                 synchronized (this) {
                     wait();
                 }

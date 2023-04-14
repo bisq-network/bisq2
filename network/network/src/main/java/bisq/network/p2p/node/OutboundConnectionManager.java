@@ -78,8 +78,8 @@ public class OutboundConnectionManager {
         this.selector = selector;
     }
 
-    public boolean areConnectionsInProgress() {
-        return !connectingChannels.isEmpty() || !outboundHandshakeChannels.isEmpty();
+    public boolean isActive() {
+        return !connectingChannels.isEmpty() || !outboundHandshakeChannels.isEmpty() || !verifiedConnections.isEmpty();
     }
 
     public void createNewConnection(Address address) {
