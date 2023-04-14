@@ -1,7 +1,7 @@
 package bisq.gradle.electrum
 
-import bisq.gradle.electrum.tasks.DownloadTask
 import bisq.gradle.electrum.tasks.FileVerificationTask
+import bisq.gradle.tasks.DownloadTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
