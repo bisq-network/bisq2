@@ -8,4 +8,5 @@ dependencyResolutionManagement {
 
 include 'commons'
 include 'desktop-regtest'
+include 'gradle-tasks'
 include 'electrum-binaries'
