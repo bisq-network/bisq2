@@ -112,7 +112,7 @@ public class ServerChannel {
                             log.info("Received message from {}", socketChannel.getRemoteAddress());
 
                             if (inboundConnectionsManager.isInboundConnection(socketChannel)) {
-                                inboundConnectionsManager.handleInboundConnection(socketChannel, Collections.emptyList());
+                                inboundConnectionsManager.handleInboundConnection(socketChannel);
                             }
                         }
                     }

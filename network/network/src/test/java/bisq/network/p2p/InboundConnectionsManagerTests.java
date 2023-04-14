@@ -98,7 +98,7 @@ public class InboundConnectionsManagerTests {
                             log.info("Received message from {}", socketChannel.getRemoteAddress());
 
                             if (inboundConnectionsManager.isInboundConnection(socketChannel)) {
-                                inboundConnectionsManager.handleInboundConnection(socketChannel, Collections.emptyList());
+                                inboundConnectionsManager.handleInboundConnection(socketChannel);
                             }
                         }
                     }
@@ -180,17 +180,10 @@ public class InboundConnectionsManagerTests {
 
                         if (selectionKey.isReadable()) {
                             SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
-
-                            NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel = new NetworkEnvelopeSocketChannel(socketChannel);
-                            List<NetworkEnvelope> networkEnvelopes = networkEnvelopeSocketChannel.receiveNetworkEnvelopes();
-                            if (networkEnvelopes.isEmpty()) {
-                                continue;
-                            }
-
                             log.info("Received message from {}", socketChannel.getRemoteAddress());
 
                             if (inboundConnectionsManager.isInboundConnection(socketChannel)) {
-                                inboundConnectionsManager.handleInboundConnection(socketChannel, networkEnvelopes);
+                                inboundConnectionsManager.handleInboundConnection(socketChannel);
                             }
                         }
                     }
