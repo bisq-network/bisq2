@@ -1,11 +1,12 @@
 package bisq.gradle.tasks
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import java.io.FileOutputStream
 import java.net.URL
 import java.nio.channels.Channels
@@ -19,15 +20,8 @@ abstract class DownloadTask : DefaultTask() {
     @get:Optional
     abstract val sha256hash: Property<String>
 
-    @get:OutputDirectory
-    abstract val downloadDirectory: DirectoryProperty
-
     @get:OutputFile
-    val outputFile: Provider<RegularFile>
-        get() = downloadDirectory.file(fileName)
-
-    private val fileName: String
-        get() = downloadUrl.get().split("/").last()
+    abstract val outputFile: RegularFileProperty
 
     @TaskAction
     fun download() {

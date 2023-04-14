@@ -29,7 +29,7 @@ class ElectrumBinaryPackager(
             }
 
         extractDmgOrCopyTask.configure {
-            dependsOn(binaryDownloader.lastTask)
+            dependsOn(binaryDownloader.verifyDownloadTask)
         }
 
         val packageElectrumBinariesTask: TaskProvider<Zip> =
@@ -52,13 +52,13 @@ class ElectrumBinaryPackager(
 
     private fun registerDmgExtractionTask(): TaskProvider<out Task> =
         project.tasks.register<ExtractElectrumAppFromDmgFile>("extractElectrumAppFromDmgFile") {
-            dmgFile.set(binaryDownloader.binaryFile)
+            dmgFile.set(binaryDownloader.verifyDownloadTask.flatMap { it.fileToVerify })
             outputDirectory.set(binariesDir)
         }
 
     private fun registerVerifiedElectrumBinary(): TaskProvider<out Task> =
         project.tasks.register<Copy>("copyVerifiedElectrumBinary") {
-            from(binaryDownloader.binaryFile.asFile.absolutePath)
+            from(binaryDownloader.verifyDownloadTask.flatMap { it.fileToVerify })
             into(binariesDir.get().asFile.absolutePath)
         }
 }
