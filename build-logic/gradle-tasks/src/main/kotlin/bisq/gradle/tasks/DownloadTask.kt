@@ -1,6 +1,5 @@
-package bisq.gradle.electrum.tasks
+package bisq.gradle.tasks
 
-import bisq.gradle.electrum.Sha256
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
