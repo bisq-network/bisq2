@@ -3,8 +3,6 @@ package bisq.gradle.electrum
 import bisq.gradle.electrum.tasks.FileVerificationTask
 import bisq.gradle.tasks.DownloadTask
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -21,28 +19,13 @@ class ElectrumBinaryDownloader(
         private const val DOWNLOADS_DIR = "${BisqElectrumPlugin.DATA_DIR}/downloads"
     }
 
-    private val taskDownloadDirectory: Provider<Directory> = project.layout.buildDirectory.dir(DOWNLOADS_DIR)
-
-    val binaryFile: RegularFile
-        get() = taskDownloadDirectory.get().file(getBinaryFileName())
-
-    lateinit var lastTask: TaskProvider<out Task>
+    lateinit var verifyDownloadTask: TaskProvider<FileVerificationTask>
 
     fun registerTasks() {
-        val binaryDownloadTask: TaskProvider<DownloadTask> =
-            project.tasks.register<DownloadTask>("downloadElectrumBinary") {
-                downloadUrl.set(getBinaryDownloadUrl())
-                sha256hash.set(getBinaryHash())
-                downloadDirectory.set(taskDownloadDirectory)
-            }
+        val binaryDownloadTask: TaskProvider<DownloadTask> = registerBinaryDownloadTask()
+        val signatureDownloadTask: TaskProvider<DownloadTask> = registerSignatureDownloadTask()
 
-        val signatureDownloadTask: TaskProvider<DownloadTask> =
-            project.tasks.register<DownloadTask>("downloadElectrumSignature") {
-                downloadUrl.set(getSignatureDownloadUrl())
-                downloadDirectory.set(taskDownloadDirectory)
-            }
-
-        lastTask = project.tasks.register<FileVerificationTask>("verifyElectrumBinary") {
+        verifyDownloadTask = project.tasks.register<FileVerificationTask>("verifyElectrumBinary") {
             dependsOn(binaryDownloadTask, signatureDownloadTask)
 
             fileToVerify.set(binaryDownloadTask.flatMap { it.outputFile })
@@ -54,18 +37,43 @@ class ElectrumBinaryDownloader(
         }
     }
 
-    private fun getBinaryFileName(): String {
-        val electrumVersion: String = pluginExtension.version.get()
-        return when (getOS()) {
-            OS.LINUX -> "electrum-$electrumVersion-x86_64.AppImage"
-            OS.MAC_OS -> "electrum-$electrumVersion.dmg"
-            OS.WINDOWS -> "electrum-$electrumVersion.exe"
+    private fun registerBinaryDownloadTask(): TaskProvider<DownloadTask> {
+        val binaryUrl: Provider<String> = getBinaryDownloadUrl()
+        val binaryFileName: Provider<String> = getFileNameFromUrl(binaryUrl)
+        val binaryOutputFile: Provider<RegularFile> =
+            project.layout.buildDirectory.file("$DOWNLOADS_DIR/$binaryFileName")
+        return project.tasks.register<DownloadTask>("downloadElectrumBinary") {
+            downloadUrl.set(binaryUrl)
+            sha256hash.set(getBinaryHash())
+            outputFile.set(binaryOutputFile)
         }
     }
 
-    private fun getBinaryDownloadUrl(): String = "$ELECTRUM_WEBSITE_URL/${pluginExtension.version.get()}/" + getBinaryFileName()
+    private fun registerSignatureDownloadTask(): TaskProvider<DownloadTask> {
+        val signatureUrl: Provider<String> = getSignatureDownloadUrl()
+        val signatureFileName: Provider<String> = getFileNameFromUrl(signatureUrl)
+        val signatureOutputFile: Provider<RegularFile> =
+            project.layout.buildDirectory.file("$DOWNLOADS_DIR/$signatureFileName")
+        return project.tasks.register<DownloadTask>("downloadElectrumSignature") {
+            downloadUrl.set(signatureUrl)
+            outputFile.set(signatureOutputFile)
+        }
+    }
 
-    private fun getSignatureDownloadUrl(): String = "${getBinaryDownloadUrl()}.asc"
+    private fun getBinaryDownloadUrl(): Provider<String> =
+        pluginExtension.version.map { "$ELECTRUM_WEBSITE_URL/${it}/" + getBinaryFileName(it) }
+
+    private fun getBinaryFileName(version: String): String =
+        when (getOS()) {
+            OS.LINUX -> "electrum-$version-x86_64.AppImage"
+            OS.MAC_OS -> "electrum-$version.dmg"
+            OS.WINDOWS -> "electrum-$version.exe"
+        }
+
+
+    private fun getSignatureDownloadUrl(): Provider<String> = getBinaryDownloadUrl().map { "$it.asc" }
+
+    private fun getFileNameFromUrl(url: Provider<String>): Provider<String> = url.map { it.split("/").last() }
 
     private fun getBinaryHash(): Property<String> {
         return when (getOS()) {
