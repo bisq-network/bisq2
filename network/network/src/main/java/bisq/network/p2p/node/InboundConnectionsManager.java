@@ -85,6 +85,7 @@ public class InboundConnectionsManager {
 
             inboundHandshakeChannels.add(newConnectionSocketChannel);
         } catch (IOException e) {
+            log.warn("Cannot accept new connection", e);
             try {
                 if (newConnectionSocketChannel != null) {
                     newConnectionSocketChannel.close();
