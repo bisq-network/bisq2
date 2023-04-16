@@ -22,6 +22,7 @@ import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
@@ -33,8 +34,10 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.overlay.ComboBoxOverlay;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
+import bisq.user.identity.UserIdentityService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -57,6 +60,7 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -84,6 +88,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final View view;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final UserIdentityService userIdentityService;
         private Pin channelItemsPin;
         private Pin numVisibleChannelsPin;
 
@@ -92,6 +97,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
 
             model = new Model();
             view = new View(model, this);
@@ -174,13 +180,20 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
-            publicTradeChannelService.hidePublicTradeChannel(channel);
-
-            model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
-            if (!model.sortedList.isEmpty()) {
-                tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
+            Optional<PublicTradeChatMessage> myOpenOffer = channel.getChatMessages().stream()
+                    .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
+                    .findAny();
+            if (myOpenOffer.isPresent()) {
+                new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
-                tradeChannelSelectionService.selectChannel(null);
+                publicTradeChannelService.hidePublicTradeChannel(channel);
+
+                model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
+                if (!model.sortedList.isEmpty()) {
+                    tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
+                } else {
+                    tradeChannelSelectionService.selectChannel(null);
+                }
             }
         }
 
