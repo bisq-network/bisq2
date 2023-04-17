@@ -80,12 +80,12 @@ jobs:
           key: ${{ runner.os }}-electrum-binaries-${{ hashFiles('wallets/electrum/build.gradle') }}
 
       - name: Gradle Build Action (root)
-        uses: gradle/gradle-build-action@v2.4.0
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           arguments: build --scan
 
 #      - name: Gradle Build Action (wallets)
-#        uses: gradle/gradle-build-action@v2.4.0
+#        uses: gradle/gradle-build-action@v2.4.2
 #        with:
 #          arguments: build --scan
 #          build-root-directory: wallets
