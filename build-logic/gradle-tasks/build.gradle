@@ -8,6 +8,5 @@ repositories {
 }
 
 dependencies {
-    implementation libs.google.guava
     implementation libs.bouncycastle.pg
 }
