@@ -4,7 +4,6 @@ import bisq.gradle.electrum.tasks.FileVerificationTask
 import bisq.gradle.tasks.DownloadTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
@@ -44,7 +43,6 @@ class ElectrumBinaryDownloader(
             project.layout.buildDirectory.file("$DOWNLOADS_DIR/$binaryFileName")
         return project.tasks.register<DownloadTask>("downloadElectrumBinary") {
             downloadUrl.set(binaryUrl)
-            sha256hash.set(getBinaryHash())
             outputFile.set(binaryOutputFile)
         }
     }
@@ -74,14 +72,6 @@ class ElectrumBinaryDownloader(
     private fun getSignatureDownloadUrl(): Provider<String> = getBinaryDownloadUrl().map { "$it.asc" }
 
     private fun getFileNameFromUrl(url: Provider<String>): Provider<String> = url.map { it.split("/").last() }
-
-    private fun getBinaryHash(): Property<String> {
-        return when (getOS()) {
-            OS.LINUX -> pluginExtension.appImageHash
-            OS.MAC_OS -> pluginExtension.dmgHash
-            OS.WINDOWS -> pluginExtension.exeHash
-        }
-    }
 
     private fun getPublicKeyUrls() =
         setOf(
