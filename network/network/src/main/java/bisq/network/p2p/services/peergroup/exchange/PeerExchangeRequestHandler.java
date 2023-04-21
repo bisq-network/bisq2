@@ -52,8 +52,8 @@ class PeerExchangeRequestHandler implements Connection.Listener {
                 node, connection.getPeerAddress(), peersForPeerExchange.size());
         ts = System.currentTimeMillis();
         try {
-            // We get called from the IO thread, so we do not use the async send method
-            node.send(new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange)), connection);
+            // We get called from the IO thread, so we do not use the async sendAsync method
+            node.sendAsync(new PeerExchangeRequest(nonce, new ArrayList<>(peersForPeerExchange)), connection);
         } catch (Throwable throwable) {
             future.completeExceptionally(throwable);
             dispose();

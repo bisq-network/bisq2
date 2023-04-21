@@ -44,8 +44,8 @@ public class InboundConnectionsManager {
     private final Node node;
     private final List<SocketChannel> inboundHandshakeChannels = new CopyOnWriteArrayList<>();
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
-    private final Map<SocketChannel, InboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
-    private final Map<Address, InboundConnectionChannel> connectionByAddress = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, InboundConnection> connectionByChannel = new ConcurrentHashMap<>();
+    private final Map<Address, InboundConnection> connectionByAddress = new ConcurrentHashMap<>();
     private final Map<SocketChannel, NetworkEnvelopeSocketChannel> networkEnvelopeChannelBySocketChannel = new ConcurrentHashMap<>();
 
     public InboundConnectionsManager(BanList banList,
@@ -102,10 +102,10 @@ public class InboundConnectionsManager {
             networkEnvelopeChannelBySocketChannel.put(socketChannel, networkEnvelopeSocketChannel);
 
             log.debug("Inbound handshake request at: {}", myCapability.getAddress());
-            Optional<InboundConnectionChannel> inboundConnectionOptional = performHandshake(networkEnvelopeSocketChannel);
+            Optional<InboundConnection> inboundConnectionOptional = performHandshake(networkEnvelopeSocketChannel);
 
             if (inboundConnectionOptional.isPresent()) {
-                InboundConnectionChannel inboundConnection = inboundConnectionOptional.get();
+                InboundConnection inboundConnection = inboundConnectionOptional.get();
                 Address peerAddress = inboundConnection.getPeerAddress();
                 log.debug("Inbound handshake completed: Initiated by {} to {}",
                         peerAddress, myCapability.getAddress());
@@ -118,8 +118,8 @@ public class InboundConnectionsManager {
                     connectionByAddress.put(peerAddress, inboundConnection);
                     verifiedConnections.add(socketChannel);
 
-                    log.info("Calling node.onNewIncomingConnection for peer {}", peerAddress.getFullAddress());
-                    node.onNewIncomingConnection(inboundConnection);
+                    log.info("Calling node.onNewConnection for peer {}", peerAddress.getFullAddress());
+                    node.onNewConnection(inboundConnection);
                 }
 
             } else {
@@ -129,7 +129,7 @@ public class InboundConnectionsManager {
             inboundHandshakeChannels.remove(socketChannel);
 
         } else if (verifiedConnections.contains(socketChannel)) {
-            InboundConnectionChannel inboundConnection = connectionByChannel.get(socketChannel);
+            InboundConnection inboundConnection = connectionByChannel.get(socketChannel);
             Address peerAddress = inboundConnection.getPeerAddress();
 
             NetworkEnvelopeSocketChannel networkEnvelopeChannel = networkEnvelopeChannelBySocketChannel.get(socketChannel);
@@ -152,16 +152,7 @@ public class InboundConnectionsManager {
         return inboundHandshakeChannels.contains(socketChannel) || verifiedConnections.contains(socketChannel);
     }
 
-    public Optional<InboundConnectionChannel> getConnectionByAddress(Address address) {
-        InboundConnectionChannel inboundConnection = connectionByAddress.get(address);
-        return Optional.ofNullable(inboundConnection);
-    }
-
-    public Collection<InboundConnectionChannel> getAllInboundConnections() {
-        return connectionByAddress.values();
-    }
-
-    private Optional<InboundConnectionChannel> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
+    private Optional<InboundConnection> performHandshake(NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel) {
         try {
             var handshakeResponder = new ConnectionHandshakeResponder(
                     banList,
@@ -185,7 +176,7 @@ public class InboundConnectionsManager {
             }
 
             return Optional.of(
-                    new InboundConnectionChannel(
+                    new InboundConnection(
                             handshakeRequest.getCapability(),
                             handshakeRequest.getLoad(),
                             networkEnvelopeSocketChannel,
@@ -199,6 +190,15 @@ public class InboundConnectionsManager {
         }
 
         return Optional.empty();
+    }
+
+    public Optional<InboundConnection> getConnectionByAddress(Address address) {
+        InboundConnection inboundConnection = connectionByAddress.get(address);
+        return Optional.ofNullable(inboundConnection);
+    }
+
+    public Collection<InboundConnection> getAllInboundConnections() {
+        return connectionByAddress.values();
     }
 
     private boolean isAlreadyConnectedToPeer(Address peerAddress) {

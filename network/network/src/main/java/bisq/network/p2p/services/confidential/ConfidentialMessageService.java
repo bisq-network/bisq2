@@ -39,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static bisq.network.NetworkService.DISPATCHER;
+import static bisq.network.NetworkService.NETWORK_IO_POOL;
 import static java.util.concurrent.CompletableFuture.*;
 
 @Slf4j
@@ -152,25 +153,27 @@ public class ConfidentialMessageService implements Node.Listener, DataService.Li
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Result send(NetworkMessage networkMessage,
-                       Address address,
-                       PubKey receiverPubKey,
-                       KeyPair senderKeyPair,
-                       String senderNodeId) {
-        try {
-            // Node gets initialized at higher level services
-            nodesById.assertNodeIsInitialized(senderNodeId);
-            Connection connection = nodesById.getConnection(senderNodeId, address);
-            return send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId);
-        } catch (Throwable throwable) {
-            if (networkMessage instanceof MailboxMessage) {
-                ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
-                return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
-            } else {
-                log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
-                return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
-            }
-        }
+    public CompletableFuture<Result> send(NetworkMessage networkMessage,
+                                          Address address,
+                                          PubKey receiverPubKey,
+                                          KeyPair senderKeyPair,
+                                          String senderNodeId) {
+        // Node gets initialized at higher level services
+        nodesById.assertNodeIsInitialized(senderNodeId);
+
+        return nodesById.getConnectionAsync(senderNodeId, address)
+                .thenApplyAsync(connection ->
+                                send(networkMessage, connection, receiverPubKey, senderKeyPair, senderNodeId),
+                        NETWORK_IO_POOL)
+                .exceptionally(throwable -> {
+                    if (networkMessage instanceof MailboxMessage) {
+                        ConfidentialMessage confidentialMessage = getConfidentialMessage(networkMessage, receiverPubKey, senderKeyPair);
+                        return storeMailBoxMessage((MailboxMessage) networkMessage, confidentialMessage, receiverPubKey, senderKeyPair);
+                    } else {
+                        log.warn("Sending proto failed and proto is not type of MailboxMessage. proto={}", networkMessage);
+                        return new Result(State.FAILED).setErrorMsg("Sending proto failed and proto is not type of MailboxMessage. Exception=" + throwable);
+                    }
+                });
     }
 
     private Result send(NetworkMessage networkMessage,

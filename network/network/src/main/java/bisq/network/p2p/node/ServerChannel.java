@@ -23,8 +23,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -66,16 +64,10 @@ public class ServerChannel {
 
     public void start() {
         Address myAddress = myCapability.getAddress();
-        log.debug("Create server: {}", myAddress);
+        log.debug("Create server: {}", myAddress.getFullAddress());
 
         serverThread = new Thread(() -> {
             try {
-                InetSocketAddress socketAddress = new InetSocketAddress(
-                        InetAddress.getLocalHost(),
-                        myAddress.getPort()
-                );
-                serverSocketChannel.socket().bind(socketAddress);
-
                 Selector selector = SelectorProvider.provider().openSelector();
                 InboundConnectionsManager inboundConnectionsManager =
                         new InboundConnectionsManager(
@@ -152,14 +144,14 @@ public class ServerChannel {
         return myCapability.getAddress();
     }
 
-    public Optional<InboundConnectionChannel> getConnectionByAddress(Address address) {
+    public Optional<InboundConnection> getConnectionByAddress(Address address) {
         if (inboundConnectionsManager.isPresent()) {
             return inboundConnectionsManager.get().getConnectionByAddress(address);
         }
         return Optional.empty();
     }
 
-    public Collection<InboundConnectionChannel> getAllInboundConnections() {
+    public Collection<InboundConnection> getAllInboundConnections() {
         if (inboundConnectionsManager.isPresent()) {
             return inboundConnectionsManager.get().getAllInboundConnections();
         }

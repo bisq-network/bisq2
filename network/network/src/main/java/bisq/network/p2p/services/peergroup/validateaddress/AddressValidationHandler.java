@@ -29,7 +29,6 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Getter
 @Slf4j
@@ -53,11 +52,10 @@ class AddressValidationHandler implements Connection.Listener {
     CompletableFuture<Boolean> request() {
         log.debug("Node {} send ConfirmAddressRequest to {} with nonce {}",
                 node, addressOfInboundConnection, nonce);
-        supplyAsync(() -> node.getConnection(addressOfInboundConnection, false), NETWORK_IO_POOL)
-                .thenApply(connection ->
-                        // We get called from the IO thread, so we do not use the async send method
-                        node.send(new AddressValidationRequest(nonce), connection)
-                )
+
+        node.getConnectionAsync(addressOfInboundConnection)
+                .thenApplyAsync(connection -> node.sendAsync(new AddressValidationRequest(nonce), connection)
+                        , NETWORK_IO_POOL)
                 .whenComplete((connection, throwable) -> {
                     if (throwable == null) {
                         if (connection instanceof OutboundConnection) {

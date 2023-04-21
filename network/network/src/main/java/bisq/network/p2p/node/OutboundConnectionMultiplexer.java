@@ -24,19 +24,19 @@ import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class OutboundConnectionMultiplexer implements OutboundConnectionManager.Listener {
+public class OutboundConnectionMultiplexer {
 
     private final Selector selector;
     private final OutboundConnectionManager outboundConnectionManager;
 
     private Optional<Thread> workerThread = Optional.empty();
-    private final Map<Address, CompletableFuture<OutboundConnectionChannel>> completableFutureByPeerAddress = new ConcurrentHashMap<>();
-
 
     public OutboundConnectionMultiplexer(OutboundConnectionManager outboundConnectionManager) {
         this.selector = outboundConnectionManager.getSelector();
@@ -44,8 +44,6 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
     }
 
     public void start() {
-        outboundConnectionManager.registerListener(this);
-
         var thread = new Thread(this::workerLoop);
         workerThread = Optional.of(thread);
         thread.start();
@@ -55,8 +53,8 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         workerThread.ifPresent(Thread::interrupt);
     }
 
-    public CompletableFuture<OutboundConnectionChannel> getConnection(Address address) {
-        Optional<OutboundConnectionChannel> optionalConnectionChannel =
+    public CompletableFuture<OutboundConnection> getConnection(Address address) {
+        Optional<OutboundConnection> optionalConnectionChannel =
                 outboundConnectionManager.getConnection(address);
 
         if (optionalConnectionChannel.isPresent()) {
@@ -65,9 +63,7 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
             );
         }
 
-        var completableFuture = new CompletableFuture<OutboundConnectionChannel>();
-        completableFutureByPeerAddress.put(address, completableFuture);
-        outboundConnectionManager.createNewConnection(address);
+        CompletableFuture<OutboundConnection> completableFuture = outboundConnectionManager.createNewConnection(address);
 
         synchronized (this) {
             notify();
@@ -76,30 +72,24 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
         return completableFuture;
     }
 
-    @Override
-    public void onNewConnection(OutboundConnectionChannel outboundConnectionChannel) {
-        Address peerAddress = outboundConnectionChannel.getPeerAddress();
-        CompletableFuture<OutboundConnectionChannel> completableFuture =
-                completableFutureByPeerAddress.get(peerAddress);
-        completableFuture.complete(outboundConnectionChannel);
-    }
-
-    public Collection<OutboundConnectionChannel> getAllOutboundConnections() {
+    public Collection<OutboundConnection> getAllOutboundConnections() {
         return outboundConnectionManager.getAllOutboundConnections();
     }
 
     private void workerLoop() {
-        try {
-            while (!outboundConnectionManager.isActive()) {
-                synchronized (this) {
-                    wait();
+        while (true) {
+            try {
+                while (!outboundConnectionManager.isActive()) {
+                    synchronized (this) {
+                        wait();
+                    }
                 }
+
+                selectorLoop();
+
+            } catch (InterruptedException e) {
+                log.warn("InterruptedException in OutboundConnectionMultiplexer workerThread.", e);
             }
-
-            selectorLoop();
-
-        } catch (InterruptedException e) {
-            log.warn("InterruptedException in OutboundConnectionMultiplexer workerThread.", e);
         }
     }
 
@@ -117,6 +107,7 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
 
                     if (selectionKey.isConnectable()) {
                         outboundConnectionManager.handleConnectableChannel(socketChannel);
+                        continue;
                     }
 
                     if (selectionKey.isReadable()) {
@@ -129,10 +120,10 @@ public class OutboundConnectionMultiplexer implements OutboundConnectionManager.
 
                 }
             }
+        } catch (CancelledKeyException e) {
+            log.warn("Connection already closed.", e);
         } catch (IOException e) {
             log.warn("IOException in OutboundConnectionMultiplexer selector.", e);
-        } catch (CancelledKeyException e) {
-            // Connection attempt failed. Nothing we can do here.
         }
     }
 }
