@@ -97,11 +97,11 @@ public class PeerGroup {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Stream<OutboundConnection> getOutboundConnections() {
-        return node.getOutboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
+        return node.getOutboundConnections().stream().filter(Connection::isRunning);
     }
 
     public Stream<InboundConnection> getInboundConnections() {
-        return node.getInboundConnectionsByAddress().values().stream().filter(Connection::isRunning);
+        return node.getInboundConnections().stream().filter(Connection::isRunning);
     }
 
     public Stream<Connection> getAllConnections() {

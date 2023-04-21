@@ -22,6 +22,7 @@ import bisq.common.util.NetworkUtils;
 import bisq.network.p2p.node.*;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.Transport;
+import bisq.network.p2p.node.transport.socketchannel.ClearNetSocketChannelFactory;
 import bisq.network.p2p.services.peergroup.BanList;
 import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
@@ -30,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
@@ -58,12 +61,20 @@ public class OutboundConnectionsMultiplexerTest {
 
         Address address = Address.localHost(NetworkUtils.findFreeSystemPort());
         Capability serverCapability = new Capability(address, supportedTransportTypes);
+
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        InetSocketAddress socketAddress = new InetSocketAddress(
+                InetAddress.getLocalHost(),
+                address.getPort()
+        );
+        serverSocketChannel.socket().bind(socketAddress);
+
         ServerChannel serverChannel = new ServerChannel(
                 serverCapability,
                 mock(BanList.class),
                 createAuthorizationService(),
                 mock(Node.class),
-                ServerSocketChannel.open()
+                serverSocketChannel
         );
 
         var countDownLatch = new CountDownLatch(1);
@@ -88,13 +99,14 @@ public class OutboundConnectionsMultiplexerTest {
                         mock(BanList.class),
                         Load.INITIAL_LOAD,
                         outboundCapability,
+                        new ClearNetSocketChannelFactory(),
                         mock(Node.class),
                         selector
                 );
                 var connectionMultiplexer = new OutboundConnectionMultiplexer(outboundConnectionManager);
                 connectionMultiplexer.start();
 
-                CompletableFuture<OutboundConnectionChannel> connection = connectionMultiplexer.getConnection(address);
+                CompletableFuture<OutboundConnection> connection = connectionMultiplexer.getConnection(address);
                 return connection.get(1, TimeUnit.MINUTES);
 
 
@@ -107,7 +119,7 @@ public class OutboundConnectionsMultiplexerTest {
         var thread = new Thread(futureTask);
         thread.start();
 
-        OutboundConnectionChannel outboundConnectionChannel = futureTask.get(30, TimeUnit.SECONDS);
+        OutboundConnection outboundConnectionChannel = futureTask.get(30, TimeUnit.SECONDS);
         assertThat(outboundConnectionChannel).isNotNull();
     }
 

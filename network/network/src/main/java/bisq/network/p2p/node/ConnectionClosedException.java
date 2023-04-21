@@ -24,16 +24,9 @@ import java.util.concurrent.CompletionException;
 public class ConnectionClosedException extends CompletionException {
     @Getter
     private Connection connection;
-    @Getter
-    private ConnectionChannel connectionChannel;
 
     public ConnectionClosedException(Connection connection) {
         super("Connection has been already closed. Connection=" + connection);
         this.connection = connection;
-    }
-
-    public ConnectionClosedException(ConnectionChannel connectionChannel) {
-        super("Connection has been already closed. Connection=" + connectionChannel);
-        this.connectionChannel = connectionChannel;
     }
 }

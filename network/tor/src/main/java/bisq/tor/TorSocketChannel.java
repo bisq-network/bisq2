@@ -19,6 +19,7 @@ package bisq.tor;
 
 import bisq.socks5_socket_channel.Socks5ConnectionData;
 import bisq.socks5_socket_channel.Socks5SocketChannel;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
+@Slf4j
 public class TorSocketChannel implements Closeable, ReadableByteChannel, WritableByteChannel {
     private final Socks5SocketChannel socks5SocketChannel;
 
@@ -51,7 +53,11 @@ public class TorSocketChannel implements Closeable, ReadableByteChannel, Writabl
                 torSocksConnectionData.getDestinationPort()
         );
 
+        long ts = System.currentTimeMillis();
         SocketChannel socketChannel = socks5SocketChannel.connect(connectionData, byteBuffer);
+        log.info("Tor socket to {} created. Took {} ms", connectionData.getDestinationHostName(),
+                System.currentTimeMillis() - ts);
+
         byteBuffer.clear();
 
         return socketChannel;

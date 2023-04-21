@@ -21,6 +21,7 @@ package bisq.network.p2p.node;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.peergroup.BanList;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
@@ -39,6 +40,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Maintains a map with nodes by nodeId.
  * Provides delegate methods to node with given nodeId
  */
+@Slf4j
 public class NodesById implements Node.Listener {
     public interface Listener {
         void onNodeAdded(Node node);
@@ -67,16 +69,16 @@ public class NodesById implements Node.Listener {
         getOrCreateNode(nodeId).initialize(serverPort);
     }
 
-    public Connection getConnection(String nodeId, Address address) {
-        return getOrCreateNode(nodeId).getConnection(address);
+    public CompletableFuture<? extends Connection> getConnectionAsync(String nodeId, Address address) {
+        return getOrCreateNode(nodeId).getConnectionAsync(address);
     }
 
-    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
-        return getOrCreateNode(senderNodeId).send(networkMessage, address);
+    public CompletableFuture<Connection> send(String senderNodeId, NetworkMessage networkMessage, Address address) {
+        return getOrCreateNode(senderNodeId).sendAsync(networkMessage, address);
     }
 
     public Connection send(String senderNodeId, NetworkMessage networkMessage, Connection connection) {
-        return getOrCreateNode(senderNodeId).send(networkMessage, connection);
+        return getOrCreateNode(senderNodeId).sendAsync(networkMessage, connection);
     }
 
     public CompletableFuture<Boolean> shutdown() {

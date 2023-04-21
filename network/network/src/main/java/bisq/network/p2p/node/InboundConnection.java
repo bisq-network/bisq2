@@ -17,32 +17,20 @@
 
 package bisq.network.p2p.node;
 
-import bisq.network.p2p.node.transport.Transport;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.Socket;
-import java.util.function.BiConsumer;
-
 @Slf4j
 public class InboundConnection extends Connection {
-    @Getter
-    private final Transport.ServerSocketResult serverSocketResult;
-
     @Setter
     private boolean isPeerAddressVerified;
 
-    InboundConnection(Socket socket,
-                      Transport.ServerSocketResult serverSocketResult,
-                      Capability peersCapability,
-                      Load peersLoad,
-                      Metrics metrics,
-                      Handler handler,
-                      BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersLoad, metrics, handler, errorHandler);
-        this.serverSocketResult = serverSocketResult;
-        log.debug("Create inboundConnection from server: {}", serverSocketResult);
+    public InboundConnection(Capability peersCapability,
+                             Load peersLoad,
+                             NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
+                             Metrics metrics) {
+        super(peersCapability, peersLoad, networkEnvelopeSocketChannel, metrics);
+        log.debug("Create inboundConnection");
     }
 
     @Override

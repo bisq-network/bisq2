@@ -95,7 +95,7 @@ public class Broadcaster {
                     .forEach(connection -> {
                         log.debug("Node {} broadcast to {}", node, connection.getPeerAddress());
                         try {
-                            node.send(broadcastMessage, connection);
+                            node.sendAsync(broadcastMessage, connection);
                             numSuccess.incrementAndGet();
                         } catch (Throwable throwable) {
                             numFaults.incrementAndGet();
