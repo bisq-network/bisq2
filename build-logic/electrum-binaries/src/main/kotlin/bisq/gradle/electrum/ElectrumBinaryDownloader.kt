@@ -16,7 +16,6 @@ class ElectrumBinaryDownloader(
 ) {
 
     companion object {
-        private const val ELECTRUM_WEBSITE_URL = "https://download.electrum.org"
         private const val DOWNLOADS_DIR = "${BisqElectrumPlugin.DATA_DIR}/downloads"
     }
 
@@ -61,15 +60,7 @@ class ElectrumBinaryDownloader(
     }
 
     private fun getBinaryDownloadUrl(): Provider<String> =
-        pluginExtension.version.map { "$ELECTRUM_WEBSITE_URL/${it}/" + getBinaryFileName(it) }
-
-    private fun getBinaryFileName(version: String): String =
-        when (getOS()) {
-            OS.LINUX -> "electrum-$version-x86_64.AppImage"
-            OS.MAC_OS -> "electrum-$version.dmg"
-            OS.WINDOWS -> "electrum-$version.exe"
-        }
-
+        pluginExtension.version.map { ElectrumBinaryUrlProvider(it).url }
 
     private fun getSignatureDownloadUrl(): Provider<String> = getBinaryDownloadUrl().map { "$it.asc" }
 
