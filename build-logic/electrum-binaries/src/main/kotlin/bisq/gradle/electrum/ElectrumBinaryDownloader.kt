@@ -7,6 +7,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.register
+import java.net.URL
 
 class ElectrumBinaryDownloader(
     private val project: Project,
@@ -36,8 +37,8 @@ class ElectrumBinaryDownloader(
     }
 
     private fun registerBinaryDownloadTask(): TaskProvider<DownloadTask> {
-        val binaryUrl: Provider<String> = getBinaryDownloadUrl()
-        val binaryFileName: Provider<String> = getFileNameFromUrl(binaryUrl)
+        val binaryUrl: Provider<URL> = getBinaryDownloadUrl()
+        val binaryFileName: Provider<String> = binaryUrl.map { it.file }
         val binaryOutputFile: Provider<RegularFile> =
             project.layout.buildDirectory.file("$DOWNLOADS_DIR/$binaryFileName")
         return project.tasks.register<DownloadTask>("downloadElectrumBinary") {
@@ -47,8 +48,8 @@ class ElectrumBinaryDownloader(
     }
 
     private fun registerSignatureDownloadTask(): TaskProvider<DownloadTask> {
-        val signatureUrl: Provider<String> = getSignatureDownloadUrl()
-        val signatureFileName: Provider<String> = getFileNameFromUrl(signatureUrl)
+        val signatureUrl: Provider<URL> = getSignatureDownloadUrl()
+        val signatureFileName: Provider<String> = signatureUrl.map { it.file }
         val signatureOutputFile: Provider<RegularFile> =
             project.layout.buildDirectory.file("$DOWNLOADS_DIR/$signatureFileName")
         return project.tasks.register<DownloadTask>("downloadElectrumSignature") {
@@ -57,12 +58,10 @@ class ElectrumBinaryDownloader(
         }
     }
 
-    private fun getBinaryDownloadUrl(): Provider<String> =
+    private fun getBinaryDownloadUrl(): Provider<URL> =
         pluginExtension.version.map { ElectrumBinaryUrlProvider(it).url }
 
-    private fun getSignatureDownloadUrl(): Provider<String> = getBinaryDownloadUrl().map { "$it.asc" }
-
-    private fun getFileNameFromUrl(url: Provider<String>): Provider<String> = url.map { it.split("/").last() }
+    private fun getSignatureDownloadUrl(): Provider<URL> = getBinaryDownloadUrl().map { URL("$it.asc") }
 
     private fun getPublicKeyUrls() =
         setOf(
