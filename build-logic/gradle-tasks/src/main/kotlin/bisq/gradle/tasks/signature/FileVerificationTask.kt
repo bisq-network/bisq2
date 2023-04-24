@@ -1,6 +1,5 @@
-package bisq.gradle.electrum.tasks
+package bisq.gradle.tasks.signature
 
-import bisq.gradle.electrum.SignatureVerifier
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty

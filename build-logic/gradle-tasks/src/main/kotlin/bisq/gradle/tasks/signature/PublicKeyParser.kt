@@ -1,11 +1,10 @@
-package bisq.gradle.electrum
+package bisq.gradle.tasks.signature
 
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import java.io.ByteArrayInputStream
-import java.io.File
 
 object PublicKeyParser {
 
