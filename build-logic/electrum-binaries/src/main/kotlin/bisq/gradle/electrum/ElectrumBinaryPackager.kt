@@ -1,6 +1,8 @@
 package bisq.gradle.electrum
 
 import bisq.gradle.electrum.tasks.ExtractElectrumAppFromDmgFile
+import bisq.gradle.tasks.OS
+import bisq.gradle.tasks.getOS
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
