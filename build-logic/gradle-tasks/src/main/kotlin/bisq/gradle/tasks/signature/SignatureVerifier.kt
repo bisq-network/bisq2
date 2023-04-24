@@ -1,4 +1,4 @@
-package bisq.gradle.electrum
+package bisq.gradle.tasks.signature
 
 import org.bouncycastle.bcpg.ArmoredInputStream
 import org.bouncycastle.jce.provider.BouncyCastleProvider

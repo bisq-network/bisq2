@@ -1,9 +1,7 @@
 package bisq.gradle.electrum
 
-import bisq.gradle.electrum.tasks.FileVerificationTask
+import bisq.gradle.tasks.signature.FileVerificationTask
 import bisq.gradle.tasks.DownloadTask
-import bisq.gradle.tasks.OS
-import bisq.gradle.tasks.getOS
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
