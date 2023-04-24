@@ -1,4 +1,4 @@
-package bisq.gradle.electrum
+package bisq.gradle.tasks
 
 import java.util.*
 
