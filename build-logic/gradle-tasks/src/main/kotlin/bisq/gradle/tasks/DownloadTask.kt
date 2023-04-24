@@ -13,7 +13,7 @@ import java.nio.channels.Channels
 abstract class DownloadTask : DefaultTask() {
 
     @get:Input
-    abstract val downloadUrl: Property<String>
+    abstract val downloadUrl: Property<URL>
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -25,7 +25,7 @@ abstract class DownloadTask : DefaultTask() {
 
     private fun downloadFile() {
         val url = downloadUrl.get()
-        URL(url).openStream().use { inputStream ->
+        url.openStream().use { inputStream ->
             Channels.newChannel(inputStream).use { readableByteChannel ->
                 println("Downloading: $url")
 
