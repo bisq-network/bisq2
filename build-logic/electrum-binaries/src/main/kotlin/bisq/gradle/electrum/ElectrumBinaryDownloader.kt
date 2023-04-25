@@ -1,7 +1,7 @@
 package bisq.gradle.electrum
 
-import bisq.gradle.tasks.signature.FileVerificationTask
 import bisq.gradle.tasks.DownloadTask
+import bisq.gradle.tasks.signature.SignatureVerificationTask
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -18,13 +18,13 @@ class ElectrumBinaryDownloader(
         private const val DOWNLOADS_DIR = "${BisqElectrumPlugin.DATA_DIR}/downloads"
     }
 
-    lateinit var verifyDownloadTask: TaskProvider<FileVerificationTask>
+    lateinit var verifyDownloadTask: TaskProvider<SignatureVerificationTask>
 
     fun registerTasks() {
         val binaryDownloadTask: TaskProvider<DownloadTask> = registerBinaryDownloadTask()
         val signatureDownloadTask: TaskProvider<DownloadTask> = registerSignatureDownloadTask()
 
-        verifyDownloadTask = project.tasks.register<FileVerificationTask>("verifyElectrumBinary") {
+        verifyDownloadTask = project.tasks.register<SignatureVerificationTask>("verifyElectrumBinary") {
             dependsOn(binaryDownloadTask, signatureDownloadTask)
 
             fileToVerify.set(binaryDownloadTask.flatMap { it.outputFile })

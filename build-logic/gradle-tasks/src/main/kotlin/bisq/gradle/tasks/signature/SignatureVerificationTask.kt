@@ -10,7 +10,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.net.URL
 
-abstract class FileVerificationTask : DefaultTask() {
+abstract class SignatureVerificationTask : DefaultTask() {
 
     @get:InputFile
     abstract val fileToVerify: RegularFileProperty
