@@ -2,6 +2,7 @@ package bisq.gradle.electrum
 
 import bisq.gradle.electrum.tasks.ExtractElectrumAppFromDmgFile
 import bisq.gradle.tasks.OS
+import bisq.gradle.tasks.download.SignedBinaryDownloader
 import bisq.gradle.tasks.getOS
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -14,7 +15,7 @@ import org.gradle.kotlin.dsl.register
 
 class ElectrumBinaryPackager(
     private val project: Project,
-    private val binaryDownloader: ElectrumBinaryDownloader,
+    private val binaryDownloader: SignedBinaryDownloader,
 ) {
     companion object {
         private const val BINARIES_DIR = "${BisqElectrumPlugin.DATA_DIR}/binaries"
@@ -31,7 +32,7 @@ class ElectrumBinaryPackager(
             }
 
         extractDmgOrCopyTask.configure {
-            dependsOn(binaryDownloader.verifyDownloadTask)
+            dependsOn(binaryDownloader.verifySignatureTask)
         }
 
         val packageElectrumBinariesTask: TaskProvider<Zip> =
@@ -54,13 +55,13 @@ class ElectrumBinaryPackager(
 
     private fun registerDmgExtractionTask(): TaskProvider<out Task> =
         project.tasks.register<ExtractElectrumAppFromDmgFile>("extractElectrumAppFromDmgFile") {
-            dmgFile.set(binaryDownloader.verifyDownloadTask.flatMap { it.fileToVerify })
+            dmgFile.set(binaryDownloader.verifySignatureTask.flatMap { it.fileToVerify })
             outputDirectory.set(binariesDir)
         }
 
     private fun registerVerifiedElectrumBinary(): TaskProvider<out Task> =
         project.tasks.register<Copy>("copyVerifiedElectrumBinary") {
-            from(binaryDownloader.verifyDownloadTask.flatMap { it.fileToVerify })
+            from(binaryDownloader.verifySignatureTask.flatMap { it.fileToVerify })
             into(binariesDir.get().asFile.absolutePath)
         }
 }
