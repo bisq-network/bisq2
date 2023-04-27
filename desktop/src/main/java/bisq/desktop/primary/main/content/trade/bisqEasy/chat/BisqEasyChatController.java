@@ -42,7 +42,6 @@ import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
-import bisq.user.identity.UserIdentity;
 import bisq.wallets.core.WalletService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -184,22 +183,16 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
             // Don't show complete trade button for BTC sellers or chat with no offers
             if (lastOfferMessage == null) {
                 model.getCompleteTradeDisabled().set(true);
+                model.getCompleteTradeTooltip().set(Res.get("na"));
                 return;
             }
 
-            checkArgument(lastOfferMessage.getTradeChatOffer().isPresent());
-            var offer = lastOfferMessage.getTradeChatOffer().get();
-
-            boolean isBtcSeller = isMyMessage(lastOfferMessage) == offer.getDirection().isBuy();
-            boolean noWallet = walletService.isEmpty();
-            boolean isDisabled = isBtcSeller || noWallet;
-            model.getCompleteTradeDisabled().set(isDisabled);
-
-            String tooltip = isBtcSeller ? "Coming soon" :
-                    noWallet ?
-                            Res.get("wallet.unavailable") :
-                            Res.get("bisqEasy.completeOffer.tooltip");
-            view.updateCompleteTradeTooltip(isDisabled, tooltip);
+            model.getCompleteTradeDisabled().set(isBtcSeller() || walletService.isEmpty());
+            String tooltip = isBtcSeller() ? "Coming soon" :
+                    hasWallet() ?
+                            Res.get("bisqEasy.completeOffer.tooltip") :
+                            Res.get("wallet.unavailable");
+            model.getCompleteTradeTooltip().set(tooltip);
         });
     }
 
@@ -255,17 +248,12 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
             if (walletService.isEmpty()) return;
 
             // I'm buying BTC, send unused address
-            // Format: bitcoin:<address>[?amount=<amount>][?label=<label>][?message=<message>]
             walletService.get().getUnusedAddress().
                     thenAccept(receiveAddress -> UIThread.run(() -> {
                         if (receiveAddress == null) return;
 
                         chatService.getPrivateTradeChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
-                                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-                                    String bitcoinUri = "bitcoin:" + receiveAddress +
-                                            "?label=" + myUserIdentity.getUserProfile().getNickName();
-                                    // TODO: Make bitcoiUri a clickable link
-                                    String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress, /*bitcoinUri*/"");
+                                    String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
                                     chatService.getPrivateTradeChannelService().sendPrivateChatMessage(message,
                                             Optional.empty(),
                                             channel);
@@ -281,5 +269,16 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
     boolean isMyMessage(ChatMessage chatMessage) {
         return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+    }
+
+    boolean isBtcSeller() {
+        checkArgument(lastOfferMessage.getTradeChatOffer().isPresent());
+        var offer = lastOfferMessage.getTradeChatOffer().get();
+
+        return isMyMessage(lastOfferMessage) == offer.getDirection().isBuy();
+    }
+
+    boolean hasWallet() {
+        return walletService.isPresent();
     }
 }

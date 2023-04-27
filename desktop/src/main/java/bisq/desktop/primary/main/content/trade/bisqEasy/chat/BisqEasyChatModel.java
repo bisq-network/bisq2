@@ -37,6 +37,7 @@ public class BisqEasyChatModel extends BaseChatModel {
     private final BooleanProperty openDisputeDisabled = new SimpleBooleanProperty();
     private final BooleanProperty tradeHelpersVisible = new SimpleBooleanProperty();
     private final BooleanProperty completeTradeDisabled = new SimpleBooleanProperty();
+    private final StringProperty completeTradeTooltip = new SimpleStringProperty();
 
     public BisqEasyChatModel(ChannelDomain channelDomain) {
         this.channelDomain = channelDomain;

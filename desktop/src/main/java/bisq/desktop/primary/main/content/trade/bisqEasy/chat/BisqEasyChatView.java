@@ -41,6 +41,7 @@ public class BisqEasyChatView extends BaseChatView {
     // Trade helpers
     private final Button completeTradeButton, openDisputeButton;
     private final VBox tradeHelpers, completeTradeButtonWrapper;
+    private final Tooltip completeTradeTooltip;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -89,6 +90,9 @@ public class BisqEasyChatView extends BaseChatView {
                 chatMessagesComponent.getChildren().remove(0);
             }
         });
+
+        completeTradeTooltip = new Tooltip("");
+        installTooltip();
     }
 
     private void decorateButton(Button button) {
@@ -98,13 +102,10 @@ public class BisqEasyChatView extends BaseChatView {
         VBox.setMargin(button, new Insets(-2, 25, 17, 25));
     }
 
-    public void updateCompleteTradeTooltip(boolean isDisabled, String tooltip) {
-        if (isDisabled) {
-            Tooltip.install(completeTradeButtonWrapper, new Tooltip(tooltip));
-        } else {
-            completeTradeButton.setTooltip(new Tooltip(tooltip));
-            completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
-        }
+    public void installTooltip() {
+        Tooltip.install(completeTradeButtonWrapper, completeTradeTooltip);
+        completeTradeButton.setTooltip(completeTradeTooltip);
+        completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
     }
 
     @Override
@@ -122,6 +123,7 @@ public class BisqEasyChatView extends BaseChatView {
         openDisputeButton.setOnAction(e -> bisqEasyChatController.onOpenMediation());
         tradeHelpers.visibleProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
         tradeHelpers.managedProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
+        completeTradeTooltip.textProperty().bind(bisqEasyChatModel.getCompleteTradeTooltip());
 
         toggleOffersButton.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
@@ -136,9 +138,12 @@ public class BisqEasyChatView extends BaseChatView {
         createOfferButton.setOnAction(null);
 
         completeTradeButton.disableProperty().unbind();
+        completeTradeButton.setOnAction(null);
         openDisputeButton.disableProperty().unbind();
+        openDisputeButton.setOnAction(null);
         tradeHelpers.visibleProperty().unbind();
         tradeHelpers.managedProperty().unbind();
+        completeTradeTooltip.textProperty().unbind();
 
         toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
