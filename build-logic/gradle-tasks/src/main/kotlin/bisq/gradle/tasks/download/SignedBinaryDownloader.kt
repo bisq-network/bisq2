@@ -17,8 +17,7 @@ class SignedBinaryDownloader(
     private val perOsUrlProvider: (String) -> PerOsUrlProvider,
     private val downloadDirectory: String,
 
-    private val allPublicKeyUrls: Set<URL>,
-    private val allPublicKeyFingerprints: Set<String>
+    private val pgpFingerprintToKeyUrlMap: Map<String, URL>
 ) {
     lateinit var verifySignatureTask: TaskProvider<SignatureVerificationTask>
     private val downloadTaskFactory = DownloadTaskFactory(project, downloadDirectory)
@@ -37,17 +36,9 @@ class SignedBinaryDownloader(
 
             fileToVerify.set(binaryDownloadTask.flatMap { it.outputFile })
             detachedSignatureFile.set(signatureDownloadTask.flatMap { it.outputFile })
-            publicKeyUrls.set(allPublicKeyUrls)
-            publicKeyFingerprints.set(getNormalizedFingerprints())
+            pgpFingerprintToKeyUrl.set(pgpFingerprintToKeyUrlMap)
 
             resultFile.set(project.layout.buildDirectory.file("${downloadDirectory}/sha256.result"))
         }
-    }
-
-    private fun getNormalizedFingerprints(): Set<String> {
-        return allPublicKeyFingerprints.map { fingerprint ->
-            fingerprint.filterNot { it.isWhitespace() }  // Remove all spaces
-                .toLowerCase()
-        }.toSet()
     }
 }

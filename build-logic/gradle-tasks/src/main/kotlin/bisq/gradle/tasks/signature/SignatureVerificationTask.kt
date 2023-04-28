@@ -4,9 +4,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -22,21 +22,14 @@ abstract class SignatureVerificationTask : DefaultTask() {
     abstract val detachedSignatureFile: Property<Provider<RegularFile>>
 
     @get:Input
-    abstract val publicKeyUrls: SetProperty<URL>
-
-    @get:Input
-    abstract val publicKeyFingerprints: SetProperty<String>
+    abstract val pgpFingerprintToKeyUrl: MapProperty<String, URL>
 
     @get:OutputFile
     abstract val resultFile: RegularFileProperty
 
     @TaskAction
     fun verify() {
-        val signatureVerifier = SignatureVerifier(
-            allPublicKeyUrls = publicKeyUrls.get(),
-            publicKeyFingerprints = publicKeyFingerprints.get()
-        )
-
+        val signatureVerifier = SignatureVerifier(pgpFingerprintToKeyUrl.get())
         val isSignatureValid = signatureVerifier.verifySignature(
             signatureFile = detachedSignatureFile.get().get().asFile,
             fileToVerify = fileToVerify.get().get().asFile

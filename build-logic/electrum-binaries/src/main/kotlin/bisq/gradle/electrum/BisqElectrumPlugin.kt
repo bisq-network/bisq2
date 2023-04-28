@@ -24,21 +24,21 @@ class BisqElectrumPlugin : Plugin<Project> {
             perOsUrlProvider = { version -> ElectrumBinaryUrlProvider(version) },
             downloadDirectory = DOWNLOADS_DIR,
 
-            allPublicKeyUrls = setOf(
-                this::class.java.getResource("/ThomasV.asc")!!,
+            pgpFingerprintToKeyUrlMap = mapOf(
+                Pair(
+                    normalizedFingerprint("6694 D8DE 7BE8 EE56 31BE  D950 2BD5 824B 7F94 70E6"),
+                    this::class.java.getResource("/ThomasV.asc")!!
+                ),
 
-                // Why failing signature check?
-                // this::class.java.getResource("/Emzy.asc")!!
+                Pair(
+                    normalizedFingerprint("9EDA FF80 E080 6596 04F4  A76B 2EBB 056F D847 F8A7"),
+                    this::class.java.getResource("/Emzy.asc")!!
+                ),
 
-                this::class.java.getResource("/SomberNight.asc")!!
-            ),
-            allPublicKeyFingerprints = setOf(
-                // ThomasV
-                "6694 D8DE 7BE8 EE56 31BE  D950 2BD5 824B 7F94 70E6",
-                // Emzy
-                "9EDA FF80 E080 6596 04F4  A76B 2EBB 056F D847 F8A7",
-                // SomberNight
-                "0EED CFD5 CAFB 4590 6734  9B23 CA9E EEC4 3DF9 11DC"
+                Pair(
+                    normalizedFingerprint("0EED CFD5 CAFB 4590 6734  9B23 CA9E EEC4 3DF9 11DC"),
+                    this::class.java.getResource("/SomberNight.asc")!!
+                ),
             )
         )
         electrumBinaryDownloader.registerTasks()
@@ -46,4 +46,8 @@ class BisqElectrumPlugin : Plugin<Project> {
         val electrumBinaryPackager = ElectrumBinaryPackager(project, electrumBinaryDownloader)
         electrumBinaryPackager.registerTasks()
     }
+
+    private fun normalizedFingerprint(fingerprint: String): String =
+        fingerprint.filterNot { it.isWhitespace() }  // Remove all spaces
+            .toLowerCase()
 }

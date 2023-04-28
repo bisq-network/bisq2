@@ -7,16 +7,13 @@ import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureList
 import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider
-import org.bouncycastle.util.encoders.Hex
-import org.gradle.api.GradleException
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.URL
 import java.security.Security
 
 class SignatureVerifier(
-    private val allPublicKeyUrls: Set<URL>,
-    private val publicKeyFingerprints: Set<String>
+    private val pgpFingerprintToKeyUrl: Map<String, URL>
 ) {
 
     fun verifySignature(
@@ -26,30 +23,20 @@ class SignatureVerifier(
         Security.addProvider(BouncyCastleProvider())
 
         var isSuccess = true
-        for (publicKeyUrl in allPublicKeyUrls) {
-            val publicKey: PGPPublicKey = parseAndVerifyPublicKey(publicKeyUrl)
-            val signature: ByteArray = readSignatureFromFile(signatureFile)
-            val fileToVerifyByteArray: ByteArray = fileToVerify.readBytes()
+        pgpFingerprintToKeyUrl.forEach { (fingerprint, keyUrl) ->
+            val ppgPublicKeyParser = PpgPublicKeyParser(fingerprint, keyUrl)
+            ppgPublicKeyParser.parse()
 
-            val hasValidSignature = verifyDetachedSignature(publicKey, signature, fileToVerifyByteArray)
-            isSuccess = isSuccess && hasValidSignature
+            val isSignedByAnyKey = verifyDetachedSignature(
+                potentialSigningKeys = ppgPublicKeyParser.keyById,
+                pgpSignatureByteArray = readSignatureFromFile(signatureFile),
+                data = fileToVerify.readBytes()
+            )
+
+            isSuccess = isSuccess && isSignedByAnyKey
         }
 
         return isSuccess
-    }
-
-    private fun parseAndVerifyPublicKey(
-        publicKeyUrl: URL
-    ): PGPPublicKey {
-        val publicKeyByteArray = publicKeyUrl.readBytes()
-        val publicKey: PGPPublicKey = PublicKeyParser.parsePublicKeyFromFile(publicKeyByteArray)
-
-        val fingerprint = Hex.toHexString(publicKey.fingerprint)
-        if (fingerprint !in publicKeyFingerprints) {
-            throw GradleException("$publicKeyUrl has invalid fingerprint.")
-        }
-
-        return publicKey
     }
 
     private fun readSignatureFromFile(signatureFile: File): ByteArray {
@@ -60,7 +47,7 @@ class SignatureVerifier(
     }
 
     private fun verifyDetachedSignature(
-        verifyingKey: PGPPublicKey,
+        potentialSigningKeys: Map<Long, PGPPublicKey>,
         pgpSignatureByteArray: ByteArray,
         data: ByteArray
     ): Boolean {
@@ -68,16 +55,22 @@ class SignatureVerifier(
         val signatureList: PGPSignatureList = pgpObjectFactory.nextObject() as PGPSignatureList
 
         var pgpSignature: PGPSignature? = null
+        var signingKey: PGPPublicKey? = null
+
         for (s in signatureList) {
-            if (s.keyID == verifyingKey.keyID) {
+            signingKey = potentialSigningKeys[s.keyID]
+            if (signingKey != null) {
                 pgpSignature = s
                 break
             }
         }
+
+        checkNotNull(signingKey) { "signingKey not found" }
         checkNotNull(pgpSignature) { "signature for key not found" }
+
         pgpSignature.init(
             JcaPGPContentVerifierBuilderProvider().setProvider("BC"),
-            verifyingKey
+            signingKey
         )
         pgpSignature.update(data)
         return pgpSignature.verify()
