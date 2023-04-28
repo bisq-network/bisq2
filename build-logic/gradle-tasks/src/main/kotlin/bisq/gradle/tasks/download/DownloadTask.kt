@@ -1,8 +1,9 @@
 package bisq.gradle.tasks.download
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -16,7 +17,7 @@ abstract class DownloadTask : DefaultTask() {
     abstract val downloadUrl: Property<URL>
 
     @get:OutputFile
-    abstract val outputFile: RegularFileProperty
+    abstract val outputFile: Property<Provider<RegularFile>>
 
     @TaskAction
     fun download() {
@@ -29,7 +30,7 @@ abstract class DownloadTask : DefaultTask() {
             Channels.newChannel(inputStream).use { readableByteChannel ->
                 println("Downloading: $url")
 
-                FileOutputStream(outputFile.get().asFile).use { fileOutputStream ->
+                FileOutputStream(outputFile.get().get().asFile).use { fileOutputStream ->
                     fileOutputStream.channel
                         .transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
                 }

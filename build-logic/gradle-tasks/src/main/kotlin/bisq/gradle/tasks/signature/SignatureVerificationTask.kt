@@ -2,7 +2,10 @@ package bisq.gradle.tasks.signature
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -13,10 +16,10 @@ import java.net.URL
 abstract class SignatureVerificationTask : DefaultTask() {
 
     @get:InputFile
-    abstract val fileToVerify: RegularFileProperty
+    abstract val fileToVerify: Property<Provider<RegularFile>>
 
     @get:InputFile
-    abstract val detachedSignatureFile: RegularFileProperty
+    abstract val detachedSignatureFile: Property<Provider<RegularFile>>
 
     @get:Input
     abstract val publicKeyUrls: SetProperty<URL>
@@ -35,15 +38,15 @@ abstract class SignatureVerificationTask : DefaultTask() {
         )
 
         val isSignatureValid = signatureVerifier.verifySignature(
-            signatureFile = detachedSignatureFile.get().asFile,
-            fileToVerify = fileToVerify.get().asFile
+            signatureFile = detachedSignatureFile.get().get().asFile,
+            fileToVerify = fileToVerify.get().get().asFile
         )
 
         resultFile.get().asFile.writeText("$isSignatureValid")
 
         if (!isSignatureValid) {
             throw GradleException(
-                "Signature verification failed for ${fileToVerify.get().asFile.absolutePath}."
+                "Signature verification failed for ${fileToVerify.get().get().asFile.absolutePath}."
             )
         }
     }

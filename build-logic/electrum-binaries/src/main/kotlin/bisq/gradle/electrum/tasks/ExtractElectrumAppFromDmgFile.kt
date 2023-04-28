@@ -4,7 +4,8 @@ import bisq.gradle.electrum.DmgImageMounter
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
@@ -29,7 +30,7 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
     }
 
     @get:InputFile
-    abstract val dmgFile: RegularFileProperty
+    abstract val dmgFile: Property<Provider<RegularFile>>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
@@ -47,7 +48,7 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
 
         electrumAppFile.mkdirs()
 
-        val dmgImageMounter = DmgImageMounter(dmgFile.get().asFile, File(MOUNT_DIR))
+        val dmgImageMounter = DmgImageMounter(dmgFile.get().get().asFile, File(MOUNT_DIR))
         dmgImageMounter.use {
             dmgImageMounter.mount()
             waitUntilDmgImageMounted()
