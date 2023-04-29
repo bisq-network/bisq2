@@ -18,6 +18,7 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.BasePrivateChatMessage;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
@@ -34,6 +35,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
@@ -137,6 +139,24 @@ public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage
         }
     }
 
+    public void leaveChannel(C channel) {
+        if (channel.getChatMessages().stream()
+                .max(Comparator.comparing(ChatMessage::getDate))
+                .stream().anyMatch(m -> m.getMessageType().equals(MessageType.LEAVE))) {
+            // Don't send leave message if peer already left channel
+            getChannels().remove(channel);
+            return;
+        }
+
+        sendLeaveMessage(channel)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Sending leave channel message failed.");
+                    }
+                    getChannels().remove(channel);
+                    persist();
+                });
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
