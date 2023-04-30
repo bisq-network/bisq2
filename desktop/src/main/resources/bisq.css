@@ -1423,21 +1423,20 @@
  ******************************************************************************/
 
 .bisq-badge {
-    -fx-padding: 0 20 0 0;
-
+    -fx-padding: 0 0 0 0;
 }
 
 .bisq-badge .badge-pane {
-    -fx-background-color: -bisq-grey-6;
+    -fx-background-color: -bisq-red;
     -fx-background-radius: 15;
     /*   -fx-pref-width: 15;*/
     -fx-pref-height: 15;
 }
 
-.bisq-badge .badge-label {
+.bisq-badge .badge-pane .label {
     -fx-font-size: 0.85em;
-    -fx-text-fill: -bisq-white;
-
+    -fx-text-fill: -bisq-white !important;
+    -fx-font-family: "IBM Plex Sans SemiBold";
 }
 
 /*******************************************************************************
