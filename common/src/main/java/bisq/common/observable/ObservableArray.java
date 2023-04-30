@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private final List<Observer<T>> observableListMappers = new CopyOnWriteArrayList<>();
+    private final List<Observer<T>> observers = new CopyOnWriteArrayList<>();
 
     public ObservableArray() {
     }
@@ -35,7 +35,7 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
     }
 
     private List<Observer<T>> getObservers() {
-        return observableListMappers;
+        return observers;
     }
 
     public Pin addChangedListener(Runnable handler) {
