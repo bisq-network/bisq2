@@ -42,10 +42,10 @@ public abstract class ObservableCollection<S> implements Collection<S> {
 
     protected abstract Collection<S> createCollection();
 
-    public Pin addObserver(CollectionObserver<S> observer) {
-        observers.add(observer);
-        observer.addAll(collection);
-        return () -> observers.remove(observer);
+    public Pin addListener(CollectionObserver<S> listener) {
+        observers.add(listener);
+        listener.addAll(collection);
+        return () -> observers.remove(listener);
     }
 
     public Pin addListener(Runnable listener) {
