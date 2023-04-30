@@ -17,14 +17,20 @@
 
 package bisq.common.observable;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
+public class ObservableSet<T> implements Set<T> {
+    private final Set<T> collection = new CopyOnWriteArraySet<>();
+
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
     private final List<Observer<T>> observers = new CopyOnWriteArrayList<>();
 
@@ -56,24 +62,25 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
 
     @Override
     public boolean add(T element) {
-        boolean result = super.add(element);
+        boolean result = collection.add(element);
         if (result) {
             getObservers().forEach(observer -> observer.add(element));
         }
         return result;
     }
 
-    public boolean addAll(Collection<? extends T> values) {
-        boolean result = super.addAll(values);
+    public boolean addAll(@NotNull Collection<? extends T> values) {
+        boolean result = collection.addAll(values);
         if (result) {
             getObservers().forEach(observer -> observer.addAll(values));
         }
         return result;
     }
 
+
     @Override
     public boolean remove(Object element) {
-        boolean result = super.remove(element);
+        boolean result = collection.remove(element);
         if (result) {
             getObservers().forEach(observer -> observer.remove(element));
         }
@@ -81,8 +88,8 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> values) {
-        boolean result = super.removeAll(values);
+    public boolean removeAll(@NotNull Collection<?> values) {
+        boolean result = collection.removeAll(values);
         if (result) {
             getObservers().forEach(observer -> observer.removeAll(values));
         }
@@ -91,7 +98,48 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
 
     @Override
     public void clear() {
-        super.clear();
+        collection.clear();
         getObservers().forEach(Observer::clear);
+    }
+
+    @Override
+    public boolean containsAll(@NotNull Collection<?> c) {
+        return collection.containsAll(c);
+    }
+
+    @Override
+    public int size() {
+        return collection.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return collection.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        return collection.contains(o);
+    }
+
+    @NotNull
+    @Override
+    public Iterator<T> iterator() {
+        return collection.iterator();
+    }
+
+    @Override
+    public Object[] toArray() {
+        return collection.toArray();
+    }
+
+    @Override
+    public <T1> T1[] toArray(@NotNull T1[] a) {
+        return collection.toArray(a);
+    }
+
+    @Override
+    public boolean retainAll(@NotNull Collection<?> c) {
+        return collection.retainAll(c);
     }
 }
