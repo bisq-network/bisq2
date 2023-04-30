@@ -110,9 +110,11 @@ public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
 
     @Override
     public boolean add(T element) {
-        super.add(element);
-        getObservers().forEach(observer -> observer.add(element));
-        return true;
+        boolean result = super.add(element);
+        if (result) {
+            getObservers().forEach(observer -> observer.add(element));
+        }
+        return result;
     }
 
     public boolean addAll(Collection<? extends T> values) {
