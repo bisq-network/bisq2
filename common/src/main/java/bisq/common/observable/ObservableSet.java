@@ -26,7 +26,7 @@ import java.util.function.Function;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private transient List<Observer<T>> observableListMappers = new CopyOnWriteArrayList<>();
+    private final List<Observer<T>> observableListMappers = new CopyOnWriteArrayList<>();
 
     public ObservableSet() {
     }
@@ -36,9 +36,6 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     }
 
     private List<Observer<T>> getObservers() {
-        if (observableListMappers == null) {
-            observableListMappers = new CopyOnWriteArrayList<>();
-        }
         return observableListMappers;
     }
 
