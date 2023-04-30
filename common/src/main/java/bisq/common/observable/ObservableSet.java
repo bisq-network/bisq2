@@ -21,21 +21,21 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ObservableSet<T> extends ObservableCollection<T> implements Set<T> {
+public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> {
     public ObservableSet() {
         super();
     }
 
-    public ObservableSet(Collection<T> values) {
+    public ObservableSet(Collection<S> values) {
         super(values);
     }
 
     @Override
-    protected Collection<T> createCollection() {
+    protected Collection<S> createCollection() {
         return new CopyOnWriteArraySet<>();
     }
 
-    public Set<T> getSet() {
-        return (Set<T>) collection;
+    public Set<S> getSet() {
+        return (Set<S>) collection;
     }
 }

@@ -25,22 +25,22 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class ObservableArray<T> extends ObservableCollection<T> implements List<T> {
+public class ObservableArray<S> extends ObservableCollection<S> implements List<S> {
     public ObservableArray() {
         super();
     }
 
-    public ObservableArray(Collection<T> values) {
+    public ObservableArray(Collection<S> values) {
         super(values);
     }
 
     @Override
-    protected Collection<T> createCollection() {
+    protected Collection<S> createCollection() {
         return new CopyOnWriteArrayList<>();
     }
 
-    public List<T> getList() {
-        return (List<T>) collection;
+    public List<S> getList() {
+        return (List<S>) collection;
     }
 
 
@@ -49,7 +49,7 @@ public class ObservableArray<T> extends ObservableCollection<T> implements List<
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean addAll(int index, @NotNull Collection<? extends T> c) {
+    public boolean addAll(int index, @NotNull Collection<? extends S> c) {
         boolean result = getList().addAll(index, c);
         if (result) {
             observers.forEach(observer -> observer.addAll(c));
@@ -58,27 +58,27 @@ public class ObservableArray<T> extends ObservableCollection<T> implements List<
     }
 
     @Override
-    public T set(int index, T element) {
-        T previous = getList().set(index, element);
+    public S set(int index, S element) {
+        S previous = getList().set(index, element);
         observers.forEach(observer -> observer.add(element));
         return previous;
     }
 
     @Override
-    public void add(int index, T element) {
+    public void add(int index, S element) {
         getList().add(index, element);
         observers.forEach(observer -> observer.add(element));
     }
 
     @Override
-    public T remove(int index) {
-        T removedElement = getList().remove(index);
+    public S remove(int index) {
+        S removedElement = getList().remove(index);
         observers.forEach(observer -> observer.remove(removedElement));
         return removedElement;
     }
 
     @Override
-    public T get(int index) {
+    public S get(int index) {
         return getList().get(index);
     }
 
@@ -93,22 +93,22 @@ public class ObservableArray<T> extends ObservableCollection<T> implements List<
     }
 
     @Override
-    public ListIterator<T> listIterator() {
+    public ListIterator<S> listIterator() {
         return getList().listIterator();
     }
 
     @Override
-    public ListIterator<T> listIterator(int index) {
+    public ListIterator<S> listIterator(int index) {
         return getList().listIterator(index);
     }
 
     @Override
-    public List<T> subList(int fromIndex, int toIndex) {
+    public List<S> subList(int fromIndex, int toIndex) {
         return getList().subList(fromIndex, toIndex);
     }
 
     @Override
-    public void sort(Comparator<? super T> c) {
+    public void sort(Comparator<? super S> c) {
         getList().sort(c);
     }
 }

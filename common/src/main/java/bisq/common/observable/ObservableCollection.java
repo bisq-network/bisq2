@@ -26,30 +26,30 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class ObservableCollection<T> implements Collection<T> {
-    protected final Collection<T> collection = createCollection();
+public abstract class ObservableCollection<S> implements Collection<S> {
+    protected final Collection<S> collection = createCollection();
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    protected final List<Observer<T>> observers = new CopyOnWriteArrayList<>();
+    protected final List<Observer<S>> observers = new CopyOnWriteArrayList<>();
 
     protected ObservableCollection() {
     }
 
-    protected ObservableCollection(Collection<T> values) {
+    protected ObservableCollection(Collection<S> values) {
         addAll(values);
     }
 
-    protected abstract Collection<T> createCollection();
+    protected abstract Collection<S> createCollection();
 
     public Pin addChangedListener(Runnable handler) {
-        ChangeListener<T> changedListener = new ChangeListener<>(handler);
+        ChangeListener<S> changedListener = new ChangeListener<>(handler);
         observers.add(changedListener);
         handler.run();
         return () -> observers.remove(changedListener);
     }
 
-    public <L> Pin addCollectionChangeMapper(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
-        CollectionChangeMapper<T, L> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
+    public <L> Pin addCollectionChangeMapper(Collection<L> collection, Function<S, L> mapFunction, Consumer<Runnable> executor) {
+        CollectionChangeMapper<S, L> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
         collectionChangeMapper.clear();
         collectionChangeMapper.addAll(this);
         observers.add(collectionChangeMapper);
@@ -57,7 +57,7 @@ public abstract class ObservableCollection<T> implements Collection<T> {
     }
 
     @Override
-    public boolean add(T element) {
+    public boolean add(S element) {
         boolean changed = collection.add(element);
         if (changed) {
             observers.forEach(observer -> observer.add(element));
@@ -66,7 +66,7 @@ public abstract class ObservableCollection<T> implements Collection<T> {
     }
 
     @Override
-    public boolean addAll(@NotNull Collection<? extends T> values) {
+    public boolean addAll(@NotNull Collection<? extends S> values) {
         boolean changed = collection.addAll(values);
         if (changed) {
             observers.forEach(observer -> observer.addAll(values));
@@ -124,7 +124,7 @@ public abstract class ObservableCollection<T> implements Collection<T> {
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<S> iterator() {
         return collection.iterator();
     }
 
@@ -134,7 +134,7 @@ public abstract class ObservableCollection<T> implements Collection<T> {
     }
 
     @Override
-    public <T1> T1[] toArray(@NotNull T1[] a) {
+    public <S1> S1[] toArray(@NotNull S1[] a) {
         return collection.toArray(a);
     }
 }
