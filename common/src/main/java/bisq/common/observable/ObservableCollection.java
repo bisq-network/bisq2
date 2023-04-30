@@ -48,8 +48,8 @@ public abstract class ObservableCollection<S> implements Collection<S> {
         return () -> observers.remove(changedListener);
     }
 
-    public <L> Pin addCollectionChangeMapper(Collection<L> collection, Function<S, L> mapFunction, Consumer<Runnable> executor) {
-        CollectionChangeMapper<S, L> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
+    public <T> Pin addCollectionChangeMapper(Collection<T> collection, Function<S, T> mapFunction, Consumer<Runnable> executor) {
+        CollectionChangeMapper<S, T> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
         collectionChangeMapper.clear();
         collectionChangeMapper.addAll(this);
         observers.add(collectionChangeMapper);
