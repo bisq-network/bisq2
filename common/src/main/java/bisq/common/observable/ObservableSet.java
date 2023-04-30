@@ -31,41 +31,6 @@ import java.util.stream.Collectors;
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     @EqualsAndHashCode
     @ToString
-    private static final class ChangeListener<M> implements Observer<M> {
-        private final Runnable handler;
-
-        public ChangeListener(Runnable handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public void add(M element) {
-            handler.run();
-        }
-
-        @Override
-        public void addAll(Collection<? extends M> values) {
-            handler.run();
-        }
-
-        @Override
-        public void remove(Object element) {
-            handler.run();
-        }
-
-        @Override
-        public void removeAll(Collection<?> values) {
-            handler.run();
-        }
-
-        @Override
-        public void clear() {
-            handler.run();
-        }
-    }
-
-    @EqualsAndHashCode
-    @ToString
     private static final class ObservableListMapper<M, L> implements Observer<M> {
         private final Collection<L> collection;
         private final Function<M, L> mapFunction;
