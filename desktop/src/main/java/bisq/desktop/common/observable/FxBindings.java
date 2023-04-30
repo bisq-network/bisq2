@@ -32,7 +32,7 @@ import java.util.function.Function;
 
 @Slf4j
 public class FxBindings {
-    public static <S, R> ObservableListBindings<S, R> bind(ObservableList<R> observer) {
+    public static <S, T> ObservableListBindings<S, T> bind(ObservableList<T> observer) {
         return new ObservableListBindings<>(observer);
     }
 
@@ -73,16 +73,16 @@ public class FxBindings {
     }
 
 
-    public static class ObservableListBindings<S, R> {
-        private final ObservableList<R> observableList;
+    public static class ObservableListBindings<S, T> {
+        private final ObservableList<T> observableList;
         @SuppressWarnings("unchecked")
-        private Function<S, R> mapFunction = e -> (R) e;
+        private Function<S, T> mapFunction = e -> (T) e;
 
-        private ObservableListBindings(ObservableList<R> observableList) {
+        private ObservableListBindings(ObservableList<T> observableList) {
             this.observableList = observableList;
         }
 
-        public ObservableListBindings<S, R> map(Function<S, R> mapper) {
+        public ObservableListBindings<S, T> map(Function<S, T> mapper) {
             this.mapFunction = mapper;
             return this;
         }
