@@ -29,7 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
-    public interface Observer<M, L> {
+    public interface Observer<M> {
         void add(M element);
 
         void addAll(Collection<? extends M> values);
@@ -43,7 +43,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
 
     @EqualsAndHashCode
     @ToString
-    private static final class ChangeListener<M, L> implements Observer<M, L> {
+    private static final class ChangeListener<M, L> implements Observer<M> {
         private final Runnable handler;
 
         public ChangeListener(Runnable handler) {
@@ -78,7 +78,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
 
     @EqualsAndHashCode
     @ToString
-    private static final class ObservableListMapper<M, L> implements Observer<M, L> {
+    private static final class ObservableListMapper<M, L> implements Observer<M> {
         private final Collection<L> collection;
         private final Function<M, L> mapFunction;
         private final Consumer<Runnable> executor;
@@ -127,7 +127,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     }
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private transient List<Observer<T, ?>> observableListMappers = new CopyOnWriteArrayList<>();
+    private transient List<Observer<T>> observableListMappers = new CopyOnWriteArrayList<>();
 
     public ObservableSet() {
     }
@@ -136,7 +136,7 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         addAll(values);
     }
 
-    private List<Observer<T, ?>> getObservers() {
+    private List<Observer<T>> getObservers() {
         if (observableListMappers == null) {
             observableListMappers = new CopyOnWriteArrayList<>();
         }
