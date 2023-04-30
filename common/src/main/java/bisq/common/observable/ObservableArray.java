@@ -28,40 +28,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableArray<T> extends CopyOnWriteArrayList<T> {
-    @EqualsAndHashCode
-    @ToString
-    private static final class ChangeListener<M> implements Observer<M> {
-        private final Runnable handler;
-
-        public ChangeListener(Runnable handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public void add(M element) {
-            handler.run();
-        }
-
-        @Override
-        public void addAll(Collection<? extends M> values) {
-            handler.run();
-        }
-
-        @Override
-        public void remove(Object element) {
-            handler.run();
-        }
-
-        @Override
-        public void removeAll(Collection<?> values) {
-            handler.run();
-        }
-
-        @Override
-        public void clear() {
-            handler.run();
-        }
-    }
 
     @EqualsAndHashCode
     @ToString
