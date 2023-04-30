@@ -29,7 +29,7 @@ import java.util.Collection;
  */
 @EqualsAndHashCode
 @ToString
-final class InvalidationHandler<S> implements Observer<S> {
+final class InvalidationHandler<S> implements CollectionObserver<S> {
     private final Runnable listener;
 
     public InvalidationHandler(Runnable listener) {

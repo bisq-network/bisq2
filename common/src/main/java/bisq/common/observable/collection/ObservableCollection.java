@@ -31,7 +31,7 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     protected final Collection<S> collection = createCollection();
 
     // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    protected final List<Observer<S>> observers = new CopyOnWriteArrayList<>();
+    protected final List<CollectionObserver<S>> observers = new CopyOnWriteArrayList<>();
 
     protected ObservableCollection() {
     }
@@ -42,7 +42,7 @@ public abstract class ObservableCollection<S> implements Collection<S> {
 
     protected abstract Collection<S> createCollection();
 
-    public Pin addObserver(Observer<S> observer) {
+    public Pin addObserver(CollectionObserver<S> observer) {
         observers.add(observer);
         observer.addAll(collection);
         return () -> observers.remove(observer);
@@ -102,7 +102,7 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     @Override
     public void clear() {
         collection.clear();
-        observers.forEach(Observer::clear);
+        observers.forEach(CollectionObserver::clear);
     }
 
     @Override

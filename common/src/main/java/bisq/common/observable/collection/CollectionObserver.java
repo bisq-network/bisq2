@@ -19,7 +19,7 @@ package bisq.common.observable.collection;
 
 import java.util.Collection;
 
-public interface Observer<S> {
+public interface CollectionObserver<S> {
     void add(S element);
 
     void addAll(Collection<? extends S> values);

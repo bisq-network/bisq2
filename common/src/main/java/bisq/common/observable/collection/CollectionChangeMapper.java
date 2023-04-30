@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  */
 @EqualsAndHashCode
 @ToString
-final class CollectionChangeMapper<S, T> implements Observer<S> {
+final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     private final Collection<T> targetCollection;
     private final Function<S, T> mapFunction;
     private final Consumer<Runnable> executor;
