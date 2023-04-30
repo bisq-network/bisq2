@@ -22,37 +22,42 @@ import lombok.ToString;
 
 import java.util.Collection;
 
+/**
+ * Simple Observer which notifies the given handler about any change of the target collection.
+ *
+ * @param <S> The type of the source collection element.
+ */
 @EqualsAndHashCode
 @ToString
-final class ChangeListener<S> implements Observer<S> {
-    private final Runnable handler;
+final class InvalidationHandler<S> implements Observer<S> {
+    private final Runnable listener;
 
-    public ChangeListener(Runnable handler) {
-        this.handler = handler;
+    public InvalidationHandler(Runnable listener) {
+        this.listener = listener;
     }
 
     @Override
     public void add(S element) {
-        handler.run();
+        listener.run();
     }
 
     @Override
     public void addAll(Collection<? extends S> values) {
-        handler.run();
+        listener.run();
     }
 
     @Override
     public void remove(Object element) {
-        handler.run();
+        listener.run();
     }
 
     @Override
     public void removeAll(Collection<?> values) {
-        handler.run();
+        listener.run();
     }
 
     @Override
     public void clear() {
-        handler.run();
+        listener.run();
     }
 }

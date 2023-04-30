@@ -75,6 +75,8 @@ public class FxBindings {
 
     public static class ObservableListBindings<S, T> {
         private final ObservableList<T> observableList;
+
+        // In case there is no map function provided we require that target type is the same as the source type. 
         @SuppressWarnings("unchecked")
         private Function<S, T> mapFunction = e -> (T) e;
 
@@ -82,11 +84,12 @@ public class FxBindings {
             this.observableList = observableList;
         }
 
-        public ObservableListBindings<S, T> map(Function<S, T> mapper) {
-            this.mapFunction = mapper;
+        public ObservableListBindings<S, T> map(Function<S, T> mapFunction) {
+            this.mapFunction = mapFunction;
             return this;
         }
 
+        // We support currently only JavaFX ObservableList even if the source is a set.
         public Pin to(ObservableSet<S> observable) {
             return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
         }
