@@ -48,6 +48,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
+/**
+ * Handles chat notifications
+ */
 @Slf4j
 public class ChatNotifications {
     private final NotificationsService notificationsService;
@@ -169,8 +172,8 @@ public class ChatNotifications {
             default:
                 return;
         }
-        String channelInfo = null;
-        String title = null;
+        String channelInfo;
+        String title;
         if (chatMessage instanceof PrivateTradeChatMessage) {
             PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
             if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
