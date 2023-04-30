@@ -19,7 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.network.NetworkService;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;

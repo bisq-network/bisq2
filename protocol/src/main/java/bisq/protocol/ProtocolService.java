@@ -20,7 +20,7 @@ package bisq.protocol;
 import bisq.account.protocol.SwapProtocolType;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.contract.Contract;

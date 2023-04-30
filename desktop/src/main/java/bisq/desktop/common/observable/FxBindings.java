@@ -18,9 +18,9 @@
 package bisq.desktop.common.observable;
 
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableArray;
-import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;

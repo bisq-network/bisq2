@@ -20,7 +20,7 @@ package bisq.wallets.core;
 import bisq.common.application.Service;
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;

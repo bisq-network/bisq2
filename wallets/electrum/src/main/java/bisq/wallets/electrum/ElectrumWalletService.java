@@ -19,9 +19,8 @@ package bisq.wallets.electrum;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.NetworkUtils;
-import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
@@ -29,6 +28,7 @@ import bisq.wallets.core.model.Utxo;
 import bisq.wallets.electrum.notifications.ElectrumNotifyApi;
 import bisq.wallets.electrum.notifications.ElectrumNotifyWebServer;
 import bisq.wallets.electrum.rpc.ElectrumProcessConfig;
+import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

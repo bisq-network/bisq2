@@ -20,7 +20,7 @@ package bisq.settings;
 import bisq.common.application.Service;
 import bisq.common.currency.Market;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;

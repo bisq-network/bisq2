@@ -18,14 +18,14 @@
 package bisq.wallets.bitcoind;
 
 import bisq.common.monetary.Coin;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.rpc.BitcoindWallet;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
-import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.model.*;
+import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 
 import java.util.ArrayList;

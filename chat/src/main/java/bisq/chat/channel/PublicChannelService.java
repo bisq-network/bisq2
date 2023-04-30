@@ -19,7 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;

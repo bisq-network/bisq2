@@ -15,27 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.observable;
+package bisq.common.observable.collection;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> {
-    public ObservableSet() {
-        super();
-    }
+public interface Observer<S> {
+    void add(S element);
 
-    public ObservableSet(Collection<S> values) {
-        super(values);
-    }
+    void addAll(Collection<? extends S> values);
 
-    @Override
-    protected Collection<S> createCollection() {
-        return new CopyOnWriteArraySet<>();
-    }
+    void remove(Object element);
 
-    public Set<S> getSet() {
-        return (Set<S>) collection;
-    }
+    void removeAll(Collection<?> values);
+
+    void clear();
 }

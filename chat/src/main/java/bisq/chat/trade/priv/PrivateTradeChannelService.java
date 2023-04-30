@@ -24,7 +24,7 @@ import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChatOffer;
 import bisq.common.data.Pair;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkId;
