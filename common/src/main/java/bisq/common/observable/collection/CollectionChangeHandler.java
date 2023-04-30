@@ -29,35 +29,39 @@ import java.util.Collection;
  */
 @EqualsAndHashCode
 @ToString
-final class InvalidationHandler<S> implements CollectionObserver<S> {
+final class CollectionChangeHandler<S> implements CollectionObserver<S> {
     private final Runnable listener;
 
-    public InvalidationHandler(Runnable listener) {
+    public CollectionChangeHandler(Runnable listener) {
         this.listener = listener;
+    }
+
+    void onChange() {
+        listener.run();
     }
 
     @Override
     public void add(S element) {
-        listener.run();
+        onChange();
     }
 
     @Override
     public void addAll(Collection<? extends S> values) {
-        listener.run();
+        onChange();
     }
 
     @Override
     public void remove(Object element) {
-        listener.run();
+        onChange();
     }
 
     @Override
     public void removeAll(Collection<?> values) {
-        listener.run();
+        onChange();
     }
 
     @Override
     public void clear() {
-        listener.run();
+        onChange();
     }
 }

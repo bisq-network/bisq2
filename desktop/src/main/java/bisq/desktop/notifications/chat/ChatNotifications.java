@@ -102,24 +102,24 @@ public class ChatNotifications {
 
         sortedChatMessages.setComparator(ChatNotification::compareTo);
 
-        privateTradeChannelService.getChannels().addChangedListener(() ->
+        privateTradeChannelService.getChannels().addListener(() ->
                 onPrivateTradeChannelsChanged(privateTradeChannelService.getChannels()));
-        publicTradeChannelService.getChannels().addChangedListener(() ->
+        publicTradeChannelService.getChannels().addListener(() ->
                 onPublicTradeChannelsChanged(publicTradeChannelService.getChannels()));
 
-        privateDiscussionChannelService.getChannels().addChangedListener(() ->
+        privateDiscussionChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateDiscussionChannelService.getChannels()));
-        publicDiscussionChannelService.getChannels().addChangedListener(() ->
+        publicDiscussionChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicDiscussionChannelService.getChannels()));
 
-        privateEventsChannelService.getChannels().addChangedListener(() ->
+        privateEventsChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateEventsChannelService.getChannels()));
-        publicEventsChannelService.getChannels().addChangedListener(() ->
+        publicEventsChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicEventsChannelService.getChannels()));
 
-        privateSupportChannelService.getChannels().addChangedListener(() ->
+        privateSupportChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateSupportChannelService.getChannels()));
-        publicSupportChannelService.getChannels().addChangedListener(() ->
+        publicSupportChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicSupportChannelService.getChannels()));
     }
 

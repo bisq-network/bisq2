@@ -48,11 +48,11 @@ public abstract class ObservableCollection<S> implements Collection<S> {
         return () -> observers.remove(observer);
     }
 
-    public Pin addChangedListener(Runnable listener) {
-        InvalidationHandler<S> invalidationHandler = new InvalidationHandler<>(listener);
-        observers.add(invalidationHandler);
-        listener.run();
-        return () -> observers.remove(invalidationHandler);
+    public Pin addListener(Runnable listener) {
+        CollectionChangeHandler<S> collectionChangeHandler = new CollectionChangeHandler<>(listener);
+        observers.add(collectionChangeHandler);
+        collectionChangeHandler.onChange();
+        return () -> observers.remove(collectionChangeHandler);
     }
 
     public <T> Pin addCollectionChangeMapper(Collection<T> collection, Function<S, T> mapFunction, Consumer<Runnable> executor) {
