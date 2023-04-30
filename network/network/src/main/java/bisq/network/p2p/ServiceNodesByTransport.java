@@ -43,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -145,14 +146,7 @@ public class ServiceNodesByTransport {
         return receiverAddressByNetworkType.entrySet().stream().map(entry -> {
                     Transport.Type transportType = entry.getKey();
                     if (map.containsKey(transportType)) {
-                        try {
-                            Connection connection = map.get(transportType)
-                                    .send(senderNodeId, networkMessage, entry.getValue())
-                                    .get(2, TimeUnit.MINUTES);
-                            return new Pair<>(transportType, connection);
-                        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                            throw new RuntimeException("Couldn't send messages.", e);
-                        }
+                        return new Pair<>(transportType, map.get(transportType).send(senderNodeId, networkMessage, entry.getValue()));
                     } else {
                         return null;
                     }

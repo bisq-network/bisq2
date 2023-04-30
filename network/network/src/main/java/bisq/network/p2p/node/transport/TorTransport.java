@@ -3,8 +3,9 @@ package bisq.network.p2p.node.transport;
 import bisq.network.NetworkService;
 import bisq.network.p2p.node.Address;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.tor.OnionAddress;
 import bisq.tor.Tor;
-import bisq.tor.TorServerSocketChannel;
+import bisq.tor.TorServerSocket;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,7 +13,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.nio.channels.ServerSocketChannel;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -64,29 +66,28 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public CompletableFuture<ServerSocketChannelResult> getServerSocketChannel(int port, String nodeId) {
+    public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Start hidden service with port {} and nodeId {}", port, nodeId);
         long ts = System.currentTimeMillis();
         try {
-            TorServerSocketChannel torServerSocket = tor.getTorServerSocket();
-            return torServerSocket.start(port, nodeId)
-                    .thenApply(onionAddress -> {
-                        log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
-                                System.currentTimeMillis() - ts, onionAddress, nodeId);
-
-                        ServerSocketChannel serverSocketChannel = torServerSocket.getLocalServerSocketChannel()
-                                .orElseThrow();
-                        return new ServerSocketChannelResult(
-                                nodeId,
-                                serverSocketChannel,
-                                new Address(onionAddress.getHost(), onionAddress.getPort())
-                        );
-                    });
-
-        } catch (IOException e) {
+            TorServerSocket torServerSocket = tor.getTorServerSocket();
+            OnionAddress onionAddress = torServerSocket.bind(port, nodeId);
+            log.info("Tor hidden service Ready. Took {} ms. Onion address={}; nodeId={}",
+                    System.currentTimeMillis() - ts, onionAddress, nodeId);
+            return new ServerSocketResult(nodeId, torServerSocket, new Address(onionAddress.getHost(), onionAddress.getPort()));
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             throw new ConnectionException(e);
         }
+    }
+
+    @Override
+    public Socket getSocket(Address address) throws IOException {
+        long ts = System.currentTimeMillis();
+        Socket socket = tor.getSocket(null); // Blocking call. Takes 5-15 sec usually.
+        socket.connect(new InetSocketAddress(address.getHost(), address.getPort()));
+        log.info("Tor socket to {} created. Took {} ms", address, System.currentTimeMillis() - ts);
+        return socket;
     }
 
     @Override
@@ -110,9 +111,5 @@ public class TorTransport implements Transport {
     @Override
     public Optional<Address> getServerAddress(String serverId) {
         return tor.getHostName(serverId).map(hostName -> new Address(hostName, TorTransport.DEFAULT_PORT));
-    }
-
-    public int getSocksPort() {
-        return tor.getProxyPort();
     }
 }

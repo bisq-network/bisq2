@@ -18,22 +18,23 @@
 package bisq.network.p2p.node;
 
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.TorTransport;
 import bisq.network.p2p.node.transport.Transport;
-import bisq.network.p2p.node.transport.socketchannel.ClearNetSocketChannelFactory;
-import bisq.network.p2p.node.transport.socketchannel.SocketChannelFactory;
-import bisq.network.p2p.node.transport.socketchannel.TorSocketChannelFactory;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Slf4j
 public class PeerConnectionsManager {
@@ -42,7 +43,6 @@ public class PeerConnectionsManager {
     private final String nodeId;
     private final BanList banList;
     private final AuthorizationService authorizationService;
-    private final Transport.Type transportType;
     private final Transport transport;
 
     private Optional<ServerChannel> server = Optional.empty();
@@ -52,19 +52,21 @@ public class PeerConnectionsManager {
                                   String nodeId,
                                   BanList banList,
                                   AuthorizationService authorizationService,
-                                  Transport.Type transportType,
                                   Transport transport) {
         this.config = config;
         this.nodeId = nodeId;
         this.banList = banList;
         this.authorizationService = authorizationService;
-        this.transportType = transportType;
         this.transport = transport;
     }
 
-    public CompletableFuture<Void> start(Node node, int port) {
-        return createServerAndListenAsync(node, port)
-                .thenAccept(myCapability -> createAndStartOutboundConnectionMultiplexer(myCapability, node));
+    public void start(Node node, int port) {
+        try {
+            Capability myCapability = createServerAndListen(node, port);
+            createAndStartOutboundConnectionMultiplexer(myCapability, node);
+        } catch (IOException e) {
+            log.error("Couldn't start PeerConnectionsManager", e);
+        }
     }
 
     public void shutdown() {
@@ -76,19 +78,27 @@ public class PeerConnectionsManager {
         return server.map(ServerChannel::getAddress);
     }
 
-    public CompletableFuture<? extends Connection> getConnection(Address address) {
+    public ConnectionChannel getConnection(Address address) {
         if (server.isPresent()) {
-            Optional<InboundConnection> connectionOptional = server.get().getConnectionByAddress(address);
+            Optional<InboundConnectionChannel> connectionOptional = server.get().getConnectionByAddress(address);
             if (connectionOptional.isPresent()) {
-                InboundConnection connection = connectionOptional.get();
-                return CompletableFuture.completedFuture(connection);
+                return connectionOptional.get();
             }
         }
 
-        return outboundConnectionMultiplexer.get().getConnection(address);
+        if (outboundConnectionMultiplexer.isPresent()) {
+            CompletableFuture<OutboundConnectionChannel> connection = outboundConnectionMultiplexer.get().getConnection(address);
+            try {
+                return connection.get(2, MINUTES);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                log.warn("Couldn't connect to {}", address);
+            }
+        }
+
+        return null;
     }
 
-    public Stream<Connection> getAllConnections() {
+    public Stream<ConnectionChannel> getAllConnections() {
         return Stream.concat(getInboundConnections().stream(), getOutboundConnections().stream());
     }
 
@@ -96,34 +106,29 @@ public class PeerConnectionsManager {
         return getInboundConnections().size() + getOutboundConnections().size();
     }
 
-    public Collection<InboundConnection> getInboundConnections() {
+    public Collection<InboundConnectionChannel> getInboundConnections() {
         return server.isPresent() ? server.get().getAllInboundConnections() : Collections.emptyList();
     }
 
-    public Collection<OutboundConnection> getOutboundConnections() {
+    public Collection<OutboundConnectionChannel> getOutboundConnections() {
         return outboundConnectionMultiplexer.isPresent() ?
                 outboundConnectionMultiplexer.get().getAllOutboundConnections() : Collections.emptyList();
     }
 
-    private CompletableFuture<Capability> createServerAndListenAsync(Node node, int port) {
-        return transport.getServerSocketChannel(port, nodeId)
-                .thenApply(serverSocketChannelResult -> {
-                    Capability serverCapability = new Capability(
-                            serverSocketChannelResult.getAddress(),
-                            new ArrayList<>(config.getSupportedTransportTypes())
-                    );
-                    ServerChannel serverChannel = new ServerChannel(
-                            serverCapability,
-                            banList,
-                            authorizationService,
-                            node,
-                            serverSocketChannelResult.getServerSocketChannel()
-                    );
-                    server = Optional.of(serverChannel);
-                    serverChannel.start();
+    private Capability createServerAndListen(Node node, int port) throws IOException {
+        Transport.ServerSocketResult serverSocketResult = transport.getServerSocket(port, nodeId);
+        Capability serverCapability = new Capability(serverSocketResult.getAddress(), new ArrayList<>(config.getSupportedTransportTypes()));
+        ServerChannel serverChannel = new ServerChannel(
+                serverCapability,
+                banList,
+                authorizationService,
+                node,
+                ServerSocketChannel.open()
+        );
+        server = Optional.of(serverChannel);
+        serverChannel.start();
 
-                    return serverCapability;
-                });
+        return serverCapability;
     }
 
     private void createAndStartOutboundConnectionMultiplexer(Capability serverCapability, Node node) {
@@ -133,7 +138,6 @@ public class PeerConnectionsManager {
                     banList,
                     Load.INITIAL_LOAD,
                     serverCapability,
-                    getSocketChannelFactory(),
                     node,
                     SelectorProvider.provider().openSelector()
             );
@@ -143,19 +147,6 @@ public class PeerConnectionsManager {
             connectionMultiplexer.start();
         } catch (IOException e) {
             log.error("Couldn't create OutboundConnectionManager", e);
-        }
-    }
-
-    private SocketChannelFactory getSocketChannelFactory() {
-        switch (transportType) {
-            case TOR:
-                TorTransport torTransport = (TorTransport) transport;
-                int socksProxyPort = torTransport.getSocksPort();
-                return new TorSocketChannelFactory(socksProxyPort);
-            case CLEAR:
-                return new ClearNetSocketChannelFactory();
-            default:
-                throw new UnsupportedOperationException("Unsupported transportType");
         }
     }
 }

@@ -58,7 +58,7 @@ class InventoryHandler implements Connection.Listener {
         // log.debug("Node {} send GetInventoryRequest to {} with dataFilter {} and nonce {}. Connection={}",
         //        node, connection.getPeerAddress(), dataFilter, nonce, connection.getId());
         ts = System.currentTimeMillis();
-        supplyAsync(() -> node.sendAsync(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new InventoryRequest(dataFilter, nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);

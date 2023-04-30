@@ -7,9 +7,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.nio.channels.ServerSocketChannel;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -55,25 +54,23 @@ public class ClearNetTransport implements Transport {
     }
 
     @Override
-    public CompletableFuture<ServerSocketChannelResult> getServerSocketChannel(int port, String nodeId) {
+    public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.info("Create serverSocket at port {}", port);
         try {
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-            InetSocketAddress socketAddress = new InetSocketAddress(
-                    InetAddress.getLocalHost(),
-                    port
-            );
-            serverSocketChannel.socket().bind(socketAddress);
-
+            ServerSocket serverSocket = new ServerSocket(port);
             Address address = Address.localHost(port);
             log.debug("ServerSocket created at port {}", port);
-            return CompletableFuture.completedFuture(
-                    new ServerSocketChannelResult(nodeId, serverSocketChannel, address)
-            );
+            return new ServerSocketResult(nodeId, serverSocket, address);
         } catch (IOException e) {
             log.error("{}. Server port {}", e, port);
             throw new CompletionException(e);
         }
+    }
+
+    @Override
+    public Socket getSocket(Address address) throws IOException {
+        log.debug("Create new Socket to {}", address);
+        return new Socket(address.getHost(), address.getPort());
     }
 
     @Override
@@ -89,6 +86,10 @@ public class ClearNetTransport implements Transport {
 
     @Override
     public boolean isAddressAvailable(Address address) {
-        return true;
+        try (Socket ignored = getSocket(address)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

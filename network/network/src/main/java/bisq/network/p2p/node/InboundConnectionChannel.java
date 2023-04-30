@@ -17,23 +17,24 @@
 
 package bisq.network.p2p.node;
 
-import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletionException;
+@Slf4j
+public class InboundConnectionChannel extends ConnectionChannel {
+    @Setter
+    private boolean isPeerAddressVerified;
 
-public class ConnectionClosedException extends CompletionException {
-    @Getter
-    private Connection connection;
-    @Getter
-    private ConnectionChannel connectionChannel;
-
-    public ConnectionClosedException(Connection connection) {
-        super("Connection has been already closed. Connection=" + connection);
-        this.connection = connection;
+    public InboundConnectionChannel(Capability peersCapability,
+                                    Load peersLoad,
+                                    NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
+                                    Metrics metrics) {
+        super(peersCapability, peersLoad, networkEnvelopeSocketChannel, metrics);
+        log.debug("Create inboundConnection");
     }
 
-    public ConnectionClosedException(ConnectionChannel connectionChannel) {
-        super("Connection has been already closed. Connection=" + connectionChannel);
-        this.connectionChannel = connectionChannel;
+    @Override
+    public boolean isPeerAddressVerified() {
+        return isPeerAddressVerified;
     }
 }

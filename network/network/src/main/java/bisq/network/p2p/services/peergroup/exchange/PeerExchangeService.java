@@ -34,10 +34,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import static bisq.network.NetworkService.NETWORK_IO_POOL;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * Responsible for executing the peer exchange protocol with set of peers.
@@ -133,39 +133,36 @@ public class PeerExchangeService implements Node.Listener {
     }
 
     private CompletableFuture<Boolean> doPeerExchangeAsync(Address peerAddress) {
-        return node.getConnectionAsync(peerAddress)
-                .handleAsync((BiFunction<Connection, Throwable, Boolean>) (connection, throwable) -> {
-                    String key = connection != null ? connection.getId() : null;
+        return supplyAsync(() -> doPeerExchange(peerAddress), NETWORK_IO_POOL);
+    }
 
-                    if (throwable != null) {
-                        if (key != null) {
-                            requestHandlerMap.remove(key);
-                        }
-                        log.info("Node {} failed to do a peer exchange with {} because of: {}", node, peerAddress, throwable.getMessage());
-                        return false;
-                    }
+    private boolean doPeerExchange(Address peerAddress) {
+        String key = null;
+        try {
+            Connection connection = node.getConnection(peerAddress);
+            key = connection.getId();
+            if (requestHandlerMap.containsKey(key)) {
+                log.warn("Node {} : requestHandlerMap contains already {}. " +
+                        "We dispose the existing handler and start a new one.", node, peerAddress);
+                requestHandlerMap.get(key).dispose();
+            }
 
-                    if (connection == null) {
-                        return false;
-                    }
+            PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
+            requestHandlerMap.put(key, handler);
+            Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
 
-                    if (requestHandlerMap.containsKey(key)) {
-                        log.warn("Node {} : requestHandlerMap contains already {}. " +
-                                "We dispose the existing handler and start a new one.", node, peerAddress);
-                        requestHandlerMap.get(key).dispose();
-                    }
-
-                    PeerExchangeRequestHandler handler = new PeerExchangeRequestHandler(node, connection);
-                    requestHandlerMap.put(key, handler);
-                    Set<Peer> myPeers = peerExchangeStrategy.getPeers(peerAddress);
-
-                    Set<Peer> peers = handler.request(myPeers).join();
-                    log.info("Node {} completed peer exchange with {} and received {} peers.", node, peerAddress, peers.size());
-                    peerExchangeStrategy.addReportedPeers(peers, peerAddress);
-                    requestHandlerMap.remove(key);
-                    return true;
-
-                }, NETWORK_IO_POOL);
+            Set<Peer> peers = handler.request(myPeers).join();
+            log.info("Node {} completed peer exchange with {} and received {} peers.", node, peerAddress, peers.size());
+            peerExchangeStrategy.addReportedPeers(peers, peerAddress);
+            requestHandlerMap.remove(key);
+            return true;
+        } catch (Throwable throwable) {
+            if (key != null) {
+                requestHandlerMap.remove(key);
+            }
+            log.info("Node {} failed to do a peer exchange with {} because of: {}", node, peerAddress, throwable.getMessage());
+            return false;
+        }
     }
 
     public void shutdown() {
@@ -184,7 +181,7 @@ public class PeerExchangeService implements Node.Listener {
             Address peerAddress = connection.getPeerAddress();
             peerExchangeStrategy.addReportedPeers(new HashSet<>(request.getPeers()), peerAddress);
             List<Peer> myPeers = new ArrayList<>(peerExchangeStrategy.getPeers(peerAddress));
-            NETWORK_IO_POOL.submit(() -> node.sendAsync(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
+            NETWORK_IO_POOL.submit(() -> node.send(new PeerExchangeResponse(request.getNonce(), myPeers), connection));
             log.debug("Node {} sent PeerExchangeResponse with my myPeers {}", node, myPeers);
         }
     }
