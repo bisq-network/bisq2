@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
     @EqualsAndHashCode
     @ToString
-    private static final class ChangeListener<M, L> implements Observer<M> {
+    private static final class ChangeListener<M> implements Observer<M> {
         private final Runnable handler;
 
         public ChangeListener(Runnable handler) {
@@ -131,8 +131,8 @@ public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
         return observableListMappers;
     }
 
-    public <L> Pin addChangedListener(Runnable handler) {
-        ChangeListener<T, L> changedListener = new ChangeListener<>(handler);
+    public Pin addChangedListener(Runnable handler) {
+        ChangeListener<T> changedListener = new ChangeListener<>(handler);
         getObservers().add(changedListener);
         handler.run();
         return () -> getObservers().remove(changedListener);
