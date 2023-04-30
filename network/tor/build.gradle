@@ -1,6 +1,19 @@
 plugins {
     id 'bisq.java-library'
     id 'bisq.java-integration-tests'
+    id 'bisq.gradle.tor_binary.BisqTorBinaryPlugin'
+}
+
+tor {
+    version = '12.0.5'
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs += ['build/generated/src/main/resources']
+        }
+    }
 }
 
 dependencies {
