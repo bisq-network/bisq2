@@ -69,6 +69,7 @@ public class ObservableSet<T> implements Set<T> {
         return result;
     }
 
+    @Override
     public boolean addAll(@NotNull Collection<? extends T> values) {
         boolean result = collection.addAll(values);
         if (result) {
@@ -94,6 +95,12 @@ public class ObservableSet<T> implements Set<T> {
             getObservers().forEach(observer -> observer.removeAll(values));
         }
         return result;
+    }
+
+    @Override
+    public boolean retainAll(@NotNull Collection<?> c) {
+        //todo
+        return collection.retainAll(c);
     }
 
     @Override
@@ -136,10 +143,5 @@ public class ObservableSet<T> implements Set<T> {
     @Override
     public <T1> T1[] toArray(@NotNull T1[] a) {
         return collection.toArray(a);
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> c) {
-        return collection.retainAll(c);
     }
 }
