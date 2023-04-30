@@ -21,7 +21,7 @@ import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.common.data.Pair;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

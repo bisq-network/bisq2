@@ -19,7 +19,7 @@ package bisq.user.role;
 
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;

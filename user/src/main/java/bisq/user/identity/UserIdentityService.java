@@ -20,7 +20,7 @@ package bisq.user.identity;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkId;

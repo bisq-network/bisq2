@@ -342,7 +342,7 @@ public class ChatMessagesComponent {
             }
 
             if (selectedChannel != null) {
-                chatMessagesPin = selectedChannel.getChatMessages().addChangedListener(this::maybeSwitchUserProfile);
+                chatMessagesPin = selectedChannel.getChatMessages().addListener(this::maybeSwitchUserProfile);
             }
         }
 

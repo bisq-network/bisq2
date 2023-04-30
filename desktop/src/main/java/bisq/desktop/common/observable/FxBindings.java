@@ -18,9 +18,9 @@
 package bisq.desktop.common.observable;
 
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableArray;
-import bisq.common.observable.ObservableSet;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.desktop.common.threading.UIThread;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -32,11 +32,11 @@ import java.util.function.Function;
 
 @Slf4j
 public class FxBindings {
-    public static <T, R> ObservableListBindings<T, R> bind(ObservableList<R> observer) {
+    public static <S, T> ObservableListBindings<S, T> bind(ObservableList<T> observer) {
         return new ObservableListBindings<>(observer);
     }
 
-    public static <T> ObservablePropertyBindings<T> bind(ObjectProperty<T> observer) {
+    public static <S> ObservablePropertyBindings<S> bind(ObjectProperty<S> observer) {
         return new ObservablePropertyBindings<>(observer);
     }
 
@@ -60,7 +60,7 @@ public class FxBindings {
         return new BooleanBiDirPropertyBindings(observer);
     }
 
-    public static <T> ObjectBiDirPropertyBindings<T> bindBiDir(ObjectProperty<T> observer) {
+    public static <S> ObjectBiDirPropertyBindings<S> bindBiDir(ObjectProperty<S> observer) {
         return new ObjectBiDirPropertyBindings<>(observer);
     }
 
@@ -68,42 +68,45 @@ public class FxBindings {
         return new StringPropertyBindings(observer);
     }
 
-    public static <T> Pin subscribe(Observable<T> observable, Consumer<T> consumer) {
+    public static <S> Pin subscribe(Observable<S> observable, Consumer<S> consumer) {
         return observable.addObserver(e -> UIThread.run(() -> consumer.accept(e)));
     }
 
 
-    public static class ObservableListBindings<T, R> {
-        private final ObservableList<R> observableList;
-        @SuppressWarnings("unchecked")
-        private Function<T, R> mapFunction = e -> (R) e;
+    public static class ObservableListBindings<S, T> {
+        private final ObservableList<T> observableList;
 
-        private ObservableListBindings(ObservableList<R> observableList) {
+        // In case there is no map function provided we require that target type is the same as the source type. 
+        @SuppressWarnings("unchecked")
+        private Function<S, T> mapFunction = e -> (T) e;
+
+        private ObservableListBindings(ObservableList<T> observableList) {
             this.observableList = observableList;
         }
 
-        public ObservableListBindings<T, R> map(Function<T, R> mapper) {
-            this.mapFunction = mapper;
+        public ObservableListBindings<S, T> map(Function<S, T> mapFunction) {
+            this.mapFunction = mapFunction;
             return this;
         }
 
-        public Pin to(ObservableSet<T> observable) {
-            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
+        // We support currently only JavaFX ObservableList even if the source is a set.
+        public Pin to(ObservableSet<S> observable) {
+            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
         }
 
-        public Pin to(ObservableArray<T> observable) {
-            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
+        public Pin to(ObservableArray<S> observable) {
+            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
         }
     }
 
-    public static final class ObservablePropertyBindings<T> {
-        private final ObjectProperty<T> observer;
+    public static final class ObservablePropertyBindings<S> {
+        private final ObjectProperty<S> observer;
 
-        public ObservablePropertyBindings(ObjectProperty<T> observer) {
+        public ObservablePropertyBindings(ObjectProperty<S> observer) {
             this.observer = observer;
         }
 
-        public Pin to(Observable<T> observable) {
+        public Pin to(Observable<S> observable) {
             return observable.addObserver(e -> UIThread.run(() -> observer.set(e)));
         }
     }
@@ -179,15 +182,15 @@ public class FxBindings {
         }
     }
 
-    public static final class ObjectBiDirPropertyBindings<T> {
-        private final ObjectProperty<T> observer;
+    public static final class ObjectBiDirPropertyBindings<S> {
+        private final ObjectProperty<S> observer;
 
-        public ObjectBiDirPropertyBindings(ObjectProperty<T> observer) {
+        public ObjectBiDirPropertyBindings(ObjectProperty<S> observer) {
             this.observer = observer;
         }
 
-        public Pin to(Observable<T> observable) {
-            ChangeListener<T> listener = (o, oldValue, newValue) -> {
+        public Pin to(Observable<S> observable) {
+            ChangeListener<S> listener = (o, oldValue, newValue) -> {
                 observable.set(newValue);
             };
             observer.addListener(listener);

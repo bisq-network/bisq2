@@ -66,7 +66,7 @@ public class DashboardController implements Controller {
 
         // We listen on all channels, also hidden ones and use a weak reference listener
         publicTradeChannelService.getChannels().forEach(publicTradeChannel ->
-                publicTradeChannel.getChatMessages().addChangedListener(new WeakReference<Runnable>(this::updateOffersOnline).get()));
+                publicTradeChannel.getChatMessages().addListener(new WeakReference<Runnable>(this::updateOffersOnline).get()));
 
         // We trigger a call of updateOffersOnline for each channel when registering our observer. But we only want one call, 
         // so we block execution of the code inside updateOffersOnline to only call it once.

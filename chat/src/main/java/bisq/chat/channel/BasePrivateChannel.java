@@ -20,7 +20,7 @@ package bisq.chat.channel;
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.common.data.ByteArray;
 import bisq.common.data.Pair;
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;

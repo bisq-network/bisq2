@@ -26,8 +26,8 @@ import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.common.observable.ObservableArray;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
@@ -102,24 +102,24 @@ public class ChatNotifications {
 
         sortedChatMessages.setComparator(ChatNotification::compareTo);
 
-        privateTradeChannelService.getChannels().addChangedListener(() ->
+        privateTradeChannelService.getChannels().addListener(() ->
                 onPrivateTradeChannelsChanged(privateTradeChannelService.getChannels()));
-        publicTradeChannelService.getChannels().addChangedListener(() ->
+        publicTradeChannelService.getChannels().addListener(() ->
                 onPublicTradeChannelsChanged(publicTradeChannelService.getChannels()));
 
-        privateDiscussionChannelService.getChannels().addChangedListener(() ->
+        privateDiscussionChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateDiscussionChannelService.getChannels()));
-        publicDiscussionChannelService.getChannels().addChangedListener(() ->
+        publicDiscussionChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicDiscussionChannelService.getChannels()));
 
-        privateEventsChannelService.getChannels().addChangedListener(() ->
+        privateEventsChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateEventsChannelService.getChannels()));
-        publicEventsChannelService.getChannels().addChangedListener(() ->
+        publicEventsChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicEventsChannelService.getChannels()));
 
-        privateSupportChannelService.getChannels().addChangedListener(() ->
+        privateSupportChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateSupportChannelService.getChannels()));
-        publicSupportChannelService.getChannels().addChangedListener(() ->
+        publicSupportChannelService.getChannels().addListener(() ->
                 onPublicChannelsChanged(publicSupportChannelService.getChannels()));
     }
 

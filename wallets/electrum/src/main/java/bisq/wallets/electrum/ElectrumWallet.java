@@ -17,7 +17,6 @@
 
 package bisq.wallets.electrum;
 
-import bisq.common.observable.ObservableSet;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.model.*;
 import bisq.wallets.electrum.rpc.ElectrumDaemon;

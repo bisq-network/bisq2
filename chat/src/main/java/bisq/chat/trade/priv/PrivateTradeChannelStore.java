@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;

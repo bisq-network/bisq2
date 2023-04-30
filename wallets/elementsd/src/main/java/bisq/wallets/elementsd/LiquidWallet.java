@@ -17,7 +17,7 @@
 
 package bisq.wallets.elementsd;
 
-import bisq.common.observable.ObservableArray;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
 import bisq.wallets.core.Wallet;

@@ -19,19 +19,19 @@ package bisq.wallets.bitcoind;
 
 import bisq.common.monetary.Coin;
 import bisq.common.observable.Observable;
-import bisq.common.observable.ObservableSet;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceClient;
 import bisq.wallets.bitcoind.rpc.BitcoindDaemon;
 import bisq.wallets.bitcoind.zmq.ZmqConnection;
 import bisq.wallets.bitcoind.zmq.ZmqWallet;
-import bisq.wallets.json_rpc.RpcConfig;
 import bisq.wallets.core.Wallet;
 import bisq.wallets.core.WalletService;
 import bisq.wallets.core.exceptions.WalletNotInitializedException;
 import bisq.wallets.core.model.Transaction;
 import bisq.wallets.core.model.TransactionInfo;
 import bisq.wallets.core.model.Utxo;
+import bisq.wallets.json_rpc.RpcConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
