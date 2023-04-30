@@ -29,18 +29,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ObservableSet<T> extends CopyOnWriteArraySet<T> {
-    public interface Observer<M> {
-        void add(M element);
-
-        void addAll(Collection<? extends M> values);
-
-        void remove(Object element);
-
-        void removeAll(Collection<?> values);
-
-        void clear();
-    }
-
     @EqualsAndHashCode
     @ToString
     private static final class ChangeListener<M, L> implements Observer<M> {
