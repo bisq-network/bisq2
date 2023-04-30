@@ -49,18 +49,12 @@ public abstract class ChannelSelection {
             this.chatService = chatService;
         }
 
-        @Override
-        public void onActivate() {
-        }
-
         protected abstract Model getChannelSelectionModel();
 
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
-            if (channelsPin != null) {
-                channelsPin.unbind();
-            }
+            channelsPin.unbind();
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);

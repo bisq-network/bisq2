@@ -117,8 +117,6 @@ public class PrivateChannelSelection extends ChannelSelection {
 
         @Override
         public void onActivate() {
-            super.onActivate();
-
             if (model.channelDomain == ChannelDomain.TRADE) {
                 channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
@@ -171,6 +169,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 userIdentityService.selectChatUserIdentity(((PrivateChannel) channel).getMyUserIdentity());
                             }
                         });
+            } else {
+                throw new RuntimeException("Not supported channelDomain " + model.channelDomain);
             }
         }
 

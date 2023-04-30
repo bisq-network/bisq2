@@ -81,8 +81,6 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
 
         @Override
         public void onActivate() {
-            super.onActivate();
-
             channelsPin = FxBindings.<PublicChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicEventsChannelService.getChannels());
