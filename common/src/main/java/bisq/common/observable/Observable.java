@@ -21,32 +21,32 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
 
-public class Observable<T> {
-    private T value;
+public class Observable<S> {
+    private S value;
     // todo as observers is transient we get null after reading persisted data
     // we will likely not persist it when we impl protobuf serialisation, so the Observable can be considered 
     // not serializable
-    private final Set<Consumer<T>> observers = new CopyOnWriteArraySet<>();
+    private final Set<Consumer<S>> observers = new CopyOnWriteArraySet<>();
 
     public Observable() {
     }
 
-    public Observable(T value) {
+    public Observable(S value) {
         set(value);
     }
 
-    public Pin addObserver(Consumer<T> observer) {
+    public Pin addObserver(Consumer<S> observer) {
         observers.add(observer);
         observer.accept(value);
         return () -> observers.remove(observer);
     }
 
-    public void set(T value) {
+    public void set(S value) {
         this.value = value;
         observers.forEach(observer -> observer.accept(value));
     }
 
-    public T get() {
+    public S get() {
         return value;
     }
 

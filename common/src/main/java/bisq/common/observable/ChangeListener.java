@@ -24,7 +24,7 @@ import java.util.Collection;
 
 @EqualsAndHashCode
 @ToString
-final class ChangeListener<M> implements Observer<M> {
+final class ChangeListener<S> implements Observer<S> {
     private final Runnable handler;
 
     public ChangeListener(Runnable handler) {
@@ -32,12 +32,12 @@ final class ChangeListener<M> implements Observer<M> {
     }
 
     @Override
-    public void add(M element) {
+    public void add(S element) {
         handler.run();
     }
 
     @Override
-    public void addAll(Collection<? extends M> values) {
+    public void addAll(Collection<? extends S> values) {
         handler.run();
     }
 

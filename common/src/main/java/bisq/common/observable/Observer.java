@@ -19,10 +19,10 @@ package bisq.common.observable;
 
 import java.util.Collection;
 
-public interface Observer<M> {
-    void add(M element);
+public interface Observer<S> {
+    void add(S element);
 
-    void addAll(Collection<? extends M> values);
+    void addAll(Collection<? extends S> values);
 
     void remove(Object element);
 
