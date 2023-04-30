@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -28,6 +27,7 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
@@ -38,9 +38,11 @@ import bisq.desktop.components.overlay.ComboBoxOverlay;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
-import bisq.presentation.notifications.NotificationsService;
 import bisq.user.identity.UserIdentityService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -60,10 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -91,7 +90,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final UserIdentityService userIdentityService;
-        private final NotificationsService notificationsService;
         private Pin numVisibleChannelsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
@@ -100,9 +98,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
-            notificationsService = applicationService.getNotificationsService();
 
-            model = new Model(notificationsService);
+            model = new Model();
             view = new View(model, this);
 
             applyPredicate();
@@ -147,20 +144,31 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             model.allMarkets.setAll(marketListItems);
             model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
 
-            /*publicTradeChannelService.getChannels().forEach(channel->{
-                channel.getChatMessages().addChangedListener(()->{
-                    
+            publicTradeChannelService.getChannels().forEach(channel -> {
+                channel.getChatMessages().addListener(new CollectionObserver<>() {
+                    @Override
+                    public void add(PublicTradeChatMessage message) {
+                        UIThread.run(() -> onChatMessageAdded(message, channel));
+                    }
+
+                    @Override
+                    public void addAll(Collection<? extends PublicTradeChatMessage> values) {
+                        UIThread.run(() -> values.forEach(message -> onChatMessageAdded(message, channel)));
+                    }
+
+                    @Override
+                    public void remove(Object element) {
+                    }
+
+                    @Override
+                    public void removeAll(Collection<?> values) {
+                    }
+
+                    @Override
+                    public void clear() {
+                    }
                 });
             });
-            model.channelItems.addListener(new ListChangeListener<ChannelSelection.View.ChannelItem>() {
-                @Override
-                public void onChanged(Change<? extends ChannelSelection.View.ChannelItem> c) {
-                    c.next();
-                    c.getAddedSubList().forEach(channelItem->{
-                       // channelItem.getChannel().getChatMessages().add
-                    });
-                }
-            });*/
         }
 
         @Override
@@ -212,6 +220,14 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
         }
 
+        private void onChatMessageAdded(PublicTradeChatMessage message, PublicTradeChannel channel) {
+            String channelId = channel.getId();
+            model.numNewMessagesByChannelId.putIfAbsent(channelId, new HashSet<>());
+            model.numNewMessagesByChannelId.get(channelId).add(message);
+            model.channelIdWithNumMessagesChange.set(channelId);
+            UIThread.runOnNextRenderFrame(() -> model.channelIdWithNumMessagesChange.set(""));
+        }
+
         private int getNumMessages(Market market) {
             return publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
@@ -229,16 +245,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class Model extends ChannelSelection.Model {
-        private final NotificationsService notificationsService;
+        private final Map<String, Set<PublicTradeChatMessage>> numNewMessagesByChannelId = new HashMap<>();
+        private final StringProperty channelIdWithNumMessagesChange = new SimpleStringProperty();
         ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
         SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
 
-        public Model(NotificationsService notificationsService) {
-            this.notificationsService = notificationsService;
-        }
-
-        public int getNumNewMessages(Channel<?> channel) {
-            return 0;
+        public Model() {
         }
     }
 
@@ -326,6 +338,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 final HBox hBox = new HBox();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
                 final ColorAdjust hoverEffect = new ColorAdjust();
+                ChangeListener<String> channelIdWithNumMessagesChangeListener;
 
                 {
                     setCursor(Cursor.HAND);
@@ -392,7 +405,21 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         });
                         applyEffect(icons, item.isSelected(), false);
 
-                        numMessagesBadge.setText(Integer.toString(model.getNumNewMessages(item.getChannel())));
+                        channelIdWithNumMessagesChangeListener = (observable, oldValue, newValue) -> {
+                            if (item.getChannel().getId().equals(newValue)) {
+                                int numMessages = model.numNewMessagesByChannelId.get(newValue).size();
+                                if (numMessages > 0) {
+                                    if (numMessages < 10) {
+                                        numMessagesBadge.setText(String.valueOf(numMessages));
+                                    } else {
+                                        numMessagesBadge.setText("*");
+                                    }
+                                } else {
+                                    numMessagesBadge.setText("");
+                                }
+                            }
+                        };
+                        model.channelIdWithNumMessagesChange.addListener(channelIdWithNumMessagesChangeListener);
 
                         setGraphic(hBox);
                     } else {
@@ -403,6 +430,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         setOnMouseExited(null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
+                        }
+                        if (channelIdWithNumMessagesChangeListener != null) {
+                            model.channelIdWithNumMessagesChange.removeListener(channelIdWithNumMessagesChangeListener);
+                            channelIdWithNumMessagesChangeListener = null;
                         }
                         setGraphic(null);
                     }
