@@ -80,7 +80,7 @@ public class InventoryService implements Node.Listener {
             InventoryRequest request = (InventoryRequest) networkMessage;
             log.debug("Node {} received GetInventoryRequest with nonce {} from {}", node, request.getNonce(), connection.getPeerAddress());
             Inventory inventory = inventoryProvider.apply(request.getDataFilter());
-            NetworkService.NETWORK_IO_POOL.submit(() -> node.sendAsync(new InventoryResponse(inventory, request.getNonce()), connection));
+            NetworkService.NETWORK_IO_POOL.submit(() -> node.send(new InventoryResponse(inventory, request.getNonce()), connection));
             log.debug("Node {} sent GetInventoryResponse with inventory {} and nonce {} to {}. Connection={}",
                     node, inventory, request.getNonce(), connection.getPeerAddress(), connection.getId());
         }

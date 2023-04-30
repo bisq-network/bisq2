@@ -20,5 +20,5 @@ package bisq.network.p2p;
 import bisq.network.p2p.node.transport.Transport;
 
 public interface BoostrapListener {
-    void onBootstrapped(Transport.ServerSocketChannelResult serverSocketResult);
+    void onBootstrapped(Transport.ServerSocketResult serverSocketResult);
 }

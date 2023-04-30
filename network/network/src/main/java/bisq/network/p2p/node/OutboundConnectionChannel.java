@@ -20,26 +20,20 @@ package bisq.network.p2p.node;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.Socket;
-import java.util.function.BiConsumer;
-
 @Slf4j
-public class OutboundConnection extends Connection {
+public class OutboundConnectionChannel extends ConnectionChannel {
 
     @Getter
     private final Address address;
 
-    OutboundConnection(Socket socket,
-                       Address address,
-                       Capability peersCapability,
-                       Load peersLoad,
-                       Metrics metrics,
-                       Handler handler,
-                       BiConsumer<Connection, Exception> errorHandler) {
-        super(socket, peersCapability, peersLoad, metrics, handler, errorHandler);
+    public OutboundConnectionChannel(Capability peersCapability,
+                                     Load peersLoad,
+                                     NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
+                                     Metrics metrics) {
+        super(peersCapability, peersLoad, networkEnvelopeSocketChannel, metrics);
 
-        this.address = address;
-        log.debug("Create outboundConnection to {}", address);
+        this.address = peersCapability.getAddress();
+        log.debug("Create outboundConnection to {}", this.address);
     }
 
     @Override

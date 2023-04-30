@@ -24,7 +24,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.io.IOException;
-import java.nio.channels.ServerSocketChannel;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -52,28 +53,29 @@ public interface Transport {
 
     interface Config {
         String getBaseDir();
-
         int getSocketTimeout();
     }
 
     @Getter
     @ToString
     @EqualsAndHashCode
-    final class ServerSocketChannelResult {
+    final class ServerSocketResult {
         private final String nodeId;
-        private final ServerSocketChannel serverSocketChannel;
+        private final ServerSocket serverSocket;
         private final Address address;
 
-        public ServerSocketChannelResult(String nodeId, ServerSocketChannel serverSocketChannel, Address address) {
+        public ServerSocketResult(String nodeId, ServerSocket serverSocket, Address address) {
             this.nodeId = nodeId;
-            this.serverSocketChannel = serverSocketChannel;
+            this.serverSocket = serverSocket;
             this.address = address;
         }
     }
 
     boolean initialize();
 
-    CompletableFuture<ServerSocketChannelResult> getServerSocketChannel(int port, String nodeId);
+    ServerSocketResult getServerSocket(int port, String nodeId);
+
+    Socket getSocket(Address address) throws IOException;
 
     default Optional<Socks5Proxy> getSocksProxy() throws IOException {
         return Optional.empty();

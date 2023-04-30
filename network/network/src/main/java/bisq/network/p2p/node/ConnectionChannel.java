@@ -25,17 +25,10 @@ import bisq.network.p2p.node.authorization.AuthorizationToken;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-import java.io.EOFException;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Represents an inbound or outbound connection to a peer node.
@@ -45,11 +38,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Notifies errorHandler on exceptions from the inputHandlerService executor.
  */
 @Slf4j
-public abstract class Connection {
+public abstract class ConnectionChannel {
     interface Handler {
-        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, Connection connection);
+        void handleNetworkMessage(NetworkMessage networkMessage, AuthorizationToken authorizationToken, ConnectionChannel connectionChannel);
 
-        void handleConnectionClosed(Connection connection, CloseReason closeReason);
+        void handleConnectionClosed(ConnectionChannel connectionChannel, CloseReason closeReason);
     }
 
     public interface Listener {
@@ -65,14 +58,11 @@ public abstract class Connection {
     @Getter
     private final Load peersLoad;
     @Getter
+    private final NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel;
+    @Getter
     private final Metrics metrics;
 
-    private NetworkEnvelopeSocket networkEnvelopeSocket;
-
-    private final Handler handler;
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
-    @Nullable
-    private Future<?> future;
 
     @Getter
     private volatile boolean isStopped;
@@ -81,65 +71,19 @@ public abstract class Connection {
     private final AtomicInteger sentMessageCounter = new AtomicInteger(0);
     private final Object writeLock = new Object();
 
-    protected Connection(Socket socket,
-                         Capability peersCapability,
-                         Load peersLoad,
-                         Metrics metrics,
-                         Handler handler,
-                         BiConsumer<Connection, Exception> errorHandler) {
+    protected ConnectionChannel(Capability peersCapability,
+                                Load peersLoad,
+                                NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
+                                Metrics metrics) {
         this.peersCapability = peersCapability;
         this.peersLoad = peersLoad;
-        this.handler = handler;
+        this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
         this.metrics = metrics;
-
-        try {
-            this.networkEnvelopeSocket = new NetworkEnvelopeSocket(socket);
-        } catch (IOException exception) {
-            log.error("Could not create objectOutputStream/objectInputStream for socket " + socket, exception);
-            errorHandler.accept(this, exception);
-            close(CloseReason.EXCEPTION.exception(exception));
-            return;
-        }
-
-        future = NetworkService.NETWORK_IO_POOL.submit(() -> {
-            Thread.currentThread().setName("Connection.read-" + getThreadNameId());
-            try {
-                while (isInputStreamActive()) {
-                    var proto = networkEnvelopeSocket.receiveNextEnvelope();
-                    // parsing might need some time wo we check again if connection is still active
-                    if (isInputStreamActive()) {
-                        checkNotNull(proto, "Proto from NetworkEnvelope.parseDelimitedFrom(inputStream) must not be null");
-                        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
-                        if (networkEnvelope.getVersion() != NetworkEnvelope.VERSION) {
-                            throw new ConnectionException("Invalid network version. " +
-                                    networkEnvelope.getClass().getSimpleName());
-                        }
-                        NetworkMessage networkMessage = networkEnvelope.getNetworkMessage();
-                        log.debug("Received message: {} at: {}",
-                                StringUtils.truncate(networkMessage.toString(), 200), this);
-                        metrics.onReceived(networkEnvelope);
-                        NetworkService.DISPATCHER.submit(() -> handler.handleNetworkMessage(networkMessage,
-                                networkEnvelope.getAuthorizationToken(),
-                                this));
-                    }
-                }
-            } catch (Exception exception) {
-                //todo StreamCorruptedException from i2p at shutdown. prob it send some text data at shut down
-                if (isInputStreamActive()) {
-                    log.debug("Call shutdown from startListen read handler {} due exception={}", this, exception.toString());
-                    close(CloseReason.EXCEPTION.exception(exception));
-                    // EOFException expected if connection got closed
-                    if (!(exception instanceof EOFException)) {
-                        errorHandler.accept(this, exception);
-                    }
-                }
-            }
-        });
     }
 
-    Connection send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
+    ConnectionChannel send(NetworkMessage networkMessage, AuthorizationToken authorizationToken) {
         if (isStopped) {
-            log.warn("Message not sent as connection has been shut down already. Message={}, Connection={}",
+            log.warn("Message not sent as connection has been shut down already. Message={}, ConnectionChannel={}",
                     StringUtils.truncate(networkMessage.toString(), 200), this);
             throw new ConnectionClosedException(this);
         }
@@ -148,7 +92,7 @@ public abstract class Connection {
             boolean sent = false;
             synchronized (writeLock) {
                 try {
-                    networkEnvelopeSocket.send(networkEnvelope);
+                    networkEnvelopeSocketChannel.send(networkEnvelope);
                     sent = true;
                 } catch (Throwable throwable) {
                     if (!isStopped) {
@@ -189,15 +133,11 @@ public abstract class Connection {
         }
         log.info("Close {}", this);
         isStopped = true;
-        if (future != null) {
-            future.cancel(true);
-        }
         try {
-            networkEnvelopeSocket.close();
+            networkEnvelopeSocketChannel.close();
         } catch (IOException ignore) {
         }
         NetworkService.DISPATCHER.submit(() -> {
-            handler.handleConnectionClosed(this, closeReason);
             listeners.forEach(listener -> listener.onConnectionClosed(closeReason));
             listeners.clear();
         });
@@ -230,7 +170,7 @@ public abstract class Connection {
     }
 
     public boolean isOutboundConnection() {
-        return this instanceof OutboundConnection;
+        return this instanceof OutboundConnectionChannel;
     }
 
     public boolean isRunning() {
@@ -240,7 +180,7 @@ public abstract class Connection {
     @Override
     public String toString() {
         return "'" + getClass().getSimpleName() + " [peerAddress=" + getPeersCapability().getAddress() +
-                ", socket=" + networkEnvelopeSocket +
+                ", socket=" + networkEnvelopeSocketChannel +
                 ", keyId=" + getId() + "]'";
     }
 

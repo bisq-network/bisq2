@@ -20,7 +20,6 @@ package bisq.network.p2p.node;
 import bisq.network.p2p.ConnectionHandshakeInitiator;
 import bisq.network.p2p.message.NetworkEnvelope;
 import bisq.network.p2p.node.authorization.AuthorizationService;
-import bisq.network.p2p.node.transport.socketchannel.SocketChannelFactory;
 import bisq.network.p2p.services.peergroup.BanList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -42,12 +42,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 public class OutboundConnectionManager {
+    public interface Listener {
+        void onNewConnection(OutboundConnectionChannel outboundConnectionChannel);
+    }
 
     private final AuthorizationService authorizationService;
     private final BanList banList;
     private final Load myLoad;
     private final Capability myCapability;
-    private final SocketChannelFactory socketChannelFactory;
     private final Node node;
     @Getter
     private final Selector selector;
@@ -59,38 +61,36 @@ public class OutboundConnectionManager {
     private final List<SocketChannel> outboundHandshakeChannels = new CopyOnWriteArrayList<>();
     private final List<SocketChannel> verifiedConnections = new CopyOnWriteArrayList<>();
 
-    private final Map<SocketChannel, OutboundConnection> connectionBySocketChannel = new ConcurrentHashMap<>();
-    private final Map<Address, CompletableFuture<OutboundConnection>> completableFutureByPeerAddress = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, OutboundConnectionChannel> connectionByChannel = new ConcurrentHashMap<>();
+    private final Map<Address, CompletableFuture<OutboundConnectionChannel>> completableFutureByPeerAddress = new ConcurrentHashMap<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     public OutboundConnectionManager(AuthorizationService authorizationService,
                                      BanList banList,
                                      Load myLoad,
                                      Capability myCapability,
-                                     SocketChannelFactory socketChannelFactory, Node node,
+                                     Node node,
                                      Selector selector) {
         this.authorizationService = authorizationService;
         this.banList = banList;
         this.myLoad = myLoad;
         this.myCapability = myCapability;
-        this.socketChannelFactory = socketChannelFactory;
         this.node = node;
         this.selector = selector;
     }
 
-    public synchronized CompletableFuture<OutboundConnection> createNewConnection(Address address) {
+    public CompletableFuture<OutboundConnectionChannel> createNewConnection(Address address) {
         if (completableFutureByPeerAddress.containsKey(address)) {
             return completableFutureByPeerAddress.get(address);
         }
 
-        var completableFuture = new CompletableFuture<OutboundConnection>();
+        var completableFuture = new CompletableFuture<OutboundConnectionChannel>();
         completableFutureByPeerAddress.put(address, completableFuture);
 
         try {
-            log.info("Creating outbound connection to {}", address.getFullAddress());
-
-            SocketChannel socketChannel = socketChannelFactory.getSocketChannelForAddress(address);
+            SocketChannel socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
-            socketChannel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_WRITE);
+            socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
             addressByChannel.put(socketChannel, address);
             channelByAddress.put(address, socketChannel);
@@ -103,7 +103,6 @@ public class OutboundConnectionManager {
 
         } catch (IOException e) {
             log.warn("Couldn't create connection to " + address.getFullAddress(), e);
-            completableFuture.completeExceptionally(e);
         }
 
         return completableFuture;
@@ -120,9 +119,6 @@ public class OutboundConnectionManager {
             channelByAddress.remove(address);
 
             addressByChannel.remove(socketChannel);
-
-            CompletableFuture<OutboundConnection> completableFuture = completableFutureByPeerAddress.get(address);
-            completableFuture.completeExceptionally(e);
         }
     }
 
@@ -159,22 +155,18 @@ public class OutboundConnectionManager {
             verifiedConnections.add(socketChannel);
             outboundHandshakeChannels.remove(socketChannel);
 
-            OutboundConnection outboundConnectionChannel = new OutboundConnection(
-                    handshakeResponse.getCapability(),
+            Capability peerCapability = handshakeResponse.getCapability();
+            OutboundConnectionChannel outboundConnectionChannel = new OutboundConnectionChannel(
+                    peerCapability,
                     handshakeResponse.getLoad(),
                     networkEnvelopeSocketChannel,
                     new Metrics()
             );
-            connectionBySocketChannel.put(socketChannel, outboundConnectionChannel);
 
-            Address peerAddress = outboundConnectionChannel.getPeerAddress();
-            CompletableFuture<OutboundConnection> completableFuture = completableFutureByPeerAddress.get(peerAddress);
-            completableFuture.complete(outboundConnectionChannel);
-
-            node.onNewConnection(outboundConnectionChannel);
-
+            connectionByChannel.put(socketChannel, outboundConnectionChannel);
+            listeners.forEach(l -> l.onNewConnection(outboundConnectionChannel));
         } else if (verifiedConnections.contains(socketChannel)) {
-            OutboundConnection connectionChannel = connectionBySocketChannel.get(socketChannel);
+            OutboundConnectionChannel connectionChannel = connectionByChannel.get(socketChannel);
 
             NetworkEnvelopeSocketChannel envelopeSocketChannel = connectionChannel.getNetworkEnvelopeSocketChannel();
             List<NetworkEnvelope> networkEnvelopes = envelopeSocketChannel.receiveNetworkEnvelopes();
@@ -189,23 +181,44 @@ public class OutboundConnectionManager {
         }
     }
 
-    public Optional<OutboundConnection> getConnection(Address address) {
+    public Optional<OutboundConnectionChannel> getConnection(Address address) {
         if (channelByAddress.containsKey(address)) {
             SocketChannel socketChannel = channelByAddress.get(address);
-            OutboundConnection connectionChannel = connectionBySocketChannel.get(socketChannel);
+            OutboundConnectionChannel connectionChannel = connectionByChannel.get(socketChannel);
             return Optional.ofNullable(connectionChannel);
         }
+
         return Optional.empty();
     }
 
-    public Collection<OutboundConnection> getAllOutboundConnections() {
-        return connectionBySocketChannel.values();
+    public Collection<OutboundConnectionChannel> getAllOutboundConnections() {
+        return connectionByChannel.values();
+    }
+
+    public void registerListener(Listener l) {
+        listeners.add(l);
+    }
+
+    public void removeListener(Listener l) {
+        listeners.remove(l);
     }
 
     private void handleConnectedChannel(SocketChannel socketChannel) {
-        outboundHandshakeChannels.add(socketChannel);
-        Address address = addressByChannel.get(socketChannel);
-        log.info("Created outbound connection to {}", address.getFullAddress());
+        try {
+            socketChannel.register(selector, SelectionKey.OP_WRITE);
+            outboundHandshakeChannels.add(socketChannel);
+
+            Address address = addressByChannel.get(socketChannel);
+            log.info("Created outbound connection to {}", address.getFullAddress());
+        } catch (ClosedChannelException e) {
+            log.error("Couldn't connect to channel.", e);
+
+            // Connection closed.
+            Address address = addressByChannel.get(socketChannel);
+            channelByAddress.remove(address);
+
+            addressByChannel.remove(socketChannel);
+        }
     }
 
     private ByteBuffer wrapPayloadInByteBuffer(NetworkEnvelope networkEnvelope) {

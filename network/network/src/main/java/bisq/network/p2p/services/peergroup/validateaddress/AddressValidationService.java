@@ -100,7 +100,7 @@ public class AddressValidationService implements Node.Listener {
                 InboundConnection inboundConnection = (InboundConnection) connection;
                 log.debug("Node {} received AddressValidationRequest with nonce {} from {}", node, addressValidationRequest.getNonce(), peerAddress);
                 requesters.add(connection.getId());
-                NETWORK_IO_POOL.submit(() -> node.sendAsync(new AddressValidationResponse(addressValidationRequest.getNonce()), inboundConnection));
+                NETWORK_IO_POOL.submit(() -> node.send(new AddressValidationResponse(addressValidationRequest.getNonce()), inboundConnection));
                 log.debug("Node {} sent AddressValidationResponse with nonce {} to {}. Connection={}", node, addressValidationRequest.getNonce(), peerAddress, inboundConnection.getId());
             } else {
                 log.warn("Node {}  got a AddressValidationRequest at {}. We expect an inbound connection. We close that connection.", node, connection);

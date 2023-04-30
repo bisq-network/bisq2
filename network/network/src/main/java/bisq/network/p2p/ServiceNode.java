@@ -44,7 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -179,17 +181,11 @@ public class ServiceNode {
                                                               PubKey receiverPubKey,
                                                               KeyPair senderKeyPair,
                                                               String senderNodeId) {
-        return confidentialMessageService.map(service -> {
-                    try {
-                        return service.send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId).get(2, TimeUnit.MINUTES);
-                    } catch (ExecutionException | InterruptedException | TimeoutException e) {
-                        throw new RuntimeException("ConfidentialMessageService not present at confidentialSend", e);
-                    }
-                })
+        return confidentialMessageService.map(service -> service.send(networkMessage, address, receiverPubKey, senderKeyPair, senderNodeId))
                 .orElseThrow(() -> new RuntimeException("ConfidentialMessageService not present at confidentialSend"));
     }
 
-    public CompletableFuture<Connection> send(String senderNodeId, NetworkMessage networkMessage, Address address) {
+    public Connection send(String senderNodeId, NetworkMessage networkMessage, Address address) {
         return getNodesById().send(senderNodeId, networkMessage, address);
     }
 

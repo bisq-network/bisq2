@@ -31,12 +31,13 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class OutboundConnectionMultiplexer {
+public class OutboundConnectionMultiplexer implements OutboundConnectionManager.Listener {
 
     private final Selector selector;
     private final OutboundConnectionManager outboundConnectionManager;
 
     private Optional<Thread> workerThread = Optional.empty();
+
 
     public OutboundConnectionMultiplexer(OutboundConnectionManager outboundConnectionManager) {
         this.selector = outboundConnectionManager.getSelector();
@@ -44,6 +45,8 @@ public class OutboundConnectionMultiplexer {
     }
 
     public void start() {
+        outboundConnectionManager.registerListener(this);
+
         var thread = new Thread(this::workerLoop);
         workerThread = Optional.of(thread);
         thread.start();
@@ -53,8 +56,8 @@ public class OutboundConnectionMultiplexer {
         workerThread.ifPresent(Thread::interrupt);
     }
 
-    public CompletableFuture<OutboundConnection> getConnection(Address address) {
-        Optional<OutboundConnection> optionalConnectionChannel =
+    public CompletableFuture<OutboundConnectionChannel> getConnection(Address address) {
+        Optional<OutboundConnectionChannel> optionalConnectionChannel =
                 outboundConnectionManager.getConnection(address);
 
         if (optionalConnectionChannel.isPresent()) {
@@ -63,13 +66,17 @@ public class OutboundConnectionMultiplexer {
             );
         }
 
-        CompletableFuture<OutboundConnection> completableFuture = outboundConnectionManager.createNewConnection(address);
+        CompletableFuture<OutboundConnectionChannel> completableFuture = outboundConnectionManager.createNewConnection(address);
         selector.wakeup();
 
         return completableFuture;
     }
 
-    public Collection<OutboundConnection> getAllOutboundConnections() {
+    @Override
+    public void onNewConnection(OutboundConnectionChannel outboundConnectionChannel) {
+    }
+
+    public Collection<OutboundConnectionChannel> getAllOutboundConnections() {
         return outboundConnectionManager.getAllOutboundConnections();
     }
 
@@ -93,7 +100,6 @@ public class OutboundConnectionMultiplexer {
 
                     if (selectionKey.isConnectable()) {
                         outboundConnectionManager.handleConnectableChannel(socketChannel);
-                        continue;
                     }
 
                     if (selectionKey.isReadable()) {
@@ -106,10 +112,10 @@ public class OutboundConnectionMultiplexer {
 
                 }
             }
-        } catch (CancelledKeyException e) {
-            log.warn("Connection already closed.", e);
         } catch (IOException e) {
             log.warn("IOException in OutboundConnectionMultiplexer selector.", e);
+        } catch (CancelledKeyException e) {
+            // Connection attempt failed. Nothing we can do here.
         }
     }
 }

@@ -138,7 +138,7 @@ public class I2PTransport implements Transport {
 
 
     @Override
-    public CompletableFuture<ServerSocketChannelResult> getServerSocketChannel(int port, String nodeId) {
+    public ServerSocketResult getServerSocket(int port, String nodeId) {
         log.debug("Create serverSocket");
         try {
             sessionId = nodeId;
@@ -153,15 +153,15 @@ public class I2PTransport implements Transport {
             // Port is irrelevant for I2P
             Address address = new Address(destination, port);
             log.debug("ServerSocket created. SessionId={}, destination={}", sessionId, destination);
-            throw new UnsupportedOperationException();
-            // return new ServerSocketChannelResult(nodeId, serverSocket, address);
+            return new ServerSocketResult(nodeId, serverSocket, address);
         } catch (Exception exception) {
             exception.printStackTrace();
             throw new ConnectionException(exception);
         }
     }
 
-    public Socket getSocketChannel(Address address) throws IOException {
+    @Override
+    public Socket getSocket(Address address) throws IOException {
         try {
             //todo check usage of sessionId
             log.debug("Create new Socket to {} with sessionId={}", address, sessionId);

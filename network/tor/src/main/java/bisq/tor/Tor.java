@@ -86,7 +86,6 @@ public class Tor {
     @Getter
     private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
     private final RetryPolicy<Boolean> retryPolicy;
-    @Getter
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
@@ -189,10 +188,10 @@ public class Tor {
         }
     }
 
-    public TorServerSocketChannel getTorServerSocket() throws IOException {
+    public TorServerSocket getTorServerSocket() throws IOException {
         checkArgument(state.get() == RUNNING,
                 "Invalid state at Tor.getTorServerSocket. state=" + state.get());
-        return new TorServerSocketChannel(torDirPath, torController);
+        return new TorServerSocket(torDirPath, torController);
     }
 
     public Proxy getProxy(@Nullable String streamId) throws IOException {

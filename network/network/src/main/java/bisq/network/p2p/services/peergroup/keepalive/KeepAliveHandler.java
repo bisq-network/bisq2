@@ -51,7 +51,7 @@ class KeepAliveHandler implements Connection.Listener {
         log.info("Node {} send Ping to {} with nonce {}. Connection={}",
                 node, connection.getPeerAddress(), nonce, connection.getId());
         ts = System.currentTimeMillis();
-        supplyAsync(() -> node.sendAsync(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
+        supplyAsync(() -> node.send(new Ping(nonce), connection), NetworkService.NETWORK_IO_POOL)
                 .whenComplete((c, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
