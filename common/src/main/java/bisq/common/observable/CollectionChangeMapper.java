@@ -37,14 +37,14 @@ import java.util.stream.Collectors;
  */
 @EqualsAndHashCode
 @ToString
-final class ObservableListMapper<S, T> implements Observer<S> {
+final class CollectionChangeMapper<S, T> implements Observer<S> {
     private final Collection<T> targetCollection;
     private final Function<S, T> mapFunction;
     private final Consumer<Runnable> executor;
 
-    ObservableListMapper(Collection<T> targetCollection,
-                         Function<S, T> mapFunction,
-                         Consumer<Runnable> executor) {
+    CollectionChangeMapper(Collection<T> targetCollection,
+                           Function<S, T> mapFunction,
+                           Consumer<Runnable> executor) {
         this.targetCollection = targetCollection;
         this.mapFunction = mapFunction;
         this.executor = executor;

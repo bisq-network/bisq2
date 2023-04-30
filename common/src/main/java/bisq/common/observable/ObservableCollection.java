@@ -48,12 +48,12 @@ public abstract class ObservableCollection<T> implements Collection<T> {
         return () -> observers.remove(changedListener);
     }
 
-    public <L> Pin addObservableListMapper(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
-        ObservableListMapper<T, L> observableListMapper = new ObservableListMapper<>(collection, mapFunction, executor);
-        observableListMapper.clear();
-        observableListMapper.addAll(this);
-        observers.add(observableListMapper);
-        return () -> observers.remove(observableListMapper);
+    public <L> Pin addCollectionChangeMapper(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
+        CollectionChangeMapper<T, L> collectionChangeMapper = new CollectionChangeMapper<>(collection, mapFunction, executor);
+        collectionChangeMapper.clear();
+        collectionChangeMapper.addAll(this);
+        observers.add(collectionChangeMapper);
+        return () -> observers.remove(collectionChangeMapper);
     }
 
     @Override

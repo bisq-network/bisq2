@@ -88,11 +88,11 @@ public class FxBindings {
         }
 
         public Pin to(ObservableSet<T> observable) {
-            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
+            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
         }
 
         public Pin to(ObservableArray<T> observable) {
-            return observable.addObservableListMapper(observableList, mapFunction, UIThread::run);
+            return observable.addCollectionChangeMapper(observableList, mapFunction, UIThread::run);
         }
     }
 
