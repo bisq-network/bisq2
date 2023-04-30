@@ -64,10 +64,7 @@ public class OutboundConnectionMultiplexer {
         }
 
         CompletableFuture<OutboundConnection> completableFuture = outboundConnectionManager.createNewConnection(address);
-
-        synchronized (this) {
-            notify();
-        }
+        selector.wakeup();
 
         return completableFuture;
     }
@@ -78,18 +75,7 @@ public class OutboundConnectionMultiplexer {
 
     private void workerLoop() {
         while (true) {
-            try {
-                while (!outboundConnectionManager.isActive()) {
-                    synchronized (this) {
-                        wait();
-                    }
-                }
-
-                selectorLoop();
-
-            } catch (InterruptedException e) {
-                log.warn("InterruptedException in OutboundConnectionMultiplexer workerThread.", e);
-            }
+            selectorLoop();
         }
     }
 

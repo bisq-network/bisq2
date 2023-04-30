@@ -52,7 +52,6 @@ public class OutboundConnectionManager {
     @Getter
     private final Selector selector;
 
-    private final List<SocketChannel> connectingChannels = new CopyOnWriteArrayList<>();
     private final Map<SocketChannel, Address> addressByChannel = new ConcurrentHashMap<>();
     private final Map<Address, SocketChannel> channelByAddress = new ConcurrentHashMap<>();
     private final Map<SocketChannel, ConnectionHandshakeInitiator> handshakeInitiatorByChannel = new ConcurrentHashMap<>();
@@ -78,10 +77,6 @@ public class OutboundConnectionManager {
         this.selector = selector;
     }
 
-    public boolean isActive() {
-        return !connectingChannels.isEmpty() || !outboundHandshakeChannels.isEmpty() || !verifiedConnections.isEmpty();
-    }
-
     public synchronized CompletableFuture<OutboundConnection> createNewConnection(Address address) {
         if (completableFutureByPeerAddress.containsKey(address)) {
             return completableFutureByPeerAddress.get(address);
@@ -97,7 +92,6 @@ public class OutboundConnectionManager {
             socketChannel.configureBlocking(false);
             socketChannel.register(selector, SelectionKey.OP_CONNECT | SelectionKey.OP_WRITE);
 
-            connectingChannels.add(socketChannel);
             addressByChannel.put(socketChannel, address);
             channelByAddress.put(address, socketChannel);
 
@@ -125,7 +119,6 @@ public class OutboundConnectionManager {
             Address address = addressByChannel.get(socketChannel);
             channelByAddress.remove(address);
 
-            connectingChannels.remove(socketChannel);
             addressByChannel.remove(socketChannel);
 
             CompletableFuture<OutboundConnection> completableFuture = completableFutureByPeerAddress.get(address);
@@ -210,9 +203,7 @@ public class OutboundConnectionManager {
     }
 
     private void handleConnectedChannel(SocketChannel socketChannel) {
-        connectingChannels.remove(socketChannel);
         outboundHandshakeChannels.add(socketChannel);
-
         Address address = addressByChannel.get(socketChannel);
         log.info("Created outbound connection to {}", address.getFullAddress());
     }
