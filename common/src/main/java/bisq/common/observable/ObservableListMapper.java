@@ -25,37 +25,47 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Observer implementation which maps the changes of the source collection to the
+ * target collection (usually a JavaFx ObservableCollection) using the mapFunction and the given
+ * executor (usually runs the runnable on the JavaFX Application Thread).
+ * This is useful for mirroring changes of the source collection on the target collection while supporting
+ * the UI frameworks constraints and mapping to different element types (usually ListItems).
+ *
+ * @param <S> The type of the collection element of the source collection
+ * @param <T> The type of the collection element of the target collection
+ */
 @EqualsAndHashCode
 @ToString
-final class ObservableListMapper<M, L> implements Observer<M> {
-    private final Collection<L> collection;
-    private final Function<M, L> mapFunction;
+final class ObservableListMapper<S, T> implements Observer<S> {
+    private final Collection<T> targetCollection;
+    private final Function<S, T> mapFunction;
     private final Consumer<Runnable> executor;
 
-    ObservableListMapper(Collection<L> collection,
-                         Function<M, L> mapFunction,
+    ObservableListMapper(Collection<T> targetCollection,
+                         Function<S, T> mapFunction,
                          Consumer<Runnable> executor) {
-        this.collection = collection;
+        this.targetCollection = targetCollection;
         this.mapFunction = mapFunction;
         this.executor = executor;
     }
 
     @Override
-    public void add(M element) {
+    public void add(S element) {
         executor.accept(() -> {
-            L item = mapFunction.apply(element);
-            if (!collection.contains(item)) {
-                collection.add(item);
+            T item = mapFunction.apply(element);
+            if (!targetCollection.contains(item)) {
+                targetCollection.add(item);
             }
         });
     }
 
     @Override
-    public void addAll(Collection<? extends M> values) {
+    public void addAll(Collection<? extends S> values) {
         executor.accept(() -> values.forEach(element -> {
-            L item = mapFunction.apply(element);
-            if (!collection.contains(item)) {
-                collection.add(item);
+            T item = mapFunction.apply(element);
+            if (!targetCollection.contains(item)) {
+                targetCollection.add(item);
             }
         }));
     }
@@ -63,19 +73,19 @@ final class ObservableListMapper<M, L> implements Observer<M> {
     @Override
     public void remove(Object element) {
         //noinspection unchecked
-        executor.accept(() -> collection.remove(mapFunction.apply((M) element)));
+        executor.accept(() -> targetCollection.remove(mapFunction.apply((S) element)));
     }
 
     @Override
     public void removeAll(Collection<?> values) {
         //noinspection unchecked
-        executor.accept(() -> collection.removeAll(values.stream()
-                .map(element -> mapFunction.apply((M) element))
+        executor.accept(() -> targetCollection.removeAll(values.stream()
+                .map(element -> mapFunction.apply((S) element))
                 .collect(Collectors.toSet())));
     }
 
     @Override
     public void clear() {
-        executor.accept(collection::clear);
+        executor.accept(targetCollection::clear);
     }
 }
