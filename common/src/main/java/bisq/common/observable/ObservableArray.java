@@ -19,189 +19,96 @@ package bisq.common.observable;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class ObservableArray<T> implements List<T> {
-    private final List<T> collection = new CopyOnWriteArrayList<>();
-    // Must be a list, not a set as otherwise if 2 instances of the same component is using it, one would get replaced.
-    private final List<Observer<T>> observers = new CopyOnWriteArrayList<>();
-
+public class ObservableArray<T> extends ObservableCollection<T> implements List<T> {
     public ObservableArray() {
+        super();
     }
 
     public ObservableArray(Collection<T> values) {
-        addAll(values);
-    }
-
-    private List<Observer<T>> getObservers() {
-        return observers;
-    }
-
-    public Pin addChangedListener(Runnable handler) {
-        ChangeListener<T> changedListener = new ChangeListener<>(handler);
-        getObservers().add(changedListener);
-        handler.run();
-        return () -> getObservers().remove(changedListener);
-    }
-
-    public <L> Pin addObservableListMapper(Collection<L> collection, Function<T, L> mapFunction, Consumer<Runnable> executor) {
-        ObservableListMapper<T, L> observableListMapper = new ObservableListMapper<>(collection, mapFunction, executor);
-        observableListMapper.clear();
-        observableListMapper.addAll(this);
-        getObservers().add(observableListMapper);
-        return () -> getObservers().remove(observableListMapper);
+        super(values);
     }
 
     @Override
-    public boolean add(T element) {
-        boolean result = collection.add(element);
-        if (result) {
-            getObservers().forEach(observer -> observer.add(element));
-        }
-        return result;
+    protected Collection<T> createCollection() {
+        return new CopyOnWriteArrayList<>();
     }
 
-    @Override
-    public boolean addAll(@NotNull Collection<? extends T> values) {
-        boolean result = collection.addAll(values);
-        if (result) {
-            getObservers().forEach(observer -> observer.addAll(values));
-        }
-        return result;
+    public List<T> getList() {
+        return (List<T>) collection;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // List implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public boolean addAll(int index, @NotNull Collection<? extends T> c) {
-        boolean result = collection.addAll(index, c);
+        boolean result = getList().addAll(index, c);
         if (result) {
-            getObservers().forEach(observer -> observer.addAll(c));
+            observers.forEach(observer -> observer.addAll(c));
         }
         return result;
     }
-
-    @Override
-    public boolean remove(Object element) {
-        boolean result = collection.remove(element);
-        if (result) {
-            getObservers().forEach(observer -> observer.remove(element));
-        }
-        return result;
-    }
-
-    @Override
-    public boolean removeAll(@NotNull Collection<?> values) {
-        boolean result = collection.removeAll(values);
-        if (result) {
-            getObservers().forEach(observer -> observer.removeAll(values));
-        }
-        return result;
-    }
-
-    @Override
-    public boolean retainAll(@NotNull Collection<?> c) {
-        //todo
-        return collection.retainAll(c);
-    }
-
-    @Override
-    public void clear() {
-        collection.clear();
-        getObservers().forEach(Observer::clear);
-    }
-
 
     @Override
     public T set(int index, T element) {
-        //todo
-        return collection.set(index, element);
+        T previous = getList().set(index, element);
+        observers.forEach(observer -> observer.add(element));
+        return previous;
     }
 
     @Override
     public void add(int index, T element) {
-        //todo
-        collection.add(index, element);
+        getList().add(index, element);
+        observers.forEach(observer -> observer.add(element));
     }
 
     @Override
     public T remove(int index) {
-        //todo
-        return collection.remove(index);
-    }
-
-    @Override
-    public boolean containsAll(@NotNull Collection<?> c) {
-        return collection.containsAll(c);
-    }
-
-    @Override
-    public int size() {
-        return collection.size();
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return collection.isEmpty();
-    }
-
-    @Override
-    public boolean contains(Object o) {
-        return collection.contains(o);
-    }
-
-    @NotNull
-    @Override
-    public Iterator<T> iterator() {
-        return collection.iterator();
-    }
-
-    @Override
-    public Object[] toArray() {
-        return collection.toArray();
-    }
-
-    @Override
-    public <T1> T1[] toArray(@NotNull T1[] a) {
-        return collection.toArray(a);
+        T removedElement = getList().remove(index);
+        observers.forEach(observer -> observer.remove(removedElement));
+        return removedElement;
     }
 
     @Override
     public T get(int index) {
-        return collection.get(index);
+        return getList().get(index);
     }
 
     @Override
     public int indexOf(Object o) {
-        return collection.indexOf(o);
+        return getList().indexOf(o);
     }
 
     @Override
     public int lastIndexOf(Object o) {
-        return collection.lastIndexOf(o);
+        return getList().lastIndexOf(o);
     }
 
-    @NotNull
     @Override
     public ListIterator<T> listIterator() {
-        return collection.listIterator();
+        return getList().listIterator();
     }
 
-    @NotNull
     @Override
     public ListIterator<T> listIterator(int index) {
-        return collection.listIterator(index);
+        return getList().listIterator(index);
     }
 
-    @NotNull
     @Override
     public List<T> subList(int fromIndex, int toIndex) {
-        return collection.subList(fromIndex, toIndex);
+        return getList().subList(fromIndex, toIndex);
     }
 
     @Override
     public void sort(Comparator<? super T> c) {
-        collection.sort(c);
+        getList().sort(c);
     }
 }

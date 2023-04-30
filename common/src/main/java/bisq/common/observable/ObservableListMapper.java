@@ -40,6 +40,7 @@ final class ObservableListMapper<M, L> implements Observer<M> {
         this.executor = executor;
     }
 
+    @Override
     public void add(M element) {
         executor.accept(() -> {
             L item = mapFunction.apply(element);
@@ -49,6 +50,7 @@ final class ObservableListMapper<M, L> implements Observer<M> {
         });
     }
 
+    @Override
     public void addAll(Collection<? extends M> values) {
         executor.accept(() -> values.forEach(element -> {
             L item = mapFunction.apply(element);
@@ -58,11 +60,13 @@ final class ObservableListMapper<M, L> implements Observer<M> {
         }));
     }
 
+    @Override
     public void remove(Object element) {
         //noinspection unchecked
         executor.accept(() -> collection.remove(mapFunction.apply((M) element)));
     }
 
+    @Override
     public void removeAll(Collection<?> values) {
         //noinspection unchecked
         executor.accept(() -> collection.removeAll(values.stream()
@@ -70,6 +74,7 @@ final class ObservableListMapper<M, L> implements Observer<M> {
                 .collect(Collectors.toSet())));
     }
 
+    @Override
     public void clear() {
         executor.accept(collection::clear);
     }
