@@ -139,7 +139,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getCreateOfferButtonVisible().set(false);
                 model.getTradeHelpersVisible().set(true);
 
-                chatMessagesPin = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().addChangedListener(this::updateLastOfferMessage);
+                chatMessagesPin = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().addListener(this::updateLastOfferMessage);
                 updateLastOfferMessage();
 
                 Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
