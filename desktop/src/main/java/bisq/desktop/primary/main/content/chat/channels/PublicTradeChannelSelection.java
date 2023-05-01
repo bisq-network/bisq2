@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -27,7 +28,6 @@ import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;
 import bisq.common.observable.Pin;
-import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
@@ -40,10 +40,8 @@ import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
@@ -62,7 +60,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.*;
+import javax.annotation.Nullable;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -111,16 +113,23 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         @Override
+        protected ChannelService<?, ?, ?> getChannelService() {
+            return publicTradeChannelService;
+        }
+
+        @Override
         public void onActivate() {
+            super.onActivate();
+
             getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
             channelsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (channel instanceof PublicTradeChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                        if (channel instanceof PublicTradeChannel) {
+                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                        } else if (channel == null && !model.channelItems.isEmpty()) {
                                     model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {
                                     model.selectedChannelItem.set(null);
@@ -143,32 +152,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             model.allMarkets.setAll(marketListItems);
             model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
-
-            publicTradeChannelService.getChannels().forEach(channel -> {
-                channel.getChatMessages().addListener(new CollectionObserver<>() {
-                    @Override
-                    public void add(PublicTradeChatMessage message) {
-                        UIThread.run(() -> onChatMessageAdded(message, channel));
-                    }
-
-                    @Override
-                    public void addAll(Collection<? extends PublicTradeChatMessage> values) {
-                        UIThread.run(() -> values.forEach(message -> onChatMessageAdded(message, channel)));
-                    }
-
-                    @Override
-                    public void remove(Object element) {
-                    }
-
-                    @Override
-                    public void removeAll(Collection<?> values) {
-                    }
-
-                    @Override
-                    public void clear() {
-                    }
-                });
-            });
         }
 
         @Override
@@ -220,14 +203,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             }
         }
 
-        private void onChatMessageAdded(PublicTradeChatMessage message, PublicTradeChannel channel) {
-            String channelId = channel.getId();
-            model.numNewMessagesByChannelId.putIfAbsent(channelId, new HashSet<>());
-            model.numNewMessagesByChannelId.get(channelId).add(message);
-            model.channelIdWithNumMessagesChange.set(channelId);
-            UIThread.runOnNextRenderFrame(() -> model.channelIdWithNumMessagesChange.set(""));
-        }
-
         private int getNumMessages(Market market) {
             return publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
@@ -245,10 +220,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class Model extends ChannelSelection.Model {
-        private final Map<String, Set<PublicTradeChatMessage>> numNewMessagesByChannelId = new HashMap<>();
-        private final StringProperty channelIdWithNumMessagesChange = new SimpleStringProperty();
-        ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
-        SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
+        private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
+        private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
 
         public Model() {
         }
@@ -330,7 +303,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Badge numMessagesBadge;
                 final StackPane iconAndBadge = new StackPane();
@@ -338,7 +310,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 final HBox hBox = new HBox();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
                 final ColorAdjust hoverEffect = new ColorAdjust();
-                ChangeListener<String> channelIdWithNumMessagesChangeListener;
+                @Nullable
+                private Subscription widthSubscription;
+                @Nullable
+                MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
 
                 {
                     setCursor(Cursor.HAND);
@@ -405,21 +380,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         });
                         applyEffect(icons, item.isSelected(), false);
 
-                        channelIdWithNumMessagesChangeListener = (observable, oldValue, newValue) -> {
-                            if (item.getChannel().getId().equals(newValue)) {
-                                int numMessages = model.numNewMessagesByChannelId.get(newValue).size();
-                                if (numMessages > 0) {
-                                    if (numMessages < 10) {
-                                        numMessagesBadge.setText(String.valueOf(numMessages));
-                                    } else {
-                                        numMessagesBadge.setText("*");
-                                    }
-                                } else {
-                                    numMessagesBadge.setText("");
-                                }
-                            }
-                        };
-                        model.channelIdWithNumMessagesChange.addListener(channelIdWithNumMessagesChangeListener);
+                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey());
+                        model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
+                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key));
 
                         setGraphic(hBox);
                     } else {
@@ -430,12 +393,28 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         setOnMouseExited(null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
+                            widthSubscription = null;
                         }
-                        if (channelIdWithNumMessagesChangeListener != null) {
-                            model.channelIdWithNumMessagesChange.removeListener(channelIdWithNumMessagesChangeListener);
-                            channelIdWithNumMessagesChangeListener = null;
+                        if (channelIdWithNumUnseenMessagesMapListener != null) {
+                            model.channelIdWithNumUnseenMessagesMap.removeListener(channelIdWithNumUnseenMessagesMapListener);
+                            channelIdWithNumUnseenMessagesMapListener = null;
                         }
                         setGraphic(null);
+                    }
+                }
+
+                private void onUnseenMessagesChanged(ChannelItem item, String channelId) {
+                    if (channelId.equals(item.getChannel().getId())) {
+                        int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
+                        if (numUnseenMessages > 0) {
+                            if (numUnseenMessages < 10) {
+                                numMessagesBadge.setText(String.valueOf(numUnseenMessages));
+                            } else {
+                                numMessagesBadge.setText("*");
+                            }
+                        } else {
+                            numMessagesBadge.setText("");
+                        }
                     }
                 }
 

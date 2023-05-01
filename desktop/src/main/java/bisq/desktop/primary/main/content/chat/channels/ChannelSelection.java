@@ -4,6 +4,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Pin;
@@ -16,11 +17,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -36,14 +36,16 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
-
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
+        private final Set<Pin> unseenChatMessageIdsPin = new HashSet<>();
 
         protected Controller(ChatService chatService) {
             this.chatService = chatService;
@@ -51,15 +53,30 @@ public abstract class ChannelSelection {
 
         protected abstract Model getChannelSelectionModel();
 
+        protected abstract ChannelService<?, ?, ?> getChannelService();
+
+        @Override
+        public void onActivate() {
+            getChannelService().getChannels().forEach(channel -> {
+                Pin pin = channel.getUnseenChatMessageIds().addListener(() -> onNumUnseenMessagesChanged(channel));
+                unseenChatMessageIdsPin.add(pin);
+            });
+        }
+
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
             channelsPin.unbind();
+            unseenChatMessageIdsPin.forEach(Pin::unbind);
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);
-    }
 
+        protected void onNumUnseenMessagesChanged(Channel<?> channel) {
+            UIThread.run(() ->
+                    getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), channel.getUnseenChatMessageIds().size()));
+        }
+    }
 
     protected static class Model implements bisq.desktop.common.view.Model {
         ObjectProperty<View.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
@@ -67,6 +84,7 @@ public abstract class ChannelSelection {
         ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
+        ObservableMap<String, Integer> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
 
         public Model() {
         }
@@ -161,18 +179,6 @@ public abstract class ChannelSelection {
                     }
                 }
             });
-        }
-
-        protected void initCell(ListCell<ChannelItem> cell, Label label, ImageView iconImageView, HBox hBox) {
-            cell.setCursor(Cursor.HAND);
-            cell.setPrefHeight(40);
-            cell.setPadding(new Insets(0, 0, -20, 0));
-            cell.setPadding(new Insets(0, 0, -20, 0));
-            label.setGraphic(iconImageView);
-            label.setGraphicTextGap(8);
-            hBox.setSpacing(10);
-            hBox.setAlignment(Pos.CENTER_LEFT);
-            hBox.getChildren().add(label);
         }
 
         protected void updateCell(ListCell<ChannelItem> cell, ChannelItem item, Label label, ImageView iconImageView) {

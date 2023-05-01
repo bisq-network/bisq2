@@ -28,6 +28,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
@@ -37,6 +38,7 @@ import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.MapChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -47,6 +49,7 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -76,30 +79,37 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PrivateTradeChannelService privateTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final PrivateChannelService privateDiscussionChannelService;
         private final ChannelSelectionService discussionChannelSelectionService;
-        private final PrivateChannelService privateEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
-        private final PrivateChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
+        private final BasePrivateChannelService<?, ?, ?> channelService;
 
         protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
             super(applicationService.getChatService());
 
-            privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            switch (channelDomain) {
+                case TRADE:
+                    channelService = chatService.getPrivateTradeChannelService();
+                    break;
+                case DISCUSSION:
+                    channelService = chatService.getPrivateDiscussionChannelService();
+                    break;
+                case EVENTS:
+                    channelService = chatService.getPrivateEventsChannelService();
+                    break;
+                case SUPPORT:
+                    channelService = chatService.getPrivateSupportChannelService();
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected channelDomain " + channelDomain);
+            }
+
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-
-            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
-
-            privateEventsChannelService = chatService.getPrivateEventsChannelService();
             eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
-
-            privateSupportChannelService = chatService.getPrivateSupportChannelService();
             supportChannelSelectionService = chatService.getSupportChannelSelectionService();
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -116,11 +126,18 @@ public class PrivateChannelSelection extends ChannelSelection {
         }
 
         @Override
+        protected ChannelService<?, ?, ?> getChannelService() {
+            return channelService;
+        }
+
+        @Override
         public void onActivate() {
+            super.onActivate();
+
             if (model.channelDomain == ChannelDomain.TRADE) {
                 channelsPin = FxBindings.<PrivateTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(privateTradeChannelService.getChannels());
+                        .to(((PrivateTradeChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -136,7 +153,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
                 channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(privateDiscussionChannelService.getChannels());
+                        .to(((PrivateChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -148,7 +165,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.EVENTS) {
                 channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(privateEventsChannelService.getChannels());
+                        .to(((PrivateChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -160,7 +177,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.SUPPORT) {
                 channelsPin = FxBindings.<PrivateChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(privateSupportChannelService.getChannels());
+                        .to(((PrivateChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -213,28 +230,28 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void doLeaveChannel(BasePrivateChannel<?> privateChannel) {
             switch (privateChannel.getChannelDomain()) {
                 case TRADE:
-                    privateTradeChannelService.leaveChannel((PrivateTradeChannel) privateChannel);
+                    ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChannel) privateChannel);
                     model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
                                     () -> tradeChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
-                    privateDiscussionChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    ((PrivateChannelService) channelService).leaveChannel((PrivateChannel) privateChannel);
                     model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChannel()),
                                     () -> discussionChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
-                    privateEventsChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    ((PrivateChannelService) channelService).leaveChannel((PrivateChannel) privateChannel);
                     model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChannel()),
                                     () -> eventsChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
-                    privateSupportChannelService.leaveChannel((PrivateChannel) privateChannel);
+                    ((PrivateChannelService) channelService).leaveChannel((PrivateChannel) privateChannel);
                     model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChannel()),
@@ -281,17 +298,22 @@ public class PrivateChannelSelection extends ChannelSelection {
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
                 final HBox hBox = new HBox();
+                final Badge numMessagesBadge = new Badge();
+                final StackPane iconAndBadge = new StackPane();
                 final Tooltip tooltip = new BisqTooltip();
                 final ImageView roboIcon = new ImageView();
                 final ImageView secondaryRoboIcon = new ImageView();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
                 final ColorAdjust hoverEffect = new ColorAdjust();
                 @Nullable
+                private Subscription widthSubscription;
+                @Nullable
                 private Pin inMediationPin;
+                @Nullable
+                MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
 
                 {
                     setCursor(Cursor.HAND);
@@ -308,9 +330,15 @@ public class PrivateChannelSelection extends ChannelSelection {
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
 
+                    numMessagesBadge.setPosition(Pos.CENTER);
+
                     removeIcon.setCursor(Cursor.HAND);
                     removeIcon.setId("icon-label-grey");
                     HBox.setMargin(removeIcon, new Insets(0, 12, 0, -20));
+
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeIcon);
+                    iconAndBadge.setAlignment(Pos.CENTER);
+                    HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
                     nonSelectedEffect.setSaturation(-0.4);
                     nonSelectedEffect.setBrightness(-0.6);
@@ -326,15 +354,21 @@ public class PrivateChannelSelection extends ChannelSelection {
                     if (item == null || empty) {
                         label.setGraphic(null);
                         removeIcon.setOnMouseClicked(null);
-                        hBox.setOnMouseClicked(null);
-                        hBox.setOnMouseEntered(null);
-                        hBox.setOnMouseExited(null);
+                        setOnMouseClicked(null);
+                        setOnMouseEntered(null);
+                        setOnMouseExited(null);
                         hBox.getChildren().clear();
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
+                            widthSubscription = null;
+                        }
+                        if (channelIdWithNumUnseenMessagesMapListener != null) {
+                            model.channelIdWithNumUnseenMessagesMap.removeListener(channelIdWithNumUnseenMessagesMapListener);
+                            channelIdWithNumUnseenMessagesMapListener = null;
                         }
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
+                            inMediationPin = null;
                         }
                         Tooltip.install(this, null);
                         setGraphic(null);
@@ -385,7 +419,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                                     tooltip.setText(peer.getTooltipString());
                                 }
                                 label.setText(privateTradeChannel.getChannelSelectionDisplayString());
-                                hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
+
+                                hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
 
                                 if (widthSubscription != null) {
                                     widthSubscription.unsubscribe();
@@ -405,7 +440,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         hBox.getChildren().clear();
                         label.setText(item.getDisplayString());
                         tooltip.setText(peer.getTooltipString());
-                        hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), removeIcon);
+                        hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setMaxWidth(getWidth() - 95);
@@ -414,18 +449,25 @@ public class PrivateChannelSelection extends ChannelSelection {
                     }
                     removeIcon.setOpacity(0);
                     removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChannel));
-                    setOnMouseClicked(e -> {
-                        Transitions.fadeIn(removeIcon);
-                    });
+                    setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                     setOnMouseEntered(e -> {
                         Transitions.fadeIn(removeIcon);
+                        Transitions.fadeOut(numMessagesBadge);
                         applyEffect(icons, item.isSelected(), true);
                     });
                     setOnMouseExited(e -> {
                         Transitions.fadeOut(removeIcon);
+                        Transitions.fadeIn(numMessagesBadge);
                         applyEffect(icons, item.isSelected(), false);
                     });
+
+
                     applyEffect(icons, item.isSelected(), false);
+
+                    channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey());
+                    model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
+                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key));
+
                     setGraphic(hBox);
                 }
 
@@ -441,6 +483,21 @@ public class PrivateChannelSelection extends ChannelSelection {
                             }
                         }
                     });
+                }
+
+                private void onUnseenMessagesChanged(ChannelItem item, String channelId) {
+                    if (channelId.equals(item.getChannel().getId())) {
+                        int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
+                        if (numUnseenMessages > 0) {
+                            if (numUnseenMessages < 10) {
+                                numMessagesBadge.setText(String.valueOf(numUnseenMessages));
+                            } else {
+                                numMessagesBadge.setText("*");
+                            }
+                        } else {
+                            numMessagesBadge.setText("");
+                        }
+                    }
                 }
             };
         }

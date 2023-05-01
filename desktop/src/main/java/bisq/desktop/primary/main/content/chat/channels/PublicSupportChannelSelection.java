@@ -20,19 +20,15 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.ChannelService;
 import bisq.chat.channel.PublicChannel;
 import bisq.chat.channel.PublicChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class PublicSupportChannelSelection extends PublicChannelSelection {
@@ -77,17 +73,24 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
         }
 
         @Override
+        protected ChannelService<?, ?, ?> getChannelService() {
+            return publicSupportChannelService;
+        }
+
+        @Override
         public void onActivate() {
+            super.onActivate();
+            
             channelsPin = FxBindings.<PublicChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicSupportChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (channel instanceof PublicChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                                } else if (channel == null && !model.channelItems.isEmpty()) {
-                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                        if (channel instanceof PublicChannel) {
+                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                        } else if (channel == null && !model.channelItems.isEmpty()) {
+                            model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {
                                     model.selectedChannelItem.set(null);
                                 }
@@ -112,7 +115,7 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
     protected static class Model extends ChannelSelection.Model {
     }
 
-    protected static class View extends ChannelSelection.View<Model, Controller> {
+    protected static class View extends PublicChannelSelection.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
@@ -121,36 +124,5 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
         protected String getHeadlineText() {
             return Res.get("social.publicChannels");
         }
-
-        @Override
-        protected ListCell<ChannelItem> getListCell() {
-            return new ListCell<>() {
-                private Subscription widthSubscription;
-                final Label label = new Label();
-                final ImageView iconImageView = new ImageView();
-                final HBox hBox = new HBox();
-
-                {
-                    initCell(this, label, iconImageView, hBox);
-                }
-
-
-                @Override
-                protected void updateItem(ChannelItem item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicChannel) {
-                        widthSubscription = setupCellBinding(this, item, label, iconImageView);
-                        updateCell(this, item, label, iconImageView);
-                        setGraphic(hBox);
-                    } else {
-                        setGraphic(null);
-                        if (widthSubscription != null) {
-                            widthSubscription.unsubscribe();
-                        }
-                    }
-                }
-            };
-        }
-
     }
 }
