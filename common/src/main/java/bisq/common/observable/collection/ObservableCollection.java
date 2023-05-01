@@ -144,4 +144,9 @@ public abstract class ObservableCollection<S> implements Collection<S> {
     public <S1> S1[] toArray(@NotNull S1[] a) {
         return collection.toArray(a);
     }
+
+    @Override
+    public String toString() {
+        return collection.toString();
+    }
 }
