@@ -95,7 +95,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private Pin numVisibleChannelsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
-            super(applicationService.getChatService());
+            super(applicationService);
 
             publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();

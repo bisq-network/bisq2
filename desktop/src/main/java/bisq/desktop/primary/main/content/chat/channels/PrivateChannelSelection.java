@@ -88,7 +88,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final BasePrivateChannelService<?, ?, ?> channelService;
 
         protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
-            super(applicationService.getChatService());
+            super(applicationService);
 
             switch (channelDomain) {
                 case TRADE:

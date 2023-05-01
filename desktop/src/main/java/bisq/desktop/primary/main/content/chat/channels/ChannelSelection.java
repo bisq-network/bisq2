@@ -1,10 +1,12 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
+import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -44,13 +46,15 @@ import java.util.Set;
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
+        private final UserIdentityService userIdentityService;
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
         private final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
         private final Set<Pin> numChatMessagesPins = new HashSet<>();
 
-        protected Controller(ChatService chatService) {
-            this.chatService = chatService;
+        protected Controller(DefaultApplicationService applicationService) {
+            chatService = applicationService.getChatService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
         }
 
         protected abstract Model getChannelSelectionModel();
@@ -76,11 +80,16 @@ public abstract class ChannelSelection {
                     }
                 }
 
-                int numChatMessages = channel.getChatMessages().size();
-                int numSeenChatMessages = channel.getSeenChatMessageIds().size();
-                int numUnSeenChatMessages = Math.max(0, numChatMessages - numSeenChatMessages);
+                int numUnSeenChatMessages = (int) channel.getChatMessages().stream()
+                        .filter(this::isNotMyMessage)
+                        .filter(message -> !channel.getSeenChatMessageIds().contains(message.getMessageId()))
+                        .count();
                 getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
             });
+        }
+
+        private boolean isNotMyMessage(ChatMessage chatMessage) {
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
         }
 
         @Override

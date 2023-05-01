@@ -18,7 +18,6 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.ChatService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChannelService;
 import bisq.chat.channel.PublicChannel;
@@ -35,7 +34,7 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
     private final Controller controller;
 
     public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
-        controller = new Controller(applicationService.getChatService());
+        controller = new Controller(applicationService);
     }
 
     @Override
@@ -55,8 +54,8 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         private final PublicChannelService publicDiscussionChannelService;
         private final ChannelSelectionService discussionChannelSelectionService;
 
-        protected Controller(ChatService chatService) {
-            super(chatService);
+        protected Controller(DefaultApplicationService applicationService) {
+            super(applicationService);
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();

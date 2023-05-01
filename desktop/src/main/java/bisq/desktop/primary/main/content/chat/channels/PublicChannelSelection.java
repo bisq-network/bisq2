@@ -64,6 +64,7 @@ public abstract class PublicChannelSelection extends ChannelSelection {
                     hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
                     numMessagesBadge.setPosition(Pos.CENTER);
+                    HBox.setMargin(numMessagesBadge, new Insets(0, 12, 0, 0));
                     hBox.getChildren().addAll(label, Spacer.fillHBox(), numMessagesBadge);
                 }
 
