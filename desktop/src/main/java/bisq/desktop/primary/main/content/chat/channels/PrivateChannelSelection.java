@@ -464,9 +464,9 @@ public class PrivateChannelSelection extends ChannelSelection {
 
                     applyEffect(icons, item.isSelected(), false);
 
-                    channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey());
+                    channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
                     model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
-                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key));
+                    model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
 
                     setGraphic(hBox);
                 }
@@ -483,21 +483,6 @@ public class PrivateChannelSelection extends ChannelSelection {
                             }
                         }
                     });
-                }
-
-                private void onUnseenMessagesChanged(ChannelItem item, String channelId) {
-                    if (channelId.equals(item.getChannel().getId())) {
-                        int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
-                        if (numUnseenMessages > 0) {
-                            if (numUnseenMessages < 10) {
-                                numMessagesBadge.setText(String.valueOf(numUnseenMessages));
-                            } else {
-                                numMessagesBadge.setText("*");
-                            }
-                        } else {
-                            numMessagesBadge.setText("");
-                        }
-                    }
                 }
             };
         }

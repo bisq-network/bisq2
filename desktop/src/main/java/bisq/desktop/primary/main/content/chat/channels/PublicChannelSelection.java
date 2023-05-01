@@ -75,9 +75,9 @@ public abstract class PublicChannelSelection extends ChannelSelection {
                         widthSubscription = setupCellBinding(this, item, label, iconImageView);
                         updateCell(this, item, label, iconImageView);
 
-                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey());
+                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
                         model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
-                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key));
+                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
 
                         setGraphic(hBox);
                     } else {
@@ -90,21 +90,6 @@ public abstract class PublicChannelSelection extends ChannelSelection {
                         if (channelIdWithNumUnseenMessagesMapListener != null) {
                             model.channelIdWithNumUnseenMessagesMap.removeListener(channelIdWithNumUnseenMessagesMapListener);
                             channelIdWithNumUnseenMessagesMapListener = null;
-                        }
-                    }
-                }
-
-                private void onUnseenMessagesChanged(ChannelItem item, String channelId) {
-                    if (channelId.equals(item.getChannel().getId())) {
-                        int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
-                        if (numUnseenMessages > 0) {
-                            if (numUnseenMessages < 10) {
-                                numMessagesBadge.setText(String.valueOf(numUnseenMessages));
-                            } else {
-                                numMessagesBadge.setText("*");
-                            }
-                        } else {
-                            numMessagesBadge.setText("");
                         }
                     }
                 }

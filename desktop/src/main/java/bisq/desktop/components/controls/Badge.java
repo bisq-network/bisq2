@@ -97,7 +97,7 @@ public class Badge extends StackPane {
             StackPane badgePane = new StackPane();
             badgePane.getStyleClass().add("badge-pane");
             badgePane.getChildren().add(labelControl);
-            badgePane.setPrefWidth(textLength * 15d);
+            badgePane.setPrefWidth(textLength * 12d);
 
             if (tooltip != null) {
                 Tooltip.install(badgePane, new BisqTooltip(tooltip));

@@ -14,6 +14,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
@@ -235,6 +236,19 @@ public abstract class ChannelSelection {
                 cell.setOnMouseReleased(e -> {
                     iconImageView.setId(item.iconIdSelected);
                 });
+            }
+        }
+
+        protected void onUnseenMessagesChanged(ChannelItem item, String channelId, Badge numMessagesBadge) {
+            if (channelId.equals(item.getChannel().getId())) {
+                int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
+                if (numUnseenMessages > 99) {
+                    numMessagesBadge.setText("*");
+                } else if (numUnseenMessages > 0) {
+                    numMessagesBadge.setText(String.valueOf(numUnseenMessages));
+                } else {
+                    numMessagesBadge.setText("");
+                }
             }
         }
 
