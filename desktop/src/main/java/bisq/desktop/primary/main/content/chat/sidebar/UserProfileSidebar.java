@@ -247,7 +247,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
 
             mention = new Hyperlink(Res.get("social.mention"));
             ignore = new Hyperlink();
-            report = new Hyperlink(Res.get("social.reports"));
+            report = new Hyperlink(Res.get("social.report"));
             VBox optionsBox = new VBox(5, optionsLabel, mention, ignore, report);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));

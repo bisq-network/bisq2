@@ -79,7 +79,7 @@ public class AccountAgeTab3Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/burnBsq");
+        Browser.open("https://bisq.wiki/reputation/accountAge");
     }
 
     void onCopyToClipboard(String pubKeyHash) {
