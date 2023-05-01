@@ -115,7 +115,7 @@ message PublicChannelStore {
 }
 
 message ChannelSelectionStore {
-  optional Channel selectedChannel = 1;
+  optional string selectedChannelId = 1;
 }
 
 
@@ -153,10 +153,6 @@ message PrivateTradeChannel {
 
 message PublicTradeChannel {
   common.Market market = 1;
-}
-
-message TradeChannelSelectionStore {
-  optional Channel selectedChannel = 1;
 }
 
 message PrivateTradeChannelStore {

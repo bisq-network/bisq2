@@ -187,6 +187,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
             Optional<PublicTradeChatMessage> myOpenOffer = channel.getChatMessages().stream()
+                    .filter(PublicTradeChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
                     .findAny();
             if (myOpenOffer.isPresent()) {

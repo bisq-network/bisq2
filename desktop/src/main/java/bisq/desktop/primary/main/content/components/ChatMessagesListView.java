@@ -176,6 +176,7 @@ public class ChatMessagesListView {
         @Nullable
         private ChannelService<?, ?, ?> currentChannelService;
         private Subscription selectedChannelSubscription;
+        private Subscription focusSubscription;
 
         private Controller(DefaultApplicationService applicationService,
                            Consumer<UserProfile> mentionUserHandler,
@@ -325,7 +326,11 @@ public class ChatMessagesListView {
                     }
                 });
             }
-
+            focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(), focused -> {
+                if (focused && currentChannelService != null && model.getSelectedChannel().get() != null) {
+                    currentChannelService.updateSeenChatMessageIds(model.getSelectedChannel().get());
+                }
+            });
             selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel, selectedChannel -> {
                 if (currentChannelService != null && selectedChannel != null) {
                     currentChannelService.updateSeenChatMessageIds(selectedChannel);
@@ -341,6 +346,7 @@ public class ChatMessagesListView {
                 chatMessagesPin.unbind();
                 chatMessagesPin = null;
             }
+            focusSubscription.unsubscribe();
             selectedChannelSubscription.unsubscribe();
         }
 

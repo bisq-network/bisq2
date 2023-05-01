@@ -7,6 +7,7 @@ import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelService;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
@@ -68,6 +69,13 @@ public abstract class ChannelSelection {
 
         private void updateUnseenMessagesMap(Channel<?> channel) {
             UIThread.run(() -> {
+                if (getChannelService() instanceof PublicTradeChannelService) {
+                    PublicTradeChannelService publicTradeChannelService = (PublicTradeChannelService) getChannelService();
+                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) channel)) {
+                        return;
+                    }
+                }
+
                 int numChatMessages = channel.getChatMessages().size();
                 int numSeenChatMessages = channel.getSeenChatMessageIds().size();
                 int numUnSeenChatMessages = Math.max(0, numChatMessages - numSeenChatMessages);

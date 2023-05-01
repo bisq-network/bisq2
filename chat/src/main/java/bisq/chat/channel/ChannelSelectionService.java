@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
@@ -36,6 +37,7 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateChannelService privateChannelService;
     private final PublicChannelService publicChannelService;
+    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChannelSelectionService(PersistenceService persistenceService,
                                    PrivateChannelService privateChannelService,
@@ -60,17 +62,29 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
+    public void onPersistedApplied(ChannelSelectionStore persisted) {
+        applySelectedChannel();
+    }
+
     public void selectChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateChannel) {
             privateChannelService.removeExpiredMessages((PrivateChannel) channel);
         }
 
-        getSelectedChannel().set(channel);
+        persistableStore.setSelectedChannelId(channel != null ? channel.getId() : null);
         persist();
+
+        applySelectedChannel();
     }
 
-    public Observable<Channel<? extends ChatMessage>> getSelectedChannel() {
-        return persistableStore.getSelectedChannel();
+    private void applySelectedChannel() {
+        Stream<Channel<?>> stream = Stream.concat(publicChannelService.getChannels().stream(),
+                privateChannelService.getChannels().stream());
+        selectedChannel.set(stream
+                .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
+                .findAny()
+                .orElse(null));
     }
 
     public void reportUserProfile(UserProfile userProfile, String reason) {
