@@ -430,7 +430,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                         if (secondaryRoboIcon.getImage() != null) {
                                             label.setMaxWidth(getWidth() - 120);
                                         } else {
-                                            label.setMaxWidth(getWidth() - 95);
+                                            label.setMaxWidth(getWidth() - 115);
                                         }
                                     }
                                 });
@@ -443,7 +443,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
-                                label.setMaxWidth(getWidth() - 95);
+                                label.setMaxWidth(getWidth() - 115);
                             }
                         });
                     }
