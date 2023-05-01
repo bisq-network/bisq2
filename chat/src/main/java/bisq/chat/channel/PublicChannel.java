@@ -23,10 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @ToString(callSuper = true)
@@ -76,13 +73,15 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
 
     public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                           bisq.chat.protobuf.PublicChannel proto) {
-        return new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+        PublicChannel publicChannel = new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
+        publicChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
+        return publicChannel;
     }
 
     @Override
@@ -96,8 +95,8 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicChatMessage> removeMessages) {
-        chatMessages.removeAll(removeMessages);
+    public void removeChatMessages(Collection<PublicChatMessage> messages) {
+        chatMessages.removeAll(messages);
     }
 
     @Override

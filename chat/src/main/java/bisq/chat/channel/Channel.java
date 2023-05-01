@@ -22,6 +22,7 @@ import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
@@ -40,6 +41,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
+    protected final ObservableSet<String> unseenChatMessageIds = new ObservableSet<>();
 
     public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         this.channelDomain = channelDomain;
@@ -52,7 +54,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
         return bisq.chat.protobuf.Channel.newBuilder()
                 .setChannelName(channelName)
                 .setChannelDomain(channelDomain.toProto())
-                .setChannelNotificationType(channelNotificationType.get().toProto());
+                .setChannelNotificationType(channelNotificationType.get().toProto())
+                .addAllUnseenChatMessageIds(unseenChatMessageIds);
     }
 
     abstract public bisq.chat.protobuf.Channel toProto();
@@ -82,13 +85,25 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
+    protected void onChatMessageAdded(T chatMessage) {
+        unseenChatMessageIds.add(chatMessage.getMessageId());
+    }
+
+    protected void onChatMessageRemoved(T chatMessage) {
+        unseenChatMessageIds.remove(chatMessage.getMessageId());
+    }
+
+    protected void onChatMessagesRemoved(Collection<T> messages) {
+        messages.forEach(this::onChatMessageRemoved);
+    }
+
     abstract public ObservableArray<T> getChatMessages();
 
     abstract public void addChatMessage(T chatMessage);
 
     abstract public void removeChatMessage(T chatMessage);
 
-    abstract public void removeChatMessages(Collection<T> removeMessages);
+    abstract public void removeChatMessages(Collection<T> messages);
 
     abstract public Set<String> getMembers();
 

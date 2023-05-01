@@ -70,9 +70,10 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
 
     protected abstract ObservableArray<C> getChannels();
 
-    protected void addMessage(M message, C channel) {
+    public void addMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.addChatMessage(message);
+            channel.onChatMessageAdded(message);
         }
         persist();
     }

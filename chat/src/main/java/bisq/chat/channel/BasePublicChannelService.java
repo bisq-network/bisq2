@@ -125,6 +125,7 @@ public abstract class BasePublicChannelService<M extends BasePublicChatMessage, 
     protected void removeMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.removeChatMessage(message);
+            channel.onChatMessageRemoved(message);
         }
         persist();
     }

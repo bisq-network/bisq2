@@ -75,6 +75,7 @@ message Channel {
   ChannelDomain channelDomain = 1;
   string channelName = 2;
   ChannelNotificationType channelNotificationType = 3;
+  repeated string unseenChatMessageIds = 4;
   oneof message{
     PrivateChannel privateChannel = 10;
     PublicChannel publicChannel = 11;

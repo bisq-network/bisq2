@@ -134,6 +134,7 @@ public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage
         if (!toRemove.isEmpty()) {
             synchronized (getPersistableStore()) {
                 channel.removeChatMessages(toRemove);
+                channel.onChatMessagesRemoved(toRemove);
             }
             persist();
         }

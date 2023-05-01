@@ -121,6 +121,7 @@ public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeCh
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
         privateTradeChannel.getInMediation().set(proto.getInMediation());
+        privateTradeChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
         return privateTradeChannel;
     }
 
@@ -135,8 +136,8 @@ public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeCh
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateTradeChatMessage> removeMessages) {
-        chatMessages.removeAll(removeMessages);
+    public void removeChatMessages(Collection<PrivateTradeChatMessage> messages) {
+        chatMessages.removeAll(messages);
     }
 
     public boolean isMediator() {

@@ -151,7 +151,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
                     mediationRequest.getPeer()
             );
             privateTradeChannelService.setMediationActivated(channel, true);
-            mediationRequest.getChatMessages().forEach(channel::addChatMessage);
+            mediationRequest.getChatMessages().forEach(chatMessage -> privateTradeChannelService.addMessage(chatMessage, channel));
             tradeChannelSelectionService.selectChannel(channel);
 
             MediationResponse mediationResponseToRequester = new MediationResponse(channel.getId(), Res.get("bisqEasy.mediation.msgToRequester"));
