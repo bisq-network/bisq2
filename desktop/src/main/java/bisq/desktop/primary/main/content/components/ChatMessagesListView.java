@@ -22,6 +22,7 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.*;
 import bisq.chat.message.*;
 import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.TradeChatOfferMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -29,7 +30,6 @@ import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.chat.trade.TradeChatOffer;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
@@ -82,17 +82,16 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import bisq.wallets.core.WalletService;
-
-
 import static bisq.desktop.primary.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ChatMessagesListView {
@@ -171,8 +170,12 @@ public class ChatMessagesListView {
         private final PublicChannelService publicSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
-        private Pin selectedChannelPin, chatMessagesPin;
+        private Pin selectedChannelPin;
+        private Pin chatMessagesPin;
         private Pin offerOnlySettingsPin;
+        @Nullable
+        private ChannelService<?, ?, ?> currentChannelService;
+        private Subscription selectedChannelSubscription;
 
         private Controller(DefaultApplicationService applicationService,
                            Consumer<UserProfile> mentionUserHandler,
@@ -237,16 +240,19 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
+                        currentChannelService = publicTradeChannelService;
                     } else if (channel instanceof PrivateTradeChannel) {
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
+                        currentChannelService = privateTradeChannelService;
                     } else if (channel == null) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         model.chatMessages.clear();
+                        currentChannelService = null;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
@@ -260,6 +266,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
+                        currentChannelService = publicDiscussionChannelService;
                     } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -268,6 +275,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
+                        currentChannelService = privateDiscussionChannelService;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
@@ -281,6 +289,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
+                        currentChannelService = publicEventsChannelService;
                     } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -289,6 +298,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
+                        currentChannelService = privateEventsChannelService;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
@@ -302,6 +312,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
+                        currentChannelService = publicSupportChannelService;
                     } else if (channel instanceof PrivateChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -310,9 +321,16 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
+                        currentChannelService = privateSupportChannelService;
                     }
                 });
             }
+
+            selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel, selectedChannel -> {
+                if (currentChannelService != null && selectedChannel != null) {
+                    currentChannelService.updateSeenChatMessageIds(selectedChannel);
+                }
+            });
         }
 
         @Override
@@ -323,6 +341,7 @@ public class ChatMessagesListView {
                 chatMessagesPin.unbind();
                 chatMessagesPin = null;
             }
+            selectedChannelSubscription.unsubscribe();
         }
 
 

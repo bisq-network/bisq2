@@ -73,7 +73,13 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
     public void addMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.addChatMessage(message);
-            channel.onChatMessageAdded(message);
+        }
+        persist();
+    }
+
+    public void updateSeenChatMessageIds(Channel<? extends ChatMessage> channel) {
+        synchronized (getPersistableStore()) {
+            channel.updateSeenChatMessageIds();
         }
         persist();
     }

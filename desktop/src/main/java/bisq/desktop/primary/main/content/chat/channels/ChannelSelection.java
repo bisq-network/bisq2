@@ -45,7 +45,8 @@ public abstract class ChannelSelection {
         protected final ChatService chatService;
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
-        private final Set<Pin> unseenChatMessageIdsPin = new HashSet<>();
+        private final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
+        private final Set<Pin> numChatMessagesPins = new HashSet<>();
 
         protected Controller(ChatService chatService) {
             this.chatService = chatService;
@@ -58,8 +59,19 @@ public abstract class ChannelSelection {
         @Override
         public void onActivate() {
             getChannelService().getChannels().forEach(channel -> {
-                Pin pin = channel.getUnseenChatMessageIds().addListener(() -> onNumUnseenMessagesChanged(channel));
-                unseenChatMessageIdsPin.add(pin);
+                Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
+                seenChatMessageIdsPins.add(seenChatMessageIdsPin);
+                Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
+                numChatMessagesPins.add(numChatMessagesPin);
+            });
+        }
+
+        private void updateUnseenMessagesMap(Channel<?> channel) {
+            UIThread.run(() -> {
+                int numChatMessages = channel.getChatMessages().size();
+                int numSeenChatMessages = channel.getSeenChatMessageIds().size();
+                int numUnSeenChatMessages = Math.max(0, numChatMessages - numSeenChatMessages);
+                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
             });
         }
 
@@ -67,15 +79,11 @@ public abstract class ChannelSelection {
         public void onDeactivate() {
             selectedChannelPin.unbind();
             channelsPin.unbind();
-            unseenChatMessageIdsPin.forEach(Pin::unbind);
+            seenChatMessageIdsPins.forEach(Pin::unbind);
+            numChatMessagesPins.forEach(Pin::unbind);
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);
-
-        protected void onNumUnseenMessagesChanged(Channel<?> channel) {
-            UIThread.run(() ->
-                    getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), channel.getUnseenChatMessageIds().size()));
-        }
     }
 
     protected static class Model implements bisq.desktop.common.view.Model {

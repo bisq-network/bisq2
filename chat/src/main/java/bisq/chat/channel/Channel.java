@@ -21,7 +21,6 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -31,6 +30,7 @@ import lombok.ToString;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ToString
 @Getter
@@ -41,7 +41,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     @EqualsAndHashCode.Include
     private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
-    protected final ObservableSet<String> unseenChatMessageIds = new ObservableSet<>();
+    protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 
     public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         this.channelDomain = channelDomain;
@@ -55,7 +55,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .setChannelName(channelName)
                 .setChannelDomain(channelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto())
-                .addAllUnseenChatMessageIds(unseenChatMessageIds);
+                .addAllSeenChatMessageIds(seenChatMessageIds);
     }
 
     abstract public bisq.chat.protobuf.Channel toProto();
@@ -85,19 +85,14 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    protected void onChatMessageAdded(T chatMessage) {
-        unseenChatMessageIds.add(chatMessage.getMessageId());
+    public void updateSeenChatMessageIds() {
+        seenChatMessageIds.clear();
+        seenChatMessageIds.addAll(getChatMessages().stream()
+                .map(ChatMessage::getMessageId)
+                .collect(Collectors.toSet()));
     }
 
-    protected void onChatMessageRemoved(T chatMessage) {
-        unseenChatMessageIds.remove(chatMessage.getMessageId());
-    }
-
-    protected void onChatMessagesRemoved(Collection<T> messages) {
-        messages.forEach(this::onChatMessageRemoved);
-    }
-
-    abstract public ObservableArray<T> getChatMessages();
+    abstract public ObservableSet<T> getChatMessages();
 
     abstract public void addChatMessage(T chatMessage);
 

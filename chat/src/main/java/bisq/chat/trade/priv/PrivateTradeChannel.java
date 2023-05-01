@@ -121,7 +121,7 @@ public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeCh
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
         privateTradeChannel.getInMediation().set(proto.getInMediation());
-        privateTradeChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
+        privateTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return privateTradeChannel;
     }
 

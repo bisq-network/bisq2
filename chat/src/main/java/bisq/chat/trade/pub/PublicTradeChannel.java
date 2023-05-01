@@ -55,7 +55,7 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
     public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
         PublicTradeChannel publicTradeChannel = new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
-        publicTradeChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
+        publicTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return publicTradeChannel;
     }
 

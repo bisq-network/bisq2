@@ -80,7 +80,7 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        publicChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
+        publicChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return publicChannel;
     }
 

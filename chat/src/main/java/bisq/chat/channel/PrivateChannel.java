@@ -79,7 +79,7 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
         );
-        privateChannel.getUnseenChatMessageIds().addAll(new HashSet<>(baseProto.getUnseenChatMessageIdsList()));
+        privateChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return privateChannel;
     }
 
