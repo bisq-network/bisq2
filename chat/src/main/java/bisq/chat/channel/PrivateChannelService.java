@@ -97,15 +97,4 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
     public ObservableArray<PrivateChannel> getChannels() {
         return persistableStore.getChannels();
     }
-
-    public void leaveChannel(PrivateChannel channel) {
-        sendLeaveMessage(channel)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        log.warn("Sending leave channel message failed.");
-                    }
-                    getChannels().remove(channel);
-                    persist();
-                });
-    }
 }
