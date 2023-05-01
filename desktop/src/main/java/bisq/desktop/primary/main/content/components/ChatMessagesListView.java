@@ -858,7 +858,7 @@ public class ChatMessagesListView {
                                 dateTime.setText(item.getDate());
 
                                 item.getSenderUserProfile().ifPresent(author -> {
-                                    userName.setText(author.getNickName());
+                                    userName.setText(author.getUserName());
                                     userName.setOnMouseClicked(e -> controller.onMention(author));
 
                                     userProfileIcon.setUserProfile(author);

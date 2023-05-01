@@ -284,7 +284,7 @@ public class ChatMessagesComponent {
         }
 
         private void fillUserMention(UserProfile user) {
-            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getNickName() + " ");
+            String content = model.getTextInput().get().replaceAll("@[a-zA-Z\\d]*$", "@" + user.getUserName() + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());
@@ -417,11 +417,11 @@ public class ChatMessagesComponent {
             StackPane.setMargin(sendButton, new Insets(0, 10, 0, 0));
             StackPane bottomBoxStackPane = new StackPane(inputField, sendButton);
 
-            userProfileSelection.setMaxComboBoxWidth(150);
+            userProfileSelection.setMaxComboBoxWidth(165);
             userProfileSelection.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(UserProfileSelection.ListItem item) {
-                    return item != null ? StringUtils.truncate(item.getUserIdentity().getNickName(), 8) : "";
+                    return item != null ? StringUtils.truncate(item.getUserIdentity().getUserName(), 10) : "";
                 }
 
                 @Override
@@ -431,8 +431,8 @@ public class ChatMessagesComponent {
             });
             userProfileSelectionRoot = userProfileSelection.getRoot();
             userProfileSelectionRoot.setMaxHeight(44);
-            userProfileSelectionRoot.setMaxWidth(150);
-            userProfileSelectionRoot.setMinWidth(150);
+            userProfileSelectionRoot.setMaxWidth(165);
+            userProfileSelectionRoot.setMinWidth(165);
             userProfileSelectionRoot.setId("chat-user-profile-bg");
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
@@ -446,7 +446,7 @@ public class ChatMessagesComponent {
             root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            userMentionPopup.setItemDisplayConverter(UserProfile::getNickName);
+            userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
