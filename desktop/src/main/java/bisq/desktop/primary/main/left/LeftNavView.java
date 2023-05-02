@@ -348,15 +348,29 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         if (selectedLeftNavButton == null) return;
 
-        if (selectedLeftNavButton.getHeight() > 0) {
+        LeftNavButton buttonForHeight;
+        if (selectedLeftNavButton instanceof LeftNavSubButton) {
+            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+            LeftNavButton parentButton = leftNavSubButton.getParentButton();
+            if (!parentButton.getIsSubMenuExpanded().get()) {
+                buttonForHeight = parentButton;
+            } else {
+                buttonForHeight = selectedLeftNavButton;
+            }
+        } else {
+            buttonForHeight = selectedLeftNavButton;
+        }
+
+        if (buttonForHeight.getHeight() > 0) {
             Transitions.animateNavigationButtonMarks(selectionMarker,
-                    selectedLeftNavButton.getHeight(),
+                    buttonForHeight.getHeight(),
                     calculateTargetY());
         } else {
             // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
             // We only know target position after the initial animation is done.
+            LeftNavButton finalButtonForHeight = buttonForHeight;
             UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
-                            selectedLeftNavButton.getHeight(),
+                            finalButtonForHeight.getHeight(),
                             calculateTargetY()))
                     .after(Transitions.getDuration(Transitions.DEFAULT_DURATION / 2));
         }
@@ -367,15 +381,21 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
         if (selectedLeftNavButton instanceof LeftNavSubButton) {
-            for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
-                Node item = mainMenuItems.getChildren().get(i);
-                if (item instanceof VBox) {
-                    VBox submenu = (VBox) item;
-                    if (submenu.getChildren().contains(selectedLeftNavButton)) {
-                        targetY += submenu.getLayoutY();
-                        break;
+            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+            LeftNavButton parentButton = leftNavSubButton.getParentButton();
+            if (parentButton.getIsSubMenuExpanded().get()) {
+                for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
+                    Node item = mainMenuItems.getChildren().get(i);
+                    if (item instanceof VBox) {
+                        VBox submenu = (VBox) item;
+                        if (submenu.getChildren().contains(selectedLeftNavButton)) {
+                            targetY += submenu.getLayoutY();
+                            break;
+                        }
                     }
                 }
+            } else {
+                targetY = menuTop + parentButton.getBoundsInParent().getMinY();
             }
         }
         return targetY;
