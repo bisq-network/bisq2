@@ -616,13 +616,13 @@ public class ChatMessagesListView {
             VBox.setVgrow(listView, Priority.ALWAYS);
             root.getChildren().add(listView);
 
-            messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
+            messagesListener = c -> scrollDown();
         }
 
         @Override
         protected void onViewAttached() {
             model.getSortedChatMessages().addListener(messagesListener);
-            UIThread.runOnNextRenderFrame(this::scrollDown);
+            scrollDown();
         }
 
         @Override
