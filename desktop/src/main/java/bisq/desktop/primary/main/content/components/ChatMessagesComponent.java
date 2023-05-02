@@ -34,6 +34,7 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
+import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -124,6 +125,7 @@ public class ChatMessagesComponent {
         private final PrivateChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
+        private final MediationService mediationService;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
 
@@ -152,6 +154,8 @@ public class ChatMessagesComponent {
             quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
             userProfileSelection = new UserProfileSelection(userIdentityService);
+            mediationService = applicationService.getSupportService().getMediationService();
+
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
                     this::showChatUserDetails,
@@ -299,8 +303,8 @@ public class ChatMessagesComponent {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.getChannelDomain() == ChannelDomain.TRADE) {
-                privateTradeChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(tradeChannelSelectionService::selectChannel);
+                PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
+                tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(discussionChannelSelectionService::selectChannel);
@@ -311,6 +315,12 @@ public class ChatMessagesComponent {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(supportChannelSelectionService::selectChannel);
             }
+        }
+
+        private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
+            UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+            Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
+            return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {
