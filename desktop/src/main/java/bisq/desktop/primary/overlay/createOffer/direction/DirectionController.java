@@ -54,8 +54,7 @@ public class DirectionController implements Controller {
 
     @Override
     public void onActivate() {
-        setDirection(model.getDirection().get());
-        model.getShowReputationInfo().set(false);
+        setDirection(Direction.BUY);
     }
 
     @Override

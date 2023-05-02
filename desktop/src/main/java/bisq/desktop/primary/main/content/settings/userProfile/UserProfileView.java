@@ -114,7 +114,9 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
 
         deletedButton = new Button(Res.get("settings.userProfile.deleteProfile"));
 
-        HBox buttonsHBox = new HBox(20, saveButton, deletedButton);
+        // todo For now we hide the deletedButton because it comes with some complexities
+        // See https://github.com/bisq-network/bisq2/issues/794
+        HBox buttonsHBox = new HBox(20, saveButton/*, deletedButton*/);
         formVBox.getChildren().add(buttonsHBox);
     }
 

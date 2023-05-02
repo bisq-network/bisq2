@@ -17,6 +17,7 @@
 
 package bisq.desktop.common.view;
 
+import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Styles;
 import bisq.desktop.common.utils.Transitions;
@@ -72,7 +73,8 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
 
         rootWidthSubscription = EasyBind.subscribe(root.widthProperty(), w -> {
             if (model.getSelectedTabButton().get() != null) {
-                selectionMarker.setLayoutX(getSelectionMarkerX(model.getSelectedTabButton().get()));
+                // Need delay to give time for rendering in case of scrollbars
+                UIThread.runOnNextRenderFrame(() -> selectionMarker.setLayoutX(getSelectionMarkerX(model.getSelectedTabButton().get())));
             }
         });
 
@@ -197,8 +199,12 @@ public abstract class TabView<M extends TabModel, C extends TabController<M>> ex
         }
 
         layoutDoneSubscription = EasyBind.subscribe(model.getSelectedTabButton().get().layoutXProperty(), x -> {
-            Transitions.animateTabButtonMarks(selectionMarker, selectedTabButton.getWidth(),
-                    getSelectionMarkerX(selectedTabButton));
+            // Need delay to give time for rendering in case of scrollbars
+            UIScheduler.run(() -> Transitions.animateTabButtonMarks(selectionMarker,
+                            selectedTabButton.getWidth(),
+                            getSelectionMarkerX(selectedTabButton)))
+                    .after(100);
+
             UIThread.runOnNextRenderFrame(() -> {
                 if (layoutDoneSubscription != null) {
                     layoutDoneSubscription.unsubscribe();

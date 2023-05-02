@@ -58,12 +58,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private final ToggleGroup toggleGroup = new ToggleGroup();
     @Getter
     private final NetworkInfoBox networkInfoBox;
-    private final Button expandIcon, collapseIcon;
+    private final Button horizontalExpandIcon, horizontalCollapseIcon;
     private final ImageView logoExpanded, logoCollapsed;
     private final Region selectionMarker;
     private final VBox mainMenuItems;
     private final int menuTop;
-    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin;
+    private final LeftNavButton tradeAppsButton, learnButton;
+    private Subscription navigationTargetSubscription, menuExpandedSubscription, selectedNavigationButtonPin, tradeAppsSubMenuExpandedPin, learnsSubMenuExpandedPin;
 
     public LeftNavView(LeftNavModel model, LeftNavController controller) {
         super(new AnchorPane(), model, controller);
@@ -80,34 +81,34 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 "nav-community",
                 NavigationTarget.DASHBOARD, false);
 
-        LeftNavButton trade = createNavigationButton(Res.get("trade"),
+        tradeAppsButton = createNavigationButton(Res.get("tradeApps"),
                 "nav-trade",
                 NavigationTarget.TRADE_OVERVIEW, true);
 
         VBox tradeSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("bisqEasy"), NavigationTarget.BISQ_EASY, trade),
-                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, trade),
+                createSubmenuNavigationButton(Res.get("bisqEasy"), NavigationTarget.BISQ_EASY, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTISIG, tradeAppsButton),
+                createSubmenuNavigationButton(Res.get("liquidSwap"), NavigationTarget.LIQUID_SWAP, tradeAppsButton),
                 // createSubmenuNavigationButton(Res.get("moneroSwap"), NavigationTarget.MONERO_SWAP, trade),
-                createSubmenuNavigationButton(Res.get("multiSig"), NavigationTarget.BISQ_MULTISIG, trade),
                 // createSubmenuNavigationButton(Res.get("lightning"), NavigationTarget.LIGHTNING_X, trade),
-                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, trade)
+                createSubmenuNavigationButton(Res.get("bsqSwap"), NavigationTarget.BSQ_SWAP, tradeAppsButton)
         );
 
         LeftNavButton wallet = createNavigationButton(Res.get("wallet"),
                 "nav-wallet",
                 NavigationTarget.WALLET, false);
 
-        LeftNavButton learn = createNavigationButton(Res.get("learn"),
+        learnButton = createNavigationButton(Res.get("learn"),
                 "nav-learn",
                 NavigationTarget.ACADEMY_OVERVIEW, true);
 
         VBox learnSubMenuItems = createSubmenu(
-                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learn),
-                createSubmenuNavigationButton(Res.get("academy.foss"), NavigationTarget.FOSS_ACADEMY, learn)
+                createSubmenuNavigationButton(Res.get("academy.bisq"), NavigationTarget.BISQ_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("academy.bitcoin"), NavigationTarget.BITCOIN_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("academy.security"), NavigationTarget.SECURITY_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("academy.privacy"), NavigationTarget.PRIVACY_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("academy.wallets"), NavigationTarget.WALLETS_ACADEMY, learnButton),
+                createSubmenuNavigationButton(Res.get("academy.foss"), NavigationTarget.FOSS_ACADEMY, learnButton)
         );
 
         LeftNavButton chat = createNavigationButton(Res.get("discussion"),
@@ -133,19 +134,19 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 () -> controller.onNavigationTargetSelected(NavigationTarget.NETWORK_INFO));
         Layout.pinToAnchorPane(networkInfoBox, null, null, 18, 0);
 
-        expandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
-        expandIcon.setCursor(Cursor.HAND);
-        expandIcon.setLayoutY(menuTop - 3);
-        expandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
-        expandIcon.setOpacity(0);
-        Tooltip.install(expandIcon, new BisqTooltip(Res.get("navigation.expandIcon.tooltip")));
+        horizontalExpandIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_RIGHT, "16");
+        horizontalExpandIcon.setCursor(Cursor.HAND);
+        horizontalExpandIcon.setLayoutY(menuTop - 3);
+        horizontalExpandIcon.setLayoutX(MARKER_WIDTH + COLLAPSED_WIDTH - EXPAND_ICON_SIZE);
+        horizontalExpandIcon.setOpacity(0);
+        Tooltip.install(horizontalExpandIcon, new BisqTooltip(Res.get("navigation.expandIcon.tooltip")));
 
-        collapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
-        collapseIcon.setCursor(Cursor.HAND);
-        collapseIcon.setLayoutY(menuTop - 3);
-        collapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
-        collapseIcon.setOpacity(0);
-        Tooltip.install(collapseIcon, new BisqTooltip(Res.get("navigation.collapseIcon.tooltip")));
+        horizontalCollapseIcon = BisqIconButton.createIconButton(AwesomeIcon.CHEVRON_SIGN_LEFT, "16");
+        horizontalCollapseIcon.setCursor(Cursor.HAND);
+        horizontalCollapseIcon.setLayoutY(menuTop - 3);
+        horizontalCollapseIcon.setLayoutX(MARKER_WIDTH + EXPANDED_WIDTH - EXPAND_ICON_SIZE);
+        horizontalCollapseIcon.setOpacity(0);
+        Tooltip.install(horizontalCollapseIcon, new BisqTooltip(Res.get("navigation.collapseIcon.tooltip")));
 
         logoExpanded = ImageUtil.getImageViewById("logo-grey");
         VBox.setMargin(logoExpanded, new Insets(0, 0, 0, 11));
@@ -162,8 +163,8 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         selectionMarker.setPrefWidth(3);
         selectionMarker.setPrefHeight(LeftNavButton.HEIGHT);
 
-        mainMenuItems.getChildren().addAll(dashBoard, trade, tradeSubMenuItems,
-                learn, learnSubMenuItems,
+        mainMenuItems.getChildren().addAll(dashBoard, tradeAppsButton, tradeSubMenuItems,
+                learnButton, learnSubMenuItems,
                 chat, events, support,
                 settings);
         if (model.isWalletEnabled()) {
@@ -171,23 +172,23 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         }
 
         mainMenuItems.setLayoutY(menuTop);
-        root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, expandIcon, collapseIcon, networkInfoBox);
+        root.getChildren().addAll(logoExpanded, logoCollapsed, selectionMarker, mainMenuItems, horizontalExpandIcon, horizontalCollapseIcon, networkInfoBox);
     }
 
     @Override
     protected void onViewAttached() {
-        expandIcon.setOnMouseClicked(e -> controller.onToggleExpandMenu());
-        collapseIcon.setOnMouseClicked(e -> controller.onToggleExpandMenu());
+        horizontalExpandIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
+        horizontalCollapseIcon.setOnMouseClicked(e -> controller.onToggleHorizontalExpandState());
         navigationTargetSubscription = EasyBind.subscribe(model.getSelectedNavigationTarget(), navigationTarget -> {
             if (navigationTarget != null) {
                 controller.findNavButton(navigationTarget).ifPresent(toggleGroup::selectToggle);
                 maybeAnimateMark();
             }
         });
-        expandIcon.setVisible(false);
-        expandIcon.setManaged(false);
+        horizontalExpandIcon.setVisible(false);
+        horizontalExpandIcon.setManaged(false);
 
-        menuExpandedSubscription = EasyBind.subscribe(model.getMenuExpanded(), menuExpanded -> {
+        menuExpandedSubscription = EasyBind.subscribe(model.getMenuHorizontalExpanded(), menuExpanded -> {
             int width = menuExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
             AtomicInteger duration = new AtomicInteger(400);
             if (menuExpanded) {
@@ -198,9 +199,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
                 Transitions.fadeIn(networkInfoBox, duration.get());
 
-                Transitions.fadeOut(expandIcon, duration.get() / 4, () -> {
-                    expandIcon.setVisible(false);
-                    expandIcon.setManaged(false);
+                Transitions.fadeOut(horizontalExpandIcon, duration.get() / 4, () -> {
+                    horizontalExpandIcon.setVisible(false);
+                    horizontalExpandIcon.setManaged(false);
                 });
                 UIScheduler.run(() -> {
                     Transitions.fadeIn(logoExpanded, duration.get() / 4, () -> {
@@ -215,23 +216,23 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                     Transitions.fadeIn(networkInfoBox, duration.get() / 4);
                     networkInfoBox.setVisible(true);
                     networkInfoBox.setManaged(true);
-                    collapseIcon.setOpacity(0);
-                    collapseIcon.setVisible(true);
-                    collapseIcon.setManaged(true);
-                    Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
+                    horizontalCollapseIcon.setOpacity(0);
+                    horizontalCollapseIcon.setVisible(true);
+                    horizontalCollapseIcon.setManaged(true);
+                    Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
                 }).after(duration.get() + 100);
             } else {
-                expandIcon.setOpacity(0);
-                expandIcon.setVisible(true);
-                expandIcon.setManaged(true);
+                horizontalExpandIcon.setOpacity(0);
+                horizontalExpandIcon.setVisible(true);
+                horizontalExpandIcon.setManaged(true);
 
                 model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
-                            collapseIcon.setVisible(false);
-                            collapseIcon.setManaged(false);
-                            collapseIcon.setOpacity(0);
-                            Transitions.fadeIn(expandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
+                            horizontalCollapseIcon.setVisible(false);
+                            horizontalCollapseIcon.setManaged(false);
+                            horizontalCollapseIcon.setOpacity(0);
+                            Transitions.fadeIn(horizontalExpandIcon, 2 * Transitions.DEFAULT_DURATION, 0.3, null);
                         })
                         .after(duration.get() / 4);
                 Transitions.fadeOut(networkInfoBox, duration.get() / 2, () -> {
@@ -248,13 +249,13 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         });
 
         root.setOnMouseEntered(e -> {
-            if (collapseIcon.isVisible()) {
-                Transitions.fadeIn(collapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
+            if (horizontalCollapseIcon.isVisible()) {
+                Transitions.fadeIn(horizontalCollapseIcon, Transitions.DEFAULT_DURATION, 0.3, null);
             }
         });
         root.setOnMouseExited(e -> {
-            if (collapseIcon.isVisible()) {
-                Transitions.fadeOut(collapseIcon);
+            if (horizontalCollapseIcon.isVisible()) {
+                Transitions.fadeOut(horizontalCollapseIcon);
             }
         });
 
@@ -264,15 +265,22 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 selectedNavigationButtonPin.unsubscribe();
             }
         });
+
+        tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
+                tradeAppsButton::setSubMenuExpanded);
+        learnsSubMenuExpandedPin = EasyBind.subscribe(model.getLearnsSubMenuExpanded(),
+                learnButton::setSubMenuExpanded);
     }
 
     @Override
     protected void onViewDetached() {
-        expandIcon.setOnMouseClicked(null);
-        collapseIcon.setOnMouseClicked(null);
+        horizontalExpandIcon.setOnMouseClicked(null);
+        horizontalCollapseIcon.setOnMouseClicked(null);
         navigationTargetSubscription.unsubscribe();
         menuExpandedSubscription.unsubscribe();
         selectedNavigationButtonPin.unsubscribe();
+        tradeAppsSubMenuExpandedPin.unsubscribe();
+        learnsSubMenuExpandedPin.unsubscribe();
         root.setOnMouseEntered(null);
         root.setOnMouseExited(null);
     }
@@ -281,7 +289,12 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                                                  String iconId,
                                                  NavigationTarget navigationTarget,
                                                  boolean hasSubmenu) {
-        LeftNavButton button = new LeftNavButton(title, iconId, toggleGroup, navigationTarget, hasSubmenu, this::expandCollapseHandler);
+        LeftNavButton button = new LeftNavButton(title,
+                iconId,
+                toggleGroup,
+                navigationTarget,
+                hasSubmenu,
+                this::verticalExpandCollapseHandler);
         setupButtonHandler(navigationTarget, button);
         return button;
     }
@@ -313,9 +326,17 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             maybeAnimateMark();
         });
         controller.onNavigationButtonCreated(button);
+
+        EasyBind.subscribe(button.getIsSubMenuExpanded(), expanded -> {
+            if (button == tradeAppsButton) {
+                controller.onTradeAppsSubMenuExpanded(expanded);
+            } else if (button == learnButton) {
+                controller.onLearSubMenuExpanded(expanded);
+            }
+        });
     }
 
-    private void expandCollapseHandler(NavigationTarget navigationTarget) {
+    private void verticalExpandCollapseHandler(NavigationTarget navigationTarget) {
         if (model.getSelectedNavigationButton().get() == null) {
             // There is no button selected on startup
             controller.onNavigationTargetSelected(navigationTarget);
@@ -326,10 +347,43 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
     private void maybeAnimateMark() {
         LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
         if (selectedLeftNavButton == null) return;
-        
-        UIThread.runOnNextRenderFrame(() -> {
-            double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
-            if (selectedLeftNavButton instanceof LeftNavSubButton) {
+
+        LeftNavButton buttonForHeight;
+        if (selectedLeftNavButton instanceof LeftNavSubButton) {
+            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+            LeftNavButton parentButton = leftNavSubButton.getParentButton();
+            if (!parentButton.getIsSubMenuExpanded().get()) {
+                buttonForHeight = parentButton;
+            } else {
+                buttonForHeight = selectedLeftNavButton;
+            }
+        } else {
+            buttonForHeight = selectedLeftNavButton;
+        }
+
+        if (buttonForHeight.getHeight() > 0) {
+            Transitions.animateNavigationButtonMarks(selectionMarker,
+                    buttonForHeight.getHeight(),
+                    calculateTargetY());
+        } else {
+            // Duration for animation for opening submenu is Transitions.DEFAULT_DURATION / 2.
+            // We only know target position after the initial animation is done.
+            LeftNavButton finalButtonForHeight = buttonForHeight;
+            UIScheduler.run(() -> Transitions.animateNavigationButtonMarks(selectionMarker,
+                            finalButtonForHeight.getHeight(),
+                            calculateTargetY()))
+                    .after(Transitions.getDuration(Transitions.DEFAULT_DURATION / 2));
+        }
+        updateSubmenu();
+    }
+
+    private double calculateTargetY() {
+        LeftNavButton selectedLeftNavButton = model.getSelectedNavigationButton().get();
+        double targetY = menuTop + selectedLeftNavButton.getBoundsInParent().getMinY();
+        if (selectedLeftNavButton instanceof LeftNavSubButton) {
+            LeftNavSubButton leftNavSubButton = (LeftNavSubButton) selectedLeftNavButton;
+            LeftNavButton parentButton = leftNavSubButton.getParentButton();
+            if (parentButton.getIsSubMenuExpanded().get()) {
                 for (int i = 0; i < mainMenuItems.getChildren().size(); i++) {
                     Node item = mainMenuItems.getChildren().get(i);
                     if (item instanceof VBox) {
@@ -340,10 +394,11 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                         }
                     }
                 }
+            } else {
+                targetY = menuTop + parentButton.getBoundsInParent().getMinY();
             }
-            Transitions.animateNavigationButtonMarks(selectionMarker, selectedLeftNavButton.getHeight(), targetY);
-            updateSubmenu();
-        });
+        }
+        return targetY;
     }
 
     private void updateSubmenu() {

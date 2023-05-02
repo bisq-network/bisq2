@@ -249,10 +249,10 @@ public class ChatMessagesListView {
                         model.allowEditing.set(false);
                         currentChannelService = privateTradeChannelService;
                     } else if (channel == null) {
+                        model.chatMessages.clear();
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        model.chatMessages.clear();
                         currentChannelService = null;
                     }
                 });
@@ -614,7 +614,7 @@ public class ChatMessagesListView {
             listView.setSelectionModel(new NoSelectionModel<>());
 
             VBox.setVgrow(listView, Priority.ALWAYS);
-            root.getChildren().addAll(listView);
+            root.getChildren().add(listView);
 
             messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
         }
@@ -622,7 +622,7 @@ public class ChatMessagesListView {
         @Override
         protected void onViewAttached() {
             model.getSortedChatMessages().addListener(messagesListener);
-            UIThread.runOnNextRenderFrame(this::scrollDown);
+            scrollDown();
         }
 
         @Override

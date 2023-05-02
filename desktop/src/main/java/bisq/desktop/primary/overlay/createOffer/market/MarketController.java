@@ -61,6 +61,7 @@ public class MarketController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getSearchText().set("");
         // Used selected public channel or if private channel is selected we use any of the public channels for 
         // setting the default market 
         Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
@@ -89,7 +90,6 @@ public class MarketController implements Controller {
                 })
                 .collect(Collectors.toList()));
 
-
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
                 model.getFilteredList().setPredicate(item -> true);
@@ -98,9 +98,7 @@ public class MarketController implements Controller {
                 model.getFilteredList().setPredicate(item ->
                         item != null &&
                                 (item.getMarketCodes().toLowerCase().contains(search) ||
-                                        item.getMarketName().toLowerCase().contains(search) ||
-                                        item.getNumOffers().contains(search) ||
-                                        item.getNumUsers().contains(search))
+                                        item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
                 );
             }
         });

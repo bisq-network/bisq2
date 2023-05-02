@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.common.currency.Market;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
@@ -28,10 +29,7 @@ import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
@@ -90,7 +88,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     protected void onViewAttached() {
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-        tableView.scrollTo(model.getSelectedMarketListItem().get());
+        UIThread.runOnNextRenderFrame(() -> tableView.scrollTo(model.getSelectedMarketListItem().get()));
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onSelect);
     }
@@ -143,7 +141,13 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
                 if (item != null && !empty) {
                     label.setGraphic(item.getIcon());
                     label.setText(item.getMarketCodes());
-                    label.setTooltip(new BisqTooltip(item.getMarketName()));
+
+                    Tooltip tooltip = new BisqTooltip(item.getMarketName());
+                    // Force font color as color from css gets shadowed by parent
+                    tooltip.setStyle("-fx-text-fill: -bisq-black;");
+
+                    label.setTooltip(tooltip);
+
                     setGraphic(label);
                 } else {
                     label.setGraphic(null);

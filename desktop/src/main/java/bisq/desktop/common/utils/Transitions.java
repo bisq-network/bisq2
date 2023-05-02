@@ -286,7 +286,7 @@ public class Transitions {
         }
     }
 
-    private static int getDuration(int duration) {
+    public static int getDuration(int duration) {
         return getUseAnimations() ? duration : 1;
     }
 

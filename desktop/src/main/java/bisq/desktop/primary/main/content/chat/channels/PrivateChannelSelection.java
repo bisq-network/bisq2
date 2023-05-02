@@ -428,7 +428,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                                     if (w.doubleValue() > 0) {
                                         if (secondaryRoboIcon.getImage() != null) {
-                                            label.setMaxWidth(getWidth() - 120);
+                                            label.setMaxWidth(getWidth() - 140);
                                         } else {
                                             label.setMaxWidth(getWidth() - 115);
                                         }

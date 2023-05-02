@@ -103,6 +103,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             model.getSideBarVisible().set(true);
 
             UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
+                    userIdentityService,
                     chatService,
                     reputationService,
                     userProfile,
@@ -118,6 +119,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
         });
 
+        model.getSearchText().set("");
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
                 chatMessagesComponent.setSearchPredicate(item -> true);
@@ -135,6 +137,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
     protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
         UIThread.run(() -> {
+            model.getSearchText().set("");
             model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
             model.getSelectedChannel().set(channel);
 
@@ -142,11 +145,6 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 cleanupChannelInfo();
                 showChannelInfo();
             }
-        
-         /* 
-            if (model.getNotificationsVisible().get()) {
-                notificationsSettings.setChannel(channel);
-            }*/
         });
     }
 

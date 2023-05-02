@@ -121,6 +121,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         }
         UIThread.run(() -> {
             if (channel == null) {
+                model.getChannelIcon().set(null);
                 return;
             }
             if (channel instanceof PrivateTradeChannel) {
