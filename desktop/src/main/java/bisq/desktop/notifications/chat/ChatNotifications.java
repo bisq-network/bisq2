@@ -141,6 +141,12 @@ public class ChatNotifications {
 
         notificationsService.add(id);
 
+        // If user is ignored we do not notify, but we still keep the messageIds to not trigger 
+        // notifications after un-ignore.
+        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorId())) {
+            return;
+        }
+
         Channel<? extends ChatMessage> channel = chatNotification.getChannel();
         ChannelNotificationType channelNotificationType = channel.getChannelNotificationType().get();
         if (channelNotificationType == ChannelNotificationType.GLOBAL_DEFAULT) {
