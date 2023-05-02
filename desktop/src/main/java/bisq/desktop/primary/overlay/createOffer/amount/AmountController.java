@@ -20,7 +20,6 @@ package bisq.desktop.primary.overlay.createOffer.amount;
 import bisq.application.DefaultApplicationService;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.Quote;
 import bisq.desktop.common.threading.UIThread;
@@ -89,7 +88,7 @@ public class AmountController implements Controller {
             return;
         }
         model.setDirection(direction);
-        model.getSpendOrReceiveString().set(direction==Direction.BUY? Res.get("buying"):Res.get("selling"));
+        model.getSpendOrReceiveString().set(direction == Direction.BUY ? Res.get("buying") : Res.get("selling"));
     }
 
     public void setMarket(Market market) {
@@ -118,8 +117,11 @@ public class AmountController implements Controller {
 
         baseAmount.setAmount(null);
         if (model.getQuoteSideAmount().get() == null) {
-            //todo we need to adjust to diff fiat exchange rates
-            quoteAmount.setAmount(Fiat.parse("100", model.getMarket().getQuoteCurrencyCode()));
+            // We use 0.004 BTC as default value converted with the price to the fiat amount
+            Quote fixPrice = price.fixPriceProperty().get();
+            Monetary baseCurrencyAmount = Coin.asBtc(400000);
+            Monetary exactAmount = fixPrice.toQuoteMonetary(baseCurrencyAmount);
+            quoteAmount.setAmount(exactAmount.round(0));
         } else {
             quoteAmount.setAmount(model.getQuoteSideAmount().get());
         }

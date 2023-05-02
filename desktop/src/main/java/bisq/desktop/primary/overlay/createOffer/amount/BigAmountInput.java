@@ -177,6 +177,7 @@ public class BigAmountInput {
             textInputListener = (o, old, newValue) -> {
                 if (textInput.isFocused()) {
                     controller.onAmount(textInput.getText());
+                    adjustTextFieldStyle();
                 }
             };
             // Listeners on model change
@@ -203,8 +204,17 @@ public class BigAmountInput {
 
         private void applyAmount(Monetary newValue) {
             textInput.setText(newValue == null ? "" : AmountFormatter.formatAmount(newValue, true));
-           // textInput.requestFocus();
+            // textInput.requestFocus();
             textInput.selectRange(textInput.getLength(), textInput.getLength());
+            adjustTextFieldStyle();
+        }
+
+        private void adjustTextFieldStyle() {
+            if (textInput.getText().length() > 6) {
+                textInput.setId("base-amount-text-field-small");
+            } else {
+                textInput.setId("base-amount-text-field");
+            }
         }
     }
 }
