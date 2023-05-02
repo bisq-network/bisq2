@@ -12,7 +12,6 @@ apache-httpcomponents-core-lib = { strictly = '4.4.13' }
 apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
 
 assertj-core-lib = { strictly = '3.22.0' }
-bisq-tor-binary-lib = { strictly = '787183b147286d783a6392bb9ffcd8ba920d6fff' }
 bouncycastle-lib = { strictly = '1.69' } # Oldest version without known CVEs
 
 chimp-jsocks-lib = { strictly = '567e1cd6' }
@@ -71,12 +70,6 @@ apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpcli
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
 
 annotations = { module = 'org.jetbrains:annotations', version.ref = 'annotations-lib' }
-
-bisq-tor-binary-geoip = { module = 'com.github.bisq-network.tor-binary:tor-binary-geoip', version.ref = 'bisq-tor-binary-lib' }
-bisq-tor-binary-macos = { module = 'com.github.bisq-network.tor-binary:tor-binary-macos', version.ref = 'bisq-tor-binary-lib' }
-bisq-tor-binary-linux32 = { module = 'com.github.bisq-network.tor-binary:tor-binary-linux32', version.ref = 'bisq-tor-binary-lib' }
-bisq-tor-binary-linux64 = { module = 'com.github.bisq-network.tor-binary:tor-binary-linux64', version.ref = 'bisq-tor-binary-lib' }
-bisq-tor-binary-windows = { module = 'com.github.bisq-network.tor-binary:tor-binary-windows', version.ref = 'bisq-tor-binary-lib' }
 
 bouncycastle = { module = 'org.bouncycastle:bcprov-jdk15on', version.ref = 'bouncycastle-lib' }
 bouncycastle-pg = { module = 'org.bouncycastle:bcpg-jdk15on', version.ref = 'bouncycastle-lib' }
@@ -140,7 +133,6 @@ typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-conf
 # Defines groups of libs that are commonly used together
 # Referenced in dependencies block as 'implementation libs.bundles.i2p'
 [bundles]
-bisq-tor-binaries = ['bisq-tor-binary-geoip', 'bisq-tor-binary-macos', 'bisq-tor-binary-linux32', 'bisq-tor-binary-linux64', 'bisq-tor-binary-windows']
 fontawesomefx = ['fontawesomefx', 'fontawesomefx-commons', 'fontawesomefx-materialdesignfont']
 fxmisc-libs = ['fxmisc-easybind', 'fxmisc-richtextfx']
 glassfish-jersey = ['glassfish-jersey-jdk-http', 'glassfish-jersey-json-jackson', 'glassfish-jersey-inject-hk2', 'glassfish-jaxb-runtime']

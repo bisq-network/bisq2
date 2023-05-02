@@ -26,6 +26,4 @@ dependencies {
 
     implementation libs.chimp.jsocks
     implementation libs.chimp.jtorctl
-
-    implementation libs.bundles.bisq.tor.binaries
 }
