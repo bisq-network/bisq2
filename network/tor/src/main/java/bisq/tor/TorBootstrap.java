@@ -111,9 +111,6 @@ class TorBootstrap {
 
             FileUtils.makeFile(versionFile);
 
-            FileUtils.resourceToFile(geoIPFile);
-            FileUtils.resourceToFile(geoIPv6File);
-
             installTorrcFile();
 
             File destDir = new File(torDirPath);
