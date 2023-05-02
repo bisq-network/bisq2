@@ -103,6 +103,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             model.getSideBarVisible().set(true);
 
             UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
+                    userIdentityService,
                     chatService,
                     reputationService,
                     userProfile,

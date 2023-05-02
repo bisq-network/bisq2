@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.TimeFormatter;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
@@ -52,11 +53,12 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
     private final Controller controller;
 
     public UserProfileSidebar(UserProfileService userProfileService,
+                              UserIdentityService userIdentityService,
                               ChatService chatService,
                               ReputationService reputationService,
                               UserProfile userProfile,
                               Runnable closeHandler) {
-        controller = new Controller(userProfileService, chatService, reputationService, userProfile, closeHandler);
+        controller = new Controller(userProfileService, userIdentityService, chatService, reputationService, userProfile, closeHandler);
     }
 
     public Pane getRoot() {
@@ -85,16 +87,19 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         @Getter
         private final View view;
         private final UserProfileService userProfileService;
+        private final UserIdentityService userIdentityService;
         private final ReputationService reputationService;
         private final Runnable closeHandler;
 
 
         private Controller(UserProfileService userProfileService,
+                           UserIdentityService userIdentityService,
                            ChatService chatService,
                            ReputationService reputationService,
                            UserProfile userProfile,
                            Runnable closeHandler) {
             this.userProfileService = userProfileService;
+            this.userIdentityService = userIdentityService;
             this.reputationService = reputationService;
             this.closeHandler = closeHandler;
             model = new Model(chatService, userProfile);
@@ -123,6 +128,9 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             model.profileAge.set(reputationService.getProfileAgeService().getProfileAge(userProfile)
                     .map(TimeFormatter::formatAgeInDays)
                     .orElse(Res.get("na")));
+
+            // If we selected our own user we don't show certain features
+            model.isPeer.set(!userIdentityService.isUserIdentityPresent(userProfile.getId()));
         }
 
         @Override
@@ -175,6 +183,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final StringProperty profileAge = new SimpleStringProperty();
         private final BooleanProperty ignoreUserSelected = new SimpleBooleanProperty();
         private final StringProperty ignoreButtonText = new SimpleStringProperty();
+        private final BooleanProperty isPeer = new SimpleBooleanProperty();
 
         private Model(ChatService chatService, UserProfile userProfile) {
             this.chatService = chatService;
@@ -195,6 +204,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
         private final Button privateMsgButton;
         private final VBox statementBox;
         private final VBox termsBox;
+        private final VBox optionsBox;
         private Subscription roboHashNodeSubscription;
         private final Button closeButton;
 
@@ -249,7 +259,7 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             ignore = new Hyperlink();
             report = new Hyperlink(Res.get("social.report"));
             //todo report is not implemented yet so we hide it
-            VBox optionsBox = new VBox(5, optionsLabel, mention, ignore/*, report*/);
+            optionsBox = new VBox(5, optionsLabel, mention, ignore/*, report*/);
             optionsBox.setAlignment(Pos.CENTER_LEFT);
             VBox.setMargin(optionsBox, new Insets(8, 0, 0, 0));
 
@@ -277,6 +287,11 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             reputationScore.textProperty().bind(model.reputationScore);
             profileAge.textProperty().bind(model.profileAge);
             ignore.textProperty().bind(model.ignoreButtonText);
+            optionsBox.visibleProperty().bind(model.isPeer);
+            optionsBox.managedProperty().bind(model.isPeer);
+            privateMsgButton.visibleProperty().bind(model.isPeer);
+            privateMsgButton.managedProperty().bind(model.isPeer);
+
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
@@ -303,6 +318,10 @@ public class UserProfileSidebar implements Comparable<UserProfileSidebar> {
             reputationScore.textProperty().unbind();
             profileAge.textProperty().unbind();
             ignore.textProperty().unbind();
+            optionsBox.visibleProperty().unbind();
+            optionsBox.managedProperty().unbind();
+            privateMsgButton.visibleProperty().unbind();
+            privateMsgButton.managedProperty().unbind();
 
             roboHashNodeSubscription.unsubscribe();
 
