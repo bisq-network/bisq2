@@ -47,6 +47,20 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "",
                         "protocol-satoshi-square"
                 ),
+                new ProtocolListItem(SwapProtocol.Type.BISQ_MULTISIG,
+                        NavigationTarget.BISQ_MULTISIG,
+                        Res.get("trade.protocols.basic.info.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.markets.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.markets.info.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.security.info.BISQ_MULTISIG"),
+                        new Pair<>(10000L, 700000L),
+                        Res.get("trade.protocols.privacy.info.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.convenience.info.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.costs.info.BISQ_MULTISIG"),
+                        Res.get("trade.protocols.speed.info.BISQ_MULTISIG"),
+                        "Q4/23",
+                        "protocol-bisq"
+                ),
                 new ProtocolListItem(SwapProtocol.Type.LIQUID_SWAP,
                         NavigationTarget.LIQUID_SWAP,
                         Res.get("trade.protocols.basic.info.LIQUID_SWAP"),
@@ -58,7 +72,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.costs.info.LIQUID_SWAP"),
                         Res.get("trade.protocols.speed.info.LIQUID_SWAP"),
-                        "Q1/23",
+                        "Q1/24",
                         "protocol-liquid"
                 ),
                 /* new ProtocolListItem(SwapProtocol.Type.MONERO_SWAP,
@@ -75,20 +89,6 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         "Q1/23",
                         "protocol-monero"
                 ), */
-                new ProtocolListItem(SwapProtocol.Type.BISQ_MULTISIG,
-                        NavigationTarget.BISQ_MULTISIG,
-                        Res.get("trade.protocols.basic.info.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.markets.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.markets.info.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.security.info.BISQ_MULTISIG"),
-                        new Pair<>(10000L, 700000L),
-                        Res.get("trade.protocols.privacy.info.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.convenience.info.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.costs.info.BISQ_MULTISIG"),
-                        Res.get("trade.protocols.speed.info.BISQ_MULTISIG"),
-                        "Q3/23",
-                        "protocol-bisq"
-                ),
                 /* new ProtocolListItem(SwapProtocol.Type.LIGHTNING_X,
                         NavigationTarget.LIGHTNING_X,
                         Res.get("trade.protocols.basic.info.LIGHTNING_X"),
@@ -114,7 +114,7 @@ public abstract class TradeOverviewBaseController<M extends TradeOverviewBaseMod
                         Res.get("trade.protocols.convenience.info.BSQ_SWAP"),
                         Res.get("trade.protocols.costs.info.BSQ_SWAP"),
                         Res.get("trade.protocols.speed.info.BSQ_SWAP"),
-                        "Q4/23",
+                        "Q2/24",
                         "protocol-bsq"
                 )
         );

@@ -114,8 +114,10 @@ public class TradeOverviewGridView extends TradeOverviewBaseView<GridPane, Trade
         VBox markets = getParameterPane(Res.get("markets"), protocol.getMarkets());
         gridPane.add(markets, 0, ++rowIndex);
 
-        VBox release = getParameterPane(Res.get("trade.protocols.table.header.release"), protocol.getReleaseDate());
-        gridPane.add(release, 1, rowIndex);
+        if (!protocol.getReleaseDate().isEmpty()) {
+            VBox release = getParameterPane(Res.get("trade.protocols.table.header.release"), protocol.getReleaseDate());
+            gridPane.add(release, 1, rowIndex);
+        }
 
         VBox security = getParameterPane(Res.get("trade.protocols.table.header.security"),
                 protocol.getSwapProtocolType().getSecurity().ordinal(), protocol.getSecurityInfo()
