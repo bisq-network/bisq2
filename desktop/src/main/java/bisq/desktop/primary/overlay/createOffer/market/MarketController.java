@@ -90,7 +90,6 @@ public class MarketController implements Controller {
                 })
                 .collect(Collectors.toList()));
 
-
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
                 model.getFilteredList().setPredicate(item -> true);

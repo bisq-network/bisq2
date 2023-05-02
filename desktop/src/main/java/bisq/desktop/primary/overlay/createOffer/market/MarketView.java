@@ -18,6 +18,7 @@
 package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.common.currency.Market;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SearchBox;
@@ -87,7 +88,7 @@ public class MarketView extends View<VBox, MarketModel, MarketController> {
     protected void onViewAttached() {
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-        tableView.scrollTo(model.getSelectedMarketListItem().get());
+        UIThread.runOnNextRenderFrame(() -> tableView.scrollTo(model.getSelectedMarketListItem().get()));
         tableView.getSelectionModel().select(model.getSelectedMarketListItem().get());
         selectedItemPin = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), controller::onSelect);
     }
