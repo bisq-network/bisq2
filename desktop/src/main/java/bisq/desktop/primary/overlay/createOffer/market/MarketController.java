@@ -61,6 +61,7 @@ public class MarketController implements Controller {
 
     @Override
     public void onActivate() {
+        model.getSearchText().set("");
         // Used selected public channel or if private channel is selected we use any of the public channels for 
         // setting the default market 
         Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
