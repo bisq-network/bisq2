@@ -136,7 +136,15 @@ public class AmountController implements Controller {
         });
 
         baseAmountFromCompSubscription = EasyBind.subscribe(baseAmount.amountProperty(),
-                amount -> model.getBaseSideAmount().set(amount));
+                amount -> {
+                    if (amount != null && amount.getValue() > model.getMaxAmount().get().getValue()) {
+                        model.getBaseSideAmount().set(model.getMaxAmount().get());
+                    } else if (amount != null && amount.getValue() < model.getMinAmount().get().getValue()) {
+                        model.getBaseSideAmount().set(model.getMinAmount().get());
+                    } else {
+                        model.getBaseSideAmount().set(amount);
+                    }
+                });
         quoteAmountFromCompSubscription = EasyBind.subscribe(quoteAmount.amountProperty(),
                 amount -> model.getQuoteSideAmount().set(amount));
         priceFromCompSubscription = EasyBind.subscribe(price.fixPriceProperty(),
