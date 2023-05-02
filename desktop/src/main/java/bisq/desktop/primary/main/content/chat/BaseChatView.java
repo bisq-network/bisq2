@@ -144,6 +144,8 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
                 headline.setGraphicTextGap(10);
                 icon.setStyle("-fx-cursor: hand;");
                 icon.setOnMouseClicked(e -> controller.onToggleChannelInfo());
+            } else {
+                headline.setGraphic(null);
             }
         });
     }

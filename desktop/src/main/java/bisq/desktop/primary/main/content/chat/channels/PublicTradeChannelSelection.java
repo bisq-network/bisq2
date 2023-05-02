@@ -129,8 +129,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                     channel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (channel instanceof PublicTradeChannel) {
                                     model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                                } else if (channel == null && !model.channelItems.isEmpty()) {
-                                    model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {
                                     model.selectedChannelItem.set(null);
                                 }
