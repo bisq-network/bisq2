@@ -57,6 +57,9 @@ public class Badge extends StackPane {
         getStyleClass().add("bisq-badge");
         setPosition(pos);
         setControl(control);
+        text.addListener((o, oldVal, newVal) -> refreshBadge());
+        this.badge = new Group();
+        this.getChildren().add(badge);
         position.addListener((o, oldVal, newVal) -> StackPane.setAlignment(badge, newVal));
     }
 
@@ -67,16 +70,13 @@ public class Badge extends StackPane {
     public void setControl(Node control) {
         if (control != null) {
             this.control = control;
-            this.badge = new Group();
             this.getChildren().add(control);
-            this.getChildren().add(badge);
 
             // if the control got resized the badge must be rest
             if (control instanceof Region) {
                 ((Region) control).widthProperty().addListener((o, oldVal, newVal) -> refreshBadge());
                 ((Region) control).heightProperty().addListener((o, oldVal, newVal) -> refreshBadge());
             }
-            text.addListener((o, oldVal, newVal) -> refreshBadge());
         }
     }
 
@@ -93,16 +93,14 @@ public class Badge extends StackPane {
         int textLength = text.get().length();
         if (enabled && textLength > 0) {
             Label labelControl = new Label(text.get());
-            labelControl.getStyleClass().add("badge-label");
 
             StackPane badgePane = new StackPane();
             badgePane.getStyleClass().add("badge-pane");
             badgePane.getChildren().add(labelControl);
-            badgePane.setPrefWidth(textLength * 15d);
+            badgePane.setPrefWidth(textLength * 12d);
 
-            //todo not working yet ?
             if (tooltip != null) {
-                Tooltip.uninstall(badgePane, new BisqTooltip(tooltip));
+                Tooltip.install(badgePane, new BisqTooltip(tooltip));
             }
 
             badge.getChildren().add(badgePane);

@@ -20,6 +20,10 @@ package bisq.desktop.notifications;
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.notifications.chat.ChatNotifications;
 
+/**
+ * Manages different types of notifications.
+ * Currently, it is handling only chat notifications.
+ */
 public class DesktopNotifications {
     private static DesktopNotifications instance;
 

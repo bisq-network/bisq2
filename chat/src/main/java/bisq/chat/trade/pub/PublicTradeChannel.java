@@ -27,6 +27,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 @Getter
 @ToString(callSuper = true)
@@ -44,7 +45,6 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
         this.market = market;
     }
 
-
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
@@ -54,7 +54,9 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
 
     public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
-        return new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
+        PublicTradeChannel publicTradeChannel = new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
+        publicTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return publicTradeChannel;
     }
 
     @Override
@@ -68,8 +70,8 @@ public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatM
     }
 
     @Override
-    public void removeChatMessages(Collection<PublicTradeChatMessage> removeMessages) {
-        chatMessages.removeAll(removeMessages);
+    public void removeChatMessages(Collection<PublicTradeChatMessage> messages) {
+        chatMessages.removeAll(messages);
     }
 
     public String getDescription() {

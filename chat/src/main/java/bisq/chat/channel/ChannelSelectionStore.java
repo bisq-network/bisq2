@@ -17,40 +17,41 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.ChatMessage;
-import bisq.common.observable.Observable;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 @Slf4j
 @Getter
 public final class ChannelSelectionStore implements PersistableStore<ChannelSelectionStore> {
-    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    @Nullable
+    @Setter
+    private String selectedChannelId;
 
     public ChannelSelectionStore() {
     }
 
-    private ChannelSelectionStore(Channel<? extends ChatMessage> selectedChannel) {
-        this.selectedChannel.set(selectedChannel);
+    private ChannelSelectionStore(String selectedChannelId) {
+        this.selectedChannelId = selectedChannelId;
     }
 
     @Override
     public bisq.chat.protobuf.ChannelSelectionStore toProto() {
         bisq.chat.protobuf.ChannelSelectionStore.Builder builder = bisq.chat.protobuf.ChannelSelectionStore.newBuilder();
-        Optional.ofNullable(selectedChannel.get()).ifPresent(selectedChannel -> builder.setSelectedChannel(selectedChannel.toProto()));
+        Optional.ofNullable(selectedChannelId).ifPresent(builder::setSelectedChannelId);
         return builder.build();
     }
 
     public static ChannelSelectionStore fromProto(bisq.chat.protobuf.ChannelSelectionStore proto) {
-        return new ChannelSelectionStore(proto.hasSelectedChannel() ? Channel.fromProto(proto.getSelectedChannel()) : null);
+        return new ChannelSelectionStore(proto.hasSelectedChannelId() ? proto.getSelectedChannelId() : null);
     }
-
 
     @Override
     public ProtoResolver<PersistableStore<?>> getResolver() {
@@ -65,11 +66,11 @@ public final class ChannelSelectionStore implements PersistableStore<ChannelSele
 
     @Override
     public void applyPersisted(ChannelSelectionStore persisted) {
-        this.selectedChannel.set(persisted.selectedChannel.get());
+        this.selectedChannelId = persisted.selectedChannelId;
     }
 
     @Override
     public ChannelSelectionStore getClone() {
-        return new ChannelSelectionStore(selectedChannel.get());
+        return new ChannelSelectionStore(selectedChannelId);
     }
 }

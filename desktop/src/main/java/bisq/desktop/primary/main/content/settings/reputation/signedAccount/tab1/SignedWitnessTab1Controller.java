@@ -44,7 +44,7 @@ public class SignedWitnessTab1Controller implements Controller {
     }
 
     void onLearnMore() {
-        Browser.open("https://bisq.wiki/reputation/burnBsq");
+        Browser.open("https://bisq.wiki/reputation/signedAccount");
     }
 
     void onNext() {

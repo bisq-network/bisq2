@@ -19,6 +19,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
@@ -40,6 +41,7 @@ import bisq.i18n.Res;
 import bisq.user.identity.UserIdentityService;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
@@ -58,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -89,11 +92,10 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final UserIdentityService userIdentityService;
-        private Pin channelItemsPin;
         private Pin numVisibleChannelsPin;
 
         protected Controller(DefaultApplicationService applicationService) {
-            super(applicationService.getChatService());
+            super(applicationService);
 
             publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
@@ -111,11 +113,16 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         @Override
+        protected ChannelService<?, ?, ?> getChannelService() {
+            return publicTradeChannelService;
+        }
+
+        @Override
         public void onActivate() {
             super.onActivate();
 
             getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
-            channelItemsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
@@ -151,7 +158,6 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onDeactivate() {
             super.onDeactivate();
 
-            channelItemsPin.unbind();
             numVisibleChannelsPin.unbind();
         }
 
@@ -181,6 +187,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
             Optional<PublicTradeChatMessage> myOpenOffer = channel.getChatMessages().stream()
+                    .filter(PublicTradeChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
                     .findAny();
             if (myOpenOffer.isPresent()) {
@@ -214,8 +221,11 @@ public class PublicTradeChannelSelection extends ChannelSelection {
     }
 
     protected static class Model extends ChannelSelection.Model {
-        ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
-        SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
+        private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
+        private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
+
+        public Model() {
+        }
     }
 
     protected static class View extends ChannelSelection.View<Model, Controller> {
@@ -294,25 +304,37 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                private Subscription widthSubscription;
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+                final Badge numMessagesBadge;
+                final StackPane iconAndBadge = new StackPane();
                 final Label label = new Label();
                 final HBox hBox = new HBox();
                 final ColorAdjust nonSelectedEffect = new ColorAdjust();
                 final ColorAdjust hoverEffect = new ColorAdjust();
+                @Nullable
+                private Subscription widthSubscription;
+                @Nullable
+                MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
 
                 {
                     setCursor(Cursor.HAND);
                     setPrefHeight(50);
                     setPadding(new Insets(0, 0, -20, 0));
 
+                    numMessagesBadge = new Badge();
+                    numMessagesBadge.setPosition(Pos.CENTER);
+
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeIcon);
+                    iconAndBadge.setAlignment(Pos.CENTER);
+
                     label.getStyleClass().add("bisq-text-8");
                     hBox.setAlignment(Pos.CENTER_LEFT);
-                    hBox.getChildren().addAll(label, Spacer.fillHBox(), removeIcon);
+                    hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
+
+                    HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
                     removeIcon.setCursor(Cursor.HAND);
                     removeIcon.setId("icon-label-grey");
-                    HBox.setMargin(removeIcon, new Insets(0, 12, 0, 0));
 
                     nonSelectedEffect.setSaturation(-0.4);
                     nonSelectedEffect.setBrightness(-0.6);
@@ -349,22 +371,34 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseEntered(e -> {
                             Transitions.fadeIn(removeIcon);
+                            Transitions.fadeOut(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), true);
                         });
                         setOnMouseExited(e -> {
                             Transitions.fadeOut(removeIcon);
+                            Transitions.fadeIn(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), false);
                         });
                         applyEffect(icons, item.isSelected(), false);
+
+                        channelIdWithNumUnseenMessagesMapListener = change -> onUnseenMessagesChanged(item, change.getKey(), numMessagesBadge);
+                        model.channelIdWithNumUnseenMessagesMap.addListener(channelIdWithNumUnseenMessagesMapListener);
+                        model.channelIdWithNumUnseenMessagesMap.keySet().forEach(key -> onUnseenMessagesChanged(item, key, numMessagesBadge));
+
                         setGraphic(hBox);
                     } else {
                         label.setGraphic(null);
                         removeIcon.setOnMouseClicked(null);
-                        hBox.setOnMouseClicked(null);
-                        hBox.setOnMouseEntered(null);
-                        hBox.setOnMouseExited(null);
+                        setOnMouseClicked(null);
+                        setOnMouseEntered(null);
+                        setOnMouseExited(null);
                         if (widthSubscription != null) {
                             widthSubscription.unsubscribe();
+                            widthSubscription = null;
+                        }
+                        if (channelIdWithNumUnseenMessagesMapListener != null) {
+                            model.channelIdWithNumUnseenMessagesMap.removeListener(channelIdWithNumUnseenMessagesMapListener);
+                            channelIdWithNumUnseenMessagesMapListener = null;
                         }
                         setGraphic(null);
                     }

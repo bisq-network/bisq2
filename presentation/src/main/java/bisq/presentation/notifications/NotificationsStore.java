@@ -21,18 +21,15 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@EqualsAndHashCode
-@ToString
 public final class NotificationsStore implements PersistableStore<NotificationsStore> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
+
     private final Map<String, Long> dateByMessageId = new ConcurrentHashMap<>();
 
     public NotificationsStore() {
@@ -40,10 +37,6 @@ public final class NotificationsStore implements PersistableStore<NotificationsS
 
     private NotificationsStore(Map<String, Long> dateByMessageId) {
         this.dateByMessageId.putAll(dateByMessageId);
-    }
-
-    Map<String, Long> getDateByMessageId() {
-        return dateByMessageId;
     }
 
     @Override
@@ -80,6 +73,10 @@ public final class NotificationsStore implements PersistableStore<NotificationsS
     public void applyPersisted(NotificationsStore persisted) {
         dateByMessageId.clear();
         dateByMessageId.putAll(prune(persisted.dateByMessageId));
+    }
+
+    Map<String, Long> getDateByMessageId() {
+        return dateByMessageId;
     }
 
     private Map<String, Long> prune(Map<String, Long> dateByMessageId) {

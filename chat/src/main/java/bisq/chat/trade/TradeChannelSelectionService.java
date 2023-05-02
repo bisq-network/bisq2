@@ -18,6 +18,7 @@
 package bisq.chat.trade;
 
 import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChannelSelectionStore;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -32,14 +33,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class TradeChannelSelectionService implements PersistenceClient<TradeChannelSelectionStore> {
-    private final TradeChannelSelectionStore persistableStore = new TradeChannelSelectionStore();
-    private final Persistence<TradeChannelSelectionStore> persistence;
+public class TradeChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
+    private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
+    private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
+    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public TradeChannelSelectionService(PersistenceService persistenceService,
                                         PrivateTradeChannelService privateTradeChannelService,
@@ -60,17 +63,29 @@ public class TradeChannelSelectionService implements PersistenceClient<TradeChan
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
+    public void onPersistedApplied(ChannelSelectionStore persisted) {
+        applySelectedChannel();
+    }
+
     public void selectChannel(Channel<? extends ChatMessage> channel) {
         if (channel instanceof PrivateTradeChannel) {
             privateTradeChannelService.removeExpiredMessages((PrivateTradeChannel) channel);
         }
 
-        getSelectedChannel().set(channel);
+        persistableStore.setSelectedChannelId(channel != null ? channel.getId() : null);
         persist();
+
+        applySelectedChannel();
     }
 
-    public Observable<Channel<? extends ChatMessage>> getSelectedChannel() {
-        return persistableStore.getSelectedChannel();
+    private void applySelectedChannel() {
+        Stream<Channel<?>> stream = Stream.concat(publicTradeChannelService.getChannels().stream(),
+                privateTradeChannelService.getChannels().stream());
+        selectedChannel.set(stream
+                .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
+                .findAny()
+                .orElse(null));
     }
 
     public void reportUserProfile(UserProfile userProfile, String reason) {

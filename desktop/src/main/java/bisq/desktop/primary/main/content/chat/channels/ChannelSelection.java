@@ -1,26 +1,30 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
+import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
+import bisq.desktop.components.controls.Badge;
 import bisq.user.identity.UserIdentityService;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -36,36 +40,69 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
-
+        private final UserIdentityService userIdentityService;
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
+        private final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
+        private final Set<Pin> numChatMessagesPins = new HashSet<>();
 
-        protected Controller(ChatService chatService) {
-            this.chatService = chatService;
-        }
-
-        @Override
-        public void onActivate() {
+        protected Controller(DefaultApplicationService applicationService) {
+            chatService = applicationService.getChatService();
+            userIdentityService = applicationService.getUserService().getUserIdentityService();
         }
 
         protected abstract Model getChannelSelectionModel();
 
+        protected abstract ChannelService<?, ?, ?> getChannelService();
+
+        @Override
+        public void onActivate() {
+            getChannelService().getChannels().forEach(channel -> {
+                Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
+                seenChatMessageIdsPins.add(seenChatMessageIdsPin);
+                Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
+                numChatMessagesPins.add(numChatMessagesPin);
+            });
+        }
+
+        private void updateUnseenMessagesMap(Channel<?> channel) {
+            UIThread.run(() -> {
+                if (getChannelService() instanceof PublicTradeChannelService) {
+                    PublicTradeChannelService publicTradeChannelService = (PublicTradeChannelService) getChannelService();
+                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) channel)) {
+                        return;
+                    }
+                }
+
+                int numUnSeenChatMessages = (int) channel.getChatMessages().stream()
+                        .filter(this::isNotMyMessage)
+                        .filter(message -> !channel.getSeenChatMessageIds().contains(message.getMessageId()))
+                        .count();
+                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
+            });
+        }
+
+        private boolean isNotMyMessage(ChatMessage chatMessage) {
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+        }
+
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
-            if (channelsPin != null) {
-                channelsPin.unbind();
-            }
+            channelsPin.unbind();
+            seenChatMessageIdsPins.forEach(Pin::unbind);
+            numChatMessagesPins.forEach(Pin::unbind);
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);
     }
-
 
     protected static class Model implements bisq.desktop.common.view.Model {
         ObjectProperty<View.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
@@ -73,6 +110,7 @@ public abstract class ChannelSelection {
         ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
+        ObservableMap<String, Integer> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
 
         public Model() {
         }
@@ -169,18 +207,6 @@ public abstract class ChannelSelection {
             });
         }
 
-        protected void initCell(ListCell<ChannelItem> cell, Label label, ImageView iconImageView, HBox hBox) {
-            cell.setCursor(Cursor.HAND);
-            cell.setPrefHeight(40);
-            cell.setPadding(new Insets(0, 0, -20, 0));
-            cell.setPadding(new Insets(0, 0, -20, 0));
-            label.setGraphic(iconImageView);
-            label.setGraphicTextGap(8);
-            hBox.setSpacing(10);
-            hBox.setAlignment(Pos.CENTER_LEFT);
-            hBox.getChildren().add(label);
-        }
-
         protected void updateCell(ListCell<ChannelItem> cell, ChannelItem item, Label label, ImageView iconImageView) {
             label.setText(item.getDisplayString().toUpperCase());
 
@@ -210,6 +236,19 @@ public abstract class ChannelSelection {
                 cell.setOnMouseReleased(e -> {
                     iconImageView.setId(item.iconIdSelected);
                 });
+            }
+        }
+
+        protected void onUnseenMessagesChanged(ChannelItem item, String channelId, Badge numMessagesBadge) {
+            if (channelId.equals(item.getChannel().getId())) {
+                int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
+                if (numUnseenMessages > 99) {
+                    numMessagesBadge.setText("*");
+                } else if (numUnseenMessages > 0) {
+                    numMessagesBadge.setText(String.valueOf(numUnseenMessages));
+                } else {
+                    numMessagesBadge.setText("");
+                }
             }
         }
 

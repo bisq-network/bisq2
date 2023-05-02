@@ -75,6 +75,7 @@ message Channel {
   ChannelDomain channelDomain = 1;
   string channelName = 2;
   ChannelNotificationType channelNotificationType = 3;
+  repeated string seenChatMessageIds = 4;
   oneof message{
     PrivateChannel privateChannel = 10;
     PublicChannel publicChannel = 11;
@@ -114,7 +115,7 @@ message PublicChannelStore {
 }
 
 message ChannelSelectionStore {
-  optional Channel selectedChannel = 1;
+  optional string selectedChannelId = 1;
 }
 
 
@@ -152,10 +153,6 @@ message PrivateTradeChannel {
 
 message PublicTradeChannel {
   common.Market market = 1;
-}
-
-message TradeChannelSelectionStore {
-  optional Channel selectedChannel = 1;
 }
 
 message PrivateTradeChannelStore {

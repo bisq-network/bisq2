@@ -70,7 +70,7 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
 
     public static PrivateChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                            bisq.chat.protobuf.PrivateChannel proto) {
-        return new PrivateChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+        PrivateChannel privateChannel = new PrivateChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -79,6 +79,8 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
         );
+        privateChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return privateChannel;
     }
 
     @Override
@@ -92,8 +94,8 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateChatMessage> removeMessages) {
-        chatMessages.removeAll(removeMessages);
+    public void removeChatMessages(Collection<PrivateChatMessage> messages) {
+        chatMessages.removeAll(messages);
     }
 
     @Override

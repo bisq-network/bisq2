@@ -20,6 +20,7 @@ package bisq.desktop.notifications.chat;
 import bisq.chat.channel.Channel;
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.ChatMessage;
+import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.EqualsAndHashCode;
@@ -50,7 +51,7 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
         }
         message = chatMessage.getText();
 
-        userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
+        userName = senderUserProfile.map(UserProfile::getUserName).orElse(Res.get("na"));
     }
 
     @Override

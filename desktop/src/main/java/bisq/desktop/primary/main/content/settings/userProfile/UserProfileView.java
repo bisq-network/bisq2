@@ -17,6 +17,7 @@
 
 package bisq.desktop.primary.main.content.settings.userProfile;
 
+import bisq.common.util.StringUtils;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
@@ -73,7 +74,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         comboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(UserIdentity userIdentity) {
-                return userIdentity != null ? userIdentity.getNickName() : "";
+                return userIdentity != null ? StringUtils.abbreviate(userIdentity.getUserName(), 30) : "";
             }
 
             @Override
