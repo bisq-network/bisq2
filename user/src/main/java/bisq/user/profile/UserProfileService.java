@@ -103,6 +103,12 @@ public class UserProfileService implements PersistenceClient<UserProfileStore>, 
         return new ArrayList<>(getUserProfileById().values());
     }
 
+    public boolean isChatUserIgnored(String profileId) {
+        return findUserProfile(profileId)
+                .map(this::isChatUserIgnored)
+                .orElse(false);
+    }
+
     public boolean isChatUserIgnored(UserProfile userProfile) {
         return getIgnoredUserProfileIds().contains(userProfile.getId());
     }

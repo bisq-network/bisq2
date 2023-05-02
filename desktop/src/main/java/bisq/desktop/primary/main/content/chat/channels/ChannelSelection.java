@@ -16,6 +16,7 @@ import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -48,6 +49,7 @@ public abstract class ChannelSelection {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
         private final UserIdentityService userIdentityService;
+        private final UserProfileService userProfileService;
         protected Pin selectedChannelPin;
         protected Pin channelsPin;
         private final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
@@ -56,6 +58,7 @@ public abstract class ChannelSelection {
         protected Controller(DefaultApplicationService applicationService) {
             chatService = applicationService.getChatService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
+            userProfileService = applicationService.getUserService().getUserProfileService();
         }
 
         protected abstract Model getChannelSelectionModel();
@@ -83,6 +86,7 @@ public abstract class ChannelSelection {
 
                 int numUnSeenChatMessages = (int) channel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
+                        .filter(this::isAuthorNotIgnored)
                         .filter(message -> !channel.getSeenChatMessageIds().contains(message.getMessageId()))
                         .count();
                 getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
@@ -91,6 +95,10 @@ public abstract class ChannelSelection {
 
         private boolean isNotMyMessage(ChatMessage chatMessage) {
             return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+        }
+
+        private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
+            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorId());
         }
 
         @Override
