@@ -139,8 +139,12 @@ public class AmountController implements Controller {
                 amount -> {
                     if (amount != null && amount.getValue() > model.getMaxAmount().get().getValue()) {
                         model.getBaseSideAmount().set(model.getMaxAmount().get());
+                        setQuoteFromBase();
+                        baseAmount.setAmount(model.getBaseSideAmount().get());
                     } else if (amount != null && amount.getValue() < model.getMinAmount().get().getValue()) {
                         model.getBaseSideAmount().set(model.getMinAmount().get());
+                        setQuoteFromBase();
+                        baseAmount.setAmount(model.getBaseSideAmount().get());
                     } else {
                         model.getBaseSideAmount().set(amount);
                     }
