@@ -99,9 +99,7 @@ public class MarketController implements Controller {
                 model.getFilteredList().setPredicate(item ->
                         item != null &&
                                 (item.getMarketCodes().toLowerCase().contains(search) ||
-                                        item.getMarketName().toLowerCase().contains(search) ||
-                                        item.getNumOffers().contains(search) ||
-                                        item.getNumUsers().contains(search))
+                                        item.getMarket().getQuoteCurrencyName().toLowerCase().contains(search))
                 );
             }
         });
