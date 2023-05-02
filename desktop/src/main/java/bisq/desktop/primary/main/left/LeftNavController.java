@@ -57,6 +57,25 @@ public class LeftNavController implements Controller {
         findNavButton(supportedNavigationTarget)
                 .ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(supportedNavigationTarget);
+
+        switch (supportedNavigationTarget) {
+            case BISQ_ACADEMY:
+            case BITCOIN_ACADEMY:
+            case SECURITY_ACADEMY:
+            case PRIVACY_ACADEMY:
+            case WALLETS_ACADEMY:
+            case FOSS_ACADEMY:
+                onLearSubMenuExpanded(true);
+                break;
+            case BISQ_EASY:
+            case LIQUID_SWAP:
+            case BISQ_MULTISIG:
+            case MONERO_SWAP:
+            case BSQ_SWAP:
+            case LIGHTNING_X:
+                onTradeAppsSubMenuExpanded(true);
+                break;
+        }
     }
 
     @Override
@@ -73,13 +92,21 @@ public class LeftNavController implements Controller {
         Navigation.navigateTo(navigationTarget);
     }
 
-    void onToggleExpandMenu() {
-        model.getMenuExpanded().set(!model.getMenuExpanded().get());
+    void onToggleHorizontalExpandState() {
+        model.getMenuHorizontalExpanded().set(!model.getMenuHorizontalExpanded().get());
     }
 
     void onNavigationButtonCreated(LeftNavButton leftNavButton) {
         model.getLeftNavButtons().add(leftNavButton);
         model.getNavigationTargets().add(leftNavButton.getNavigationTarget());
+    }
+
+    void onTradeAppsSubMenuExpanded(boolean value) {
+        model.getTradeAppsSubMenuExpanded().set(value);
+    }
+
+    void onLearSubMenuExpanded(boolean value) {
+        model.getLearnsSubMenuExpanded().set(value);
     }
 
     Optional<LeftNavButton> findNavButton(NavigationTarget navigationTarget) {

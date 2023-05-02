@@ -55,6 +55,7 @@ class LeftNavButton extends Pane implements Toggle {
     protected final NavigationTarget navigationTarget;
     @Getter
     private final boolean hasSubmenu;
+    private final Consumer<NavigationTarget> verticalExpandCollapseHandler;
     protected final ObjectProperty<ToggleGroup> toggleGroupProperty = new SimpleObjectProperty<>();
     protected final BooleanProperty selectedProperty = new SimpleBooleanProperty();
     protected final BooleanProperty highlightedProperty = new SimpleBooleanProperty();
@@ -68,7 +69,7 @@ class LeftNavButton extends Pane implements Toggle {
     @Nullable
     protected final ImageView iconHover;
     @Nullable
-    private Node expandIcon, collapseIcon;
+    private Node verticalExpandIcon, verticalCollapseIcon;
     @Nullable
     private VBox expandCollapseIcon;
 
@@ -80,12 +81,13 @@ class LeftNavButton extends Pane implements Toggle {
                   ToggleGroup toggleGroup,
                   NavigationTarget navigationTarget,
                   boolean hasSubmenu,
-                  Consumer<NavigationTarget> expandCollapse) {
+                  Consumer<NavigationTarget> verticalExpandCollapseHandler) {
         this.icon = iconId != null ? ImageUtil.getImageViewById(iconId) : null;
         this.iconActive = iconId != null ? ImageUtil.getImageViewById(iconId + "-active") : null;
         this.iconHover = iconId != null ? ImageUtil.getImageViewById(iconId + "-hover") : null;
         this.navigationTarget = navigationTarget;
         this.hasSubmenu = hasSubmenu;
+        this.verticalExpandCollapseHandler = verticalExpandCollapseHandler;
         isSubMenuExpanded.set(false);
 
         setMinHeight(calculateHeight());
@@ -113,36 +115,26 @@ class LeftNavButton extends Pane implements Toggle {
         getChildren().add(label);
 
         if (hasSubmenu) {
-            expandIcon = BisqIconButton.createIconButton("nav-arrow-right");
-            collapseIcon = BisqIconButton.createIconButton("nav-arrow-down");
-            expandIcon.setOnMouseClicked(e -> {
-                getIsSubMenuExpanded().set(true);
-                if (expandCollapse != null) {
-                    expandCollapse.accept(this.navigationTarget);
-                }
-            });
-            collapseIcon.setOnMouseClicked(e -> {
-                getIsSubMenuExpanded().set(false);
-                if (expandCollapse != null) {
-                    expandCollapse.accept(this.navigationTarget);
-                }
-            });
+            verticalExpandIcon = BisqIconButton.createIconButton("nav-arrow-right");
+            verticalCollapseIcon = BisqIconButton.createIconButton("nav-arrow-down");
+            verticalExpandIcon.setOnMouseClicked(e -> setSubMenuExpanded(true));
+            verticalCollapseIcon.setOnMouseClicked(e -> setSubMenuExpanded(false));
 
             expandCollapseIcon = new VBox();
             expandCollapseIcon.setOpacity(0.4);
 
             expandCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
             expandCollapseIcon.setLayoutY(10);
-            expandCollapseIcon.getChildren().setAll(expandIcon);
+            expandCollapseIcon.getChildren().setAll(verticalExpandIcon);
 
             getChildren().addAll(expandCollapseIcon);
 
             EasyBind.subscribe(getIsSubMenuExpanded(), isExpanded -> {
                 checkNotNull(expandCollapseIcon);
                 if (isExpanded) {
-                    expandCollapseIcon.getChildren().setAll(collapseIcon);
+                    expandCollapseIcon.getChildren().setAll(verticalCollapseIcon);
                 } else {
-                    expandCollapseIcon.getChildren().setAll(expandIcon);
+                    expandCollapseIcon.getChildren().setAll(verticalExpandIcon);
                 }
             });
         }
@@ -156,6 +148,13 @@ class LeftNavButton extends Pane implements Toggle {
                 getChildren().set(0, isHovered ? iconHover : icon);
             }
         });
+    }
+
+    void setSubMenuExpanded(boolean value) {
+        getIsSubMenuExpanded().set(value);
+        if (verticalExpandCollapseHandler != null) {
+            verticalExpandCollapseHandler.accept(this.navigationTarget);
+        }
     }
 
     protected void applyStyle() {
