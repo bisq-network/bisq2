@@ -116,7 +116,8 @@ class TorBootstrap {
 
             installTorrcFile();
 
-            TorUtils.extractBinary(torDirPath, osType);
+            File destDir = new File(torDirPath);
+            new TorBinaryZipExtractor(destDir).extractBinary();
             log.info("Tor files installed to {}", torDirPath);
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
