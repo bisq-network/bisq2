@@ -616,7 +616,7 @@ public class ChatMessagesListView {
             VBox.setVgrow(listView, Priority.ALWAYS);
             root.getChildren().add(listView);
 
-            messagesListener = c -> scrollDown();
+            messagesListener = c -> UIThread.runOnNextRenderFrame(this::scrollDown);
         }
 
         @Override
