@@ -22,6 +22,7 @@ import java.util.List;
 @Slf4j
 @Getter
 public final class TradeChatOffer implements Proto {
+    private final String id;
     private final Direction direction;
     private final long baseSideAmount;
     private final Market market;
@@ -32,13 +33,15 @@ public final class TradeChatOffer implements Proto {
 
     private transient final String chatMessageText;
 
-    public TradeChatOffer(Direction direction,
+    public TradeChatOffer(String id,
+                          Direction direction,
                           Market market,
                           long baseSideAmount,
                           long quoteSideAmount,
                           List<String> paymentMethods,
                           String makersTradeTerms,
                           long requiredTotalReputationScore) {
+        this.id = id;
         this.direction = direction;
         this.market = market;
         this.baseSideAmount = baseSideAmount;
@@ -58,6 +61,7 @@ public final class TradeChatOffer implements Proto {
     @Override
     public bisq.chat.protobuf.TradeChatOffer toProto() {
         return bisq.chat.protobuf.TradeChatOffer.newBuilder()
+                .setId(id)
                 .setDirection(direction.toProto())
                 .setMarket(market.toProto())
                 .setBaseSideAmount(baseSideAmount)
@@ -69,7 +73,8 @@ public final class TradeChatOffer implements Proto {
     }
 
     public static TradeChatOffer fromProto(bisq.chat.protobuf.TradeChatOffer proto) {
-        return new TradeChatOffer(Direction.fromProto(proto.getDirection()),
+        return new TradeChatOffer(proto.getId(),
+                Direction.fromProto(proto.getDirection()),
                 Market.fromProto(proto.getMarket()),
                 proto.getBaseSideAmount(),
                 proto.getQuoteSideAmount(),

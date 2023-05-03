@@ -129,13 +129,14 @@ message PrivateTradeChatMessage {
 }
 
 message TradeChatOffer {
-  offer.Direction direction = 1;
-  common.Market market = 2;
-  uint64 baseSideAmount = 3;
-  uint64 quoteSideAmount = 4;
-  repeated string paymentMethods = 5;
-  string makersTradeTerms = 6;
-  uint64 requiredTotalReputationScore = 7;
+  string id = 1;
+  offer.Direction direction = 2;
+  common.Market market = 3;
+  uint64 baseSideAmount = 4;
+  uint64 quoteSideAmount = 5;
+  repeated string paymentMethods = 6;
+  string makersTradeTerms = 7;
+  uint64 requiredTotalReputationScore = 8;
 }
 
 message PublicTradeChatMessage {
