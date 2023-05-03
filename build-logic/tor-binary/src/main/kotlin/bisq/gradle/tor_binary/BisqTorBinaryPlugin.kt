@@ -1,5 +1,6 @@
 package bisq.gradle.tor_binary
 
+import bisq.gradle.tasks.PgpFingerprint
 import bisq.gradle.tasks.download.SignedBinaryDownloader
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -26,7 +27,7 @@ class BisqTorBinaryPlugin : Plugin<Project> {
 
             pgpFingerprintToKeyUrlMap = mapOf(
                 Pair(
-                    normalizedFingerprint("EF6E 286D DA85 EA2A 4BA7  DE68 4E2C 6E87 9329 8290"),
+                    PgpFingerprint.normalize("EF6E 286D DA85 EA2A 4BA7  DE68 4E2C 6E87 9329 8290"),
                     this::class.java.getResource("/Tor_Browser_Developers_(signing_key).asc")!!,
                 )
             )
@@ -38,8 +39,4 @@ class BisqTorBinaryPlugin : Plugin<Project> {
         val torBinaryPackager = TorBinaryPackager(project)
         torBinaryPackager.registerTasks(binaryTarFile)
     }
-
-    private fun normalizedFingerprint(fingerprint: String): String =
-        fingerprint.filterNot { it.isWhitespace() }  // Remove all spaces
-            .toLowerCase()
 }
