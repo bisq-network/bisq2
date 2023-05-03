@@ -17,20 +17,18 @@
 
 package bisq.wallets.electrum;
 
+import bisq.common.archive.ZipFileExtractor;
 import bisq.common.util.FileUtils;
 import bisq.common.util.OsUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @Slf4j
 public class ElectrumBinaryExtractor {
@@ -47,18 +45,18 @@ public class ElectrumBinaryExtractor {
         this.destDir = destDirPath.toFile();
     }
 
-    public Path extractFileWithSuffix(String fileNameSuffix) {
+    public void extractArchive() {
         try {
             createDestDirIfNotPresent();
 
             try (InputStream inputStream = openBinariesZipAsStream()) {
                 if (OsUtils.isMac()) {
                     extractElectrumAppFileToDataDir(inputStream);
-                    return destDir.toPath().resolve("Electrum.app");
 
                 } else {
-                    File extractedFile = extractFileWithSuffixFromStream(inputStream, fileNameSuffix);
-                    return extractedFile.toPath();
+                    try (ZipFileExtractor zipFileExtractor = new ZipFileExtractor(inputStream, destDir)) {
+                        zipFileExtractor.extractArchive();
+                    }
                 }
             }
 
@@ -89,27 +87,6 @@ public class ElectrumBinaryExtractor {
         deleteElectrumAppFileIfExisting();
         copyZipFromResourcesToDataDir(inputStream);
         unpackZipFileWithUnzipCommand();
-    }
-
-    private File extractFileWithSuffixFromStream(InputStream inputStream, String fileSuffix) {
-        try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
-            byte[] buffer = new byte[1024];
-            ZipEntry zipEntry = zipInputStream.getNextEntry();
-            while (zipEntry != null) {
-
-                String fileName = zipEntry.getName();
-                if (fileName.endsWith(fileSuffix)) {
-                    return writeStreamToFile(buffer, zipInputStream, fileName);
-                }
-
-                zipEntry = zipInputStream.getNextEntry();
-            }
-            zipInputStream.closeEntry();
-
-        } catch (IOException e) {
-            throw new ElectrumExtractionFailedException("Couldn't extract Electrum binary.", e);
-        }
-        throw new ElectrumExtractionFailedException("Couldn't extract Electrum binary.");
     }
 
     private void deleteElectrumAppFileIfExisting() {
@@ -148,20 +125,6 @@ public class ElectrumBinaryExtractor {
             }
         } catch (InterruptedException | IOException e) {
             throw new ElectrumExtractionFailedException("Could not copy Electrum.app to data directory.");
-        }
-    }
-
-    private File writeStreamToFile(byte[] buffer, InputStream inputStream, String fileName) {
-        File destFile = new File(destDir, fileName);
-        try (FileOutputStream outputStream = new FileOutputStream(destFile)) {
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                outputStream.write(buffer, 0, length);
-            }
-
-            return destFile;
-        } catch (IOException e) {
-            throw new ElectrumExtractionFailedException("Couldn't write to stream to: " + destFile);
         }
     }
 }

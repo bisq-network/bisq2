@@ -27,22 +27,22 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ElectrumBinaryExtractorTest {
-    private final ElectrumBinaryExtractor binaryExtractor;
+    private final Path destDirPath = FileUtils.createTempDir();
+    private final ElectrumBinaryExtractor binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
 
     public ElectrumBinaryExtractorTest() throws IOException {
-        Path destDirPath = FileUtils.createTempDir();
-        binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
     }
 
     @Test
     void extractBinaries() {
-        String binarySuffix = ElectrumProcess.getBinarySuffix();
-        Path electrumBinaryPath = binaryExtractor.extractFileWithSuffix(binarySuffix);
-        File electrumBinary = electrumBinaryPath.toFile();
+        binaryExtractor.extractArchive();
 
-        assertThat(electrumBinary.exists())
-                .isTrue();
-        assertThat(electrumBinary.length())
-                .isGreaterThan(0);
+        File[] filesInDir = destDirPath.toFile().listFiles();
+        assertThat(filesInDir).isNotEmpty();
+
+        File extractedFile = filesInDir[0];
+        String binarySuffix = ElectrumProcess.getBinarySuffix();
+        assertThat(extractedFile.getName())
+                .endsWith(binarySuffix);
     }
 }
