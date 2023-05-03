@@ -59,7 +59,7 @@ public final class PrivateTwoPartyChannel extends BasePrivateChannel<PrivateChat
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
-        return getChannelBuilder().setPrivateChannel(bisq.chat.protobuf.PrivateChannel.newBuilder()
+        return getChannelBuilder().setPrivateTwoPartyChannel(bisq.chat.protobuf.PrivateTwoPartyChannel.newBuilder()
                         .setPeer(peer.toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
@@ -69,7 +69,7 @@ public final class PrivateTwoPartyChannel extends BasePrivateChannel<PrivateChat
     }
 
     public static PrivateTwoPartyChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                                   bisq.chat.protobuf.PrivateChannel proto) {
+                                                   bisq.chat.protobuf.PrivateTwoPartyChannel proto) {
         PrivateTwoPartyChannel privateTwoPartyChannel = new PrivateTwoPartyChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeer()),

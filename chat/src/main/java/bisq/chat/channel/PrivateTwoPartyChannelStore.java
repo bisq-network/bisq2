@@ -39,13 +39,13 @@ public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoP
     }
 
     @Override
-    public bisq.chat.protobuf.PrivateChannelStore toProto() {
-        bisq.chat.protobuf.PrivateChannelStore.Builder builder = bisq.chat.protobuf.PrivateChannelStore.newBuilder()
+    public bisq.chat.protobuf.PrivateTwoPartyChannelStore toProto() {
+        bisq.chat.protobuf.PrivateTwoPartyChannelStore.Builder builder = bisq.chat.protobuf.PrivateTwoPartyChannelStore.newBuilder()
                 .addAllChannels(channels.stream().map(PrivateTwoPartyChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PrivateTwoPartyChannelStore fromProto(bisq.chat.protobuf.PrivateChannelStore proto) {
+    public static PrivateTwoPartyChannelStore fromProto(bisq.chat.protobuf.PrivateTwoPartyChannelStore proto) {
         List<PrivateTwoPartyChannel> privateTwoPartyChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateTwoPartyChannel) PrivateTwoPartyChannel.fromProto(e))
                 .collect(Collectors.toList());
@@ -56,7 +56,7 @@ public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoP
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PrivateChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.PrivateTwoPartyChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }
