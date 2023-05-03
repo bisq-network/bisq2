@@ -29,27 +29,27 @@ import java.util.stream.Collectors;
 
 @Getter
 public class PrivateChannelStore implements PersistableStore<PrivateChannelStore> {
-    private final ObservableArray<PrivateChannel> channels = new ObservableArray<>();
+    private final ObservableArray<PrivateTwoPartyChannel> channels = new ObservableArray<>();
 
     public PrivateChannelStore() {
     }
 
-    private PrivateChannelStore(List<PrivateChannel> privateChannels) {
-        setAll(privateChannels);
+    private PrivateChannelStore(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
+        setAll(privateTwoPartyChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateChannelStore toProto() {
         bisq.chat.protobuf.PrivateChannelStore.Builder builder = bisq.chat.protobuf.PrivateChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(PrivateTwoPartyChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateChannelStore fromProto(bisq.chat.protobuf.PrivateChannelStore proto) {
-        List<PrivateChannel> privateChannels = proto.getChannelsList().stream()
-                .map(e -> (PrivateChannel) PrivateChannel.fromProto(e))
+        List<PrivateTwoPartyChannel> privateTwoPartyChannels = proto.getChannelsList().stream()
+                .map(e -> (PrivateTwoPartyChannel) PrivateTwoPartyChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PrivateChannelStore(privateChannels);
+        return new PrivateChannelStore(privateTwoPartyChannels);
     }
 
     @Override
@@ -73,8 +73,8 @@ public class PrivateChannelStore implements PersistableStore<PrivateChannelStore
         return new PrivateChannelStore(channels);
     }
 
-    public void setAll(List<PrivateChannel> privateChannels) {
+    public void setAll(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
         this.channels.clear();
-        this.channels.addAll(privateChannels);
+        this.channels.addAll(privateTwoPartyChannels);
     }
 }

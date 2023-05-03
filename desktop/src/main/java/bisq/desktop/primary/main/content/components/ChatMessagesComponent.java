@@ -263,18 +263,18 @@ public class ChatMessagesComponent {
                         break;
                 }
 
-            } else if (channel instanceof PrivateChannel) {
+            } else if (channel instanceof PrivateTwoPartyChannel) {
                 switch (channel.getChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                 }
             }

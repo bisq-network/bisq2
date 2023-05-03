@@ -268,13 +268,13 @@ public class ChatMessagesListView {
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChannelService = publicDiscussionChannelService;
-                    } else if (channel instanceof PrivateChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChannelService = privateDiscussionChannelService;
                     }
@@ -291,13 +291,13 @@ public class ChatMessagesListView {
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChannelService = publicEventsChannelService;
-                    } else if (channel instanceof PrivateChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChannelService = privateEventsChannelService;
                     }
@@ -314,13 +314,13 @@ public class ChatMessagesListView {
                                 .to(((PublicChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChannelService = publicSupportChannelService;
-                    } else if (channel instanceof PrivateChannel) {
+                    } else if (channel instanceof PrivateTwoPartyChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateChannel) channel).getChatMessages());
+                                .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChannelService = privateSupportChannelService;
                     }

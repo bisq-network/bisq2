@@ -33,10 +33,10 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage> {
+public final class PrivateTwoPartyChannel extends BasePrivateChannel<PrivateChatMessage> {
     private final UserProfile peer;
 
-    public PrivateChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
+    public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
                 BasePrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
@@ -46,12 +46,12 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
         );
     }
 
-    private PrivateChannel(ChannelDomain channelDomain,
-                           String channelName,
-                           UserProfile peer,
-                           UserIdentity myProfile,
-                           List<PrivateChatMessage> chatMessages,
-                           ChannelNotificationType channelNotificationType) {
+    private PrivateTwoPartyChannel(ChannelDomain channelDomain,
+                                   String channelName,
+                                   UserProfile peer,
+                                   UserIdentity myProfile,
+                                   List<PrivateChatMessage> chatMessages,
+                                   ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
         this.peer = peer;
@@ -68,9 +68,9 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
                 .build();
     }
 
-    public static PrivateChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                           bisq.chat.protobuf.PrivateChannel proto) {
-        PrivateChannel privateChannel = new PrivateChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+    public static PrivateTwoPartyChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                                   bisq.chat.protobuf.PrivateChannel proto) {
+        PrivateTwoPartyChannel privateTwoPartyChannel = new PrivateTwoPartyChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -79,8 +79,8 @@ public final class PrivateChannel extends BasePrivateChannel<PrivateChatMessage>
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
         );
-        privateChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return privateChannel;
+        privateTwoPartyChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return privateTwoPartyChannel;
     }
 
     @Override

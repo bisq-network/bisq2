@@ -68,8 +68,8 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateChannel) {
-            privateChannelService.removeExpiredMessages((PrivateChannel) channel);
+        if (channel instanceof PrivateTwoPartyChannel) {
+            privateChannelService.removeExpiredMessages((PrivateTwoPartyChannel) channel);
         }
 
         persistableStore.setSelectedChannelId(channel != null ? channel.getId() : null);

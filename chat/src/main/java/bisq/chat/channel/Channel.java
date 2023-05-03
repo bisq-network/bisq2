@@ -63,7 +63,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
         switch (proto.getMessageCase()) {
             case PRIVATECHANNEL: {
-                return PrivateChannel.fromProto(proto, proto.getPrivateChannel());
+                return PrivateTwoPartyChannel.fromProto(proto, proto.getPrivateChannel());
             }
 
             case PRIVATETRADECHANNEL: {

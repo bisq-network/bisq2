@@ -242,7 +242,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPrivateChannelsChanged(ObservableArray<PrivateChannel> channels) {
+    private void onPrivateChannelsChanged(ObservableArray<PrivateTwoPartyChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

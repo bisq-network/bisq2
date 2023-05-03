@@ -38,7 +38,7 @@ import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateChannel, PrivateChannelStore> {
+public class PrivateChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateChannelStore> {
     @Getter
     private final PrivateChannelStore persistableStore = new PrivateChannelStore();
     @Getter
@@ -66,7 +66,7 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
 
     @Override
     protected PrivateChatMessage createNewPrivateChatMessage(String messageId,
-                                                             PrivateChannel channel,
+                                                             PrivateTwoPartyChannel channel,
                                                              UserProfile sender,
                                                              String receiversId,
                                                              String text,
@@ -87,14 +87,14 @@ public class PrivateChannelService extends BasePrivateChannelService<PrivateChat
     }
 
     @Override
-    protected PrivateChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        PrivateChannel privateChannel = new PrivateChannel(peer, myUserIdentity, channelDomain);
-        privateChannel.getChannelNotificationType().addObserver(value -> persist());
-        return privateChannel;
+    protected PrivateTwoPartyChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        PrivateTwoPartyChannel privateTwoPartyChannel = new PrivateTwoPartyChannel(peer, myUserIdentity, channelDomain);
+        privateTwoPartyChannel.getChannelNotificationType().addObserver(value -> persist());
+        return privateTwoPartyChannel;
     }
 
     @Override
-    public ObservableArray<PrivateChannel> getChannels() {
+    public ObservableArray<PrivateTwoPartyChannel> getChannels() {
         return persistableStore.getChannels();
     }
 }
