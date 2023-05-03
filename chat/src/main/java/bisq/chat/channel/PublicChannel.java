@@ -32,11 +32,11 @@ import java.util.stream.Collectors;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class BasePublicChannel<M extends BasePublicChatMessage> extends Channel<M> {
+public abstract class PublicChannel<M extends BasePublicChatMessage> extends Channel<M> {
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    public BasePublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+    public PublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
     }
 

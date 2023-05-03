@@ -28,7 +28,7 @@ import java.util.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicChatChannel extends BasePublicChannel<PublicChatMessage> {
+public final class PublicChatChannel extends PublicChannel<PublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;

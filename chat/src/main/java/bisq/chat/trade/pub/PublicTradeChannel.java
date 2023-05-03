@@ -17,9 +17,9 @@
 
 package bisq.chat.trade.pub;
 
-import bisq.chat.channel.BasePublicChannel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.PublicChannel;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import java.util.HashSet;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends BasePublicChannel<PublicTradeChatMessage> {
+public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
     private final Market market;
 
     public PublicTradeChannel(Market market) {

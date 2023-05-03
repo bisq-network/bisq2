@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.BasePublicChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateChannel;
+import bisq.chat.channel.PublicChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -202,7 +202,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
     }
 
-    protected void applyDefaultPublicChannelIcon(BasePublicChannel<?> channel) {
+    protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
         String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getChannelName();
         Button iconButton = BisqIconButton.createIconButton(iconId);
