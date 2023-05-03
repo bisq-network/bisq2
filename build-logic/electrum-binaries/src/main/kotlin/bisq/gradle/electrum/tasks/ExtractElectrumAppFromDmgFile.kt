@@ -25,7 +25,6 @@ abstract class ExtractElectrumAppFromDmgFile : DefaultTask() {
         private const val ELECTRUM_APP = "Electrum.app"
         private const val MOUNTED_ELECTRUM_APP_PATH = "$MOUNT_DIR/$ELECTRUM_APP"
 
-        private const val CMD_TIMEOUT: Long = 25
         private const val MOUNT_TIMEOUT_IN_MILLISECONDS = 30 * 1000
     }
 
