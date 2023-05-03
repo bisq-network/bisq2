@@ -41,14 +41,14 @@ public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PrivateTwoPartyChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PublicChannelService publicDiscussionChannelService;
+    private final PublicChatChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final ChannelSelectionService discussionChannelSelectionService;
     private final PrivateTwoPartyChannelService privateSupportChannelService;
-    private final PublicChannelService publicSupportChannelService;
+    private final PublicChatChannelService publicSupportChannelService;
     private final ChannelSelectionService supportChannelSelectionService;
     private final PrivateTwoPartyChannelService privateEventsChannelService;
-    private final PublicChannelService publicEventsChannelService;
+    private final PublicChatChannelService publicEventsChannelService;
     private final ChannelSelectionService eventsChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
@@ -78,7 +78,7 @@ public class ChatService implements Service {
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.DISCUSSION);
-        publicDiscussionChannelService = new PublicChannelService(persistenceService,
+        publicDiscussionChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -101,7 +101,7 @@ public class ChatService implements Service {
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.EVENTS);
-        publicEventsChannelService = new PublicChannelService(persistenceService,
+        publicEventsChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -124,7 +124,7 @@ public class ChatService implements Service {
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.SUPPORT);
-        publicSupportChannelService = new PublicChannelService(persistenceService,
+        publicSupportChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,

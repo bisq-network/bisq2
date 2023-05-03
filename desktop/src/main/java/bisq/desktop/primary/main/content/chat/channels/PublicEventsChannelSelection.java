@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChannelService;
-import bisq.chat.channel.PublicChannelService;
 import bisq.chat.channel.PublicChatChannel;
+import bisq.chat.channel.PublicChatChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -52,7 +52,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicChannelService publicEventsChannelService;
+        private final PublicChatChannelService publicEventsChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService eventsChannelSelectionService;
 
