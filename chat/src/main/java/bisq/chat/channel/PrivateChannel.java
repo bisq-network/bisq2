@@ -32,7 +32,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends Channel<T> {
-
+//todo
     public static String createChannelName(Pair<String, String> userIds) {
         String userId1 = userIds.getFirst();
         String userId2 = userIds.getSecond();

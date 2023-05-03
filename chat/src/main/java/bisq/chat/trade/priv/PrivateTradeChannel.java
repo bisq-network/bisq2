@@ -20,6 +20,7 @@ package bisq.chat.trade.priv;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.PrivateChannel;
+import bisq.chat.channel.PrivateGroupChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.common.data.Pair;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMessage> {
+public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeChatMessage> {
     public static PrivateTradeChannel createByTrader(UserIdentity myUserIdentity,
                                                      UserProfile peer,
                                                      Optional<UserProfile> mediator) {
