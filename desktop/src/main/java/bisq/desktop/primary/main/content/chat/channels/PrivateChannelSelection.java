@@ -147,7 +147,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 if (inMediationPin != null) {
                                     inMediationPin.unbind();
                                 }
-                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getInMediation());
+                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getIsInMediation());
                             }
                         });
             } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
@@ -407,14 +407,14 @@ public class PrivateChannelSelection extends ChannelSelection {
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
                         }
-                        inMediationPin = privateTradeChannel.getInMediation().addObserver(e ->
+                        inMediationPin = privateTradeChannel.getIsInMediation().addObserver(e ->
                         {
                             UIThread.run(() -> {
                                 hBox.getChildren().clear();
                                 hBox.getChildren().add(roboIcon);
 
                                 if (privateTradeChannel.findMediator().isPresent() &&
-                                        privateTradeChannel.getInMediation().get()) {
+                                        privateTradeChannel.getIsInMediation().get()) {
                                     if (privateTradeChannel.isMediator()) {
                                         // We are the mediator
                                         UserProfile trader1 = privateTradeChannel.getPeer();

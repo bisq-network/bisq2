@@ -134,7 +134,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
 
 
     public void setMediationActivated(PrivateTradeChannel channel, boolean mediationActivated) {
-        channel.getInMediation().set(mediationActivated);
+        channel.getIsInMediation().set(mediationActivated);
         persist();
     }
 

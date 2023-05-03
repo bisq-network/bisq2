@@ -67,7 +67,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     }
 
 
-    private final Observable<Boolean> inMediation = new Observable<>(false);
+    private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final TradeChatOffer tradeChatOffer;
 
     // Taker
@@ -109,7 +109,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
         this.tradeChatOffer = tradeChatOffer;
         traders.forEach(trader -> addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, trader)));
         mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
-        inMediation.set(isInMediation);
+        this.isInMediation.set(isInMediation);
         getSeenChatMessageIds().addAll(seenChatMessageIds);
     }
 
@@ -150,7 +150,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
                 .addAllTraders(getTraders().stream()
                         .map(UserProfile::toProto)
                         .collect(Collectors.toList()))
-                .setInMediation(inMediation.get())
+                .setIsInMediation(isInMediation.get())
                 .addAllChatMessages(chatMessages.stream()
                         .map(PrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
@@ -171,7 +171,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
-                proto.getInMediation(),
+                proto.getIsInMediation(),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
                 new HashSet<>(baseProto.getSeenChatMessageIdsList()));
     }
@@ -199,7 +199,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     public String getDisplayString() {
         String mediatorLabel = "";
         Optional<UserProfile> mediator = findMediator();
-        if (mediator.isPresent() && inMediation.get()) {
+        if (mediator.isPresent() && isInMediation.get()) {
             mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
         }
         String peer = getPeer().getUserName();
@@ -213,7 +213,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
 
     public String getChannelSelectionDisplayString() {
         String peer = getPeer().getUserName();
-        if (!inMediation.get()) {
+        if (!isInMediation.get()) {
             return peer;
         }
 

@@ -149,7 +149,7 @@ message PrivateTradeChannel {
   repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
   repeated ChatMessage chatMessages = 5;
-  bool inMediation = 6;
+  bool isInMediation = 6;
 }
 
 message PublicTradeChannel {
