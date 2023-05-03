@@ -34,13 +34,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class BasePublicChannelService<M extends BasePublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
+public abstract class PublicChannelService<M extends BasePublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements DataService.Listener {
 
-    public BasePublicChannelService(NetworkService networkService,
-                                    UserIdentityService userIdentityService,
-                                    UserProfileService userProfileService,
-                                    ChannelDomain channelDomain) {
+    public PublicChannelService(NetworkService networkService,
+                                UserIdentityService userIdentityService,
+                                UserProfileService userProfileService,
+                                ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, channelDomain);
     }
 

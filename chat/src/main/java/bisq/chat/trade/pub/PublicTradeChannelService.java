@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.pub;
 
-import bisq.chat.channel.BasePublicChannelService;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.PublicChannelService;
 import bisq.chat.message.Quotation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PublicTradeChannelService extends BasePublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
+public class PublicTradeChannelService extends PublicChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
     @Getter
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
