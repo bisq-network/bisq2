@@ -381,11 +381,26 @@ public class PrivateChannelSelection extends ChannelSelection {
                     }
 
                     PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChannel();
-                    UserProfile peer = privateChannel.getPeer();
-                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                    Tooltip.install(this, tooltip);
+                    UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    icons.add(roboIcon);
+                    if (privateChannel instanceof PrivateTwoPartyChannel) {
+                        PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
+                        peer = privateTwoPartyChannel.getPeer();
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(this, tooltip);
+                        icons.add(roboIcon);
+                    } else if (privateChannel instanceof PrivateGroupChannel<?>) {
+                        //todo
+                        PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
+                        List<UserProfile> peers = privateGroupChannel.getPeers();
+                        peer = peers.get(0);
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(this, tooltip);
+                        icons.add(roboIcon);
+                    } else {
+                        throw new RuntimeException("privateChannel expected to be " +
+                                "PrivateTwoPartyChannel or PrivateGroupChannel");
+                    }
 
                     if (privateChannel instanceof PrivateTradeChannel) {
                         PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) privateChannel;

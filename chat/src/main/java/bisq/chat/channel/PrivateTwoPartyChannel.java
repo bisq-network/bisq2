@@ -24,16 +24,15 @@ import bisq.common.data.Pair;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @ToString(callSuper = true)
-@Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
+
     private final UserProfile peer;
 
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
@@ -81,6 +80,10 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
         );
         privateTwoPartyChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return privateTwoPartyChannel;
+    }
+
+    public UserProfile getPeer() {
+        return peer;
     }
 
     @Override

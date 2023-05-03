@@ -94,7 +94,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                 messageType,
                 Optional.empty());
     }
-
+  
     protected PrivateTradeChatMessage createNewPrivateTradeChatMessage(String messageId,
                                                                        PrivateTradeChannel channel,
                                                                        UserProfile sender,
@@ -164,7 +164,6 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
         return persistableStore.getChannels();
     }
 
-    @Override
     protected void processMessage(PrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
@@ -184,13 +183,12 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
         }
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(String text,
-                                                                                    Optional<Quotation> quotedMessage,
-                                                                                    PrivateTradeChannel channel) {
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      PrivateTradeChannel channel) {
         return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TAKE_OFFER);
     }
 
-    @Override
     public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       PrivateTradeChannel channel,

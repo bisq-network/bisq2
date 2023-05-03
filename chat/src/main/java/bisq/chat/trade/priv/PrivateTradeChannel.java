@@ -141,6 +141,13 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
         chatMessages.removeAll(messages);
     }
 
+    @Override
+    public List<UserProfile> getPeers() {
+        //todo
+        List<UserProfile> peers = new ArrayList<>(List.of(peerOrTrader1));
+        return peers;
+    }
+
     public boolean isMediator() {
         return mediator.filter(mediator -> mediator.getId().equals(this.myUserIdentity.getId())).isPresent();
     }

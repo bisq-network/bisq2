@@ -19,10 +19,7 @@ package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.PrivateChannel;
-import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.*;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -37,6 +34,7 @@ import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
 import bisq.desktop.primary.main.content.components.QuotedMessageBlock;
 import bisq.user.identity.UserIdentityService;
+import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationService;
 import javafx.scene.control.Button;
@@ -47,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -195,11 +194,18 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
-        Image image = RoboHash.getImage(privateChannel.getPeer().getPubKeyHash());
-        ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(35);
-        imageView.setFitHeight(35);
-        model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
+        if (privateChannel instanceof PrivateTwoPartyChannel) {
+            PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
+            Image image = RoboHash.getImage(privateTwoPartyChannel.getPeer().getPubKeyHash());
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(35);
+            imageView.setFitHeight(35);
+            model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
+        } else if (privateChannel instanceof PrivateGroupChannel<?>) {
+            PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
+            List<UserProfile> peers = privateGroupChannel.getPeers();
+            //todo impl multiple icons
+        }
     }
 
     protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {

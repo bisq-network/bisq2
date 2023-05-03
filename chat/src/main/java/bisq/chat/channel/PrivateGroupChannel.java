@@ -19,6 +19,7 @@ package bisq.chat.channel;
 
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -36,4 +37,7 @@ public abstract class PrivateGroupChannel<T extends BasePrivateChatMessage> exte
                                   ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myUserIdentity, chatMessages, channelNotificationType);
     }
+
+    //todo
+    abstract public List<UserProfile> getPeers();
 }

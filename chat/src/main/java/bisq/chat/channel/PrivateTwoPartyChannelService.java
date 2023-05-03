@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class PrivateTwoPartyChannelService extends PrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateTwoPartyChannelStore> {
@@ -96,5 +97,57 @@ public class PrivateTwoPartyChannelService extends PrivateChannelService<Private
     @Override
     public ObservableArray<PrivateTwoPartyChannel> getChannels() {
         return persistableStore.getChannels();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<PrivateTwoPartyChannel> maybeCreateAndAddChannel(UserProfile peer) {
+        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
+                .flatMap(myUserIdentity -> maybeCreateAndAddChannel(peer, myUserIdentity.getId()));
+    }
+
+    @Override
+    public void leaveChannel(PrivateTwoPartyChannel channel) {
+        leaveChannel(channel, channel.getPeer());
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      PrivateTwoPartyChannel channel) {
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TEXT);
+    }
+
+    protected Optional<PrivateTwoPartyChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
+        return userIdentityService.findUserIdentity(myUserIdentityId)
+                .map(myUserIdentity -> {
+                            Optional<PrivateTwoPartyChannel> existingChannel = getChannels().stream()
+                                    .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                                            channel.getPeer().equals(peer))
+                                    .findAny();
+                            if (existingChannel.isPresent()) {
+                                return existingChannel.get();
+                            }
+
+                            PrivateTwoPartyChannel channel = createNewChannel(peer, myUserIdentity);
+                            getChannels().add(channel);
+                            persist();
+                            return channel;
+                        }
+                );
+    }
+
+    protected void processMessage(PrivateChatMessage message) {
+        if (message.getChannelDomain() != channelDomain) {
+            return;
+        }
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorId());
+        if (!isMyMessage) {
+            findChannelForMessage(message)
+                    .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
+                    .ifPresent(channel -> addMessage(message, channel));
+        }
     }
 }

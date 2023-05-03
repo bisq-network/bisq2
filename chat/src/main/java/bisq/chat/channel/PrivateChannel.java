@@ -21,7 +21,6 @@ import bisq.chat.message.BasePrivateChatMessage;
 import bisq.common.data.Pair;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -58,6 +57,4 @@ public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends C
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
     }
-
-    public abstract UserProfile getPeer();
 }
