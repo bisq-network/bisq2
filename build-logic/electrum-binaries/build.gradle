@@ -18,5 +18,4 @@ gradlePlugin {
 
 dependencies {
     implementation project(':gradle-tasks')
-    implementation libs.bouncycastle.pg
 }
