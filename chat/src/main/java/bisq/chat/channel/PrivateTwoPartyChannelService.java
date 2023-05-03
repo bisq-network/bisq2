@@ -112,22 +112,24 @@ public class PrivateTwoPartyChannelService extends PrivateChannelService<Private
     @Override
     public void leaveChannel(PrivateTwoPartyChannel channel) {
         leaveChannel(channel, channel.getPeer());
+        // todo 
+        //channel.getChannelMembers().remove()
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Quotation> quotedMessage,
-                                                                                      PrivateTwoPartyChannel channel) {
-        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TEXT);
+    public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
+                                                                               Optional<Quotation> quotedMessage,
+                                                                               PrivateTwoPartyChannel channel) {
+        return sendMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getPeer(), MessageType.TEXT);
     }
 
     protected Optional<PrivateTwoPartyChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
-                            Optional<PrivateTwoPartyChannel> existingChannel = getChannels().stream()
-                                    .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                                            channel.getPeer().equals(peer))
-                                    .findAny();
-                            if (existingChannel.isPresent()) {
+                    Optional<PrivateTwoPartyChannel> existingChannel = getChannels().stream()
+                            .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                                    channel.getPeer().equals(peer))
+                            .findAny();
+                    if (existingChannel.isPresent()) {
                                 return existingChannel.get();
                             }
 

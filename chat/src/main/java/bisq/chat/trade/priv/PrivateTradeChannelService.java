@@ -24,6 +24,7 @@ import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.monetary.Fiat;
+import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -42,8 +43,7 @@ import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -56,6 +56,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
     @Getter
     private final Persistence<PrivateTradeChannelStore> persistence;
+    private final Map<String, Pin> notificationTypeChangePins = new HashMap<>();
 
     public PrivateTradeChannelService(PersistenceService persistenceService,
                                       NetworkService networkService,
@@ -69,53 +70,35 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Taker
+    // MessageListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PrivateTradeChannel takerFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
-                                                         UserIdentity myUserIdentity,
-                                                         UserProfile maker,
-                                                         Optional<UserProfile> mediator) {
+    @Override
+    public void onMessage(NetworkMessage networkMessage) {
+        if (networkMessage instanceof PrivateTradeChatMessage) {
+            processMessage((PrivateTradeChatMessage) networkMessage);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PrivateTradeChannel traderFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
+                                                          UserIdentity myUserIdentity,
+                                                          UserProfile peer,
+                                                          Optional<UserProfile> mediator) {
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChannel channel = PrivateTradeChannel.createByTaker(tradeChatOffer, myUserIdentity, maker, mediator);
-                    //todo manage pins
-                    channel.getChannelNotificationType().addObserver(value -> persist());
+                    PrivateTradeChannel channel = PrivateTradeChannel.createByTrader(tradeChatOffer, myUserIdentity, peer, mediator);
+                    Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
+                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
                 });
     }
-
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicTradeChatMessage chatMessage,
-                                                                                    PrivateTradeChannel privateTradeChannel,
-                                                                                    UserProfile makerUserProfile) {
-        checkArgument(chatMessage.getTradeChatOffer().isPresent());
-
-        TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
-        String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
-                tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
-        String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-        String text = Res.get("bisqEasy.takeOffer.takerRequest",
-                direction, amount, methods);
-        Optional<Quotation> quotation = Optional.of(new Quotation(makerUserProfile.getNym(),
-                makerUserProfile.getNickName(),
-                makerUserProfile.getPubKeyHash(),
-                chatMessage.getText()));
-        return sendPrivateChatMessage(StringUtils.createShortUid(),
-                text,
-                quotation,
-                privateTradeChannel,
-                privateTradeChannel.getMyUserIdentity(),
-                makerUserProfile,
-                MessageType.TAKE_OFFER);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mediator
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PrivateTradeChannel mediatorFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
                                                             UserIdentity myUserIdentity,
@@ -124,14 +107,59 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
                     PrivateTradeChannel channel = PrivateTradeChannel.createByMediator(tradeChatOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
-                    //todo manage pins
-                    channel.getChannelNotificationType().addObserver(value -> persist());
+                    Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
+                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
                 });
     }
 
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicTradeChatMessage offerMessage,
+                                                                                    PrivateTradeChannel channel) {
+        checkArgument(offerMessage.getTradeChatOffer().isPresent());
+        UserProfile maker = channel.getPeer();
+        TradeChatOffer tradeChatOffer = offerMessage.getTradeChatOffer().get();
+        String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
+                tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
+        String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+        String text = Res.get("bisqEasy.takeOffer.takerRequest",
+                direction, amount, methods);
+        Optional<Quotation> quotation = Optional.of(new Quotation(maker.getNym(),
+                maker.getNickName(),
+                maker.getPubKeyHash(),
+                offerMessage.getText()));
+        UserIdentity myUserIdentity = channel.getMyUserIdentity();
+        PrivateTradeChatMessage takeOfferMessage = new PrivateTradeChatMessage(StringUtils.createShortUid(),
+                channel.getChannelName(),
+                myUserIdentity.getUserProfile(),
+                maker.getId(),
+                text,
+                quotation,
+                new Date().getTime(),
+                false,
+                channel.findMediator(),
+                MessageType.TAKE_OFFER,
+                Optional.of(tradeChatOffer));
+        addMessage(takeOfferMessage, channel);
+        return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
+                                                                               Optional<Quotation> quotation,
+                                                                               PrivateTradeChannel channel) {
+        String shortUid = StringUtils.createShortUid();
+        if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
+            List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
+                    .map(peer -> sendMessage(shortUid, text, quotation, channel, peer, MessageType.TEXT))
+                    .collect(Collectors.toList());
+            return CompletableFutureUtils.allOf(futures)
+                    .thenApply(list -> list.get(0));
+        } else {
+            return sendMessage(shortUid, text, quotation, channel, channel.getPeer(), MessageType.TEXT);
+        }
+    }
 
     public void setMediationActivated(PrivateTradeChannel channel, boolean mediationActivated) {
         channel.getIsInMediation().set(mediationActivated);
@@ -139,11 +167,14 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTradeChatMessage) {
-            processMessage((PrivateTradeChatMessage) networkMessage);
-        }
+    public ObservableArray<PrivateTradeChannel> getChannels() {
+        return persistableStore.getChannels();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected PrivateTradeChatMessage createNewPrivateChatMessage(String messageId,
@@ -155,30 +186,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                                                                   long time,
                                                                   boolean wasEdited,
                                                                   MessageType messageType) {
-        return createNewPrivateTradeChatMessage(
-                messageId,
-                channel,
-                sender,
-                receiversId,
-                text,
-                quotedMessage,
-                time,
-                wasEdited,
-                messageType,
-                Optional.empty());
-    }
-
-    protected PrivateTradeChatMessage createNewPrivateTradeChatMessage(String messageId,
-                                                                       PrivateTradeChannel channel,
-                                                                       UserProfile sender,
-                                                                       String receiversId,
-                                                                       String text,
-                                                                       Optional<Quotation> quotedMessage,
-                                                                       long time,
-                                                                       boolean wasEdited,
-                                                                       MessageType messageType,
-                                                                       Optional<TradeChatOffer> tradeChatOffer) {
-        // We send the mediator only in the first message to the peer.
+        // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
         return new PrivateTradeChatMessage(
                 messageId,
@@ -191,7 +199,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                 wasEdited,
                 mediator,
                 messageType,
-                tradeChatOffer);
+                Optional.empty());
     }
 
     //todo
@@ -201,18 +209,8 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
 
-    public Optional<PrivateTradeChannel> findChannel(String channelName) {
-        return getChannels().stream()
-                .filter(channel -> channel.getChannelName().equals(channelName))
-                .findAny();
-    }
 
-    @Override
-    public ObservableArray<PrivateTradeChannel> getChannels() {
-        return persistableStore.getChannels();
-    }
-
-    protected void processMessage(PrivateTradeChatMessage message) {
+    private void processMessage(PrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
                     .flatMap(myUserIdentity -> findChannelForMessage(message)
@@ -221,12 +219,14 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                                     return Optional.empty();
                                 } else if (userProfileService.isChatUserIgnored(message.getSender())) {
                                     return Optional.empty();
-                                } else {
-                                    //todo
-                                    return Optional.of(takerFindOrCreatesChannel(message.getTradeChatOffer().get(),
+                                } else if (message.getTradeChatOffer().isPresent()) {
+                                    return Optional.of(traderFindOrCreatesChannel(message.getTradeChatOffer().get(),
                                             myUserIdentity,
                                             message.getSender(),
                                             message.getMediator()));
+                                } else {
+                                    log.error("Unexpected case");
+                                    return Optional.empty();
                                 }
                             }))
                     .ifPresent(channel -> addMessage(message, channel));
@@ -234,14 +234,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
     }
 
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTradeTextMessage(String text,
-                                                                                    Optional<Quotation> quotedMessage,
-                                                                                    PrivateTradeChannel channel) {
-        List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
-                .map(peer -> sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), peer, MessageType.TEXT)).collect(Collectors.toList());
-        return CompletableFutureUtils.allOf(futures)
-                .thenApply(list -> list.get(0));
-    }
+   
 
    /* public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage1(String text,
                                                                                        Optional<Quotation> quotedMessage,

@@ -82,16 +82,16 @@ public abstract class PrivateChannelService<M extends BasePrivateChatMessage,
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String messageId,
-                                                                                         String text,
-                                                                                         Optional<Quotation> quotedMessage,
-                                                                                         C channel,
-                                                                                         UserIdentity senderIdentity,
-                                                                                         UserProfile receiver,
-                                                                                         MessageType messageType) {
+    protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(String messageId,
+                                                                              String text,
+                                                                              Optional<Quotation> quotedMessage,
+                                                                              C channel,
+                                                                              UserProfile receiver,
+                                                                              MessageType messageType) {
+        UserIdentity myUserIdentity = channel.getMyUserIdentity();
         M chatMessage = createNewPrivateChatMessage(messageId,
                 channel,
-                senderIdentity.getUserProfile(),
+                myUserIdentity.getUserProfile(),
                 receiver.getId(),
                 text,
                 quotedMessage,
@@ -100,7 +100,7 @@ public abstract class PrivateChannelService<M extends BasePrivateChatMessage,
                 messageType);
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
@@ -109,7 +109,8 @@ public abstract class PrivateChannelService<M extends BasePrivateChatMessage,
     protected void leaveChannel(C channel, UserProfile receiver) {
         if (channel.getChatMessages().stream()
                 .max(Comparator.comparing(ChatMessage::getDate))
-                .stream().anyMatch(m -> m.getMessageType().equals(MessageType.LEAVE))) {
+                .stream()
+                .anyMatch(m -> m.getMessageType().equals(MessageType.LEAVE))) {
             // Don't send leave message if peer already left channel
             getChannels().remove(channel);
             return;
@@ -127,21 +128,13 @@ public abstract class PrivateChannelService<M extends BasePrivateChatMessage,
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel,
                                                                                    UserProfile receiver) {
-        return sendPrivateChatMessage(Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
+        return sendMessage(StringUtils.createShortUid(),
+                Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),
                 channel,
-                MessageType.LEAVE,
-                receiver);
+                receiver,
+                MessageType.LEAVE);
     }
-
-    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Quotation> quotedMessage,
-                                                                                      C channel,
-                                                                                      MessageType messageType,
-                                                                                      UserProfile receiver) {
-        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), receiver, messageType);
-    }
-
 
     public void removeExpiredMessages(C channel) {
         Set<M> toRemove = channel.getChatMessages().stream()

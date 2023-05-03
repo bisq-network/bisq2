@@ -45,16 +45,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeChatMessage> {
 
-    public static PrivateTradeChannel createByTaker(TradeChatOffer tradeChatOffer,
-                                                    UserIdentity myUserIdentity,
-                                                    UserProfile maker,
-                                                    Optional<UserProfile> mediator) {
+    public static PrivateTradeChannel createByTrader(TradeChatOffer tradeChatOffer,
+                                                     UserIdentity myUserIdentity,
+                                                     UserProfile peer,
+                                                     Optional<UserProfile> mediator) {
         return new PrivateTradeChannel(tradeChatOffer,
                 myUserIdentity,
-                maker,
+                peer,
                 mediator);
     }
-
 
     public static PrivateTradeChannel createByMediator(TradeChatOffer tradeChatOffer,
                                                        UserIdentity myUserIdentity,
@@ -70,15 +69,14 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final TradeChatOffer tradeChatOffer;
 
-    // Taker
     private PrivateTradeChannel(TradeChatOffer tradeChatOffer,
                                 UserIdentity myUserIdentity,
-                                UserProfile maker,
+                                UserProfile peer,
                                 Optional<UserProfile> mediator) {
         super(ChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
-        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, maker));
+        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, peer));
         mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
     }
 
@@ -218,12 +216,13 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
         }
 
         Optional<UserProfile> mediator = findMediator();
-        checkArgument(mediator.isPresent(), "mediator must be present");
         if (isMediator()) {
             checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
             return peer + ", " + getPeers().get(1).getUserName();
-        } else {
+        } else if (mediator.isPresent()) {
             return peer + ", " + mediator.get().getUserName();
+        } else {
+            return peer;
         }
     }
 

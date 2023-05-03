@@ -244,7 +244,7 @@ public class ChatMessagesComponent {
                 publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
             } else if (channel instanceof PrivateTradeChannel) {
                 if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChannel) channel).isMediator()) {
-                    privateTradeChannelService.sendTradeTextMessage(text, quotation, (PrivateTradeChannel) channel);
+                    privateTradeChannelService.sendTextMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
@@ -268,13 +268,13 @@ public class ChatMessagesComponent {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateDiscussionChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateEventsChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateSupportChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                 }
             }

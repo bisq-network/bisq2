@@ -256,7 +256,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
                         chatService.getPrivateTradeChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
                                     String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
-                            chatService.getPrivateTradeChannelService().sendTradeTextMessage(message,
+                            chatService.getPrivateTradeChannelService().sendTextMessage(message,
                                     Optional.empty(),
                                     channel);
                                 }

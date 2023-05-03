@@ -45,11 +45,11 @@ public class TakeOfferHelper {
                     UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
                     TradeChatOffer tradeChatOffer = tradeChatMessage.getTradeChatOffer().get();
                     Optional<UserProfile> mediator = mediationService.takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
-                    PrivateTradeChannel privateTradeChannel = privateTradeChannelService.takerFindOrCreatesChannel(tradeChatOffer,
+                    PrivateTradeChannel privateTradeChannel = privateTradeChannelService.traderFindOrCreatesChannel(tradeChatOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);
-                    return privateTradeChannelService.sendTakeOfferMessage(tradeChatMessage, privateTradeChannel, makerUserProfile);
+                    return privateTradeChannelService.sendTakeOfferMessage(tradeChatMessage, privateTradeChannel);
                 })
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from tradeChatMessage.authorId")));
     }
