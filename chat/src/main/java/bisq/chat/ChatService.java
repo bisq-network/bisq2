@@ -83,11 +83,11 @@ public class ChatService implements Service {
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.DISCUSSION,
-                List.of(new PublicChannel(ChannelDomain.DISCUSSION, "bisq"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "bitcoin"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "markets"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "economy"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "offTopic")));
+                List.of(new PublicChatChannel(ChannelDomain.DISCUSSION, "bisq"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "bitcoin"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "markets"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "economy"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "offTopic")));
 
         discussionChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
@@ -106,12 +106,12 @@ public class ChatService implements Service {
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.EVENTS,
-                List.of(new PublicChannel(ChannelDomain.EVENTS, "conferences"),
-                        new PublicChannel(ChannelDomain.EVENTS, "meetups"),
-                        new PublicChannel(ChannelDomain.EVENTS, "podcasts"),
-                        new PublicChannel(ChannelDomain.EVENTS, "noKyc"),
-                        new PublicChannel(ChannelDomain.EVENTS, "nodes"),
-                        new PublicChannel(ChannelDomain.EVENTS, "tradeEvents")));
+                List.of(new PublicChatChannel(ChannelDomain.EVENTS, "conferences"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "meetups"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "podcasts"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "noKyc"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "nodes"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "tradeEvents")));
         eventsChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateEventsChannelService,
                 publicEventsChannelService,
@@ -129,9 +129,9 @@ public class ChatService implements Service {
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.SUPPORT,
-                List.of(new PublicChannel(ChannelDomain.SUPPORT, "support"),
-                        new PublicChannel(ChannelDomain.SUPPORT, "questions"),
-                        new PublicChannel(ChannelDomain.SUPPORT, "reports")));
+                List.of(new PublicChatChannel(ChannelDomain.SUPPORT, "support"),
+                        new PublicChatChannel(ChannelDomain.SUPPORT, "questions"),
+                        new PublicChatChannel(ChannelDomain.SUPPORT, "reports")));
         supportChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateSupportChannelService,
                 publicSupportChannelService,

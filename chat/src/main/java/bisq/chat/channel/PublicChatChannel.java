@@ -28,13 +28,13 @@ import java.util.*;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
+public final class PublicChatChannel extends BasePublicChannel<PublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicChannel(ChannelDomain channelDomain, String channelName) {
+    public PublicChatChannel(ChannelDomain channelDomain, String channelName) {
         this(channelDomain,
                 channelName,
                 Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
@@ -44,13 +44,13 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
                 ChannelNotificationType.GLOBAL_DEFAULT);
     }
 
-    private PublicChannel(ChannelDomain channelDomain,
-                          String channelName,
-                          String displayName,
-                          String description,
-                          String channelAdminId,
-                          List<String> channelModeratorIds,
-                          ChannelNotificationType channelNotificationType) {
+    private PublicChatChannel(ChannelDomain channelDomain,
+                              String channelName,
+                              String displayName,
+                              String description,
+                              String channelAdminId,
+                              List<String> channelModeratorIds,
+                              ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
 
         this.displayName = displayName;
@@ -71,17 +71,17 @@ public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
                 .build();
     }
 
-    public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                          bisq.chat.protobuf.PublicChannel proto) {
-        PublicChannel publicChannel = new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+    public static PublicChatChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+                                              bisq.chat.protobuf.PublicChannel proto) {
+        PublicChatChannel publicChatChannel = new PublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        publicChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return publicChannel;
+        publicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return publicChatChannel;
     }
 
     @Override

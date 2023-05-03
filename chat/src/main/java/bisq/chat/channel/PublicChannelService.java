@@ -37,19 +37,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class PublicChannelService extends BasePublicChannelService<PublicChatMessage, PublicChannel, PublicChannelStore> {
+public class PublicChannelService extends BasePublicChannelService<PublicChatMessage, PublicChatChannel, PublicChannelStore> {
     @Getter
     private final PublicChannelStore persistableStore = new PublicChannelStore();
     @Getter
     private final Persistence<PublicChannelStore> persistence;
-    private final List<PublicChannel> defaultChannels;
+    private final List<PublicChatChannel> defaultChannels;
 
     public PublicChannelService(PersistenceService persistenceService,
                                 NetworkService networkService,
                                 UserIdentityService userIdentityService,
                                 UserProfileService userProfileService,
                                 ChannelDomain channelDomain,
-                                List<PublicChannel> defaultChannels) {
+                                List<PublicChatChannel> defaultChannels) {
         super(networkService, userIdentityService, userProfileService, channelDomain);
 
         this.defaultChannels = defaultChannels;
@@ -89,17 +89,17 @@ public class PublicChannelService extends BasePublicChannelService<PublicChatMes
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<PublicChannel> getChannels() {
+    public ObservableArray<PublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
     @Override
     protected PublicChatMessage createChatMessage(String text,
                                                   Optional<Quotation> quotedMessage,
-                                                  PublicChannel publicChannel,
+                                                  PublicChatChannel publicChatChannel,
                                                   UserProfile userProfile) {
-        return new PublicChatMessage(publicChannel.getChannelDomain(),
-                publicChannel.getChannelName(),
+        return new PublicChatMessage(publicChatChannel.getChannelDomain(),
+                publicChatChannel.getChannelName(),
                 userProfile.getId(),
                 text,
                 quotedMessage,

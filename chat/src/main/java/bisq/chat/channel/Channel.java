@@ -75,7 +75,7 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
 
             case PUBLICCHANNEL: {
-                return PublicChannel.fromProto(proto, proto.getPublicChannel());
+                return PublicChatChannel.fromProto(proto, proto.getPublicChannel());
             }
 
             case MESSAGE_NOT_SET: {

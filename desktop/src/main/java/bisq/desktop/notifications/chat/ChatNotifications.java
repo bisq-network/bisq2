@@ -256,7 +256,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicChannelsChanged(ObservableArray<PublicChannel> channels) {
+    private void onPublicChannelsChanged(ObservableArray<PublicChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
