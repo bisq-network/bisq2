@@ -413,17 +413,17 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 hBox.getChildren().clear();
                                 hBox.getChildren().add(roboIcon);
 
-                                if (privateTradeChannel.getMediator().isPresent() &&
+                                if (privateTradeChannel.findMediator().isPresent() &&
                                         privateTradeChannel.getInMediation().get()) {
                                     if (privateTradeChannel.isMediator()) {
                                         // We are the mediator
-                                        UserProfile trader1 = privateTradeChannel.getPeerOrTrader1();
-                                        UserProfile trader2 = privateTradeChannel.getMyUserProfileOrTrader2();
+                                        UserProfile trader1 = privateTradeChannel.getPeer();
+                                        UserProfile trader2 = privateTradeChannel.getPeers().get(1);
                                         roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
                                         secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
                                         tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
                                     } else {
-                                        UserProfile mediator = privateTradeChannel.getMediator().get();
+                                        UserProfile mediator = privateTradeChannel.findMediator().get();
                                         secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
                                         tooltip.setText(peer.getTooltipString() + "\n\n" +
                                                 Res.get("mediator") + ":\n" + mediator.getTooltipString());

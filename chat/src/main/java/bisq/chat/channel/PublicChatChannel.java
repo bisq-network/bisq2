@@ -23,7 +23,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 
 @Getter
 @ToString(callSuper = true)
@@ -82,21 +85,6 @@ public final class PublicChatChannel extends PublicChannel<PublicChatMessage> {
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
         publicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return publicChatChannel;
-    }
-
-    @Override
-    public void addChatMessage(PublicChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessage(PublicChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<PublicChatMessage> messages) {
-        chatMessages.removeAll(messages);
     }
 
     @Override

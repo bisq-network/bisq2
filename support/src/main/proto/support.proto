@@ -8,11 +8,11 @@ import "chat.proto";
 
 
 message MediationRequest {
-  user.UserProfile requester = 1;
-  user.UserProfile peer = 2;
-  repeated chat.ChatMessage chatMessages = 3;
+  chat.TradeChatOffer tradeChatOffer = 1;
+  user.UserProfile requester = 2;
+  user.UserProfile peer = 3;
+  repeated chat.ChatMessage chatMessages = 4;
 }
 message MediationResponse {
-  string channelId = 1;
-  string message = 2;
+  chat.TradeChatOffer tradeChatOffer = 1;
 }

@@ -19,7 +19,6 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelMember;
 import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -106,12 +105,12 @@ public class ChannelSidebar {
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
             model.channelName.set(channel.getDisplayString());
-            model.members.setAll(channel.getChannelMembers().stream()
-                    .map(ChannelMember::getUserProfile)
+            model.members.setAll(channel.getMembers().stream()
+                    .flatMap(authorId -> userProfileService.findUserProfile(authorId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
                     .sorted()
                     .collect(Collectors.toList()));
-
+            
             if (channel instanceof PublicChatChannel) {
                 PublicChatChannel publicChatChannel = (PublicChatChannel) channel;
                 model.description.set(publicChatChannel.getDescription());

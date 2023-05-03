@@ -22,7 +22,6 @@ import bisq.chat.ChatService;
 import bisq.chat.channel.*;
 import bisq.chat.message.*;
 import bisq.chat.trade.TradeChannelSelectionService;
-import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.TradeChatOfferMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -30,8 +29,6 @@ import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.common.monetary.Coin;
-import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.observable.FxBindings;
@@ -44,8 +41,8 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
+import bisq.desktop.helpers.TakeOfferHelper;
 import bisq.i18n.Res;
-import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
@@ -55,7 +52,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
-import com.google.common.base.Joiner;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -92,6 +88,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static bisq.desktop.primary.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class ChatMessagesListView {
@@ -391,34 +388,15 @@ public class ChatMessagesListView {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void onTakeOffer(PublicTradeChatMessage chatMessage) {
-            if (model.isMyMessage(chatMessage) || chatMessage.getTradeChatOffer().isEmpty()) {
-                return;
-            }
-            userProfileService.findUserProfile(chatMessage.getAuthorId())
-                    .ifPresent(peersUserProfile -> {
-                        PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peersUserProfile);
-                        tradeChannelSelectionService.selectChannel(privateTradeChannel);
-                        TradeChatOffer tradeChatOffer = chatMessage.getTradeChatOffer().get();
-                        String text = chatMessage.getText();
-                        Optional<Quotation> quotation = Optional.of(new Quotation(peersUserProfile.getNym(),
-                                peersUserProfile.getNickName(),
-                                peersUserProfile.getPubKeyHash(),
-                                text));
-                        String takerDirection = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-                        String amount = (tradeChatOffer.getMarket().isFiat() ?
-                                AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
-                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true) :
-                                AmountFormatter.formatAmountWithCode(Coin.of(tradeChatOffer.getQuoteSideAmount(),
-                                        tradeChatOffer.getMarket().getQuoteCurrencyCode()), true));
-                        String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
-                        String replyText = Res.get("bisqEasy.takeOffer.takerRequest",
-                                takerDirection, amount, methods);
-                        privateTradeChannelService.sendPrivateChatMessage(replyText,
-                                        quotation,
-                                        privateTradeChannel,
-                                        Optional.of(tradeChatOffer))
-                                .thenAccept(result -> UIThread.run(() -> model.takeOfferCompleteHandler.ifPresent(Runnable::run)));
-                    });
+            checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
+
+            TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage)
+                    .thenAccept(result -> UIThread.run(() -> {
+                        privateTradeChannelService.findChannel(chatMessage.getTradeChatOffer().orElseThrow().getId())
+                                .ifPresent(tradeChannelSelectionService::selectChannel);
+                        Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
+                        takeOfferCompleteHandler.ifPresent(Runnable::run);
+                    }));
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
@@ -516,8 +494,9 @@ public class ChatMessagesListView {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.getChannelDomain() == ChannelDomain.TRADE) {
-                PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
-                tradeChannelSelectionService.selectChannel(privateTradeChannel);
+                // todo use new 2 party channelservice
+                //PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
+                //tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
             } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
@@ -525,13 +504,6 @@ public class ChatMessagesListView {
             } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
-        }
-
-
-        private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
-            UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-            Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
-            return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
         }
 
         private void applyPredicate() {

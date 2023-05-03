@@ -144,9 +144,9 @@ message PublicTradeChatMessage {
 }
 
 message PrivateTradeChannel {
-  user.UserProfile peerOrTrader1 = 1;
-  user.UserProfile myUserProfileOrTrader2 = 2;
-  user.UserIdentity myUserIdentity = 3;
+  TradeChatOffer tradeChatOffer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
   repeated ChatMessage chatMessages = 5;
   bool inMediation = 6;

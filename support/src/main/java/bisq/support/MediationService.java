@@ -18,11 +18,10 @@
 package bisq.support;
 
 import bisq.chat.ChatService;
-import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
 import bisq.common.application.Service;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.confidential.MessageListener;
@@ -47,12 +46,25 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 @Slf4j
 public class MediationService implements Service, DataService.Listener, MessageListener {
+    // This method can be used for verification when taker provides mediators list.
+    // If mediator list was not matching the expected one present in the network it might have been a manipulation attempt.
+    public static Optional<UserProfile> selectMediator(Set<AuthorizedRoleRegistrationData> mediators, String makersProfileId, String takersProfileId) {
+        if (mediators.isEmpty()) {
+            return Optional.empty();
+        } else if (mediators.iterator().hasNext()) {
+            return Optional.of(mediators.iterator().next().getUserProfile());
+        } else {
+            String concat = makersProfileId + takersProfileId;
+            int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
+            return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
+        }
+    }
+
     private final NetworkService networkService;
     private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();
     private final UserIdentityService userIdentityService;
     private final RoleRegistrationService roleRegistrationService;
     private final PrivateTradeChannelService privateTradeChannelService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
@@ -61,7 +73,6 @@ public class MediationService implements Service, DataService.Listener, MessageL
         userIdentityService = userService.getUserIdentityService();
         roleRegistrationService = userService.getRoleRegistrationService();
         privateTradeChannelService = chatService.getPrivateTradeChannelService();
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
     }
 
 
@@ -79,6 +90,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        networkService.removeMessageListener(this);
         networkService.removeDataServiceListener(this);
         return CompletableFuture.completedFuture(true);
     }
@@ -121,12 +133,23 @@ public class MediationService implements Service, DataService.Listener, MessageL
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestMediation(UserIdentity myProfile, UserProfile peer, UserProfile mediator) {
-        PrivateTradeChannel channel = (PrivateTradeChannel) tradeChannelSelectionService.getSelectedChannel().get();
-        MediationRequest networkMessage = new MediationRequest(new ArrayList<>(channel.getChatMessages()),
-                myProfile.getUserProfile(),
-                peer);
-        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myProfile.getNodeIdAndKeyPair());
+    public void requestMediation(PrivateTradeChannel privateTradeChannel) {
+        TradeChatOffer tradeChatOffer = privateTradeChannel.getTradeChatOffer();
+        UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
+        UserProfile peer = privateTradeChannel.getPeer();
+        UserProfile mediator = privateTradeChannel.findMediator().orElseThrow();
+        MediationRequest networkMessage = new MediationRequest(tradeChatOffer,
+                myUserIdentity.getUserProfile(),
+                peer,
+                new ArrayList<>(privateTradeChannel.getChatMessages()));
+        networkService.confidentialSend(networkMessage, mediator.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+    }
+
+    // As maker might have different mediator data we use the taker to select. For verification, we still can add 
+    // a method that taker need to provide the data for the selection to the maker which would reveal if the selection
+    // was faked.
+    public Optional<UserProfile> takerSelectMediator(String makersProfileId, String takersProfileId) {
+        return selectMediator(mediators, makersProfileId, takersProfileId);
     }
 
 
@@ -145,32 +168,32 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     private void processMediationRequest(MediationRequest mediationRequest) {
         findMyMediatorUserIdentity().ifPresent(myMediatorUserIdentity -> {
-            PrivateTradeChannel channel = privateTradeChannelService.mediatorCreatesNewChannel(
+            PrivateTradeChannel channel = privateTradeChannelService.mediatorFindOrCreatesChannel(
+                    mediationRequest.getTradeChatOffer(),
                     myMediatorUserIdentity,
                     mediationRequest.getRequester(),
                     mediationRequest.getPeer()
             );
             privateTradeChannelService.setMediationActivated(channel, true);
             mediationRequest.getChatMessages().forEach(chatMessage -> privateTradeChannelService.addMessage(chatMessage, channel));
-            tradeChannelSelectionService.selectChannel(channel);
+            //tradeChannelSelectionService.selectChannel(channel);
 
-            MediationResponse mediationResponseToRequester = new MediationResponse(channel.getId(), Res.get("bisqEasy.mediation.msgToRequester"));
-            networkService.confidentialSend(mediationResponseToRequester, mediationRequest.getRequester().getNetworkId(), myMediatorUserIdentity.getNodeIdAndKeyPair());
+            networkService.confidentialSend(new MediationResponse(mediationRequest.getTradeChatOffer()), mediationRequest.getRequester().getNetworkId(), myMediatorUserIdentity.getNodeIdAndKeyPair());
 
-            MediationResponse mediationResponseToPeer = new MediationResponse(channel.getId(), Res.get("bisqEasy.mediation.msgToPeer"));
-            networkService.confidentialSend(mediationResponseToPeer, mediationRequest.getPeer().getNetworkId(), myMediatorUserIdentity.getNodeIdAndKeyPair());
+            networkService.confidentialSend(new MediationResponse(mediationRequest.getTradeChatOffer()), mediationRequest.getPeer().getNetworkId(), myMediatorUserIdentity.getNodeIdAndKeyPair());
         });
     }
 
     private void processMediationResponse(MediationResponse mediationResponse) {
-        privateTradeChannelService.findChannelById(mediationResponse.getChannelId()).ifPresent(channel -> {
-            // Requester had it activated at request time
-            if (!channel.getInMediation().get()) {
-                // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
-                privateTradeChannelService.setMediationActivated(channel, true);
-                //todo send messages as well
-            }
-        });
+        privateTradeChannelService.findChannelById(mediationResponse.getTradeChatOffer().getId())
+                .ifPresent(channel -> {
+                    // Requester had it activated at request time
+                    if (!channel.getInMediation().get()) {
+                        privateTradeChannelService.setMediationActivated(channel, true);
+                        // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
+                        //todo send messages as well
+                    }
+                });
     }
 
     private Optional<UserIdentity> findMyMediatorUserIdentity() {
@@ -180,13 +203,6 @@ public class MediationService implements Service, DataService.Listener, MessageL
                 .findAny();
     }
 
-    public Optional<UserProfile> selectMediator(String myProfileId, String peersProfileId) {
-        if (mediators.isEmpty()) {
-            return Optional.empty();
-        }
-        String concat = myProfileId + peersProfileId;
-        int index = new BigInteger(concat.getBytes(StandardCharsets.UTF_8)).mod(BigInteger.valueOf(mediators.size())).intValue();
-        return Optional.of(new ArrayList<>(mediators).get(index).getUserProfile());
-    }
+
 }
 

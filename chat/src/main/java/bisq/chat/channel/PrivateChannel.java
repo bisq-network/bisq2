@@ -19,19 +19,23 @@ package bisq.chat.channel;
 
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.common.data.Pair;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends Channel<T> {
-//todo
+    //todo
     public static String createChannelName(Pair<String, String> userIds) {
         String userId1 = userIds.getFirst();
         String userId2 = userIds.getSecond();
@@ -46,6 +50,8 @@ public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends C
 
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<T> chatMessages = new ObservableSet<>();
+    protected final ObservableSet<ChannelMember> channelMembers = new ObservableSet<>();
+    protected final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
     public PrivateChannel(ChannelDomain channelDomain,
                           String channelName,
@@ -56,5 +62,26 @@ public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends C
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
+    }
+
+    public void addChannelMember(ChannelMember channelMember) {
+        channelMembers.add(channelMember);
+        if (channelMember.getType() != ChannelMember.Type.SELF) {
+            peers.add(channelMember.getUserProfile());
+        }
+    }
+/*
+    public Set<String> getPeersProfileIds() {
+        return peers.stream()
+                .map(UserProfile::getId)
+                .collect(Collectors.toSet());
+    }*/
+
+    @Override
+    public Set<String> getMembers() {
+        return channelMembers.stream()
+                .map(ChannelMember::getUserProfile)
+                .map(UserProfile::getId)
+                .collect(Collectors.toSet());
     }
 }

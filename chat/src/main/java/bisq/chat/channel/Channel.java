@@ -21,11 +21,9 @@ import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -44,8 +42,6 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
-    protected final ObservableSet<ChannelMember> channelMembers = new ObservableSet<>();
-    protected final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
     public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         this.channelDomain = channelDomain;
@@ -96,25 +92,8 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .collect(Collectors.toSet()));
     }
 
-    public void addChannelMember(ChannelMember channelMember) {
-        channelMembers.add(channelMember);
-        if (channelMember.getType() != ChannelMember.Type.SELF) {
-            peers.add(channelMember.getUserProfile());
-        }
-    }
 
-    public Set<String> getChannelMembersUserProfileIds() {
-        return channelMembers.stream()
-                .map(ChannelMember::getUserProfile)
-                .map(UserProfile::getId)
-                .collect(Collectors.toSet());
-    }
-
-    public Set<String> getPeersProfileIds() {
-        return peers.stream()
-                .map(UserProfile::getId)
-                .collect(Collectors.toSet());
-    }
+    abstract public Set<String> getMembers();
 
     abstract public ObservableSet<T> getChatMessages();
 

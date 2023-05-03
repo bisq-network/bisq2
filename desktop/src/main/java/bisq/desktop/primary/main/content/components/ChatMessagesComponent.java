@@ -244,7 +244,7 @@ public class ChatMessagesComponent {
                 publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
             } else if (channel instanceof PrivateTradeChannel) {
                 if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChannel) channel).isMediator()) {
-                    privateTradeChannelService.sendPrivateChatMessage(text, quotation, (PrivateTradeChannel) channel);
+                    privateTradeChannelService.sendTradeTextMessage(text, quotation, (PrivateTradeChannel) channel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
@@ -303,8 +303,9 @@ public class ChatMessagesComponent {
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
             if (model.getChannelDomain() == ChannelDomain.TRADE) {
-                PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
-                tradeChannelSelectionService.selectChannel(privateTradeChannel);
+                // todo use new 2 party channelservice
+                // PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
+                // tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(discussionChannelSelectionService::selectChannel);
@@ -315,12 +316,6 @@ public class ChatMessagesComponent {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer)
                         .ifPresent(supportChannelSelectionService::selectChannel);
             }
-        }
-
-        private PrivateTradeChannel getPrivateTradeChannel(UserProfile peersUserProfile) {
-            UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-            Optional<UserProfile> mediator = mediationService.selectMediator(myUserIdentity.getUserProfile().getId(), peersUserProfile.getId());
-            return privateTradeChannelService.traderCreatesNewChannel(myUserIdentity, peersUserProfile, mediator);
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {
