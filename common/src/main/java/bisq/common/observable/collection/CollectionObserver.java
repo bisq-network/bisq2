@@ -24,6 +24,8 @@ public interface CollectionObserver<S> {
 
     void addAll(Collection<? extends S> values);
 
+    void setAll(Collection<? extends S> values);
+
     void remove(Object element);
 
     void removeAll(Collection<?> values);
