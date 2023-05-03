@@ -73,14 +73,17 @@ public class MarketController implements Controller {
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<PublicTradeChatMessage> offerMessages = publicTradeChannelService.getChannels().stream()
+                    Set<PublicTradeChatMessage> allMessages = publicTradeChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
-                            .filter(message -> message.getTradeChatOffer().isPresent())
                             .collect(Collectors.toSet());
-                    int numOffersInChannel = offerMessages.size();
-                    int numUsersInChannel = (int) offerMessages.stream()
+                    int numOffersInChannel = (int) allMessages.stream()
+                            .filter(message -> message.getTradeChatOffer().isPresent())
+                            .distinct()
+                            .count();
+                    int numUsersInChannel = (int) allMessages.stream()
                             .map(ChatMessage::getAuthorId)
+                            .distinct()
                             .count();
                     MarketView.MarketListItem item = new MarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);
                     if (market.equals(model.getSelectedMarket().get())) {
