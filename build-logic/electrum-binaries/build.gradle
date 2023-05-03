@@ -18,6 +18,4 @@ gradlePlugin {
 
 dependencies {
     implementation project(':gradle-tasks')
-    implementation libs.google.guava
-    implementation libs.bouncycastle.pg
 }
