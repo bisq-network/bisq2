@@ -38,7 +38,7 @@ import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateTwoPartyChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateTwoPartyChannelStore> {
+public class PrivateTwoPartyChannelService extends PrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateTwoPartyChannelStore> {
     @Getter
     private final PrivateTwoPartyChannelStore persistableStore = new PrivateTwoPartyChannelStore();
     @Getter

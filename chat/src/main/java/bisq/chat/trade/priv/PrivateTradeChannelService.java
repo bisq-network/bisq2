@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.chat.channel.BasePrivateChannelService;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.PrivateChannelService;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChatOffer;
@@ -45,7 +45,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTradeChannelService extends BasePrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
+public class PrivateTradeChannelService extends PrivateChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
     @Getter
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
     @Getter

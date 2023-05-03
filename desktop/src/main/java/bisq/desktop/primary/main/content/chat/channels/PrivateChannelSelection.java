@@ -85,7 +85,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
-        private final BasePrivateChannelService<?, ?, ?> channelService;
+        private final PrivateChannelService<?, ?, ?> channelService;
 
         protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
             super(applicationService);
