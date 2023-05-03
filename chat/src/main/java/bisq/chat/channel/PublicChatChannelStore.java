@@ -28,13 +28,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PublicChannelStore implements PersistableStore<PublicChannelStore> {
+public class PublicChatChannelStore implements PersistableStore<PublicChatChannelStore> {
     private final ObservableArray<PublicChatChannel> channels = new ObservableArray<>();
 
-    public PublicChannelStore() {
+    public PublicChatChannelStore() {
     }
 
-    private PublicChannelStore(List<PublicChatChannel> privateDiscussionChannels) {
+    private PublicChatChannelStore(List<PublicChatChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
@@ -45,11 +45,11 @@ public class PublicChannelStore implements PersistableStore<PublicChannelStore> 
         return builder.build();
     }
 
-    public static PublicChannelStore fromProto(bisq.chat.protobuf.PublicChannelStore proto) {
+    public static PublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChannelStore proto) {
         List<PublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicChatChannel) PublicChatChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PublicChannelStore(privateDiscussionChannels);
+        return new PublicChatChannelStore(privateDiscussionChannels);
     }
 
     @Override
@@ -64,13 +64,13 @@ public class PublicChannelStore implements PersistableStore<PublicChannelStore> 
     }
 
     @Override
-    public void applyPersisted(PublicChannelStore chatStore) {
+    public void applyPersisted(PublicChatChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PublicChannelStore getClone() {
-        return new PublicChannelStore(channels);
+    public PublicChatChannelStore getClone() {
+        return new PublicChatChannelStore(channels);
     }
 
     public void setAll(List<PublicChatChannel> privateDiscussionChannels) {
