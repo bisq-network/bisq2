@@ -28,13 +28,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PrivateChannelStore implements PersistableStore<PrivateChannelStore> {
+public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoPartyChannelStore> {
     private final ObservableArray<PrivateTwoPartyChannel> channels = new ObservableArray<>();
 
-    public PrivateChannelStore() {
+    public PrivateTwoPartyChannelStore() {
     }
 
-    private PrivateChannelStore(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
+    private PrivateTwoPartyChannelStore(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
         setAll(privateTwoPartyChannels);
     }
 
@@ -45,11 +45,11 @@ public class PrivateChannelStore implements PersistableStore<PrivateChannelStore
         return builder.build();
     }
 
-    public static PrivateChannelStore fromProto(bisq.chat.protobuf.PrivateChannelStore proto) {
+    public static PrivateTwoPartyChannelStore fromProto(bisq.chat.protobuf.PrivateChannelStore proto) {
         List<PrivateTwoPartyChannel> privateTwoPartyChannels = proto.getChannelsList().stream()
                 .map(e -> (PrivateTwoPartyChannel) PrivateTwoPartyChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PrivateChannelStore(privateTwoPartyChannels);
+        return new PrivateTwoPartyChannelStore(privateTwoPartyChannels);
     }
 
     @Override
@@ -64,13 +64,13 @@ public class PrivateChannelStore implements PersistableStore<PrivateChannelStore
     }
 
     @Override
-    public void applyPersisted(PrivateChannelStore chatStore) {
+    public void applyPersisted(PrivateTwoPartyChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PrivateChannelStore getClone() {
-        return new PrivateChannelStore(channels);
+    public PrivateTwoPartyChannelStore getClone() {
+        return new PrivateTwoPartyChannelStore(channels);
     }
 
     public void setAll(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
