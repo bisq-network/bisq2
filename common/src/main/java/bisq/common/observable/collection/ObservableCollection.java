@@ -81,6 +81,12 @@ public abstract class ObservableCollection<S> implements Collection<S> {
         return changed;
     }
 
+    public void setAll(@NotNull Collection<? extends S> values) {
+        collection.clear();
+        collection.addAll(values);
+        observers.forEach(observer -> observer.setAll(values));
+    }
+
     @Override
     public boolean remove(Object element) {
         boolean changed = collection.remove(element);

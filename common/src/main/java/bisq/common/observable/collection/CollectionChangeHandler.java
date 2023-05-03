@@ -51,6 +51,11 @@ final class CollectionChangeHandler<S> implements CollectionObserver<S> {
     }
 
     @Override
+    public void setAll(Collection<? extends S> values) {
+        onChange();
+    }
+
+    @Override
     public void remove(Object element) {
         onChange();
     }

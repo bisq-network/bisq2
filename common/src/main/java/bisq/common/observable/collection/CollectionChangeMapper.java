@@ -71,6 +71,17 @@ final class CollectionChangeMapper<S, T> implements CollectionObserver<S> {
     }
 
     @Override
+    public void setAll(Collection<? extends S> values) {
+        executor.accept(() -> {
+            targetCollection.clear();
+            values.forEach(element -> {
+                T item = mapFunction.apply(element);
+                targetCollection.add(item);
+            });
+        });
+    }
+
+    @Override
     public void remove(Object element) {
         //noinspection unchecked
         executor.accept(() -> targetCollection.remove(mapFunction.apply((S) element)));
