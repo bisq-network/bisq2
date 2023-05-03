@@ -17,9 +17,9 @@
 
 package bisq.chat.trade.priv;
 
-import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.common.data.Pair;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeChatMessage> {
+public final class PrivateTradeChannel extends PrivateChannel<PrivateTradeChatMessage> {
     public static PrivateTradeChannel createByTrader(UserIdentity myUserIdentity,
                                                      UserProfile peer,
                                                      Optional<UserProfile> mediator) {
@@ -71,7 +71,7 @@ public final class PrivateTradeChannel extends BasePrivateChannel<PrivateTradeCh
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator) {
-        this(BasePrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
+        this(PrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
                 peerOrTrader1,
                 myUserProfileOrTrader2,
                 myUserIdentity,

@@ -33,12 +33,12 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTwoPartyChannel extends BasePrivateChannel<PrivateChatMessage> {
+public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
     private final UserProfile peer;
 
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
-                BasePrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
+                PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),

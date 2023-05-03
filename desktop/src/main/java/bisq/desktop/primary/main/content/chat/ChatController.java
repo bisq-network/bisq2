@@ -68,7 +68,7 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
             }
 
             if (channel instanceof PrivateTwoPartyChannel) {
-                applyPeersIcon((BasePrivateChannel<?>) channel);
+                applyPeersIcon((PrivateChannel<?>) channel);
                 publicChannelSelection.deSelectChannel();
             } else {
                 applyDefaultPublicChannelIcon((BasePublicChannel<?>) channel);

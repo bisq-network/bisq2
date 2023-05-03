@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage, C extends BasePrivateChannel<M>, S extends PersistableStore<S>>
+public abstract class BasePrivateChannelService<M extends BasePrivateChatMessage, C extends PrivateChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 

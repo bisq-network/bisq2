@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.BasePublicChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -194,7 +194,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 
-    protected void applyPeersIcon(BasePrivateChannel<?> privateChannel) {
+    protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
         Image image = RoboHash.getImage(privateChannel.getPeer().getPubKeyHash());
         ImageView imageView = new ImageView(image);
         imageView.setFitWidth(35);

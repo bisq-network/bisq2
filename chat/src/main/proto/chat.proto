@@ -90,8 +90,8 @@ message PrivateChatMessage {
   user.UserProfile sender = 2;
 }
 message PrivateTwoPartyChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
+  user.UserIdentity myUserIdentity = 1;
+  user.UserProfile peer = 2;
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTwoPartyChannelStore {

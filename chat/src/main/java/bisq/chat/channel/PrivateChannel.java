@@ -31,7 +31,7 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class BasePrivateChannel<T extends BasePrivateChatMessage> extends Channel<T> {
+public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends Channel<T> {
 
     public static String createChannelName(Pair<String, String> userIds) {
         String userId1 = userIds.getFirst();
@@ -48,11 +48,11 @@ public abstract class BasePrivateChannel<T extends BasePrivateChatMessage> exten
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<T> chatMessages = new ObservableSet<>();
 
-    public BasePrivateChannel(ChannelDomain channelDomain,
-                              String channelName,
-                              UserIdentity myUserIdentity,
-                              List<T> chatMessages,
-                              ChannelNotificationType channelNotificationType) {
+    public PrivateChannel(ChannelDomain channelDomain,
+                          String channelName,
+                          UserIdentity myUserIdentity,
+                          List<T> chatMessages,
+                          ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
 
         this.myUserIdentity = myUserIdentity;

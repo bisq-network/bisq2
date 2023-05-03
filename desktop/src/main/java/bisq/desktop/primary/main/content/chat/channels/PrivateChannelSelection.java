@@ -219,7 +219,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             model.selectedChannelItem.set(null);
         }
 
-        public void onLeaveChannel(BasePrivateChannel<?> privateChannel) {
+        public void onLeaveChannel(PrivateChannel<?> privateChannel) {
             new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChannel.getMyUserIdentity().getUserName()))
                     .closeButtonText(Res.get("cancel"))
                     .actionButtonText(Res.get("social.privateChannel.leave"))
@@ -227,7 +227,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                     .show();
         }
 
-        public void doLeaveChannel(BasePrivateChannel<?> privateChannel) {
+        public void doLeaveChannel(PrivateChannel<?> privateChannel) {
             switch (privateChannel.getChannelDomain()) {
                 case TRADE:
                     ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChannel) privateChannel);
@@ -376,11 +376,11 @@ public class PrivateChannelSelection extends ChannelSelection {
                     }
 
                     Channel<?> channel = item.getChannel();
-                    if (!(channel instanceof BasePrivateChannel)) {
+                    if (!(channel instanceof PrivateChannel)) {
                         return;
                     }
 
-                    BasePrivateChannel<?> privateChannel = (BasePrivateChannel<?>) item.getChannel();
+                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChannel();
                     UserProfile peer = privateChannel.getPeer();
                     roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                     Tooltip.install(this, tooltip);
