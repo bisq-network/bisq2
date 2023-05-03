@@ -17,8 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.data.Pair;
 import bisq.user.identity.UserIdentity;
@@ -26,15 +24,17 @@ import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
-
-    private final UserProfile peer;
-
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
                 PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
@@ -53,13 +53,13 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
                                    ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
-        this.peer = peer;
+        addChannelMember(new ChannelMember(ChannelMember.Type.PEER, peer));
     }
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateTwoPartyChannel(bisq.chat.protobuf.PrivateTwoPartyChannel.newBuilder()
-                        .setPeer(peer.toProto())
+                        .setPeer(getPeer().toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(PrivateChatMessage::toChatMessageProto)
@@ -83,7 +83,8 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
     }
 
     public UserProfile getPeer() {
-        return peer;
+        checkArgument(getPeers().size() == 1, "peers.size must be 1 at PrivateTwoPartyChannel");
+        return getPeers().get(0);
     }
 
     @Override
@@ -102,31 +103,7 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
     }
 
     @Override
-    public Set<String> getMembers() {
-        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
-        getChatMessages().forEach(chatMessage -> {
-            String authorId = chatMessage.getAuthorId();
-            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorId).add(chatMessage);
-
-            String receiversId = chatMessage.getReceiversId();
-            chatMessagesByAuthor.putIfAbsent(receiversId, new ArrayList<>());
-            chatMessagesByAuthor.get(receiversId).add(chatMessage);
-        });
-
-        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
-                    List<ChatMessage> chatMessages = entry.getValue();
-                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
-                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
-                    return new Pair<>(entry.getKey(), lastChatMessage);
-                })
-                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
-                .map(Pair::getFirst)
-                .collect(Collectors.toSet());
-    }
-
-    @Override
     public String getDisplayString() {
-        return peer.getUserName() + "-" + myUserIdentity.getUserName();
+        return getPeer().getUserName() + "-" + myUserIdentity.getUserName();
     }
 }

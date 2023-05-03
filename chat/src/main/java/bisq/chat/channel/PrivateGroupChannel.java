@@ -19,25 +19,22 @@ package bisq.chat.channel;
 
 import bisq.chat.message.BasePrivateChatMessage;
 import bisq.user.identity.UserIdentity;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 
-@Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateGroupChannel<T extends BasePrivateChatMessage> extends PrivateChannel<T> {
+
     protected PrivateGroupChannel(ChannelDomain channelDomain,
                                   String channelName,
                                   UserIdentity myUserIdentity,
                                   List<T> chatMessages,
                                   ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myUserIdentity, chatMessages, channelNotificationType);
-    }
 
-    //todo
-    abstract public List<UserProfile> getPeers();
+        addChannelMember(new ChannelMember(ChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
+    }
 }

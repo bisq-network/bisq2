@@ -17,20 +17,23 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePublicChatMessage;
-import bisq.common.observable.collection.ObservableSet;
-import lombok.EqualsAndHashCode;
+import bisq.user.profile.UserProfile;
 import lombok.Getter;
-import lombok.ToString;
 
 @Getter
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PublicChannel<M extends BasePublicChatMessage> extends Channel<M> {
-    // Transient because we do not persist the messages as they are persisted in the P2P data store.
-    protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
+public class ChannelMember {
+    public enum Type {
+        SELF,
+        PEER,
+        TRADER,
+        MEDIATOR
+    }
 
-    public PublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
-        super(channelDomain, channelName, channelNotificationType);
+    private final Type type;
+    private final UserProfile userProfile;
+
+    public ChannelMember(Type type, UserProfile userProfile) {
+        this.type = type;
+        this.userProfile = userProfile;
     }
 }
