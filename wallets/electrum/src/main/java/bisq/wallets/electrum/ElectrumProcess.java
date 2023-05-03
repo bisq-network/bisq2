@@ -64,8 +64,7 @@ public class ElectrumProcess implements BisqProcess {
     private void unpackArchive() {
         Path destDirPath = electrumRootDataDir.resolve("bin");
         var binaryExtractor = new ElectrumBinaryExtractor(destDirPath);
-        String binarySuffix = getBinarySuffix();
-        binaryExtractor.extractFileWithSuffix(binarySuffix);
+        binaryExtractor.extractArchive();
     }
 
     private void createAndStartProcess() {
