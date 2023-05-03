@@ -39,16 +39,16 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class ChatService implements Service {
     private final PrivateTradeChannelService privateTradeChannelService;
-    private final PrivateChannelService privateDiscussionChannelService;
+    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PublicChannelService publicDiscussionChannelService;
+    private final PublicChatChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
     private final ChannelSelectionService discussionChannelSelectionService;
-    private final PrivateChannelService privateSupportChannelService;
-    private final PublicChannelService publicSupportChannelService;
+    private final PrivateTwoPartyChannelService privateSupportChannelService;
+    private final PublicChatChannelService publicSupportChannelService;
     private final ChannelSelectionService supportChannelSelectionService;
-    private final PrivateChannelService privateEventsChannelService;
-    private final PublicChannelService publicEventsChannelService;
+    private final PrivateTwoPartyChannelService privateEventsChannelService;
+    private final PublicChatChannelService publicEventsChannelService;
     private final ChannelSelectionService eventsChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
@@ -72,22 +72,22 @@ public class ChatService implements Service {
                 publicTradeChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new PrivateChannelService(persistenceService,
+        privateDiscussionChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.DISCUSSION);
-        publicDiscussionChannelService = new PublicChannelService(persistenceService,
+        publicDiscussionChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.DISCUSSION,
-                List.of(new PublicChannel(ChannelDomain.DISCUSSION, "bisq"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "bitcoin"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "markets"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "economy"),
-                        new PublicChannel(ChannelDomain.DISCUSSION, "offTopic")));
+                List.of(new PublicChatChannel(ChannelDomain.DISCUSSION, "bisq"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "bitcoin"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "markets"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "economy"),
+                        new PublicChatChannel(ChannelDomain.DISCUSSION, "offTopic")));
 
         discussionChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
@@ -95,43 +95,43 @@ public class ChatService implements Service {
                 ChannelDomain.DISCUSSION);
 
         // Events
-        privateEventsChannelService = new PrivateChannelService(persistenceService,
+        privateEventsChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.EVENTS);
-        publicEventsChannelService = new PublicChannelService(persistenceService,
+        publicEventsChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.EVENTS,
-                List.of(new PublicChannel(ChannelDomain.EVENTS, "conferences"),
-                        new PublicChannel(ChannelDomain.EVENTS, "meetups"),
-                        new PublicChannel(ChannelDomain.EVENTS, "podcasts"),
-                        new PublicChannel(ChannelDomain.EVENTS, "noKyc"),
-                        new PublicChannel(ChannelDomain.EVENTS, "nodes"),
-                        new PublicChannel(ChannelDomain.EVENTS, "tradeEvents")));
+                List.of(new PublicChatChannel(ChannelDomain.EVENTS, "conferences"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "meetups"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "podcasts"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "noKyc"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "nodes"),
+                        new PublicChatChannel(ChannelDomain.EVENTS, "tradeEvents")));
         eventsChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateEventsChannelService,
                 publicEventsChannelService,
                 ChannelDomain.EVENTS);
 
         // Support
-        privateSupportChannelService = new PrivateChannelService(persistenceService,
+        privateSupportChannelService = new PrivateTwoPartyChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChannelDomain.SUPPORT);
-        publicSupportChannelService = new PublicChannelService(persistenceService,
+        publicSupportChannelService = new PublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 ChannelDomain.SUPPORT,
-                List.of(new PublicChannel(ChannelDomain.SUPPORT, "support"),
-                        new PublicChannel(ChannelDomain.SUPPORT, "questions"),
-                        new PublicChannel(ChannelDomain.SUPPORT, "reports")));
+                List.of(new PublicChatChannel(ChannelDomain.SUPPORT, "support"),
+                        new PublicChatChannel(ChannelDomain.SUPPORT, "questions"),
+                        new PublicChatChannel(ChannelDomain.SUPPORT, "reports")));
         supportChannelSelectionService = new ChannelSelectionService(persistenceService,
                 privateSupportChannelService,
                 publicSupportChannelService,

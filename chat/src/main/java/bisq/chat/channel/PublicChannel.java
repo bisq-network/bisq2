@@ -17,90 +17,46 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.PublicChatMessage;
-import bisq.i18n.Res;
+import bisq.chat.message.BasePublicChatMessage;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.MessageType;
+import bisq.common.data.Pair;
+import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicChannel extends BasePublicChannel<PublicChatMessage> {
-    private final String displayName;
-    private final String description;
-    private final String channelAdminId;
-    private final List<String> channelModeratorIds;
+public abstract class PublicChannel<M extends BasePublicChatMessage> extends Channel<M> {
+    // Transient because we do not persist the messages as they are persisted in the P2P data store.
+    protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    public PublicChannel(ChannelDomain channelDomain, String channelName) {
-        this(channelDomain,
-                channelName,
-                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
-                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".description"),
-                "",
-                new ArrayList<>(),
-                ChannelNotificationType.GLOBAL_DEFAULT);
-    }
-
-    private PublicChannel(ChannelDomain channelDomain,
-                          String channelName,
-                          String displayName,
-                          String description,
-                          String channelAdminId,
-                          List<String> channelModeratorIds,
-                          ChannelNotificationType channelNotificationType) {
+    public PublicChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
-
-        this.displayName = displayName;
-        this.description = description;
-        this.channelAdminId = channelAdminId;
-        this.channelModeratorIds = channelModeratorIds;
-        // We need to sort deterministically as the data is used in the proof of work check
-        this.channelModeratorIds.sort(Comparator.comparing((String e) -> e));
-    }
-
-    public bisq.chat.protobuf.Channel toProto() {
-        return getChannelBuilder()
-                .setPublicChannel(bisq.chat.protobuf.PublicChannel.newBuilder()
-                        .setChannelName(displayName)
-                        .setDescription(description)
-                        .setChannelAdminId(channelAdminId)
-                        .addAllChannelModeratorIds(channelModeratorIds))
-                .build();
-    }
-
-    public static PublicChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                          bisq.chat.protobuf.PublicChannel proto) {
-        PublicChannel publicChannel = new PublicChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
-                baseProto.getChannelName(),
-                proto.getChannelName(),
-                proto.getDescription(),
-                proto.getChannelAdminId(),
-                new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        publicChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return publicChannel;
     }
 
     @Override
-    public void addChatMessage(PublicChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
+    public Set<String> getMembers() {
+        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
+        getChatMessages().forEach(chatMessage -> {
+            String authorId = chatMessage.getAuthorId();
+            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
+            chatMessagesByAuthor.get(authorId).add(chatMessage);
+        });
 
-    @Override
-    public void removeChatMessage(PublicChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<PublicChatMessage> messages) {
-        chatMessages.removeAll(messages);
-    }
-
-    @Override
-    public String getDisplayString() {
-        return displayName;
+        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
+                    List<ChatMessage> chatMessages = entry.getValue();
+                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
+                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
+                    return new Pair<>(entry.getKey(), lastChatMessage);
+                })
+                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
+                .map(Pair::getFirst)
+                .collect(Collectors.toSet());
     }
 }

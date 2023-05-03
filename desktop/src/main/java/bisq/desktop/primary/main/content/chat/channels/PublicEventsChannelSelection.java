@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChannelService;
-import bisq.chat.channel.PublicChannel;
-import bisq.chat.channel.PublicChannelService;
+import bisq.chat.channel.PublicChatChannel;
+import bisq.chat.channel.PublicChatChannelService;
 import bisq.chat.trade.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -52,7 +52,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicChannelService publicEventsChannelService;
+        private final PublicChatChannelService publicEventsChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService eventsChannelSelectionService;
 
@@ -83,19 +83,19 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<PublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicEventsChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof PublicChannel) {
+                        if (channel instanceof PublicChatChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         } else if (channel == null && !model.channelItems.isEmpty()) {
-                                    model.selectedChannelItem.set(model.channelItems.get(0));
-                                } else {
-                                    model.selectedChannelItem.set(null);
-                                }
+                            model.selectedChannelItem.set(model.channelItems.get(0));
+                        } else {
+                            model.selectedChannelItem.set(null);
+                        }
                             }
                     ));
         }

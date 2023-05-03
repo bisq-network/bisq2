@@ -35,20 +35,20 @@ import java.util.stream.Stream;
 public class ChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
     private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
     private final Persistence<ChannelSelectionStore> persistence;
-    private final PrivateChannelService privateChannelService;
-    private final PublicChannelService publicChannelService;
+    private final PrivateTwoPartyChannelService privateTwoPartyChannelService;
+    private final PublicChatChannelService publicChatChannelService;
     private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChannelSelectionService(PersistenceService persistenceService,
-                                   PrivateChannelService privateChannelService,
-                                   PublicChannelService publicChannelService,
+                                   PrivateTwoPartyChannelService privateTwoPartyChannelService,
+                                   PublicChatChannelService publicChatChannelService,
                                    ChannelDomain channelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(channelDomain.name()) + "ChannelSelectionStore",
                 persistableStore);
-        this.privateChannelService = privateChannelService;
-        this.publicChannelService = publicChannelService;
+        this.privateTwoPartyChannelService = privateTwoPartyChannelService;
+        this.publicChatChannelService = publicChatChannelService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -68,8 +68,8 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     }
 
     public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateChannel) {
-            privateChannelService.removeExpiredMessages((PrivateChannel) channel);
+        if (channel instanceof PrivateTwoPartyChannel) {
+            privateTwoPartyChannelService.removeExpiredMessages((PrivateTwoPartyChannel) channel);
         }
 
         persistableStore.setSelectedChannelId(channel != null ? channel.getId() : null);
@@ -79,8 +79,8 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     }
 
     private void applySelectedChannel() {
-        Stream<Channel<?>> stream = Stream.concat(publicChannelService.getChannels().stream(),
-                privateChannelService.getChannels().stream());
+        Stream<Channel<?>> stream = Stream.concat(publicChatChannelService.getChannels().stream(),
+                privateTwoPartyChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()
@@ -94,7 +94,7 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
 
     private void maybeSelectChannels() {
         if (getSelectedChannel().get() == null) {
-            publicChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
+            publicChatChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
         }
         persist();
     }

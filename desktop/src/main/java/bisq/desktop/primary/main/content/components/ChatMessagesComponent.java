@@ -112,17 +112,17 @@ public class ChatMessagesComponent {
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateChannelService privateDiscussionChannelService;
-        private final PublicChannelService publicDiscussionChannelService;
+        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+        private final PublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PublicChannelService publicEventsChannelService;
-        private final PrivateChannelService privateEventsChannelService;
+        private final PublicChatChannelService publicEventsChannelService;
+        private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
-        private final PublicChannelService publicSupportChannelService;
-        private final PrivateChannelService privateSupportChannelService;
+        private final PublicChatChannelService publicSupportChannelService;
+        private final PrivateTwoPartyChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private final MediationService mediationService;
@@ -208,7 +208,7 @@ public class ChatMessagesComponent {
                 return;
             }
 
-            if (model.selectedChannel.get() instanceof BasePublicChannel) {
+            if (model.selectedChannel.get() instanceof PublicChannel) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
@@ -248,33 +248,33 @@ public class ChatMessagesComponent {
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
-            } else if (channel instanceof PublicChannel) {
+            } else if (channel instanceof PublicChatChannel) {
                 switch (channel.getChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
+                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
                         break;
                     case EVENTS:
-                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
+                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
                         break;
                     case SUPPORT:
-                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicChannel) channel, userIdentity);
+                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
                         break;
                 }
 
-            } else if (channel instanceof PrivateChannel) {
+            } else if (channel instanceof PrivateTwoPartyChannel) {
                 switch (channel.getChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateDiscussionChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateEventsChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateChannel) channel);
+                        privateSupportChannelService.sendPrivateChatMessage(text, quotation, (PrivateTwoPartyChannel) channel);
                         break;
                 }
             }
@@ -345,7 +345,7 @@ public class ChatMessagesComponent {
         private void applyUserProfileOrChannelChange() {
             boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
             Channel<?> selectedChannel = model.selectedChannel.get();
-            model.userProfileSelectionVisible.set(multipleProfiles && selectedChannel instanceof BasePublicChannel);
+            model.userProfileSelectionVisible.set(multipleProfiles && selectedChannel instanceof PublicChannel);
 
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();

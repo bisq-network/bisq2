@@ -77,8 +77,8 @@ message Channel {
   ChannelNotificationType channelNotificationType = 3;
   repeated string seenChatMessageIds = 4;
   oneof message{
-    PrivateChannel privateChannel = 10;
-    PublicChannel publicChannel = 11;
+    PrivateTwoPartyChannel privateTwoPartyChannel = 10;
+    PublicChatChannel publicChatChannel = 11;
     PrivateTradeChannel privateTradeChannel = 12;
     PublicTradeChannel publicTradeChannel = 13;
   }
@@ -89,12 +89,12 @@ message PrivateChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
 }
-message PrivateChannel {
-  user.UserProfile peer = 1;
-  user.UserIdentity myUserIdentity = 2;
+message PrivateTwoPartyChannel {
+  user.UserIdentity myUserIdentity = 1;
+  user.UserProfile peer = 2;
   repeated ChatMessage chatMessages = 3;
 }
-message PrivateChannelStore {
+message PrivateTwoPartyChannelStore {
   repeated Channel channels = 1;
 }
 
@@ -103,14 +103,14 @@ message PrivateChannelStore {
 message PublicChatMessage {
 }
 
-message PublicChannel {
+message PublicChatChannel {
   string channelName = 1;
   string description = 2;
   string channelAdminId = 3;
   repeated string channelModeratorIds = 4;
   bool isVisible = 5;
 }
-message PublicChannelStore {
+message PublicChatChannelStore {
   repeated Channel channels = 1;
 }
 

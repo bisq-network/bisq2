@@ -17,84 +17,192 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.message.BasePrivateChatMessage;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
-import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
+import bisq.network.NetworkId;
+import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
-import bisq.network.p2p.message.NetworkMessage;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceService;
+import bisq.network.p2p.services.confidential.MessageListener;
+import bisq.persistence.PersistableStore;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class PrivateChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateChannel, PrivateChannelStore> {
-    @Getter
-    private final PrivateChannelStore persistableStore = new PrivateChannelStore();
-    @Getter
-    private final Persistence<PrivateChannelStore> persistence;
+public abstract class PrivateChannelService<M extends BasePrivateChatMessage, C extends PrivateChannel<M>, S extends PersistableStore<S>>
+        extends ChannelService<M, C, S> implements MessageListener {
+    protected final ProofOfWorkService proofOfWorkService;
 
-    public PrivateChannelService(PersistenceService persistenceService,
-                                 NetworkService networkService,
+    public PrivateChannelService(NetworkService networkService,
                                  UserIdentityService userIdentityService,
                                  UserProfileService userProfileService,
                                  ProofOfWorkService proofOfWorkService,
                                  ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
-        persistence = persistenceService.getOrCreatePersistence(this,
-                "db",
-                "Private" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
-                persistableStore);
+        super(networkService, userIdentityService, userProfileService, channelDomain);
+        this.proofOfWorkService = proofOfWorkService;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Service
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public CompletableFuture<Boolean> initialize() {
+        log.info("initialize");
+        networkService.addMessageListener(this);
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
-    public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateChatMessage) {
-            processMessage((PrivateChatMessage) networkMessage);
-        }
+    public CompletableFuture<Boolean> shutdown() {
+        log.info("shutdown");
+        networkService.removeMessageListener(this);
+        return CompletableFuture.completedFuture(true);
     }
 
-    @Override
-    protected PrivateChatMessage createNewPrivateChatMessage(String messageId,
-                                                             PrivateChannel channel,
-                                                             UserProfile sender,
-                                                             String receiversId,
-                                                             String text,
-                                                             Optional<Quotation> quotedMessage,
-                                                             long time,
-                                                             boolean wasEdited,
-                                                             MessageType messageType) {
-        return new PrivateChatMessage(messageId,
-                channel.getChannelDomain(),
-                channel.getChannelName(),
-                sender,
-                receiversId,
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<C> maybeCreateAndAddChannel(UserProfile peer) {
+        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
+                .flatMap(myUserIdentity -> maybeCreateAndAddChannel(peer, myUserIdentity.getId()));
+    }
+
+    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel) {
+        return sendPrivateChatMessage(Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
+                Optional.empty(),
+                channel,
+                MessageType.LEAVE);
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      C channel) {
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), MessageType.TEXT);
+    }
+
+    public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
+                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      C channel,
+                                                                                      MessageType messageType) {
+        return sendPrivateChatMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getMyUserIdentity(), channel.getPeer(), messageType);
+    }
+
+    protected CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String messageId,
+                                                                                         String text,
+                                                                                         Optional<Quotation> quotedMessage,
+                                                                                         C channel,
+                                                                                         UserIdentity senderIdentity,
+                                                                                         UserProfile receiver,
+                                                                                         MessageType messageType) {
+        M chatMessage = createNewPrivateChatMessage(messageId,
+                channel,
+                senderIdentity.getUserProfile(),
+                receiver.getId(),
                 text,
                 quotedMessage,
                 new Date().getTime(),
-                wasEdited,
+                false,
                 messageType);
+        addMessage(chatMessage, channel);
+        NetworkId receiverNetworkId = receiver.getNetworkId();
+        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = senderIdentity.getNodeIdAndKeyPair();
+        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
-    @Override
-    protected PrivateChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        PrivateChannel privateChannel = new PrivateChannel(peer, myUserIdentity, channelDomain);
-        privateChannel.getChannelNotificationType().addObserver(value -> persist());
-        return privateChannel;
+    public void removeExpiredMessages(C channel) {
+        Set<M> toRemove = channel.getChatMessages().stream()
+                .filter(BasePrivateChatMessage::isExpired)
+                .collect(Collectors.toSet());
+        if (!toRemove.isEmpty()) {
+            synchronized (getPersistableStore()) {
+                channel.removeChatMessages(toRemove);
+                channel.updateSeenChatMessageIds();
+            }
+            persist();
+        }
     }
 
-    @Override
-    public ObservableArray<PrivateChannel> getChannels() {
-        return persistableStore.getChannels();
+    public void leaveChannel(C channel) {
+        if (channel.getChatMessages().stream()
+                .max(Comparator.comparing(ChatMessage::getDate))
+                .stream().anyMatch(m -> m.getMessageType().equals(MessageType.LEAVE))) {
+            // Don't send leave message if peer already left channel
+            getChannels().remove(channel);
+            return;
+        }
+
+        sendLeaveMessage(channel)
+                .whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Sending leave channel message failed.");
+                    }
+                    getChannels().remove(channel);
+                    persist();
+                });
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    protected Optional<C> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
+        return userIdentityService.findUserIdentity(myUserIdentityId)
+                .map(myUserIdentity -> {
+                            Optional<C> existingChannel = getChannels().stream()
+                                    .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                                            channel.getPeer().equals(peer))
+                                    .findAny();
+                            if (existingChannel.isPresent()) {
+                                return existingChannel.get();
+                            }
+
+                            C channel = createNewChannel(peer, myUserIdentity);
+                            getChannels().add(channel);
+                            persist();
+                            return channel;
+                        }
+                );
+    }
+
+    protected abstract C createNewChannel(UserProfile peer, UserIdentity myUserIdentity);
+
+    protected abstract M createNewPrivateChatMessage(String messageId,
+                                                     C channel,
+                                                     UserProfile sender,
+                                                     String receiversId,
+                                                     String text,
+                                                     Optional<Quotation> quotedMessage,
+                                                     long time,
+                                                     boolean wasEdited,
+                                                     MessageType messageType);
+
+    protected void processMessage(M message) {
+        if (message.getChannelDomain() != channelDomain) {
+            return;
+        }
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorId());
+        if (!isMyMessage) {
+            findChannelForMessage(message)
+                    .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
+                    .ifPresent(channel -> addMessage(message, channel));
+        }
     }
 }

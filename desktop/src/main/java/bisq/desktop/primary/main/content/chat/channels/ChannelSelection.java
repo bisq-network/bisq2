@@ -2,10 +2,10 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.BasePrivateChannel;
 import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelService;
+import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -299,8 +299,8 @@ public abstract class ChannelSelection {
                 iconIdHover = "channels" + domain + channelName + "-white";
                 iconId = "channels" + domain + channelName + "-grey";
 
-                if (channel instanceof BasePrivateChannel) {
-                    BasePrivateChannel<?> privateChannel = (BasePrivateChannel<?>) channel;
+                if (channel instanceof PrivateChannel) {
+                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
                     displayString = privateChannel.getPeer().getUserName();
                     // PrivateTradeChannel is handled in ListCell code
                     if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {

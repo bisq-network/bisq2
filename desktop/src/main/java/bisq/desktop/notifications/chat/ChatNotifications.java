@@ -60,12 +60,12 @@ public class ChatNotifications {
 
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PrivateChannelService privateDiscussionChannelService;
-    private final PublicChannelService publicDiscussionChannelService;
-    private final PrivateChannelService privateEventsChannelService;
-    private final PublicChannelService publicEventsChannelService;
-    private final PrivateChannelService privateSupportChannelService;
-    private final PublicChannelService publicSupportChannelService;
+    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+    private final PublicChatChannelService publicDiscussionChannelService;
+    private final PrivateTwoPartyChannelService privateEventsChannelService;
+    private final PublicChatChannelService publicEventsChannelService;
+    private final PrivateTwoPartyChannelService privateSupportChannelService;
+    private final PublicChatChannelService publicSupportChannelService;
 
     private final Map<String, Pin> pinByChannelId = new HashMap<>();
     private final ObservableList<ChatNotification<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
@@ -242,7 +242,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPrivateChannelsChanged(ObservableArray<PrivateChannel> channels) {
+    private void onPrivateChannelsChanged(ObservableArray<PrivateTwoPartyChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
@@ -256,7 +256,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicChannelsChanged(ObservableArray<PublicChannel> channels) {
+    private void onPublicChannelsChanged(ObservableArray<PublicChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

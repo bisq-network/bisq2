@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.Channel;
-import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
@@ -111,12 +111,12 @@ public class ChannelSidebar {
                     .sorted()
                     .collect(Collectors.toList()));
 
-            if (channel instanceof PublicChannel) {
-                PublicChannel publicChannel = (PublicChannel) channel;
-                model.description.set(publicChannel.getDescription());
+            if (channel instanceof PublicChatChannel) {
+                PublicChatChannel publicChatChannel = (PublicChatChannel) channel;
+                model.description.set(publicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(publicChannel.getChannelAdminId()).map(ChatUserOverview::new);
-                model.moderators.setAll(publicChannel.getChannelModeratorIds().stream()
+                model.adminProfile = userProfileService.findUserProfile(publicChatChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.moderators.setAll(publicChatChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
                         .map(ChatUserOverview::new)
                         .sorted()
