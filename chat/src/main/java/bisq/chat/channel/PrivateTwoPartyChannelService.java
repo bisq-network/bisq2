@@ -38,18 +38,18 @@ import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
-public class PrivateChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateChannelStore> {
+public class PrivateTwoPartyChannelService extends BasePrivateChannelService<PrivateChatMessage, PrivateTwoPartyChannel, PrivateChannelStore> {
     @Getter
     private final PrivateChannelStore persistableStore = new PrivateChannelStore();
     @Getter
     private final Persistence<PrivateChannelStore> persistence;
 
-    public PrivateChannelService(PersistenceService persistenceService,
-                                 NetworkService networkService,
-                                 UserIdentityService userIdentityService,
-                                 UserProfileService userProfileService,
-                                 ProofOfWorkService proofOfWorkService,
-                                 ChannelDomain channelDomain) {
+    public PrivateTwoPartyChannelService(PersistenceService persistenceService,
+                                         NetworkService networkService,
+                                         UserIdentityService userIdentityService,
+                                         UserProfileService userProfileService,
+                                         ProofOfWorkService proofOfWorkService,
+                                         ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",

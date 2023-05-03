@@ -151,7 +151,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateChannelService privateDiscussionChannelService;
+        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
         private final PublicChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final UserIdentityService userIdentityService;
@@ -163,10 +163,10 @@ public class ChatMessagesListView {
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PrivateChannelService privateEventsChannelService;
+        private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final PublicChannelService publicEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
-        private final PrivateChannelService privateSupportChannelService;
+        private final PrivateTwoPartyChannelService privateSupportChannelService;
         private final PublicChannelService publicSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final MediationService mediationService;
