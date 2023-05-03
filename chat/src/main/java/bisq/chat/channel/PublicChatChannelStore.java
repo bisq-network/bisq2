@@ -39,13 +39,13 @@ public class PublicChatChannelStore implements PersistableStore<PublicChatChanne
     }
 
     @Override
-    public bisq.chat.protobuf.PublicChannelStore toProto() {
-        bisq.chat.protobuf.PublicChannelStore.Builder builder = bisq.chat.protobuf.PublicChannelStore.newBuilder()
+    public bisq.chat.protobuf.PublicChatChannelStore toProto() {
+        bisq.chat.protobuf.PublicChatChannelStore.Builder builder = bisq.chat.protobuf.PublicChatChannelStore.newBuilder()
                 .addAllChannels(channels.stream().map(PublicChatChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
-    public static PublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChannelStore proto) {
+    public static PublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChatChannelStore proto) {
         List<PublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (PublicChatChannel) PublicChatChannel.fromProto(e))
                 .collect(Collectors.toList());
@@ -56,7 +56,7 @@ public class PublicChatChannelStore implements PersistableStore<PublicChatChanne
     public ProtoResolver<PersistableStore<?>> getResolver() {
         return any -> {
             try {
-                return fromProto(any.unpack(bisq.chat.protobuf.PublicChannelStore.class));
+                return fromProto(any.unpack(bisq.chat.protobuf.PublicChatChannelStore.class));
             } catch (InvalidProtocolBufferException e) {
                 throw new UnresolvableProtobufMessageException(e);
             }

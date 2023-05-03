@@ -63,7 +63,7 @@ public final class PublicChatChannel extends BasePublicChannel<PublicChatMessage
 
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder()
-                .setPublicChannel(bisq.chat.protobuf.PublicChannel.newBuilder()
+                .setPublicChatChannel(bisq.chat.protobuf.PublicChatChannel.newBuilder()
                         .setChannelName(displayName)
                         .setDescription(description)
                         .setChannelAdminId(channelAdminId)
@@ -72,7 +72,7 @@ public final class PublicChatChannel extends BasePublicChannel<PublicChatMessage
     }
 
     public static PublicChatChannel fromProto(bisq.chat.protobuf.Channel baseProto,
-                                              bisq.chat.protobuf.PublicChannel proto) {
+                                              bisq.chat.protobuf.PublicChatChannel proto) {
         PublicChatChannel publicChatChannel = new PublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 proto.getChannelName(),

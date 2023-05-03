@@ -78,7 +78,7 @@ message Channel {
   repeated string seenChatMessageIds = 4;
   oneof message{
     PrivateTwoPartyChannel privateTwoPartyChannel = 10;
-    PublicChannel publicChannel = 11;
+    PublicChatChannel publicChatChannel = 11;
     PrivateTradeChannel privateTradeChannel = 12;
     PublicTradeChannel publicTradeChannel = 13;
   }
@@ -103,14 +103,14 @@ message PrivateTwoPartyChannelStore {
 message PublicChatMessage {
 }
 
-message PublicChannel {
+message PublicChatChannel {
   string channelName = 1;
   string description = 2;
   string channelAdminId = 3;
   repeated string channelModeratorIds = 4;
   bool isVisible = 5;
 }
-message PublicChannelStore {
+message PublicChatChannelStore {
   repeated Channel channels = 1;
 }
 
