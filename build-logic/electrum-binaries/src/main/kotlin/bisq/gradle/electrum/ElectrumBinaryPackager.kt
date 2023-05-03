@@ -28,7 +28,7 @@ class ElectrumBinaryPackager(
             if (isMacOS()) {
                 registerDmgExtractionTask()
             } else {
-                registerVerifiedElectrumBinary()
+                registerCopyVerifiedElectrumBinary()
             }
 
         extractDmgOrCopyTask.configure {
@@ -59,7 +59,7 @@ class ElectrumBinaryPackager(
             outputDirectory.set(binariesDir)
         }
 
-    private fun registerVerifiedElectrumBinary(): TaskProvider<out Task> =
+    private fun registerCopyVerifiedElectrumBinary(): TaskProvider<out Task> =
         project.tasks.register<Copy>("copyVerifiedElectrumBinary") {
             from(binaryDownloader.verifySignatureTask.flatMap { it.fileToVerify })
             into(binariesDir.get().asFile.absolutePath)
