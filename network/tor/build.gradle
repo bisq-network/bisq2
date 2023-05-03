@@ -21,7 +21,6 @@ dependencies {
 
     implementation libs.google.guava
     implementation libs.failsafe
-    implementation libs.apache.commons.compress
     implementation libs.tukaani
 
     implementation libs.chimp.jsocks

@@ -7,7 +7,6 @@
 [versions]
 annotations-lib = { strictly = '23.0.0' }
 
-apache-commons-compress-lib = { strictly = '1.21' }
 apache-httpcomponents-core-lib = { strictly = '4.4.13' }
 apache-httpcomponents-httpclient-lib = { strictly = '4.5.13' }
 
@@ -64,7 +63,6 @@ typesafe-config-lib = { strictly = '1.4.2' }
 # Note: keys can contain dash (protobuf-java) but the dash is replaced by dot when referenced
 # in a build.gradle ('implementation libs.protobuf.java')
 [libraries]
-apache-commons-compress = { module = 'org.apache.commons:commons-compress', version.ref = 'apache-commons-compress-lib' }
 apache-httpcomponents-core = { module = 'org.apache.httpcomponents:httpcore', version.ref = 'apache-httpcomponents-core-lib' }
 apache-httpcomponents-httpclient = { module = 'org.apache.httpcomponents:httpclient', version.ref = 'apache-httpcomponents-httpclient-lib' }
 assertj-core = { module = 'org.assertj:assertj-core', version.ref = 'assertj-core-lib' }
