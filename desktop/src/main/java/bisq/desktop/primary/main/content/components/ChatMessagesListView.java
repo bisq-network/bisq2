@@ -739,6 +739,9 @@ public class ChatMessagesListView {
 
                                 ChatMessage chatMessage = item.getChatMessage();
 
+                                Node flow = this.getListView().lookup(".virtual-flow");
+                                if (flow != null && !flow.isVisible())
+                                    return;
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
                                 boolean isPublicOfferMessage = chatMessage instanceof PublicTradeChatMessage && isOfferMessage;
