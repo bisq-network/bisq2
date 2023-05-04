@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -38,12 +37,8 @@ public class ZipFileExtractor implements AutoCloseable {
     }
 
     public void extractArchive() {
-        extractEntriesMatching(zipEntry -> true);
-    }
-
-    public void extractEntriesMatching(Predicate<ZipEntry> predicate) {
         createDirIfNotPresent(destDir);
-        extractFilesMatchingCondition(predicate);
+        extractFiles();
     }
 
     @Override
@@ -59,18 +54,18 @@ public class ZipFileExtractor implements AutoCloseable {
         }
     }
 
-    private void extractFilesMatchingCondition(Predicate<ZipEntry> predicate) {
+    private void extractFiles() {
         try (ZipInputStream zipInputStream = new ZipInputStream(zipFileInputStream)) {
             byte[] buffer = new byte[1024];
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 
             while (zipEntry != null) {
+                String fileName = zipEntry.getName();
+
                 if (zipEntry.isDirectory()) {
-                    String fileName = zipEntry.getName();
                     File dirFile = new File(destDir, fileName);
                     createDirIfNotPresent(dirFile);
-                } else if (predicate.test(zipEntry)) {
-                    String fileName = zipEntry.getName();
+                } else {
                     writeStreamToFile(buffer, zipInputStream, fileName);
                 }
 
