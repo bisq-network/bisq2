@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -180,12 +181,13 @@ class LeftNavButton extends Pane implements Toggle {
             label.setManaged(true);
             Transitions.fadeIn(label, duration);
             if (hasSubmenu) {
+                Objects.requireNonNull(expandCollapseIcon).setVisible(true);
                 Transitions.fadeIn(expandCollapseIcon, 3 * duration, 0.4, null);
             }
         } else {
             Tooltip.install(this, tooltip);
             if (hasSubmenu) {
-                Transitions.fadeOut(expandCollapseIcon, duration / 2);
+                Transitions.fadeOut(expandCollapseIcon, duration / 2, () -> Objects.requireNonNull(expandCollapseIcon).setVisible(false));
             }
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);
