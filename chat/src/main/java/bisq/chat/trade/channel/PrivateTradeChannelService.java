@@ -18,7 +18,7 @@
 package bisq.chat.trade.channel;
 
 import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.PrivateGroupChannelService;
+import bisq.chat.channel.PrivateGroupChatChannelService;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateGroupChannelService<PrivateTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
+public class PrivateTradeChannelService extends PrivateGroupChatChannelService<PrivateTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
 
     @Getter
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();

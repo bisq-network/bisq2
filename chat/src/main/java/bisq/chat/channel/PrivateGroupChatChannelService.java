@@ -27,15 +27,15 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PrivateGroupChannelService<M extends PrivateChatMessage,
+public abstract class PrivateGroupChatChannelService<M extends PrivateChatMessage,
         C extends PrivateGroupChatChannel<M>, S extends PersistableStore<S>>
         extends PrivateChatChannelService<M, C, S> implements MessageListener {
 
-    public PrivateGroupChannelService(NetworkService networkService,
-                                      UserIdentityService userIdentityService,
-                                      UserProfileService userProfileService,
-                                      ProofOfWorkService proofOfWorkService,
-                                      ChannelDomain channelDomain) {
+    public PrivateGroupChatChannelService(NetworkService networkService,
+                                          UserIdentityService userIdentityService,
+                                          UserProfileService userProfileService,
+                                          ProofOfWorkService proofOfWorkService,
+                                          ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
     }
 
