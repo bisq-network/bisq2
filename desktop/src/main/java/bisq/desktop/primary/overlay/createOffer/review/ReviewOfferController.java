@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
@@ -62,7 +62,7 @@ public class ReviewOfferController implements Controller {
     private final UserIdentityService userIdentityService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final UserProfileService userProfileService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final Consumer<Boolean> buttonsVisibleHandler;
     private final PrivateTradeChannelService privateTradeChannelService;
     private final MediationService mediationService;
@@ -73,7 +73,7 @@ public class ReviewOfferController implements Controller {
         this.buttonsVisibleHandler = buttonsVisibleHandler;
         ChatService chatService = applicationService.getChatService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -138,7 +138,7 @@ public class ReviewOfferController implements Controller {
         model.setMyOfferText(StringUtils.truncate(bisqEasyOffer.getChatMessageText(), 100));
 
         publicTradeChannelService.showChannel(channel);
-        tradeChannelSelectionService.selectChannel(channel);
+        bisqEasyChatChannelSelectionService.selectChannel(channel);
 
         PublicBisqEasyOfferChatMessage myOfferMessage = new PublicBisqEasyOfferChatMessage(channel.getChannelName(),
                 userIdentity.getUserProfile().getId(),

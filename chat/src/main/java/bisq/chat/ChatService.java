@@ -17,7 +17,7 @@
 
 package bisq.chat;
 
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.channel.ChatChannelDomain;
@@ -46,7 +46,7 @@ public class ChatService implements Service {
     private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final ChatChannelSelectionService discussionChatChannelSelectionService;
     private final PrivateTwoPartyChatChannelService privateSupportChannelService;
     private final CommonPublicChatChannelService publicSupportChannelService;
@@ -71,7 +71,7 @@ public class ChatService implements Service {
                 networkService,
                 userIdentityService,
                 userProfileService);
-        tradeChannelSelectionService = new TradeChannelSelectionService(persistenceService,
+        bisqEasyChatChannelSelectionService = new BisqEasyChatChannelSelectionService(persistenceService,
                 privateTradeChannelService,
                 publicTradeChannelService);
 
@@ -148,7 +148,7 @@ public class ChatService implements Service {
         return CompletableFutureUtils.allOf(
                 privateTradeChannelService.initialize(),
                 publicTradeChannelService.initialize(),
-                tradeChannelSelectionService.initialize(),
+                bisqEasyChatChannelSelectionService.initialize(),
 
                 privateDiscussionChannelService.initialize(),
                 publicDiscussionChannelService.initialize(),
@@ -170,7 +170,7 @@ public class ChatService implements Service {
         return CompletableFutureUtils.allOf(
                 privateTradeChannelService.shutdown(),
                 publicTradeChannelService.shutdown(),
-                tradeChannelSelectionService.shutdown(),
+                bisqEasyChatChannelSelectionService.shutdown(),
 
                 privateDiscussionChannelService.shutdown(),
                 publicDiscussionChannelService.shutdown(),

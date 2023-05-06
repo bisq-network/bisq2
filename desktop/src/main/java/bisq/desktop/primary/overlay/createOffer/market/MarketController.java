@@ -19,7 +19,7 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
@@ -44,13 +44,13 @@ public class MarketController implements Controller {
     private final MarketView view;
     private final ChatService chatService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }
@@ -64,7 +64,7 @@ public class MarketController implements Controller {
         model.getSearchText().set("");
         // Used selected public channel or if private channel is selected we use any of the public channels for 
         // setting the default market 
-        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
+        Optional.ofNullable(bisqEasyChatChannelSelectionService.getSelectedChannel().get())
                 .filter(channel -> channel instanceof PublicTradeChannel)
                 .map(channel -> (PublicTradeChannel) channel)
                 .or(() -> publicTradeChannelService.getVisibleChannels().stream().findFirst())

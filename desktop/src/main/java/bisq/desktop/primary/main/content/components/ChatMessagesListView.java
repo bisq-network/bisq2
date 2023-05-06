@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
@@ -164,7 +164,7 @@ public class ChatMessagesListView {
         private final Consumer<ChatMessage> showChatUserDetailsHandler;
         private final ReputationService reputationService;
         private final UserProfileService userProfileService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
         private final PrivateTwoPartyChatChannelService privateEventsChannelService;
@@ -191,7 +191,7 @@ public class ChatMessagesListView {
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -235,7 +235,7 @@ public class ChatMessagesListView {
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
             if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (chatMessagesPin != null) {
                         chatMessagesPin.unbind();
@@ -400,7 +400,7 @@ public class ChatMessagesListView {
             TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage)
                     .thenAccept(result -> UIThread.run(() -> {
                         privateTradeChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow().getId())
-                                .ifPresent(tradeChannelSelectionService::selectChannel);
+                                .ifPresent(bisqEasyChatChannelSelectionService::selectChannel);
                         Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
                         takeOfferCompleteHandler.ifPresent(Runnable::run);
                     }));

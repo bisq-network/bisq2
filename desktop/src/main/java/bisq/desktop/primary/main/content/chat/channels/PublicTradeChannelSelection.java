@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
@@ -90,7 +90,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final PublicTradeChannelService publicTradeChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin numVisibleChannelsPin;
 
@@ -98,7 +98,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             super(applicationService);
 
             publicTradeChannelService = applicationService.getChatService().getPublicTradeChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
             model = new Model();
@@ -125,7 +125,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             channelsPin = FxBindings.<PublicTradeChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicTradeChannelService.getChannels());
-            selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (channel instanceof PublicTradeChannel) {
                                     model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
@@ -165,7 +165,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 return;
             }
 
-            tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            bisqEasyChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {
@@ -178,7 +178,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 publicTradeChannelService.findChannel(ChatChannelDomain.TRADE, PublicTradeChannel.getChannelName(marketListItem.market))
                         .ifPresent(channel -> {
                             publicTradeChannelService.showChannel(channel);
-                            tradeChannelSelectionService.selectChannel(channel);
+                            bisqEasyChatChannelSelectionService.selectChannel(channel);
                         });
             }
         }
@@ -195,9 +195,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                 model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
                 if (!model.sortedList.isEmpty()) {
-                    tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChatChannel());
+                    bisqEasyChatChannelSelectionService.selectChannel(model.sortedList.get(0).getChatChannel());
                 } else {
-                    tradeChannelSelectionService.selectChannel(null);
+                    bisqEasyChatChannelSelectionService.selectChannel(null);
                 }
             }
         }

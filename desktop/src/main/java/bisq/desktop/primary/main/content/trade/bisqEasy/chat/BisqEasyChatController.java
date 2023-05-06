@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyChatController extends BaseChatController<BisqEasyChatView, BisqEasyChatModel> {
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
     private final MediationService mediationService;
     private final Optional<WalletService> walletService;
@@ -68,7 +68,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChatChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
 
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = applicationService.getSettingsService();
         mediationService = applicationService.getSupportService().getMediationService();
         walletService = applicationService.getWalletService();
@@ -78,7 +78,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     public void onActivate() {
         super.onActivate();
 
-        selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
     }
 
@@ -141,7 +141,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getCreateOfferButtonVisible().set(false);
                 model.getTradeHelpersVisible().set(true);
 
-                chatMessagesPin = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().addListener(this::updateLastOfferMessage);
+                chatMessagesPin = bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChatMessages().addListener(this::updateLastOfferMessage);
                 updateLastOfferMessage();
 
                 Navigation.navigateTo(NavigationTarget.TRADE_GUIDE);
@@ -166,10 +166,10 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     private void updateLastOfferMessage() {
-        PrivateBisqEasyTradeChatMessage newLastOfferMessage = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
+        PrivateBisqEasyTradeChatMessage newLastOfferMessage = bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
                 .filter(chatMessage -> chatMessage instanceof PrivateBisqEasyTradeChatMessage)
                 .map(chatMessage -> (PrivateBisqEasyTradeChatMessage) chatMessage)
-                .filter(message -> message.getChannelName().equals(tradeChannelSelectionService.getSelectedChannel().get().getChannelName()))
+                .filter(message -> message.getChannelName().equals(bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChannelName()))
                 .filter(PrivateBisqEasyTradeChatMessage::hasTradeChatOffer)
                 .max(Comparator.comparing(PrivateBisqEasyTradeChatMessage::getDate))
                 .orElse(null);

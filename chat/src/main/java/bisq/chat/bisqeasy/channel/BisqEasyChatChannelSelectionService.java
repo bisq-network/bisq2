@@ -37,16 +37,16 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class TradeChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
+public class BisqEasyChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     private final Persistence<ChatChannelSelectionStore> persistence;
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
-    public TradeChannelSelectionService(PersistenceService persistenceService,
-                                        PrivateTradeChannelService privateTradeChannelService,
-                                        PublicTradeChannelService publicTradeChannelService) {
+    public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
+                                               PrivateTradeChannelService privateTradeChannelService,
+                                               PublicTradeChannelService publicTradeChannelService) {
         this.privateTradeChannelService = privateTradeChannelService;
         this.publicTradeChannelService = publicTradeChannelService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);

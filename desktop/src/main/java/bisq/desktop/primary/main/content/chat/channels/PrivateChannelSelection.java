@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.channel.ChatChannel;
@@ -83,7 +83,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final ChatChannelSelectionService eventsChatChannelSelectionService;
         private final ChatChannelSelectionService supportChatChannelSelectionService;
@@ -111,7 +111,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                     throw new RuntimeException("Unexpected channelDomain " + chatChannelDomain);
             }
 
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
             discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
             eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
             supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
@@ -143,7 +143,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTradeChannelService) channelService).getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(tradeChannelSelectionService.getSelectedChannel(),
+                selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTradeChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
@@ -209,7 +209,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                 return;
             }
             if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
-                tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
+                bisqEasyChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
                 discussionChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.EVENTS) {
@@ -237,8 +237,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                     ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChatChannel()),
-                                    () -> tradeChannelSelectionService.selectChannel(null));
+                            .ifPresentOrElse(e -> bisqEasyChatChannelSelectionService.selectChannel(e.getChatChannel()),
+                                    () -> bisqEasyChatChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
                     ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);

@@ -72,7 +72,7 @@ public class NotificationsSidebar {
 
         @Override
         public void onActivate() {
-            tradeChannelSelectionPin = chatService.getTradeChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            tradeChannelSelectionPin = chatService.getBisqEasyChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
             discussionChannelSelectionPin = chatService.getDiscussionChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
             eventsChannelSelectionPin = chatService.getEventsChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
             supportChannelSelectionPin = chatService.getSupportChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);

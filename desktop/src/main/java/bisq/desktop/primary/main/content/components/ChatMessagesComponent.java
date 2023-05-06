@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
@@ -122,7 +122,7 @@ public class ChatMessagesComponent {
         private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
         private final CommonPublicChatChannelService publicEventsChannelService;
@@ -141,7 +141,7 @@ public class ChatMessagesComponent {
             ChatService chatService = applicationService.getChatService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
@@ -182,7 +182,7 @@ public class ChatMessagesComponent {
             model.mentionableChatChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
             if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+                selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 selectedChannelPin = discussionChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
