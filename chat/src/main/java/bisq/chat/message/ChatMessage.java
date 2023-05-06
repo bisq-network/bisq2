@@ -103,8 +103,8 @@ public abstract class ChatMessage implements Proto {
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATETWOPARTYPRIVATECHATMESSAGE: {
-                return PrivateTwoPartyPrivateChatMessage.fromProto(proto);
+            case TWOPARTYPRIVATECHATMESSAGE: {
+                return TwoPartyPrivateChatMessage.fromProto(proto);
             }
 
             case PUBLICTRADECHATMESSAGE: {
@@ -152,8 +152,8 @@ public abstract class ChatMessage implements Proto {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PRIVATETWOPARTYPRIVATECHATMESSAGE: {
-                        return PrivateTwoPartyPrivateChatMessage.fromProto(proto);
+                    case TWOPARTYPRIVATECHATMESSAGE: {
+                        return TwoPartyPrivateChatMessage.fromProto(proto);
                     }
 
                     case PRIVATETRADECHATMESSAGE: {

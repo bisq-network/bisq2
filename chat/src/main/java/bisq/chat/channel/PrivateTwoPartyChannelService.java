@@ -18,8 +18,8 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.MessageType;
-import bisq.chat.message.PrivateTwoPartyPrivateChatMessage;
 import bisq.chat.message.Quotation;
+import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -39,7 +39,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTwoPartyChannelService extends PrivateChatChannelService<PrivateTwoPartyPrivateChatMessage, PrivateTwoPartyChannel, PrivateTwoPartyChannelStore> {
+public class PrivateTwoPartyChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChannel, PrivateTwoPartyChannelStore> {
     @Getter
     private final PrivateTwoPartyChannelStore persistableStore = new PrivateTwoPartyChannelStore();
     @Getter
@@ -60,22 +60,22 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Pri
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTwoPartyPrivateChatMessage) {
-            processMessage((PrivateTwoPartyPrivateChatMessage) networkMessage);
+        if (networkMessage instanceof TwoPartyPrivateChatMessage) {
+            processMessage((TwoPartyPrivateChatMessage) networkMessage);
         }
     }
 
     @Override
-    protected PrivateTwoPartyPrivateChatMessage createNewPrivateChatMessage(String messageId,
-                                                                            PrivateTwoPartyChannel channel,
-                                                                            UserProfile sender,
-                                                                            String receiversId,
-                                                                            String text,
-                                                                            Optional<Quotation> quotedMessage,
-                                                                            long time,
-                                                                            boolean wasEdited,
-                                                                            MessageType messageType) {
-        return new PrivateTwoPartyPrivateChatMessage(messageId,
+    protected TwoPartyPrivateChatMessage createNewPrivateChatMessage(String messageId,
+                                                                     PrivateTwoPartyChannel channel,
+                                                                     UserProfile sender,
+                                                                     String receiversId,
+                                                                     String text,
+                                                                     Optional<Quotation> quotedMessage,
+                                                                     long time,
+                                                                     boolean wasEdited,
+                                                                     MessageType messageType) {
+        return new TwoPartyPrivateChatMessage(messageId,
                 channel.getChannelDomain(),
                 channel.getChannelName(),
                 sender,
@@ -141,7 +141,7 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Pri
                 );
     }
 
-    protected void processMessage(PrivateTwoPartyPrivateChatMessage message) {
+    protected void processMessage(TwoPartyPrivateChatMessage message) {
         if (message.getChannelDomain() != channelDomain) {
             return;
         }
