@@ -110,7 +110,7 @@ public abstract class ChatMessage implements Proto {
             case PUBLICTRADECHATMESSAGE: {
                 return PublicTradeChatMessage.fromProto(proto);
             }
-            case PRIVATETRADECHATMESSAGE: {
+            case PRIVATEBISQEASYTRADECHATMESSAGE: {
                 return PrivateBisqEasyTradeChatMessage.fromProto(proto);
             }
 
@@ -156,7 +156,7 @@ public abstract class ChatMessage implements Proto {
                         return TwoPartyPrivateChatMessage.fromProto(proto);
                     }
 
-                    case PRIVATETRADECHATMESSAGE: {
+                    case PRIVATEBISQEASYTRADECHATMESSAGE: {
                         return PrivateBisqEasyTradeChatMessage.fromProto(proto);
                     }
 

@@ -19,7 +19,7 @@ package bisq.chat.bisqeasy.message;
 
 import java.util.Optional;
 
-public interface TradeChatOfferMessage {
+public interface BisqEasyOfferMessage {
     Optional<BisqEasyOffer> getBisqEasyOffer();
 
     boolean hasTradeChatOffer();

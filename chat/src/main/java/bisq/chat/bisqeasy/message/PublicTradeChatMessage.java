@@ -35,7 +35,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends PublicChatMessage implements TradeChatOfferMessage {
+public final class PublicTradeChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public PublicTradeChatMessage(String channelName,

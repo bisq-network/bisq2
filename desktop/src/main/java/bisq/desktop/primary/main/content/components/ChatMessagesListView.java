@@ -24,9 +24,9 @@ import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOfferMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -565,8 +565,8 @@ public class ChatMessagesListView {
         }
 
         boolean isOfferMessage(ChatMessage chatMessage) {
-            return chatMessage instanceof TradeChatOfferMessage &&
-                    ((TradeChatOfferMessage) chatMessage).hasTradeChatOffer();
+            return chatMessage instanceof BisqEasyOfferMessage &&
+                    ((BisqEasyOfferMessage) chatMessage).hasTradeChatOffer();
         }
     }
 

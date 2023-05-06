@@ -66,7 +66,7 @@ message ChatMessage {
   oneof message {
     TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;
     CommonPublicChatMessage commonPublicChatMessage = 21;
-    PrivateTradeChatMessage privateTradeChatMessage = 22;
+    PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = 22;
     PublicTradeChatMessage publicTradeChatMessage = 23;
   }
 }
@@ -120,7 +120,7 @@ message ChatChannelSelectionStore {
 
 
 // Trade
-message PrivateTradeChatMessage {
+message PrivateBisqEasyTradeChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;

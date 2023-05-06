@@ -35,7 +35,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage implements TradeChatOfferMessage {
+public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
@@ -96,13 +96,13 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
     }
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        bisq.chat.protobuf.PrivateTradeChatMessage.Builder builder = bisq.chat.protobuf.PrivateTradeChatMessage.newBuilder()
+        bisq.chat.protobuf.PrivateBisqEasyTradeChatMessage.Builder builder = bisq.chat.protobuf.PrivateBisqEasyTradeChatMessage.newBuilder()
                 .setReceiversId(receiversId)
                 .setSender(sender.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
         return getChatMessageBuilder()
-                .setPrivateTradeChatMessage(builder)
+                .setPrivateBisqEasyTradeChatMessage(builder)
                 .build();
     }
 
@@ -110,19 +110,19 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        bisq.chat.protobuf.PrivateTradeChatMessage privateTradeChatMessage = baseProto.getPrivateTradeChatMessage();
-        Optional<UserProfile> mediator = privateTradeChatMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(privateTradeChatMessage.getMediator())) :
+        bisq.chat.protobuf.PrivateBisqEasyTradeChatMessage PrivateBisqEasyTradeChatMessage = baseProto.getPrivateBisqEasyTradeChatMessage();
+        Optional<UserProfile> mediator = PrivateBisqEasyTradeChatMessage.hasMediator() ?
+                Optional.of(UserProfile.fromProto(PrivateBisqEasyTradeChatMessage.getMediator())) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPrivateTradeChatMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateTradeChatMessage().getBisqEasyOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPrivateBisqEasyTradeChatMessage().hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateBisqEasyTradeChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new PrivateBisqEasyTradeChatMessage(
                 baseProto.getMessageId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
-                UserProfile.fromProto(privateTradeChatMessage.getSender()),
-                privateTradeChatMessage.getReceiversId(),
+                UserProfile.fromProto(PrivateBisqEasyTradeChatMessage.getSender()),
+                PrivateBisqEasyTradeChatMessage.getReceiversId(),
                 baseProto.getText(),
                 quotedMessage,
                 baseProto.getDate(),
