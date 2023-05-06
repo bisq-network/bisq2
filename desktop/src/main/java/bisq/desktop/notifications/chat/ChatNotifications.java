@@ -248,7 +248,7 @@ public class ChatNotifications {
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PrivateTwoPartyChatMessage,
+            Pin pin = FxBindings.<PrivateTwoPartyPrivateChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());

@@ -32,17 +32,17 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTwoPartyChatMessage extends PrivateChatMessage {
-    public PrivateTwoPartyChatMessage(String messageId,
-                                      ChannelDomain channelDomain,
-                                      String channelName,
-                                      UserProfile sender,
-                                      String receiversId,
-                                      String text,
-                                      Optional<Quotation> quotedMessage,
-                                      long date,
-                                      boolean wasEdited,
-                                      MessageType messageType) {
+public final class PrivateTwoPartyPrivateChatMessage extends PrivateChatMessage {
+    public PrivateTwoPartyPrivateChatMessage(String messageId,
+                                             ChannelDomain channelDomain,
+                                             String channelName,
+                                             UserProfile sender,
+                                             String receiversId,
+                                             String text,
+                                             Optional<Quotation> quotedMessage,
+                                             long date,
+                                             boolean wasEdited,
+                                             MessageType messageType) {
         super(messageId,
                 channelDomain,
                 channelName,
@@ -53,20 +53,20 @@ public final class PrivateTwoPartyChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 messageType,
-                new MetaData(ChatMessage.TTL, 100000, PrivateTwoPartyChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PrivateTwoPartyPrivateChatMessage.class.getSimpleName()));
     }
 
-    private PrivateTwoPartyChatMessage(String messageId,
-                                       ChannelDomain channelDomain,
-                                       String channelName,
-                                       UserProfile sender,
-                                       String receiversId,
-                                       String text,
-                                       Optional<Quotation> quotedMessage,
-                                       long date,
-                                       boolean wasEdited,
-                                       MessageType messageType,
-                                       MetaData metaData) {
+    private PrivateTwoPartyPrivateChatMessage(String messageId,
+                                              ChannelDomain channelDomain,
+                                              String channelName,
+                                              UserProfile sender,
+                                              String receiversId,
+                                              String text,
+                                              Optional<Quotation> quotedMessage,
+                                              long date,
+                                              boolean wasEdited,
+                                              MessageType messageType,
+                                              MetaData metaData) {
         super(messageId, channelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
     }
 
@@ -79,18 +79,18 @@ public final class PrivateTwoPartyChatMessage extends PrivateChatMessage {
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
-                .setPrivateTwoPartyChatMessage(bisq.chat.protobuf.PrivateTwoPartyChatMessage.newBuilder()
+                .setPrivateTwoPartyPrivateChatMessage(bisq.chat.protobuf.PrivateTwoPartyPrivateChatMessage.newBuilder()
                         .setReceiversId(receiversId)
                         .setSender(sender.toProto()))
                 .build();
     }
 
-    public static PrivateTwoPartyChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static PrivateTwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        bisq.chat.protobuf.PrivateTwoPartyChatMessage privateChatMessage = baseProto.getPrivateTwoPartyChatMessage();
-        return new PrivateTwoPartyChatMessage(
+        bisq.chat.protobuf.PrivateTwoPartyPrivateChatMessage privateChatMessage = baseProto.getPrivateTwoPartyPrivateChatMessage();
+        return new PrivateTwoPartyPrivateChatMessage(
                 baseProto.getMessageId(),
                 ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
