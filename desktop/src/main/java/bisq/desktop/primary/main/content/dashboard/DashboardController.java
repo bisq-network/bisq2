@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.trade.channel.PublicTradeChannelService;
+import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;

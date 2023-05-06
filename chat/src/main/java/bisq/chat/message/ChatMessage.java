@@ -18,8 +18,8 @@
 package bisq.chat.message;
 
 import bisq.chat.channel.ChannelDomain;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.trade.message.PrivateTradeChatMessage;
+import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;

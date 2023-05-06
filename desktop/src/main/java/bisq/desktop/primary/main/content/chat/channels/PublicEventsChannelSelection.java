@@ -22,7 +22,7 @@ import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChannelService;
 import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.channel.PublicChatChannelService;
-import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.trade.channel.TradeChannelSelectionService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;

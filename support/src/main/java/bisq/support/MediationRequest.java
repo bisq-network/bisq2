@@ -17,8 +17,8 @@
 
 package bisq.support;
 
-import bisq.chat.trade.TradeChatOffer;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
+import bisq.chat.trade.message.PrivateTradeChatMessage;
+import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;

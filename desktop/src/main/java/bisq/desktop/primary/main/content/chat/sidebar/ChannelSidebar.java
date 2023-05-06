@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.components.ChatUserOverview;

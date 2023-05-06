@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.trade;
+package bisq.chat.trade.message;
 
 import java.util.Optional;
 

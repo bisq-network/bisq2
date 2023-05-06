@@ -18,8 +18,8 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.trade.channel.PrivateTradeChannel;
+import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;

@@ -18,9 +18,9 @@
 package bisq.chat;
 
 import bisq.chat.channel.*;
-import bisq.chat.trade.TradeChannelSelectionService;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.trade.channel.PrivateTradeChannelService;
+import bisq.chat.trade.channel.PublicTradeChannelService;
+import bisq.chat.trade.channel.TradeChannelSelectionService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;

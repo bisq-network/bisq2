@@ -15,14 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.chat.trade.priv;
+package bisq.chat.trade.channel;
 
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.PrivateGroupChannelService;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
-import bisq.chat.trade.TradeChatOffer;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.trade.message.PrivateTradeChatMessage;
+import bisq.chat.trade.message.PublicTradeChatMessage;
+import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
