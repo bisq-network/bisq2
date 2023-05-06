@@ -108,13 +108,28 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PublicChannelService 
+    // API 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public ObservableArray<BisqEasyPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
+
+
+    @Override
+    public void leaveChannel(BisqEasyPublicChatChannel channel) {
+        //todo
+    }
+
+    public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
+        return findChannel(BisqEasyPublicChatChannel.createId(market));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected BisqEasyPublicChatMessage createChatMessage(String text,
@@ -159,12 +174,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
     private void maybeAddPublicTradeChannel(BisqEasyPublicChatChannel channel) {
         if (!getChannels().contains(channel)) {
-            channel.getChatChannelNotificationType().addObserver(value -> persist());
             getChannels().add(channel);
         }
-    }
-
-    public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
-        return findChannel(BisqEasyPublicChatChannel.createId(market));
     }
 }

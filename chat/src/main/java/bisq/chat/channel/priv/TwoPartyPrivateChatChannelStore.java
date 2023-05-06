@@ -74,7 +74,6 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
     }
 
     public void setAll(List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
-        this.channels.clear();
-        this.channels.addAll(twoPartyPrivateChatChannels);
+        this.channels.setAll(twoPartyPrivateChatChannels);
     }
 }

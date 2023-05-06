@@ -174,7 +174,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
                     mediationRequest.getRequester(),
                     mediationRequest.getPeer()
             );
-            bisqEasyPrivateTradeChatChannelService.setMediationActivated(channel, true);
+            bisqEasyPrivateTradeChatChannelService.setIsInMediation(channel, true);
             mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyPrivateTradeChatChannelService.addMessage(chatMessage, channel));
             //tradeChannelSelectionService.selectChannel(channel);
 
@@ -189,7 +189,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
                     if (!channel.getIsInMediation().get()) {
-                        bisqEasyPrivateTradeChatChannelService.setMediationActivated(channel, true);
+                        bisqEasyPrivateTradeChatChannelService.setIsInMediation(channel, true);
                         // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                         //todo send messages as well
                     }

@@ -55,7 +55,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Private" + StringUtils.capitalize(chatChannelDomain.name()) + "ChannelStore",
+                "Private" + StringUtils.capitalize(chatChannelDomain.name()) + "ChatChannelStore",
                 persistableStore);
     }
 
@@ -90,9 +90,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     @Override
     protected TwoPartyPrivateChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
-        twoPartyPrivateChatChannel.getChatChannelNotificationType().addObserver(value -> persist());
-        return twoPartyPrivateChatChannel;
+        return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
     }
 
     @Override
@@ -122,6 +120,11 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                                                                TwoPartyPrivateChatChannel channel) {
         return sendMessage(StringUtils.createShortUid(), text, citation, channel, channel.getPeer(), ChatMessageType.TEXT);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)

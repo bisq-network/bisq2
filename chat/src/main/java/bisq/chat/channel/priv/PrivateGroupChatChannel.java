@@ -36,7 +36,5 @@ public abstract class PrivateGroupChatChannel<M extends PrivateChatMessage> exte
                                       List<M> chatMessages,
                                       ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
-
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
     }
 }

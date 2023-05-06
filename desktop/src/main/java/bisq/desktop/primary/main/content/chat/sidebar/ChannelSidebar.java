@@ -107,7 +107,7 @@ public class ChannelSidebar {
             }
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
-            model.channelName.set(chatChannel.getDisplayString());
+            model.channelTitle.set(chatChannel.getChannelTitle());
             model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
                     .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
@@ -154,7 +154,7 @@ public class ChannelSidebar {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
-        private final StringProperty channelName = new SimpleStringProperty();
+        private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
@@ -206,7 +206,7 @@ public class ChannelSidebar {
 
         @Override
         protected void onViewAttached() {
-            headline.textProperty().bind(model.channelName);
+            headline.textProperty().bind(model.channelTitle);
             descriptionText.textProperty().bind(model.description);
             descriptionText.visibleProperty().bind(model.descriptionVisible);
             descriptionText.managedProperty().bind(model.descriptionVisible);

@@ -15,7 +15,7 @@ public final class PublicTradeChannelDto {
     @EqualsAndHashCode.Include
     private String channelId;
     private String description;
-    private String displayString;
+    private String channelTitle;
 
     @JsonProperty("market")
     private MarketDto marketDto;
@@ -24,7 +24,7 @@ public final class PublicTradeChannelDto {
         PublicTradeChannelDto dto = new PublicTradeChannelDto();
         dto.channelId = bisqEasyPublicChatChannel.getId();
         dto.description = bisqEasyPublicChatChannel.getDescription();
-        dto.displayString = bisqEasyPublicChatChannel.getDisplayString();
+        dto.channelTitle = bisqEasyPublicChatChannel.getChannelTitle();
         dto.marketDto = MarketDto.from(bisqEasyPublicChatChannel.getMarket());
         return dto;
     }

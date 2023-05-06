@@ -45,9 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
-        C extends PrivateChatChannel<M>, S extends PersistableStore<S>>
-        extends ChatChannelService<M, C, S> implements MessageListener {
+public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
@@ -106,9 +104,8 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
-    abstract void leaveChannel(C channel);
-
     protected void leaveChannel(C channel, UserProfile receiver) {
+        //todo handle via members
         if (channel.getChatMessages().stream()
                 .max(Comparator.comparing(ChatMessage::getDate))
                 .stream()

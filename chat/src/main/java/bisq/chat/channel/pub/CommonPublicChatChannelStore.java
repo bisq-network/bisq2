@@ -74,7 +74,6 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
     }
 
     public void setAll(List<CommonPublicChatChannel> privateDiscussionChannels) {
-        this.channels.clear();
-        this.channels.addAll(privateDiscussionChannels);
+        this.channels.setAll(privateDiscussionChannels);
     }
 }

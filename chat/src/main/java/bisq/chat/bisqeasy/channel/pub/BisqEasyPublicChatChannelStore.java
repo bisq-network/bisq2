@@ -80,8 +80,7 @@ public class BisqEasyPublicChatChannelStore implements PersistableStore<BisqEasy
     }
 
     public void setAll(List<BisqEasyPublicChatChannel> privateTradeChannels, Set<String> visibleChannelIds) {
-        this.channels.clear();
-        this.channels.addAll(privateTradeChannels);
+        this.channels.setAll(privateTradeChannels);
         this.visibleChannelIds.clear();
         this.visibleChannelIds.addAll(visibleChannelIds);
     }

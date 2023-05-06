@@ -55,10 +55,10 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     private TwoPartyPrivateChatChannel(String id,
                                        ChatChannelDomain chatChannelDomain,
                                        UserProfile peer,
-                                       UserIdentity myProfile,
+                                       UserIdentity myUserIdentity,
                                        List<TwoPartyPrivateChatMessage> chatMessages,
                                        ChatChannelNotificationType chatChannelNotificationType) {
-        super(id, chatChannelDomain, myProfile, chatMessages, chatChannelNotificationType);
+        super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
     }
@@ -111,7 +111,8 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     }
 
     @Override
-    public String getDisplayString() {
+    public String getChannelTitle() {
+        //todo only show my username if i have multiple identities -> move to service
         return getPeer().getUserName() + "-" + myUserIdentity.getUserName();
     }
 }

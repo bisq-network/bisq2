@@ -25,7 +25,6 @@ import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.common.monetary.Fiat;
-import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -44,7 +43,9 @@ import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,6 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     private final BisqEasyPrivateTradeChatChannelStore persistableStore = new BisqEasyPrivateTradeChatChannelStore();
     @Getter
     private final Persistence<BisqEasyPrivateTradeChatChannelStore> persistence;
-    private final Map<String, Pin> notificationTypeChangePins = new HashMap<>();
 
     public BisqEasyPrivateTradeChatChannelService(PersistenceService persistenceService,
                                                   NetworkService networkService,
@@ -93,8 +93,6 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
-                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
-                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
@@ -108,8 +106,6 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
-                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
-                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
@@ -162,8 +158,8 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         }
     }
 
-    public void setMediationActivated(BisqEasyPrivateTradeChatChannel channel, boolean mediationActivated) {
-        channel.getIsInMediation().set(mediationActivated);
+    public void setIsInMediation(BisqEasyPrivateTradeChatChannel channel, boolean isInMediation) {
+        channel.getIsInMediation().set(isInMediation);
         persist();
     }
 
@@ -209,7 +205,6 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
-
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {

@@ -142,7 +142,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
             model.getSearchText().set("");
-            model.getSelectedChannelAsString().set(chatChannel != null ? chatChannel.getDisplayString() : "");
+            model.getSelectedChannelAsString().set(chatChannel != null ? chatChannel.getChannelTitle() : "");
             model.getSelectedChannel().set(chatChannel);
 
             if (model.getChannelInfoVisible().get()) {

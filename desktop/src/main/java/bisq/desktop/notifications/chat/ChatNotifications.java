@@ -207,7 +207,7 @@ public class ChatNotifications {
                     return;
                 }
             }
-            channelInfo = chatChannel.getDisplayString();
+            channelInfo = chatChannel.getChannelTitle();
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
             channelInfo = Res.get(chatChannel.getChatChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");

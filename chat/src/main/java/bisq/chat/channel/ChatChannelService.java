@@ -52,18 +52,6 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         persist();
     }
 
-    public Optional<C> findChannel(String id) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(id))
-                .findAny();
-    }
-
-    public Optional<C> findChannel(ChatMessage chatMessage) {
-        return findChannel(chatMessage.getChannelId());
-    }
-
-    public abstract ObservableArray<C> getChannels();
-
     public void addMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
             channel.addChatMessage(message);
@@ -76,5 +64,19 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
             chatChannel.setAllMessagesSeen();
         }
         persist();
+    }
+
+    abstract public void leaveChannel(C channel);
+
+    public abstract ObservableArray<C> getChannels();
+
+    public Optional<C> findChannel(String id) {
+        return getChannels().stream()
+                .filter(channel -> channel.getId().equals(id))
+                .findAny();
+    }
+
+    public Optional<C> findChannel(ChatMessage chatMessage) {
+        return findChannel(chatMessage.getChannelId());
     }
 }

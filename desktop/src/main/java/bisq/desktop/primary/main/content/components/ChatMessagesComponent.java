@@ -302,7 +302,7 @@ public class ChatMessagesComponent {
         }
 
         private void fillChannelMention(ChatChannel<?> chatChannel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + chatChannel.getDisplayString() + " ");
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + chatChannel.getChannelTitle() + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());
@@ -462,7 +462,7 @@ public class ChatMessagesComponent {
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            channelMentionPopup.setItemDisplayConverter(ChatChannel::getDisplayString);
+            channelMentionPopup.setItemDisplayConverter(ChatChannel::getChannelTitle);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
         }
 

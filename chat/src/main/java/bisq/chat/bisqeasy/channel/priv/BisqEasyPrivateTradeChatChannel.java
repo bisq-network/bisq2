@@ -84,7 +84,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 Set.of(peer),
                 mediator,
                 new ArrayList<>(),
-                true,
+                false,
                 ChatChannelNotificationType.ALL,
                 new HashSet<>());
     }
@@ -178,9 +178,10 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     public boolean isMediator() {
         return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
-
+    
+    //todo move to service
     @Override
-    public String getDisplayString() {
+    public String getChannelTitle() {
         String mediatorLabel = "";
         Optional<UserProfile> mediator = findMediator();
         if (mediator.isPresent() && isInMediation.get()) {
@@ -195,6 +196,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         }
     }
 
+    //todo move to service
     public String getChannelSelectionDisplayString() {
         String peer = getPeer().getUserName();
         if (!isInMediation.get()) {

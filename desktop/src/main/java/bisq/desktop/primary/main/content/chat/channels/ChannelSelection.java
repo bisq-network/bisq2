@@ -301,7 +301,7 @@ public abstract class ChannelSelection {
 
                 if (chatChannel instanceof PrivateChatChannel) {
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
-                    displayString = privateChatChannel.getDisplayString();
+                    displayString = privateChatChannel.getChannelTitle();
                     // PrivateTradeChannel is handled in ListCell code
                     if (!(chatChannel instanceof BisqEasyPrivateTradeChatChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
@@ -310,7 +310,7 @@ public abstract class ChannelSelection {
                 } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
                     displayString = ((BisqEasyPublicChatChannel) chatChannel).getMarket().getMarketCodes();
                 } else {
-                    displayString = chatChannel.getDisplayString();
+                    displayString = chatChannel.getChannelTitle();
                 }
             }
 
