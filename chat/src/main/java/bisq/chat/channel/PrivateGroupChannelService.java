@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class PrivateGroupChannelService<M extends BasePrivateChatMessage,
         C extends PrivateGroupChannel<M>, S extends PersistableStore<S>>
-        extends PrivateChannelService<M, C, S> implements MessageListener {
+        extends PrivateChatChannelService<M, C, S> implements MessageListener {
 
     public PrivateGroupChannelService(NetworkService networkService,
                                       UserIdentityService userIdentityService,

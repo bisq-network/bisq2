@@ -85,7 +85,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
-        private final PrivateChannelService<?, ?, ?> channelService;
+        private final PrivateChatChannelService<?, ?, ?> channelService;
 
         protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
             super(applicationService);
@@ -219,40 +219,40 @@ public class PrivateChannelSelection extends ChannelSelection {
             model.selectedChannelItem.set(null);
         }
 
-        public void onLeaveChannel(PrivateChannel<?> privateChannel) {
-            new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChannel.getMyUserIdentity().getUserName()))
+        public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
+            new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
                     .closeButtonText(Res.get("cancel"))
                     .actionButtonText(Res.get("social.privateChannel.leave"))
-                    .onAction(() -> doLeaveChannel(privateChannel))
+                    .onAction(() -> doLeaveChannel(privateChatChannel))
                     .show();
         }
 
-        public void doLeaveChannel(PrivateChannel<?> privateChannel) {
-            switch (privateChannel.getChannelDomain()) {
+        public void doLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
+            switch (privateChatChannel.getChannelDomain()) {
                 case TRADE:
-                    ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
+                    ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChannel) privateChatChannel);
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> tradeChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
+                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChatChannel);
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> discussionChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
+                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChatChannel);
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> eventsChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
+                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChatChannel);
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> supportChannelSelectionService.selectChannel(null));
@@ -376,22 +376,22 @@ public class PrivateChannelSelection extends ChannelSelection {
                     }
 
                     ChatChannel<?> chatChannel = item.getChatChannel();
-                    if (!(chatChannel instanceof PrivateChannel)) {
+                    if (!(chatChannel instanceof PrivateChatChannel)) {
                         return;
                     }
 
-                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChatChannel();
+                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    if (privateChannel instanceof PrivateTwoPartyChannel) {
-                        PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
+                    if (privateChatChannel instanceof PrivateTwoPartyChannel) {
+                        PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChatChannel;
                         peer = privateTwoPartyChannel.getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                         Tooltip.install(this, tooltip);
                         icons.add(roboIcon);
-                    } else if (privateChannel instanceof PrivateGroupChannel<?>) {
+                    } else if (privateChatChannel instanceof PrivateGroupChannel<?>) {
                         //todo
-                        PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
+                        PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChatChannel;
                         List<UserProfile> peers = privateGroupChannel.getPeers();
                         peer = peers.get(0);
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
@@ -402,8 +402,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 "PrivateTwoPartyChannel or PrivateGroupChannel");
                     }
 
-                    if (privateChannel instanceof PrivateTradeChannel) {
-                        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) privateChannel;
+                    if (privateChatChannel instanceof PrivateTradeChannel) {
+                        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) privateChatChannel;
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
                         }
@@ -463,7 +463,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         });
                     }
                     removeIcon.setOpacity(0);
-                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChannel));
+                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
                     setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                     setOnMouseEntered(e -> {
                         Transitions.fadeIn(removeIcon);

@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
+public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChatMessage> {
     // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
     private static String createChannelName(String userId1, String userId2) {
         List<String> userIds = new ArrayList<>(List.of(userId1, userId2));

@@ -193,16 +193,16 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 
-    protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
-        if (privateChannel instanceof PrivateTwoPartyChannel) {
-            PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
+    protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
+        if (privateChatChannel instanceof PrivateTwoPartyChannel) {
+            PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChatChannel;
             Image image = RoboHash.getImage(privateTwoPartyChannel.getPeer().getPubKeyHash());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
             model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
-        } else if (privateChannel instanceof PrivateGroupChannel<?>) {
-            PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
+        } else if (privateChatChannel instanceof PrivateGroupChannel<?>) {
+            PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChatChannel;
             List<UserProfile> peers = privateGroupChannel.getPeers();
             //todo impl multiple icons
         }

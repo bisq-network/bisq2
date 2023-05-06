@@ -26,7 +26,7 @@ import java.util.List;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateGroupChannel<T extends BasePrivateChatMessage> extends PrivateChannel<T> {
+public abstract class PrivateGroupChannel<T extends BasePrivateChatMessage> extends PrivateChatChannel<T> {
 
     protected PrivateGroupChannel(ChannelDomain channelDomain,
                                   String channelName,

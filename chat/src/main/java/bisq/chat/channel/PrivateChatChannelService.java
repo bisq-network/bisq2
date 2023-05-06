@@ -43,16 +43,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class PrivateChannelService<M extends BasePrivateChatMessage,
-        C extends PrivateChannel<M>, S extends PersistableStore<S>>
+public abstract class PrivateChatChannelService<M extends BasePrivateChatMessage,
+        C extends PrivateChatChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
-    public PrivateChannelService(NetworkService networkService,
-                                 UserIdentityService userIdentityService,
-                                 UserProfileService userProfileService,
-                                 ProofOfWorkService proofOfWorkService,
-                                 ChannelDomain channelDomain) {
+    public PrivateChatChannelService(NetworkService networkService,
+                                     UserIdentityService userIdentityService,
+                                     UserProfileService userProfileService,
+                                     ProofOfWorkService proofOfWorkService,
+                                     ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, channelDomain);
 
         this.proofOfWorkService = proofOfWorkService;

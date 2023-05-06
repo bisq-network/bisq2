@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends ChatChannel<T> {
+public abstract class PrivateChatChannel<T extends BasePrivateChatMessage> extends ChatChannel<T> {
     protected final UserIdentity myUserIdentity;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
@@ -41,11 +41,11 @@ public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends C
     protected final ObservableSet<ChannelMember> channelMembers = new ObservableSet<>();
     protected final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
-    public PrivateChannel(ChannelDomain channelDomain,
-                          String channelName,
-                          UserIdentity myUserIdentity,
-                          List<T> chatMessages,
-                          ChannelNotificationType channelNotificationType) {
+    public PrivateChatChannel(ChannelDomain channelDomain,
+                              String channelName,
+                              UserIdentity myUserIdentity,
+                              List<T> chatMessages,
+                              ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
