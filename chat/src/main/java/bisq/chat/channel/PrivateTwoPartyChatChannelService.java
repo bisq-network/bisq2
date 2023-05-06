@@ -39,18 +39,18 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTwoPartyChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChatChannel, PrivateTwoPartyChannelStore> {
+public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChatChannel, PrivateTwoPartyChannelStore> {
     @Getter
     private final PrivateTwoPartyChannelStore persistableStore = new PrivateTwoPartyChannelStore();
     @Getter
     private final Persistence<PrivateTwoPartyChannelStore> persistence;
 
-    public PrivateTwoPartyChannelService(PersistenceService persistenceService,
-                                         NetworkService networkService,
-                                         UserIdentityService userIdentityService,
-                                         UserProfileService userProfileService,
-                                         ProofOfWorkService proofOfWorkService,
-                                         ChannelDomain channelDomain) {
+    public PrivateTwoPartyChatChannelService(PersistenceService persistenceService,
+                                             NetworkService networkService,
+                                             UserIdentityService userIdentityService,
+                                             UserProfileService userProfileService,
+                                             ProofOfWorkService proofOfWorkService,
+                                             ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",

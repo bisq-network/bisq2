@@ -60,11 +60,11 @@ public class ChatNotifications {
 
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
+    private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
-    private final PrivateTwoPartyChannelService privateEventsChannelService;
+    private final PrivateTwoPartyChatChannelService privateEventsChannelService;
     private final CommonPublicChatChannelService publicEventsChannelService;
-    private final PrivateTwoPartyChannelService privateSupportChannelService;
+    private final PrivateTwoPartyChatChannelService privateSupportChannelService;
     private final CommonPublicChatChannelService publicSupportChannelService;
 
     private final Map<String, Pin> pinByChannelId = new HashMap<>();

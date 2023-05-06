@@ -153,7 +153,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChannelService) channelService).getChannels());
+                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -165,7 +165,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.EVENTS) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChannelService) channelService).getChannels());
+                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -177,7 +177,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             } else if (model.channelDomain == ChannelDomain.SUPPORT) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChannelService) channelService).getChannels());
+                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
                         channel -> {
@@ -237,21 +237,21 @@ public class PrivateChannelSelection extends ChannelSelection {
                                     () -> tradeChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> discussionChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> eventsChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
-                    ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChatChannel()),
