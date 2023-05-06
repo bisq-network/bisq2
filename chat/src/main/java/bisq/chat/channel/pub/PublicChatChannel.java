@@ -58,7 +58,7 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
 
     //todo
     @Override
-    public Set<String> getMembers() {
+    public Set<String> getUserProfileIdsOfAllChannelMembers() {
         Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
         getChatMessages().forEach(chatMessage -> {
             String authorId = chatMessage.getAuthorId();

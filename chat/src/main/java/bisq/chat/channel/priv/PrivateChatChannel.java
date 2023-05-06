@@ -68,7 +68,7 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     }*/
 
     @Override
-    public Set<String> getMembers() {
+    public Set<String> getUserProfileIdsOfAllChannelMembers() {
         return privateChatChannelMembers.stream()
                 .map(PrivateChatChannelMember::getUserProfile)
                 .map(UserProfile::getId)

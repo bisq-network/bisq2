@@ -103,5 +103,5 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
 
     abstract public String getDisplayString();
 
-    abstract public Set<String> getMembers();
+    abstract public Set<String> getUserProfileIdsOfAllChannelMembers();
 }
