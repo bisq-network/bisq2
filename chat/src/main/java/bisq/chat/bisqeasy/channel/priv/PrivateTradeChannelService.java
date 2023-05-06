@@ -22,7 +22,7 @@ import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateGroupChatChannelService;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Quotation;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
@@ -141,7 +141,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 new Date().getTime(),
                 false,
                 channel.findMediator(),
-                MessageType.TAKE_OFFER,
+                ChatMessageType.TAKE_OFFER,
                 Optional.of(bisqEasyOffer));
         addMessage(takeOfferMessage, channel);
         return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
@@ -153,12 +153,12 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
         String shortUid = StringUtils.createShortUid();
         if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
-                    .map(peer -> sendMessage(shortUid, text, quotation, channel, peer, MessageType.TEXT))
+                    .map(peer -> sendMessage(shortUid, text, quotation, channel, peer, ChatMessageType.TEXT))
                     .collect(Collectors.toList());
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
-            return sendMessage(shortUid, text, quotation, channel, channel.getPeer(), MessageType.TEXT);
+            return sendMessage(shortUid, text, quotation, channel, channel.getPeer(), ChatMessageType.TEXT);
         }
     }
 
@@ -186,7 +186,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                                                                           Optional<Quotation> quotedMessage,
                                                                           long time,
                                                                           boolean wasEdited,
-                                                                          MessageType messageType) {
+                                                                          ChatMessageType chatMessageType) {
         // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
         return new PrivateBisqEasyTradeChatMessage(
@@ -199,7 +199,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 time,
                 wasEdited,
                 mediator,
-                messageType,
+                chatMessageType,
                 Optional.empty());
     }
 
@@ -216,7 +216,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
             userIdentityService.findUserIdentity(message.getReceiversId())
                     .flatMap(myUserIdentity -> findChannelForMessage(message)
                             .or(() -> {
-                                if (message.getMessageType() == MessageType.LEAVE) {
+                                if (message.getChatMessageType() == ChatMessageType.LEAVE) {
                                     return Optional.empty();
                                 } else if (userProfileService.isChatUserIgnored(message.getSender())) {
                                     return Optional.empty();

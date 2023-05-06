@@ -20,7 +20,7 @@ package bisq.chat.channel.priv;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
@@ -89,7 +89,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                                                                               Optional<Quotation> quotedMessage,
                                                                               C channel,
                                                                               UserProfile receiver,
-                                                                              MessageType messageType) {
+                                                                              ChatMessageType chatMessageType) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         M chatMessage = createNewPrivateChatMessage(messageId,
                 channel,
@@ -99,7 +99,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                 quotedMessage,
                 new Date().getTime(),
                 false,
-                messageType);
+                chatMessageType);
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = receiver.getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = myUserIdentity.getNodeIdAndKeyPair();
@@ -112,7 +112,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         if (channel.getChatMessages().stream()
                 .max(Comparator.comparing(ChatMessage::getDate))
                 .stream()
-                .anyMatch(m -> m.getMessageType().equals(MessageType.LEAVE))) {
+                .anyMatch(m -> m.getChatMessageType().equals(ChatMessageType.LEAVE))) {
             // Don't send leave message if peer already left channel
             getChannels().remove(channel);
             return;
@@ -135,7 +135,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                 Optional.empty(),
                 channel,
                 receiver,
-                MessageType.LEAVE);
+                ChatMessageType.LEAVE);
     }
 
     public void removeExpiredMessages(C channel) {
@@ -166,5 +166,5 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                                                      Optional<Quotation> quotedMessage,
                                                      long time,
                                                      boolean wasEdited,
-                                                     MessageType messageType);
+                                                     ChatMessageType chatMessageType);
 }

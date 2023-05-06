@@ -53,7 +53,7 @@ public abstract class ChatMessage implements Proto {
     protected final Optional<Quotation> quotation;
     protected final long date;
     protected final boolean wasEdited;
-    protected final MessageType messageType;
+    protected final ChatMessageType chatMessageType;
     protected final MetaData metaData;
 
     protected ChatMessage(String messageId,
@@ -64,7 +64,7 @@ public abstract class ChatMessage implements Proto {
                           Optional<Quotation> quotation,
                           long date,
                           boolean wasEdited,
-                          MessageType messageType,
+                          ChatMessageType chatMessageType,
                           MetaData metaData) {
         this.messageId = messageId;
         this.chatChannelDomain = chatChannelDomain;
@@ -74,7 +74,7 @@ public abstract class ChatMessage implements Proto {
         this.quotation = quotation;
         this.date = date;
         this.wasEdited = wasEdited;
-        this.messageType = messageType;
+        this.chatMessageType = chatMessageType;
         this.metaData = metaData;
     }
 
@@ -94,7 +94,7 @@ public abstract class ChatMessage implements Proto {
                 .setAuthorId(authorId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
-                .setMessageType(messageType.toProto())
+                .setChatMessageType(chatMessageType.toProto())
                 .setMetaData(metaData.toProto());
         quotation.ifPresent(quotedMessage -> builder.setQuotation(quotedMessage.toProto()));
         optionalText.ifPresent(builder::setText);

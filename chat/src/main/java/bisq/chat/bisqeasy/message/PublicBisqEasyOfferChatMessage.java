@@ -19,7 +19,7 @@ package bisq.chat.bisqeasy.message;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
@@ -54,7 +54,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 quotedMessage,
                 date,
                 wasEdited,
-                MessageType.TEXT,
+                ChatMessageType.TEXT,
                 new MetaData(ChatMessage.TTL, 100000, PublicBisqEasyOfferChatMessage.class.getSimpleName()));
     }
 
@@ -67,7 +67,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                                            Optional<Quotation> quotedMessage,
                                            long date,
                                            boolean wasEdited,
-                                           MessageType messageType,
+                                           ChatMessageType chatMessageType,
                                            MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
@@ -77,7 +77,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 quotedMessage,
                 date,
                 wasEdited,
-                messageType,
+                chatMessageType,
                 metaData);
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -108,7 +108,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                MessageType.fromProto(baseProto.getMessageType()),
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 

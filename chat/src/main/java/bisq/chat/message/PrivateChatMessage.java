@@ -47,7 +47,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  Optional<Quotation> quotedMessage,
                                  long date,
                                  boolean wasEdited,
-                                 MessageType messageType,
+                                 ChatMessageType chatMessageType,
                                  MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
@@ -57,7 +57,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 quotedMessage,
                 date,
                 wasEdited,
-                messageType,
+                chatMessageType,
                 metaData);
         this.receiversId = receiversId;
         this.sender = sender;

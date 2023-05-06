@@ -26,7 +26,7 @@ import "security.proto";
 import "offer.proto";
 import "user.proto";
 
-enum MessageType {
+enum ChatMessageType {
   TEXT = 0;
   LEAVE = 1;
   TAKE_OFFER = 2;
@@ -61,7 +61,7 @@ message ChatMessage {
   optional Quotation quotation = 6;
   uint64 date = 7;
   bool wasEdited = 8;
-  MessageType messageType = 9;
+  ChatMessageType chatMessageType = 9;
   network.MetaData metaData = 10;
   oneof message {
     TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;

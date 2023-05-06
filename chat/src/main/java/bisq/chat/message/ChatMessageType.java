@@ -20,18 +20,18 @@ package bisq.chat.message;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum MessageType implements ProtoEnum {
+public enum ChatMessageType implements ProtoEnum {
     TEXT,
     LEAVE,
     TAKE_OFFER;
 
     @Override
-    public bisq.chat.protobuf.MessageType toProto() {
-        return bisq.chat.protobuf.MessageType.valueOf(name());
+    public bisq.chat.protobuf.ChatMessageType toProto() {
+        return bisq.chat.protobuf.ChatMessageType.valueOf(name());
     }
 
-    public static MessageType fromProto(bisq.chat.protobuf.MessageType proto) {
-        return ProtobufUtils.enumFromProto(MessageType.class, proto.name());
+    public static ChatMessageType fromProto(bisq.chat.protobuf.ChatMessageType proto) {
+        return ProtobufUtils.enumFromProto(ChatMessageType.class, proto.name());
     }
 
 }

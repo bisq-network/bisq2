@@ -18,7 +18,7 @@
 package bisq.chat.channel.priv;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Quotation;
 import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.common.observable.collection.ObservableArray;
@@ -75,7 +75,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                                                                      Optional<Quotation> quotedMessage,
                                                                      long time,
                                                                      boolean wasEdited,
-                                                                     MessageType messageType) {
+                                                                     ChatMessageType chatMessageType) {
         return new TwoPartyPrivateChatMessage(messageId,
                 channel.getChatChannelDomain(),
                 channel.getChannelName(),
@@ -85,7 +85,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                 quotedMessage,
                 new Date().getTime(),
                 wasEdited,
-                messageType);
+                chatMessageType);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Quotation> quotedMessage,
                                                                                PrivateTwoPartyChatChannel channel) {
-        return sendMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getPeer(), MessageType.TEXT);
+        return sendMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getPeer(), ChatMessageType.TEXT);
     }
 
     protected Optional<PrivateTwoPartyChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {

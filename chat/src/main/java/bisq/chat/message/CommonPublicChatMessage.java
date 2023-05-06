@@ -45,7 +45,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
-                MessageType.TEXT,
+                ChatMessageType.TEXT,
                 new MetaData(ChatMessage.TTL, 100000, CommonPublicChatMessage.class.getSimpleName()));
     }
 
@@ -57,7 +57,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                     Optional<Quotation> quotedMessage,
                                     long date,
                                     boolean wasEdited,
-                                    MessageType messageType,
+                                    ChatMessageType chatMessageType,
                                     MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
@@ -67,7 +67,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
-                messageType,
+                chatMessageType,
                 metaData);
     }
 
@@ -88,7 +88,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                MessageType.fromProto(baseProto.getMessageType()),
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 }

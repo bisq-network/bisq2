@@ -42,9 +42,9 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
                                 Optional<Quotation> quotation,
                                 long date,
                                 boolean wasEdited,
-                                MessageType messageType,
+                                ChatMessageType chatMessageType,
                                 MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, authorId, text, quotation, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, authorId, text, quotation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override

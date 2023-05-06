@@ -187,7 +187,7 @@ public class ChatNotifications {
         String title;
         if (chatMessage instanceof PrivateBisqEasyTradeChatMessage) {
             PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = (PrivateBisqEasyTradeChatMessage) chatMessage;
-            if (privateBisqEasyTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
+            if (privateBisqEasyTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
                 PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");

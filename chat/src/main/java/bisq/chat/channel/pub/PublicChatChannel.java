@@ -21,7 +21,7 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PublicChatMessage;
 import bisq.common.data.Pair;
 import bisq.common.observable.collection.ObservableSet;
@@ -73,7 +73,7 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
                     ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
                     return new Pair<>(entry.getKey(), lastChatMessage);
                 })
-                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
+                .filter(pair -> pair.getSecond().getChatMessageType() != ChatMessageType.LEAVE)
                 .map(Pair::getFirst)
                 .collect(Collectors.toSet());
     }

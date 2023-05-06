@@ -18,7 +18,7 @@
 package bisq.chat.bisqeasy.message;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.message.MessageType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -48,7 +48,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                            long date,
                                            boolean wasEdited,
                                            Optional<UserProfile> mediator,
-                                           MessageType messageType,
+                                           ChatMessageType chatMessageType,
                                            Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
                 ChatChannelDomain.TRADE,
@@ -60,7 +60,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 date,
                 wasEdited,
                 mediator,
-                messageType,
+                chatMessageType,
                 bisqEasyOffer,
                 new MetaData(TTL, 100000, PrivateBisqEasyTradeChatMessage.class.getSimpleName()));
     }
@@ -75,10 +75,10 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                             long date,
                                             boolean wasEdited,
                                             Optional<UserProfile> mediator,
-                                            MessageType messageType,
+                                            ChatMessageType chatMessageType,
                                             Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -128,7 +128,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 mediator,
-                MessageType.fromProto(baseProto.getMessageType()),
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 bisqEasyOffer,
                 MetaData.fromProto(baseProto.getMetaData())
         );

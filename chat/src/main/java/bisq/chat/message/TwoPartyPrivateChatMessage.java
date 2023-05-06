@@ -42,7 +42,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       Optional<Quotation> quotedMessage,
                                       long date,
                                       boolean wasEdited,
-                                      MessageType messageType) {
+                                      ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
                 channelName,
@@ -52,7 +52,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 quotedMessage,
                 date,
                 wasEdited,
-                messageType,
+                chatMessageType,
                 new MetaData(ChatMessage.TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
     }
 
@@ -65,9 +65,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        Optional<Quotation> quotedMessage,
                                        long date,
                                        boolean wasEdited,
-                                       MessageType messageType,
+                                       ChatMessageType chatMessageType,
                                        MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -100,7 +100,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 quotedMessage,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
-                MessageType.fromProto(baseProto.getMessageType()),
+                ChatMessageType.fromProto(baseProto.getChatMessageType()),
                 MetaData.fromProto(baseProto.getMetaData()));
     }
 }
