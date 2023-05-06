@@ -17,9 +17,9 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePublicChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
+import bisq.chat.message.PublicChatMessage;
 import bisq.common.data.Pair;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PublicChannel<M extends BasePublicChatMessage> extends ChatChannel<M> {
+public abstract class PublicChannel<M extends PublicChatMessage> extends ChatChannel<M> {
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 

@@ -29,7 +29,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class CommonPublicChatMessage extends BasePublicChatMessage {
+public final class CommonPublicChatMessage extends PublicChatMessage {
     public CommonPublicChatMessage(ChannelDomain channelDomain,
                                    String channelName,
                                    String authorId,

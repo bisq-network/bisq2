@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePublicChatMessage;
+import bisq.chat.message.PublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public abstract class PublicChannelService<M extends BasePublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
+public abstract class PublicChannelService<M extends PublicChatMessage, C extends PublicChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements DataService.Listener {
 
     public PublicChannelService(NetworkService networkService,

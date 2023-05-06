@@ -33,17 +33,17 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class BasePublicChatMessage extends ChatMessage implements DistributedData {
-    protected BasePublicChatMessage(String messageId,
-                                    ChannelDomain channelDomain,
-                                    String channelName,
-                                    String authorId,
-                                    Optional<String> text,
-                                    Optional<Quotation> quotation,
-                                    long date,
-                                    boolean wasEdited,
-                                    MessageType messageType,
-                                    MetaData metaData) {
+public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+    protected PublicChatMessage(String messageId,
+                                ChannelDomain channelDomain,
+                                String channelName,
+                                String authorId,
+                                Optional<String> text,
+                                Optional<Quotation> quotation,
+                                long date,
+                                boolean wasEdited,
+                                MessageType messageType,
+                                MetaData metaData) {
         super(messageId, channelDomain, channelName, authorId, text, quotation, date, wasEdited, messageType, metaData);
     }
 

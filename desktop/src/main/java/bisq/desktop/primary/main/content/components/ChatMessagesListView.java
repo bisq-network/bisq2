@@ -465,7 +465,7 @@ public class ChatMessagesListView {
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
             if (!isMyMessage(chatMessage)) {
-                if (chatMessage instanceof BasePublicChatMessage) {
+                if (chatMessage instanceof PublicChatMessage) {
                     items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
                             () -> onIgnoreUser(chatMessage)));
                 }
@@ -912,8 +912,8 @@ public class ChatMessagesListView {
                             replyIcon.setVisible(!isMyMessage);
                             replyIcon.setManaged(!isMyMessage);
 
-                            pmIcon.setVisible(!isMyMessage && chatMessage instanceof BasePublicChatMessage);
-                            pmIcon.setManaged(!isMyMessage && chatMessage instanceof BasePublicChatMessage);
+                            pmIcon.setVisible(!isMyMessage && chatMessage instanceof PublicChatMessage);
+                            pmIcon.setManaged(!isMyMessage && chatMessage instanceof PublicChatMessage);
 
                             editIcon.setVisible(isMyMessage && allowEditing);
                             editIcon.setManaged(isMyMessage && allowEditing);
