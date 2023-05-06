@@ -30,17 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
+public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
     protected final ChannelDomain channelDomain;
 
-    public ChannelService(NetworkService networkService,
-                          UserIdentityService userIdentityService,
-                          UserProfileService userProfileService,
-                          ChannelDomain channelDomain) {
+    public ChatChannelService(NetworkService networkService,
+                              UserIdentityService userIdentityService,
+                              UserProfileService userProfileService,
+                              ChannelDomain channelDomain) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;

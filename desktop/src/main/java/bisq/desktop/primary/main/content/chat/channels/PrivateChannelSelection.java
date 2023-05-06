@@ -126,7 +126,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected ChannelService<?, ?, ?> getChannelService() {
+        protected ChatChannelService<?, ?, ?> getChannelService() {
             return channelService;
         }
 

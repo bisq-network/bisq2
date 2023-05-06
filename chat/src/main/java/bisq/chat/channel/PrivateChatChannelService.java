@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         C extends PrivateChatChannel<M>, S extends PersistableStore<S>>
-        extends ChannelService<M, C, S> implements MessageListener {
+        extends ChatChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,

@@ -3,8 +3,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.ChannelService;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.channel.PrivateTradeChatChannel;
@@ -63,7 +63,7 @@ public abstract class ChannelSelection {
 
         protected abstract Model getChannelSelectionModel();
 
-        protected abstract ChannelService<?, ?, ?> getChannelService();
+        protected abstract ChatChannelService<?, ?, ?> getChannelService();
 
         @Override
         public void onActivate() {

@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
-import bisq.chat.channel.ChannelService;
+import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.CommonPublicChatChannel;
 import bisq.chat.channel.PublicChatChannelService;
 import bisq.desktop.common.observable.FxBindings;
@@ -72,7 +72,7 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         }
 
         @Override
-        protected ChannelService<?, ?, ?> getChannelService() {
+        protected ChatChannelService<?, ?, ?> getChannelService() {
             return publicDiscussionChannelService;
         }
 

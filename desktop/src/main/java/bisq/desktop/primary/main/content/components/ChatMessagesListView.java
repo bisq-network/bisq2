@@ -167,7 +167,7 @@ public class ChatMessagesListView {
         private Pin chatMessagesPin;
         private Pin offerOnlySettingsPin;
         @Nullable
-        private ChannelService<?, ?, ?> currentChannelService;
+        private ChatChannelService<?, ?, ?> currentChatChannelService;
         private Subscription selectedChannelSubscription;
         private Subscription focusSubscription;
 
@@ -234,19 +234,19 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                        currentChannelService = publicTradeChannelService;
+                        currentChatChannelService = publicTradeChannelService;
                     } else if (channel instanceof PrivateTradeChatChannel) {
                         chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTradeChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
-                        currentChannelService = privateTradeChannelService;
+                        currentChatChannelService = privateTradeChannelService;
                     } else if (channel == null) {
                         model.chatMessages.clear();
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        currentChannelService = null;
+                        currentChatChannelService = null;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
@@ -260,7 +260,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                        currentChannelService = publicDiscussionChannelService;
+                        currentChatChannelService = publicDiscussionChannelService;
                     } else if (channel instanceof PrivateTwoPartyChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -269,7 +269,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
-                        currentChannelService = privateDiscussionChannelService;
+                        currentChatChannelService = privateDiscussionChannelService;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
@@ -283,7 +283,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                        currentChannelService = publicEventsChannelService;
+                        currentChatChannelService = publicEventsChannelService;
                     } else if (channel instanceof PrivateTwoPartyChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -292,7 +292,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
-                        currentChannelService = privateEventsChannelService;
+                        currentChatChannelService = privateEventsChannelService;
                     }
                 });
             } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
@@ -306,7 +306,7 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                        currentChannelService = publicSupportChannelService;
+                        currentChatChannelService = publicSupportChannelService;
                     } else if (channel instanceof PrivateTwoPartyChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
@@ -315,18 +315,18 @@ public class ChatMessagesListView {
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
-                        currentChannelService = privateSupportChannelService;
+                        currentChatChannelService = privateSupportChannelService;
                     }
                 });
             }
             focusSubscription = EasyBind.subscribe(view.getRoot().getScene().getWindow().focusedProperty(), focused -> {
-                if (focused && currentChannelService != null && model.getSelectedChannel().get() != null) {
-                    currentChannelService.updateSeenChatMessageIds(model.getSelectedChannel().get());
+                if (focused && currentChatChannelService != null && model.getSelectedChannel().get() != null) {
+                    currentChatChannelService.updateSeenChatMessageIds(model.getSelectedChannel().get());
                 }
             });
             selectedChannelSubscription = EasyBind.subscribe(model.selectedChannel, selectedChannel -> {
-                if (currentChannelService != null && selectedChannel != null) {
-                    currentChannelService.updateSeenChatMessageIds(selectedChannel);
+                if (currentChatChannelService != null && selectedChannel != null) {
+                    currentChatChannelService.updateSeenChatMessageIds(selectedChannel);
                 }
             });
         }

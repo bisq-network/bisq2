@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
-import bisq.chat.channel.ChannelService;
+import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.CommonPublicChatChannel;
 import bisq.chat.channel.PublicChatChannelService;
 import bisq.chat.trade.channel.TradeChannelSelectionService;
@@ -75,7 +75,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         }
 
         @Override
-        protected ChannelService<?, ?, ?> getChannelService() {
+        protected ChatChannelService<?, ?, ?> getChannelService() {
             return publicEventsChannelService;
         }
 
