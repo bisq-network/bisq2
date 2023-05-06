@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.common.currency.Market;
@@ -184,8 +184,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         public void onHideTradeChannel(PublicTradeChannel channel) {
-            Optional<PublicTradeChatMessage> myOpenOffer = channel.getChatMessages().stream()
-                    .filter(PublicTradeChatMessage::hasTradeChatOffer)
+            Optional<PublicBisqEasyOfferChatMessage> myOpenOffer = channel.getChatMessages().stream()
+                    .filter(PublicBisqEasyOfferChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
                     .findAny();
             if (myOpenOffer.isPresent()) {

@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.channel.pub;
 
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.Quotation;
@@ -44,7 +44,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PublicTradeChannelService extends PublicChatChannelService<PublicTradeChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
+public class PublicTradeChannelService extends PublicChatChannelService<PublicBisqEasyOfferChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
     @Getter
     private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
     @Getter
@@ -93,16 +93,16 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicTr
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage) {
-            processAddedMessage((PublicTradeChatMessage) distributedData);
+        if (distributedData instanceof PublicBisqEasyOfferChatMessage) {
+            processAddedMessage((PublicBisqEasyOfferChatMessage) distributedData);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicTradeChatMessage) {
-            processRemovedMessage((PublicTradeChatMessage) distributedData);
+        if (distributedData instanceof PublicBisqEasyOfferChatMessage) {
+            processRemovedMessage((PublicBisqEasyOfferChatMessage) distributedData);
         }
     }
 
@@ -117,11 +117,11 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicTr
     }
 
     @Override
-    protected PublicTradeChatMessage createChatMessage(String text,
-                                                       Optional<Quotation> quotedMessage,
-                                                       PublicTradeChannel publicChannel,
-                                                       UserProfile userProfile) {
-        return new PublicTradeChatMessage(publicChannel.getChannelName(),
+    protected PublicBisqEasyOfferChatMessage createChatMessage(String text,
+                                                               Optional<Quotation> quotedMessage,
+                                                               PublicTradeChannel publicChannel,
+                                                               UserProfile userProfile) {
+        return new PublicBisqEasyOfferChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -131,10 +131,10 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicTr
     }
 
     @Override
-    protected PublicTradeChatMessage createEditedChatMessage(PublicTradeChatMessage originalChatMessage,
-                                                             String editedText,
-                                                             UserProfile userProfile) {
-        return new PublicTradeChatMessage(originalChatMessage.getChannelName(),
+    protected PublicBisqEasyOfferChatMessage createEditedChatMessage(PublicBisqEasyOfferChatMessage originalChatMessage,
+                                                                     String editedText,
+                                                                     UserProfile userProfile) {
+        return new PublicBisqEasyOfferChatMessage(originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),

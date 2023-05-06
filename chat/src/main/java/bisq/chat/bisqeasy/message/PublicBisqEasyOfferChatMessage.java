@@ -35,16 +35,16 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicTradeChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
+public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
-    public PublicTradeChatMessage(String channelName,
-                                  String authorId,
-                                  Optional<BisqEasyOffer> bisqEasyOffer,
-                                  Optional<String> text,
-                                  Optional<Quotation> quotedMessage,
-                                  long date,
-                                  boolean wasEdited) {
+    public PublicBisqEasyOfferChatMessage(String channelName,
+                                          String authorId,
+                                          Optional<BisqEasyOffer> bisqEasyOffer,
+                                          Optional<String> text,
+                                          Optional<Quotation> quotedMessage,
+                                          long date,
+                                          boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 ChatChannelDomain.TRADE,
                 channelName,
@@ -55,20 +55,20 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements B
                 date,
                 wasEdited,
                 MessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, PublicTradeChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, PublicBisqEasyOfferChatMessage.class.getSimpleName()));
     }
 
-    private PublicTradeChatMessage(String messageId,
-                                   ChatChannelDomain chatChannelDomain,
-                                   String channelName,
-                                   String authorId,
-                                   Optional<BisqEasyOffer> bisqEasyOffer,
-                                   Optional<String> text,
-                                   Optional<Quotation> quotedMessage,
-                                   long date,
-                                   boolean wasEdited,
-                                   MessageType messageType,
-                                   MetaData metaData) {
+    private PublicBisqEasyOfferChatMessage(String messageId,
+                                           ChatChannelDomain chatChannelDomain,
+                                           String channelName,
+                                           String authorId,
+                                           Optional<BisqEasyOffer> bisqEasyOffer,
+                                           Optional<String> text,
+                                           Optional<Quotation> quotedMessage,
+                                           long date,
+                                           boolean wasEdited,
+                                           MessageType messageType,
+                                           MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
                 channelName,
@@ -83,22 +83,22 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements B
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
-        bisq.chat.protobuf.PublicTradeChatMessage.Builder builder = bisq.chat.protobuf.PublicTradeChatMessage.newBuilder();
+        bisq.chat.protobuf.PublicBisqEasyOfferChatMessage.Builder builder = bisq.chat.protobuf.PublicBisqEasyOfferChatMessage.newBuilder();
         bisqEasyOffer.ifPresent(bisqEasyOffer -> builder.setBisqEasyOffer(bisqEasyOffer.toProto()));
-        return getChatMessageBuilder().setPublicTradeChatMessage(builder).build();
+        return getChatMessageBuilder().setPublicBisqEasyOfferChatMessage(builder).build();
     }
 
-    public static PublicTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static PublicBisqEasyOfferChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPublicTradeChatMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicTradeChatMessage().getBisqEasyOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPublicBisqEasyOfferChatMessage().hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
-        return new PublicTradeChatMessage(
+        return new PublicBisqEasyOfferChatMessage(
                 baseProto.getMessageId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),

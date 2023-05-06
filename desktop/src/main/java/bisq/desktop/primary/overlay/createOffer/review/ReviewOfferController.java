@@ -24,7 +24,7 @@ import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -140,7 +140,7 @@ public class ReviewOfferController implements Controller {
         publicTradeChannelService.showChannel(channel);
         tradeChannelSelectionService.selectChannel(channel);
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getChannelName(),
+        PublicBisqEasyOfferChatMessage myOfferMessage = new PublicBisqEasyOfferChatMessage(channel.getChannelName(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(bisqEasyOffer),
                 Optional.empty(),
@@ -164,7 +164,7 @@ public class ReviewOfferController implements Controller {
     }
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
-        PublicTradeChatMessage chatMessage = listItem.getChatMessage();
+        PublicBisqEasyOfferChatMessage chatMessage = listItem.getChatMessage();
         TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
             model.getShowTakeOfferSuccess().set(true);
             buttonsVisibleHandler.accept(false);

@@ -20,7 +20,7 @@ package bisq.desktop.helpers;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.network.NetworkService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -38,7 +38,7 @@ public class TakeOfferHelper {
                                                                                            UserIdentityService userIdentityService,
                                                                                            MediationService mediationService,
                                                                                            PrivateTradeChannelService privateTradeChannelService,
-                                                                                           PublicTradeChatMessage tradeChatMessage) {
+                                                                                           PublicBisqEasyOfferChatMessage tradeChatMessage) {
         checkArgument(tradeChatMessage.getBisqEasyOffer().isPresent(), "tradeChatMessage must contain offer");
         return userProfileService.findUserProfile(tradeChatMessage.getAuthorId())
                 .map(makerUserProfile -> {

@@ -26,7 +26,7 @@ import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -241,7 +241,7 @@ public class ChatMessagesListView {
                         chatMessagesPin.unbind();
                     }
                     if (channel instanceof PublicTradeChannel) {
-                        chatMessagesPin = FxBindings.<PublicTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PublicBisqEasyOfferChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
@@ -394,7 +394,7 @@ public class ChatMessagesListView {
         // UI - handle internally
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void onTakeOffer(PublicTradeChatMessage chatMessage) {
+        private void onTakeOffer(PublicBisqEasyOfferChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
 
             TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage)
@@ -426,8 +426,8 @@ public class ChatMessagesListView {
         }
 
         private void doDeleteMessage(ChatMessage chatMessage, UserIdentity messageAuthor) {
-            if (chatMessage instanceof PublicTradeChatMessage) {
-                publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, messageAuthor);
+            if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
+                publicTradeChannelService.deleteChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, messageAuthor);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
 
                 //todo services dont do any domain specific here
@@ -452,9 +452,9 @@ public class ChatMessagesListView {
             if (!isMyMessage(chatMessage)) {
                 return;
             }
-            if (chatMessage instanceof PublicTradeChatMessage) {
+            if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-                publicTradeChannelService.publishEditedChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
+                publicTradeChannelService.publishEditedChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicDiscussionChannelService.publishEditedChatMessage((CommonPublicChatMessage) chatMessage, editedText, userIdentity);
@@ -517,9 +517,9 @@ public class ChatMessagesListView {
             boolean offerOnly = settingsService.getOffersOnly().get();
             Predicate<ChatMessageListItem<? extends ChatMessage>> predicate = item -> {
                 boolean offerOnlyPredicate = true;
-                if (item.getChatMessage() instanceof PublicTradeChatMessage) {
-                    PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) item.getChatMessage();
-                    offerOnlyPredicate = !offerOnly || publicTradeChatMessage.hasTradeChatOffer();
+                if (item.getChatMessage() instanceof PublicBisqEasyOfferChatMessage) {
+                    PublicBisqEasyOfferChatMessage publicBisqEasyOfferChatMessage = (PublicBisqEasyOfferChatMessage) item.getChatMessage();
+                    offerOnlyPredicate = !offerOnly || publicBisqEasyOfferChatMessage.hasTradeChatOffer();
                 }
                 return offerOnlyPredicate &&
                         item.getSenderUserProfile().isPresent() &&
@@ -720,7 +720,7 @@ public class ChatMessagesListView {
 
 
                                 boolean isOfferMessage = model.isOfferMessage(chatMessage);
-                                boolean isPublicOfferMessage = chatMessage instanceof PublicTradeChatMessage && isOfferMessage;
+                                boolean isPublicOfferMessage = chatMessage instanceof PublicBisqEasyOfferChatMessage && isOfferMessage;
                                 boolean myMessage = model.isMyMessage(chatMessage);
 
                                 dateTime.setVisible(false);
@@ -802,7 +802,7 @@ public class ChatMessagesListView {
                                         VBox reputationVBox = new VBox(4, reputationLabel, reputationScoreDisplay);
                                         reputationVBox.setAlignment(Pos.CENTER_LEFT);
 
-                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer((PublicTradeChatMessage) chatMessage));
+                                        takeOfferButton.setOnAction(e -> controller.onTakeOffer((PublicBisqEasyOfferChatMessage) chatMessage));
 
                                         VBox messageVBox = new VBox(quotedMessageVBox, message);
                                         HBox.setMargin(userProfileIconVbox, new Insets(-5, 0, -5, 0));

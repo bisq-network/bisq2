@@ -23,7 +23,7 @@ import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
@@ -197,9 +197,9 @@ public class ChatNotifications {
         }
 
         if (chatMessage instanceof PublicChatMessage) {
-            if (chatMessage instanceof PublicTradeChatMessage) {
-                PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.hasTradeChatOffer()) {
+            if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
+                PublicBisqEasyOfferChatMessage publicBisqEasyOfferChatMessage = (PublicBisqEasyOfferChatMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !publicBisqEasyOfferChatMessage.hasTradeChatOffer()) {
                     return;
                 }
                 PublicTradeChannel publicTradeChannel = (PublicTradeChannel) chatChannel;
@@ -239,7 +239,7 @@ public class ChatNotifications {
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PublicTradeChatMessage,
+            Pin pin = FxBindings.<PublicBisqEasyOfferChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());

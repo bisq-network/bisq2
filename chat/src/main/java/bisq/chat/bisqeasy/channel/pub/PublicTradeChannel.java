@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.channel.pub;
 
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.pub.PublicChatChannel;
@@ -32,7 +32,7 @@ import java.util.HashSet;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends PublicChatChannel<PublicTradeChatMessage> {
+public final class PublicTradeChannel extends PublicChatChannel<PublicBisqEasyOfferChatMessage> {
     public static String getChannelName(Market market) {
         return market.toString();
     }

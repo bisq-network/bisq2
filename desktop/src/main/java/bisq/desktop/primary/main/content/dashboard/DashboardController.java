@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.dashboard;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -108,7 +108,7 @@ public class DashboardController implements Controller {
         if (allowUpdateOffersOnline) {
             UIThread.run(() ->
                     model.getOffersOnline().set(String.valueOf(publicTradeChannelService.getChannels().stream().flatMap(channel -> channel.getChatMessages().stream())
-                            .filter(PublicTradeChatMessage::hasTradeChatOffer)
+                            .filter(PublicBisqEasyOfferChatMessage::hasTradeChatOffer)
                             .count())));
         }
     }

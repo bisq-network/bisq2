@@ -18,7 +18,7 @@
 package bisq.chat.message;
 
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
@@ -107,8 +107,8 @@ public abstract class ChatMessage implements Proto {
                 return TwoPartyPrivateChatMessage.fromProto(proto);
             }
 
-            case PUBLICTRADECHATMESSAGE: {
-                return PublicTradeChatMessage.fromProto(proto);
+            case PUBLICBISQEASYOFFERCHATMESSAGE: {
+                return PublicBisqEasyOfferChatMessage.fromProto(proto);
             }
             case PRIVATEBISQEASYTRADECHATMESSAGE: {
                 return PrivateBisqEasyTradeChatMessage.fromProto(proto);
@@ -130,8 +130,8 @@ public abstract class ChatMessage implements Proto {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PUBLICTRADECHATMESSAGE: {
-                        return PublicTradeChatMessage.fromProto(proto);
+                    case PUBLICBISQEASYOFFERCHATMESSAGE: {
+                        return PublicBisqEasyOfferChatMessage.fromProto(proto);
                     }
                     case COMMONPUBLICCHATMESSAGE: {
                         return CommonPublicChatMessage.fromProto(proto);

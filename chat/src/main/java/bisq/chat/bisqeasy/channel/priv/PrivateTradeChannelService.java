@@ -19,7 +19,7 @@ package bisq.chat.bisqeasy.channel.priv;
 
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.MessageType;
@@ -116,7 +116,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 });
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicTradeChatMessage offerMessage,
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicBisqEasyOfferChatMessage offerMessage,
                                                                                     PrivateTradeChatChannel channel) {
         checkArgument(offerMessage.getBisqEasyOffer().isPresent());
         UserProfile maker = channel.getPeer();

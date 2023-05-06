@@ -22,7 +22,7 @@ import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
-import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -73,7 +73,7 @@ public class MarketController implements Controller {
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<PublicTradeChatMessage> allMessages = publicTradeChannelService.getChannels().stream()
+                    Set<PublicBisqEasyOfferChatMessage> allMessages = publicTradeChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());

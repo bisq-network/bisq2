@@ -67,7 +67,7 @@ message ChatMessage {
     TwoPartyPrivateChatMessage twoPartyPrivateChatMessage = 20;
     CommonPublicChatMessage commonPublicChatMessage = 21;
     PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = 22;
-    PublicTradeChatMessage publicTradeChatMessage = 23;
+    PublicBisqEasyOfferChatMessage publicBisqEasyOfferChatMessage = 23;
   }
 }
 
@@ -139,7 +139,7 @@ message BisqEasyOffer {
   uint64 requiredTotalReputationScore = 8;
 }
 
-message PublicTradeChatMessage {
+message PublicBisqEasyOfferChatMessage {
   optional BisqEasyOffer bisqEasyOffer = 1;
 }
 
