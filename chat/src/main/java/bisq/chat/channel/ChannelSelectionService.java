@@ -36,19 +36,19 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
     private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateTwoPartyChannelService privateTwoPartyChannelService;
-    private final PublicChatChannelService publicChatChannelService;
+    private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChannelSelectionService(PersistenceService persistenceService,
                                    PrivateTwoPartyChannelService privateTwoPartyChannelService,
-                                   PublicChatChannelService publicChatChannelService,
+                                   CommonPublicChatChannelService commonPublicChatChannelService,
                                    ChannelDomain channelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(channelDomain.name()) + "ChannelSelectionStore",
                 persistableStore);
         this.privateTwoPartyChannelService = privateTwoPartyChannelService;
-        this.publicChatChannelService = publicChatChannelService;
+        this.commonPublicChatChannelService = commonPublicChatChannelService;
     }
 
     public CompletableFuture<Boolean> initialize() {
@@ -79,7 +79,7 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     }
 
     private void applySelectedChannel() {
-        Stream<ChatChannel<?>> stream = Stream.concat(publicChatChannelService.getChannels().stream(),
+        Stream<ChatChannel<?>> stream = Stream.concat(commonPublicChatChannelService.getChannels().stream(),
                 privateTwoPartyChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
@@ -94,7 +94,7 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
 
     private void maybeSelectChannels() {
         if (getSelectedChannel().get() == null) {
-            publicChatChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
+            commonPublicChatChannelService.getChannels().stream().findAny().ifPresent(this::selectChannel);
         }
         persist();
     }

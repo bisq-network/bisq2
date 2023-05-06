@@ -109,15 +109,15 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
         private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-        private final PublicChatChannelService publicDiscussionChannelService;
+        private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
         private final ChannelSelectionService discussionChannelSelectionService;
         private final SettingsService settingsService;
-        private final PublicChatChannelService publicEventsChannelService;
+        private final CommonPublicChatChannelService publicEventsChannelService;
         private final PrivateTwoPartyChannelService privateEventsChannelService;
         private final ChannelSelectionService eventsChannelSelectionService;
-        private final PublicChatChannelService publicSupportChannelService;
+        private final CommonPublicChatChannelService publicSupportChannelService;
         private final PrivateTwoPartyChannelService privateSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
         private final UserProfileSelection userProfileSelection;

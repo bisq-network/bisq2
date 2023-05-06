@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.support;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelSelectionService;
-import bisq.chat.channel.PublicChatChannelService;
+import bisq.chat.channel.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
@@ -40,7 +40,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     }
 
     @Override
-    public PublicChatChannelService getPublicChannelService() {
+    public CommonPublicChatChannelService getPublicChannelService() {
         return chatService.getPublicSupportChannelService();
     }
 

@@ -37,19 +37,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class PublicChatChannelService extends PublicChannelService<CommonPublicChatMessage, CommonPublicChatChannel, PublicChatChannelStore> {
+public class CommonPublicChatChannelService extends PublicChannelService<CommonPublicChatMessage, CommonPublicChatChannel, PublicChatChannelStore> {
     @Getter
     private final PublicChatChannelStore persistableStore = new PublicChatChannelStore();
     @Getter
     private final Persistence<PublicChatChannelStore> persistence;
     private final List<CommonPublicChatChannel> defaultChannels;
 
-    public PublicChatChannelService(PersistenceService persistenceService,
-                                    NetworkService networkService,
-                                    UserIdentityService userIdentityService,
-                                    UserProfileService userProfileService,
-                                    ChannelDomain channelDomain,
-                                    List<CommonPublicChatChannel> defaultChannels) {
+    public CommonPublicChatChannelService(PersistenceService persistenceService,
+                                          NetworkService networkService,
+                                          UserIdentityService userIdentityService,
+                                          UserProfileService userProfileService,
+                                          ChannelDomain channelDomain,
+                                          List<CommonPublicChatChannel> defaultChannels) {
         super(networkService, userIdentityService, userProfileService, channelDomain);
 
         this.defaultChannels = defaultChannels;

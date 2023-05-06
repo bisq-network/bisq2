@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.CommonPublicChatChannel;
-import bisq.chat.channel.PublicChatChannelService;
+import bisq.chat.channel.CommonPublicChatChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
@@ -51,7 +51,7 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicChatChannelService publicSupportChannelService;
+        private final CommonPublicChatChannelService publicSupportChannelService;
         private final ChannelSelectionService supportChannelSelectionService;
 
         protected Controller(DefaultApplicationService applicationService) {

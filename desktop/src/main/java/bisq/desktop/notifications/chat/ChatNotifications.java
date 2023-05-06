@@ -61,11 +61,11 @@ public class ChatNotifications {
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-    private final PublicChatChannelService publicDiscussionChannelService;
+    private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final PrivateTwoPartyChannelService privateEventsChannelService;
-    private final PublicChatChannelService publicEventsChannelService;
+    private final CommonPublicChatChannelService publicEventsChannelService;
     private final PrivateTwoPartyChannelService privateSupportChannelService;
-    private final PublicChatChannelService publicSupportChannelService;
+    private final CommonPublicChatChannelService publicSupportChannelService;
 
     private final Map<String, Pin> pinByChannelId = new HashMap<>();
     private final ObservableList<ChatNotification<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();

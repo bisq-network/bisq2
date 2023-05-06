@@ -31,7 +31,7 @@ import java.util.Optional;
 @Slf4j
 public abstract class ChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
     protected ChannelSelectionService channelSelectionService;
-    protected PublicChatChannelService publicChatChannelService;
+    protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChannelSelection publicChannelSelection;
 
     public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
@@ -40,14 +40,14 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
 
     @Override
     public void createDependencies() {
-        publicChatChannelService = getPublicChannelService();
+        commonPublicChatChannelService = getPublicChannelService();
         channelSelectionService = getChannelSelectionService();
         publicChannelSelection = getPublicChannelSelection();
     }
 
     abstract public ChannelSelectionService getChannelSelectionService();
 
-    abstract public PublicChatChannelService getPublicChannelService();
+    abstract public CommonPublicChatChannelService getPublicChannelService();
 
     abstract public PublicChannelSelection getPublicChannelSelection();
 
