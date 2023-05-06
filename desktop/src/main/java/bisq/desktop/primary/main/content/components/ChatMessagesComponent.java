@@ -20,10 +20,10 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -118,10 +118,10 @@ public class ChatMessagesComponent {
         private final QuotedMessageBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
-        private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
+        private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
         private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
-        private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
+        private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
@@ -139,8 +139,8 @@ public class ChatMessagesComponent {
         private Controller(DefaultApplicationService applicationService,
                            ChatChannelDomain chatChannelDomain) {
             ChatService chatService = applicationService.getChatService();
-            publicBisqEasyOfferChatChannelService = chatService.getPublicBisqEasyOfferChatChannelService();
-            privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
+            bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
+            bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -238,7 +238,7 @@ public class ChatMessagesComponent {
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
             Optional<Citation> citation = citationBlock.getCitation();
-            if (chatChannel instanceof PublicBisqEasyOfferChatChannel) {
+            if (chatChannel instanceof BisqEasyPublicChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
@@ -248,10 +248,10 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                publicBisqEasyOfferChatChannelService.publishChatMessage(text, citation, (PublicBisqEasyOfferChatChannel) chatChannel, userIdentity);
-            } else if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
-                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateBisqEasyTradeChatChannel) chatChannel).isMediator()) {
-                    privateBisqEasyTradeChatChannelService.sendTextMessage(text, citation, (PrivateBisqEasyTradeChatChannel) chatChannel);
+                bisqEasyPublicChatChannelService.publishChatMessage(text, citation, (BisqEasyPublicChatChannel) chatChannel, userIdentity);
+            } else if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
+                    bisqEasyPrivateTradeChatChannelService.sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }

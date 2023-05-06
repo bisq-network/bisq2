@@ -18,8 +18,8 @@
 package bisq.chat;
 
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
@@ -42,9 +42,9 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class ChatService implements Service {
-    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
-    private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final ChatChannelSelectionService discussionChatChannelSelectionService;
@@ -62,18 +62,18 @@ public class ChatService implements Service {
                        UserProfileService userProfileService) {
 
         // Trade
-        privateBisqEasyTradeChatChannelService = new PrivateBisqEasyTradeChatChannelService(persistenceService,
+        bisqEasyPrivateTradeChatChannelService = new BisqEasyPrivateTradeChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService);
-        publicBisqEasyOfferChatChannelService = new PublicBisqEasyOfferChatChannelService(persistenceService,
+        bisqEasyPublicChatChannelService = new BisqEasyPublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService);
         bisqEasyChatChannelSelectionService = new BisqEasyChatChannelSelectionService(persistenceService,
-                privateBisqEasyTradeChatChannelService,
-                publicBisqEasyOfferChatChannelService);
+                bisqEasyPrivateTradeChatChannelService,
+                bisqEasyPublicChatChannelService);
 
         // Discussion
         privateDiscussionChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
@@ -146,8 +146,8 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return CompletableFutureUtils.allOf(
-                privateBisqEasyTradeChatChannelService.initialize(),
-                publicBisqEasyOfferChatChannelService.initialize(),
+                bisqEasyPrivateTradeChatChannelService.initialize(),
+                bisqEasyPublicChatChannelService.initialize(),
                 bisqEasyChatChannelSelectionService.initialize(),
 
                 privateDiscussionChannelService.initialize(),
@@ -168,8 +168,8 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFutureUtils.allOf(
-                privateBisqEasyTradeChatChannelService.shutdown(),
-                publicBisqEasyOfferChatChannelService.shutdown(),
+                bisqEasyPrivateTradeChatChannelService.shutdown(),
+                bisqEasyPublicChatChannelService.shutdown(),
                 bisqEasyChatChannelSelectionService.shutdown(),
 
                 privateDiscussionChannelService.shutdown(),

@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.channel.pub;
 
-import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.Citation;
@@ -44,36 +44,36 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelService<PublicBisqEasyOfferChatMessage, PublicBisqEasyOfferChatChannel, PublicBisqEasyOfferChatChannelStore> {
+public class BisqEasyPublicChatChannelService extends PublicChatChannelService<BisqEasyPublicChatMessage, BisqEasyPublicChatChannel, BisqEasyPublicChatChannelStore> {
     @Getter
-    private final PublicBisqEasyOfferChatChannelStore persistableStore = new PublicBisqEasyOfferChatChannelStore();
+    private final BisqEasyPublicChatChannelStore persistableStore = new BisqEasyPublicChatChannelStore();
     @Getter
-    private final Persistence<PublicBisqEasyOfferChatChannelStore> persistence;
+    private final Persistence<BisqEasyPublicChatChannelStore> persistence;
     @Getter
     private final Observable<Integer> numVisibleChannels = new Observable<>(0);
 
-    public PublicBisqEasyOfferChatChannelService(PersistenceService persistenceService,
-                                                 NetworkService networkService,
-                                                 UserIdentityService userIdentityService,
-                                                 UserProfileService userProfileService) {
+    public BisqEasyPublicChatChannelService(PersistenceService persistenceService,
+                                            NetworkService networkService,
+                                            UserIdentityService userIdentityService,
+                                            UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService, ChatChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
 
-    public void showChannel(PublicBisqEasyOfferChatChannel channel) {
+    public void showChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelNames().add(channel.getChannelName());
         numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
-    public void hidePublicTradeChannel(PublicBisqEasyOfferChatChannel channel) {
+    public void hidePublicTradeChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelNames().remove(channel.getChannelName());
         numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
-    public boolean isVisible(PublicBisqEasyOfferChatChannel channel) {
+    public boolean isVisible(BisqEasyPublicChatChannel channel) {
         return getVisibleChannelNames().contains(channel.getChannelName());
     }
 
@@ -81,7 +81,7 @@ public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelServ
         return persistableStore.getVisibleChannelNames();
     }
 
-    public Set<PublicBisqEasyOfferChatChannel> getVisibleChannels() {
+    public Set<BisqEasyPublicChatChannel> getVisibleChannels() {
         return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
     }
 
@@ -93,16 +93,16 @@ public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelServ
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicBisqEasyOfferChatMessage) {
-            processAddedMessage((PublicBisqEasyOfferChatMessage) distributedData);
+        if (distributedData instanceof BisqEasyPublicChatMessage) {
+            processAddedMessage((BisqEasyPublicChatMessage) distributedData);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicBisqEasyOfferChatMessage) {
-            processRemovedMessage((PublicBisqEasyOfferChatMessage) distributedData);
+        if (distributedData instanceof BisqEasyPublicChatMessage) {
+            processRemovedMessage((BisqEasyPublicChatMessage) distributedData);
         }
     }
 
@@ -112,16 +112,16 @@ public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelServ
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<PublicBisqEasyOfferChatChannel> getChannels() {
+    public ObservableArray<BisqEasyPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
     @Override
-    protected PublicBisqEasyOfferChatMessage createChatMessage(String text,
-                                                               Optional<Citation> citation,
-                                                               PublicBisqEasyOfferChatChannel publicChannel,
-                                                               UserProfile userProfile) {
-        return new PublicBisqEasyOfferChatMessage(publicChannel.getChannelName(),
+    protected BisqEasyPublicChatMessage createChatMessage(String text,
+                                                          Optional<Citation> citation,
+                                                          BisqEasyPublicChatChannel publicChannel,
+                                                          UserProfile userProfile) {
+        return new BisqEasyPublicChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -131,10 +131,10 @@ public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelServ
     }
 
     @Override
-    protected PublicBisqEasyOfferChatMessage createEditedChatMessage(PublicBisqEasyOfferChatMessage originalChatMessage,
-                                                                     String editedText,
-                                                                     UserProfile userProfile) {
-        return new PublicBisqEasyOfferChatMessage(originalChatMessage.getChannelName(),
+    protected BisqEasyPublicChatMessage createEditedChatMessage(BisqEasyPublicChatMessage originalChatMessage,
+                                                                String editedText,
+                                                                UserProfile userProfile) {
+        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),
@@ -149,15 +149,15 @@ public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelServ
             return;
         }
 
-        PublicBisqEasyOfferChatChannel defaultChannel = new PublicBisqEasyOfferChatChannel(MarketRepository.getDefault());
+        BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
         showChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
-        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new PublicBisqEasyOfferChatChannel(market)));
+        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));
     }
 
-    private void maybeAddPublicTradeChannel(PublicBisqEasyOfferChatChannel channel) {
+    private void maybeAddPublicTradeChannel(BisqEasyPublicChatChannel channel) {
         if (!getChannels().contains(channel)) {
             channel.getChatChannelNotificationType().addObserver(value -> persist());
             getChannels().add(channel);

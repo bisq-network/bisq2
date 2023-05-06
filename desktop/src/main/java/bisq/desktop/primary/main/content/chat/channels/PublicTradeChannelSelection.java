@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
-import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.common.currency.Market;
@@ -89,7 +89,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
+        private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin numVisibleChannelsPin;
@@ -97,7 +97,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService);
 
-            publicBisqEasyOfferChatChannelService = applicationService.getChatService().getPublicBisqEasyOfferChatChannelService();
+            bisqEasyPublicChatChannelService = applicationService.getChatService().getBisqEasyPublicChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
@@ -114,7 +114,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         @Override
         protected ChatChannelService<?, ?, ?> getChannelService() {
-            return publicBisqEasyOfferChatChannelService;
+            return bisqEasyPublicChatChannelService;
         }
 
         @Override
@@ -122,12 +122,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             super.onActivate();
 
             getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
-            channelsPin = FxBindings.<PublicBisqEasyOfferChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<BisqEasyPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
-                    .to(publicBisqEasyOfferChatChannelService.getChannels());
+                    .to(bisqEasyPublicChatChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (channel instanceof PublicBisqEasyOfferChatChannel) {
+                                if (channel instanceof BisqEasyPublicChatChannel) {
                                     model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                                 } else {
                                     model.selectedChannelItem.set(null);
@@ -135,13 +135,13 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                             }
                     ));
 
-            numVisibleChannelsPin = publicBisqEasyOfferChatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
+            numVisibleChannelsPin = bisqEasyPublicChatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
             List<Market> markets = MarketRepository.getAllFiatMarkets();
 
             Set<Market> visibleMarkets = model.filteredList.stream()
-                    .map(e -> ((PublicBisqEasyOfferChatChannel) e.getChatChannel()))
-                    .map(PublicBisqEasyOfferChatChannel::getMarket)
+                    .map(e -> ((BisqEasyPublicChatChannel) e.getChatChannel()))
+                    .map(BisqEasyPublicChatChannel::getMarket)
                     .collect(Collectors.toSet());
             markets.removeAll(visibleMarkets);
             List<View.MarketListItem> marketListItems = markets.stream()
@@ -175,23 +175,23 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                publicBisqEasyOfferChatChannelService.findChannel(ChatChannelDomain.TRADE, PublicBisqEasyOfferChatChannel.getChannelName(marketListItem.market))
+                bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(marketListItem.market))
                         .ifPresent(channel -> {
-                            publicBisqEasyOfferChatChannelService.showChannel(channel);
+                            bisqEasyPublicChatChannelService.showChannel(channel);
                             bisqEasyChatChannelSelectionService.selectChannel(channel);
                         });
             }
         }
 
-        public void onHideTradeChannel(PublicBisqEasyOfferChatChannel channel) {
-            Optional<PublicBisqEasyOfferChatMessage> myOpenOffer = channel.getChatMessages().stream()
-                    .filter(PublicBisqEasyOfferChatMessage::hasTradeChatOffer)
+        public void onHideTradeChannel(BisqEasyPublicChatChannel channel) {
+            Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
+                    .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
                     .findAny();
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
-                publicBisqEasyOfferChatChannelService.hidePublicTradeChannel(channel);
+                bisqEasyPublicChatChannelService.hidePublicTradeChannel(channel);
 
                 model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
                 if (!model.sortedList.isEmpty()) {
@@ -203,17 +203,17 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return publicBisqEasyOfferChatChannelService.findChannel(ChatChannelDomain.TRADE, PublicBisqEasyOfferChatChannel.getChannelName(market))
+            return bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }
 
         private void applyPredicate() {
             model.filteredList.setPredicate(item -> {
-                checkArgument(item.getChatChannel() instanceof PublicBisqEasyOfferChatChannel,
+                checkArgument(item.getChatChannel() instanceof BisqEasyPublicChatChannel,
                         "Channel must be type of PublicTradeChannel");
-                PublicBisqEasyOfferChatChannel channel = (PublicBisqEasyOfferChatChannel) item.getChatChannel();
-                return publicBisqEasyOfferChatChannelService.isVisible(channel);
+                BisqEasyPublicChatChannel channel = (BisqEasyPublicChatChannel) item.getChatChannel();
+                return bisqEasyPublicChatChannelService.isVisible(channel);
             });
         }
     }
@@ -344,9 +344,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChatChannel() instanceof PublicBisqEasyOfferChatChannel) {
-                        PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = (PublicBisqEasyOfferChatChannel) item.getChatChannel();
-                        Market market = publicBisqEasyOfferChatChannel.getMarket();
+                    if (item != null && !empty && item.getChatChannel() instanceof BisqEasyPublicChatChannel) {
+                        BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) item.getChatChannel();
+                        Market market = bisqEasyPublicChatChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());
 
@@ -365,7 +365,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                         });
 
                         removeIcon.setOpacity(0);
-                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(publicBisqEasyOfferChatChannel));
+                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(bisqEasyPublicChatChannel));
                         setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                         setOnMouseEntered(e -> {
                             Transitions.fadeIn(removeIcon);

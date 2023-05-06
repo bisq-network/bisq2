@@ -18,12 +18,12 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
-import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
@@ -63,8 +63,8 @@ public class ChatNotifications {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
 
-    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-    private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final TwoPartyPrivateChatChannelService privateEventsChannelService;
@@ -86,8 +86,8 @@ public class ChatNotifications {
         this.notificationsService = notificationsService;
         this.settingsService = settingsService;
 
-        privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
-        publicBisqEasyOfferChatChannelService = chatService.getPublicBisqEasyOfferChatChannelService();
+        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
 
         privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -110,10 +110,10 @@ public class ChatNotifications {
 
         sortedChatMessages.setComparator(ChatNotification::compareTo);
 
-        privateBisqEasyTradeChatChannelService.getChannels().addListener(() ->
-                onPrivateTradeChannelsChanged(privateBisqEasyTradeChatChannelService.getChannels()));
-        publicBisqEasyOfferChatChannelService.getChannels().addListener(() ->
-                onPublicTradeChannelsChanged(publicBisqEasyOfferChatChannelService.getChannels()));
+        bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
+                onPrivateTradeChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+        bisqEasyPublicChatChannelService.getChannels().addListener(() ->
+                onPublicTradeChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
 
         privateDiscussionChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateDiscussionChannelService.getChannels()));
@@ -185,10 +185,10 @@ public class ChatNotifications {
         }
         String channelInfo;
         String title;
-        if (chatMessage instanceof PrivateBisqEasyTradeChatMessage) {
-            PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = (PrivateBisqEasyTradeChatMessage) chatMessage;
-            if (privateBisqEasyTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
-                PrivateBisqEasyTradeChatChannel privateTradeChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
+        if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
+            BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
+            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
+                BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
                 notificationsService.notify(title, msg);
@@ -197,13 +197,13 @@ public class ChatNotifications {
         }
 
         if (chatMessage instanceof PublicChatMessage) {
-            if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
-                PublicBisqEasyOfferChatMessage publicBisqEasyOfferChatMessage = (PublicBisqEasyOfferChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !publicBisqEasyOfferChatMessage.hasTradeChatOffer()) {
+            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasTradeChatOffer()) {
                     return;
                 }
-                PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = (PublicBisqEasyOfferChatChannel) chatChannel;
-                if (!publicBisqEasyOfferChatChannelService.isVisible(publicBisqEasyOfferChatChannel)) {
+                BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
+                if (!bisqEasyPublicChatChannelService.isVisible(bisqEasyPublicChatChannel)) {
                     return;
                 }
             }
@@ -219,13 +219,13 @@ public class ChatNotifications {
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
     // thus we have boilerplate methods here...
 
-    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateBisqEasyTradeChatChannel> channels) {
+    private void onPrivateTradeChannelsChanged(ObservableArray<BisqEasyPrivateTradeChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PrivateBisqEasyTradeChatMessage,
+            Pin pin = FxBindings.<BisqEasyPrivateTradeChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());
@@ -233,13 +233,13 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicTradeChannelsChanged(ObservableArray<PublicBisqEasyOfferChatChannel> channels) {
+    private void onPublicTradeChannelsChanged(ObservableArray<BisqEasyPublicChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PublicBisqEasyOfferChatMessage,
+            Pin pin = FxBindings.<BisqEasyPublicChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());

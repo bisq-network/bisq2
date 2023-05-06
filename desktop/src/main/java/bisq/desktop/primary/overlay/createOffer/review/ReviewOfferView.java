@@ -18,7 +18,7 @@
 package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.common.utils.Transitions;
@@ -361,7 +361,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     @EqualsAndHashCode
     @Getter
     static class ListItem implements TableItem {
-        private final PublicBisqEasyOfferChatMessage chatMessage;
+        private final BisqEasyPublicChatMessage chatMessage;
         private final Optional<UserProfile> senderUserProfile;
         private final String userName;
         private final String amount;
@@ -369,7 +369,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
 
-        public ListItem(PublicBisqEasyOfferChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
+        public ListItem(BisqEasyPublicChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             userName = senderUserProfile.map(UserProfile::getUserName).orElse("");

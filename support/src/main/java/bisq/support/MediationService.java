@@ -18,8 +18,8 @@
 package bisq.support;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
@@ -64,7 +64,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();
     private final UserIdentityService userIdentityService;
     private final RoleRegistrationService roleRegistrationService;
-    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
 
     public MediationService(NetworkService networkService,
                             ChatService chatService,
@@ -72,7 +72,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
         roleRegistrationService = userService.getRoleRegistrationService();
-        privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
+        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
 
 
@@ -133,7 +133,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestMediation(PrivateBisqEasyTradeChatChannel privateTradeChannel) {
+    public void requestMediation(BisqEasyPrivateTradeChatChannel privateTradeChannel) {
         BisqEasyOffer bisqEasyOffer = privateTradeChannel.getBisqEasyOffer();
         UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
         UserProfile peer = privateTradeChannel.getPeer();
@@ -168,14 +168,14 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     private void processMediationRequest(MediationRequest mediationRequest) {
         findMyMediatorUserIdentity().ifPresent(myMediatorUserIdentity -> {
-            PrivateBisqEasyTradeChatChannel channel = privateBisqEasyTradeChatChannelService.mediatorFindOrCreatesChannel(
+            BisqEasyPrivateTradeChatChannel channel = bisqEasyPrivateTradeChatChannelService.mediatorFindOrCreatesChannel(
                     mediationRequest.getBisqEasyOffer(),
                     myMediatorUserIdentity,
                     mediationRequest.getRequester(),
                     mediationRequest.getPeer()
             );
-            privateBisqEasyTradeChatChannelService.setMediationActivated(channel, true);
-            mediationRequest.getChatMessages().forEach(chatMessage -> privateBisqEasyTradeChatChannelService.addMessage(chatMessage, channel));
+            bisqEasyPrivateTradeChatChannelService.setMediationActivated(channel, true);
+            mediationRequest.getChatMessages().forEach(chatMessage -> bisqEasyPrivateTradeChatChannelService.addMessage(chatMessage, channel));
             //tradeChannelSelectionService.selectChannel(channel);
 
             networkService.confidentialSend(new MediationResponse(mediationRequest.getBisqEasyOffer()), mediationRequest.getRequester().getNetworkId(), myMediatorUserIdentity.getNodeIdAndKeyPair());
@@ -185,11 +185,11 @@ public class MediationService implements Service, DataService.Listener, MessageL
     }
 
     private void processMediationResponse(MediationResponse mediationResponse) {
-        privateBisqEasyTradeChatChannelService.findChannelById(mediationResponse.getBisqEasyOffer().getId())
+        bisqEasyPrivateTradeChatChannelService.findChannelById(mediationResponse.getBisqEasyOffer().getId())
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
                     if (!channel.getIsInMediation().get()) {
-                        privateBisqEasyTradeChatChannelService.setMediationActivated(channel, true);
+                        bisqEasyPrivateTradeChatChannelService.setMediationActivated(channel, true);
                         // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                         //todo send messages as well
                     }

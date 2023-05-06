@@ -2,9 +2,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
@@ -77,9 +77,9 @@ public abstract class ChannelSelection {
 
         private void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
             UIThread.run(() -> {
-                if (getChannelService() instanceof PublicBisqEasyOfferChatChannelService) {
-                    PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService = (PublicBisqEasyOfferChatChannelService) getChannelService();
-                    if (!publicBisqEasyOfferChatChannelService.isVisible((PublicBisqEasyOfferChatChannel) chatChannel)) {
+                if (getChannelService() instanceof BisqEasyPublicChatChannelService) {
+                    BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = (BisqEasyPublicChatChannelService) getChannelService();
+                    if (!bisqEasyPublicChatChannelService.isVisible((BisqEasyPublicChatChannel) chatChannel)) {
                         return;
                     }
                 }
@@ -303,12 +303,12 @@ public abstract class ChannelSelection {
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
                     displayString = privateChatChannel.getDisplayString();
                     // PrivateTradeChannel is handled in ListCell code
-                    if (!(chatChannel instanceof PrivateBisqEasyTradeChatChannel) && hasMultipleProfiles) {
+                    if (!(chatChannel instanceof BisqEasyPrivateTradeChatChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
                         displayString += " [" + privateChatChannel.getMyUserIdentity().getUserName() + "]";
                     }
-                } else if (chatChannel instanceof PublicBisqEasyOfferChatChannel) {
-                    displayString = ((PublicBisqEasyOfferChatChannel) chatChannel).getMarket().getMarketCodes();
+                } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
+                    displayString = ((BisqEasyPublicChatChannel) chatChannel).getMarket().getMarketCodes();
                 } else {
                     displayString = chatChannel.getDisplayString();
                 }

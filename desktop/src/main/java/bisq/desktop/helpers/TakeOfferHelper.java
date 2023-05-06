@@ -17,10 +17,10 @@
 
 package bisq.desktop.helpers;
 
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.network.NetworkService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -37,19 +37,19 @@ public class TakeOfferHelper {
     public static CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(UserProfileService userProfileService,
                                                                                            UserIdentityService userIdentityService,
                                                                                            MediationService mediationService,
-                                                                                           PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService,
-                                                                                           PublicBisqEasyOfferChatMessage tradeChatMessage) {
+                                                                                           BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService,
+                                                                                           BisqEasyPublicChatMessage tradeChatMessage) {
         checkArgument(tradeChatMessage.getBisqEasyOffer().isPresent(), "tradeChatMessage must contain offer");
         return userProfileService.findUserProfile(tradeChatMessage.getAuthorId())
                 .map(makerUserProfile -> {
                     UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
                     BisqEasyOffer bisqEasyOffer = tradeChatMessage.getBisqEasyOffer().get();
                     Optional<UserProfile> mediator = mediationService.takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
-                    PrivateBisqEasyTradeChatChannel privateTradeChannel = privateBisqEasyTradeChatChannelService.traderFindOrCreatesChannel(bisqEasyOffer,
+                    BisqEasyPrivateTradeChatChannel privateTradeChannel = bisqEasyPrivateTradeChatChannelService.traderFindOrCreatesChannel(bisqEasyOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);
-                    return privateBisqEasyTradeChatChannelService.sendTakeOfferMessage(tradeChatMessage, privateTradeChannel);
+                    return bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(tradeChatMessage, privateTradeChannel);
                 })
                 .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from tradeChatMessage.authorId")));
     }

@@ -18,7 +18,7 @@
 package bisq.chat.bisqeasy.channel.priv;
 
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateChatChannelMember;
@@ -44,23 +44,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChannel<PrivateBisqEasyTradeChatMessage> {
+public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
 
-    public static PrivateBisqEasyTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
+    public static BisqEasyPrivateTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
                                                                  UserIdentity myUserIdentity,
                                                                  UserProfile peer,
                                                                  Optional<UserProfile> mediator) {
-        return new PrivateBisqEasyTradeChatChannel(bisqEasyOffer,
+        return new BisqEasyPrivateTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 peer,
                 mediator);
     }
 
-    public static PrivateBisqEasyTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
+    public static BisqEasyPrivateTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
                                                                    UserIdentity myUserIdentity,
                                                                    UserProfile requestingTrader,
                                                                    UserProfile nonRequestingTrader) {
-        return new PrivateBisqEasyTradeChatChannel(bisqEasyOffer,
+        return new BisqEasyPrivateTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 requestingTrader,
                 nonRequestingTrader);
@@ -70,7 +70,7 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final BisqEasyOffer bisqEasyOffer;
 
-    private PrivateBisqEasyTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+    private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile peer,
                                             Optional<UserProfile> mediator) {
@@ -82,7 +82,7 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
     }
 
     // Mediator
-    private PrivateBisqEasyTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+    private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile requestingTrader,
                                             UserProfile nonRequestingTrader) {
@@ -94,12 +94,12 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
     }
 
     // From proto
-    private PrivateBisqEasyTradeChatChannel(String channelName,
+    private BisqEasyPrivateTradeChatChannel(String channelName,
                                             BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             Set<UserProfile> traders,
                                             Optional<UserProfile> mediator,
-                                            List<PrivateBisqEasyTradeChatMessage> chatMessages,
+                                            List<BisqEasyPrivateTradeChatMessage> chatMessages,
                                             boolean isInMediation,
                                             ChatChannelNotificationType chatChannelNotificationType,
                                             Set<String> seenChatMessageIds) {
@@ -143,7 +143,7 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel.Builder builder = bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel.newBuilder()
+        bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel.Builder builder = bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel.newBuilder()
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .setMyUserIdentity(myUserIdentity.toProto())
                 .addAllTraders(getTraders().stream()
@@ -151,15 +151,15 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
                         .collect(Collectors.toList()))
                 .setIsInMediation(isInMediation.get())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(PrivateBisqEasyTradeChatMessage::toChatMessageProto)
+                        .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
         findMediator().ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChannelBuilder().setPrivateBisqEasyTradeChatChannel(builder).build();
     }
 
-    public static PrivateBisqEasyTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                            bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel proto) {
-        return new PrivateBisqEasyTradeChatChannel(
+    public static BisqEasyPrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                            bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel proto) {
+        return new BisqEasyPrivateTradeChatChannel(
                 baseProto.getChannelName(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -168,7 +168,7 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
                         .collect(Collectors.toSet()),
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
-                        .map(PrivateBisqEasyTradeChatMessage::fromProto)
+                        .map(BisqEasyPrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 proto.getIsInMediation(),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
@@ -176,17 +176,17 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
     }
 
     @Override
-    public void addChatMessage(PrivateBisqEasyTradeChatMessage chatMessage) {
+    public void addChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PrivateBisqEasyTradeChatMessage chatMessage) {
+    public void removeChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateBisqEasyTradeChatMessage> messages) {
+    public void removeChatMessages(Collection<BisqEasyPrivateTradeChatMessage> messages) {
         chatMessages.removeAll(messages);
     }
 
@@ -228,7 +228,7 @@ public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChann
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at PrivateBisqEasyTradeChatChannel");
+        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at BisqEasyPrivateTradeChatChannel");
         return getPeers().get(0);
     }
 

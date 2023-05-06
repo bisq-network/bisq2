@@ -17,9 +17,9 @@
 
 package bisq.chat.bisqeasy.channel;
 
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelSelectionStore;
 import bisq.chat.message.ChatMessage;
@@ -40,15 +40,15 @@ import java.util.stream.Stream;
 public class BisqEasyChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     private final Persistence<ChatChannelSelectionStore> persistence;
-    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-    private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
-                                               PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService,
-                                               PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService) {
-        this.privateBisqEasyTradeChatChannelService = privateBisqEasyTradeChatChannelService;
-        this.publicBisqEasyOfferChatChannelService = publicBisqEasyOfferChatChannelService;
+                                               BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService,
+                                               BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService) {
+        this.bisqEasyPrivateTradeChatChannelService = bisqEasyPrivateTradeChatChannelService;
+        this.bisqEasyPublicChatChannelService = bisqEasyPublicChatChannelService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -69,8 +69,8 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
     }
 
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
-            privateBisqEasyTradeChatChannelService.removeExpiredMessages((PrivateBisqEasyTradeChatChannel) chatChannel);
+        if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+            bisqEasyPrivateTradeChatChannelService.removeExpiredMessages((BisqEasyPrivateTradeChatChannel) chatChannel);
         }
 
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
@@ -80,8 +80,8 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
     }
 
     private void applySelectedChannel() {
-        Stream<ChatChannel<?>> stream = Stream.concat(publicBisqEasyOfferChatChannelService.getChannels().stream(),
-                privateBisqEasyTradeChatChannelService.getChannels().stream());
+        Stream<ChatChannel<?>> stream = Stream.concat(bisqEasyPublicChatChannelService.getChannels().stream(),
+                bisqEasyPrivateTradeChatChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()
@@ -95,12 +95,12 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
 
     private void maybeSelectDefaultChannel() {
         if (getSelectedChannel().get() == null) {
-            publicBisqEasyOfferChatChannelService.getChannels().stream()
+            bisqEasyPublicChatChannelService.getChannels().stream()
                     .filter(publicTradeChannel -> MarketRepository.getDefault().equals(publicTradeChannel.getMarket()))
                     .findAny()
                     .ifPresent(channel -> {
                         selectChannel(channel);
-                        publicBisqEasyOfferChatChannelService.showChannel(channel);
+                        bisqEasyPublicChatChannelService.showChannel(channel);
                     });
         }
         persist();

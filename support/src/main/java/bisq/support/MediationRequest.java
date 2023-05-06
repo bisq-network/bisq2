@@ -18,7 +18,7 @@
 package bisq.support;
 
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
@@ -48,16 +48,16 @@ public final class MediationRequest implements MailboxMessage {
     private final BisqEasyOffer bisqEasyOffer;
     private final UserProfile requester;
     private final UserProfile peer;
-    private final List<PrivateBisqEasyTradeChatMessage> chatMessages;
+    private final List<BisqEasyPrivateTradeChatMessage> chatMessages;
 
-    public MediationRequest(BisqEasyOffer bisqEasyOffer, UserProfile requester, UserProfile peer, List<PrivateBisqEasyTradeChatMessage> chatMessages) {
+    public MediationRequest(BisqEasyOffer bisqEasyOffer, UserProfile requester, UserProfile peer, List<BisqEasyPrivateTradeChatMessage> chatMessages) {
         this.bisqEasyOffer = bisqEasyOffer;
         this.requester = requester;
         this.peer = peer;
         this.chatMessages = chatMessages;
 
         // We need to sort deterministically as the data is used in the proof of work check
-        this.chatMessages.sort(Comparator.comparing((PrivateBisqEasyTradeChatMessage e) -> new ByteArray(e.serialize())));
+        this.chatMessages.sort(Comparator.comparing((BisqEasyPrivateTradeChatMessage e) -> new ByteArray(e.serialize())));
     }
 
     @Override
@@ -74,7 +74,7 @@ public final class MediationRequest implements MailboxMessage {
                 .setRequester(requester.toProto())
                 .setPeer(peer.toProto())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(PrivateBisqEasyTradeChatMessage::toChatMessageProto)
+                        .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()))
                 .build();
     }
@@ -84,7 +84,7 @@ public final class MediationRequest implements MailboxMessage {
                 UserProfile.fromProto(proto.getRequester()),
                 UserProfile.fromProto(proto.getPeer()),
                 proto.getChatMessagesList().stream()
-                        .map(PrivateBisqEasyTradeChatMessage::fromProto)
+                        .map(BisqEasyPrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()));
     }
 

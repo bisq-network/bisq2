@@ -19,10 +19,10 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
-import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
@@ -59,7 +59,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     private final MediationService mediationService;
     private final Optional<WalletService> walletService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
-    PrivateBisqEasyTradeChatMessage lastOfferMessage;
+    BisqEasyPrivateTradeChatMessage lastOfferMessage;
 
     private Pin offerOnlySettingsPin;
     private Pin inMediationPin;
@@ -125,8 +125,8 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getChannelIcon().set(null);
                 return;
             }
-            if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
-                PrivateBisqEasyTradeChatChannel privateChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
+            if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+                BisqEasyPrivateTradeChatChannel privateChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
 
                 if (inMediationPin != null) {
@@ -152,7 +152,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getActionButtonText().set(Res.get("createOffer"));
                 privateChannelSelection.deSelectChannel();
 
-                Market market = ((PublicBisqEasyOfferChatChannel) chatChannel).getMarket();
+                Market market = ((BisqEasyPublicChatChannel) chatChannel).getMarket();
                 StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase()).getFirst();
@@ -166,12 +166,12 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     private void updateLastOfferMessage() {
-        PrivateBisqEasyTradeChatMessage newLastOfferMessage = bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
-                .filter(chatMessage -> chatMessage instanceof PrivateBisqEasyTradeChatMessage)
-                .map(chatMessage -> (PrivateBisqEasyTradeChatMessage) chatMessage)
+        BisqEasyPrivateTradeChatMessage newLastOfferMessage = bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
+                .filter(chatMessage -> chatMessage instanceof BisqEasyPrivateTradeChatMessage)
+                .map(chatMessage -> (BisqEasyPrivateTradeChatMessage) chatMessage)
                 .filter(message -> message.getChannelName().equals(bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChannelName()))
-                .filter(PrivateBisqEasyTradeChatMessage::hasTradeChatOffer)
-                .max(Comparator.comparing(PrivateBisqEasyTradeChatMessage::getDate))
+                .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
+                .max(Comparator.comparing(BisqEasyPrivateTradeChatMessage::getDate))
                 .orElse(null);
 
         if (newLastOfferMessage == lastOfferMessage) return;
@@ -213,15 +213,15 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
     void onCreateOfferButtonClicked() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) return;
+        if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) return;
 
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     void onOpenMediation() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        checkArgument(chatChannel instanceof PrivateBisqEasyTradeChatChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
-        PrivateBisqEasyTradeChatChannel privateTradeChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
+        checkArgument(chatChannel instanceof BisqEasyPrivateTradeChatChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
+        BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
         Optional<UserProfile> mediator = privateTradeChannel.findMediator();
         if (mediator.isPresent()) {
             new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
@@ -240,7 +240,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     void onCompleteTrade() {
-        PrivateBisqEasyTradeChatMessage chatMessage = lastOfferMessage;
+        BisqEasyPrivateTradeChatMessage chatMessage = lastOfferMessage;
         if (chatMessage == null) return;
 
         BisqEasyOffer offer = chatMessage.getBisqEasyOffer().orElse(null);
@@ -254,9 +254,9 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                     thenAccept(receiveAddress -> UIThread.run(() -> {
                         if (receiveAddress == null) return;
 
-                        chatService.getPrivateBisqEasyTradeChatChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
+                        chatService.getBisqEasyPrivateTradeChatChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
                                     String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
-                                    chatService.getPrivateBisqEasyTradeChatChannelService().sendTextMessage(message,
+                                    chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                                             Optional.empty(),
                                             channel);
                                 }
