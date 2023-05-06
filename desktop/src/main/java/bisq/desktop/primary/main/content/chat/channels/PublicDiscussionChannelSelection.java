@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
@@ -52,13 +52,13 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         @Getter
         private final View view;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
-        private final ChannelSelectionService discussionChannelSelectionService;
+        private final ChatChannelSelectionService discussionChatChannelSelectionService;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService);
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
             model = new Model();
             view = new View(model, this);
@@ -84,15 +84,15 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicDiscussionChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(discussionChatChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof CommonPublicChatChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                        } else if (channel == null && !model.channelItems.isEmpty()) {
-                            model.selectedChannelItem.set(model.channelItems.get(0));
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
+                                if (channel instanceof CommonPublicChatChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                                } else {
+                                    model.selectedChannelItem.set(null);
+                                }
                             }
                     ));
         }
@@ -103,7 +103,7 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
                 return;
             }
 
-            discussionChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            discussionChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {

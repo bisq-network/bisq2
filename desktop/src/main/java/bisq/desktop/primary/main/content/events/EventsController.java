@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -35,8 +35,8 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     }
 
     @Override
-    public ChannelSelectionService getChannelSelectionService() {
-        return chatService.getEventsChannelSelectionService();
+    public ChatChannelSelectionService getChannelSelectionService() {
+        return chatService.getEventsChatChannelSelectionService();
     }
 
     @Override

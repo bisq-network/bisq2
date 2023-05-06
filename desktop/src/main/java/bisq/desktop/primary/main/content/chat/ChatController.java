@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
@@ -36,7 +36,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class ChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
-    protected ChannelSelectionService channelSelectionService;
+    protected ChatChannelSelectionService chatChannelSelectionService;
     protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChannelSelection publicChannelSelection;
 
@@ -47,11 +47,11 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     @Override
     public void createDependencies() {
         commonPublicChatChannelService = getPublicChannelService();
-        channelSelectionService = getChannelSelectionService();
+        chatChannelSelectionService = getChannelSelectionService();
         publicChannelSelection = getPublicChannelSelection();
     }
 
-    abstract public ChannelSelectionService getChannelSelectionService();
+    abstract public ChatChannelSelectionService getChannelSelectionService();
 
     abstract public CommonPublicChatChannelService getPublicChannelService();
 
@@ -61,7 +61,7 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     public void onActivate() {
         super.onActivate();
 
-        selectedChannelPin = channelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }
 
     @Override

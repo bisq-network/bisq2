@@ -35,17 +35,17 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class ChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
+public class ChatChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
     private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
     private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
-    public ChannelSelectionService(PersistenceService persistenceService,
-                                   PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService,
-                                   CommonPublicChatChannelService commonPublicChatChannelService,
-                                   ChatChannelDomain chatChannelDomain) {
+    public ChatChannelSelectionService(PersistenceService persistenceService,
+                                       PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService,
+                                       CommonPublicChatChannelService commonPublicChatChannelService,
+                                       ChatChannelDomain chatChannelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(chatChannelDomain.name()) + "ChannelSelectionStore",

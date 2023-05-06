@@ -17,8 +17,8 @@
 
 package bisq.chat;
 
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
@@ -47,13 +47,13 @@ public class ChatService implements Service {
     private final PublicTradeChannelService publicTradeChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final TradeChannelSelectionService tradeChannelSelectionService;
-    private final ChannelSelectionService discussionChannelSelectionService;
+    private final ChatChannelSelectionService discussionChatChannelSelectionService;
     private final PrivateTwoPartyChatChannelService privateSupportChannelService;
     private final CommonPublicChatChannelService publicSupportChannelService;
-    private final ChannelSelectionService supportChannelSelectionService;
+    private final ChatChannelSelectionService supportChatChannelSelectionService;
     private final PrivateTwoPartyChatChannelService privateEventsChannelService;
     private final CommonPublicChatChannelService publicEventsChannelService;
-    private final ChannelSelectionService eventsChannelSelectionService;
+    private final ChatChannelSelectionService eventsChatChannelSelectionService;
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
@@ -93,7 +93,7 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "economy"),
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "offTopic")));
 
-        discussionChannelSelectionService = new ChannelSelectionService(persistenceService,
+        discussionChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
                 privateDiscussionChannelService,
                 publicDiscussionChannelService,
                 ChatChannelDomain.DISCUSSION);
@@ -116,7 +116,7 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "noKyc"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "nodes"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "tradeEvents")));
-        eventsChannelSelectionService = new ChannelSelectionService(persistenceService,
+        eventsChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
                 privateEventsChannelService,
                 publicEventsChannelService,
                 ChatChannelDomain.EVENTS);
@@ -136,7 +136,7 @@ public class ChatService implements Service {
                 List.of(new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "support"),
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "questions"),
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "reports")));
-        supportChannelSelectionService = new ChannelSelectionService(persistenceService,
+        supportChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
                 privateSupportChannelService,
                 publicSupportChannelService,
                 ChatChannelDomain.SUPPORT);
@@ -152,15 +152,15 @@ public class ChatService implements Service {
 
                 privateDiscussionChannelService.initialize(),
                 publicDiscussionChannelService.initialize(),
-                discussionChannelSelectionService.initialize(),
+                discussionChatChannelSelectionService.initialize(),
 
                 privateEventsChannelService.initialize(),
                 publicEventsChannelService.initialize(),
-                eventsChannelSelectionService.initialize(),
+                eventsChatChannelSelectionService.initialize(),
 
                 privateSupportChannelService.initialize(),
                 publicSupportChannelService.initialize(),
-                supportChannelSelectionService.initialize()
+                supportChatChannelSelectionService.initialize()
         ).thenApply(list -> true);
     }
 
@@ -174,15 +174,15 @@ public class ChatService implements Service {
 
                 privateDiscussionChannelService.shutdown(),
                 publicDiscussionChannelService.shutdown(),
-                discussionChannelSelectionService.shutdown(),
+                discussionChatChannelSelectionService.shutdown(),
 
                 privateEventsChannelService.shutdown(),
                 publicEventsChannelService.shutdown(),
-                eventsChannelSelectionService.shutdown(),
+                eventsChatChannelSelectionService.shutdown(),
 
                 privateSupportChannelService.shutdown(),
                 publicSupportChannelService.shutdown(),
-                supportChannelSelectionService.shutdown()
+                supportChatChannelSelectionService.shutdown()
 
         ).thenApply(list -> true);
     }

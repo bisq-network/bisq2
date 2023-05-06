@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -35,8 +35,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     }
 
     @Override
-    public ChannelSelectionService getChannelSelectionService() {
-        return chatService.getDiscussionChannelSelectionService();
+    public ChatChannelSelectionService getChannelSelectionService() {
+        return chatService.getDiscussionChatChannelSelectionService();
     }
 
     @Override

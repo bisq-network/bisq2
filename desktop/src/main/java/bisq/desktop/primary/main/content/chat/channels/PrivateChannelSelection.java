@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.priv.*;
 import bisq.chat.trade.channel.TradeChannelSelectionService;
@@ -84,9 +84,9 @@ public class PrivateChannelSelection extends ChannelSelection {
         @Getter
         private final View view;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService discussionChannelSelectionService;
-        private final ChannelSelectionService eventsChannelSelectionService;
-        private final ChannelSelectionService supportChannelSelectionService;
+        private final ChatChannelSelectionService discussionChatChannelSelectionService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
+        private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final UserIdentityService userIdentityService;
         private Pin inMediationPin;
         private final PrivateChatChannelService<?, ?, ?> channelService;
@@ -112,9 +112,9 @@ public class PrivateChannelSelection extends ChannelSelection {
             }
 
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
-            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
+            supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
@@ -159,7 +159,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
+                selectedChannelPin = FxBindings.subscribe(discussionChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTwoPartyChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
@@ -171,7 +171,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
+                selectedChannelPin = FxBindings.subscribe(eventsChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTwoPartyChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
@@ -183,7 +183,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
 
-                selectedChannelPin = FxBindings.subscribe(supportChannelSelectionService.getSelectedChannel(),
+                selectedChannelPin = FxBindings.subscribe(supportChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
                             if (channel instanceof PrivateTwoPartyChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
@@ -211,11 +211,11 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
                 tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
-                discussionChannelSelectionService.selectChannel(channelItem.getChatChannel());
+                discussionChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.EVENTS) {
-                eventsChannelSelectionService.selectChannel(channelItem.getChatChannel());
+                eventsChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.SUPPORT) {
-                supportChannelSelectionService.selectChannel(channelItem.getChatChannel());
+                supportChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             }
         }
 
@@ -244,22 +244,22 @@ public class PrivateChannelSelection extends ChannelSelection {
                     ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChatChannel()),
-                                    () -> discussionChannelSelectionService.selectChannel(null));
+                            .ifPresentOrElse(e -> discussionChatChannelSelectionService.selectChannel(e.getChatChannel()),
+                                    () -> discussionChatChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
                     ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChatChannel()),
-                                    () -> eventsChannelSelectionService.selectChannel(null));
+                            .ifPresentOrElse(e -> eventsChatChannelSelectionService.selectChannel(e.getChatChannel()),
+                                    () -> eventsChatChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
                     ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChatChannel()),
-                                    () -> supportChannelSelectionService.selectChannel(null));
+                            .ifPresentOrElse(e -> supportChatChannelSelectionService.selectChannel(e.getChatChannel()),
+                                    () -> supportChatChannelSelectionService.selectChannel(null));
                     break;
             }
         }

@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
@@ -54,14 +54,14 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         private final View view;
         private final CommonPublicChatChannelService publicEventsChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService eventsChannelSelectionService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService);
 
             publicEventsChannelService = chatService.getPublicEventsChannelService();
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
             model = new Model();
             view = new View(model, this);
@@ -87,15 +87,15 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicEventsChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(eventsChatChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof CommonPublicChatChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                        } else if (channel == null && !model.channelItems.isEmpty()) {
-                            model.selectedChannelItem.set(model.channelItems.get(0));
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
+                                if (channel instanceof CommonPublicChatChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                                } else {
+                                    model.selectedChannelItem.set(null);
+                                }
                             }
                     ));
         }
@@ -106,7 +106,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
                 return;
             }
 
-            eventsChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            eventsChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {

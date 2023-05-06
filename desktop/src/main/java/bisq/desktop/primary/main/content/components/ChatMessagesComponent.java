@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -123,14 +123,14 @@ public class ChatMessagesComponent {
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService discussionChannelSelectionService;
+        private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
         private final CommonPublicChatChannelService publicEventsChannelService;
         private final PrivateTwoPartyChatChannelService privateEventsChannelService;
-        private final ChannelSelectionService eventsChannelSelectionService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
         private final CommonPublicChatChannelService publicSupportChannelService;
         private final PrivateTwoPartyChatChannelService privateSupportChannelService;
-        private final ChannelSelectionService supportChannelSelectionService;
+        private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private final MediationService mediationService;
         private Pin selectedChannelPin;
@@ -145,15 +145,15 @@ public class ChatMessagesComponent {
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
             publicEventsChannelService = chatService.getPublicEventsChannelService();
             privateEventsChannelService = chatService.getPrivateEventsChannelService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
             publicSupportChannelService = chatService.getPublicSupportChannelService();
             privateSupportChannelService = chatService.getPrivateSupportChannelService();
-            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+            supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -184,11 +184,11 @@ public class ChatMessagesComponent {
             if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+                selectedChannelPin = discussionChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+                selectedChannelPin = eventsChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+                selectedChannelPin = supportChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             }
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
@@ -315,13 +315,13 @@ public class ChatMessagesComponent {
                 // tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(discussionChannelSelectionService::selectChannel);
+                        .ifPresent(discussionChatChannelSelectionService::selectChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(eventsChannelSelectionService::selectChannel);
+                        .ifPresent(eventsChatChannelSelectionService::selectChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(supportChannelSelectionService::selectChannel);
+                        .ifPresent(supportChatChannelSelectionService::selectChannel);
             }
         }
 

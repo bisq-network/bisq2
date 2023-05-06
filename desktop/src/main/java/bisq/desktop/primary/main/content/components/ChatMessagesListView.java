@@ -19,9 +19,9 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
@@ -165,14 +165,14 @@ public class ChatMessagesListView {
         private final ReputationService reputationService;
         private final UserProfileService userProfileService;
         private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService discussionChannelSelectionService;
+        private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
         private final PrivateTwoPartyChatChannelService privateEventsChannelService;
         private final CommonPublicChatChannelService publicEventsChannelService;
-        private final ChannelSelectionService eventsChannelSelectionService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
         private final PrivateTwoPartyChatChannelService privateSupportChannelService;
         private final CommonPublicChatChannelService publicSupportChannelService;
-        private final ChannelSelectionService supportChannelSelectionService;
+        private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final MediationService mediationService;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
@@ -195,15 +195,15 @@ public class ChatMessagesListView {
 
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
             privateEventsChannelService = chatService.getPrivateEventsChannelService();
             publicEventsChannelService = chatService.getPublicEventsChannelService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
             privateSupportChannelService = chatService.getPrivateSupportChannelService();
             publicSupportChannelService = chatService.getPublicSupportChannelService();
-            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+            supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
@@ -261,7 +261,7 @@ public class ChatMessagesListView {
                     }
                 });
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                selectedChannelPin = discussionChatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
                         if (chatMessagesPin != null) {
@@ -284,7 +284,7 @@ public class ChatMessagesListView {
                     }
                 });
             } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                selectedChannelPin = eventsChatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
                         if (chatMessagesPin != null) {
@@ -307,7 +307,7 @@ public class ChatMessagesListView {
                     }
                 });
             } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
+                selectedChannelPin = supportChatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
                         if (chatMessagesPin != null) {
@@ -505,11 +505,11 @@ public class ChatMessagesListView {
                 //PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 //tradeChannelSelectionService.selectChannel(privateTradeChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
+                privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChatChannelSelectionService::selectChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
+                privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChatChannelSelectionService::selectChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
+                privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChatChannelSelectionService::selectChannel);
             }
         }
 
