@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class CommonPublicChatChannelService extends PublicChannelService<CommonPublicChatMessage, CommonPublicChatChannel, PublicChatChannelStore> {
+public class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, PublicChatChannelStore> {
     @Getter
     private final PublicChatChannelStore persistableStore = new PublicChatChannelStore();
     @Getter
