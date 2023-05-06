@@ -260,7 +260,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<CommonPublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
@@ -283,7 +283,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<CommonPublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
@@ -306,7 +306,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<CommonPublicChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
@@ -421,16 +421,16 @@ public class ChatMessagesListView {
         private void doDeleteMessage(ChatMessage chatMessage, UserIdentity messageAuthor) {
             if (chatMessage instanceof PublicTradeChatMessage) {
                 publicTradeChannelService.deleteChatMessage((PublicTradeChatMessage) chatMessage, messageAuthor);
-            } else if (chatMessage instanceof PublicChatMessage) {
+            } else if (chatMessage instanceof CommonPublicChatMessage) {
 
                 //todo services dont do any domain specific here
                 // -> networkService.removeAuthenticatedData(chatMessage, userIdentity.getNodeIdAndKeyPair());
                 publicDiscussionChannelService.findChannelForMessage(chatMessage)
-                        .ifPresent(c -> publicDiscussionChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
+                        .ifPresent(c -> publicDiscussionChannelService.deleteChatMessage((CommonPublicChatMessage) chatMessage, messageAuthor));
                 publicEventsChannelService.findChannelForMessage(chatMessage)
-                        .ifPresent(c -> publicEventsChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
+                        .ifPresent(c -> publicEventsChannelService.deleteChatMessage((CommonPublicChatMessage) chatMessage, messageAuthor));
                 publicSupportChannelService.findChannelForMessage(chatMessage)
-                        .ifPresent(c -> publicSupportChannelService.deleteChatMessage((PublicChatMessage) chatMessage, messageAuthor));
+                        .ifPresent(c -> publicSupportChannelService.deleteChatMessage((CommonPublicChatMessage) chatMessage, messageAuthor));
             }
         }
 
@@ -448,9 +448,9 @@ public class ChatMessagesListView {
             if (chatMessage instanceof PublicTradeChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicTradeChannelService.publishEditedChatMessage((PublicTradeChatMessage) chatMessage, editedText, userIdentity);
-            } else if (chatMessage instanceof PublicChatMessage) {
+            } else if (chatMessage instanceof CommonPublicChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-                publicDiscussionChannelService.publishEditedChatMessage((PublicChatMessage) chatMessage, editedText, userIdentity);
+                publicDiscussionChannelService.publishEditedChatMessage((CommonPublicChatMessage) chatMessage, editedText, userIdentity);
             }
             //todo editing private message not supported yet
         }

@@ -29,14 +29,14 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicChatMessage extends BasePublicChatMessage {
-    public PublicChatMessage(ChannelDomain channelDomain,
-                             String channelName,
-                             String authorId,
-                             String text,
-                             Optional<Quotation> quotedMessage,
-                             long date,
-                             boolean wasEdited) {
+public final class CommonPublicChatMessage extends BasePublicChatMessage {
+    public CommonPublicChatMessage(ChannelDomain channelDomain,
+                                   String channelName,
+                                   String authorId,
+                                   String text,
+                                   Optional<Quotation> quotedMessage,
+                                   long date,
+                                   boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 channelDomain,
                 channelName,
@@ -46,19 +46,19 @@ public final class PublicChatMessage extends BasePublicChatMessage {
                 date,
                 wasEdited,
                 MessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, PublicChatMessage.class.getSimpleName()));
+                new MetaData(ChatMessage.TTL, 100000, CommonPublicChatMessage.class.getSimpleName()));
     }
 
-    private PublicChatMessage(String messageId,
-                              ChannelDomain channelDomain,
-                              String channelName,
-                              String authorId,
-                              Optional<String> text,
-                              Optional<Quotation> quotedMessage,
-                              long date,
-                              boolean wasEdited,
-                              MessageType messageType,
-                              MetaData metaData) {
+    private CommonPublicChatMessage(String messageId,
+                                    ChannelDomain channelDomain,
+                                    String channelName,
+                                    String authorId,
+                                    Optional<String> text,
+                                    Optional<Quotation> quotedMessage,
+                                    long date,
+                                    boolean wasEdited,
+                                    MessageType messageType,
+                                    MetaData metaData) {
         super(messageId,
                 channelDomain,
                 channelName,
@@ -72,14 +72,14 @@ public final class PublicChatMessage extends BasePublicChatMessage {
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicChatMessage(bisq.chat.protobuf.PublicChatMessage.newBuilder()).build();
+        return getChatMessageBuilder().setCommonPublicChatMessage(bisq.chat.protobuf.CommonPublicChatMessage.newBuilder()).build();
     }
 
-    public static PublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
-        return new PublicChatMessage(
+        return new CommonPublicChatMessage(
                 baseProto.getMessageId(),
                 ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),

@@ -65,7 +65,7 @@ message ChatMessage {
   network.MetaData metaData = 10;
   oneof message {
     PrivateTwoPartyChatMessage privateTwoPartyChatMessage = 20;
-    PublicChatMessage publicChatMessage = 21;
+    CommonPublicChatMessage commonPublicChatMessage = 21;
     PrivateTradeChatMessage privateTradeChatMessage = 22;
     PublicTradeChatMessage publicTradeChatMessage = 23;
   }
@@ -100,7 +100,7 @@ message PrivateTwoPartyChannelStore {
 
 
 // Public
-message PublicChatMessage {
+message CommonPublicChatMessage {
 }
 
 message PublicChatChannel {

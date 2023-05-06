@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.CommonPublicChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class PublicChatChannelService extends PublicChannelService<PublicChatMessage, PublicChatChannel, PublicChatChannelStore> {
+public class PublicChatChannelService extends PublicChannelService<CommonPublicChatMessage, PublicChatChannel, PublicChatChannelStore> {
     @Getter
     private final PublicChatChannelStore persistableStore = new PublicChatChannelStore();
     @Getter
@@ -70,16 +70,16 @@ public class PublicChatChannelService extends PublicChannelService<PublicChatMes
     @Override
     public void onAuthenticatedDataAdded(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicChatMessage) {
-            processAddedMessage((PublicChatMessage) distributedData);
+        if (distributedData instanceof CommonPublicChatMessage) {
+            processAddedMessage((CommonPublicChatMessage) distributedData);
         }
     }
 
     @Override
     public void onAuthenticatedDataRemoved(AuthenticatedData authenticatedData) {
         DistributedData distributedData = authenticatedData.getDistributedData();
-        if (distributedData instanceof PublicChatMessage) {
-            processRemovedMessage((PublicChatMessage) distributedData);
+        if (distributedData instanceof CommonPublicChatMessage) {
+            processRemovedMessage((CommonPublicChatMessage) distributedData);
         }
     }
 
@@ -94,11 +94,11 @@ public class PublicChatChannelService extends PublicChannelService<PublicChatMes
     }
 
     @Override
-    protected PublicChatMessage createChatMessage(String text,
-                                                  Optional<Quotation> quotedMessage,
-                                                  PublicChatChannel publicChatChannel,
-                                                  UserProfile userProfile) {
-        return new PublicChatMessage(publicChatChannel.getChannelDomain(),
+    protected CommonPublicChatMessage createChatMessage(String text,
+                                                        Optional<Quotation> quotedMessage,
+                                                        PublicChatChannel publicChatChannel,
+                                                        UserProfile userProfile) {
+        return new CommonPublicChatMessage(publicChatChannel.getChannelDomain(),
                 publicChatChannel.getChannelName(),
                 userProfile.getId(),
                 text,
@@ -108,10 +108,10 @@ public class PublicChatChannelService extends PublicChannelService<PublicChatMes
     }
 
     @Override
-    protected PublicChatMessage createEditedChatMessage(PublicChatMessage originalChatMessage,
-                                                        String editedText,
-                                                        UserProfile userProfile) {
-        return new PublicChatMessage(originalChatMessage.getChannelDomain(),
+    protected CommonPublicChatMessage createEditedChatMessage(CommonPublicChatMessage originalChatMessage,
+                                                              String editedText,
+                                                              UserProfile userProfile) {
+        return new CommonPublicChatMessage(originalChatMessage.getChannelDomain(),
                 originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 editedText,

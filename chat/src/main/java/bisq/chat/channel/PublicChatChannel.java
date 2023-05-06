@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.PublicChatMessage;
+import bisq.chat.message.CommonPublicChatMessage;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,7 +31,7 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicChatChannel extends PublicChannel<PublicChatMessage> {
+public final class PublicChatChannel extends PublicChannel<CommonPublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;
