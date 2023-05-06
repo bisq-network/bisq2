@@ -31,13 +31,13 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicChatChannel extends PublicChannel<CommonPublicChatMessage> {
+public final class CommonPublicChatChannel extends PublicChannel<CommonPublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public PublicChatChannel(ChannelDomain channelDomain, String channelName) {
+    public CommonPublicChatChannel(ChannelDomain channelDomain, String channelName) {
         this(channelDomain,
                 channelName,
                 Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
@@ -47,13 +47,13 @@ public final class PublicChatChannel extends PublicChannel<CommonPublicChatMessa
                 ChannelNotificationType.GLOBAL_DEFAULT);
     }
 
-    private PublicChatChannel(ChannelDomain channelDomain,
-                              String channelName,
-                              String displayName,
-                              String description,
-                              String channelAdminId,
-                              List<String> channelModeratorIds,
-                              ChannelNotificationType channelNotificationType) {
+    private CommonPublicChatChannel(ChannelDomain channelDomain,
+                                    String channelName,
+                                    String displayName,
+                                    String description,
+                                    String channelAdminId,
+                                    List<String> channelModeratorIds,
+                                    ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, channelNotificationType);
 
         this.displayName = displayName;
@@ -66,7 +66,7 @@ public final class PublicChatChannel extends PublicChannel<CommonPublicChatMessa
 
     public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder()
-                .setPublicChatChannel(bisq.chat.protobuf.PublicChatChannel.newBuilder()
+                .setCommonPublicChatChannel(bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
                         .setChannelName(displayName)
                         .setDescription(description)
                         .setChannelAdminId(channelAdminId)
@@ -74,17 +74,17 @@ public final class PublicChatChannel extends PublicChannel<CommonPublicChatMessa
                 .build();
     }
 
-    public static PublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                              bisq.chat.protobuf.PublicChatChannel proto) {
-        PublicChatChannel publicChatChannel = new PublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+    public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                    bisq.chat.protobuf.CommonPublicChatChannel proto) {
+        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 proto.getChannelName(),
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        publicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return publicChatChannel;
+        commonPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return commonPublicChatChannel;
     }
 
     @Override

@@ -244,18 +244,18 @@ public class ChatMessagesComponent {
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
-            } else if (chatChannel instanceof PublicChatChannel) {
+            } else if (chatChannel instanceof CommonPublicChatChannel) {
                 switch (chatChannel.getChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChatChannel) chatChannel, userIdentity);
+                        publicDiscussionChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case EVENTS:
-                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicChatChannel) chatChannel, userIdentity);
+                        publicEventsChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case SUPPORT:
-                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicChatChannel) chatChannel, userIdentity);
+                        publicSupportChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                 }
 

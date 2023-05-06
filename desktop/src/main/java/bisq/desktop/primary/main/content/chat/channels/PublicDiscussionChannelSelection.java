@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChannelService;
-import bisq.chat.channel.PublicChatChannel;
+import bisq.chat.channel.CommonPublicChatChannel;
 import bisq.chat.channel.PublicChatChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -80,13 +80,13 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<CommonPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicDiscussionChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(discussionChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof PublicChatChannel) {
+                        if (channel instanceof CommonPublicChatChannel) {
                             model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
                         } else if (channel == null && !model.channelItems.isEmpty()) {
                             model.selectedChannelItem.set(model.channelItems.get(0));

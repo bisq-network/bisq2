@@ -29,25 +29,25 @@ import java.util.stream.Collectors;
 
 @Getter
 public class PublicChatChannelStore implements PersistableStore<PublicChatChannelStore> {
-    private final ObservableArray<PublicChatChannel> channels = new ObservableArray<>();
+    private final ObservableArray<CommonPublicChatChannel> channels = new ObservableArray<>();
 
     public PublicChatChannelStore() {
     }
 
-    private PublicChatChannelStore(List<PublicChatChannel> privateDiscussionChannels) {
+    private PublicChatChannelStore(List<CommonPublicChatChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PublicChatChannelStore toProto() {
         bisq.chat.protobuf.PublicChatChannelStore.Builder builder = bisq.chat.protobuf.PublicChatChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PublicChatChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(CommonPublicChatChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChatChannelStore proto) {
-        List<PublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
-                .map(e -> (PublicChatChannel) PublicChatChannel.fromProto(e))
+        List<CommonPublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
+                .map(e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
                 .collect(Collectors.toList());
         return new PublicChatChannelStore(privateDiscussionChannels);
     }
@@ -73,7 +73,7 @@ public class PublicChatChannelStore implements PersistableStore<PublicChatChanne
         return new PublicChatChannelStore(channels);
     }
 
-    public void setAll(List<PublicChatChannel> privateDiscussionChannels) {
+    public void setAll(List<CommonPublicChatChannel> privateDiscussionChannels) {
         this.channels.clear();
         this.channels.addAll(privateDiscussionChannels);
     }
