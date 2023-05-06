@@ -8,11 +8,11 @@ import "chat.proto";
 
 
 message MediationRequest {
-  chat.TradeChatOffer tradeChatOffer = 1;
+  chat.BisqEasyOffer bisqEasyOffer = 1;
   user.UserProfile requester = 2;
   user.UserProfile peer = 3;
   repeated chat.ChatMessage chatMessages = 4;
 }
 message MediationResponse {
-  chat.TradeChatOffer tradeChatOffer = 1;
+  chat.BisqEasyOffer bisqEasyOffer = 1;
 }

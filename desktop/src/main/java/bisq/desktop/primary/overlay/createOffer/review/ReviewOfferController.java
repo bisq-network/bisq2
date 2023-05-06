@@ -23,8 +23,8 @@ import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -127,7 +127,7 @@ public class ReviewOfferController implements Controller {
         model.getShowTakeOfferSuccess().set(false);
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-        TradeChatOffer tradeChatOffer = new TradeChatOffer(StringUtils.createUid(),
+        BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
                 model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
@@ -135,14 +135,14 @@ public class ReviewOfferController implements Controller {
                 new ArrayList<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get());
-        model.setMyOfferText(StringUtils.truncate(tradeChatOffer.getChatMessageText(), 100));
+        model.setMyOfferText(StringUtils.truncate(bisqEasyOffer.getChatMessageText(), 100));
 
         publicTradeChannelService.showChannel(channel);
         tradeChannelSelectionService.selectChannel(channel);
 
         PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getChannelName(),
                 userIdentity.getUserProfile().getId(),
-                Optional.of(tradeChatOffer),
+                Optional.of(bisqEasyOffer),
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
@@ -211,18 +211,18 @@ public class ReviewOfferController implements Controller {
             if (userProfileService.findUserProfile(item.getChatMessage().getAuthorId()).isEmpty()) {
                 return false;
             }
-            if (item.getChatMessage().getTradeChatOffer().isEmpty()) {
+            if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {
                 return false;
             }
             if (model.getMyOfferMessage() == null) {
                 return false;
             }
-            if (model.getMyOfferMessage().getTradeChatOffer().isEmpty()) {
+            if (model.getMyOfferMessage().getBisqEasyOffer().isEmpty()) {
                 return false;
             }
 
-            TradeChatOffer myChatOffer = model.getMyOfferMessage().getTradeChatOffer().get();
-            TradeChatOffer peersOffer = item.getChatMessage().getTradeChatOffer().get();
+            BisqEasyOffer myChatOffer = model.getMyOfferMessage().getBisqEasyOffer().get();
+            BisqEasyOffer peersOffer = item.getChatMessage().getBisqEasyOffer().get();
 
             if (peersOffer.getDirection().equals(myChatOffer.getDirection())) {
                 return false;

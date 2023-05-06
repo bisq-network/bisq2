@@ -124,11 +124,11 @@ message PrivateTradeChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
-  optional TradeChatOffer tradeChatOffer = 4;
+  optional BisqEasyOffer bisqEasyOffer = 4;
 
 }
 
-message TradeChatOffer {
+message BisqEasyOffer {
   string id = 1;
   offer.Direction direction = 2;
   common.Market market = 3;
@@ -140,11 +140,11 @@ message TradeChatOffer {
 }
 
 message PublicTradeChatMessage {
-  optional TradeChatOffer tradeChatOffer = 1;
+  optional BisqEasyOffer bisqEasyOffer = 1;
 }
 
 message PrivateTradeChannel {
-  TradeChatOffer tradeChatOffer = 1;
+  BisqEasyOffer bisqEasyOffer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;

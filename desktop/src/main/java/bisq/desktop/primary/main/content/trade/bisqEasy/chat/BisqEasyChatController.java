@@ -21,8 +21,8 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
@@ -243,7 +243,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         PrivateBisqEasyTradeChatMessage chatMessage = lastOfferMessage;
         if (chatMessage == null) return;
 
-        TradeChatOffer offer = chatMessage.getTradeChatOffer().orElse(null);
+        BisqEasyOffer offer = chatMessage.getBisqEasyOffer().orElse(null);
         if (offer == null) return;
 
         if (isMyMessage(chatMessage) == offer.getDirection().isSell()) {
@@ -274,8 +274,8 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     boolean isBtcSeller() {
-        checkArgument(lastOfferMessage.getTradeChatOffer().isPresent());
-        var offer = lastOfferMessage.getTradeChatOffer().get();
+        checkArgument(lastOfferMessage.getBisqEasyOffer().isPresent());
+        var offer = lastOfferMessage.getBisqEasyOffer().get();
 
         return isMyMessage(lastOfferMessage) == offer.getDirection().isBuy();
     }

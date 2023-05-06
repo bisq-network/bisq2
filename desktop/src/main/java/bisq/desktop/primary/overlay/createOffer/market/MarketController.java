@@ -78,7 +78,7 @@ public class MarketController implements Controller {
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());
                     int numOffersInChannel = (int) allMessages.stream()
-                            .filter(message -> message.getTradeChatOffer().isPresent())
+                            .filter(message -> message.getBisqEasyOffer().isPresent())
                             .distinct()
                             .count();
                     int numUsersInChannel = (int) allMessages.stream()

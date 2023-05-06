@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.overlay.createOffer.review;
 
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.common.utils.Transitions;
@@ -373,9 +373,9 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
             this.chatMessage = chatMessage;
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
-            Optional<TradeChatOffer> tradeChatOffer = chatMessage.getTradeChatOffer();
-            amountAsLong = tradeChatOffer.map(TradeChatOffer::getQuoteSideAmount).orElse(0L);
-            String code = tradeChatOffer.map(TradeChatOffer::getMarket)
+            Optional<BisqEasyOffer> bisqEasyOffer = chatMessage.getBisqEasyOffer();
+            amountAsLong = bisqEasyOffer.map(BisqEasyOffer::getQuoteSideAmount).orElse(0L);
+            String code = bisqEasyOffer.map(BisqEasyOffer::getMarket)
                     .map(Market::getQuoteCurrencyCode)
                     .orElse("");
             amount = AmountFormatter.formatAmountWithCode(Fiat.of(amountAsLong, code), true);

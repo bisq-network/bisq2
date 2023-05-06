@@ -17,9 +17,9 @@
 
 package bisq.chat.bisqeasy.channel.priv;
 
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.MessageType;
@@ -86,13 +86,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PrivateTradeChatChannel traderFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
+    public PrivateTradeChatChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
                                                               UserIdentity myUserIdentity,
                                                               UserProfile peer,
                                                               Optional<UserProfile> mediator) {
-        return findChannel(tradeChatOffer.getId())
+        return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByTrader(tradeChatOffer, myUserIdentity, peer, mediator);
+                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
                     Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -101,13 +101,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 });
     }
 
-    public PrivateTradeChatChannel mediatorFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
+    public PrivateTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
                                                                 UserIdentity myUserIdentity,
                                                                 UserProfile requestingTrader,
                                                                 UserProfile nonRequestingTrader) {
-        return findChannel(tradeChatOffer.getId())
+        return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByMediator(tradeChatOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
+                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
                     Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -118,13 +118,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicTradeChatMessage offerMessage,
                                                                                     PrivateTradeChatChannel channel) {
-        checkArgument(offerMessage.getTradeChatOffer().isPresent());
+        checkArgument(offerMessage.getBisqEasyOffer().isPresent());
         UserProfile maker = channel.getPeer();
-        TradeChatOffer tradeChatOffer = offerMessage.getTradeChatOffer().get();
-        String direction = Res.get(tradeChatOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(tradeChatOffer.getQuoteSideAmount(),
-                tradeChatOffer.getMarket().getQuoteCurrencyCode()), true);
-        String methods = Joiner.on(", ").join(tradeChatOffer.getPaymentMethods());
+        BisqEasyOffer bisqEasyOffer = offerMessage.getBisqEasyOffer().get();
+        String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
+                bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
+        String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
         String text = Res.get("bisqEasy.takeOffer.takerRequest",
                 direction, amount, methods);
         Optional<Quotation> quotation = Optional.of(new Quotation(maker.getNym(),
@@ -142,7 +142,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 false,
                 channel.findMediator(),
                 MessageType.TAKE_OFFER,
-                Optional.of(tradeChatOffer));
+                Optional.of(bisqEasyOffer));
         addMessage(takeOfferMessage, channel);
         return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
     }
@@ -220,8 +220,8 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                                     return Optional.empty();
                                 } else if (userProfileService.isChatUserIgnored(message.getSender())) {
                                     return Optional.empty();
-                                } else if (message.getTradeChatOffer().isPresent()) {
-                                    return Optional.of(traderFindOrCreatesChannel(message.getTradeChatOffer().get(),
+                                } else if (message.getBisqEasyOffer().isPresent()) {
+                                    return Optional.of(traderFindOrCreatesChannel(message.getBisqEasyOffer().get(),
                                             myUserIdentity,
                                             message.getSender(),
                                             message.getMediator()));
@@ -309,7 +309,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
   /*  public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
                                                                                       Optional<Quotation> quotedMessage,
                                                                                       PrivateTradeChannel channel,
-                                                                                      Optional<TradeChatOffer> tradeChatOffer) {
+                                                                                      Optional<BisqEasyOffer> bisqEasyOffer) {
         PrivateTradeChatMessage chatMessage = createNewPrivateTradeChatMessage(
                 StringUtils.createShortUid(),
                 channel,
@@ -320,7 +320,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 new Date().getTime(),
                 false,
                 MessageType.TEXT,
-                tradeChatOffer);
+                bisqEasyOffer);
         addMessage(chatMessage, channel);
         NetworkId receiverNetworkId = channel.getPeer().getNetworkId();
         NetworkIdWithKeyPair senderNetworkIdWithKeyPair = channel.getMyUserIdentity().getNodeIdAndKeyPair();

@@ -21,7 +21,7 @@ import java.util.List;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public final class TradeChatOffer implements Proto {
+public final class BisqEasyOffer implements Proto {
     private final String id;
     private final Direction direction;
     private final long baseSideAmount;
@@ -33,14 +33,14 @@ public final class TradeChatOffer implements Proto {
 
     private transient final String chatMessageText;
 
-    public TradeChatOffer(String id,
-                          Direction direction,
-                          Market market,
-                          long baseSideAmount,
-                          long quoteSideAmount,
-                          List<String> paymentMethods,
-                          String makersTradeTerms,
-                          long requiredTotalReputationScore) {
+    public BisqEasyOffer(String id,
+                         Direction direction,
+                         Market market,
+                         long baseSideAmount,
+                         long quoteSideAmount,
+                         List<String> paymentMethods,
+                         String makersTradeTerms,
+                         long requiredTotalReputationScore) {
         this.id = id;
         this.direction = direction;
         this.market = market;
@@ -52,15 +52,15 @@ public final class TradeChatOffer implements Proto {
 
         // We need to sort deterministically as the data is used in the proof of work check
         this.paymentMethods.sort(Comparator.comparing((String e) -> e));
-        chatMessageText = Res.get("createOffer.tradeChatOffer.chatMessage",
+        chatMessageText = Res.get("createOffer.bisqEasyOffer.chatMessage",
                 Res.get(direction.name().toLowerCase()).toUpperCase(),
                 AmountFormatter.formatAmountWithCode(Fiat.of(quoteSideAmount, market.getQuoteCurrencyCode()), true),
                 Joiner.on(", ").join(this.paymentMethods));
     }
 
     @Override
-    public bisq.chat.protobuf.TradeChatOffer toProto() {
-        return bisq.chat.protobuf.TradeChatOffer.newBuilder()
+    public bisq.chat.protobuf.BisqEasyOffer toProto() {
+        return bisq.chat.protobuf.BisqEasyOffer.newBuilder()
                 .setId(id)
                 .setDirection(direction.toProto())
                 .setMarket(market.toProto())
@@ -72,8 +72,8 @@ public final class TradeChatOffer implements Proto {
                 .build();
     }
 
-    public static TradeChatOffer fromProto(bisq.chat.protobuf.TradeChatOffer proto) {
-        return new TradeChatOffer(proto.getId(),
+    public static BisqEasyOffer fromProto(bisq.chat.protobuf.BisqEasyOffer proto) {
+        return new BisqEasyOffer(proto.getId(),
                 Direction.fromProto(proto.getDirection()),
                 Market.fromProto(proto.getMarket()),
                 proto.getBaseSideAmount(),

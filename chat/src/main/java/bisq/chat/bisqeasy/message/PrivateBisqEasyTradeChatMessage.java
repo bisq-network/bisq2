@@ -37,7 +37,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage implements TradeChatOfferMessage {
     private final Optional<UserProfile> mediator;
-    private final Optional<TradeChatOffer> tradeChatOffer;
+    private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public PrivateBisqEasyTradeChatMessage(String messageId,
                                            String channelName,
@@ -49,7 +49,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                            boolean wasEdited,
                                            Optional<UserProfile> mediator,
                                            MessageType messageType,
-                                           Optional<TradeChatOffer> tradeChatOffer) {
+                                           Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
                 ChatChannelDomain.TRADE,
                 channelName,
@@ -61,7 +61,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 wasEdited,
                 mediator,
                 messageType,
-                tradeChatOffer,
+                bisqEasyOffer,
                 new MetaData(TTL, 100000, PrivateBisqEasyTradeChatMessage.class.getSimpleName()));
     }
 
@@ -76,16 +76,16 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                             boolean wasEdited,
                                             Optional<UserProfile> mediator,
                                             MessageType messageType,
-                                            Optional<TradeChatOffer> tradeChatOffer,
+                                            Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
         super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
         this.mediator = mediator;
-        this.tradeChatOffer = tradeChatOffer;
+        this.bisqEasyOffer = bisqEasyOffer;
     }
 
     @Override
     public boolean hasTradeChatOffer() {
-        return tradeChatOffer.isPresent();
+        return bisqEasyOffer.isPresent();
     }
 
     @Override
@@ -100,7 +100,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 .setReceiversId(receiversId)
                 .setSender(sender.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        tradeChatOffer.ifPresent(offer -> builder.setTradeChatOffer(offer.toProto()));
+        bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
         return getChatMessageBuilder()
                 .setPrivateTradeChatMessage(builder)
                 .build();
@@ -114,8 +114,8 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
         Optional<UserProfile> mediator = privateTradeChatMessage.hasMediator() ?
                 Optional.of(UserProfile.fromProto(privateTradeChatMessage.getMediator())) :
                 Optional.empty();
-        Optional<TradeChatOffer> tradeChatOffer = baseProto.getPrivateTradeChatMessage().hasTradeChatOffer() ?
-                Optional.of(TradeChatOffer.fromProto(baseProto.getPrivateTradeChatMessage().getTradeChatOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPrivateTradeChatMessage().hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateTradeChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new PrivateBisqEasyTradeChatMessage(
                 baseProto.getMessageId(),
@@ -129,7 +129,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 baseProto.getWasEdited(),
                 mediator,
                 MessageType.fromProto(baseProto.getMessageType()),
-                tradeChatOffer,
+                bisqEasyOffer,
                 MetaData.fromProto(baseProto.getMetaData())
         );
     }

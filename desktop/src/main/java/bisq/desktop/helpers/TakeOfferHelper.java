@@ -19,8 +19,8 @@ package bisq.desktop.helpers;
 
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
-import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.network.NetworkService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
@@ -39,13 +39,13 @@ public class TakeOfferHelper {
                                                                                            MediationService mediationService,
                                                                                            PrivateTradeChannelService privateTradeChannelService,
                                                                                            PublicTradeChatMessage tradeChatMessage) {
-        checkArgument(tradeChatMessage.getTradeChatOffer().isPresent(), "tradeChatMessage must contain offer");
+        checkArgument(tradeChatMessage.getBisqEasyOffer().isPresent(), "tradeChatMessage must contain offer");
         return userProfileService.findUserProfile(tradeChatMessage.getAuthorId())
                 .map(makerUserProfile -> {
                     UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
-                    TradeChatOffer tradeChatOffer = tradeChatMessage.getTradeChatOffer().get();
+                    BisqEasyOffer bisqEasyOffer = tradeChatMessage.getBisqEasyOffer().get();
                     Optional<UserProfile> mediator = mediationService.takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
-                    PrivateTradeChatChannel privateTradeChannel = privateTradeChannelService.traderFindOrCreatesChannel(tradeChatOffer,
+                    PrivateTradeChatChannel privateTradeChannel = privateTradeChannelService.traderFindOrCreatesChannel(bisqEasyOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);

@@ -36,11 +36,11 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class PublicTradeChatMessage extends PublicChatMessage implements TradeChatOfferMessage {
-    private final Optional<TradeChatOffer> tradeChatOffer;
+    private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public PublicTradeChatMessage(String channelName,
                                   String authorId,
-                                  Optional<TradeChatOffer> tradeChatOffer,
+                                  Optional<BisqEasyOffer> bisqEasyOffer,
                                   Optional<String> text,
                                   Optional<Quotation> quotedMessage,
                                   long date,
@@ -49,7 +49,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                 ChatChannelDomain.TRADE,
                 channelName,
                 authorId,
-                tradeChatOffer,
+                bisqEasyOffer,
                 text,
                 quotedMessage,
                 date,
@@ -62,7 +62,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                                    ChatChannelDomain chatChannelDomain,
                                    String channelName,
                                    String authorId,
-                                   Optional<TradeChatOffer> tradeChatOffer,
+                                   Optional<BisqEasyOffer> bisqEasyOffer,
                                    Optional<String> text,
                                    Optional<Quotation> quotedMessage,
                                    long date,
@@ -79,12 +79,12 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                 wasEdited,
                 messageType,
                 metaData);
-        this.tradeChatOffer = tradeChatOffer;
+        this.bisqEasyOffer = bisqEasyOffer;
     }
 
     public bisq.chat.protobuf.ChatMessage toProto() {
         bisq.chat.protobuf.PublicTradeChatMessage.Builder builder = bisq.chat.protobuf.PublicTradeChatMessage.newBuilder();
-        tradeChatOffer.ifPresent(tradeChatOffer -> builder.setTradeChatOffer(tradeChatOffer.toProto()));
+        bisqEasyOffer.ifPresent(bisqEasyOffer -> builder.setBisqEasyOffer(bisqEasyOffer.toProto()));
         return getChatMessageBuilder().setPublicTradeChatMessage(builder).build();
     }
 
@@ -95,15 +95,15 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
                 Optional.empty();
-        Optional<TradeChatOffer> tradeChatOffer = baseProto.getPublicTradeChatMessage().hasTradeChatOffer() ?
-                Optional.of(TradeChatOffer.fromProto(baseProto.getPublicTradeChatMessage().getTradeChatOffer())) :
+        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getPublicTradeChatMessage().hasBisqEasyOffer() ?
+                Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicTradeChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getMessageId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),
-                tradeChatOffer,
+                bisqEasyOffer,
                 text,
                 quotedMessage,
                 baseProto.getDate(),
@@ -114,7 +114,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
 
     @Override
     public String getText() {
-        return tradeChatOffer.map(TradeChatOffer::getChatMessageText).orElse(super.getText());
+        return bisqEasyOffer.map(BisqEasyOffer::getChatMessageText).orElse(super.getText());
     }
 
     @Override
@@ -124,6 +124,6 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
 
     @Override
     public boolean hasTradeChatOffer() {
-        return tradeChatOffer.isPresent();
+        return bisqEasyOffer.isPresent();
     }
 }
