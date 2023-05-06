@@ -28,13 +28,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class PublicChatChannelStore implements PersistableStore<PublicChatChannelStore> {
+public class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
     private final ObservableArray<CommonPublicChatChannel> channels = new ObservableArray<>();
 
-    public PublicChatChannelStore() {
+    public CommonPublicChatChannelStore() {
     }
 
-    private PublicChatChannelStore(List<CommonPublicChatChannel> privateDiscussionChannels) {
+    private CommonPublicChatChannelStore(List<CommonPublicChatChannel> privateDiscussionChannels) {
         setAll(privateDiscussionChannels);
     }
 
@@ -45,11 +45,11 @@ public class PublicChatChannelStore implements PersistableStore<PublicChatChanne
         return builder.build();
     }
 
-    public static PublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChatChannelStore proto) {
+    public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.PublicChatChannelStore proto) {
         List<CommonPublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
                 .map(e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PublicChatChannelStore(privateDiscussionChannels);
+        return new CommonPublicChatChannelStore(privateDiscussionChannels);
     }
 
     @Override
@@ -64,13 +64,13 @@ public class PublicChatChannelStore implements PersistableStore<PublicChatChanne
     }
 
     @Override
-    public void applyPersisted(PublicChatChannelStore chatStore) {
+    public void applyPersisted(CommonPublicChatChannelStore chatStore) {
         setAll(chatStore.getChannels());
     }
 
     @Override
-    public PublicChatChannelStore getClone() {
-        return new PublicChatChannelStore(channels);
+    public CommonPublicChatChannelStore getClone() {
+        return new CommonPublicChatChannelStore(channels);
     }
 
     public void setAll(List<CommonPublicChatChannel> privateDiscussionChannels) {

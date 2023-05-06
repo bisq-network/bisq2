@@ -110,7 +110,7 @@ message CommonPublicChatChannel {
   repeated string channelModeratorIds = 4;
   bool isVisible = 5;
 }
-message PublicChatChannelStore {
+message CommonPublicChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 
