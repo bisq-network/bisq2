@@ -21,7 +21,7 @@ import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
 public enum ChatChannelNotificationType implements ProtoEnum {
-    GLOBAL_DEFAULT,
+    GLOBAL_DEFAULT, // As defined in settings
     ALL,
     MENTION,
     OFF;

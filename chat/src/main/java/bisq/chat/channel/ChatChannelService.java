@@ -30,8 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
-        implements Service, PersistenceClient<S> {
+public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>> implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
@@ -47,7 +46,8 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         this.chatChannelDomain = chatChannelDomain;
     }
 
-    public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChatChannelNotificationType chatChannelNotificationType) {
+    public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage> chatChannel,
+                                               ChatChannelNotificationType chatChannelNotificationType) {
         chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
         persist();
     }

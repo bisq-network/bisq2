@@ -38,15 +38,9 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class ChatChannel<M extends ChatMessage> implements Proto {
-    public String getId() {
-        return id;
-    }
-
     @EqualsAndHashCode.Include
     protected final String id;
-    private final ChatChannelDomain chatChannelDomain;
-
-    //protected final String channelName;
+    protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 

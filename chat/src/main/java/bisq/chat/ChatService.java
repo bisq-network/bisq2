@@ -20,8 +20,11 @@ package bisq.chat;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.ChatChannelService;
+import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
@@ -185,6 +188,38 @@ public class ChatService implements Service {
                 supportChatChannelSelectionService.shutdown()
 
         ).thenApply(list -> true);
+    }
+
+    public ChatChannelService<?, ?, ?> getChatChannelService(ChatChannel<?> chatChannel) {
+        boolean isPrivateChatChannel = chatChannel instanceof PrivateChatChannel;
+        switch (chatChannel.getChatChannelDomain()) {
+            case BISQ_EASY:
+                if (isPrivateChatChannel) {
+                    return bisqEasyPrivateTradeChatChannelService;
+                } else {
+                    return bisqEasyPublicChatChannelService;
+                }
+            case DISCUSSION:
+                if (isPrivateChatChannel) {
+                    return privateDiscussionChannelService;
+                } else {
+                    return publicDiscussionChannelService;
+                }
+            case EVENTS:
+                if (isPrivateChatChannel) {
+                    return privateEventsChannelService;
+                } else {
+                    return publicEventsChannelService;
+                }
+            case SUPPORT:
+                if (isPrivateChatChannel) {
+                    return privateSupportChannelService;
+                } else {
+                    return publicSupportChannelService;
+                }
+            default:
+                throw new RuntimeException("Unexpected chatChannelDomain");
+        }
     }
 
     public void reportUserProfile(UserProfile userProfile, String reason) {
