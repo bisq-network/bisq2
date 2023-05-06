@@ -43,7 +43,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
     @EqualsAndHashCode.Include
-    private transient final String id;
+    protected transient final String id;
 
     public ChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
         this.chatChannelDomain = chatChannelDomain;
@@ -93,9 +93,6 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 .collect(Collectors.toSet()));
     }
 
-
-    abstract public Set<String> getMembers();
-
     abstract public ObservableSet<M> getChatMessages();
 
     abstract public void addChatMessage(M chatMessage);
@@ -105,4 +102,6 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     abstract public void removeChatMessages(Collection<M> messages);
 
     abstract public String getDisplayString();
+
+    abstract public Set<String> getMembers();
 }

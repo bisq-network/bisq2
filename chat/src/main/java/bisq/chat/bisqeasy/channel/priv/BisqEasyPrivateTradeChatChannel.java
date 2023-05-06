@@ -70,27 +70,36 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final BisqEasyOffer bisqEasyOffer;
 
+    // Called from trader
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile peer,
                                             Optional<UserProfile> mediator) {
-        super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
-
-        this.bisqEasyOffer = bisqEasyOffer;
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, peer));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
+        this(bisqEasyOffer.getId(),
+                bisqEasyOffer,
+                myUserIdentity,
+                Set.of(peer),
+                mediator,
+                new ArrayList<>(),
+                true,
+                ChatChannelNotificationType.ALL,
+                new HashSet<>());
     }
 
-    // Mediator
+    // Called from mediator
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile requestingTrader,
                                             UserProfile nonRequestingTrader) {
-        super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
-
-        this.bisqEasyOffer = bisqEasyOffer;
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, requestingTrader));
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, nonRequestingTrader));
+        this(bisqEasyOffer.getId(),
+                bisqEasyOffer,
+                myUserIdentity,
+                Set.of(requestingTrader, nonRequestingTrader),
+                Optional.of(myUserIdentity.getUserProfile()),
+                new ArrayList<>(),
+                true,
+                ChatChannelNotificationType.ALL,
+                new HashSet<>());
     }
 
     // From proto
@@ -106,40 +115,13 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
+        // Mediator gets added as SELF and as MEDIATOR
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
         traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
         mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
         this.isInMediation.set(isInMediation);
-        getSeenChatMessageIds().addAll(seenChatMessageIds);
+        this.seenChatMessageIds.addAll(seenChatMessageIds);
     }
-
-   /* private PrivateTradeChannel(UserProfile peerOrTrader1,
-                                UserProfile myUserProfileOrTrader2,
-                                UserIdentity myUserIdentity,
-                                Optional<UserProfile> mediator) {
-        this(PrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
-                peerOrTrader1,
-                myUserProfileOrTrader2,
-                myUserIdentity,
-                mediator,
-                new ArrayList<>(),
-                ChannelNotificationType.ALL);
-    }*/
-
-   /* private PrivateTradeChannel(String channelName,
-                                UserProfile peerOrTrader1,
-                                UserProfile myUserProfileOrTrader2,
-                                UserIdentity myUserIdentity,
-                                Optional<UserProfile> mediator,
-                                List<PrivateTradeChatMessage> chatMessages,
-                                ChannelNotificationType channelNotificationType) {
-        super(ChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
-
-        bisqEasyOffer = null;
-      *//*  this.peerOrTrader1 = peerOrTrader1;
-        this.myUserProfileOrTrader2 = myUserProfileOrTrader2;
-        this.myUserIdentity = myUserIdentity;
-        this.mediator = mediator;*//*
-    }*/
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {

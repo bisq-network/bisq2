@@ -66,6 +66,7 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
             chatMessagesByAuthor.get(authorId).add(chatMessage);
         });
 
+        // FIXME we do not sent a leave message and even if so we would like to get all member even if not active
         return chatMessagesByAuthor.entrySet().stream()
                 .map(entry -> {
                     List<ChatMessage> chatMessages = entry.getValue();

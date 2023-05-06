@@ -58,8 +58,8 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(channelModeratorIds);
-        displayName = Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".name");
-        description = Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".description");
+        displayName = Res.get(id + ".name");
+        description = Res.get(id + ".description");
     }
 
     public bisq.chat.protobuf.ChatChannel toProto() {

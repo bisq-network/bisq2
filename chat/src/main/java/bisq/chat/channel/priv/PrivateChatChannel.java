@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends ChatChannel<M> {
     protected final UserIdentity myUserIdentity;
-
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
     protected transient final ObservableSet<PrivateChatChannelMember> privateChatChannelMembers = new ObservableSet<>();
