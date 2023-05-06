@@ -22,7 +22,6 @@ import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -175,7 +174,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(marketListItem.market))
+                bisqEasyPublicChatChannelService.findChannel(marketListItem.market)
                         .ifPresent(channel -> {
                             bisqEasyPublicChatChannelService.showChannel(channel);
                             bisqEasyChatChannelSelectionService.selectChannel(channel);
@@ -203,7 +202,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(market))
+            return bisqEasyPublicChatChannelService.findChannel(market)
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }

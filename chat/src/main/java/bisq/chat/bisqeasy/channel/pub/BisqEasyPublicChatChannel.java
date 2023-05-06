@@ -33,15 +33,10 @@ import java.util.HashSet;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
-    private static String createId(Market market) {
+    static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." +
                 market.getBaseCurrencyCode() + "." +
                 market.getQuoteCurrencyCode();
-    }
-
-    //todo remove
-    public static String getChannelName(Market market) {
-        return market.toString();
     }
 
     private final Market market;

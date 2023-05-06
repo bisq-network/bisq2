@@ -76,11 +76,12 @@ public class ChannelSidebar {
         private final View view;
         private final UserProfileService userProfileService;
         private final Runnable closeHandler;
+        private final NotificationsSidebar notificationsSidebar;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
             this.closeHandler = closeHandler;
             userProfileService = applicationService.getUserService().getUserProfileService();
-            NotificationsSidebar notificationsSidebar = new NotificationsSidebar(applicationService.getChatService());
+            notificationsSidebar = new NotificationsSidebar(applicationService.getChatService());
             model = new Model();
             view = new View(model, this, notificationsSidebar.getRoot());
         }
@@ -94,6 +95,8 @@ public class ChannelSidebar {
         }
 
         void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+            notificationsSidebar.setChannel(chatChannel);
+
             if (chatChannel == null) {
                 model.descriptionVisible.set(false);
                 model.description.set(null);

@@ -25,7 +25,6 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
-import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -120,7 +119,7 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(model.getMarket())).orElseThrow();
+        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(model.getMarket()).orElseThrow();
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);

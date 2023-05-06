@@ -49,7 +49,7 @@ public class NotificationsSidebar {
     }
 
     public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        controller.setChannel(chatChannel);
+        controller.applyChannel(chatChannel);
     }
 
     public Pane getRoot() {
@@ -90,9 +90,9 @@ public class NotificationsSidebar {
             }
         }
 
-        private void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-            model.notificationType.set(chatChannel.getChatChannelNotificationType().get());
+        private void applyChannel(ChatChannel<? extends ChatMessage> chatChannel) {
             model.channel.set(chatChannel);
+            model.notificationType.set(chatChannel.getChatChannelNotificationType().get());
         }
 
         private void onChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
@@ -107,7 +107,9 @@ public class NotificationsSidebar {
         void onSetNotificationType(ChatChannelNotificationType type) {
             model.notificationType.set(type);
             ChatChannel<? extends ChatMessage> chatChannel = model.channel.get();
-            chatService.getChatChannelService(chatChannel).setChatChannelNotificationType(chatChannel, type);
+            if (chatChannel != null) {
+                chatService.getChatChannelService(chatChannel).setChatChannelNotificationType(chatChannel, type);
+            }
         }
     }
 

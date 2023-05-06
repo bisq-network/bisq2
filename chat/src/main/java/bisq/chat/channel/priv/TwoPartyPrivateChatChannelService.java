@@ -148,7 +148,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         }
         boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
         if (!isMyMessage) {
-            findChannelForMessage(message)
+            findChannel(message)
                     .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))
                     .ifPresent(channel -> addMessage(message, channel));
         }

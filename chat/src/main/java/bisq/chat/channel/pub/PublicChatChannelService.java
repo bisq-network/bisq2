@@ -116,12 +116,11 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void processAddedMessage(M message) {
-        findChannelForMessage(message).ifPresent(channel -> addMessage(message, channel));
+        findChannel(message).ifPresent(channel -> addMessage(message, channel));
     }
 
     protected void processRemovedMessage(M message) {
-        findChannelForMessage(message)
-                .ifPresent(channel -> removeMessage(message, channel));
+        findChannel(message).ifPresent(channel -> removeMessage(message, channel));
     }
 
     protected void removeMessage(M message, C channel) {

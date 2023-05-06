@@ -214,7 +214,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
-                    .flatMap(myUserIdentity -> findChannelForMessage(message)
+                    .flatMap(myUserIdentity -> findChannel(message)
                             .or(() -> {
                                 if (message.getChatMessageType() == ChatMessageType.LEAVE) {
                                     return Optional.empty();

@@ -163,4 +163,8 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
             getChannels().add(channel);
         }
     }
+
+    public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
+        return findChannel(BisqEasyPublicChatChannel.createId(market));
+    }
 }

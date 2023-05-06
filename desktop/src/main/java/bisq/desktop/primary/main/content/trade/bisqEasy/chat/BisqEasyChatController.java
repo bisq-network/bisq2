@@ -254,7 +254,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                     thenAccept(receiveAddress -> UIThread.run(() -> {
                         if (receiveAddress == null) return;
 
-                        chatService.getBisqEasyPrivateTradeChatChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
+                        chatService.getBisqEasyPrivateTradeChatChannelService().findChannel(chatMessage).ifPresent(channel -> {
                                     String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
                                     chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
                                             Optional.empty(),
