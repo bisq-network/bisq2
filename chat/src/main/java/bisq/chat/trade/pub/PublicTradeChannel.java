@@ -26,13 +26,16 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Collection;
 import java.util.HashSet;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
+    public static String getChannelName(Market market) {
+        return market.toString();
+    }
+
     private final Market market;
 
     public PublicTradeChannel(Market market) {
@@ -59,34 +62,11 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
         return publicTradeChannel;
     }
 
-    @Override
-    public void addChatMessage(PublicTradeChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessage(PublicTradeChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<PublicTradeChatMessage> messages) {
-        chatMessages.removeAll(messages);
-    }
-
     public String getDescription() {
         return Res.get("social.marketChannel.description", market.toString());
     }
 
     public String getDisplayString() {
         return market.getMarketCodes();
-    }
-
-    public static String getChannelName(Market market) {
-        return market.toString();
-    }
-
-    public static String getChannelId(Market market) {
-        return ChannelDomain.TRADE.name().toLowerCase() + "." + getChannelName(market);
     }
 }

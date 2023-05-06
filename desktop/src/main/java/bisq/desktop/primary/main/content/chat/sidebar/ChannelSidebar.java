@@ -110,7 +110,7 @@ public class ChannelSidebar {
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
                     .sorted()
                     .collect(Collectors.toList()));
-
+            
             if (channel instanceof PublicChatChannel) {
                 PublicChatChannel publicChatChannel = (PublicChatChannel) channel;
                 model.description.set(publicChatChannel.getDescription());

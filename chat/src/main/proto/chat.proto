@@ -129,13 +129,14 @@ message PrivateTradeChatMessage {
 }
 
 message TradeChatOffer {
-  offer.Direction direction = 1;
-  common.Market market = 2;
-  uint64 baseSideAmount = 3;
-  uint64 quoteSideAmount = 4;
-  repeated string paymentMethods = 5;
-  string makersTradeTerms = 6;
-  uint64 requiredTotalReputationScore = 7;
+  string id = 1;
+  offer.Direction direction = 2;
+  common.Market market = 3;
+  uint64 baseSideAmount = 4;
+  uint64 quoteSideAmount = 5;
+  repeated string paymentMethods = 6;
+  string makersTradeTerms = 7;
+  uint64 requiredTotalReputationScore = 8;
 }
 
 message PublicTradeChatMessage {
@@ -143,12 +144,12 @@ message PublicTradeChatMessage {
 }
 
 message PrivateTradeChannel {
-  user.UserProfile peerOrTrader1 = 1;
-  user.UserProfile myUserProfileOrTrader2 = 2;
-  user.UserIdentity myUserIdentity = 3;
+  TradeChatOffer tradeChatOffer = 1;
+  user.UserIdentity myUserIdentity = 2;
+  repeated user.UserProfile traders = 3;
   optional user.UserProfile mediator = 4;
   repeated ChatMessage chatMessages = 5;
-  bool inMediation = 6;
+  bool isInMediation = 6;
 }
 
 message PublicTradeChannel {

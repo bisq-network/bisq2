@@ -17,6 +17,7 @@
 
 package bisq.support;
 
+import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.priv.PrivateTradeChatMessage;
 import bisq.common.data.ByteArray;
 import bisq.common.proto.ProtoResolver;
@@ -43,14 +44,17 @@ public final class MediationRequest implements MailboxMessage {
     private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
             100000,
             MediationRequest.class.getSimpleName());
+
+    private final TradeChatOffer tradeChatOffer;
     private final UserProfile requester;
     private final UserProfile peer;
     private final List<PrivateTradeChatMessage> chatMessages;
 
-    public MediationRequest(List<PrivateTradeChatMessage> chatMessages, UserProfile requester, UserProfile peer) {
-        this.chatMessages = chatMessages;
+    public MediationRequest(TradeChatOffer tradeChatOffer, UserProfile requester, UserProfile peer, List<PrivateTradeChatMessage> chatMessages) {
+        this.tradeChatOffer = tradeChatOffer;
         this.requester = requester;
         this.peer = peer;
+        this.chatMessages = chatMessages;
 
         // We need to sort deterministically as the data is used in the proof of work check
         this.chatMessages.sort(Comparator.comparing((PrivateTradeChatMessage e) -> new ByteArray(e.serialize())));
@@ -66,20 +70,22 @@ public final class MediationRequest implements MailboxMessage {
 
     private bisq.support.protobuf.MediationRequest toMediationRequestProto() {
         return bisq.support.protobuf.MediationRequest.newBuilder()
+                .setTradeChatOffer(tradeChatOffer.toProto())
+                .setRequester(requester.toProto())
+                .setPeer(peer.toProto())
                 .addAllChatMessages(chatMessages.stream()
                         .map(PrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()))
-                .setRequester(requester.toProto())
-                .setPeer(peer.toProto())
                 .build();
     }
 
     public static MediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new MediationRequest(proto.getChatMessagesList().stream()
-                .map(PrivateTradeChatMessage::fromProto)
-                .collect(Collectors.toList()),
+        return new MediationRequest(TradeChatOffer.fromProto(proto.getTradeChatOffer()),
                 UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()));
+                UserProfile.fromProto(proto.getPeer()),
+                proto.getChatMessagesList().stream()
+                        .map(PrivateTradeChatMessage::fromProto)
+                        .collect(Collectors.toList()));
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {

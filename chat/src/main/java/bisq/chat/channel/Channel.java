@@ -92,6 +92,9 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
                 .collect(Collectors.toSet()));
     }
 
+
+    abstract public Set<String> getMembers();
+
     abstract public ObservableSet<T> getChatMessages();
 
     abstract public void addChatMessage(T chatMessage);
@@ -99,8 +102,6 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     abstract public void removeChatMessage(T chatMessage);
 
     abstract public void removeChatMessages(Collection<T> messages);
-
-    abstract public Set<String> getMembers();
 
     abstract public String getDisplayString();
 }

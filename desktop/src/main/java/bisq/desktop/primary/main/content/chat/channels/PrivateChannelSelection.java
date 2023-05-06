@@ -147,7 +147,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 if (inMediationPin != null) {
                                     inMediationPin.unbind();
                                 }
-                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getInMediation());
+                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChannel) channel).getIsInMediation());
                             }
                         });
             } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
@@ -381,34 +381,49 @@ public class PrivateChannelSelection extends ChannelSelection {
                     }
 
                     PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChannel();
-                    UserProfile peer = privateChannel.getPeer();
-                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                    Tooltip.install(this, tooltip);
+                    UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    icons.add(roboIcon);
+                    if (privateChannel instanceof PrivateTwoPartyChannel) {
+                        PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
+                        peer = privateTwoPartyChannel.getPeer();
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(this, tooltip);
+                        icons.add(roboIcon);
+                    } else if (privateChannel instanceof PrivateGroupChannel<?>) {
+                        //todo
+                        PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
+                        List<UserProfile> peers = privateGroupChannel.getPeers();
+                        peer = peers.get(0);
+                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                        Tooltip.install(this, tooltip);
+                        icons.add(roboIcon);
+                    } else {
+                        throw new RuntimeException("privateChannel expected to be " +
+                                "PrivateTwoPartyChannel or PrivateGroupChannel");
+                    }
 
                     if (privateChannel instanceof PrivateTradeChannel) {
                         PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) privateChannel;
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
                         }
-                        inMediationPin = privateTradeChannel.getInMediation().addObserver(e ->
+                        inMediationPin = privateTradeChannel.getIsInMediation().addObserver(e ->
                         {
                             UIThread.run(() -> {
                                 hBox.getChildren().clear();
                                 hBox.getChildren().add(roboIcon);
 
-                                if (privateTradeChannel.getMediator().isPresent() &&
-                                        privateTradeChannel.getInMediation().get()) {
+                                if (privateTradeChannel.findMediator().isPresent() &&
+                                        privateTradeChannel.getIsInMediation().get()) {
                                     if (privateTradeChannel.isMediator()) {
                                         // We are the mediator
-                                        UserProfile trader1 = privateTradeChannel.getPeerOrTrader1();
-                                        UserProfile trader2 = privateTradeChannel.getMyUserProfileOrTrader2();
+                                        UserProfile trader1 = privateTradeChannel.getPeer();
+                                        UserProfile trader2 = privateTradeChannel.getPeers().get(1);
                                         roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
                                         secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
                                         tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
                                     } else {
-                                        UserProfile mediator = privateTradeChannel.getMediator().get();
+                                        UserProfile mediator = privateTradeChannel.findMediator().get();
                                         secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
                                         tooltip.setText(peer.getTooltipString() + "\n\n" +
                                                 Res.get("mediator") + ":\n" + mediator.getTooltipString());

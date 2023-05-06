@@ -17,6 +17,7 @@
 
 package bisq.support;
 
+import bisq.chat.trade.TradeChatOffer;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -37,12 +38,11 @@ public final class MediationResponse implements MailboxMessage {
     private final MetaData metaData = new MetaData(TimeUnit.DAYS.toMillis(5),
             100000,
             MediationResponse.class.getSimpleName());
-    private final String channelId;
-    private final String message;
 
-    public MediationResponse(String channelId, String message) {
-        this.channelId = channelId;
-        this.message = message;
+    private final TradeChatOffer tradeChatOffer;
+
+    public MediationResponse(TradeChatOffer tradeChatOffer) {
+        this.tradeChatOffer = tradeChatOffer;
     }
 
     @Override
@@ -55,13 +55,12 @@ public final class MediationResponse implements MailboxMessage {
 
     private bisq.support.protobuf.MediationResponse toMediationResponseProto() {
         return bisq.support.protobuf.MediationResponse.newBuilder()
-                .setChannelId(channelId)
-                .setMessage(message)
+                .setTradeChatOffer(tradeChatOffer.toProto())
                 .build();
     }
 
     public static MediationResponse fromProto(bisq.support.protobuf.MediationResponse proto) {
-        return new MediationResponse(proto.getChannelId(), proto.getMessage());
+        return new MediationResponse(TradeChatOffer.fromProto(proto.getTradeChatOffer()));
     }
 
     public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {

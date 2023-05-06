@@ -18,12 +18,10 @@
 package bisq.chat.trade.priv;
 
 import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChannelMember;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PrivateChannel;
 import bisq.chat.channel.PrivateGroupChannel;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
-import bisq.common.data.Pair;
+import bisq.chat.trade.TradeChatOffer;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
@@ -35,6 +33,8 @@ import lombok.ToString;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * PrivateTradeChannel is either a 2 party channel of both traders or a 3 party channel with 2 traders and the mediator.
  * Depending on the case the fields are differently interpreted.
@@ -44,31 +44,74 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeChatMessage> {
-    public static PrivateTradeChannel createByTrader(UserIdentity myUserIdentity,
+
+    public static PrivateTradeChannel createByTrader(TradeChatOffer tradeChatOffer,
+                                                     UserIdentity myUserIdentity,
                                                      UserProfile peer,
                                                      Optional<UserProfile> mediator) {
-        return new PrivateTradeChannel(peer,
-                myUserIdentity.getUserProfile(),
+        return new PrivateTradeChannel(tradeChatOffer,
                 myUserIdentity,
+                peer,
                 mediator);
     }
 
-    public static PrivateTradeChannel createByMediator(UserIdentity myUserIdentity,
-                                                       UserProfile trader1,
-                                                       UserProfile trader2) {
-        return new PrivateTradeChannel(trader1,
-                trader2,
+    public static PrivateTradeChannel createByMediator(TradeChatOffer tradeChatOffer,
+                                                       UserIdentity myUserIdentity,
+                                                       UserProfile requestingTrader,
+                                                       UserProfile nonRequestingTrader) {
+        return new PrivateTradeChannel(tradeChatOffer,
                 myUserIdentity,
-                Optional.of(myUserIdentity.getUserProfile()));
+                requestingTrader,
+                nonRequestingTrader);
     }
 
-    private final UserProfile peerOrTrader1;
-    private final UserProfile myUserProfileOrTrader2;
-    private final UserIdentity myUserIdentity;
-    private final Optional<UserProfile> mediator;
-    private final Observable<Boolean> inMediation = new Observable<>(false);
 
-    private PrivateTradeChannel(UserProfile peerOrTrader1,
+    private final Observable<Boolean> isInMediation = new Observable<>(false);
+    private final TradeChatOffer tradeChatOffer;
+
+    private PrivateTradeChannel(TradeChatOffer tradeChatOffer,
+                                UserIdentity myUserIdentity,
+                                UserProfile peer,
+                                Optional<UserProfile> mediator) {
+        super(ChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
+
+        this.tradeChatOffer = tradeChatOffer;
+        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, peer));
+        mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
+    }
+
+    // Mediator
+    private PrivateTradeChannel(TradeChatOffer tradeChatOffer,
+                                UserIdentity myUserIdentity,
+                                UserProfile requestingTrader,
+                                UserProfile nonRequestingTrader) {
+        super(ChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
+
+        this.tradeChatOffer = tradeChatOffer;
+        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, requestingTrader));
+        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, nonRequestingTrader));
+    }
+
+    // From proto
+    private PrivateTradeChannel(String channelName,
+                                TradeChatOffer tradeChatOffer,
+                                UserIdentity myUserIdentity,
+                                Set<UserProfile> traders,
+                                Optional<UserProfile> mediator,
+                                List<PrivateTradeChatMessage> chatMessages,
+                                boolean isInMediation,
+                                ChannelNotificationType channelNotificationType,
+                                Set<String> seenChatMessageIds) {
+        super(ChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
+
+        this.tradeChatOffer = tradeChatOffer;
+        traders.forEach(trader -> addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, trader)));
+        mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
+        this.isInMediation.set(isInMediation);
+        getSeenChatMessageIds().addAll(seenChatMessageIds);
+    }
+
+   /* private PrivateTradeChannel(UserProfile peerOrTrader1,
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
                                 Optional<UserProfile> mediator) {
@@ -79,9 +122,9 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
                 mediator,
                 new ArrayList<>(),
                 ChannelNotificationType.ALL);
-    }
+    }*/
 
-    private PrivateTradeChannel(String channelName,
+   /* private PrivateTradeChannel(String channelName,
                                 UserProfile peerOrTrader1,
                                 UserProfile myUserProfileOrTrader2,
                                 UserIdentity myUserIdentity,
@@ -90,40 +133,45 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
                                 ChannelNotificationType channelNotificationType) {
         super(ChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
 
-        this.peerOrTrader1 = peerOrTrader1;
+        tradeChatOffer = null;
+      *//*  this.peerOrTrader1 = peerOrTrader1;
         this.myUserProfileOrTrader2 = myUserProfileOrTrader2;
         this.myUserIdentity = myUserIdentity;
-        this.mediator = mediator;
-    }
+        this.mediator = mediator;*//*
+    }*/
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         bisq.chat.protobuf.PrivateTradeChannel.Builder builder = bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
-                .setPeerOrTrader1(peerOrTrader1.toProto())
-                .setMyUserProfileOrTrader2(myUserProfileOrTrader2.toProto())
-                .setMyUserIdentity(this.myUserIdentity.toProto())
+                .setTradeChatOffer(tradeChatOffer.toProto())
+                .setMyUserIdentity(myUserIdentity.toProto())
+                .addAllTraders(getTraders().stream()
+                        .map(UserProfile::toProto)
+                        .collect(Collectors.toList()))
+                .setIsInMediation(isInMediation.get())
                 .addAllChatMessages(chatMessages.stream()
                         .map(PrivateTradeChatMessage::toChatMessageProto)
-                        .collect(Collectors.toList()))
-                .setInMediation(inMediation.get());
-        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
+                        .collect(Collectors.toList()));
+        findMediator().ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChannelBuilder().setPrivateTradeChannel(builder).build();
     }
 
     public static PrivateTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
                                                 bisq.chat.protobuf.PrivateTradeChannel proto) {
-        PrivateTradeChannel privateTradeChannel = new PrivateTradeChannel(baseProto.getChannelName(),
-                UserProfile.fromProto(proto.getPeerOrTrader1()),
-                UserProfile.fromProto(proto.getMyUserProfileOrTrader2()),
+        return new PrivateTradeChannel(
+                baseProto.getChannelName(),
+                TradeChatOffer.fromProto(proto.getTradeChatOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
+                proto.getTradersList().stream()
+                        .map(UserProfile::fromProto)
+                        .collect(Collectors.toSet()),
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
                         .map(PrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
-        privateTradeChannel.getInMediation().set(proto.getInMediation());
-        privateTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return privateTradeChannel;
+                proto.getIsInMediation(),
+                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
+                new HashSet<>(baseProto.getSeenChatMessageIdsList()));
     }
 
     @Override
@@ -142,71 +190,57 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     }
 
     public boolean isMediator() {
-        return mediator.filter(mediator -> mediator.getId().equals(this.myUserIdentity.getId())).isPresent();
+        return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
 
     @Override
     public String getDisplayString() {
         String mediatorLabel = "";
-        if (mediator.isPresent() && inMediation.get()) {
+        Optional<UserProfile> mediator = findMediator();
+        if (mediator.isPresent() && isInMediation.get()) {
             mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
         }
+        String peer = getPeer().getUserName();
         if (isMediator()) {
-            return peerOrTrader1.getUserName() + " - " + myUserProfileOrTrader2.getUserName() + mediatorLabel;
+            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
+            return peer + " - " + getPeers().get(1).getUserName() + mediatorLabel;
         } else {
-            return peerOrTrader1.getUserName() + " - " + myUserIdentity.getUserName() + mediatorLabel;
+            return peer + " - " + myUserIdentity.getUserName() + mediatorLabel;
         }
-    }
-
-    @Override
-    public Set<String> getMembers() {
-        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
-        getChatMessages().forEach(chatMessage -> {
-            String authorId = chatMessage.getAuthorId();
-            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorId).add(chatMessage);
-
-            String receiversId = chatMessage.getReceiversId();
-            if (chatMessage.getMessageType() != MessageType.LEAVE) {
-                chatMessagesByAuthor.putIfAbsent(receiversId, new ArrayList<>());
-                chatMessagesByAuthor.get(receiversId).add(chatMessage);
-            }
-
-            chatMessage.getMediator().ifPresent(mediator -> {
-                if (inMediation.get()) {
-                    String mediatorId = mediator.getId();
-                    chatMessagesByAuthor.putIfAbsent(mediatorId, new ArrayList<>());
-                    chatMessagesByAuthor.get(mediatorId).add(chatMessage);
-                }
-            });
-        });
-
-        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
-                    List<ChatMessage> chatMessages = entry.getValue();
-                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
-                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
-                    return new Pair<>(entry.getKey(), lastChatMessage);
-                })
-                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
-                .map(Pair::getFirst)
-                .collect(Collectors.toSet());
     }
 
     public String getChannelSelectionDisplayString() {
-        if (inMediation.get()) {
-            if (isMediator()) {
-                return peerOrTrader1.getUserName() + ", " + myUserProfileOrTrader2.getUserName();
-            } else if (mediator.isPresent()) {
-                return peerOrTrader1.getUserName() + ", " + mediator.get().getUserName();
-            } else {
-                return peerOrTrader1.getUserName();
-            }
+        String peer = getPeer().getUserName();
+        if (!isInMediation.get()) {
+            return peer;
+        }
+
+        Optional<UserProfile> mediator = findMediator();
+        if (isMediator()) {
+            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
+            return peer + ", " + getPeers().get(1).getUserName();
+        } else if (mediator.isPresent()) {
+            return peer + ", " + mediator.get().getUserName();
         } else {
-            return peerOrTrader1.getUserName();
+            return peer;
         }
     }
 
     public UserProfile getPeer() {
-        return peerOrTrader1;
+        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at PrivateTradeChannel");
+        return getPeers().get(0);
+    }
+
+    public Set<UserProfile> getTraders() {
+        return getChannelMembers().stream()
+                .filter(e -> e.getType() == ChannelMember.Type.TRADER)
+                .map(ChannelMember::getUserProfile)
+                .collect(Collectors.toSet());
+    }
+
+    public Optional<UserProfile> findMediator() {
+        return getChannelMembers().stream()
+                .filter(channelMember -> channelMember.getType() == ChannelMember.Type.MEDIATOR)
+                .map(ChannelMember::getUserProfile).findAny();
     }
 }

@@ -17,28 +17,30 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.data.Pair;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @ToString(callSuper = true)
-@Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
-    private final UserProfile peer;
+    // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
+    private static String createChannelName(String userId1, String userId2) {
+        List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
+        Collections.sort(userIds);
+        return userIds.get(0) + "." + userIds.get(1);
+    }
 
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
-                PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
+                createChannelName(peer.getId(), myUserIdentity.getId()),
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),
@@ -54,13 +56,13 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
                                    ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
-        this.peer = peer;
+        addChannelMember(new ChannelMember(ChannelMember.Type.PEER, peer));
     }
 
     @Override
     public bisq.chat.protobuf.Channel toProto() {
         return getChannelBuilder().setPrivateTwoPartyChannel(bisq.chat.protobuf.PrivateTwoPartyChannel.newBuilder()
-                        .setPeer(peer.toProto())
+                        .setPeer(getPeer().toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(PrivateChatMessage::toChatMessageProto)
@@ -83,6 +85,11 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
         return privateTwoPartyChannel;
     }
 
+    public UserProfile getPeer() {
+        checkArgument(getPeers().size() == 1, "peers.size must be 1 at PrivateTwoPartyChannel");
+        return getPeers().get(0);
+    }
+
     @Override
     public void addChatMessage(PrivateChatMessage chatMessage) {
         chatMessages.add(chatMessage);
@@ -99,31 +106,7 @@ public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMess
     }
 
     @Override
-    public Set<String> getMembers() {
-        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
-        getChatMessages().forEach(chatMessage -> {
-            String authorId = chatMessage.getAuthorId();
-            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorId).add(chatMessage);
-
-            String receiversId = chatMessage.getReceiversId();
-            chatMessagesByAuthor.putIfAbsent(receiversId, new ArrayList<>());
-            chatMessagesByAuthor.get(receiversId).add(chatMessage);
-        });
-
-        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
-                    List<ChatMessage> chatMessages = entry.getValue();
-                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
-                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
-                    return new Pair<>(entry.getKey(), lastChatMessage);
-                })
-                .filter(pair -> pair.getSecond().getMessageType() != MessageType.LEAVE)
-                .map(Pair::getFirst)
-                .collect(Collectors.toSet());
-    }
-
-    @Override
     public String getDisplayString() {
-        return peer.getUserName() + "-" + myUserIdentity.getUserName();
+        return getPeer().getUserName() + "-" + myUserIdentity.getUserName();
     }
 }

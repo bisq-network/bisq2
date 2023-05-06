@@ -38,4 +38,11 @@ public abstract class PrivateGroupChannelService<M extends BasePrivateChatMessag
                                       ChannelDomain channelDomain) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
     }
+
+    @Override
+    public void leaveChannel(C channel) {
+        channel.getPeers().forEach(peer -> leaveChannel(channel, peer));
+        // todo 
+        //channel.getChannelMembers().remove()
+    }
 }

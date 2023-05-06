@@ -42,6 +42,7 @@ import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;
+import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
@@ -131,7 +132,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 if (inMediationPin != null) {
                     inMediationPin.unbind();
                 }
-                inMediationPin = privateChannel.getInMediation().addObserver(mediationActivated ->
+                inMediationPin = privateChannel.getIsInMediation().addObserver(mediationActivated ->
                         model.getOpenDisputeDisabled().set(mediationActivated ||
                                 privateChannel.isMediator()));
 
@@ -219,15 +220,15 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
     void onOpenMediation() {
         Channel<? extends ChatMessage> channel = model.getSelectedChannel().get();
-        if (!(channel instanceof PrivateTradeChannel)) return;
-
+        checkArgument(channel instanceof PrivateTradeChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
         PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
-        if (privateTradeChannel.getMediator().isPresent()) {
+        Optional<UserProfile> mediator = privateTradeChannel.findMediator();
+        if (mediator.isPresent()) {
             new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
                     .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
                     .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
                     .onAction(() -> {
-                        mediationService.requestMediation(privateTradeChannel.getMyUserIdentity(), privateTradeChannel.getPeer(), privateTradeChannel.getMediator().get());
+                        mediationService.requestMediation(privateTradeChannel);
                         new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
                                 .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();
                     })
@@ -255,9 +256,9 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
                         chatService.getPrivateTradeChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
                                     String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
-                                    chatService.getPrivateTradeChannelService().sendPrivateChatMessage(message,
-                                            Optional.empty(),
-                                            channel);
+                            chatService.getPrivateTradeChannelService().sendTextMessage(message,
+                                    Optional.empty(),
+                                    channel);
                                 }
                         );
                     }));

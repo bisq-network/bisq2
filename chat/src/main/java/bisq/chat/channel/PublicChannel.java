@@ -41,6 +41,20 @@ public abstract class PublicChannel<M extends BasePublicChatMessage> extends Cha
     }
 
     @Override
+    public void addChatMessage(M chatMessage) {
+        chatMessages.add(chatMessage);
+    }
+
+    public void removeChatMessage(M chatMessage) {
+        chatMessages.remove(chatMessage);
+    }
+
+    public void removeChatMessages(Collection<M> messages) {
+        chatMessages.removeAll(messages);
+    }
+
+    //todo
+    @Override
     public Set<String> getMembers() {
         Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
         getChatMessages().forEach(chatMessage -> {
@@ -49,7 +63,8 @@ public abstract class PublicChannel<M extends BasePublicChatMessage> extends Cha
             chatMessagesByAuthor.get(authorId).add(chatMessage);
         });
 
-        return chatMessagesByAuthor.entrySet().stream().map(entry -> {
+        return chatMessagesByAuthor.entrySet().stream()
+                .map(entry -> {
                     List<ChatMessage> chatMessages = entry.getValue();
                     chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
                     ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
@@ -59,4 +74,5 @@ public abstract class PublicChannel<M extends BasePublicChatMessage> extends Cha
                 .map(Pair::getFirst)
                 .collect(Collectors.toSet());
     }
+
 }
