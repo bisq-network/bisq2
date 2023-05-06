@@ -18,8 +18,8 @@
 package bisq.chat.trade.priv;
 
 import bisq.chat.channel.ChannelDomain;
-import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.MessageType;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.chat.trade.TradeChatOffer;
 import bisq.chat.trade.TradeChatOfferMessage;
@@ -37,7 +37,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTradeChatMessage extends BasePrivateChatMessage implements TradeChatOfferMessage {
+public final class PrivateTradeChatMessage extends PrivateChatMessage implements TradeChatOfferMessage {
     private final Optional<UserProfile> mediator;
     private final Optional<TradeChatOffer> tradeChatOffer;
 

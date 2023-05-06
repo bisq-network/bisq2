@@ -32,7 +32,7 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTwoPartyChatMessage extends BasePrivateChatMessage {
+public final class PrivateTwoPartyChatMessage extends PrivateChatMessage {
     public PrivateTwoPartyChatMessage(String messageId,
                                       ChannelDomain channelDomain,
                                       String channelName,

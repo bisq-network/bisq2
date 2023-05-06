@@ -17,9 +17,9 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class PrivateChatChannelService<M extends BasePrivateChatMessage,
+public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         C extends PrivateChatChannel<M>, S extends PersistableStore<S>>
         extends ChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
@@ -138,7 +138,7 @@ public abstract class PrivateChatChannelService<M extends BasePrivateChatMessage
 
     public void removeExpiredMessages(C channel) {
         Set<M> toRemove = channel.getChatMessages().stream()
-                .filter(BasePrivateChatMessage::isExpired)
+                .filter(PrivateChatMessage::isExpired)
                 .collect(Collectors.toSet());
         if (!toRemove.isEmpty()) {
             synchronized (getPersistableStore()) {

@@ -18,8 +18,8 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.channel.ChatChannel;
-import bisq.chat.message.BasePrivateChatMessage;
 import bisq.chat.message.ChatMessage;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -44,8 +44,8 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
         this.chatChannel = chatChannel;
         this.chatMessage = chatMessage;
 
-        if (chatMessage instanceof BasePrivateChatMessage) {
-            senderUserProfile = Optional.of(((BasePrivateChatMessage) chatMessage).getSender());
+        if (chatMessage instanceof PrivateChatMessage) {
+            senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
         } else {
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
         }

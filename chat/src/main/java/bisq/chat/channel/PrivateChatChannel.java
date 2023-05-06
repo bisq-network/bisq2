@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePrivateChatMessage;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateChatChannel<T extends BasePrivateChatMessage> extends ChatChannel<T> {
+public abstract class PrivateChatChannel<T extends PrivateChatMessage> extends ChatChannel<T> {
     protected final UserIdentity myUserIdentity;
 
     // We persist the messages as they are NOT persisted in the P2P data store.

@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePrivateChatMessage;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.MessageListener;
 import bisq.persistence.PersistableStore;
@@ -27,7 +27,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PrivateGroupChannelService<M extends BasePrivateChatMessage,
+public abstract class PrivateGroupChannelService<M extends PrivateChatMessage,
         C extends PrivateGroupChannel<M>, S extends PersistableStore<S>>
         extends PrivateChatChannelService<M, C, S> implements MessageListener {
 

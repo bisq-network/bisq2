@@ -34,21 +34,21 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class BasePrivateChatMessage extends ChatMessage implements MailboxMessage {
+public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage {
     protected final String receiversId;
     protected final UserProfile sender;
 
-    protected BasePrivateChatMessage(String messageId,
-                                     ChannelDomain channelDomain,
-                                     String channelName,
-                                     UserProfile sender,
-                                     String receiversId,
-                                     String text,
-                                     Optional<Quotation> quotedMessage,
-                                     long date,
-                                     boolean wasEdited,
-                                     MessageType messageType,
-                                     MetaData metaData) {
+    protected PrivateChatMessage(String messageId,
+                                 ChannelDomain channelDomain,
+                                 String channelName,
+                                 UserProfile sender,
+                                 String receiversId,
+                                 String text,
+                                 Optional<Quotation> quotedMessage,
+                                 long date,
+                                 boolean wasEdited,
+                                 MessageType messageType,
+                                 MetaData metaData) {
         super(messageId,
                 channelDomain,
                 channelName,

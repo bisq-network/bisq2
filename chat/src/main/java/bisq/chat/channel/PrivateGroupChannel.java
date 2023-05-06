@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.BasePrivateChatMessage;
+import bisq.chat.message.PrivateChatMessage;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -26,7 +26,7 @@ import java.util.List;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateGroupChannel<T extends BasePrivateChatMessage> extends PrivateChatChannel<T> {
+public abstract class PrivateGroupChannel<T extends PrivateChatMessage> extends PrivateChatChannel<T> {
 
     protected PrivateGroupChannel(ChannelDomain channelDomain,
                                   String channelName,

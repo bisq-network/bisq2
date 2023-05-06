@@ -1025,8 +1025,8 @@ public class ChatMessagesListView {
         public ChatMessageListItem(T chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
 
-            if (chatMessage instanceof BasePrivateChatMessage) {
-                senderUserProfile = Optional.of(((BasePrivateChatMessage) chatMessage).getSender());
+            if (chatMessage instanceof PrivateChatMessage) {
+                senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
             } else {
                 senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             }
