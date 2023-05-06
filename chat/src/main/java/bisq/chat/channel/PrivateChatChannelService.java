@@ -52,8 +52,8 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                                      UserIdentityService userIdentityService,
                                      UserProfileService userProfileService,
                                      ProofOfWorkService proofOfWorkService,
-                                     ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, userProfileService, channelDomain);
+                                     ChatChannelDomain chatChannelDomain) {
+        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
 
         this.proofOfWorkService = proofOfWorkService;
     }

@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.PublicChatMessage;
@@ -46,7 +46,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                                   long date,
                                   boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                ChannelDomain.TRADE,
+                ChatChannelDomain.TRADE,
                 channelName,
                 authorId,
                 tradeChatOffer,
@@ -59,7 +59,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
     }
 
     private PublicTradeChatMessage(String messageId,
-                                   ChannelDomain channelDomain,
+                                   ChatChannelDomain chatChannelDomain,
                                    String channelName,
                                    String authorId,
                                    Optional<TradeChatOffer> tradeChatOffer,
@@ -70,7 +70,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                                    MessageType messageType,
                                    MetaData metaData) {
         super(messageId,
-                channelDomain,
+                chatChannelDomain,
                 channelName,
                 authorId,
                 text,
@@ -100,7 +100,7 @@ public final class PublicTradeChatMessage extends PublicChatMessage implements T
                 Optional.empty();
         return new PublicTradeChatMessage(
                 baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 tradeChatOffer,

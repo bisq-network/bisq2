@@ -17,7 +17,7 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -34,7 +34,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     public TwoPartyPrivateChatMessage(String messageId,
-                                      ChannelDomain channelDomain,
+                                      ChatChannelDomain chatChannelDomain,
                                       String channelName,
                                       UserProfile sender,
                                       String receiversId,
@@ -44,7 +44,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       boolean wasEdited,
                                       MessageType messageType) {
         super(messageId,
-                channelDomain,
+                chatChannelDomain,
                 channelName,
                 sender,
                 receiversId,
@@ -57,7 +57,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     private TwoPartyPrivateChatMessage(String messageId,
-                                       ChannelDomain channelDomain,
+                                       ChatChannelDomain chatChannelDomain,
                                        String channelName,
                                        UserProfile sender,
                                        String receiversId,
@@ -67,7 +67,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        boolean wasEdited,
                                        MessageType messageType,
                                        MetaData metaData) {
-        super(messageId, channelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
     }
 
     @Override
@@ -92,7 +92,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
                 baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(privateChatMessage.getSender()),
                 privateChatMessage.getReceiversId(),

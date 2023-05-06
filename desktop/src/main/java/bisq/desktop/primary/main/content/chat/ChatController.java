@@ -34,8 +34,8 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChannelSelection publicChannelSelection;
 
-    public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
-        super(applicationService, channelDomain, host);
+    public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+        super(applicationService, chatChannelDomain, host);
     }
 
     @Override

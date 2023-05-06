@@ -36,24 +36,24 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class ChatChannel<M extends ChatMessage> implements Proto {
-    private final ChannelDomain channelDomain;
+    private final ChatChannelDomain chatChannelDomain;
     protected final String channelName;
     @EqualsAndHashCode.Include
     private transient final String id;
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 
-    public ChatChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
-        this.channelDomain = channelDomain;
+    public ChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+        this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
-        this.id = channelDomain.name().toLowerCase() + "." + channelName;
+        this.id = chatChannelDomain.name().toLowerCase() + "." + channelName;
         this.channelNotificationType.set(channelNotificationType);
     }
 
     public bisq.chat.protobuf.ChatChannel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setChannelName(channelName)
-                .setChannelDomain(channelDomain.toProto())
+                .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto())
                 .addAllSeenChatMessageIds(seenChatMessageIds);
     }

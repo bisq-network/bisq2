@@ -38,7 +38,7 @@ enum ChannelNotificationType {
   NEVER = 2;
 }
 
-enum ChannelDomain {
+enum ChatChannelDomain {
   TRADE = 0;
   DISCUSSION = 1;
   EVENTS = 2;
@@ -54,7 +54,7 @@ message Quotation {
 
 message ChatMessage {
   string messageId = 1;
-  ChannelDomain channelDomain = 2;
+  ChatChannelDomain chatChannelDomain = 2;
   string channelName = 3;
   optional string text = 4;
   string authorId = 5;
@@ -72,7 +72,7 @@ message ChatMessage {
 }
 
 message ChatChannel {
-  ChannelDomain channelDomain = 1;
+  ChatChannelDomain chatChannelDomain = 1;
   string channelName = 2;
   ChannelNotificationType channelNotificationType = 3;
   repeated string seenChatMessageIds = 4;

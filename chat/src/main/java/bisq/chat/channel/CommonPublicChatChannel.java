@@ -37,24 +37,24 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
 
-    public CommonPublicChatChannel(ChannelDomain channelDomain, String channelName) {
-        this(channelDomain,
+    public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName) {
+        this(chatChannelDomain,
                 channelName,
-                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".name"),
-                Res.get(channelDomain.name().toLowerCase() + "." + channelName + ".description"),
+                Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".name"),
+                Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
                 ChannelNotificationType.GLOBAL_DEFAULT);
     }
 
-    private CommonPublicChatChannel(ChannelDomain channelDomain,
+    private CommonPublicChatChannel(ChatChannelDomain chatChannelDomain,
                                     String channelName,
                                     String displayName,
                                     String description,
                                     String channelAdminId,
                                     List<String> channelModeratorIds,
                                     ChannelNotificationType channelNotificationType) {
-        super(channelDomain, channelName, channelNotificationType);
+        super(chatChannelDomain, channelName, channelNotificationType);
 
         this.displayName = displayName;
         this.description = description;
@@ -76,7 +76,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                     bisq.chat.protobuf.CommonPublicChatChannel proto) {
-        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 proto.getChannelName(),
                 proto.getDescription(),

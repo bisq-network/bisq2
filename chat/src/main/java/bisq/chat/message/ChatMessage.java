@@ -17,7 +17,7 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
 import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.proto.Proto;
@@ -46,7 +46,7 @@ public abstract class ChatMessage implements Proto {
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
     protected final String messageId;
-    private final ChannelDomain channelDomain;
+    private final ChatChannelDomain chatChannelDomain;
     protected final String channelName;
     protected final Optional<String> optionalText;
     protected String authorId;
@@ -57,7 +57,7 @@ public abstract class ChatMessage implements Proto {
     protected final MetaData metaData;
 
     protected ChatMessage(String messageId,
-                          ChannelDomain channelDomain,
+                          ChatChannelDomain chatChannelDomain,
                           String channelName,
                           String authorId,
                           Optional<String> text,
@@ -67,7 +67,7 @@ public abstract class ChatMessage implements Proto {
                           MessageType messageType,
                           MetaData metaData) {
         this.messageId = messageId;
-        this.channelDomain = channelDomain;
+        this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
         this.authorId = authorId;
         this.optionalText = text;
@@ -89,7 +89,7 @@ public abstract class ChatMessage implements Proto {
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setMessageId(messageId)
-                .setChannelDomain(channelDomain.toProto())
+                .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChannelName(channelName)
                 .setAuthorId(authorId)
                 .setDate(date)

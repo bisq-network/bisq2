@@ -94,12 +94,12 @@ public class ChatMessagesListView {
                                 Consumer<UserProfile> mentionUserHandler,
                                 Consumer<ChatMessage> showChatUserDetailsHandler,
                                 Consumer<ChatMessage> replyHandler,
-                                ChannelDomain channelDomain) {
+                                ChatChannelDomain chatChannelDomain) {
         controller = new Controller(applicationService,
                 mentionUserHandler,
                 showChatUserDetailsHandler,
                 replyHandler,
-                channelDomain);
+                chatChannelDomain);
     }
 
     public Pane getRoot() {
@@ -175,7 +175,7 @@ public class ChatMessagesListView {
                            Consumer<UserProfile> mentionUserHandler,
                            Consumer<ChatMessage> showChatUserDetailsHandler,
                            Consumer<ChatMessage> replyHandler,
-                           ChannelDomain channelDomain) {
+                           ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
 
             privateTradeChannelService = chatService.getPrivateTradeChannelService();
@@ -205,7 +205,7 @@ public class ChatMessagesListView {
 
             model = new Model(chatService,
                     userIdentityService,
-                    channelDomain);
+                    chatChannelDomain);
             view = new View(model, this);
         }
 
@@ -223,7 +223,7 @@ public class ChatMessagesListView {
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            if (model.getChannelDomain() == ChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
                 selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (chatMessagesPin != null) {
@@ -249,7 +249,7 @@ public class ChatMessagesListView {
                         currentChatChannelService = null;
                     }
                 });
-            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
@@ -272,7 +272,7 @@ public class ChatMessagesListView {
                         currentChatChannelService = privateDiscussionChannelService;
                     }
                 });
-            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
                 selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
@@ -295,7 +295,7 @@ public class ChatMessagesListView {
                         currentChatChannelService = privateEventsChannelService;
                     }
                 });
-            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
                 selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (channel instanceof CommonPublicChatChannel) {
@@ -489,15 +489,15 @@ public class ChatMessagesListView {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChannelDomain() == ChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
                 // todo use new 2 party channelservice
                 //PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 //tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChannelSelectionService::selectChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChannelSelectionService::selectChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChannelSelectionService::selectChannel);
             }
         }
@@ -534,7 +534,7 @@ public class ChatMessagesListView {
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
         private final BooleanProperty allowEditing = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> selectedChatMessageForMoreOptionsPopup = new SimpleObjectProperty<>(null);
-        private final ChannelDomain channelDomain;
+        private final ChatChannelDomain chatChannelDomain;
         @Setter
         private Predicate<? super ChatMessageListItem<? extends ChatMessage>> searchPredicate = e -> true;
         private Optional<Runnable> createOfferCompleteHandler = Optional.empty();
@@ -543,10 +543,10 @@ public class ChatMessagesListView {
 
         private Model(ChatService chatService,
                       UserIdentityService userIdentityService,
-                      ChannelDomain channelDomain) {
+                      ChatChannelDomain chatChannelDomain) {
             this.chatService = chatService;
             this.userIdentityService = userIdentityService;
-            this.channelDomain = channelDomain;
+            this.chatChannelDomain = chatChannelDomain;
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {

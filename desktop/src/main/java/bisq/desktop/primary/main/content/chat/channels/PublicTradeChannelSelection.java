@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.chat.trade.channel.PublicTradeChannelService;
@@ -175,7 +175,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(marketListItem.market))
+                publicTradeChannelService.findChannel(ChatChannelDomain.TRADE, PublicTradeChannel.getChannelName(marketListItem.market))
                         .ifPresent(channel -> {
                             publicTradeChannelService.showChannel(channel);
                             tradeChannelSelectionService.selectChannel(channel);
@@ -203,7 +203,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(market))
+            return publicTradeChannelService.findChannel(ChatChannelDomain.TRADE, PublicTradeChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }

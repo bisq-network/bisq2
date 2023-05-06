@@ -35,8 +35,8 @@ public abstract class PrivateGroupChatChannelService<M extends PrivateChatMessag
                                           UserIdentityService userIdentityService,
                                           UserProfileService userProfileService,
                                           ProofOfWorkService proofOfWorkService,
-                                          ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
+                                          ChatChannelDomain chatChannelDomain) {
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
     }
 
     @Override

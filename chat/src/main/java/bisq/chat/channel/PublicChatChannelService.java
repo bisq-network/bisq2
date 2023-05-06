@@ -40,8 +40,8 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     public PublicChatChannelService(NetworkService networkService,
                                     UserIdentityService userIdentityService,
                                     UserProfileService userProfileService,
-                                    ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, userProfileService, channelDomain);
+                                    ChatChannelDomain chatChannelDomain) {
+        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
     }
 
 

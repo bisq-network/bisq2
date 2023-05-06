@@ -205,7 +205,7 @@ public class ChatNotifications {
             channelInfo = chatChannel.getDisplayString();
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
-            channelInfo = Res.get(chatChannel.getChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
+            channelInfo = Res.get(chatChannel.getChatChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
         }
         title = StringUtils.abbreviate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
         notificationsService.notify(title, chatNotification.getMessage());

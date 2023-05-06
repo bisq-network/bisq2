@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.chat.message.Quotation;
@@ -51,7 +51,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
                                    MessageType messageType,
                                    Optional<TradeChatOffer> tradeChatOffer) {
         this(messageId,
-                ChannelDomain.TRADE,
+                ChatChannelDomain.TRADE,
                 channelName,
                 sender,
                 receiversId,
@@ -66,7 +66,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
     }
 
     private PrivateTradeChatMessage(String messageId,
-                                    ChannelDomain channelDomain,
+                                    ChatChannelDomain chatChannelDomain,
                                     String channelName,
                                     UserProfile sender,
                                     String receiversId,
@@ -78,7 +78,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
                                     MessageType messageType,
                                     Optional<TradeChatOffer> tradeChatOffer,
                                     MetaData metaData) {
-        super(messageId, channelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
         this.mediator = mediator;
         this.tradeChatOffer = tradeChatOffer;
     }
@@ -119,7 +119,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
                 Optional.empty();
         return new PrivateTradeChatMessage(
                 baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(privateTradeChatMessage.getSender()),
                 privateTradeChatMessage.getReceiversId(),

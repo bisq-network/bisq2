@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.channel;
 
-import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
@@ -44,7 +44,7 @@ public final class PublicTradeChannel extends PublicChatChannel<PublicTradeChatM
     }
 
     private PublicTradeChannel(String channelName, Market market) {
-        super(ChannelDomain.TRADE, channelName, ChannelNotificationType.ALL);
+        super(ChatChannelDomain.TRADE, channelName, ChannelNotificationType.ALL);
 
         this.market = market;
     }

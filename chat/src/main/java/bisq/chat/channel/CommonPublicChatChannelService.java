@@ -48,15 +48,15 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                                           NetworkService networkService,
                                           UserIdentityService userIdentityService,
                                           UserProfileService userProfileService,
-                                          ChannelDomain channelDomain,
+                                          ChatChannelDomain chatChannelDomain,
                                           List<CommonPublicChatChannel> defaultChannels) {
-        super(networkService, userIdentityService, userProfileService, channelDomain);
+        super(networkService, userIdentityService, userProfileService, chatChannelDomain);
 
         this.defaultChannels = defaultChannels;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Public" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
+                "Public" + StringUtils.capitalize(chatChannelDomain.name()) + "ChannelStore",
                 persistableStore);
 
         this.defaultChannels.forEach(channel -> channel.getChannelNotificationType().addObserver(value -> persist()));
@@ -98,7 +98,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                                                         Optional<Quotation> quotedMessage,
                                                         CommonPublicChatChannel commonPublicChatChannel,
                                                         UserProfile userProfile) {
-        return new CommonPublicChatMessage(commonPublicChatChannel.getChannelDomain(),
+        return new CommonPublicChatMessage(commonPublicChatChannel.getChatChannelDomain(),
                 commonPublicChatChannel.getChannelName(),
                 userProfile.getId(),
                 text,
@@ -111,7 +111,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
     protected CommonPublicChatMessage createEditedChatMessage(CommonPublicChatMessage originalChatMessage,
                                                               String editedText,
                                                               UserProfile userProfile) {
-        return new CommonPublicChatMessage(originalChatMessage.getChannelDomain(),
+        return new CommonPublicChatMessage(originalChatMessage.getChatChannelDomain(),
                 originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 editedText,

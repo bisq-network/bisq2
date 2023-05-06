@@ -28,12 +28,12 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateGroupChatChannel<M extends PrivateChatMessage> extends PrivateChatChannel<M> {
 
-    protected PrivateGroupChatChannel(ChannelDomain channelDomain,
+    protected PrivateGroupChatChannel(ChatChannelDomain chatChannelDomain,
                                       String channelName,
                                       UserIdentity myUserIdentity,
                                       List<M> chatMessages,
                                       ChannelNotificationType channelNotificationType) {
-        super(channelDomain, channelName, myUserIdentity, chatMessages, channelNotificationType);
+        super(chatChannelDomain, channelName, myUserIdentity, chatMessages, channelNotificationType);
 
         addChannelMember(new ChannelMember(ChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
     }

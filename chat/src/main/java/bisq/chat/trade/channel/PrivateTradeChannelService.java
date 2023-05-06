@@ -17,7 +17,7 @@
 
 package bisq.chat.trade.channel;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.PrivateGroupChatChannelService;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.Quotation;
@@ -64,7 +64,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                                       UserIdentityService userIdentityService,
                                       UserProfileService userProfileService,
                                       ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.TRADE);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }

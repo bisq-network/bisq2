@@ -42,10 +42,10 @@ public class ChannelSelectionService implements PersistenceClient<ChannelSelecti
     public ChannelSelectionService(PersistenceService persistenceService,
                                    PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService,
                                    CommonPublicChatChannelService commonPublicChatChannelService,
-                                   ChannelDomain channelDomain) {
+                                   ChatChannelDomain chatChannelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                StringUtils.capitalize(channelDomain.name()) + "ChannelSelectionStore",
+                StringUtils.capitalize(chatChannelDomain.name()) + "ChannelSelectionStore",
                 persistableStore);
         this.privateTwoPartyChatChannelService = privateTwoPartyChatChannelService;
         this.commonPublicChatChannelService = commonPublicChatChannelService;

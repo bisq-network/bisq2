@@ -50,11 +50,11 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                                              UserIdentityService userIdentityService,
                                              UserProfileService userProfileService,
                                              ProofOfWorkService proofOfWorkService,
-                                             ChannelDomain channelDomain) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, channelDomain);
+                                             ChatChannelDomain chatChannelDomain) {
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Private" + StringUtils.capitalize(channelDomain.name()) + "ChannelStore",
+                "Private" + StringUtils.capitalize(chatChannelDomain.name()) + "ChannelStore",
                 persistableStore);
     }
 
@@ -76,7 +76,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                                                                      boolean wasEdited,
                                                                      MessageType messageType) {
         return new TwoPartyPrivateChatMessage(messageId,
-                channel.getChannelDomain(),
+                channel.getChatChannelDomain(),
                 channel.getChannelName(),
                 sender,
                 receiversId,
@@ -89,7 +89,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
 
     @Override
     protected PrivateTwoPartyChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(peer, myUserIdentity, channelDomain);
+        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(peer, myUserIdentity, chatChannelDomain);
         privateTwoPartyChatChannel.getChannelNotificationType().addObserver(value -> persist());
         return privateTwoPartyChatChannel;
     }
@@ -142,7 +142,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
     }
 
     protected void processMessage(TwoPartyPrivateChatMessage message) {
-        if (message.getChannelDomain() != channelDomain) {
+        if (message.getChatChannelDomain() != chatChannelDomain) {
             return;
         }
         boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorId());

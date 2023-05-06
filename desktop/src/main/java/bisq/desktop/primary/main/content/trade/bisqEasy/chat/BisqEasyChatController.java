@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.channel.PublicTradeChannel;
@@ -66,7 +66,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     private Pin chatMessagesPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
+        super(applicationService, ChatChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
 
         tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
         settingsService = applicationService.getSettingsService();
@@ -99,8 +99,8 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     @Override
-    public BisqEasyChatModel getChatModel(ChannelDomain channelDomain) {
-        return new BisqEasyChatModel(channelDomain);
+    public BisqEasyChatModel getChatModel(ChatChannelDomain chatChannelDomain) {
+        return new BisqEasyChatModel(chatChannelDomain);
     }
 
     @Override

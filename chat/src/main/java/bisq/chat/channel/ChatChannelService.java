@@ -35,16 +35,16 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
-    protected final ChannelDomain channelDomain;
+    protected final ChatChannelDomain chatChannelDomain;
 
     public ChatChannelService(NetworkService networkService,
                               UserIdentityService userIdentityService,
                               UserProfileService userProfileService,
-                              ChannelDomain channelDomain) {
+                              ChatChannelDomain chatChannelDomain) {
         this.networkService = networkService;
         this.userIdentityService = userIdentityService;
         this.userProfileService = userProfileService;
-        this.channelDomain = channelDomain;
+        this.chatChannelDomain = chatChannelDomain;
     }
 
     public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChannelNotificationType channelNotificationType) {
@@ -65,12 +65,12 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     public Optional<C> findChannelForMessage(ChatMessage chatMessage) {
-        return findChannel(chatMessage.getChannelDomain(), chatMessage.getChannelName());
+        return findChannel(chatMessage.getChatChannelDomain(), chatMessage.getChannelName());
     }
 
-    public Optional<C> findChannel(ChannelDomain channelDomain, String channelName) {
+    public Optional<C> findChannel(ChatChannelDomain chatChannelDomain, String channelName) {
         return getChannels().stream()
-                .filter(channel -> channel.getChannelDomain().equals(channelDomain) && channel.getChannelName().equals(channelName))
+                .filter(channel -> channel.getChatChannelDomain().equals(chatChannelDomain) && channel.getChannelName().equals(channelName))
                 .findAny();
     }
 

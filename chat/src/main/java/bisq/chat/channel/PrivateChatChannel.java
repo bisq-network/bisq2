@@ -41,12 +41,12 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     protected final ObservableSet<ChannelMember> channelMembers = new ObservableSet<>();
     protected final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
-    public PrivateChatChannel(ChannelDomain channelDomain,
+    public PrivateChatChannel(ChatChannelDomain chatChannelDomain,
                               String channelName,
                               UserIdentity myUserIdentity,
                               List<M> chatMessages,
                               ChannelNotificationType channelNotificationType) {
-        super(channelDomain, channelName, channelNotificationType);
+        super(chatChannelDomain, channelName, channelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);

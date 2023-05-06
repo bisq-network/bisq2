@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.discussion;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.primary.main.content.chat.ChatModel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 public class DiscussionsModel extends ChatModel {
-    public DiscussionsModel(ChannelDomain channelDomain) {
-        super(channelDomain);
+    public DiscussionsModel(ChatChannelDomain chatChannelDomain) {
+        super(chatChannelDomain);
     }
 }

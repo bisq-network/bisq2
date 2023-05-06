@@ -2,8 +2,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
@@ -274,7 +274,7 @@ public abstract class ChannelSelection {
             @EqualsAndHashCode.Include
             private final String channelName;
             @EqualsAndHashCode.Include
-            private final ChannelDomain channelDomain;
+            private final ChatChannelDomain chatChannelDomain;
             private final ChatChannel<?> chatChannel;
             private String displayString;
             private final boolean hasMultipleProfiles;
@@ -290,11 +290,11 @@ public abstract class ChannelSelection {
 
             public ChannelItem(ChatChannel<?> chatChannel, @Nullable UserIdentityService userIdentityService) {
                 this.chatChannel = chatChannel;
-                channelDomain = chatChannel.getChannelDomain();
+                chatChannelDomain = chatChannel.getChatChannelDomain();
                 channelName = chatChannel.getChannelName();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
-                String domain = "-" + channelDomain.name().toLowerCase() + "-";
+                String domain = "-" + chatChannelDomain.name().toLowerCase() + "-";
                 iconIdSelected = "channels" + domain + channelName;
                 iconIdHover = "channels" + domain + channelName + "-white";
                 iconId = "channels" + domain + channelName + "-grey";

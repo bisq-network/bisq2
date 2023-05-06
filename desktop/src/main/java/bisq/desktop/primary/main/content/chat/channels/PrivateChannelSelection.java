@@ -63,8 +63,8 @@ import java.util.List;
 public class PrivateChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PrivateChannelSelection(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
-        controller = new Controller(applicationService, channelDomain);
+    public PrivateChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        controller = new Controller(applicationService, chatChannelDomain);
     }
 
     public Pane getRoot() {
@@ -87,10 +87,10 @@ public class PrivateChannelSelection extends ChannelSelection {
         private Pin inMediationPin;
         private final PrivateChatChannelService<?, ?, ?> channelService;
 
-        protected Controller(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
+        protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService);
 
-            switch (channelDomain) {
+            switch (chatChannelDomain) {
                 case TRADE:
                     channelService = chatService.getPrivateTradeChannelService();
                     break;
@@ -104,7 +104,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                     channelService = chatService.getPrivateSupportChannelService();
                     break;
                 default:
-                    throw new RuntimeException("Unexpected channelDomain " + channelDomain);
+                    throw new RuntimeException("Unexpected channelDomain " + chatChannelDomain);
             }
 
             tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
@@ -114,7 +114,7 @@ public class PrivateChannelSelection extends ChannelSelection {
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
-            model = new Model(channelDomain);
+            model = new Model(chatChannelDomain);
             view = new View(model, this);
 
             model.filteredList.setPredicate(item -> true);
@@ -134,7 +134,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            if (model.channelDomain == ChannelDomain.TRADE) {
+            if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
                 channelsPin = FxBindings.<PrivateTradeChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTradeChannelService) channelService).getChannels());
@@ -150,7 +150,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChatChannel) channel).getIsInMediation());
                             }
                         });
-            } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
@@ -162,7 +162,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 userIdentityService.selectChatUserIdentity(((PrivateTwoPartyChatChannel) channel).getMyUserIdentity());
                             }
                         });
-            } else if (model.channelDomain == ChannelDomain.EVENTS) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.EVENTS) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
@@ -174,7 +174,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 userIdentityService.selectChatUserIdentity(((PrivateTwoPartyChatChannel) channel).getMyUserIdentity());
                             }
                         });
-            } else if (model.channelDomain == ChannelDomain.SUPPORT) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.SUPPORT) {
                 channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
@@ -187,7 +187,7 @@ public class PrivateChannelSelection extends ChannelSelection {
                             }
                         });
             } else {
-                throw new RuntimeException("Not supported channelDomain " + model.channelDomain);
+                throw new RuntimeException("Not supported channelDomain " + model.chatChannelDomain);
             }
         }
 
@@ -204,13 +204,13 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (channelItem == null) {
                 return;
             }
-            if (model.channelDomain == ChannelDomain.TRADE) {
+            if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
                 tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
-            } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
                 discussionChannelSelectionService.selectChannel(channelItem.getChatChannel());
-            } else if (model.channelDomain == ChannelDomain.EVENTS) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.EVENTS) {
                 eventsChannelSelectionService.selectChannel(channelItem.getChatChannel());
-            } else if (model.channelDomain == ChannelDomain.SUPPORT) {
+            } else if (model.chatChannelDomain == ChatChannelDomain.SUPPORT) {
                 supportChannelSelectionService.selectChannel(channelItem.getChatChannel());
             }
         }
@@ -228,7 +228,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         }
 
         public void doLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
-            switch (privateChatChannel.getChannelDomain()) {
+            switch (privateChatChannel.getChatChannelDomain()) {
                 case TRADE:
                     ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
@@ -262,11 +262,11 @@ public class PrivateChannelSelection extends ChannelSelection {
     }
 
     protected static class Model extends ChannelSelection.Model {
-        private final ChannelDomain channelDomain;
+        private final ChatChannelDomain chatChannelDomain;
         private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
 
-        public Model(ChannelDomain channelDomain) {
-            this.channelDomain = channelDomain;
+        public Model(ChatChannelDomain chatChannelDomain) {
+            this.chatChannelDomain = chatChannelDomain;
         }
     }
 

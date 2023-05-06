@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.events;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EventsController extends ChatController<EventsView, EventsModel> implements Controller {
     public EventsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelDomain.EVENTS, NavigationTarget.NONE);
+        super(applicationService, ChatChannelDomain.EVENTS, NavigationTarget.NONE);
     }
 
     @Override
@@ -51,8 +51,8 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
 
 
     @Override
-    public EventsModel getChatModel(ChannelDomain channelDomain) {
-        return new EventsModel(channelDomain);
+    public EventsModel getChatModel(ChatChannelDomain chatChannelDomain) {
+        return new EventsModel(chatChannelDomain);
     }
 
     @Override

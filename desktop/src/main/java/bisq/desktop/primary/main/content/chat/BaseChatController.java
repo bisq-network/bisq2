@@ -67,7 +67,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected Pin selectedChannelPin;
     private Subscription searchTextPin;
 
-    public BaseChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
+    public BaseChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
@@ -75,8 +75,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, channelDomain);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelDomain);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, chatChannelDomain);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, chatChannelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
@@ -85,13 +85,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
         createDependencies();
 
-        model = getChatModel(channelDomain);
+        model = getChatModel(chatChannelDomain);
         view = getChatView();
     }
 
     public abstract void createDependencies();
 
-    public abstract M getChatModel(ChannelDomain channelDomain);
+    public abstract M getChatModel(ChatChannelDomain chatChannelDomain);
 
     public abstract V getChatView();
 
@@ -209,7 +209,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
-        String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
+        String domain = "-" + channel.getChatChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getChannelName();
         Button iconButton = BisqIconButton.createIconButton(iconId);
         //todo get larger icons and dont use scaling

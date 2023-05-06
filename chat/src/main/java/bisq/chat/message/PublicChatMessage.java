@@ -17,7 +17,7 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.encoding.Hex;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -35,7 +35,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     protected PublicChatMessage(String messageId,
-                                ChannelDomain channelDomain,
+                                ChatChannelDomain chatChannelDomain,
                                 String channelName,
                                 String authorId,
                                 Optional<String> text,
@@ -44,7 +44,7 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
                                 boolean wasEdited,
                                 MessageType messageType,
                                 MetaData metaData) {
-        super(messageId, channelDomain, channelName, authorId, text, quotation, date, wasEdited, messageType, metaData);
+        super(messageId, chatChannelDomain, channelName, authorId, text, quotation, date, wasEdited, messageType, metaData);
     }
 
     @Override

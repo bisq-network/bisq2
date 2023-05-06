@@ -17,7 +17,7 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -30,7 +30,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
-    public CommonPublicChatMessage(ChannelDomain channelDomain,
+    public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelName,
                                    String authorId,
                                    String text,
@@ -38,7 +38,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                    long date,
                                    boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                channelDomain,
+                chatChannelDomain,
                 channelName,
                 authorId,
                 Optional.of(text),
@@ -50,7 +50,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     private CommonPublicChatMessage(String messageId,
-                                    ChannelDomain channelDomain,
+                                    ChatChannelDomain chatChannelDomain,
                                     String channelName,
                                     String authorId,
                                     Optional<String> text,
@@ -60,7 +60,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                     MessageType messageType,
                                     MetaData metaData) {
         super(messageId,
-                channelDomain,
+                chatChannelDomain,
                 channelName,
                 authorId,
                 text,
@@ -81,7 +81,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 Optional.empty();
         return new CommonPublicChatMessage(
                 baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 Optional.of(baseProto.getText()),
