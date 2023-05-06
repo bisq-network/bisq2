@@ -17,9 +17,11 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.channel.PrivateTradeChatChannel;
-import bisq.chat.trade.channel.PublicTradeChannel;
+import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.trade.channel.pub.PublicTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;

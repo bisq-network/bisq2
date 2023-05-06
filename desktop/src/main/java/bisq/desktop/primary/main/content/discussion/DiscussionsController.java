@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.discussion;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelSelectionService;
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.CommonPublicChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;

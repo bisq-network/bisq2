@@ -18,10 +18,14 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.*;
-import bisq.chat.trade.channel.PrivateTradeChannelService;
-import bisq.chat.trade.channel.PrivateTradeChatChannel;
+import bisq.chat.channel.ChannelSelectionService;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelService;
+import bisq.chat.channel.priv.*;
 import bisq.chat.trade.channel.TradeChannelSelectionService;
+import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
+import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;

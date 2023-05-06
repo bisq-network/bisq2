@@ -17,6 +17,9 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
 import bisq.common.util.StringUtils;

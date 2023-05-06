@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.chat.channel.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import javafx.collections.MapChangeListener;

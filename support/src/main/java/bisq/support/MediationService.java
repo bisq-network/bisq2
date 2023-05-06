@@ -18,8 +18,8 @@
 package bisq.support;
 
 import bisq.chat.ChatService;
-import bisq.chat.trade.channel.PrivateTradeChannelService;
-import bisq.chat.trade.channel.PrivateTradeChatChannel;
+import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
+import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;

@@ -19,7 +19,12 @@ package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.PrivateGroupChatChannel;
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;

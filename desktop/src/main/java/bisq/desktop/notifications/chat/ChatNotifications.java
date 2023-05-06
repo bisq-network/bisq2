@@ -18,12 +18,17 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.*;
-import bisq.chat.trade.channel.PrivateTradeChannelService;
-import bisq.chat.trade.channel.PrivateTradeChatChannel;
-import bisq.chat.trade.channel.PublicTradeChannel;
-import bisq.chat.trade.channel.PublicTradeChannelService;
+import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
+import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.trade.channel.pub.PublicTradeChannel;
+import bisq.chat.trade.channel.pub.PublicTradeChannelService;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
 import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.observable.Pin;

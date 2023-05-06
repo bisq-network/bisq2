@@ -1,7 +1,7 @@
 package bisq.restApi.dto;
 
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
