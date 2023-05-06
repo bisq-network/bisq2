@@ -35,9 +35,9 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class ChatChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
-    private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
-    private final Persistence<ChannelSelectionStore> persistence;
+public class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
+    private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
+    private final Persistence<ChatChannelSelectionStore> persistence;
     private final PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
@@ -66,7 +66,7 @@ public class ChatChannelSelectionService implements PersistenceClient<ChannelSel
     }
 
     @Override
-    public void onPersistedApplied(ChannelSelectionStore persisted) {
+    public void onPersistedApplied(ChatChannelSelectionStore persisted) {
         applySelectedChannel();
     }
 

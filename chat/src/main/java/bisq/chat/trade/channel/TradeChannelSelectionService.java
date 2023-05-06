@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.channel;
 
-import bisq.chat.channel.ChannelSelectionStore;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelSelectionStore;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
 import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
@@ -37,9 +37,9 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class TradeChannelSelectionService implements PersistenceClient<ChannelSelectionStore> {
-    private final ChannelSelectionStore persistableStore = new ChannelSelectionStore();
-    private final Persistence<ChannelSelectionStore> persistence;
+public class TradeChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
+    private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
+    private final Persistence<ChatChannelSelectionStore> persistence;
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
@@ -64,7 +64,7 @@ public class TradeChannelSelectionService implements PersistenceClient<ChannelSe
     }
 
     @Override
-    public void onPersistedApplied(ChannelSelectionStore persisted) {
+    public void onPersistedApplied(ChatChannelSelectionStore persisted) {
         applySelectedChannel();
     }
 
