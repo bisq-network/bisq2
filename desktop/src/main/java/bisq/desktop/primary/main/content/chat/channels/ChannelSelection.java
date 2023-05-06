@@ -2,14 +2,14 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.ChannelService;
-import bisq.chat.channel.PrivateChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelService;
+import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
@@ -63,7 +63,7 @@ public abstract class ChannelSelection {
 
         protected abstract Model getChannelSelectionModel();
 
-        protected abstract ChannelService<?, ?, ?> getChannelService();
+        protected abstract ChatChannelService<?, ?, ?> getChannelService();
 
         @Override
         public void onActivate() {
@@ -75,21 +75,21 @@ public abstract class ChannelSelection {
             });
         }
 
-        private void updateUnseenMessagesMap(Channel<?> channel) {
+        private void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
             UIThread.run(() -> {
-                if (getChannelService() instanceof PublicTradeChannelService) {
-                    PublicTradeChannelService publicTradeChannelService = (PublicTradeChannelService) getChannelService();
-                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) channel)) {
+                if (getChannelService() instanceof BisqEasyPublicChatChannelService) {
+                    BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = (BisqEasyPublicChatChannelService) getChannelService();
+                    if (!bisqEasyPublicChatChannelService.isVisible((BisqEasyPublicChatChannel) chatChannel)) {
                         return;
                     }
                 }
 
-                int numUnSeenChatMessages = (int) channel.getChatMessages().stream()
+                int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
                         .filter(this::isAuthorNotIgnored)
-                        .filter(message -> !channel.getSeenChatMessageIds().contains(message.getMessageId()))
+                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getMessageId()))
                         .count();
-                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
+                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
         }
 
@@ -248,7 +248,7 @@ public abstract class ChannelSelection {
         }
 
         protected void onUnseenMessagesChanged(ChannelItem item, String channelId, Badge numMessagesBadge) {
-            if (channelId.equals(item.getChannel().getId())) {
+            if (channelId.equals(item.getChatChannel().getId())) {
                 int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
                 if (numUnseenMessages > 99) {
                     numMessagesBadge.setText("*");
@@ -274,8 +274,8 @@ public abstract class ChannelSelection {
             @EqualsAndHashCode.Include
             private final String channelName;
             @EqualsAndHashCode.Include
-            private final ChannelDomain channelDomain;
-            private final Channel<?> channel;
+            private final ChatChannelDomain chatChannelDomain;
+            private final ChatChannel<?> chatChannel;
             private String displayString;
             private final boolean hasMultipleProfiles;
             private String iconId;
@@ -284,33 +284,33 @@ public abstract class ChannelSelection {
 
             private boolean isSelected;
 
-            public ChannelItem(Channel<?> channel) {
-                this(channel, null);
+            public ChannelItem(ChatChannel<?> chatChannel) {
+                this(chatChannel, null);
             }
 
-            public ChannelItem(Channel<?> channel, @Nullable UserIdentityService userIdentityService) {
-                this.channel = channel;
-                channelDomain = channel.getChannelDomain();
-                channelName = channel.getChannelName();
+            public ChannelItem(ChatChannel<?> chatChannel, @Nullable UserIdentityService userIdentityService) {
+                this.chatChannel = chatChannel;
+                chatChannelDomain = chatChannel.getChatChannelDomain();
+                channelName = chatChannel.getChannelName();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
-                String domain = "-" + channelDomain.name().toLowerCase() + "-";
+                String domain = "-" + chatChannelDomain.name().toLowerCase() + "-";
                 iconIdSelected = "channels" + domain + channelName;
                 iconIdHover = "channels" + domain + channelName + "-white";
                 iconId = "channels" + domain + channelName + "-grey";
 
-                if (channel instanceof PrivateChannel) {
-                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
-                    displayString = privateChannel.getDisplayString();
+                if (chatChannel instanceof PrivateChatChannel) {
+                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
+                    displayString = privateChatChannel.getDisplayString();
                     // PrivateTradeChannel is handled in ListCell code
-                    if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
+                    if (!(chatChannel instanceof BisqEasyPrivateTradeChatChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
-                        displayString += " [" + privateChannel.getMyUserIdentity().getUserName() + "]";
+                        displayString += " [" + privateChatChannel.getMyUserIdentity().getUserName() + "]";
                     }
-                } else if (channel instanceof PublicTradeChannel) {
-                    displayString = ((PublicTradeChannel) channel).getMarket().getMarketCodes();
+                } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
+                    displayString = ((BisqEasyPublicChatChannel) chatChannel).getMarket().getMarketCodes();
                 } else {
-                    displayString = channel.getDisplayString();
+                    displayString = chatChannel.getDisplayString();
                 }
             }
 

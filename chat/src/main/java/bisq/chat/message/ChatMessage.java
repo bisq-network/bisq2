@@ -17,13 +17,14 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.identity.UserIdentity;
@@ -45,35 +46,35 @@ public abstract class ChatMessage implements Proto {
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
     protected final String messageId;
-    private final ChannelDomain channelDomain;
+    private final ChatChannelDomain chatChannelDomain;
     protected final String channelName;
     protected final Optional<String> optionalText;
     protected String authorId;
-    protected final Optional<Quotation> quotation;
+    protected final Optional<Citation> citation;
     protected final long date;
     protected final boolean wasEdited;
-    protected final MessageType messageType;
+    protected final ChatMessageType chatMessageType;
     protected final MetaData metaData;
 
     protected ChatMessage(String messageId,
-                          ChannelDomain channelDomain,
+                          ChatChannelDomain chatChannelDomain,
                           String channelName,
                           String authorId,
                           Optional<String> text,
-                          Optional<Quotation> quotation,
+                          Optional<Citation> citation,
                           long date,
                           boolean wasEdited,
-                          MessageType messageType,
+                          ChatMessageType chatMessageType,
                           MetaData metaData) {
         this.messageId = messageId;
-        this.channelDomain = channelDomain;
+        this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
         this.authorId = authorId;
         this.optionalText = text;
-        this.quotation = quotation;
+        this.citation = citation;
         this.date = date;
         this.wasEdited = wasEdited;
-        this.messageType = messageType;
+        this.chatMessageType = chatMessageType;
         this.metaData = metaData;
     }
 
@@ -88,33 +89,33 @@ public abstract class ChatMessage implements Proto {
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setMessageId(messageId)
-                .setChannelDomain(channelDomain.toProto())
+                .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChannelName(channelName)
                 .setAuthorId(authorId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
-                .setMessageType(messageType.toProto())
+                .setChatMessageType(chatMessageType.toProto())
                 .setMetaData(metaData.toProto());
-        quotation.ifPresent(quotedMessage -> builder.setQuotation(quotedMessage.toProto()));
+        citation.ifPresent(citation -> builder.setCitation(citation.toProto()));
         optionalText.ifPresent(builder::setText);
         return builder;
     }
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATECHATMESSAGE: {
-                return PrivateChatMessage.fromProto(proto);
+            case TWOPARTYPRIVATECHATMESSAGE: {
+                return TwoPartyPrivateChatMessage.fromProto(proto);
             }
 
-            case PUBLICTRADECHATMESSAGE: {
-                return PublicTradeChatMessage.fromProto(proto);
+            case PUBLICBISQEASYOFFERCHATMESSAGE: {
+                return BisqEasyPublicChatMessage.fromProto(proto);
             }
-            case PRIVATETRADECHATMESSAGE: {
-                return PrivateTradeChatMessage.fromProto(proto);
+            case PRIVATEBISQEASYTRADECHATMESSAGE: {
+                return BisqEasyPrivateTradeChatMessage.fromProto(proto);
             }
 
-            case PUBLICCHATMESSAGE: {
-                return PublicChatMessage.fromProto(proto);
+            case COMMONPUBLICCHATMESSAGE: {
+                return CommonPublicChatMessage.fromProto(proto);
             }
 
             case MESSAGE_NOT_SET: {
@@ -129,11 +130,11 @@ public abstract class ChatMessage implements Proto {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PUBLICTRADECHATMESSAGE: {
-                        return PublicTradeChatMessage.fromProto(proto);
+                    case PUBLICBISQEASYOFFERCHATMESSAGE: {
+                        return BisqEasyPublicChatMessage.fromProto(proto);
                     }
-                    case PUBLICCHATMESSAGE: {
-                        return PublicChatMessage.fromProto(proto);
+                    case COMMONPUBLICCHATMESSAGE: {
+                        return CommonPublicChatMessage.fromProto(proto);
                     }
                     case MESSAGE_NOT_SET: {
                         throw new UnresolvableProtobufMessageException(proto);
@@ -146,17 +147,17 @@ public abstract class ChatMessage implements Proto {
         };
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PRIVATECHATMESSAGE: {
-                        return PrivateChatMessage.fromProto(proto);
+                    case TWOPARTYPRIVATECHATMESSAGE: {
+                        return TwoPartyPrivateChatMessage.fromProto(proto);
                     }
 
-                    case PRIVATETRADECHATMESSAGE: {
-                        return PrivateTradeChatMessage.fromProto(proto);
+                    case PRIVATEBISQEASYTRADECHATMESSAGE: {
+                        return BisqEasyPrivateTradeChatMessage.fromProto(proto);
                     }
 
                     case MESSAGE_NOT_SET: {

@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
-import bisq.chat.channel.PublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import javafx.collections.MapChangeListener;
@@ -71,7 +71,7 @@ public abstract class PublicChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(View.ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicChatChannel) {
+                    if (item != null && !empty && item.getChatChannel() instanceof CommonPublicChatChannel) {
                         widthSubscription = setupCellBinding(this, item, label, iconImageView);
                         updateCell(this, item, label, iconImageView);
 

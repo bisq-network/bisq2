@@ -18,14 +18,19 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelNotificationType;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.*;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
-import bisq.chat.trade.priv.PrivateTradeChatMessage;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
@@ -58,14 +63,14 @@ public class ChatNotifications {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
 
-    private final PrivateTradeChannelService privateTradeChannelService;
-    private final PublicTradeChannelService publicTradeChannelService;
-    private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-    private final PublicChatChannelService publicDiscussionChannelService;
-    private final PrivateTwoPartyChannelService privateEventsChannelService;
-    private final PublicChatChannelService publicEventsChannelService;
-    private final PrivateTwoPartyChannelService privateSupportChannelService;
-    private final PublicChatChannelService publicSupportChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+    private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
+    private final CommonPublicChatChannelService publicDiscussionChannelService;
+    private final TwoPartyPrivateChatChannelService privateEventsChannelService;
+    private final CommonPublicChatChannelService publicEventsChannelService;
+    private final TwoPartyPrivateChatChannelService privateSupportChannelService;
+    private final CommonPublicChatChannelService publicSupportChannelService;
 
     private final Map<String, Pin> pinByChannelId = new HashMap<>();
     private final ObservableList<ChatNotification<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
@@ -81,8 +86,8 @@ public class ChatNotifications {
         this.notificationsService = notificationsService;
         this.settingsService = settingsService;
 
-        privateTradeChannelService = chatService.getPrivateTradeChannelService();
-        publicTradeChannelService = chatService.getPublicTradeChannelService();
+        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+        bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
 
         privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -105,10 +110,10 @@ public class ChatNotifications {
 
         sortedChatMessages.setComparator(ChatNotification::compareTo);
 
-        privateTradeChannelService.getChannels().addListener(() ->
-                onPrivateTradeChannelsChanged(privateTradeChannelService.getChannels()));
-        publicTradeChannelService.getChannels().addListener(() ->
-                onPublicTradeChannelsChanged(publicTradeChannelService.getChannels()));
+        bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
+                onPrivateTradeChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+        bisqEasyPublicChatChannelService.getChannels().addListener(() ->
+                onPublicTradeChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
 
         privateDiscussionChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateDiscussionChannelService.getChannels()));
@@ -147,23 +152,23 @@ public class ChatNotifications {
             return;
         }
 
-        Channel<? extends ChatMessage> channel = chatNotification.getChannel();
-        ChannelNotificationType channelNotificationType = channel.getChannelNotificationType().get();
-        if (channelNotificationType == ChannelNotificationType.GLOBAL_DEFAULT) {
+        ChatChannel<? extends ChatMessage> chatChannel = chatNotification.getChatChannel();
+        ChatChannelNotificationType chatChannelNotificationType = chatChannel.getChatChannelNotificationType().get();
+        if (chatChannelNotificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
             // Map from global settings enums
             switch (settingsService.getChatNotificationType().get()) {
                 case ALL:
-                    channelNotificationType = ChannelNotificationType.ALL;
+                    chatChannelNotificationType = ChatChannelNotificationType.ALL;
                     break;
                 case MENTION:
-                    channelNotificationType = ChannelNotificationType.MENTION;
+                    chatChannelNotificationType = ChatChannelNotificationType.MENTION;
                     break;
                 case OFF:
-                    channelNotificationType = ChannelNotificationType.OFF;
+                    chatChannelNotificationType = ChatChannelNotificationType.OFF;
                     break;
             }
         }
-        switch (channelNotificationType) {
+        switch (chatChannelNotificationType) {
             case GLOBAL_DEFAULT:
                 throw new RuntimeException("GLOBAL_DEFAULT not possible here");
             case ALL:
@@ -180,10 +185,10 @@ public class ChatNotifications {
         }
         String channelInfo;
         String title;
-        if (chatMessage instanceof PrivateTradeChatMessage) {
-            PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
-            if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
-                PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
+        if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
+            BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
+            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
+                BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
                 notificationsService.notify(title, msg);
@@ -191,21 +196,21 @@ public class ChatNotifications {
             }
         }
 
-        if (chatMessage instanceof BasePublicChatMessage) {
-            if (chatMessage instanceof PublicTradeChatMessage) {
-                PublicTradeChatMessage publicTradeChatMessage = (PublicTradeChatMessage) chatMessage;
-                if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.hasTradeChatOffer()) {
+        if (chatMessage instanceof PublicChatMessage) {
+            if (chatMessage instanceof BisqEasyPublicChatMessage) {
+                BisqEasyPublicChatMessage bisqEasyPublicChatMessage = (BisqEasyPublicChatMessage) chatMessage;
+                if (settingsService.getOffersOnly().get() && !bisqEasyPublicChatMessage.hasTradeChatOffer()) {
                     return;
                 }
-                PublicTradeChannel publicTradeChannel = (PublicTradeChannel) channel;
-                if (!publicTradeChannelService.isVisible(publicTradeChannel)) {
+                BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
+                if (!bisqEasyPublicChatChannelService.isVisible(bisqEasyPublicChatChannel)) {
                     return;
                 }
             }
-            channelInfo = channel.getDisplayString();
+            channelInfo = chatChannel.getDisplayString();
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
-            channelInfo = Res.get(channel.getChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
+            channelInfo = Res.get(chatChannel.getChatChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
         }
         title = StringUtils.abbreviate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
         notificationsService.notify(title, chatNotification.getMessage());
@@ -214,13 +219,13 @@ public class ChatNotifications {
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
     // thus we have boilerplate methods here...
 
-    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateTradeChannel> channels) {
+    private void onPrivateTradeChannelsChanged(ObservableArray<BisqEasyPrivateTradeChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PrivateTradeChatMessage,
+            Pin pin = FxBindings.<BisqEasyPrivateTradeChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());
@@ -228,13 +233,13 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicTradeChannelsChanged(ObservableArray<PublicTradeChannel> channels) {
+    private void onPublicTradeChannelsChanged(ObservableArray<BisqEasyPublicChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PublicTradeChatMessage,
+            Pin pin = FxBindings.<BisqEasyPublicChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());
@@ -242,13 +247,13 @@ public class ChatNotifications {
         });
     }
 
-    private void onPrivateChannelsChanged(ObservableArray<PrivateTwoPartyChannel> channels) {
+    private void onPrivateChannelsChanged(ObservableArray<TwoPartyPrivateChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PrivateChatMessage,
+            Pin pin = FxBindings.<TwoPartyPrivateChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());
@@ -256,13 +261,13 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicChannelsChanged(ObservableArray<PublicChatChannel> channels) {
+    private void onPublicChannelsChanged(ObservableArray<CommonPublicChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PublicChatMessage,
+            Pin pin = FxBindings.<CommonPublicChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());

@@ -18,9 +18,9 @@
 package bisq.desktop.primary.main.content.discussion;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.channel.ChannelSelectionService;
-import bisq.chat.channel.PublicChatChannelService;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
@@ -31,16 +31,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
     public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChannelDomain.DISCUSSION, NavigationTarget.NONE);
+        super(applicationService, ChatChannelDomain.DISCUSSION, NavigationTarget.NONE);
     }
 
     @Override
-    public ChannelSelectionService getChannelSelectionService() {
-        return chatService.getDiscussionChannelSelectionService();
+    public ChatChannelSelectionService getChannelSelectionService() {
+        return chatService.getDiscussionChatChannelSelectionService();
     }
 
     @Override
-    public PublicChatChannelService getPublicChannelService() {
+    public CommonPublicChatChannelService getPublicChannelService() {
         return chatService.getPublicDiscussionChannelService();
     }
 
@@ -50,8 +50,8 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
     }
 
     @Override
-    public DiscussionsModel getChatModel(ChannelDomain channelDomain) {
-        return new DiscussionsModel(channelDomain);
+    public DiscussionsModel getChatModel(ChatChannelDomain chatChannelDomain) {
+        return new DiscussionsModel(chatChannelDomain);
     }
 
     @Override

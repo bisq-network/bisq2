@@ -17,78 +17,41 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
-import bisq.common.util.StringUtils;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.common.encoding.Hex;
+import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-@Getter
+/**
+ * PublicChatMessage is added as public data to the distributed network storage.
+ */
+@Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PublicChatMessage extends BasePublicChatMessage {
-    public PublicChatMessage(ChannelDomain channelDomain,
-                             String channelName,
-                             String authorId,
-                             String text,
-                             Optional<Quotation> quotedMessage,
-                             long date,
-                             boolean wasEdited) {
-        this(StringUtils.createShortUid(),
-                channelDomain,
-                channelName,
-                authorId,
-                Optional.of(text),
-                quotedMessage,
-                date,
-                wasEdited,
-                MessageType.TEXT,
-                new MetaData(ChatMessage.TTL, 100000, PublicChatMessage.class.getSimpleName()));
+public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+    protected PublicChatMessage(String messageId,
+                                ChatChannelDomain chatChannelDomain,
+                                String channelName,
+                                String authorId,
+                                Optional<String> text,
+                                Optional<Citation> citation,
+                                long date,
+                                boolean wasEdited,
+                                ChatMessageType chatMessageType,
+                                MetaData metaData) {
+        super(messageId, chatChannelDomain, channelName, authorId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
-    private PublicChatMessage(String messageId,
-                              ChannelDomain channelDomain,
-                              String channelName,
-                              String authorId,
-                              Optional<String> text,
-                              Optional<Quotation> quotedMessage,
-                              long date,
-                              boolean wasEdited,
-                              MessageType messageType,
-                              MetaData metaData) {
-        super(messageId,
-                channelDomain,
-                channelName,
-                authorId,
-                text,
-                quotedMessage,
-                date,
-                wasEdited,
-                messageType,
-                metaData);
-    }
-
-    public bisq.chat.protobuf.ChatMessage toProto() {
-        return getChatMessageBuilder().setPublicChatMessage(bisq.chat.protobuf.PublicChatMessage.newBuilder()).build();
-    }
-
-    public static PublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
-                Optional.empty();
-        return new PublicChatMessage(
-                baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
-                baseProto.getChannelName(),
-                baseProto.getAuthorId(),
-                Optional.of(baseProto.getText()),
-                quotedMessage,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                MessageType.fromProto(baseProto.getMessageType()),
-                MetaData.fromProto(baseProto.getMetaData()));
+    @Override
+    public boolean isDataInvalid(byte[] pubKeyHash) {
+        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
+        // verified as well, so we can be sure it's the sender of the message. This check prevents against 
+        // impersonation attack.
+        return !authorId.equals(Hex.encode(pubKeyHash));
     }
 }

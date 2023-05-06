@@ -19,7 +19,12 @@ package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.PrivateGroupChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
@@ -67,7 +72,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected Pin selectedChannelPin;
     private Subscription searchTextPin;
 
-    public BaseChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
+    public BaseChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;
@@ -75,8 +80,8 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, channelDomain);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, channelDomain);
+        privateChannelSelection = new PrivateChannelSelection(applicationService, chatChannelDomain);
+        chatMessagesComponent = new ChatMessagesComponent(applicationService, chatChannelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
             chatMessagesComponent.resetSelectedChatMessage();
@@ -85,13 +90,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
 
         createDependencies();
 
-        model = getChatModel(channelDomain);
+        model = getChatModel(chatChannelDomain);
         view = getChatView();
     }
 
     public abstract void createDependencies();
 
-    public abstract M getChatModel(ChannelDomain channelDomain);
+    public abstract M getChatModel(ChatChannelDomain chatChannelDomain);
 
     public abstract V getChatView();
 
@@ -134,11 +139,11 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         searchTextPin.unsubscribe();
     }
 
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
+    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
             model.getSearchText().set("");
-            model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
-            model.getSelectedChannel().set(channel);
+            model.getSelectedChannelAsString().set(chatChannel != null ? chatChannel.getDisplayString() : "");
+            model.getSelectedChannel().set(chatChannel);
 
             if (model.getChannelInfoVisible().get()) {
                 cleanupChannelInfo();
@@ -193,23 +198,23 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         channelSidebar.setOnUndoIgnoreChatUser(null);
     }
 
-    protected void applyPeersIcon(PrivateChannel<?> privateChannel) {
-        if (privateChannel instanceof PrivateTwoPartyChannel) {
-            PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChannel;
-            Image image = RoboHash.getImage(privateTwoPartyChannel.getPeer().getPubKeyHash());
+    protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
+        if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
+            TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+            Image image = RoboHash.getImage(twoPartyPrivateChatChannel.getPeer().getPubKeyHash());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
             model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
-        } else if (privateChannel instanceof PrivateGroupChannel<?>) {
-            PrivateGroupChannel<?> privateGroupChannel = (PrivateGroupChannel<?>) privateChannel;
-            List<UserProfile> peers = privateGroupChannel.getPeers();
+        } else if (privateChatChannel instanceof PrivateGroupChatChannel<?>) {
+            PrivateGroupChatChannel<?> privateGroupChatChannel = (PrivateGroupChatChannel<?>) privateChatChannel;
+            List<UserProfile> peers = privateGroupChatChannel.getPeers();
             //todo impl multiple icons
         }
     }
 
-    protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
-        String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
+    protected void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
+        String domain = "-" + channel.getChatChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getChannelName();
         Button iconButton = BisqIconButton.createIconButton(iconId);
         //todo get larger icons and dont use scaling

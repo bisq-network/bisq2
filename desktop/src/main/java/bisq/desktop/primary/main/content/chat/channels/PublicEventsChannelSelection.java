@@ -18,11 +18,11 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.ChannelSelectionService;
-import bisq.chat.channel.ChannelService;
-import bisq.chat.channel.PublicChatChannel;
-import bisq.chat.channel.PublicChatChannelService;
-import bisq.chat.trade.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.ChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
@@ -52,16 +52,16 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         private final Model model;
         @Getter
         private final View view;
-        private final PublicChatChannelService publicEventsChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService eventsChannelSelectionService;
+        private final CommonPublicChatChannelService publicEventsChannelService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
 
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService);
 
             publicEventsChannelService = chatService.getPublicEventsChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
             model = new Model();
             view = new View(model, this);
@@ -75,7 +75,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         }
 
         @Override
-        protected ChannelService<?, ?, ?> getChannelService() {
+        protected ChatChannelService<?, ?, ?> getChannelService() {
             return publicEventsChannelService;
         }
 
@@ -83,19 +83,19 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<PublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<CommonPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                     .map(ChannelSelection.View.ChannelItem::new)
                     .to(publicEventsChannelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(eventsChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(eventsChatChannelSelectionService.getSelectedChannel(),
                     channel -> UIThread.runOnNextRenderFrame(() -> {
-                        if (channel instanceof PublicChatChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                        } else if (channel == null && !model.channelItems.isEmpty()) {
-                            model.selectedChannelItem.set(model.channelItems.get(0));
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
+                                if (channel instanceof CommonPublicChatChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                                    model.selectedChannelItem.set(model.channelItems.get(0));
+                                } else {
+                                    model.selectedChannelItem.set(null);
+                                }
                             }
                     ));
         }
@@ -106,7 +106,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
                 return;
             }
 
-            eventsChannelSelectionService.selectChannel(channelItem.getChannel());
+            eventsChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {

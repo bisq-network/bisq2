@@ -19,11 +19,11 @@ package bisq.desktop.primary.overlay.createOffer.market;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.TradeChannelSelectionService;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.desktop.common.view.Controller;
@@ -43,14 +43,14 @@ public class MarketController implements Controller {
     @Getter
     private final MarketView view;
     private final ChatService chatService;
-    private final PublicTradeChannelService publicTradeChannelService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private Subscription searchTextPin;
 
     public MarketController(DefaultApplicationService applicationService) {
         chatService = applicationService.getChatService();
-        publicTradeChannelService = chatService.getPublicTradeChannelService();
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
+        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         model = new MarketModel();
         view = new MarketView(model, this);
     }
@@ -64,21 +64,21 @@ public class MarketController implements Controller {
         model.getSearchText().set("");
         // Used selected public channel or if private channel is selected we use any of the public channels for 
         // setting the default market 
-        Optional.ofNullable(tradeChannelSelectionService.getSelectedChannel().get())
-                .filter(channel -> channel instanceof PublicTradeChannel)
-                .map(channel -> (PublicTradeChannel) channel)
-                .or(() -> publicTradeChannelService.getVisibleChannels().stream().findFirst())
-                .map(PublicTradeChannel::getMarket)
+        Optional.ofNullable(bisqEasyChatChannelSelectionService.getSelectedChannel().get())
+                .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
+                .map(channel -> (BisqEasyPublicChatChannel) channel)
+                .or(() -> bisqEasyPublicChatChannelService.getVisibleChannels().stream().findFirst())
+                .map(BisqEasyPublicChatChannel::getMarket)
                 .ifPresent(market -> model.getSelectedMarket().set(market));
 
         model.getListItems().setAll(MarketRepository.getAllFiatMarkets().stream()
                 .map(market -> {
-                    Set<PublicTradeChatMessage> allMessages = publicTradeChannelService.getChannels().stream()
+                    Set<BisqEasyPublicChatMessage> allMessages = bisqEasyPublicChatChannelService.getChannels().stream()
                             .filter(channel -> channel.getMarket().equals(market))
                             .flatMap(channel -> channel.getChatMessages().stream())
                             .collect(Collectors.toSet());
                     int numOffersInChannel = (int) allMessages.stream()
-                            .filter(message -> message.getTradeChatOffer().isPresent())
+                            .filter(message -> message.getBisqEasyOffer().isPresent())
                             .distinct()
                             .count();
                     int numUsersInChannel = (int) allMessages.stream()

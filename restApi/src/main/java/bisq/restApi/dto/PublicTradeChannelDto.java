@@ -1,6 +1,6 @@
 package bisq.restApi.dto;
 
-import bisq.chat.trade.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
@@ -20,12 +20,12 @@ public final class PublicTradeChannelDto {
     @JsonProperty("market")
     private MarketDto marketDto;
 
-    public static PublicTradeChannelDto from(PublicTradeChannel publicTradeChannel) {
+    public static PublicTradeChannelDto from(BisqEasyPublicChatChannel bisqEasyPublicChatChannel) {
         PublicTradeChannelDto dto = new PublicTradeChannelDto();
-        dto.channelName = publicTradeChannel.getChannelName();
-        dto.description = publicTradeChannel.getDescription();
-        dto.displayString = publicTradeChannel.getDisplayString();
-        dto.marketDto = MarketDto.from(publicTradeChannel.getMarket());
+        dto.channelName = bisqEasyPublicChatChannel.getChannelName();
+        dto.description = bisqEasyPublicChatChannel.getDescription();
+        dto.displayString = bisqEasyPublicChatChannel.getDisplayString();
+        dto.marketDto = MarketDto.from(bisqEasyPublicChatChannel.getMarket());
         return dto;
     }
 }

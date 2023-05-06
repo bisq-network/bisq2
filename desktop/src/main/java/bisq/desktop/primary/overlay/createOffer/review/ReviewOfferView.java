@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.overlay.createOffer.review;
 
-import bisq.chat.trade.pub.PublicTradeChatMessage;
-import bisq.chat.trade.TradeChatOffer;
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Fiat;
 import bisq.desktop.common.utils.Transitions;
@@ -361,7 +361,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
     @EqualsAndHashCode
     @Getter
     static class ListItem implements TableItem {
-        private final PublicTradeChatMessage chatMessage;
+        private final BisqEasyPublicChatMessage chatMessage;
         private final Optional<UserProfile> senderUserProfile;
         private final String userName;
         private final String amount;
@@ -369,13 +369,13 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
         @EqualsAndHashCode.Exclude
         private final ReputationScore reputationScore;
 
-        public ListItem(PublicTradeChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
+        public ListItem(BisqEasyPublicChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
             senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
             userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
-            Optional<TradeChatOffer> tradeChatOffer = chatMessage.getTradeChatOffer();
-            amountAsLong = tradeChatOffer.map(TradeChatOffer::getQuoteSideAmount).orElse(0L);
-            String code = tradeChatOffer.map(TradeChatOffer::getMarket)
+            Optional<BisqEasyOffer> bisqEasyOffer = chatMessage.getBisqEasyOffer();
+            amountAsLong = bisqEasyOffer.map(BisqEasyOffer::getQuoteSideAmount).orElse(0L);
+            String code = bisqEasyOffer.map(BisqEasyOffer::getMarket)
                     .map(Market::getQuoteCurrencyCode)
                     .orElse("");
             amount = AmountFormatter.formatAmountWithCode(Fiat.of(amountAsLong, code), true);

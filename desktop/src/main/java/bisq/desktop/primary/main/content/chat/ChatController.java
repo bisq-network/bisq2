@@ -18,7 +18,13 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.*;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
@@ -30,24 +36,24 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class ChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
-    protected ChannelSelectionService channelSelectionService;
-    protected PublicChatChannelService publicChatChannelService;
+    protected ChatChannelSelectionService chatChannelSelectionService;
+    protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChannelSelection publicChannelSelection;
 
-    public ChatController(DefaultApplicationService applicationService, ChannelDomain channelDomain, NavigationTarget host) {
-        super(applicationService, channelDomain, host);
+    public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+        super(applicationService, chatChannelDomain, host);
     }
 
     @Override
     public void createDependencies() {
-        publicChatChannelService = getPublicChannelService();
-        channelSelectionService = getChannelSelectionService();
+        commonPublicChatChannelService = getPublicChannelService();
+        chatChannelSelectionService = getChannelSelectionService();
         publicChannelSelection = getPublicChannelSelection();
     }
 
-    abstract public ChannelSelectionService getChannelSelectionService();
+    abstract public ChatChannelSelectionService getChannelSelectionService();
 
-    abstract public PublicChatChannelService getPublicChannelService();
+    abstract public CommonPublicChatChannelService getPublicChannelService();
 
     abstract public PublicChannelSelection getPublicChannelSelection();
 
@@ -55,23 +61,23 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     public void onActivate() {
         super.onActivate();
 
-        selectedChannelPin = channelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
     }
 
     @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
+    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.handleChannelChange(chatChannel);
 
         UIThread.run(() -> {
-            if (channel == null) {
+            if (chatChannel == null) {
                 return;
             }
 
-            if (channel instanceof PrivateTwoPartyChannel) {
-                applyPeersIcon((PrivateChannel<?>) channel);
+            if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                applyPeersIcon((PrivateChatChannel<?>) chatChannel);
                 publicChannelSelection.deSelectChannel();
             } else {
-                applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+                applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
                 privateChannelSelection.deSelectChannel();
             }
         });

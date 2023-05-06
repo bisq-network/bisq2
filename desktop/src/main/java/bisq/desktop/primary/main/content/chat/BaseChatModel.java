@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.main.content.chat;
 
-import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
@@ -38,7 +38,7 @@ public abstract class BaseChatModel extends NavigationModel {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
     private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
-    private final ObjectProperty<Channel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
+    private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();

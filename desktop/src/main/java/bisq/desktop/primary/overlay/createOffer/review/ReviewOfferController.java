@@ -19,13 +19,13 @@ package bisq.desktop.primary.overlay.createOffer.review;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChannelDomain;
-import bisq.chat.trade.TradeChannelSelectionService;
-import bisq.chat.trade.TradeChatOffer;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.bisqeasy.message.BisqEasyOffer;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
@@ -60,11 +60,11 @@ public class ReviewOfferController implements Controller {
     private final Runnable closeHandler;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
-    private final PublicTradeChannelService publicTradeChannelService;
+    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
     private final UserProfileService userProfileService;
-    private final TradeChannelSelectionService tradeChannelSelectionService;
+    private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final Consumer<Boolean> buttonsVisibleHandler;
-    private final PrivateTradeChannelService privateTradeChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
     private final MediationService mediationService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
@@ -72,13 +72,13 @@ public class ReviewOfferController implements Controller {
                                  Runnable closeHandler) {
         this.buttonsVisibleHandler = buttonsVisibleHandler;
         ChatService chatService = applicationService.getChatService();
-        publicTradeChannelService = chatService.getPublicTradeChannelService();
-        tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+        bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
+        bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         reputationService = applicationService.getUserService().getReputationService();
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        privateTradeChannelService = chatService.getPrivateTradeChannelService();
+        bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         this.closeHandler = closeHandler;
 
@@ -120,14 +120,14 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        PublicTradeChannel channel = publicTradeChannelService.findChannel(ChannelDomain.TRADE, PublicTradeChannel.getChannelName(model.getMarket())).orElseThrow();
+        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(model.getMarket())).orElseThrow();
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);
         model.getShowTakeOfferSuccess().set(false);
 
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-        TradeChatOffer tradeChatOffer = new TradeChatOffer(StringUtils.createUid(),
+        BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
                 model.getDirection(),
                 model.getMarket(),
                 model.getBaseSideAmount().getValue(),
@@ -135,14 +135,14 @@ public class ReviewOfferController implements Controller {
                 new ArrayList<>(model.getPaymentMethods()),
                 userIdentity.getUserProfile().getTerms(),
                 settingsService.getRequiredTotalReputationScore().get());
-        model.setMyOfferText(StringUtils.truncate(tradeChatOffer.getChatMessageText(), 100));
+        model.setMyOfferText(StringUtils.truncate(bisqEasyOffer.getChatMessageText(), 100));
 
-        publicTradeChannelService.showChannel(channel);
-        tradeChannelSelectionService.selectChannel(channel);
+        bisqEasyPublicChatChannelService.showChannel(channel);
+        bisqEasyChatChannelSelectionService.selectChannel(channel);
 
-        PublicTradeChatMessage myOfferMessage = new PublicTradeChatMessage(channel.getChannelName(),
+        BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getChannelName(),
                 userIdentity.getUserProfile().getId(),
-                Optional.of(tradeChatOffer),
+                Optional.of(bisqEasyOffer),
                 Optional.empty(),
                 Optional.empty(),
                 new Date().getTime(),
@@ -164,8 +164,8 @@ public class ReviewOfferController implements Controller {
     }
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
-        PublicTradeChatMessage chatMessage = listItem.getChatMessage();
-        TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
+        BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
+        TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, bisqEasyPrivateTradeChatChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
             model.getShowTakeOfferSuccess().set(true);
             buttonsVisibleHandler.accept(false);
         }));
@@ -173,7 +173,7 @@ public class ReviewOfferController implements Controller {
 
     void onCreateOffer() {
         UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-        publicTradeChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
+        bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);
                     buttonsVisibleHandler.accept(false);
@@ -211,18 +211,18 @@ public class ReviewOfferController implements Controller {
             if (userProfileService.findUserProfile(item.getChatMessage().getAuthorId()).isEmpty()) {
                 return false;
             }
-            if (item.getChatMessage().getTradeChatOffer().isEmpty()) {
+            if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {
                 return false;
             }
             if (model.getMyOfferMessage() == null) {
                 return false;
             }
-            if (model.getMyOfferMessage().getTradeChatOffer().isEmpty()) {
+            if (model.getMyOfferMessage().getBisqEasyOffer().isEmpty()) {
                 return false;
             }
 
-            TradeChatOffer myChatOffer = model.getMyOfferMessage().getTradeChatOffer().get();
-            TradeChatOffer peersOffer = item.getChatMessage().getTradeChatOffer().get();
+            BisqEasyOffer myChatOffer = model.getMyOfferMessage().getBisqEasyOffer().get();
+            BisqEasyOffer peersOffer = item.getChatMessage().getBisqEasyOffer().get();
 
             if (peersOffer.getDirection().equals(myChatOffer.getDirection())) {
                 return false;

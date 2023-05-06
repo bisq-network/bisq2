@@ -17,90 +17,58 @@
 
 package bisq.chat.message;
 
-import bisq.chat.channel.ChannelDomain;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.protobuf.ExternalNetworkMessage;
-import bisq.network.protobuf.NetworkMessage;
+import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
-import com.google.protobuf.Any;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
 
+/**
+ * PrivateChatMessage is sent as direct message to peer and in case peer is not online it can be stores as
+ * mailbox message.
+ */
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateChatMessage extends BasePrivateChatMessage {
-    public PrivateChatMessage(String messageId,
-                              ChannelDomain channelDomain,
-                              String channelName,
-                              UserProfile sender,
-                              String receiversId,
-                              String text,
-                              Optional<Quotation> quotedMessage,
-                              long date,
-                              boolean wasEdited,
-                              MessageType messageType) {
+public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage {
+    protected final String receiversId;
+    protected final UserProfile sender;
+
+    protected PrivateChatMessage(String messageId,
+                                 ChatChannelDomain chatChannelDomain,
+                                 String channelName,
+                                 UserProfile sender,
+                                 String receiversId,
+                                 String text,
+                                 Optional<Citation> citation,
+                                 long date,
+                                 boolean wasEdited,
+                                 ChatMessageType chatMessageType,
+                                 MetaData metaData) {
         super(messageId,
-                channelDomain,
+                chatChannelDomain,
                 channelName,
-                sender,
-                receiversId,
-                text,
-                quotedMessage,
+                sender.getId(),
+                Optional.of(text),
+                citation,
                 date,
                 wasEdited,
-                messageType,
-                new MetaData(ChatMessage.TTL, 100000, PrivateChatMessage.class.getSimpleName()));
-    }
-
-    private PrivateChatMessage(String messageId,
-                               ChannelDomain channelDomain,
-                               String channelName,
-                               UserProfile sender,
-                               String receiversId,
-                               String text,
-                               Optional<Quotation> quotedMessage,
-                               long date,
-                               boolean wasEdited,
-                               MessageType messageType,
-                               MetaData metaData) {
-        super(messageId, channelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
+                chatMessageType,
+                metaData);
+        this.receiversId = receiversId;
+        this.sender = sender;
     }
 
     @Override
-    public NetworkMessage toProto() {
-        return getNetworkMessageBuilder()
-                .setExternalNetworkMessage(ExternalNetworkMessage.newBuilder().setAny(Any.pack(toChatMessageProto())))
-                .build();
+    public MetaData getMetaData() {
+        return metaData;
     }
 
-    public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
-        return getChatMessageBuilder()
-                .setPrivateChatMessage(bisq.chat.protobuf.PrivateChatMessage.newBuilder()
-                        .setReceiversId(receiversId)
-                        .setSender(sender.toProto()))
-                .build();
-    }
-
-    public static PrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
-                Optional.empty();
-        bisq.chat.protobuf.PrivateChatMessage privateChatMessage = baseProto.getPrivateChatMessage();
-        return new PrivateChatMessage(
-                baseProto.getMessageId(),
-                ChannelDomain.fromProto(baseProto.getChannelDomain()),
-                baseProto.getChannelName(),
-                UserProfile.fromProto(privateChatMessage.getSender()),
-                privateChatMessage.getReceiversId(),
-                baseProto.getText(),
-                quotedMessage,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                MessageType.fromProto(baseProto.getMessageType()),
-                MetaData.fromProto(baseProto.getMetaData()));
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

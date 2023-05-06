@@ -19,14 +19,21 @@ package bisq.desktop.primary.main.content.components;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.*;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.channel.pub.CommonPublicChatChannel;
+import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.Quotation;
-import bisq.chat.trade.TradeChannelSelectionService;
-import bisq.chat.trade.priv.PrivateTradeChannel;
-import bisq.chat.trade.priv.PrivateTradeChannelService;
-import bisq.chat.trade.pub.PublicTradeChannel;
-import bisq.chat.trade.pub.PublicTradeChannelService;
+import bisq.chat.message.Citation;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
@@ -67,8 +74,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService, ChannelDomain channelDomain) {
-        controller = new Controller(applicationService, channelDomain);
+    public ChatMessagesComponent(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        controller = new Controller(applicationService, chatChannelDomain);
     }
 
     public Pane getRoot() {
@@ -108,50 +115,50 @@ public class ChatMessagesComponent {
         @Getter
         private final View view;
         private final UserIdentityService userIdentityService;
-        private final QuotedMessageBlock quotedMessageBlock;
+        private final QuotedMessageBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
-        private final PrivateTradeChannelService privateTradeChannelService;
-        private final PrivateTwoPartyChannelService privateDiscussionChannelService;
-        private final PublicChatChannelService publicDiscussionChannelService;
-        private final PublicTradeChannelService publicTradeChannelService;
-        private final TradeChannelSelectionService tradeChannelSelectionService;
-        private final ChannelSelectionService discussionChannelSelectionService;
+        private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+        private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
+        private final CommonPublicChatChannelService publicDiscussionChannelService;
+        private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
+        private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
+        private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
-        private final PublicChatChannelService publicEventsChannelService;
-        private final PrivateTwoPartyChannelService privateEventsChannelService;
-        private final ChannelSelectionService eventsChannelSelectionService;
-        private final PublicChatChannelService publicSupportChannelService;
-        private final PrivateTwoPartyChannelService privateSupportChannelService;
-        private final ChannelSelectionService supportChannelSelectionService;
+        private final CommonPublicChatChannelService publicEventsChannelService;
+        private final TwoPartyPrivateChatChannelService privateEventsChannelService;
+        private final ChatChannelSelectionService eventsChatChannelSelectionService;
+        private final CommonPublicChatChannelService publicSupportChannelService;
+        private final TwoPartyPrivateChatChannelService privateSupportChannelService;
+        private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private final MediationService mediationService;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
-                           ChannelDomain channelDomain) {
+                           ChatChannelDomain chatChannelDomain) {
             ChatService chatService = applicationService.getChatService();
-            publicTradeChannelService = chatService.getPublicTradeChannelService();
-            privateTradeChannelService = chatService.getPrivateTradeChannelService();
-            tradeChannelSelectionService = chatService.getTradeChannelSelectionService();
+            bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
+            bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+            bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-            discussionChannelSelectionService = chatService.getDiscussionChannelSelectionService();
+            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
             publicEventsChannelService = chatService.getPublicEventsChannelService();
             privateEventsChannelService = chatService.getPrivateEventsChannelService();
-            eventsChannelSelectionService = chatService.getEventsChannelSelectionService();
+            eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
             publicSupportChannelService = chatService.getPublicSupportChannelService();
             privateSupportChannelService = chatService.getPrivateSupportChannelService();
-            supportChannelSelectionService = chatService.getSupportChannelSelectionService();
+            supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
-            quotedMessageBlock = new QuotedMessageBlock(applicationService);
+            citationBlock = new QuotedMessageBlock(applicationService);
 
             userProfileSelection = new UserProfileSelection(userIdentityService);
             mediationService = applicationService.getSupportService().getMediationService();
@@ -160,28 +167,28 @@ public class ChatMessagesComponent {
                     this::mentionUser,
                     this::showChatUserDetails,
                     this::onReply,
-                    channelDomain);
+                    chatChannelDomain);
 
-            model = new Model(channelDomain);
+            model = new Model(chatChannelDomain);
             view = new View(model, this,
                     chatMessagesListView.getRoot(),
-                    quotedMessageBlock.getRoot(),
+                    citationBlock.getRoot(),
                     userProfileSelection);
         }
 
         @Override
         public void onActivate() {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
-            model.mentionableChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
+            model.mentionableChatChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
-            if (model.getChannelDomain() == ChannelDomain.TRADE) {
-                selectedChannelPin = tradeChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
-                selectedChannelPin = discussionChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
-                selectedChannelPin = eventsChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
-                selectedChannelPin = supportChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
+                selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
+                selectedChannelPin = discussionChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
+                selectedChannelPin = eventsChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
+                selectedChannelPin = supportChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             }
 
             Optional.ofNullable(model.selectedChatMessage).ifPresent(this::showChatUserDetails);
@@ -208,7 +215,7 @@ public class ChatMessagesComponent {
                 return;
             }
 
-            if (model.selectedChannel.get() instanceof PublicChannel) {
+            if (model.selectedChannel.get() instanceof PublicChatChannel) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
@@ -227,11 +234,11 @@ public class ChatMessagesComponent {
         }
 
         private void doSendMessage(String text) {
-            Channel<? extends ChatMessage> channel = model.selectedChannel.get();
+            ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
-            Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
-            if (channel instanceof PublicTradeChannel) {
+            Optional<Citation> citation = citationBlock.getCitation();
+            if (chatChannel instanceof BisqEasyPublicChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
@@ -241,49 +248,49 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) channel, userIdentity);
-            } else if (channel instanceof PrivateTradeChannel) {
-                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChannel) channel).isMediator()) {
-                    privateTradeChannelService.sendTextMessage(text, quotation, (PrivateTradeChannel) channel);
+                bisqEasyPublicChatChannelService.publishChatMessage(text, citation, (BisqEasyPublicChatChannel) chatChannel, userIdentity);
+            } else if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((BisqEasyPrivateTradeChatChannel) chatChannel).isMediator()) {
+                    bisqEasyPrivateTradeChatChannelService.sendTextMessage(text, citation, (BisqEasyPrivateTradeChatChannel) chatChannel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
-            } else if (channel instanceof PublicChatChannel) {
-                switch (channel.getChannelDomain()) {
+            } else if (chatChannel instanceof CommonPublicChatChannel) {
+                switch (chatChannel.getChatChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        publicDiscussionChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
+                        publicDiscussionChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case EVENTS:
-                        publicEventsChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
+                        publicEventsChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case SUPPORT:
-                        publicSupportChannelService.publishChatMessage(text, quotation, (PublicChatChannel) channel, userIdentity);
+                        publicSupportChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                 }
 
-            } else if (channel instanceof PrivateTwoPartyChannel) {
-                switch (channel.getChannelDomain()) {
+            } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+                switch (chatChannel.getChatChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateDiscussionChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateEventsChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChannel) channel);
+                        privateSupportChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                 }
             }
-            quotedMessageBlock.close();
+            citationBlock.close();
         }
 
         private void onReply(ChatMessage chatMessage) {
             if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
-                quotedMessageBlock.reply(chatMessage);
+                citationBlock.reply(chatMessage);
             }
         }
 
@@ -294,27 +301,27 @@ public class ChatMessagesComponent {
             view.inputField.positionCaret(content.length());
         }
 
-        private void fillChannelMention(Channel<?> channel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channel.getDisplayString() + " ");
+        private void fillChannelMention(ChatChannel<?> chatChannel) {
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + chatChannel.getDisplayString() + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChannelDomain() == ChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
                 // todo use new 2 party channelservice
                 // PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 // tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.DISCUSSION) {
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(discussionChannelSelectionService::selectChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.EVENTS) {
+                        .ifPresent(discussionChatChannelSelectionService::selectChannel);
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
                 privateEventsChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(eventsChannelSelectionService::selectChannel);
-            } else if (model.getChannelDomain() == ChannelDomain.SUPPORT) {
+                        .ifPresent(eventsChatChannelSelectionService::selectChannel);
+            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
                 privateSupportChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(supportChannelSelectionService::selectChannel);
+                        .ifPresent(supportChatChannelSelectionService::selectChannel);
             }
         }
 
@@ -332,22 +339,22 @@ public class ChatMessagesComponent {
             model.getTextInput().set(existingText + "@" + userProfile.getUserName() + " ");
         }
 
-        private void applySelectedChannel(Channel<? extends ChatMessage> channel) {
-            model.selectedChannel.set(channel);
+        private void applySelectedChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+            model.selectedChannel.set(chatChannel);
             applyUserProfileOrChannelChange();
         }
 
         private void applyUserProfileOrChannelChange() {
             boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
-            Channel<?> selectedChannel = model.selectedChannel.get();
-            model.userProfileSelectionVisible.set(multipleProfiles && selectedChannel instanceof PublicChannel);
+            ChatChannel<?> selectedChatChannel = model.selectedChannel.get();
+            model.userProfileSelectionVisible.set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
 
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();
             }
 
-            if (selectedChannel != null) {
-                chatMessagesPin = selectedChannel.getChatMessages().addListener(this::maybeSwitchUserProfile);
+            if (selectedChatChannel != null) {
+                chatMessagesPin = selectedChatChannel.getChatMessages().addListener(this::maybeSwitchUserProfile);
             }
         }
 
@@ -374,19 +381,19 @@ public class ChatMessagesComponent {
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final StringProperty textInput = new SimpleStringProperty("");
         private final BooleanProperty userProfileSelectionVisible = new SimpleBooleanProperty();
         private final ObjectProperty<ChatMessage> moreOptionsVisibleMessage = new SimpleObjectProperty<>(null);
         private final ObservableList<UserProfile> mentionableUsers = FXCollections.observableArrayList();
-        private final ObservableList<Channel<?>> mentionableChannels = FXCollections.observableArrayList();
-        private final ChannelDomain channelDomain;
+        private final ObservableList<ChatChannel<?>> mentionableChatChannels = FXCollections.observableArrayList();
+        private final ChatChannelDomain chatChannelDomain;
         @Nullable
         private ChatMessage selectedChatMessage;
         private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
 
-        private Model(ChannelDomain channelDomain) {
-            this.channelDomain = channelDomain;
+        private Model(ChatChannelDomain chatChannelDomain) {
+            this.chatChannelDomain = chatChannelDomain;
         }
     }
 
@@ -397,7 +404,7 @@ public class ChatMessagesComponent {
         private final BisqTextArea inputField;
         private final Button sendButton;
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
-        private final ChatMentionPopupMenu<Channel<?>> channelMentionPopup;
+        private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private final Pane userProfileSelectionRoot;
 
         private View(Model model,
@@ -455,7 +462,7 @@ public class ChatMessagesComponent {
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            channelMentionPopup.setItemDisplayConverter(Channel::getDisplayString);
+            channelMentionPopup.setItemDisplayConverter(ChatChannel::getDisplayString);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
         }
 
@@ -492,7 +499,7 @@ public class ChatMessagesComponent {
             });
 
             userMentionPopup.setItems(model.mentionableUsers);
-            channelMentionPopup.setItems(model.mentionableChannels);
+            channelMentionPopup.setItems(model.mentionableChatChannels);
         }
 
         @Override

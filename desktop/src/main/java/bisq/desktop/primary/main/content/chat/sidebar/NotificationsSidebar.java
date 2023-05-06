@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
-import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -48,8 +48,8 @@ public class NotificationsSidebar {
         controller = new Controller(chatService);
     }
 
-    public void setChannel(Channel<? extends ChatMessage> channel) {
-        controller.model.setChannel(channel);
+    public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        controller.model.setChannel(chatChannel);
     }
 
     public Pane getRoot() {
@@ -72,10 +72,10 @@ public class NotificationsSidebar {
 
         @Override
         public void onActivate() {
-            tradeChannelSelectionPin = chatService.getTradeChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
-            discussionChannelSelectionPin = chatService.getDiscussionChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
-            eventsChannelSelectionPin = chatService.getEventsChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
-            supportChannelSelectionPin = chatService.getSupportChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            tradeChannelSelectionPin = chatService.getBisqEasyChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            discussionChannelSelectionPin = chatService.getDiscussionChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            eventsChannelSelectionPin = chatService.getEventsChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
+            supportChannelSelectionPin = chatService.getSupportChatChannelSelectionService().getSelectedChannel().addObserver(this::onChannelChanged);
         }
 
 
@@ -90,31 +90,31 @@ public class NotificationsSidebar {
             }
         }
 
-        private void onChannelChanged(Channel<? extends ChatMessage> channel) {
+        private void onChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
             if (notificationTypePin != null) {
                 notificationTypePin.unbind();
             }
-            if (channel != null) {
-                notificationTypePin = FxBindings.bindBiDir(model.selected).to(channel.getChannelNotificationType());
+            if (chatChannel != null) {
+                notificationTypePin = FxBindings.bindBiDir(model.selected).to(chatChannel.getChatChannelNotificationType());
             }
         }
 
-        void onSelected(ChannelNotificationType type) {
+        void onSelected(ChatChannelNotificationType type) {
             model.selected.set(type);
         }
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
-        private final ObjectProperty<ChannelNotificationType> selected = new SimpleObjectProperty<>(ChannelNotificationType.GLOBAL_DEFAULT);
+        private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannelNotificationType> selected = new SimpleObjectProperty<>(ChatChannelNotificationType.GLOBAL_DEFAULT);
 
         private Model() {
         }
 
-        private void setChannel(Channel<? extends ChatMessage> channel) {
-            this.selected.set(channel.getChannelNotificationType().get());
+        private void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+            this.selected.set(chatChannel.getChatChannelNotificationType().get());
 
-            this.channel.set(channel);
+            this.channel.set(chatChannel);
         }
     }
 
@@ -124,7 +124,7 @@ public class NotificationsSidebar {
         private final ChangeListener<Toggle> toggleListener;
         private final RadioButton globalDefault, all, mention, off;
 
-        private final ChangeListener<Channel<? extends ChatMessage>> channelChangeListener;
+        private final ChangeListener<ChatChannel<? extends ChatMessage>> channelChangeListener;
         private Subscription selectedNotificationTypePin;
 
         private View(Model model, Controller controller) {
@@ -145,10 +145,10 @@ public class NotificationsSidebar {
             mention.setToggleGroup(toggleGroup);
             off.setToggleGroup(toggleGroup);
 
-            globalDefault.setUserData(ChannelNotificationType.GLOBAL_DEFAULT);
-            all.setUserData(ChannelNotificationType.ALL);
-            mention.setUserData(ChannelNotificationType.MENTION);
-            off.setUserData(ChannelNotificationType.OFF);
+            globalDefault.setUserData(ChatChannelNotificationType.GLOBAL_DEFAULT);
+            all.setUserData(ChatChannelNotificationType.ALL);
+            mention.setUserData(ChatChannelNotificationType.MENTION);
+            off.setUserData(ChatChannelNotificationType.OFF);
 
             VBox vBox = new VBox(10, globalDefault, all, mention, off);
             vBox.setPadding(new Insets(10));
@@ -156,7 +156,7 @@ public class NotificationsSidebar {
 
             root.getChildren().addAll(headline, vBox);
 
-            toggleListener = (observable, oldValue, newValue) -> controller.onSelected((ChannelNotificationType) newValue.getUserData());
+            toggleListener = (observable, oldValue, newValue) -> controller.onSelected((ChatChannelNotificationType) newValue.getUserData());
             channelChangeListener = (observable, oldValue, newValue) -> applySelectedNotificationType();
         }
 
