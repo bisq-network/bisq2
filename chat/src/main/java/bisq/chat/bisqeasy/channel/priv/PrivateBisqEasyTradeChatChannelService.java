@@ -51,19 +51,19 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateGroupChatChannelService<PrivateBisqEasyTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
+public class PrivateBisqEasyTradeChatChannelService extends PrivateGroupChatChannelService<PrivateBisqEasyTradeChatMessage, PrivateBisqEasyTradeChatChannel, PrivateBisqEasyTradeChatChannelStore> {
 
     @Getter
-    private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
+    private final PrivateBisqEasyTradeChatChannelStore persistableStore = new PrivateBisqEasyTradeChatChannelStore();
     @Getter
-    private final Persistence<PrivateTradeChannelStore> persistence;
+    private final Persistence<PrivateBisqEasyTradeChatChannelStore> persistence;
     private final Map<String, Pin> notificationTypeChangePins = new HashMap<>();
 
-    public PrivateTradeChannelService(PersistenceService persistenceService,
-                                      NetworkService networkService,
-                                      UserIdentityService userIdentityService,
-                                      UserProfileService userProfileService,
-                                      ProofOfWorkService proofOfWorkService) {
+    public PrivateBisqEasyTradeChatChannelService(PersistenceService persistenceService,
+                                                  NetworkService networkService,
+                                                  UserIdentityService userIdentityService,
+                                                  UserProfileService userProfileService,
+                                                  ProofOfWorkService proofOfWorkService) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.TRADE);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
@@ -86,13 +86,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PrivateTradeChatChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
-                                                              UserIdentity myUserIdentity,
-                                                              UserProfile peer,
-                                                              Optional<UserProfile> mediator) {
+    public PrivateBisqEasyTradeChatChannel traderFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                                      UserIdentity myUserIdentity,
+                                                                      UserProfile peer,
+                                                                      Optional<UserProfile> mediator) {
         return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
+                    PrivateBisqEasyTradeChatChannel channel = PrivateBisqEasyTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
                     Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -101,13 +101,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 });
     }
 
-    public PrivateTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
-                                                                UserIdentity myUserIdentity,
-                                                                UserProfile requestingTrader,
-                                                                UserProfile nonRequestingTrader) {
+    public PrivateBisqEasyTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                                        UserIdentity myUserIdentity,
+                                                                        UserProfile requestingTrader,
+                                                                        UserProfile nonRequestingTrader) {
         return findChannel(bisqEasyOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
+                    PrivateBisqEasyTradeChatChannel channel = PrivateBisqEasyTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
                     Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -117,7 +117,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicBisqEasyOfferChatMessage offerMessage,
-                                                                                    PrivateTradeChatChannel channel) {
+                                                                                    PrivateBisqEasyTradeChatChannel channel) {
         checkArgument(offerMessage.getBisqEasyOffer().isPresent());
         UserProfile maker = channel.getPeer();
         BisqEasyOffer bisqEasyOffer = offerMessage.getBisqEasyOffer().get();
@@ -149,7 +149,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Citation> citation,
-                                                                               PrivateTradeChatChannel channel) {
+                                                                               PrivateBisqEasyTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
         if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
@@ -162,13 +162,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
         }
     }
 
-    public void setMediationActivated(PrivateTradeChatChannel channel, boolean mediationActivated) {
+    public void setMediationActivated(PrivateBisqEasyTradeChatChannel channel, boolean mediationActivated) {
         channel.getIsInMediation().set(mediationActivated);
         persist();
     }
 
     @Override
-    public ObservableArray<PrivateTradeChatChannel> getChannels() {
+    public ObservableArray<PrivateBisqEasyTradeChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -179,7 +179,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
 
     @Override
     protected PrivateBisqEasyTradeChatMessage createNewPrivateChatMessage(String messageId,
-                                                                          PrivateTradeChatChannel channel,
+                                                                          PrivateBisqEasyTradeChatChannel channel,
                                                                           UserProfile sender,
                                                                           String receiversId,
                                                                           String text,
@@ -205,7 +205,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
 
     //todo
     @Override
-    protected PrivateTradeChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected PrivateBisqEasyTradeChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }

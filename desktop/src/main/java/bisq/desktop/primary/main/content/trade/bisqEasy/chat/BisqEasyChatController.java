@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
@@ -125,8 +125,8 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getChannelIcon().set(null);
                 return;
             }
-            if (chatChannel instanceof PrivateTradeChatChannel) {
-                PrivateTradeChatChannel privateChannel = (PrivateTradeChatChannel) chatChannel;
+            if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
+                PrivateBisqEasyTradeChatChannel privateChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
 
                 if (inMediationPin != null) {
@@ -213,15 +213,15 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
     void onCreateOfferButtonClicked() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        if (chatChannel instanceof PrivateTradeChatChannel) return;
+        if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) return;
 
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     void onOpenMediation() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        checkArgument(chatChannel instanceof PrivateTradeChatChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
-        PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
+        checkArgument(chatChannel instanceof PrivateBisqEasyTradeChatChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
+        PrivateBisqEasyTradeChatChannel privateTradeChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
         Optional<UserProfile> mediator = privateTradeChannel.findMediator();
         if (mediator.isPresent()) {
             new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
@@ -254,11 +254,11 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                     thenAccept(receiveAddress -> UIThread.run(() -> {
                         if (receiveAddress == null) return;
 
-                        chatService.getPrivateTradeChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
+                        chatService.getPrivateBisqEasyTradeChatChannelService().findChannelForMessage(chatMessage).ifPresent(channel -> {
                                     String message = Res.get("bisqEasy.completeOffer.sendRequest", receiveAddress);
-                            chatService.getPrivateTradeChannelService().sendTextMessage(message,
-                                    Optional.empty(),
-                                    channel);
+                                    chatService.getPrivateBisqEasyTradeChatChannelService().sendTextMessage(message,
+                                            Optional.empty(),
+                                            channel);
                                 }
                         );
                     }));

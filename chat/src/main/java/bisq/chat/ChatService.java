@@ -18,7 +18,7 @@
 package bisq.chat;
 
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -42,7 +42,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class ChatService implements Service {
-    private final PrivateTradeChannelService privateTradeChannelService;
+    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
     private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
@@ -62,7 +62,7 @@ public class ChatService implements Service {
                        UserProfileService userProfileService) {
 
         // Trade
-        privateTradeChannelService = new PrivateTradeChannelService(persistenceService,
+        privateBisqEasyTradeChatChannelService = new PrivateBisqEasyTradeChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -72,7 +72,7 @@ public class ChatService implements Service {
                 userIdentityService,
                 userProfileService);
         bisqEasyChatChannelSelectionService = new BisqEasyChatChannelSelectionService(persistenceService,
-                privateTradeChannelService,
+                privateBisqEasyTradeChatChannelService,
                 publicTradeChannelService);
 
         // Discussion
@@ -146,7 +146,7 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
         return CompletableFutureUtils.allOf(
-                privateTradeChannelService.initialize(),
+                privateBisqEasyTradeChatChannelService.initialize(),
                 publicTradeChannelService.initialize(),
                 bisqEasyChatChannelSelectionService.initialize(),
 
@@ -168,7 +168,7 @@ public class ChatService implements Service {
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFutureUtils.allOf(
-                privateTradeChannelService.shutdown(),
+                privateBisqEasyTradeChatChannelService.shutdown(),
                 publicTradeChannelService.shutdown(),
                 bisqEasyChatChannelSelectionService.shutdown(),
 

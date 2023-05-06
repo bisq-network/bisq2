@@ -18,8 +18,8 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
@@ -63,7 +63,7 @@ public class ChatNotifications {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
 
-    private final PrivateTradeChannelService privateTradeChannelService;
+    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
     private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
@@ -86,7 +86,7 @@ public class ChatNotifications {
         this.notificationsService = notificationsService;
         this.settingsService = settingsService;
 
-        privateTradeChannelService = chatService.getPrivateTradeChannelService();
+        privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
         publicTradeChannelService = chatService.getPublicTradeChannelService();
 
         privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
@@ -110,8 +110,8 @@ public class ChatNotifications {
 
         sortedChatMessages.setComparator(ChatNotification::compareTo);
 
-        privateTradeChannelService.getChannels().addListener(() ->
-                onPrivateTradeChannelsChanged(privateTradeChannelService.getChannels()));
+        privateBisqEasyTradeChatChannelService.getChannels().addListener(() ->
+                onPrivateTradeChannelsChanged(privateBisqEasyTradeChatChannelService.getChannels()));
         publicTradeChannelService.getChannels().addListener(() ->
                 onPublicTradeChannelsChanged(publicTradeChannelService.getChannels()));
 
@@ -188,7 +188,7 @@ public class ChatNotifications {
         if (chatMessage instanceof PrivateBisqEasyTradeChatMessage) {
             PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = (PrivateBisqEasyTradeChatMessage) chatMessage;
             if (privateBisqEasyTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
-                PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
+                PrivateBisqEasyTradeChatChannel privateTradeChannel = (PrivateBisqEasyTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
                 notificationsService.notify(title, msg);
@@ -219,7 +219,7 @@ public class ChatNotifications {
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
     // thus we have boilerplate methods here...
 
-    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateTradeChatChannel> channels) {
+    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateBisqEasyTradeChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
@@ -154,7 +154,7 @@ public class ChatMessagesListView {
         @Getter
         private final View view;
         private final ChatService chatService;
-        private final PrivateTradeChannelService privateTradeChannelService;
+        private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
         private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
@@ -189,7 +189,7 @@ public class ChatMessagesListView {
                            ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
 
-            privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
@@ -246,12 +246,12 @@ public class ChatMessagesListView {
                                 .to(((PublicTradeChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChatChannelService = publicTradeChannelService;
-                    } else if (channel instanceof PrivateTradeChatChannel) {
+                    } else if (channel instanceof PrivateBisqEasyTradeChatChannel) {
                         chatMessagesPin = FxBindings.<PrivateBisqEasyTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTradeChatChannel) channel).getChatMessages());
+                                .to(((PrivateBisqEasyTradeChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
-                        currentChatChannelService = privateTradeChannelService;
+                        currentChatChannelService = privateBisqEasyTradeChatChannelService;
                     } else if (channel == null) {
                         model.chatMessages.clear();
                         if (chatMessagesPin != null) {
@@ -397,9 +397,9 @@ public class ChatMessagesListView {
         private void onTakeOffer(PublicBisqEasyOfferChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
 
-            TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage)
+            TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateBisqEasyTradeChatChannelService, chatMessage)
                     .thenAccept(result -> UIThread.run(() -> {
-                        privateTradeChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow().getId())
+                        privateBisqEasyTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow().getId())
                                 .ifPresent(bisqEasyChatChannelSelectionService::selectChannel);
                         Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
                         takeOfferCompleteHandler.ifPresent(Runnable::run);

@@ -20,8 +20,8 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.channel.ChatChannel;
@@ -118,7 +118,7 @@ public class ChatMessagesComponent {
         private final QuotedMessageBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
-        private final PrivateTradeChannelService privateTradeChannelService;
+        private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
         private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicTradeChannelService publicTradeChannelService;
@@ -140,7 +140,7 @@ public class ChatMessagesComponent {
                            ChatChannelDomain chatChannelDomain) {
             ChatService chatService = applicationService.getChatService();
             publicTradeChannelService = chatService.getPublicTradeChannelService();
-            privateTradeChannelService = chatService.getPrivateTradeChannelService();
+            privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -249,9 +249,9 @@ public class ChatMessagesComponent {
                             .show();
                 }
                 publicTradeChannelService.publishChatMessage(text, citation, (PublicTradeChannel) chatChannel, userIdentity);
-            } else if (chatChannel instanceof PrivateTradeChatChannel) {
-                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChatChannel) chatChannel).isMediator()) {
-                    privateTradeChannelService.sendTextMessage(text, citation, (PrivateTradeChatChannel) chatChannel);
+            } else if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateBisqEasyTradeChatChannel) chatChannel).isMediator()) {
+                    privateBisqEasyTradeChatChannelService.sendTextMessage(text, citation, (PrivateBisqEasyTradeChatChannel) chatChannel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }

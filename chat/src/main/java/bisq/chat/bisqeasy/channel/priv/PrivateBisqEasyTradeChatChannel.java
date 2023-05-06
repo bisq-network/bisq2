@@ -44,23 +44,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<PrivateBisqEasyTradeChatMessage> {
+public final class PrivateBisqEasyTradeChatChannel extends PrivateGroupChatChannel<PrivateBisqEasyTradeChatMessage> {
 
-    public static PrivateTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
-                                                         UserIdentity myUserIdentity,
-                                                         UserProfile peer,
-                                                         Optional<UserProfile> mediator) {
-        return new PrivateTradeChatChannel(bisqEasyOffer,
+    public static PrivateBisqEasyTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
+                                                                 UserIdentity myUserIdentity,
+                                                                 UserProfile peer,
+                                                                 Optional<UserProfile> mediator) {
+        return new PrivateBisqEasyTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 peer,
                 mediator);
     }
 
-    public static PrivateTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
-                                                           UserIdentity myUserIdentity,
-                                                           UserProfile requestingTrader,
-                                                           UserProfile nonRequestingTrader) {
-        return new PrivateTradeChatChannel(bisqEasyOffer,
+    public static PrivateBisqEasyTradeChatChannel createByMediator(BisqEasyOffer bisqEasyOffer,
+                                                                   UserIdentity myUserIdentity,
+                                                                   UserProfile requestingTrader,
+                                                                   UserProfile nonRequestingTrader) {
+        return new PrivateBisqEasyTradeChatChannel(bisqEasyOffer,
                 myUserIdentity,
                 requestingTrader,
                 nonRequestingTrader);
@@ -70,10 +70,10 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final BisqEasyOffer bisqEasyOffer;
 
-    private PrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
-                                    UserIdentity myUserIdentity,
-                                    UserProfile peer,
-                                    Optional<UserProfile> mediator) {
+    private PrivateBisqEasyTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+                                            UserIdentity myUserIdentity,
+                                            UserProfile peer,
+                                            Optional<UserProfile> mediator) {
         super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
 
         this.bisqEasyOffer = bisqEasyOffer;
@@ -82,10 +82,10 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     }
 
     // Mediator
-    private PrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
-                                    UserIdentity myUserIdentity,
-                                    UserProfile requestingTrader,
-                                    UserProfile nonRequestingTrader) {
+    private PrivateBisqEasyTradeChatChannel(BisqEasyOffer bisqEasyOffer,
+                                            UserIdentity myUserIdentity,
+                                            UserProfile requestingTrader,
+                                            UserProfile nonRequestingTrader) {
         super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
 
         this.bisqEasyOffer = bisqEasyOffer;
@@ -94,15 +94,15 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     }
 
     // From proto
-    private PrivateTradeChatChannel(String channelName,
-                                    BisqEasyOffer bisqEasyOffer,
-                                    UserIdentity myUserIdentity,
-                                    Set<UserProfile> traders,
-                                    Optional<UserProfile> mediator,
-                                    List<PrivateBisqEasyTradeChatMessage> chatMessages,
-                                    boolean isInMediation,
-                                    ChatChannelNotificationType chatChannelNotificationType,
-                                    Set<String> seenChatMessageIds) {
+    private PrivateBisqEasyTradeChatChannel(String channelName,
+                                            BisqEasyOffer bisqEasyOffer,
+                                            UserIdentity myUserIdentity,
+                                            Set<UserProfile> traders,
+                                            Optional<UserProfile> mediator,
+                                            List<PrivateBisqEasyTradeChatMessage> chatMessages,
+                                            boolean isInMediation,
+                                            ChatChannelNotificationType chatChannelNotificationType,
+                                            Set<String> seenChatMessageIds) {
         super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
@@ -143,7 +143,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        bisq.chat.protobuf.PrivateTradeChannel.Builder builder = bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
+        bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel.Builder builder = bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel.newBuilder()
                 .setBisqEasyOffer(bisqEasyOffer.toProto())
                 .setMyUserIdentity(myUserIdentity.toProto())
                 .addAllTraders(getTraders().stream()
@@ -154,12 +154,12 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                         .map(PrivateBisqEasyTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
         findMediator().ifPresent(mediator -> builder.setMediator(mediator.toProto()));
-        return getChannelBuilder().setPrivateTradeChannel(builder).build();
+        return getChannelBuilder().setPrivateBisqEasyTradeChatChannel(builder).build();
     }
 
-    public static PrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                    bisq.chat.protobuf.PrivateTradeChannel proto) {
-        return new PrivateTradeChatChannel(
+    public static PrivateBisqEasyTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                            bisq.chat.protobuf.PrivateBisqEasyTradeChatChannel proto) {
+        return new PrivateBisqEasyTradeChatChannel(
                 baseProto.getChannelName(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -228,7 +228,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at PrivateTradeChannel");
+        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at PrivateBisqEasyTradeChatChannel");
         return getPeers().get(0);
     }
 

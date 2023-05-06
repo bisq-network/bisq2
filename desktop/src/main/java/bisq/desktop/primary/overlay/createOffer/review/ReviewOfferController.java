@@ -20,7 +20,7 @@ package bisq.desktop.primary.overlay.createOffer.review;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
@@ -64,7 +64,7 @@ public class ReviewOfferController implements Controller {
     private final UserProfileService userProfileService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final Consumer<Boolean> buttonsVisibleHandler;
-    private final PrivateTradeChannelService privateTradeChannelService;
+    private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
     private final MediationService mediationService;
 
     public ReviewOfferController(DefaultApplicationService applicationService,
@@ -78,7 +78,7 @@ public class ReviewOfferController implements Controller {
         settingsService = applicationService.getSettingsService();
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
-        privateTradeChannelService = chatService.getPrivateTradeChannelService();
+        privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
         mediationService = applicationService.getSupportService().getMediationService();
         this.closeHandler = closeHandler;
 
@@ -165,7 +165,7 @@ public class ReviewOfferController implements Controller {
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         PublicBisqEasyOfferChatMessage chatMessage = listItem.getChatMessage();
-        TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateTradeChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
+        TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, privateBisqEasyTradeChatChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
             model.getShowTakeOfferSuccess().set(true);
             buttonsVisibleHandler.accept(false);
         }));

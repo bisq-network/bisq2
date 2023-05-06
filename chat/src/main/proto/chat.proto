@@ -79,7 +79,7 @@ message ChatChannel {
   oneof message{
     PrivateTwoPartyChatChannel privateTwoPartyChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;
-    PrivateTradeChannel privateTradeChannel = 12;
+    PrivateBisqEasyTradeChatChannel privateBisqEasyTradeChatChannel = 12;
     PublicTradeChannel publicTradeChannel = 13;
   }
 }
@@ -125,7 +125,6 @@ message PrivateBisqEasyTradeChatMessage {
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
   optional BisqEasyOffer bisqEasyOffer = 4;
-
 }
 
 message BisqEasyOffer {
@@ -143,7 +142,7 @@ message PublicBisqEasyOfferChatMessage {
   optional BisqEasyOffer bisqEasyOffer = 1;
 }
 
-message PrivateTradeChannel {
+message PrivateBisqEasyTradeChatChannel {
   BisqEasyOffer bisqEasyOffer = 1;
   user.UserIdentity myUserIdentity = 2;
   repeated user.UserProfile traders = 3;
@@ -156,7 +155,7 @@ message PublicTradeChannel {
   common.Market market = 1;
 }
 
-message PrivateTradeChannelStore {
+message PrivateBisqEasyTradeChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 

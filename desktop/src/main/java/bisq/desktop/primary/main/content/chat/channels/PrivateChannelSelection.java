@@ -19,8 +19,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
-import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -96,7 +96,7 @@ public class PrivateChannelSelection extends ChannelSelection {
 
             switch (chatChannelDomain) {
                 case TRADE:
-                    channelService = chatService.getPrivateTradeChannelService();
+                    channelService = chatService.getPrivateBisqEasyTradeChatChannelService();
                     break;
                 case DISCUSSION:
                     channelService = chatService.getPrivateDiscussionChannelService();
@@ -139,19 +139,19 @@ public class PrivateChannelSelection extends ChannelSelection {
             super.onActivate();
 
             if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
-                channelsPin = FxBindings.<PrivateTradeChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                channelsPin = FxBindings.<PrivateBisqEasyTradeChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTradeChannelService) channelService).getChannels());
+                        .to(((PrivateBisqEasyTradeChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateTradeChatChannel) {
+                            if (channel instanceof PrivateBisqEasyTradeChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateTradeChatChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((PrivateBisqEasyTradeChatChannel) channel).getMyUserIdentity());
                                 if (inMediationPin != null) {
                                     inMediationPin.unbind();
                                 }
-                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateTradeChatChannel) channel).getIsInMediation());
+                                inMediationPin = FxBindings.bind(model.mediationActivated).to(((PrivateBisqEasyTradeChatChannel) channel).getIsInMediation());
                             }
                         });
             } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
@@ -234,7 +234,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void doLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
             switch (privateChatChannel.getChatChannelDomain()) {
                 case TRADE:
-                    ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChatChannel) privateChatChannel);
+                    ((PrivateBisqEasyTradeChatChannelService) channelService).leaveChannel((PrivateBisqEasyTradeChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> bisqEasyChatChannelSelectionService.selectChannel(e.getChatChannel()),
@@ -406,8 +406,8 @@ public class PrivateChannelSelection extends ChannelSelection {
                                 "PrivateTwoPartyChannel or PrivateGroupChannel");
                     }
 
-                    if (privateChatChannel instanceof PrivateTradeChatChannel) {
-                        PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) privateChatChannel;
+                    if (privateChatChannel instanceof PrivateBisqEasyTradeChatChannel) {
+                        PrivateBisqEasyTradeChatChannel privateTradeChannel = (PrivateBisqEasyTradeChatChannel) privateChatChannel;
                         if (inMediationPin != null) {
                             inMediationPin.unbind();
                         }
