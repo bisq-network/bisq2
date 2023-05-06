@@ -18,16 +18,12 @@
 package bisq.chat.channel;
 
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.data.Pair;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -35,9 +31,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class PrivateTwoPartyChannel extends PrivateChannel<PrivateChatMessage> {
+    // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
+    private static String createChannelName(String userId1, String userId2) {
+        List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
+        Collections.sort(userIds);
+        return userIds.get(0) + "." + userIds.get(1);
+    }
+
     public PrivateTwoPartyChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
-                PrivateChannel.createChannelName(new Pair<>(peer.getId(), myUserIdentity.getId())),
+                createChannelName(peer.getId(), myUserIdentity.getId()),
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),

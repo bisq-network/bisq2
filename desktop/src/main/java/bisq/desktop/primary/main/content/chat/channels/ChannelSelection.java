@@ -301,7 +301,7 @@ public abstract class ChannelSelection {
 
                 if (channel instanceof PrivateChannel) {
                     PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
-                    displayString = privateChannel.getChannelName();
+                    displayString = privateChannel.getDisplayString();
                     // PrivateTradeChannel is handled in ListCell code
                     if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
