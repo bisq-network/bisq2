@@ -91,7 +91,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 Optional.empty();
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(privateChatMessage.getSender()),

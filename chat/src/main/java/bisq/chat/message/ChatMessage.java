@@ -45,7 +45,7 @@ public abstract class ChatMessage implements Proto {
     //todo for dev testing we keep it short.
     public final static long TTL = TimeUnit.DAYS.toMillis(1);
 
-    protected final String messageId;
+    protected final String id;
     private final ChatChannelDomain chatChannelDomain;
     protected final String channelName;
     protected final Optional<String> optionalText;
@@ -56,7 +56,7 @@ public abstract class ChatMessage implements Proto {
     protected final ChatMessageType chatMessageType;
     protected final MetaData metaData;
 
-    protected ChatMessage(String messageId,
+    protected ChatMessage(String id,
                           ChatChannelDomain chatChannelDomain,
                           String channelName,
                           String authorId,
@@ -66,7 +66,7 @@ public abstract class ChatMessage implements Proto {
                           boolean wasEdited,
                           ChatMessageType chatMessageType,
                           MetaData metaData) {
-        this.messageId = messageId;
+        this.id = id;
         this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
         this.authorId = authorId;
@@ -88,7 +88,7 @@ public abstract class ChatMessage implements Proto {
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
-                .setMessageId(messageId)
+                .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChannelName(channelName)
                 .setAuthorId(authorId)

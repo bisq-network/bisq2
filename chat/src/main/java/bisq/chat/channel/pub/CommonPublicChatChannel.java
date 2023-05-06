@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -34,16 +34,14 @@ import java.util.List;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class CommonPublicChatChannel extends PublicChatChannel<CommonPublicChatMessage> {
-    private final String displayName;
-    private final String description;
     private final String channelAdminId;
     private final List<String> channelModeratorIds;
+    private transient final String displayName;
+    private transient final String description;
 
     public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName) {
         this(chatChannelDomain,
                 channelName,
-                Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".name"),
-                Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
                 ChatChannelNotificationType.GLOBAL_DEFAULT);
@@ -51,26 +49,22 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     private CommonPublicChatChannel(ChatChannelDomain chatChannelDomain,
                                     String channelName,
-                                    String displayName,
-                                    String description,
                                     String channelAdminId,
                                     List<String> channelModeratorIds,
                                     ChatChannelNotificationType chatChannelNotificationType) {
         super(chatChannelDomain, channelName, chatChannelNotificationType);
 
-        this.displayName = displayName;
-        this.description = description;
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
-        this.channelModeratorIds.sort(Comparator.comparing((String e) -> e));
+        Collections.sort(channelModeratorIds);
+        displayName = Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".name");
+        description = Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".description");
     }
 
     public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder()
                 .setCommonPublicChatChannel(bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
-                        .setChannelName(displayName)
-                        .setDescription(description)
                         .setChannelAdminId(channelAdminId)
                         .addAllChannelModeratorIds(channelModeratorIds))
                 .build();
@@ -80,8 +74,6 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
                                                     bisq.chat.protobuf.CommonPublicChatChannel proto) {
         CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
-                proto.getChannelName(),
-                proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));

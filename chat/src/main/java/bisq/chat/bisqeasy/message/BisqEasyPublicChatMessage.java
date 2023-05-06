@@ -99,7 +99,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyPublicChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),

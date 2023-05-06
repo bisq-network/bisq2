@@ -118,7 +118,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateBisqEasyTradeChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getSender()),

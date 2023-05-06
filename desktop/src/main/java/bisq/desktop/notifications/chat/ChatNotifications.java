@@ -139,7 +139,7 @@ public class ChatNotifications {
             return;
         }
 
-        String id = chatMessage.getMessageId();
+        String id = chatMessage.getId();
         if (notificationsService.contains(id)) {
             return;
         }

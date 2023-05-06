@@ -53,7 +53,7 @@ message Citation {
 }
 
 message ChatMessage {
-  string messageId = 1;
+  string id = 1;
   ChatChannelDomain chatChannelDomain = 2;
   string channelName = 3;
   optional string text = 4;
@@ -98,25 +98,17 @@ message TwoPartyPrivateChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 
-
 // CommonPublicChat
 message CommonPublicChatMessage {
 }
 
 message CommonPublicChatChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
+  string channelAdminId = 1;
+  repeated string channelModeratorIds = 2;
+  bool isVisible = 3;
 }
 message CommonPublicChatChannelStore {
   repeated ChatChannel channels = 1;
-}
-
-// ChatChannelSelection
-message ChatChannelSelectionStore {
-  optional string selectedChannelId = 1;
 }
 
 // BisqEasy
@@ -160,5 +152,9 @@ message BisqEasyPublicChatChannelStore {
   repeated string visibleChannelNames = 2;
 }
 
+// ChatChannelSelection
+message ChatChannelSelectionStore {
+  optional string selectedChannelId = 1;
+}
 
 

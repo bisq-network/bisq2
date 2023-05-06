@@ -80,7 +80,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         return new CommonPublicChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),

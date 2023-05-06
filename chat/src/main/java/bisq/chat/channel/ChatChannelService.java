@@ -85,7 +85,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public void updateSeenChatMessageIds(ChatChannel<? extends ChatMessage> chatChannel) {
         synchronized (getPersistableStore()) {
-            chatChannel.updateSeenChatMessageIds();
+            chatChannel.setAllMessagesSeen();
         }
         persist();
     }

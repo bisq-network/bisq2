@@ -145,7 +145,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         if (!toRemove.isEmpty()) {
             synchronized (getPersistableStore()) {
                 channel.removeChatMessages(toRemove);
-                channel.updateSeenChatMessageIds();
+                channel.setAllMessagesSeen();
             }
             persist();
         }

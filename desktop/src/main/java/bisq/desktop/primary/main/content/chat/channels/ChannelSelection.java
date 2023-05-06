@@ -87,7 +87,7 @@ public abstract class ChannelSelection {
                 int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
                         .filter(this::isAuthorNotIgnored)
-                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getMessageId()))
+                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
                         .count();
                 getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
