@@ -24,6 +24,7 @@ import bisq.common.proto.Proto;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.i18n.Res;
+import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.identity.UserIdentity;
@@ -102,8 +103,8 @@ public abstract class ChatMessage implements Proto {
 
     public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
         switch (proto.getMessageCase()) {
-            case PRIVATECHATMESSAGE: {
-                return PrivateChatMessage.fromProto(proto);
+            case PRIVATETWOPARTYCHATMESSAGE: {
+                return PrivateTwoPartyChatMessage.fromProto(proto);
             }
 
             case PUBLICTRADECHATMESSAGE: {
@@ -146,13 +147,13 @@ public abstract class ChatMessage implements Proto {
         };
     }
 
-    public static ProtoResolver<bisq.network.p2p.message.NetworkMessage> getNetworkMessageResolver() {
+    public static ProtoResolver<NetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
                 bisq.chat.protobuf.ChatMessage proto = any.unpack(bisq.chat.protobuf.ChatMessage.class);
                 switch (proto.getMessageCase()) {
-                    case PRIVATECHATMESSAGE: {
-                        return PrivateChatMessage.fromProto(proto);
+                    case PRIVATETWOPARTYCHATMESSAGE: {
+                        return PrivateTwoPartyChatMessage.fromProto(proto);
                     }
 
                     case PRIVATETRADECHATMESSAGE: {

@@ -64,7 +64,7 @@ message ChatMessage {
   MessageType messageType = 9;
   network.MetaData metaData = 10;
   oneof message {
-    PrivateChatMessage privateChatMessage = 20;
+    PrivateTwoPartyChatMessage privateTwoPartyChatMessage = 20;
     PublicChatMessage publicChatMessage = 21;
     PrivateTradeChatMessage privateTradeChatMessage = 22;
     PublicTradeChatMessage publicTradeChatMessage = 23;
@@ -85,7 +85,7 @@ message ChatChannel {
 }
 
 // Private
-message PrivateChatMessage {
+message PrivateTwoPartyChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
 }

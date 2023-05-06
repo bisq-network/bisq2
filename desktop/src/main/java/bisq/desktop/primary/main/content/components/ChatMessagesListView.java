@@ -269,7 +269,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
@@ -292,7 +292,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
@@ -315,7 +315,7 @@ public class ChatMessagesListView {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
-                        chatMessagesPin = FxBindings.<PrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateTwoPartyChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTwoPartyChannel) channel).getChatMessages());
                         model.allowEditing.set(false);

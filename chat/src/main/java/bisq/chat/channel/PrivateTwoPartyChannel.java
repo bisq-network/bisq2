@@ -17,7 +17,7 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.message.PrivateChatMessage;
+import bisq.chat.message.PrivateTwoPartyChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChatMessage> {
+public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateTwoPartyChatMessage> {
     // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
     private static String createChannelName(String userId1, String userId2) {
         List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
@@ -52,7 +52,7 @@ public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChat
                                    String channelName,
                                    UserProfile peer,
                                    UserIdentity myProfile,
-                                   List<PrivateChatMessage> chatMessages,
+                                   List<PrivateTwoPartyChatMessage> chatMessages,
                                    ChannelNotificationType channelNotificationType) {
         super(channelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
@@ -65,7 +65,7 @@ public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChat
                         .setPeer(getPeer().toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
-                                .map(PrivateChatMessage::toChatMessageProto)
+                                .map(PrivateTwoPartyChatMessage::toChatMessageProto)
                                 .collect(Collectors.toList())))
                 .build();
     }
@@ -77,7 +77,7 @@ public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChat
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()
-                        .map(PrivateChatMessage::fromProto)
+                        .map(PrivateTwoPartyChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
         );
@@ -91,17 +91,17 @@ public final class PrivateTwoPartyChannel extends PrivateChatChannel<PrivateChat
     }
 
     @Override
-    public void addChatMessage(PrivateChatMessage chatMessage) {
+    public void addChatMessage(PrivateTwoPartyChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PrivateChatMessage chatMessage) {
+    public void removeChatMessage(PrivateTwoPartyChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateChatMessage> messages) {
+    public void removeChatMessages(Collection<PrivateTwoPartyChatMessage> messages) {
         chatMessages.removeAll(messages);
     }
 
