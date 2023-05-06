@@ -44,36 +44,36 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class PublicTradeChannelService extends PublicChatChannelService<PublicBisqEasyOfferChatMessage, PublicTradeChannel, PublicTradeChannelStore> {
+public class PublicBisqEasyOfferChatChannelService extends PublicChatChannelService<PublicBisqEasyOfferChatMessage, PublicBisqEasyOfferChatChannel, PublicBisqEasyOfferChatChannelStore> {
     @Getter
-    private final PublicTradeChannelStore persistableStore = new PublicTradeChannelStore();
+    private final PublicBisqEasyOfferChatChannelStore persistableStore = new PublicBisqEasyOfferChatChannelStore();
     @Getter
-    private final Persistence<PublicTradeChannelStore> persistence;
+    private final Persistence<PublicBisqEasyOfferChatChannelStore> persistence;
     @Getter
     private final Observable<Integer> numVisibleChannels = new Observable<>(0);
 
-    public PublicTradeChannelService(PersistenceService persistenceService,
-                                     NetworkService networkService,
-                                     UserIdentityService userIdentityService,
-                                     UserProfileService userProfileService) {
+    public PublicBisqEasyOfferChatChannelService(PersistenceService persistenceService,
+                                                 NetworkService networkService,
+                                                 UserIdentityService userIdentityService,
+                                                 UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService, ChatChannelDomain.TRADE);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
 
-    public void showChannel(PublicTradeChannel channel) {
+    public void showChannel(PublicBisqEasyOfferChatChannel channel) {
         getVisibleChannelNames().add(channel.getChannelName());
         numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
-    public void hidePublicTradeChannel(PublicTradeChannel channel) {
+    public void hidePublicTradeChannel(PublicBisqEasyOfferChatChannel channel) {
         getVisibleChannelNames().remove(channel.getChannelName());
         numVisibleChannels.set(getVisibleChannelNames().size());
         persist();
     }
 
-    public boolean isVisible(PublicTradeChannel channel) {
+    public boolean isVisible(PublicBisqEasyOfferChatChannel channel) {
         return getVisibleChannelNames().contains(channel.getChannelName());
     }
 
@@ -81,7 +81,7 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicBi
         return persistableStore.getVisibleChannelNames();
     }
 
-    public Set<PublicTradeChannel> getVisibleChannels() {
+    public Set<PublicBisqEasyOfferChatChannel> getVisibleChannels() {
         return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
     }
 
@@ -112,14 +112,14 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicBi
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public ObservableArray<PublicTradeChannel> getChannels() {
+    public ObservableArray<PublicBisqEasyOfferChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
     @Override
     protected PublicBisqEasyOfferChatMessage createChatMessage(String text,
                                                                Optional<Citation> citation,
-                                                               PublicTradeChannel publicChannel,
+                                                               PublicBisqEasyOfferChatChannel publicChannel,
                                                                UserProfile userProfile) {
         return new PublicBisqEasyOfferChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
@@ -149,15 +149,15 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicBi
             return;
         }
 
-        PublicTradeChannel defaultChannel = new PublicTradeChannel(MarketRepository.getDefault());
+        PublicBisqEasyOfferChatChannel defaultChannel = new PublicBisqEasyOfferChatChannel(MarketRepository.getDefault());
         showChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
-        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new PublicTradeChannel(market)));
+        allMarkets.forEach(market -> maybeAddPublicTradeChannel(new PublicBisqEasyOfferChatChannel(market)));
     }
 
-    private void maybeAddPublicTradeChannel(PublicTradeChannel channel) {
+    private void maybeAddPublicTradeChannel(PublicBisqEasyOfferChatChannel channel) {
         if (!getChannels().contains(channel)) {
             channel.getChatChannelNotificationType().addObserver(value -> persist());
             getChannels().add(channel);

@@ -20,8 +20,8 @@ package bisq.desktop.notifications.chat;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannel;
@@ -64,7 +64,7 @@ public class ChatNotifications {
     private final UserProfileService userProfileService;
 
     private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-    private final PublicTradeChannelService publicTradeChannelService;
+    private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
     private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final PrivateTwoPartyChatChannelService privateEventsChannelService;
@@ -87,7 +87,7 @@ public class ChatNotifications {
         this.settingsService = settingsService;
 
         privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
-        publicTradeChannelService = chatService.getPublicTradeChannelService();
+        publicBisqEasyOfferChatChannelService = chatService.getPublicBisqEasyOfferChatChannelService();
 
         privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
         publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -112,8 +112,8 @@ public class ChatNotifications {
 
         privateBisqEasyTradeChatChannelService.getChannels().addListener(() ->
                 onPrivateTradeChannelsChanged(privateBisqEasyTradeChatChannelService.getChannels()));
-        publicTradeChannelService.getChannels().addListener(() ->
-                onPublicTradeChannelsChanged(publicTradeChannelService.getChannels()));
+        publicBisqEasyOfferChatChannelService.getChannels().addListener(() ->
+                onPublicTradeChannelsChanged(publicBisqEasyOfferChatChannelService.getChannels()));
 
         privateDiscussionChannelService.getChannels().addListener(() ->
                 onPrivateChannelsChanged(privateDiscussionChannelService.getChannels()));
@@ -202,8 +202,8 @@ public class ChatNotifications {
                 if (settingsService.getOffersOnly().get() && !publicBisqEasyOfferChatMessage.hasTradeChatOffer()) {
                     return;
                 }
-                PublicTradeChannel publicTradeChannel = (PublicTradeChannel) chatChannel;
-                if (!publicTradeChannelService.isVisible(publicTradeChannel)) {
+                PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = (PublicBisqEasyOfferChatChannel) chatChannel;
+                if (!publicBisqEasyOfferChatChannelService.isVisible(publicBisqEasyOfferChatChannel)) {
                     return;
                 }
             }
@@ -233,7 +233,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPublicTradeChannelsChanged(ObservableArray<PublicTradeChannel> channels) {
+    private void onPublicTradeChannelsChanged(ObservableArray<PublicBisqEasyOfferChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

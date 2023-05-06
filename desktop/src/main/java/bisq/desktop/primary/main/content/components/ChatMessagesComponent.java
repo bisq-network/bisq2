@@ -22,8 +22,8 @@ import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
@@ -121,7 +121,7 @@ public class ChatMessagesComponent {
         private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
         private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
-        private final PublicTradeChannelService publicTradeChannelService;
+        private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
@@ -139,7 +139,7 @@ public class ChatMessagesComponent {
         private Controller(DefaultApplicationService applicationService,
                            ChatChannelDomain chatChannelDomain) {
             ChatService chatService = applicationService.getChatService();
-            publicTradeChannelService = chatService.getPublicTradeChannelService();
+            publicBisqEasyOfferChatChannelService = chatService.getPublicBisqEasyOfferChatChannelService();
             privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
@@ -238,7 +238,7 @@ public class ChatMessagesComponent {
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
             Optional<Citation> citation = citationBlock.getCitation();
-            if (chatChannel instanceof PublicTradeChannel) {
+            if (chatChannel instanceof PublicBisqEasyOfferChatChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
                     new Popup().information(Res.get("social.chat.sendMsg.offerOnly.popup"))
@@ -248,7 +248,7 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                publicTradeChannelService.publishChatMessage(text, citation, (PublicTradeChannel) chatChannel, userIdentity);
+                publicBisqEasyOfferChatChannelService.publishChatMessage(text, citation, (PublicBisqEasyOfferChatChannel) chatChannel, userIdentity);
             } else if (chatChannel instanceof PrivateBisqEasyTradeChatChannel) {
                 if (settingsService.getTradeRulesConfirmed().get() || ((PrivateBisqEasyTradeChatChannel) chatChannel).isMediator()) {
                     privateBisqEasyTradeChatChannelService.sendTextMessage(text, citation, (PrivateBisqEasyTradeChatChannel) chatChannel);

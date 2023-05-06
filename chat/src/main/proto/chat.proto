@@ -80,7 +80,7 @@ message ChatChannel {
     PrivateTwoPartyChatChannel privateTwoPartyChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;
     PrivateBisqEasyTradeChatChannel privateBisqEasyTradeChatChannel = 12;
-    PublicTradeChannel publicTradeChannel = 13;
+    PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = 13;
   }
 }
 
@@ -151,7 +151,7 @@ message PrivateBisqEasyTradeChatChannel {
   bool isInMediation = 6;
 }
 
-message PublicTradeChannel {
+message PublicBisqEasyOfferChatChannel {
   common.Market market = 1;
 }
 
@@ -159,7 +159,7 @@ message PrivateBisqEasyTradeChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 
-message PublicTradeChannelStore {
+message PublicBisqEasyOfferChatChannelStore {
   repeated ChatChannel channels = 1;
   repeated string visibleChannelNames = 2;
 }

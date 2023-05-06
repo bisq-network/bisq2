@@ -3,8 +3,8 @@ package bisq.desktop.primary.main.content.chat.channels;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
@@ -77,9 +77,9 @@ public abstract class ChannelSelection {
 
         private void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
             UIThread.run(() -> {
-                if (getChannelService() instanceof PublicTradeChannelService) {
-                    PublicTradeChannelService publicTradeChannelService = (PublicTradeChannelService) getChannelService();
-                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) chatChannel)) {
+                if (getChannelService() instanceof PublicBisqEasyOfferChatChannelService) {
+                    PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService = (PublicBisqEasyOfferChatChannelService) getChannelService();
+                    if (!publicBisqEasyOfferChatChannelService.isVisible((PublicBisqEasyOfferChatChannel) chatChannel)) {
                         return;
                     }
                 }
@@ -307,8 +307,8 @@ public abstract class ChannelSelection {
                         // If we have more than 1 user profiles we add our profile as well
                         displayString += " [" + privateChatChannel.getMyUserIdentity().getUserName() + "]";
                     }
-                } else if (chatChannel instanceof PublicTradeChannel) {
-                    displayString = ((PublicTradeChannel) chatChannel).getMarket().getMarketCodes();
+                } else if (chatChannel instanceof PublicBisqEasyOfferChatChannel) {
+                    displayString = ((PublicBisqEasyOfferChatChannel) chatChannel).getMarket().getMarketCodes();
                 } else {
                     displayString = chatChannel.getDisplayString();
                 }

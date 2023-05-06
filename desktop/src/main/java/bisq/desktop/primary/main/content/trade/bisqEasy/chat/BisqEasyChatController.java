@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.channel.ChatChannel;
@@ -152,7 +152,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getActionButtonText().set(Res.get("createOffer"));
                 privateChannelSelection.deSelectChannel();
 
-                Market market = ((PublicTradeChannel) chatChannel).getMarket();
+                Market market = ((PublicBisqEasyOfferChatChannel) chatChannel).getMarket();
                 StackPane marketsImage = MarketImageComposition.imageBoxForMarket(
                         market.getBaseCurrencyCode().toLowerCase(),
                         market.getQuoteCurrencyCode().toLowerCase()).getFirst();

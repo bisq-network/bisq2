@@ -22,8 +22,8 @@ import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOfferMessage;
 import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
@@ -157,7 +157,7 @@ public class ChatMessagesListView {
         private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
         private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
-        private final PublicTradeChannelService publicTradeChannelService;
+        private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
         private final UserIdentityService userIdentityService;
         private final Consumer<UserProfile> mentionUserHandler;
         private final Consumer<ChatMessage> replyHandler;
@@ -190,7 +190,7 @@ public class ChatMessagesListView {
             chatService = applicationService.getChatService();
 
             privateBisqEasyTradeChatChannelService = chatService.getPrivateBisqEasyTradeChatChannelService();
-            publicTradeChannelService = chatService.getPublicTradeChannelService();
+            publicBisqEasyOfferChatChannelService = chatService.getPublicBisqEasyOfferChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
@@ -240,12 +240,12 @@ public class ChatMessagesListView {
                     if (chatMessagesPin != null) {
                         chatMessagesPin.unbind();
                     }
-                    if (channel instanceof PublicTradeChannel) {
+                    if (channel instanceof PublicBisqEasyOfferChatChannel) {
                         chatMessagesPin = FxBindings.<PublicBisqEasyOfferChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PublicTradeChannel) channel).getChatMessages());
+                                .to(((PublicBisqEasyOfferChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
-                        currentChatChannelService = publicTradeChannelService;
+                        currentChatChannelService = publicBisqEasyOfferChatChannelService;
                     } else if (channel instanceof PrivateBisqEasyTradeChatChannel) {
                         chatMessagesPin = FxBindings.<PrivateBisqEasyTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
@@ -427,7 +427,7 @@ public class ChatMessagesListView {
 
         private void doDeleteMessage(ChatMessage chatMessage, UserIdentity messageAuthor) {
             if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
-                publicTradeChannelService.deleteChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, messageAuthor);
+                publicBisqEasyOfferChatChannelService.deleteChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, messageAuthor);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
 
                 //todo services dont do any domain specific here
@@ -454,7 +454,7 @@ public class ChatMessagesListView {
             }
             if (chatMessage instanceof PublicBisqEasyOfferChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
-                publicTradeChannelService.publishEditedChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, editedText, userIdentity);
+                publicBisqEasyOfferChatChannelService.publishEditedChatMessage((PublicBisqEasyOfferChatMessage) chatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof CommonPublicChatMessage) {
                 UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
                 publicDiscussionChannelService.publishEditedChatMessage((CommonPublicChatMessage) chatMessage, editedText, userIdentity);

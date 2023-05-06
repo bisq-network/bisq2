@@ -17,7 +17,7 @@
 
 package bisq.desktop.primary.overlay.createOffer.review;
 
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
@@ -38,7 +38,7 @@ class ReviewOfferModel implements Model {
     @Setter
     private boolean showMatchingOffers;
     @Setter
-    private PublicTradeChannel selectedChannel;
+    private PublicBisqEasyOfferChatChannel selectedChannel;
     @Setter
     private Direction direction;
     @Setter

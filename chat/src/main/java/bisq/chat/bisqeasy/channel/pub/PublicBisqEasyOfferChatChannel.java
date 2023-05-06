@@ -32,18 +32,18 @@ import java.util.HashSet;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends PublicChatChannel<PublicBisqEasyOfferChatMessage> {
+public final class PublicBisqEasyOfferChatChannel extends PublicChatChannel<PublicBisqEasyOfferChatMessage> {
     public static String getChannelName(Market market) {
         return market.toString();
     }
 
     private final Market market;
 
-    public PublicTradeChannel(Market market) {
+    public PublicBisqEasyOfferChatChannel(Market market) {
         this(getChannelName(market), market);
     }
 
-    private PublicTradeChannel(String channelName, Market market) {
+    private PublicBisqEasyOfferChatChannel(String channelName, Market market) {
         super(ChatChannelDomain.TRADE, channelName, ChatChannelNotificationType.ALL);
 
         this.market = market;
@@ -51,16 +51,16 @@ public final class PublicTradeChannel extends PublicChatChannel<PublicBisqEasyOf
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
+        return getChannelBuilder().setPublicBisqEasyOfferChatChannel(bisq.chat.protobuf.PublicBisqEasyOfferChatChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
 
-    public static PublicTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                               bisq.chat.protobuf.PublicTradeChannel proto) {
-        PublicTradeChannel publicTradeChannel = new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
-        publicTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return publicTradeChannel;
+    public static PublicBisqEasyOfferChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                           bisq.chat.protobuf.PublicBisqEasyOfferChatChannel proto) {
+        PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = new PublicBisqEasyOfferChatChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
+        publicBisqEasyOfferChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return publicBisqEasyOfferChatChannel;
     }
 
     public String getDescription() {

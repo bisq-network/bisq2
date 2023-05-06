@@ -18,7 +18,7 @@
 package bisq.chat.channel;
 
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannel;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
@@ -71,8 +71,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
             case PRIVATEBISQEASYTRADECHATCHANNEL: {
                 return PrivateBisqEasyTradeChatChannel.fromProto(proto, proto.getPrivateBisqEasyTradeChatChannel());
             }
-            case PUBLICTRADECHANNEL: {
-                return PublicTradeChannel.fromProto(proto, proto.getPublicTradeChannel());
+            case PUBLICBISQEASYOFFERCHATCHANNEL: {
+                return PublicBisqEasyOfferChatChannel.fromProto(proto, proto.getPublicBisqEasyOfferChatChannel());
             }
 
 

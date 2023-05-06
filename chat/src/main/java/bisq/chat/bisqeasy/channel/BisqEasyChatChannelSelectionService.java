@@ -19,7 +19,7 @@ package bisq.chat.bisqeasy.channel;
 
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
-import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelSelectionStore;
 import bisq.chat.message.ChatMessage;
@@ -41,14 +41,14 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
     private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     private final Persistence<ChatChannelSelectionStore> persistence;
     private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-    private final PublicTradeChannelService publicTradeChannelService;
+    private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
                                                PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService,
-                                               PublicTradeChannelService publicTradeChannelService) {
+                                               PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService) {
         this.privateBisqEasyTradeChatChannelService = privateBisqEasyTradeChatChannelService;
-        this.publicTradeChannelService = publicTradeChannelService;
+        this.publicBisqEasyOfferChatChannelService = publicBisqEasyOfferChatChannelService;
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 
@@ -80,7 +80,7 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
     }
 
     private void applySelectedChannel() {
-        Stream<ChatChannel<?>> stream = Stream.concat(publicTradeChannelService.getChannels().stream(),
+        Stream<ChatChannel<?>> stream = Stream.concat(publicBisqEasyOfferChatChannelService.getChannels().stream(),
                 privateBisqEasyTradeChatChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
@@ -95,12 +95,12 @@ public class BisqEasyChatChannelSelectionService implements PersistenceClient<Ch
 
     private void maybeSelectDefaultChannel() {
         if (getSelectedChannel().get() == null) {
-            publicTradeChannelService.getChannels().stream()
+            publicBisqEasyOfferChatChannelService.getChannels().stream()
                     .filter(publicTradeChannel -> MarketRepository.getDefault().equals(publicTradeChannel.getMarket()))
                     .findAny()
                     .ifPresent(channel -> {
                         selectChannel(channel);
-                        publicTradeChannelService.showChannel(channel);
+                        publicBisqEasyOfferChatChannelService.showChannel(channel);
                     });
         }
         persist();
