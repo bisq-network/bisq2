@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
@@ -59,7 +59,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     private final MediationService mediationService;
     private final Optional<WalletService> walletService;
     private PublicTradeChannelSelection publicTradeChannelSelection;
-    PrivateTradeChatMessage lastOfferMessage;
+    PrivateBisqEasyTradeChatMessage lastOfferMessage;
 
     private Pin offerOnlySettingsPin;
     private Pin inMediationPin;
@@ -166,12 +166,12 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     private void updateLastOfferMessage() {
-        PrivateTradeChatMessage newLastOfferMessage = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
-                .filter(chatMessage -> chatMessage instanceof PrivateTradeChatMessage)
-                .map(chatMessage -> (PrivateTradeChatMessage) chatMessage)
+        PrivateBisqEasyTradeChatMessage newLastOfferMessage = tradeChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
+                .filter(chatMessage -> chatMessage instanceof PrivateBisqEasyTradeChatMessage)
+                .map(chatMessage -> (PrivateBisqEasyTradeChatMessage) chatMessage)
                 .filter(message -> message.getChannelName().equals(tradeChannelSelectionService.getSelectedChannel().get().getChannelName()))
-                .filter(PrivateTradeChatMessage::hasTradeChatOffer)
-                .max(Comparator.comparing(PrivateTradeChatMessage::getDate))
+                .filter(PrivateBisqEasyTradeChatMessage::hasTradeChatOffer)
+                .max(Comparator.comparing(PrivateBisqEasyTradeChatMessage::getDate))
                 .orElse(null);
 
         if (newLastOfferMessage == lastOfferMessage) return;
@@ -240,7 +240,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     void onCompleteTrade() {
-        PrivateTradeChatMessage chatMessage = lastOfferMessage;
+        PrivateBisqEasyTradeChatMessage chatMessage = lastOfferMessage;
         if (chatMessage == null) return;
 
         TradeChatOffer offer = chatMessage.getTradeChatOffer().orElse(null);

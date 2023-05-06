@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.channel.priv;
 
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannelDomain;
@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateGroupChatChannelService<PrivateTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
+public class PrivateTradeChannelService extends PrivateGroupChatChannelService<PrivateBisqEasyTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
 
     @Getter
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
@@ -76,8 +76,8 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
 
     @Override
     public void onMessage(NetworkMessage networkMessage) {
-        if (networkMessage instanceof PrivateTradeChatMessage) {
-            processMessage((PrivateTradeChatMessage) networkMessage);
+        if (networkMessage instanceof PrivateBisqEasyTradeChatMessage) {
+            processMessage((PrivateBisqEasyTradeChatMessage) networkMessage);
         }
     }
 
@@ -132,7 +132,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 maker.getPubKeyHash(),
                 offerMessage.getText()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        PrivateTradeChatMessage takeOfferMessage = new PrivateTradeChatMessage(StringUtils.createShortUid(),
+        PrivateBisqEasyTradeChatMessage takeOfferMessage = new PrivateBisqEasyTradeChatMessage(StringUtils.createShortUid(),
                 channel.getChannelName(),
                 myUserIdentity.getUserProfile(),
                 maker.getId(),
@@ -178,18 +178,18 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected PrivateTradeChatMessage createNewPrivateChatMessage(String messageId,
-                                                                  PrivateTradeChatChannel channel,
-                                                                  UserProfile sender,
-                                                                  String receiversId,
-                                                                  String text,
-                                                                  Optional<Quotation> quotedMessage,
-                                                                  long time,
-                                                                  boolean wasEdited,
-                                                                  MessageType messageType) {
+    protected PrivateBisqEasyTradeChatMessage createNewPrivateChatMessage(String messageId,
+                                                                          PrivateTradeChatChannel channel,
+                                                                          UserProfile sender,
+                                                                          String receiversId,
+                                                                          String text,
+                                                                          Optional<Quotation> quotedMessage,
+                                                                          long time,
+                                                                          boolean wasEdited,
+                                                                          MessageType messageType) {
         // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
-        return new PrivateTradeChatMessage(
+        return new PrivateBisqEasyTradeChatMessage(
                 messageId,
                 channel.getChannelName(),
                 sender,
@@ -211,7 +211,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     }
 
 
-    private void processMessage(PrivateTradeChatMessage message) {
+    private void processMessage(PrivateBisqEasyTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
                     .flatMap(myUserIdentity -> findChannelForMessage(message)

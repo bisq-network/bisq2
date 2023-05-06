@@ -22,7 +22,7 @@ import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelNotificationType;
@@ -185,9 +185,9 @@ public class ChatNotifications {
         }
         String channelInfo;
         String title;
-        if (chatMessage instanceof PrivateTradeChatMessage) {
-            PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
-            if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
+        if (chatMessage instanceof PrivateBisqEasyTradeChatMessage) {
+            PrivateBisqEasyTradeChatMessage privateBisqEasyTradeChatMessage = (PrivateBisqEasyTradeChatMessage) chatMessage;
+            if (privateBisqEasyTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
                 PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
@@ -225,7 +225,7 @@ public class ChatNotifications {
             if (pinByChannelId.containsKey(channelId)) {
                 pinByChannelId.get(channelId).unbind();
             }
-            Pin pin = FxBindings.<PrivateTradeChatMessage,
+            Pin pin = FxBindings.<PrivateBisqEasyTradeChatMessage,
                             ChatNotification<? extends ChatMessage>>bind(chatMessages)
                     .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
                     .to(channel.getChatMessages());

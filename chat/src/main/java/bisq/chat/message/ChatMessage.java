@@ -17,7 +17,7 @@
 
 package bisq.chat.message;
 
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.common.proto.Proto;
@@ -111,7 +111,7 @@ public abstract class ChatMessage implements Proto {
                 return PublicTradeChatMessage.fromProto(proto);
             }
             case PRIVATETRADECHATMESSAGE: {
-                return PrivateTradeChatMessage.fromProto(proto);
+                return PrivateBisqEasyTradeChatMessage.fromProto(proto);
             }
 
             case COMMONPUBLICCHATMESSAGE: {
@@ -157,7 +157,7 @@ public abstract class ChatMessage implements Proto {
                     }
 
                     case PRIVATETRADECHATMESSAGE: {
-                        return PrivateTradeChatMessage.fromProto(proto);
+                        return PrivateBisqEasyTradeChatMessage.fromProto(proto);
                     }
 
                     case MESSAGE_NOT_SET: {

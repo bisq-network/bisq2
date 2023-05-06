@@ -35,21 +35,21 @@ import java.util.Optional;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class PrivateTradeChatMessage extends PrivateChatMessage implements TradeChatOfferMessage {
+public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage implements TradeChatOfferMessage {
     private final Optional<UserProfile> mediator;
     private final Optional<TradeChatOffer> tradeChatOffer;
 
-    public PrivateTradeChatMessage(String messageId,
-                                   String channelName,
-                                   UserProfile sender,
-                                   String receiversId,
-                                   String text,
-                                   Optional<Quotation> quotedMessage,
-                                   long date,
-                                   boolean wasEdited,
-                                   Optional<UserProfile> mediator,
-                                   MessageType messageType,
-                                   Optional<TradeChatOffer> tradeChatOffer) {
+    public PrivateBisqEasyTradeChatMessage(String messageId,
+                                           String channelName,
+                                           UserProfile sender,
+                                           String receiversId,
+                                           String text,
+                                           Optional<Quotation> quotedMessage,
+                                           long date,
+                                           boolean wasEdited,
+                                           Optional<UserProfile> mediator,
+                                           MessageType messageType,
+                                           Optional<TradeChatOffer> tradeChatOffer) {
         this(messageId,
                 ChatChannelDomain.TRADE,
                 channelName,
@@ -62,22 +62,22 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
                 mediator,
                 messageType,
                 tradeChatOffer,
-                new MetaData(TTL, 100000, PrivateTradeChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100000, PrivateBisqEasyTradeChatMessage.class.getSimpleName()));
     }
 
-    private PrivateTradeChatMessage(String messageId,
-                                    ChatChannelDomain chatChannelDomain,
-                                    String channelName,
-                                    UserProfile sender,
-                                    String receiversId,
-                                    String text,
-                                    Optional<Quotation> quotedMessage,
-                                    long date,
-                                    boolean wasEdited,
-                                    Optional<UserProfile> mediator,
-                                    MessageType messageType,
-                                    Optional<TradeChatOffer> tradeChatOffer,
-                                    MetaData metaData) {
+    private PrivateBisqEasyTradeChatMessage(String messageId,
+                                            ChatChannelDomain chatChannelDomain,
+                                            String channelName,
+                                            UserProfile sender,
+                                            String receiversId,
+                                            String text,
+                                            Optional<Quotation> quotedMessage,
+                                            long date,
+                                            boolean wasEdited,
+                                            Optional<UserProfile> mediator,
+                                            MessageType messageType,
+                                            Optional<TradeChatOffer> tradeChatOffer,
+                                            MetaData metaData) {
         super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, messageType, metaData);
         this.mediator = mediator;
         this.tradeChatOffer = tradeChatOffer;
@@ -106,7 +106,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
                 .build();
     }
 
-    public static PrivateTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
+    public static PrivateBisqEasyTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
         Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
                 Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
                 Optional.empty();
@@ -117,7 +117,7 @@ public final class PrivateTradeChatMessage extends PrivateChatMessage implements
         Optional<TradeChatOffer> tradeChatOffer = baseProto.getPrivateTradeChatMessage().hasTradeChatOffer() ?
                 Optional.of(TradeChatOffer.fromProto(baseProto.getPrivateTradeChatMessage().getTradeChatOffer())) :
                 Optional.empty();
-        return new PrivateTradeChatMessage(
+        return new PrivateBisqEasyTradeChatMessage(
                 baseProto.getMessageId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),

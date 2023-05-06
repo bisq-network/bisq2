@@ -17,7 +17,7 @@
 
 package bisq.chat.bisqeasy.channel.priv;
 
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<PrivateTradeChatMessage> {
+public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<PrivateBisqEasyTradeChatMessage> {
 
     public static PrivateTradeChatChannel createByTrader(TradeChatOffer tradeChatOffer,
                                                          UserIdentity myUserIdentity,
@@ -99,7 +99,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                                     UserIdentity myUserIdentity,
                                     Set<UserProfile> traders,
                                     Optional<UserProfile> mediator,
-                                    List<PrivateTradeChatMessage> chatMessages,
+                                    List<PrivateBisqEasyTradeChatMessage> chatMessages,
                                     boolean isInMediation,
                                     ChatChannelNotificationType chatChannelNotificationType,
                                     Set<String> seenChatMessageIds) {
@@ -151,7 +151,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                         .collect(Collectors.toList()))
                 .setIsInMediation(isInMediation.get())
                 .addAllChatMessages(chatMessages.stream()
-                        .map(PrivateTradeChatMessage::toChatMessageProto)
+                        .map(PrivateBisqEasyTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
         findMediator().ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChannelBuilder().setPrivateTradeChannel(builder).build();
@@ -168,7 +168,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                         .collect(Collectors.toSet()),
                 proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
                 proto.getChatMessagesList().stream()
-                        .map(PrivateTradeChatMessage::fromProto)
+                        .map(PrivateBisqEasyTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 proto.getIsInMediation(),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
@@ -176,17 +176,17 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     }
 
     @Override
-    public void addChatMessage(PrivateTradeChatMessage chatMessage) {
+    public void addChatMessage(PrivateBisqEasyTradeChatMessage chatMessage) {
         chatMessages.add(chatMessage);
     }
 
     @Override
-    public void removeChatMessage(PrivateTradeChatMessage chatMessage) {
+    public void removeChatMessage(PrivateBisqEasyTradeChatMessage chatMessage) {
         chatMessages.remove(chatMessage);
     }
 
     @Override
-    public void removeChatMessages(Collection<PrivateTradeChatMessage> messages) {
+    public void removeChatMessages(Collection<PrivateBisqEasyTradeChatMessage> messages) {
         chatMessages.removeAll(messages);
     }
 

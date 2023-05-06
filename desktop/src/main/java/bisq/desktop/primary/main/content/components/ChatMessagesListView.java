@@ -24,7 +24,7 @@ import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
 import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
-import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.chat.bisqeasy.message.TradeChatOfferMessage;
 import bisq.chat.channel.ChatChannel;
@@ -247,7 +247,7 @@ public class ChatMessagesListView {
                         model.allowEditing.set(true);
                         currentChatChannelService = publicTradeChannelService;
                     } else if (channel instanceof PrivateTradeChatChannel) {
-                        chatMessagesPin = FxBindings.<PrivateTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
+                        chatMessagesPin = FxBindings.<PrivateBisqEasyTradeChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                                 .to(((PrivateTradeChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
