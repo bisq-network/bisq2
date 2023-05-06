@@ -17,9 +17,9 @@
 
 package bisq.chat.trade.channel;
 
-import bisq.chat.channel.ChannelMember;
 import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.PrivateChatChannelMember;
 import bisq.chat.channel.PrivateGroupChatChannel;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
 import bisq.chat.trade.message.TradeChatOffer;
@@ -77,8 +77,8 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
         super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
-        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, peer));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, peer));
+        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
     }
 
     // Mediator
@@ -89,8 +89,8 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
         super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
-        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, requestingTrader));
-        addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, nonRequestingTrader));
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, requestingTrader));
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, nonRequestingTrader));
     }
 
     // From proto
@@ -106,8 +106,8 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
         super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
 
         this.tradeChatOffer = tradeChatOffer;
-        traders.forEach(trader -> addChannelMember(new ChannelMember(ChannelMember.Type.TRADER, trader)));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new ChannelMember(ChannelMember.Type.MEDIATOR, mediatorProfile)));
+        traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
+        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
         this.isInMediation.set(isInMediation);
         getSeenChatMessageIds().addAll(seenChatMessageIds);
     }
@@ -233,15 +233,15 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
     }
 
     public Set<UserProfile> getTraders() {
-        return getChannelMembers().stream()
-                .filter(e -> e.getType() == ChannelMember.Type.TRADER)
-                .map(ChannelMember::getUserProfile)
+        return getPrivateChatChannelMembers().stream()
+                .filter(e -> e.getType() == PrivateChatChannelMember.Type.TRADER)
+                .map(PrivateChatChannelMember::getUserProfile)
                 .collect(Collectors.toSet());
     }
 
     public Optional<UserProfile> findMediator() {
-        return getChannelMembers().stream()
-                .filter(channelMember -> channelMember.getType() == ChannelMember.Type.MEDIATOR)
-                .map(ChannelMember::getUserProfile).findAny();
+        return getPrivateChatChannelMembers().stream()
+                .filter(privateChatChannelMember -> privateChatChannelMember.getType() == PrivateChatChannelMember.Type.MEDIATOR)
+                .map(PrivateChatChannelMember::getUserProfile).findAny();
     }
 }

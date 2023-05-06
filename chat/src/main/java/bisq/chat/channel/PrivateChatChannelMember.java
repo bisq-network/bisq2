@@ -21,7 +21,7 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 
 @Getter
-public class ChannelMember {
+public class PrivateChatChannelMember {
     public enum Type {
         SELF,
         PEER,
@@ -32,7 +32,7 @@ public class ChannelMember {
     private final Type type;
     private final UserProfile userProfile;
 
-    public ChannelMember(Type type, UserProfile userProfile) {
+    public PrivateChatChannelMember(Type type, UserProfile userProfile) {
         this.type = type;
         this.userProfile = userProfile;
     }

@@ -56,7 +56,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                                        ChannelNotificationType channelNotificationType) {
         super(chatChannelDomain, channelName, myProfile, chatMessages, channelNotificationType);
 
-        addChannelMember(new ChannelMember(ChannelMember.Type.PEER, peer));
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
     }
 
     @Override

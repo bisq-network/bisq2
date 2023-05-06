@@ -38,8 +38,8 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
 
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
-    protected final ObservableSet<ChannelMember> channelMembers = new ObservableSet<>();
-    protected final ObservableArray<UserProfile> peers = new ObservableArray<>();
+    protected transient final ObservableSet<PrivateChatChannelMember> privateChatChannelMembers = new ObservableSet<>();
+    protected transient final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
     public PrivateChatChannel(ChatChannelDomain chatChannelDomain,
                               String channelName,
@@ -52,10 +52,10 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
         this.chatMessages.addAll(chatMessages);
     }
 
-    public void addChannelMember(ChannelMember channelMember) {
-        channelMembers.add(channelMember);
-        if (channelMember.getType() != ChannelMember.Type.SELF) {
-            peers.add(channelMember.getUserProfile());
+    public void addChannelMember(PrivateChatChannelMember privateChatChannelMember) {
+        privateChatChannelMembers.add(privateChatChannelMember);
+        if (privateChatChannelMember.getType() != PrivateChatChannelMember.Type.SELF) {
+            peers.add(privateChatChannelMember.getUserProfile());
         }
     }
 /*
@@ -67,8 +67,8 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
 
     @Override
     public Set<String> getMembers() {
-        return channelMembers.stream()
-                .map(ChannelMember::getUserProfile)
+        return privateChatChannelMembers.stream()
+                .map(PrivateChatChannelMember::getUserProfile)
                 .map(UserProfile::getId)
                 .collect(Collectors.toSet());
     }
