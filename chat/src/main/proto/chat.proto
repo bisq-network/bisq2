@@ -94,7 +94,7 @@ message PrivateTwoPartyChatChannel {
   user.UserProfile peer = 2;
   repeated ChatMessage chatMessages = 3;
 }
-message PrivateTwoPartyChannelStore {
+message PrivateTwoPartyChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 

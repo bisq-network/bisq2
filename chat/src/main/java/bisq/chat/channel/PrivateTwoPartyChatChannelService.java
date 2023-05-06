@@ -39,11 +39,11 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChatChannel, PrivateTwoPartyChannelStore> {
+public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChatChannel, PrivateTwoPartyChatChannelStore> {
     @Getter
-    private final PrivateTwoPartyChannelStore persistableStore = new PrivateTwoPartyChannelStore();
+    private final PrivateTwoPartyChatChannelStore persistableStore = new PrivateTwoPartyChatChannelStore();
     @Getter
-    private final Persistence<PrivateTwoPartyChannelStore> persistence;
+    private final Persistence<PrivateTwoPartyChatChannelStore> persistence;
 
     public PrivateTwoPartyChatChannelService(PersistenceService persistenceService,
                                              NetworkService networkService,
