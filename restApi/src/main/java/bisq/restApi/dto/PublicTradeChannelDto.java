@@ -13,7 +13,7 @@ import lombok.ToString;
 @Schema(name = "PublicTradeChannel")
 public final class PublicTradeChannelDto {
     @EqualsAndHashCode.Include
-    private String channelName;
+    private String channelId;
     private String description;
     private String displayString;
 
@@ -22,7 +22,7 @@ public final class PublicTradeChannelDto {
 
     public static PublicTradeChannelDto from(BisqEasyPublicChatChannel bisqEasyPublicChatChannel) {
         PublicTradeChannelDto dto = new PublicTradeChannelDto();
-        dto.channelName = bisqEasyPublicChatChannel.getChannelName();
+        dto.channelId = bisqEasyPublicChatChannel.getId();
         dto.description = bisqEasyPublicChatChannel.getDescription();
         dto.displayString = bisqEasyPublicChatChannel.getDisplayString();
         dto.marketDto = MarketDto.from(bisqEasyPublicChatChannel.getMarket());

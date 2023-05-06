@@ -60,17 +60,17 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public Optional<C> findChannel(String channelName) {
         return getChannels().stream()
-                .filter(channel -> channel.getChannelName().equals(channelName))
+                .filter(channel -> channel.getId().equals(channelName))
                 .findAny();
     }
 
     public Optional<C> findChannelForMessage(ChatMessage chatMessage) {
-        return findChannel(chatMessage.getChatChannelDomain(), chatMessage.getChannelName());
+        return findChannel(chatMessage.getChatChannelDomain(), chatMessage.getChannelId());
     }
 
     public Optional<C> findChannel(ChatChannelDomain chatChannelDomain, String channelName) {
         return getChannels().stream()
-                .filter(channel -> channel.getChatChannelDomain().equals(chatChannelDomain) && channel.getChannelName().equals(channelName))
+                .filter(channel -> channel.getId().equals(channelName))
                 .findAny();
     }
 

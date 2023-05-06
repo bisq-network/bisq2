@@ -47,7 +47,7 @@ public abstract class ChatMessage implements Proto {
 
     protected final String id;
     private final ChatChannelDomain chatChannelDomain;
-    protected final String channelName;
+    protected final String channelId;
     protected final Optional<String> optionalText;
     protected String authorUserProfileId;
     protected final Optional<Citation> citation;
@@ -58,7 +58,7 @@ public abstract class ChatMessage implements Proto {
 
     protected ChatMessage(String id,
                           ChatChannelDomain chatChannelDomain,
-                          String channelName,
+                          String channelId,
                           String authorUserProfileId,
                           Optional<String> text,
                           Optional<Citation> citation,
@@ -68,7 +68,7 @@ public abstract class ChatMessage implements Proto {
                           MetaData metaData) {
         this.id = id;
         this.chatChannelDomain = chatChannelDomain;
-        this.channelName = channelName;
+        this.channelId = channelId;
         this.authorUserProfileId = authorUserProfileId;
         this.optionalText = text;
         this.citation = citation;
@@ -90,7 +90,7 @@ public abstract class ChatMessage implements Proto {
         bisq.chat.protobuf.ChatMessage.Builder builder = bisq.chat.protobuf.ChatMessage.newBuilder()
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())
-                .setChannelName(channelName)
+                .setChannelId(channelId)
                 .setAuthorUserProfileId(authorUserProfileId)
                 .setDate(date)
                 .setWasEdited(wasEdited)

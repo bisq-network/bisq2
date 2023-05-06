@@ -40,7 +40,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyPrivateTradeChatMessage(String messageId,
-                                           String channelName,
+                                           String channelId,
                                            UserProfile sender,
                                            String receiversId,
                                            String text,
@@ -52,7 +52,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
                 ChatChannelDomain.BISQ_EASY,
-                channelName,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -67,7 +67,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
 
     private BisqEasyPrivateTradeChatMessage(String messageId,
                                             ChatChannelDomain chatChannelDomain,
-                                            String channelName,
+                                            String channelId,
                                             UserProfile sender,
                                             String receiversId,
                                             String text,
@@ -78,7 +78,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             ChatMessageType chatMessageType,
                                             Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -120,7 +120,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
         return new BisqEasyPrivateTradeChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getSender()),
                 BisqEasyPrivateTradeChatMessage.getReceiversId(),
                 baseProto.getText(),

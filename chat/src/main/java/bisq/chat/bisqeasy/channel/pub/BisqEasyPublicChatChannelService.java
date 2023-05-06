@@ -62,27 +62,27 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
 
     public void showChannel(BisqEasyPublicChatChannel channel) {
-        getVisibleChannelNames().add(channel.getChannelName());
-        numVisibleChannels.set(getVisibleChannelNames().size());
+        getVisibleChannelIds().add(channel.getId());
+        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
     public void hidePublicTradeChannel(BisqEasyPublicChatChannel channel) {
-        getVisibleChannelNames().remove(channel.getChannelName());
-        numVisibleChannels.set(getVisibleChannelNames().size());
+        getVisibleChannelIds().remove(channel.getId());
+        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
     public boolean isVisible(BisqEasyPublicChatChannel channel) {
-        return getVisibleChannelNames().contains(channel.getChannelName());
+        return getVisibleChannelIds().contains(channel.getId());
     }
 
-    public ObservableSet<String> getVisibleChannelNames() {
-        return persistableStore.getVisibleChannelNames();
+    public ObservableSet<String> getVisibleChannelIds() {
+        return persistableStore.getVisibleChannelIds();
     }
 
     public Set<BisqEasyPublicChatChannel> getVisibleChannels() {
-        return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
+        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }
 
 
@@ -121,7 +121,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                                                           Optional<Citation> citation,
                                                           BisqEasyPublicChatChannel publicChannel,
                                                           UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(publicChannel.getChannelName(),
+        return new BisqEasyPublicChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -134,7 +134,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     protected BisqEasyPublicChatMessage createEditedChatMessage(BisqEasyPublicChatMessage originalChatMessage,
                                                                 String editedText,
                                                                 UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelName(),
+        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),

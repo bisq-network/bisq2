@@ -36,7 +36,7 @@ import java.util.Optional;
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     protected PublicChatMessage(String messageId,
                                 ChatChannelDomain chatChannelDomain,
-                                String channelName,
+                                String channelId,
                                 String authorUserProfileId,
                                 Optional<String> text,
                                 Optional<Citation> citation,
@@ -44,7 +44,7 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
                                 boolean wasEdited,
                                 ChatMessageType chatMessageType,
                                 MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, authorUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override

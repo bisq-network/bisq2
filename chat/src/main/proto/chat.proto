@@ -55,7 +55,7 @@ message Citation {
 message ChatMessage {
   string id = 1;
   ChatChannelDomain chatChannelDomain = 2;
-  string channelName = 3;
+  string channelId = 3;
   optional string text = 4;
   string authorUserProfileId = 5;
   optional Citation citation = 6;
@@ -72,8 +72,8 @@ message ChatMessage {
 }
 
 message ChatChannel {
-  ChatChannelDomain chatChannelDomain = 1;
-  string channelName = 2;
+  string id = 1;
+  ChatChannelDomain chatChannelDomain = 2;
   ChatChannelNotificationType chatChannelNotificationType = 3;
   repeated string seenChatMessageIds = 4;
   oneof message{
@@ -103,7 +103,7 @@ message CommonPublicChatMessage {
 }
 
 message CommonPublicChatChannel {
-  string channelAdminId = 1;
+  optional string channelAdminId = 1;
   repeated string channelModeratorIds = 2;
   bool isVisible = 3;
 }
@@ -149,7 +149,7 @@ message BisqEasyPublicChatChannel {
 }
 message BisqEasyPublicChatChannelStore {
   repeated ChatChannel channels = 1;
-  repeated string visibleChannelNames = 2;
+  repeated string visibleChannelIds = 2;
 }
 
 // ChatChannelSelection

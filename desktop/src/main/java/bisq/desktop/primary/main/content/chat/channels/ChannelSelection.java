@@ -272,7 +272,7 @@ public abstract class ChannelSelection {
         @Getter
         static class ChannelItem {
             @EqualsAndHashCode.Include
-            private final String channelName;
+            private final String channelId;
             @EqualsAndHashCode.Include
             private final ChatChannelDomain chatChannelDomain;
             private final ChatChannel<?> chatChannel;
@@ -291,13 +291,13 @@ public abstract class ChannelSelection {
             public ChannelItem(ChatChannel<?> chatChannel, @Nullable UserIdentityService userIdentityService) {
                 this.chatChannel = chatChannel;
                 chatChannelDomain = chatChannel.getChatChannelDomain();
-                channelName = chatChannel.getChannelName();
+                channelId = chatChannel.getId();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
-                String domain = "-" + chatChannelDomain.name().toLowerCase() + "-";
-                iconIdSelected = "channels" + domain + channelName;
-                iconIdHover = "channels" + domain + channelName + "-white";
-                iconId = "channels" + domain + channelName + "-grey";
+                String styleToken = channelId.replace(".", "-");
+                iconIdSelected = "channels-" + styleToken;
+                iconIdHover = "channels-" + styleToken + "-white";
+                iconId = "channels-" + styleToken + "-grey";
 
                 if (chatChannel instanceof PrivateChatChannel) {
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;

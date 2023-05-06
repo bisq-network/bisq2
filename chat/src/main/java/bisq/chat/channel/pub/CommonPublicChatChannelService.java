@@ -100,7 +100,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                                                         CommonPublicChatChannel commonPublicChatChannel,
                                                         UserProfile userProfile) {
         return new CommonPublicChatMessage(commonPublicChatChannel.getChatChannelDomain(),
-                commonPublicChatChannel.getChannelName(),
+                commonPublicChatChannel.getId(),
                 userProfile.getId(),
                 text,
                 citation,
@@ -113,7 +113,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                                                               String editedText,
                                                               UserProfile userProfile) {
         return new CommonPublicChatMessage(originalChatMessage.getChatChannelDomain(),
-                originalChatMessage.getChannelName(),
+                originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 editedText,
                 originalChatMessage.getCitation(),

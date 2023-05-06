@@ -25,34 +25,35 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class CommonPublicChatChannel extends PublicChatChannel<CommonPublicChatMessage> {
-    private final String channelAdminId;
+    private static String createId(ChatChannelDomain chatChannelDomain, String channelTitle) {
+        return chatChannelDomain.name().toLowerCase() + "." + channelTitle;
+    }
+
+    private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
     private transient final String displayName;
     private transient final String description;
 
-    public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName) {
-        this(chatChannelDomain,
-                channelName,
-                "",
+    public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
+        this(createId(chatChannelDomain, channelTitle),
+                chatChannelDomain,
+                Optional.empty(),
                 new ArrayList<>(),
                 ChatChannelNotificationType.GLOBAL_DEFAULT);
     }
 
-    private CommonPublicChatChannel(ChatChannelDomain chatChannelDomain,
-                                    String channelName,
-                                    String channelAdminId,
+    private CommonPublicChatChannel(String id,
+                                    ChatChannelDomain chatChannelDomain,
+                                    Optional<String> channelAdminId,
                                     List<String> channelModeratorIds,
                                     ChatChannelNotificationType chatChannelNotificationType) {
-        super(chatChannelDomain, channelName, chatChannelNotificationType);
+        super(id, chatChannelDomain, chatChannelNotificationType);
 
         this.channelAdminId = channelAdminId;
         this.channelModeratorIds = channelModeratorIds;
@@ -63,18 +64,19 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     }
 
     public bisq.chat.protobuf.ChatChannel toProto() {
+        bisq.chat.protobuf.CommonPublicChatChannel.Builder builder = bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
+                .addAllChannelModeratorIds(channelModeratorIds);
+        channelAdminId.ifPresent(builder::setChannelAdminId);
         return getChannelBuilder()
-                .setCommonPublicChatChannel(bisq.chat.protobuf.CommonPublicChatChannel.newBuilder()
-                        .setChannelAdminId(channelAdminId)
-                        .addAllChannelModeratorIds(channelModeratorIds))
-                .build();
+                .setCommonPublicChatChannel(builder).build();
     }
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                     bisq.chat.protobuf.CommonPublicChatChannel proto) {
-        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
-                proto.getChannelAdminId(),
+        CommonPublicChatChannel commonPublicChatChannel = new CommonPublicChatChannel(
+                baseProto.getId(),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
         commonPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));

@@ -33,16 +33,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
-    // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
-    private static String createChannelName(String userId1, String userId2) {
+    // Channel id must be deterministic, so we sort both userIds and use that order for the concatenated string.
+    private static String createId(ChatChannelDomain ChatChannelDomain, String userId1, String userId2) {
         List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
         Collections.sort(userIds);
-        return userIds.get(0) + "." + userIds.get(1);
+        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
     }
 
-    public TwoPartyPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity, ChatChannelDomain chatChannelDomain) {
-        this(chatChannelDomain,
-                createChannelName(peer.getId(), myUserIdentity.getId()),
+    public TwoPartyPrivateChatChannel(UserProfile peer,
+                                      UserIdentity myUserIdentity,
+                                      ChatChannelDomain chatChannelDomain) {
+        this(createId(chatChannelDomain, peer.getId(), myUserIdentity.getId()),
+                chatChannelDomain,
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),
@@ -50,13 +52,13 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         );
     }
 
-    private TwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain,
-                                       String channelName,
+    private TwoPartyPrivateChatChannel(String id,
+                                       ChatChannelDomain chatChannelDomain,
                                        UserProfile peer,
                                        UserIdentity myProfile,
                                        List<TwoPartyPrivateChatMessage> chatMessages,
                                        ChatChannelNotificationType chatChannelNotificationType) {
-        super(chatChannelDomain, channelName, myProfile, chatMessages, chatChannelNotificationType);
+        super(id, chatChannelDomain, myProfile, chatMessages, chatChannelNotificationType);
 
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
     }
@@ -74,8 +76,9 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
 
     public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                        bisq.chat.protobuf.TwoPartyPrivateChatChannel proto) {
-        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(
+                baseProto.getId(),
+                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getChatMessagesList().stream()

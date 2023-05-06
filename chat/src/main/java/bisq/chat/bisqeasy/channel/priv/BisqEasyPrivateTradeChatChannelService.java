@@ -133,7 +133,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 offerMessage.getText()));
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
-                channel.getChannelName(),
+                channel.getId(),
                 myUserIdentity.getUserProfile(),
                 maker.getId(),
                 text,
@@ -191,7 +191,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
                 messageId,
-                channel.getChannelName(),
+                channel.getId(),
                 sender,
                 receiversId,
                 text,
@@ -233,99 +233,4 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     .ifPresent(channel -> addMessage(message, channel));
         }
     }
-
-
-   
-
-   /* public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage1(String text,
-                                                                                       Optional<Citation> citation,
-                                                                                       PrivateTradeChannel channel,
-                                                                                       MessageType messageType) {
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        String messageId = StringUtils.createShortUid();
-        if (!channel.getInMediation().get() || channel.findMediator().isEmpty()) {
-            return super.sendPrivateChatMessage(messageId, text, citation, channel, myUserIdentity, channel.getPeer(), messageType);
-        }
-
-        // If mediation has been activated we send all messages to the 2 other peers
-        UserProfile receiver1, receiver2;
-        if (channel.isMediator()) {
-           *//* receiver1 = channel.getPeerOrTrader1();
-            receiver2 = channel.getMyUserProfileOrTrader2();*//*
-//todo
-            receiver1 = channel.getPeer();
-            receiver2 = channel.findMediator().get();
-        } else {
-            receiver1 = channel.getPeer();
-            receiver2 = channel.findMediator().get();
-        }
-
-        UserProfile senderUserProfile = myUserIdentity.getUserProfile();
-        NetworkIdWithKeyPair senderNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
-        long date = new Date().getTime();
-        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
-        PrivateTradeChatMessage message1 = new PrivateTradeChatMessage(
-                messageId,
-                channel.getChannelName(),
-                senderUserProfile,
-                receiver1.getId(),
-                text,
-                citation,
-                date,
-                false,
-                mediator,
-                messageType,
-                Optional.empty());
-
-        CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
-                receiver1.getNetworkId(),
-                senderNodeIdAndKeyPair);
-
-        PrivateTradeChatMessage message2 = new PrivateTradeChatMessage(
-                messageId,
-                channel.getChannelName(),
-                senderUserProfile,
-                receiver2.getId(),
-                text,
-                citation,
-                date,
-                false,
-                mediator,
-                messageType,
-                Optional.empty());
-        CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
-                receiver2.getNetworkId(),
-                senderNodeIdAndKeyPair);
-
-        // We only add one message to avoid duplicates (receiverId is different)
-        addMessage(message1, channel);
-
-        // We do not use the SendMessageResult yet, so we simply return the first. 
-        // If it becomes relevant we would need to change the API of the method.
-        return CompletableFutureUtils.allOf(sendFuture1, sendFuture2)
-                .thenApply(list -> list.get(0));
-    }*/
-
-  /*  public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Citation> citation,
-                                                                                      PrivateTradeChannel channel,
-                                                                                      Optional<BisqEasyOffer> bisqEasyOffer) {
-        PrivateTradeChatMessage chatMessage = createNewPrivateTradeChatMessage(
-                StringUtils.createShortUid(),
-                channel,
-                channel.getMyUserIdentity().getUserProfile(),
-                channel.getPeer().getId(),
-                text,
-                citation,
-                new Date().getTime(),
-                false,
-                MessageType.TEXT,
-                bisqEasyOffer);
-        addMessage(chatMessage, channel);
-        NetworkId receiverNetworkId = channel.getPeer().getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = channel.getMyUserIdentity().getNodeIdAndKeyPair();
-        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
-    }
-*/
-
 }

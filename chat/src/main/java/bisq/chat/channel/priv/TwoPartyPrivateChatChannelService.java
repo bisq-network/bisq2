@@ -78,7 +78,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                                                                      ChatMessageType chatMessageType) {
         return new TwoPartyPrivateChatMessage(messageId,
                 channel.getChatChannelDomain(),
-                channel.getChannelName(),
+                channel.getId(),
                 sender,
                 receiversId,
                 text,

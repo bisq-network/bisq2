@@ -140,7 +140,7 @@ public class ReviewOfferController implements Controller {
         bisqEasyPublicChatChannelService.showChannel(channel);
         bisqEasyChatChannelSelectionService.selectChannel(channel);
 
-        BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getChannelName(),
+        BisqEasyPublicChatMessage myOfferMessage = new BisqEasyPublicChatMessage(channel.getId(),
                 userIdentity.getUserProfile().getId(),
                 Optional.of(bisqEasyOffer),
                 Optional.empty(),

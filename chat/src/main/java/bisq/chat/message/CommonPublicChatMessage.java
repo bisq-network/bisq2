@@ -31,7 +31,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
-                                   String channelName,
+                                   String channelId,
                                    String authorUserProfileId,
                                    String text,
                                    Optional<Citation> citation,
@@ -39,7 +39,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                    boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 chatChannelDomain,
-                channelName,
+                channelId,
                 authorUserProfileId,
                 Optional.of(text),
                 citation,
@@ -51,7 +51,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
 
     private CommonPublicChatMessage(String messageId,
                                     ChatChannelDomain chatChannelDomain,
-                                    String channelName,
+                                    String channelId,
                                     String authorUserProfileId,
                                     Optional<String> text,
                                     Optional<Citation> citation,
@@ -61,7 +61,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                     MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
+                channelId,
                 authorUserProfileId,
                 text,
                 citation,
@@ -82,7 +82,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
         return new CommonPublicChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 baseProto.getAuthorUserProfileId(),
                 Optional.of(baseProto.getText()),
                 citation,

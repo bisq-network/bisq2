@@ -115,7 +115,10 @@ public class ChannelSidebar {
                 CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(commonPublicChatChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.adminProfile = commonPublicChatChannel.getChannelAdminId()
+                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(ChatUserOverview::new))
+                        .stream()
+                        .findAny();
                 model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
                         .map(ChatUserOverview::new)

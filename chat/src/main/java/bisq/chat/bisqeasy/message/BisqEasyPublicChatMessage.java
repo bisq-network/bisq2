@@ -38,7 +38,7 @@ import java.util.Optional;
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
-    public BisqEasyPublicChatMessage(String channelName,
+    public BisqEasyPublicChatMessage(String channelId,
                                      String authorUserProfileId,
                                      Optional<BisqEasyOffer> bisqEasyOffer,
                                      Optional<String> text,
@@ -47,7 +47,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                      boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 ChatChannelDomain.BISQ_EASY,
-                channelName,
+                channelId,
                 authorUserProfileId,
                 bisqEasyOffer,
                 text,
@@ -60,7 +60,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
 
     private BisqEasyPublicChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
-                                      String channelName,
+                                      String channelId,
                                       String authorUserProfileId,
                                       Optional<BisqEasyOffer> bisqEasyOffer,
                                       Optional<String> text,
@@ -71,7 +71,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                       MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
+                channelId,
                 authorUserProfileId,
                 text,
                 citation,
@@ -101,7 +101,7 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
         return new BisqEasyPublicChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 baseProto.getAuthorUserProfileId(),
                 bisqEasyOffer,
                 text,

@@ -169,7 +169,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
         BisqEasyPrivateTradeChatMessage newLastOfferMessage = bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChatMessages().stream()
                 .filter(chatMessage -> chatMessage instanceof BisqEasyPrivateTradeChatMessage)
                 .map(chatMessage -> (BisqEasyPrivateTradeChatMessage) chatMessage)
-                .filter(message -> message.getChannelName().equals(bisqEasyChatChannelSelectionService.getSelectedChannel().get().getChannelName()))
+                .filter(message -> message.getChannelId().equals(bisqEasyChatChannelSelectionService.getSelectedChannel().get().getId()))
                 .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
                 .max(Comparator.comparing(BisqEasyPrivateTradeChatMessage::getDate))
                 .orElse(null);

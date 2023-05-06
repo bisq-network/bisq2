@@ -35,7 +35,7 @@ import java.util.Optional;
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
-                                      String channelName,
+                                      String channelId,
                                       UserProfile sender,
                                       String receiversId,
                                       String text,
@@ -45,7 +45,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -58,7 +58,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
 
     private TwoPartyPrivateChatMessage(String messageId,
                                        ChatChannelDomain chatChannelDomain,
-                                       String channelName,
+                                       String channelId,
                                        UserProfile sender,
                                        String receiversId,
                                        String text,
@@ -67,7 +67,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        boolean wasEdited,
                                        ChatMessageType chatMessageType,
                                        MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -93,7 +93,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
         return new TwoPartyPrivateChatMessage(
                 baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 UserProfile.fromProto(privateChatMessage.getSender()),
                 privateChatMessage.getReceiversId(),
                 baseProto.getText(),

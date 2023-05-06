@@ -39,8 +39,10 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    public PublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
-        super(chatChannelDomain, channelName, chatChannelNotificationType);
+    public PublicChatChannel(String id,
+                             ChatChannelDomain chatChannelDomain,
+                             ChatChannelNotificationType chatChannelNotificationType) {
+        super(id, chatChannelDomain, chatChannelNotificationType);
     }
 
     @Override

@@ -214,8 +214,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
-        String domain = "-" + channel.getChatChannelDomain().name().toLowerCase() + "-";
-        String iconId = "channels" + domain + channel.getChannelName();
+        String iconId = "channels-" + channel.getId().replace(".", "-");
         Button iconButton = BisqIconButton.createIconButton(iconId);
         //todo get larger icons and dont use scaling
         iconButton.setScaleX(1.25);

@@ -40,7 +40,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
 
     protected PrivateChatMessage(String messageId,
                                  ChatChannelDomain chatChannelDomain,
-                                 String channelName,
+                                 String channelId,
                                  UserProfile sender,
                                  String receiversId,
                                  String text,
@@ -51,7 +51,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                                  MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
+                channelId,
                 sender.getId(),
                 Optional.of(text),
                 citation,
