@@ -31,7 +31,7 @@ import java.util.List;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class CommonPublicChatChannel extends PublicChannel<CommonPublicChatMessage> {
+public final class CommonPublicChatChannel extends PublicChatChannel<CommonPublicChatMessage> {
     private final String displayName;
     private final String description;
     private final String channelAdminId;

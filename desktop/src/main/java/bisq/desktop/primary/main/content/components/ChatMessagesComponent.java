@@ -204,7 +204,7 @@ public class ChatMessagesComponent {
                 return;
             }
 
-            if (model.selectedChannel.get() instanceof PublicChannel) {
+            if (model.selectedChannel.get() instanceof PublicChatChannel) {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
@@ -336,7 +336,7 @@ public class ChatMessagesComponent {
         private void applyUserProfileOrChannelChange() {
             boolean multipleProfiles = userIdentityService.getUserIdentities().size() > 1;
             ChatChannel<?> selectedChatChannel = model.selectedChannel.get();
-            model.userProfileSelectionVisible.set(multipleProfiles && selectedChatChannel instanceof PublicChannel);
+            model.userProfileSelectionVisible.set(multipleProfiles && selectedChatChannel instanceof PublicChatChannel);
 
             if (chatMessagesPin != null) {
                 chatMessagesPin.unbind();

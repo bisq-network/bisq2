@@ -19,7 +19,7 @@ package bisq.chat.trade.channel;
 
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PublicChannel;
+import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.i18n.Res;
@@ -32,7 +32,7 @@ import java.util.HashSet;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessage> {
+public final class PublicTradeChannel extends PublicChatChannel<PublicTradeChatMessage> {
     public static String getChannelName(Market market) {
         return market.toString();
     }

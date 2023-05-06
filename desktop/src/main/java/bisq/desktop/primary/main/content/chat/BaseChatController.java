@@ -208,7 +208,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         }
     }
 
-    protected void applyDefaultPublicChannelIcon(PublicChannel<?> channel) {
+    protected void applyDefaultPublicChannelIcon(PublicChatChannel<?> channel) {
         String domain = "-" + channel.getChannelDomain().name().toLowerCase() + "-";
         String iconId = "channels" + domain + channel.getChannelName();
         Button iconButton = BisqIconButton.createIconButton(iconId);
