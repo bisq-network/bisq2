@@ -22,7 +22,7 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
@@ -73,7 +73,7 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
                 return;
             }
 
-            if (chatChannel instanceof PrivateTwoPartyChatChannel) {
+            if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 applyPeersIcon((PrivateChatChannel<?>) chatChannel);
                 publicChannelSelection.deSelectChannel();
             } else {

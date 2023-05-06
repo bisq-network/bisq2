@@ -27,8 +27,8 @@ import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
@@ -119,17 +119,17 @@ public class ChatMessagesComponent {
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-        private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
+        private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
         private final CommonPublicChatChannelService publicEventsChannelService;
-        private final PrivateTwoPartyChatChannelService privateEventsChannelService;
+        private final TwoPartyPrivateChatChannelService privateEventsChannelService;
         private final ChatChannelSelectionService eventsChatChannelSelectionService;
         private final CommonPublicChatChannelService publicSupportChannelService;
-        private final PrivateTwoPartyChatChannelService privateSupportChannelService;
+        private final TwoPartyPrivateChatChannelService privateSupportChannelService;
         private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final UserProfileSelection userProfileSelection;
         private final MediationService mediationService;
@@ -270,18 +270,18 @@ public class ChatMessagesComponent {
                         break;
                 }
 
-            } else if (chatChannel instanceof PrivateTwoPartyChatChannel) {
+            } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 switch (chatChannel.getChatChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateDiscussionChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateEventsChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateSupportChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
                         break;
                 }
             }

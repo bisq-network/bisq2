@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
+public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
     private static String createChannelName(String userId1, String userId2) {
         List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
@@ -40,7 +40,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
         return userIds.get(0) + "." + userIds.get(1);
     }
 
-    public PrivateTwoPartyChatChannel(UserProfile peer, UserIdentity myUserIdentity, ChatChannelDomain chatChannelDomain) {
+    public TwoPartyPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity, ChatChannelDomain chatChannelDomain) {
         this(chatChannelDomain,
                 createChannelName(peer.getId(), myUserIdentity.getId()),
                 peer,
@@ -50,7 +50,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
         );
     }
 
-    private PrivateTwoPartyChatChannel(ChatChannelDomain chatChannelDomain,
+    private TwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain,
                                        String channelName,
                                        UserProfile peer,
                                        UserIdentity myProfile,
@@ -63,7 +63,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChannelBuilder().setPrivateTwoPartyChatChannel(bisq.chat.protobuf.PrivateTwoPartyChatChannel.newBuilder()
+        return getChannelBuilder().setTwoPartyPrivateChatChannel(bisq.chat.protobuf.TwoPartyPrivateChatChannel.newBuilder()
                         .setPeer(getPeer().toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
@@ -72,9 +72,9 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                 .build();
     }
 
-    public static PrivateTwoPartyChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                       bisq.chat.protobuf.PrivateTwoPartyChatChannel proto) {
-        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+    public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                       bisq.chat.protobuf.TwoPartyPrivateChatChannel proto) {
+        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -83,12 +83,12 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                         .collect(Collectors.toList()),
                 ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
         );
-        privateTwoPartyChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return privateTwoPartyChatChannel;
+        twoPartyPrivateChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return twoPartyPrivateChatChannel;
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() == 1, "peers.size must be 1 at PrivateTwoPartyChatChannel");
+        checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
         return getPeers().get(0);
     }
 

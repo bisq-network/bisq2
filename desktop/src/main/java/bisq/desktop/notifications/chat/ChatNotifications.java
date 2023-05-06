@@ -26,8 +26,8 @@ import bisq.chat.bisqeasy.message.PrivateBisqEasyTradeChatMessage;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.*;
@@ -65,11 +65,11 @@ public class ChatNotifications {
 
     private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
     private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
-    private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
+    private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
-    private final PrivateTwoPartyChatChannelService privateEventsChannelService;
+    private final TwoPartyPrivateChatChannelService privateEventsChannelService;
     private final CommonPublicChatChannelService publicEventsChannelService;
-    private final PrivateTwoPartyChatChannelService privateSupportChannelService;
+    private final TwoPartyPrivateChatChannelService privateSupportChannelService;
     private final CommonPublicChatChannelService publicSupportChannelService;
 
     private final Map<String, Pin> pinByChannelId = new HashMap<>();
@@ -247,7 +247,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPrivateChannelsChanged(ObservableArray<PrivateTwoPartyChatChannel> channels) {
+    private void onPrivateChannelsChanged(ObservableArray<TwoPartyPrivateChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

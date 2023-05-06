@@ -77,7 +77,7 @@ message ChatChannel {
   ChatChannelNotificationType chatChannelNotificationType = 3;
   repeated string seenChatMessageIds = 4;
   oneof message{
-    PrivateTwoPartyChatChannel privateTwoPartyChatChannel = 10;
+    TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = 10;
     CommonPublicChatChannel commonPublicChatChannel = 11;
     PrivateBisqEasyTradeChatChannel privateBisqEasyTradeChatChannel = 12;
     PublicBisqEasyOfferChatChannel publicBisqEasyOfferChatChannel = 13;
@@ -89,12 +89,12 @@ message TwoPartyPrivateChatMessage {
   string receiversId = 1;
   user.UserProfile sender = 2;
 }
-message PrivateTwoPartyChatChannel {
+message TwoPartyPrivateChatChannel {
   user.UserIdentity myUserIdentity = 1;
   user.UserProfile peer = 2;
   repeated ChatMessage chatMessages = 3;
 }
-message PrivateTwoPartyChatChannelStore {
+message TwoPartyPrivateChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 

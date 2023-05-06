@@ -23,7 +23,7 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.PrivateGroupChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
@@ -199,9 +199,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
-        if (privateChatChannel instanceof PrivateTwoPartyChatChannel) {
-            PrivateTwoPartyChatChannel privateTwoPartyChatChannel = (PrivateTwoPartyChatChannel) privateChatChannel;
-            Image image = RoboHash.getImage(privateTwoPartyChatChannel.getPeer().getPubKeyHash());
+        if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
+            TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+            Image image = RoboHash.getImage(twoPartyPrivateChatChannel.getPeer().getPubKeyHash());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);

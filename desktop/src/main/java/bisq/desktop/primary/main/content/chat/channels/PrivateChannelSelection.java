@@ -155,39 +155,39 @@ public class PrivateChannelSelection extends ChannelSelection {
                             }
                         });
             } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
-                channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
+                        .to(((TwoPartyPrivateChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(discussionChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateTwoPartyChatChannel) {
+                            if (channel instanceof TwoPartyPrivateChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateTwoPartyChatChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((TwoPartyPrivateChatChannel) channel).getMyUserIdentity());
                             }
                         });
             } else if (model.chatChannelDomain == ChatChannelDomain.EVENTS) {
-                channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
+                        .to(((TwoPartyPrivateChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(eventsChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateTwoPartyChatChannel) {
+                            if (channel instanceof TwoPartyPrivateChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateTwoPartyChatChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((TwoPartyPrivateChatChannel) channel).getMyUserIdentity());
                             }
                         });
             } else if (model.chatChannelDomain == ChatChannelDomain.SUPPORT) {
-                channelsPin = FxBindings.<PrivateTwoPartyChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
+                channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
-                        .to(((PrivateTwoPartyChatChannelService) channelService).getChannels());
+                        .to(((TwoPartyPrivateChatChannelService) channelService).getChannels());
 
                 selectedChannelPin = FxBindings.subscribe(supportChatChannelSelectionService.getSelectedChannel(),
                         channel -> {
-                            if (channel instanceof PrivateTwoPartyChatChannel) {
+                            if (channel instanceof TwoPartyPrivateChatChannel) {
                                 model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel, userIdentityService));
-                                userIdentityService.selectChatUserIdentity(((PrivateTwoPartyChatChannel) channel).getMyUserIdentity());
+                                userIdentityService.selectChatUserIdentity(((TwoPartyPrivateChatChannel) channel).getMyUserIdentity());
                             }
                         });
             } else {
@@ -241,21 +241,21 @@ public class PrivateChannelSelection extends ChannelSelection {
                                     () -> bisqEasyChatChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
-                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((TwoPartyPrivateChatChannelService) channelService).leaveChannel((TwoPartyPrivateChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> discussionChatChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> discussionChatChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
-                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((TwoPartyPrivateChatChannelService) channelService).leaveChannel((TwoPartyPrivateChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> eventsChatChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> eventsChatChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
-                    ((PrivateTwoPartyChatChannelService) channelService).leaveChannel((PrivateTwoPartyChatChannel) privateChatChannel);
+                    ((TwoPartyPrivateChatChannelService) channelService).leaveChannel((TwoPartyPrivateChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()
                             .ifPresentOrElse(e -> supportChatChannelSelectionService.selectChannel(e.getChatChannel()),
@@ -387,9 +387,9 @@ public class PrivateChannelSelection extends ChannelSelection {
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    if (privateChatChannel instanceof PrivateTwoPartyChatChannel) {
-                        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = (PrivateTwoPartyChatChannel) privateChatChannel;
-                        peer = privateTwoPartyChatChannel.getPeer();
+                    if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
+                        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+                        peer = twoPartyPrivateChatChannel.getPeer();
                         roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                         Tooltip.install(this, tooltip);
                         icons.add(roboIcon);

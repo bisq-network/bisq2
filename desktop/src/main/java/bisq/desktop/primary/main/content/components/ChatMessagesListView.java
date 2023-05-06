@@ -31,8 +31,8 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.*;
@@ -155,7 +155,7 @@ public class ChatMessagesListView {
         private final View view;
         private final ChatService chatService;
         private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-        private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
+        private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
         private final UserIdentityService userIdentityService;
@@ -167,10 +167,10 @@ public class ChatMessagesListView {
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
         private final ChatChannelSelectionService discussionChatChannelSelectionService;
         private final SettingsService settingsService;
-        private final PrivateTwoPartyChatChannelService privateEventsChannelService;
+        private final TwoPartyPrivateChatChannelService privateEventsChannelService;
         private final CommonPublicChatChannelService publicEventsChannelService;
         private final ChatChannelSelectionService eventsChatChannelSelectionService;
-        private final PrivateTwoPartyChatChannelService privateSupportChannelService;
+        private final TwoPartyPrivateChatChannelService privateSupportChannelService;
         private final CommonPublicChatChannelService publicSupportChannelService;
         private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final MediationService mediationService;
@@ -272,13 +272,13 @@ public class ChatMessagesListView {
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChatChannelService = publicDiscussionChannelService;
-                    } else if (channel instanceof PrivateTwoPartyChatChannel) {
+                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<TwoPartyPrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
+                                .to(((TwoPartyPrivateChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChatChannelService = privateDiscussionChannelService;
                     }
@@ -295,13 +295,13 @@ public class ChatMessagesListView {
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChatChannelService = publicEventsChannelService;
-                    } else if (channel instanceof PrivateTwoPartyChatChannel) {
+                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<TwoPartyPrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
+                                .to(((TwoPartyPrivateChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChatChannelService = privateEventsChannelService;
                     }
@@ -318,13 +318,13 @@ public class ChatMessagesListView {
                                 .to(((CommonPublicChatChannel) channel).getChatMessages());
                         model.allowEditing.set(true);
                         currentChatChannelService = publicSupportChannelService;
-                    } else if (channel instanceof PrivateTwoPartyChatChannel) {
+                    } else if (channel instanceof TwoPartyPrivateChatChannel) {
                         if (chatMessagesPin != null) {
                             chatMessagesPin.unbind();
                         }
                         chatMessagesPin = FxBindings.<TwoPartyPrivateChatMessage, ChatMessageListItem<? extends ChatMessage>>bind(model.chatMessages)
                                 .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
-                                .to(((PrivateTwoPartyChatChannel) channel).getChatMessages());
+                                .to(((TwoPartyPrivateChatChannel) channel).getChatMessages());
                         model.allowEditing.set(false);
                         currentChatChannelService = privateSupportChannelService;
                     }

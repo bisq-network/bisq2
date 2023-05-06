@@ -22,7 +22,7 @@ import bisq.chat.bisqeasy.channel.priv.PrivateBisqEasyTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.PublicBisqEasyOfferChatChannelService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.common.application.Service;
@@ -43,15 +43,15 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class ChatService implements Service {
     private final PrivateBisqEasyTradeChatChannelService privateBisqEasyTradeChatChannelService;
-    private final PrivateTwoPartyChatChannelService privateDiscussionChannelService;
+    private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
     private final PublicBisqEasyOfferChatChannelService publicBisqEasyOfferChatChannelService;
     private final CommonPublicChatChannelService publicDiscussionChannelService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final ChatChannelSelectionService discussionChatChannelSelectionService;
-    private final PrivateTwoPartyChatChannelService privateSupportChannelService;
+    private final TwoPartyPrivateChatChannelService privateSupportChannelService;
     private final CommonPublicChatChannelService publicSupportChannelService;
     private final ChatChannelSelectionService supportChatChannelSelectionService;
-    private final PrivateTwoPartyChatChannelService privateEventsChannelService;
+    private final TwoPartyPrivateChatChannelService privateEventsChannelService;
     private final CommonPublicChatChannelService publicEventsChannelService;
     private final ChatChannelSelectionService eventsChatChannelSelectionService;
 
@@ -76,7 +76,7 @@ public class ChatService implements Service {
                 publicBisqEasyOfferChatChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new PrivateTwoPartyChatChannelService(persistenceService,
+        privateDiscussionChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -99,7 +99,7 @@ public class ChatService implements Service {
                 ChatChannelDomain.DISCUSSION);
 
         // Events
-        privateEventsChannelService = new PrivateTwoPartyChatChannelService(persistenceService,
+        privateEventsChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -122,7 +122,7 @@ public class ChatService implements Service {
                 ChatChannelDomain.EVENTS);
 
         // Support
-        privateSupportChannelService = new PrivateTwoPartyChatChannelService(persistenceService,
+        privateSupportChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,

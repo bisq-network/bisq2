@@ -17,8 +17,8 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
-import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Observable;
@@ -38,19 +38,19 @@ import java.util.stream.Stream;
 public class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     private final Persistence<ChatChannelSelectionStore> persistence;
-    private final PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService;
+    private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
     private final CommonPublicChatChannelService commonPublicChatChannelService;
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
-                                       PrivateTwoPartyChatChannelService privateTwoPartyChatChannelService,
+                                       TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService,
                                        CommonPublicChatChannelService commonPublicChatChannelService,
                                        ChatChannelDomain chatChannelDomain) {
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(chatChannelDomain.name()) + "ChannelSelectionStore",
                 persistableStore);
-        this.privateTwoPartyChatChannelService = privateTwoPartyChatChannelService;
+        this.twoPartyPrivateChatChannelService = twoPartyPrivateChatChannelService;
         this.commonPublicChatChannelService = commonPublicChatChannelService;
     }
 
@@ -71,8 +71,8 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     }
 
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof PrivateTwoPartyChatChannel) {
-            privateTwoPartyChatChannelService.removeExpiredMessages((PrivateTwoPartyChatChannel) chatChannel);
+        if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+            twoPartyPrivateChatChannelService.removeExpiredMessages((TwoPartyPrivateChatChannel) chatChannel);
         }
 
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
@@ -83,7 +83,7 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
 
     private void applySelectedChannel() {
         Stream<ChatChannel<?>> stream = Stream.concat(commonPublicChatChannelService.getChannels().stream(),
-                privateTwoPartyChatChannelService.getChannels().stream());
+                twoPartyPrivateChatChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()
