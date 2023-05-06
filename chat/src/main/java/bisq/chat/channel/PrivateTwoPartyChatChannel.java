@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
+public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel name must be deterministic, so we sort both userIds and use that order for the concatenated string.
     private static String createChannelName(String userId1, String userId2) {
         List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
@@ -38,7 +38,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         return userIds.get(0) + "." + userIds.get(1);
     }
 
-    public TwoPartyPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
+    public PrivateTwoPartyChatChannel(UserProfile peer, UserIdentity myUserIdentity, ChannelDomain channelDomain) {
         this(channelDomain,
                 createChannelName(peer.getId(), myUserIdentity.getId()),
                 peer,
@@ -48,7 +48,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         );
     }
 
-    private TwoPartyPrivateChatChannel(ChannelDomain channelDomain,
+    private PrivateTwoPartyChatChannel(ChannelDomain channelDomain,
                                        String channelName,
                                        UserProfile peer,
                                        UserIdentity myProfile,
@@ -61,7 +61,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
-        return getChannelBuilder().setTwoPartyPrivateChatChannel(bisq.chat.protobuf.TwoPartyPrivateChatChannel.newBuilder()
+        return getChannelBuilder().setPrivateTwoPartyChatChannel(bisq.chat.protobuf.PrivateTwoPartyChatChannel.newBuilder()
                         .setPeer(getPeer().toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
@@ -70,9 +70,9 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                 .build();
     }
 
-    public static TwoPartyPrivateChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                       bisq.chat.protobuf.TwoPartyPrivateChatChannel proto) {
-        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
+    public static PrivateTwoPartyChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                       bisq.chat.protobuf.PrivateTwoPartyChatChannel proto) {
+        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),
                 UserProfile.fromProto(proto.getPeer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
@@ -81,12 +81,12 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                         .collect(Collectors.toList()),
                 ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
         );
-        twoPartyPrivateChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
-        return twoPartyPrivateChatChannel;
+        privateTwoPartyChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
+        return privateTwoPartyChatChannel;
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
+        checkArgument(getPeers().size() == 1, "peers.size must be 1 at PrivateTwoPartyChatChannel");
         return getPeers().get(0);
     }
 

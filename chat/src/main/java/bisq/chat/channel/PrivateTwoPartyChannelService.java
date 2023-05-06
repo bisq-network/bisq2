@@ -39,7 +39,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
-public class PrivateTwoPartyChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, TwoPartyPrivateChatChannel, PrivateTwoPartyChannelStore> {
+public class PrivateTwoPartyChannelService extends PrivateChatChannelService<TwoPartyPrivateChatMessage, PrivateTwoPartyChatChannel, PrivateTwoPartyChannelStore> {
     @Getter
     private final PrivateTwoPartyChannelStore persistableStore = new PrivateTwoPartyChannelStore();
     @Getter
@@ -67,7 +67,7 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Two
 
     @Override
     protected TwoPartyPrivateChatMessage createNewPrivateChatMessage(String messageId,
-                                                                     TwoPartyPrivateChatChannel channel,
+                                                                     PrivateTwoPartyChatChannel channel,
                                                                      UserProfile sender,
                                                                      String receiversId,
                                                                      String text,
@@ -88,14 +88,14 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Two
     }
 
     @Override
-    protected TwoPartyPrivateChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = new TwoPartyPrivateChatChannel(peer, myUserIdentity, channelDomain);
-        twoPartyPrivateChatChannel.getChannelNotificationType().addObserver(value -> persist());
-        return twoPartyPrivateChatChannel;
+    protected PrivateTwoPartyChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(peer, myUserIdentity, channelDomain);
+        privateTwoPartyChatChannel.getChannelNotificationType().addObserver(value -> persist());
+        return privateTwoPartyChatChannel;
     }
 
     @Override
-    public ObservableArray<TwoPartyPrivateChatChannel> getChannels() {
+    public ObservableArray<PrivateTwoPartyChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -104,13 +104,13 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Two
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(UserProfile peer) {
+    public Optional<PrivateTwoPartyChatChannel> maybeCreateAndAddChannel(UserProfile peer) {
         return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
                 .flatMap(myUserIdentity -> maybeCreateAndAddChannel(peer, myUserIdentity.getId()));
     }
 
     @Override
-    public void leaveChannel(TwoPartyPrivateChatChannel channel) {
+    public void leaveChannel(PrivateTwoPartyChatChannel channel) {
         leaveChannel(channel, channel.getPeer());
         // todo 
         //channel.getChannelMembers().remove()
@@ -118,14 +118,14 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Two
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Quotation> quotedMessage,
-                                                                               TwoPartyPrivateChatChannel channel) {
+                                                                               PrivateTwoPartyChatChannel channel) {
         return sendMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getPeer(), MessageType.TEXT);
     }
 
-    protected Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
+    protected Optional<PrivateTwoPartyChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
-                    Optional<TwoPartyPrivateChatChannel> existingChannel = getChannels().stream()
+                    Optional<PrivateTwoPartyChatChannel> existingChannel = getChannels().stream()
                             .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
                                     channel.getPeer().equals(peer))
                             .findAny();
@@ -133,7 +133,7 @@ public class PrivateTwoPartyChannelService extends PrivateChatChannelService<Two
                         return existingChannel.get();
                     }
 
-                    TwoPartyPrivateChatChannel channel = createNewChannel(peer, myUserIdentity);
+                    PrivateTwoPartyChatChannel channel = createNewChannel(peer, myUserIdentity);
                             getChannels().add(channel);
                             persist();
                             return channel;

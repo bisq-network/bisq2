@@ -18,8 +18,8 @@
 package bisq.support;
 
 import bisq.chat.ChatService;
-import bisq.chat.trade.channel.PrivateTradeChannel;
 import bisq.chat.trade.channel.PrivateTradeChannelService;
+import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
@@ -133,7 +133,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestMediation(PrivateTradeChannel privateTradeChannel) {
+    public void requestMediation(PrivateTradeChatChannel privateTradeChannel) {
         TradeChatOffer tradeChatOffer = privateTradeChannel.getTradeChatOffer();
         UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
         UserProfile peer = privateTradeChannel.getPeer();
@@ -168,7 +168,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
 
     private void processMediationRequest(MediationRequest mediationRequest) {
         findMyMediatorUserIdentity().ifPresent(myMediatorUserIdentity -> {
-            PrivateTradeChannel channel = privateTradeChannelService.mediatorFindOrCreatesChannel(
+            PrivateTradeChatChannel channel = privateTradeChannelService.mediatorFindOrCreatesChannel(
                     mediationRequest.getTradeChatOffer(),
                     myMediatorUserIdentity,
                     mediationRequest.getRequester(),

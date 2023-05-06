@@ -7,7 +7,7 @@ import bisq.chat.channel.ChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.channel.PrivateTradeChannel;
+import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.chat.trade.channel.PublicTradeChannelService;
 import bisq.common.observable.Pin;
@@ -303,7 +303,7 @@ public abstract class ChannelSelection {
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
                     displayString = privateChatChannel.getDisplayString();
                     // PrivateTradeChannel is handled in ListCell code
-                    if (!(chatChannel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
+                    if (!(chatChannel instanceof PrivateTradeChatChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
                         displayString += " [" + privateChatChannel.getMyUserIdentity().getUserName() + "]";
                     }

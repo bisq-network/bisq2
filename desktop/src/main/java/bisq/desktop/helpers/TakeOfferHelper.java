@@ -17,8 +17,8 @@
 
 package bisq.desktop.helpers;
 
-import bisq.chat.trade.channel.PrivateTradeChannel;
 import bisq.chat.trade.channel.PrivateTradeChannelService;
+import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.chat.trade.message.TradeChatOffer;
 import bisq.network.NetworkService;
@@ -45,7 +45,7 @@ public class TakeOfferHelper {
                     UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
                     TradeChatOffer tradeChatOffer = tradeChatMessage.getTradeChatOffer().get();
                     Optional<UserProfile> mediator = mediationService.takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
-                    PrivateTradeChannel privateTradeChannel = privateTradeChannelService.traderFindOrCreatesChannel(tradeChatOffer,
+                    PrivateTradeChatChannel privateTradeChannel = privateTradeChannelService.traderFindOrCreatesChannel(tradeChatOffer,
                             myUserIdentity,
                             makerUserProfile,
                             mediator);

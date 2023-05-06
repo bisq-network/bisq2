@@ -29,25 +29,25 @@ import java.util.stream.Collectors;
 
 @Getter
 public class PrivateTradeChannelStore implements PersistableStore<PrivateTradeChannelStore> {
-    private final ObservableArray<PrivateTradeChannel> channels = new ObservableArray<>();
+    private final ObservableArray<PrivateTradeChatChannel> channels = new ObservableArray<>();
 
     public PrivateTradeChannelStore() {
     }
 
-    private PrivateTradeChannelStore(List<PrivateTradeChannel> privateTradeChannels) {
+    private PrivateTradeChannelStore(List<PrivateTradeChatChannel> privateTradeChannels) {
         setAll(privateTradeChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateTradeChannelStore toProto() {
         bisq.chat.protobuf.PrivateTradeChannelStore.Builder builder = bisq.chat.protobuf.PrivateTradeChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateTradeChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(PrivateTradeChatChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateTradeChannelStore fromProto(bisq.chat.protobuf.PrivateTradeChannelStore proto) {
-        List<PrivateTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (PrivateTradeChannel) PrivateTradeChannel.fromProto(e))
+        List<PrivateTradeChatChannel> privateTradeChannels = proto.getChannelsList().stream()
+                .map(e -> (PrivateTradeChatChannel) PrivateTradeChatChannel.fromProto(e))
                 .collect(Collectors.toList());
         return new PrivateTradeChannelStore(privateTradeChannels);
     }
@@ -73,7 +73,7 @@ public class PrivateTradeChannelStore implements PersistableStore<PrivateTradeCh
         return new PrivateTradeChannelStore(channels);
     }
 
-    public void setAll(List<PrivateTradeChannel> privateTradeChannels) {
+    public void setAll(List<PrivateTradeChatChannel> privateTradeChannels) {
         this.channels.clear();
         this.channels.addAll(privateTradeChannels);
     }

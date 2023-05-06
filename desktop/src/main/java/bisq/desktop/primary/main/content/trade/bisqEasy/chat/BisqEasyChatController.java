@@ -21,7 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.channel.PrivateTradeChannel;
+import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.chat.trade.channel.TradeChannelSelectionService;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
@@ -125,8 +125,8 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
                 model.getChannelIcon().set(null);
                 return;
             }
-            if (chatChannel instanceof PrivateTradeChannel) {
-                PrivateTradeChannel privateChannel = (PrivateTradeChannel) chatChannel;
+            if (chatChannel instanceof PrivateTradeChatChannel) {
+                PrivateTradeChatChannel privateChannel = (PrivateTradeChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
 
                 if (inMediationPin != null) {
@@ -213,15 +213,15 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
 
     void onCreateOfferButtonClicked() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        if (chatChannel instanceof PrivateTradeChannel) return;
+        if (chatChannel instanceof PrivateTradeChatChannel) return;
 
         Navigation.navigateTo(NavigationTarget.CREATE_OFFER, new CreateOfferController.InitData(false));
     }
 
     void onOpenMediation() {
         ChatChannel<? extends ChatMessage> chatChannel = model.getSelectedChannel().get();
-        checkArgument(chatChannel instanceof PrivateTradeChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
-        PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) chatChannel;
+        checkArgument(chatChannel instanceof PrivateTradeChatChannel, "channel must be instanceof PrivateTradeChannel at onOpenMediation");
+        PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
         Optional<UserProfile> mediator = privateTradeChannel.findMediator();
         if (mediator.isPresent()) {
             new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))

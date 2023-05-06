@@ -20,8 +20,8 @@ package bisq.desktop.notifications.chat;
 import bisq.chat.ChatService;
 import bisq.chat.channel.*;
 import bisq.chat.message.*;
-import bisq.chat.trade.channel.PrivateTradeChannel;
 import bisq.chat.trade.channel.PrivateTradeChannelService;
+import bisq.chat.trade.channel.PrivateTradeChatChannel;
 import bisq.chat.trade.channel.PublicTradeChannel;
 import bisq.chat.trade.channel.PublicTradeChannelService;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
@@ -183,7 +183,7 @@ public class ChatNotifications {
         if (chatMessage instanceof PrivateTradeChatMessage) {
             PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
             if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
-                PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) chatChannel;
+                PrivateTradeChatChannel privateTradeChannel = (PrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
                 notificationsService.notify(title, msg);
@@ -214,7 +214,7 @@ public class ChatNotifications {
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
     // thus we have boilerplate methods here...
 
-    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateTradeChannel> channels) {
+    private void onPrivateTradeChannelsChanged(ObservableArray<PrivateTradeChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {
@@ -242,7 +242,7 @@ public class ChatNotifications {
         });
     }
 
-    private void onPrivateChannelsChanged(ObservableArray<TwoPartyPrivateChatChannel> channels) {
+    private void onPrivateChannelsChanged(ObservableArray<PrivateTwoPartyChatChannel> channels) {
         channels.forEach(channel -> {
             String channelId = channel.getId();
             if (pinByChannelId.containsKey(channelId)) {

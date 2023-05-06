@@ -20,7 +20,7 @@ package bisq.chat.trade.channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelMember;
 import bisq.chat.channel.ChannelNotificationType;
-import bisq.chat.channel.PrivateGroupChannel;
+import bisq.chat.channel.PrivateGroupChatChannel;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
 import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.observable.Observable;
@@ -44,23 +44,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeChatMessage> {
+public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<PrivateTradeChatMessage> {
 
-    public static PrivateTradeChannel createByTrader(TradeChatOffer tradeChatOffer,
-                                                     UserIdentity myUserIdentity,
-                                                     UserProfile peer,
-                                                     Optional<UserProfile> mediator) {
-        return new PrivateTradeChannel(tradeChatOffer,
+    public static PrivateTradeChatChannel createByTrader(TradeChatOffer tradeChatOffer,
+                                                         UserIdentity myUserIdentity,
+                                                         UserProfile peer,
+                                                         Optional<UserProfile> mediator) {
+        return new PrivateTradeChatChannel(tradeChatOffer,
                 myUserIdentity,
                 peer,
                 mediator);
     }
 
-    public static PrivateTradeChannel createByMediator(TradeChatOffer tradeChatOffer,
-                                                       UserIdentity myUserIdentity,
-                                                       UserProfile requestingTrader,
-                                                       UserProfile nonRequestingTrader) {
-        return new PrivateTradeChannel(tradeChatOffer,
+    public static PrivateTradeChatChannel createByMediator(TradeChatOffer tradeChatOffer,
+                                                           UserIdentity myUserIdentity,
+                                                           UserProfile requestingTrader,
+                                                           UserProfile nonRequestingTrader) {
+        return new PrivateTradeChatChannel(tradeChatOffer,
                 myUserIdentity,
                 requestingTrader,
                 nonRequestingTrader);
@@ -70,10 +70,10 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final TradeChatOffer tradeChatOffer;
 
-    private PrivateTradeChannel(TradeChatOffer tradeChatOffer,
-                                UserIdentity myUserIdentity,
-                                UserProfile peer,
-                                Optional<UserProfile> mediator) {
+    private PrivateTradeChatChannel(TradeChatOffer tradeChatOffer,
+                                    UserIdentity myUserIdentity,
+                                    UserProfile peer,
+                                    Optional<UserProfile> mediator) {
         super(ChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
@@ -82,10 +82,10 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     }
 
     // Mediator
-    private PrivateTradeChannel(TradeChatOffer tradeChatOffer,
-                                UserIdentity myUserIdentity,
-                                UserProfile requestingTrader,
-                                UserProfile nonRequestingTrader) {
+    private PrivateTradeChatChannel(TradeChatOffer tradeChatOffer,
+                                    UserIdentity myUserIdentity,
+                                    UserProfile requestingTrader,
+                                    UserProfile nonRequestingTrader) {
         super(ChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
@@ -94,15 +94,15 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     }
 
     // From proto
-    private PrivateTradeChannel(String channelName,
-                                TradeChatOffer tradeChatOffer,
-                                UserIdentity myUserIdentity,
-                                Set<UserProfile> traders,
-                                Optional<UserProfile> mediator,
-                                List<PrivateTradeChatMessage> chatMessages,
-                                boolean isInMediation,
-                                ChannelNotificationType channelNotificationType,
-                                Set<String> seenChatMessageIds) {
+    private PrivateTradeChatChannel(String channelName,
+                                    TradeChatOffer tradeChatOffer,
+                                    UserIdentity myUserIdentity,
+                                    Set<UserProfile> traders,
+                                    Optional<UserProfile> mediator,
+                                    List<PrivateTradeChatMessage> chatMessages,
+                                    boolean isInMediation,
+                                    ChannelNotificationType channelNotificationType,
+                                    Set<String> seenChatMessageIds) {
         super(ChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
 
         this.tradeChatOffer = tradeChatOffer;
@@ -157,9 +157,9 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
         return getChannelBuilder().setPrivateTradeChannel(builder).build();
     }
 
-    public static PrivateTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                bisq.chat.protobuf.PrivateTradeChannel proto) {
-        return new PrivateTradeChannel(
+    public static PrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
+                                                    bisq.chat.protobuf.PrivateTradeChannel proto) {
+        return new PrivateTradeChatChannel(
                 baseProto.getChannelName(),
                 TradeChatOffer.fromProto(proto.getTradeChatOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),

@@ -238,9 +238,9 @@ public class ChatMessagesComponent {
                             .show();
                 }
                 publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) chatChannel, userIdentity);
-            } else if (chatChannel instanceof PrivateTradeChannel) {
-                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChannel) chatChannel).isMediator()) {
-                    privateTradeChannelService.sendTextMessage(text, quotation, (PrivateTradeChannel) chatChannel);
+            } else if (chatChannel instanceof PrivateTradeChatChannel) {
+                if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChatChannel) chatChannel).isMediator()) {
+                    privateTradeChannelService.sendTextMessage(text, quotation, (PrivateTradeChatChannel) chatChannel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
@@ -259,18 +259,18 @@ public class ChatMessagesComponent {
                         break;
                 }
 
-            } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+            } else if (chatChannel instanceof PrivateTwoPartyChatChannel) {
                 switch (chatChannel.getChannelDomain()) {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendTextMessage(text, quotation, (TwoPartyPrivateChatChannel) chatChannel);
+                        privateDiscussionChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendTextMessage(text, quotation, (TwoPartyPrivateChatChannel) chatChannel);
+                        privateEventsChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendTextMessage(text, quotation, (TwoPartyPrivateChatChannel) chatChannel);
+                        privateSupportChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                 }
             }

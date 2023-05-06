@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class PrivateTradeChannelService extends PrivateGroupChannelService<PrivateTradeChatMessage, PrivateTradeChannel, PrivateTradeChannelStore> {
+public class PrivateTradeChannelService extends PrivateGroupChannelService<PrivateTradeChatMessage, PrivateTradeChatChannel, PrivateTradeChannelStore> {
 
     @Getter
     private final PrivateTradeChannelStore persistableStore = new PrivateTradeChannelStore();
@@ -86,13 +86,13 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PrivateTradeChannel traderFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
-                                                          UserIdentity myUserIdentity,
-                                                          UserProfile peer,
-                                                          Optional<UserProfile> mediator) {
+    public PrivateTradeChatChannel traderFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
+                                                              UserIdentity myUserIdentity,
+                                                              UserProfile peer,
+                                                              Optional<UserProfile> mediator) {
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChannel channel = PrivateTradeChannel.createByTrader(tradeChatOffer, myUserIdentity, peer, mediator);
+                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByTrader(tradeChatOffer, myUserIdentity, peer, mediator);
                     Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -101,13 +101,13 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
                 });
     }
 
-    public PrivateTradeChannel mediatorFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
-                                                            UserIdentity myUserIdentity,
-                                                            UserProfile requestingTrader,
-                                                            UserProfile nonRequestingTrader) {
+    public PrivateTradeChatChannel mediatorFindOrCreatesChannel(TradeChatOffer tradeChatOffer,
+                                                                UserIdentity myUserIdentity,
+                                                                UserProfile requestingTrader,
+                                                                UserProfile nonRequestingTrader) {
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
-                    PrivateTradeChannel channel = PrivateTradeChannel.createByMediator(tradeChatOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
+                    PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByMediator(tradeChatOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
                     Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
@@ -117,7 +117,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(PublicTradeChatMessage offerMessage,
-                                                                                    PrivateTradeChannel channel) {
+                                                                                    PrivateTradeChatChannel channel) {
         checkArgument(offerMessage.getTradeChatOffer().isPresent());
         UserProfile maker = channel.getPeer();
         TradeChatOffer tradeChatOffer = offerMessage.getTradeChatOffer().get();
@@ -149,7 +149,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
                                                                                Optional<Quotation> quotation,
-                                                                               PrivateTradeChannel channel) {
+                                                                               PrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
         if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
@@ -162,13 +162,13 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
         }
     }
 
-    public void setMediationActivated(PrivateTradeChannel channel, boolean mediationActivated) {
+    public void setMediationActivated(PrivateTradeChatChannel channel, boolean mediationActivated) {
         channel.getIsInMediation().set(mediationActivated);
         persist();
     }
 
     @Override
-    public ObservableArray<PrivateTradeChannel> getChannels() {
+    public ObservableArray<PrivateTradeChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
@@ -179,7 +179,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
 
     @Override
     protected PrivateTradeChatMessage createNewPrivateChatMessage(String messageId,
-                                                                  PrivateTradeChannel channel,
+                                                                  PrivateTradeChatChannel channel,
                                                                   UserProfile sender,
                                                                   String receiversId,
                                                                   String text,
@@ -205,7 +205,7 @@ public class PrivateTradeChannelService extends PrivateGroupChannelService<Priva
 
     //todo
     @Override
-    protected PrivateTradeChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected PrivateTradeChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
