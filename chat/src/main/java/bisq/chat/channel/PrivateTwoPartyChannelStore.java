@@ -29,27 +29,27 @@ import java.util.stream.Collectors;
 
 @Getter
 public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoPartyChannelStore> {
-    private final ObservableArray<PrivateTwoPartyChannel> channels = new ObservableArray<>();
+    private final ObservableArray<TwoPartyPrivateChatChannel> channels = new ObservableArray<>();
 
     public PrivateTwoPartyChannelStore() {
     }
 
-    private PrivateTwoPartyChannelStore(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
-        setAll(privateTwoPartyChannels);
+    private PrivateTwoPartyChannelStore(List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
+        setAll(twoPartyPrivateChatChannels);
     }
 
     @Override
     public bisq.chat.protobuf.PrivateTwoPartyChannelStore toProto() {
         bisq.chat.protobuf.PrivateTwoPartyChannelStore.Builder builder = bisq.chat.protobuf.PrivateTwoPartyChannelStore.newBuilder()
-                .addAllChannels(channels.stream().map(PrivateTwoPartyChannel::toProto).collect(Collectors.toList()));
+                .addAllChannels(channels.stream().map(TwoPartyPrivateChatChannel::toProto).collect(Collectors.toList()));
         return builder.build();
     }
 
     public static PrivateTwoPartyChannelStore fromProto(bisq.chat.protobuf.PrivateTwoPartyChannelStore proto) {
-        List<PrivateTwoPartyChannel> privateTwoPartyChannels = proto.getChannelsList().stream()
-                .map(e -> (PrivateTwoPartyChannel) PrivateTwoPartyChannel.fromProto(e))
+        List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = proto.getChannelsList().stream()
+                .map(e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
                 .collect(Collectors.toList());
-        return new PrivateTwoPartyChannelStore(privateTwoPartyChannels);
+        return new PrivateTwoPartyChannelStore(twoPartyPrivateChatChannels);
     }
 
     @Override
@@ -73,8 +73,8 @@ public class PrivateTwoPartyChannelStore implements PersistableStore<PrivateTwoP
         return new PrivateTwoPartyChannelStore(channels);
     }
 
-    public void setAll(List<PrivateTwoPartyChannel> privateTwoPartyChannels) {
+    public void setAll(List<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
         this.channels.clear();
-        this.channels.addAll(privateTwoPartyChannels);
+        this.channels.addAll(twoPartyPrivateChatChannels);
     }
 }

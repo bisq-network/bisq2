@@ -194,9 +194,9 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     protected void applyPeersIcon(PrivateChatChannel<?> privateChatChannel) {
-        if (privateChatChannel instanceof PrivateTwoPartyChannel) {
-            PrivateTwoPartyChannel privateTwoPartyChannel = (PrivateTwoPartyChannel) privateChatChannel;
-            Image image = RoboHash.getImage(privateTwoPartyChannel.getPeer().getPubKeyHash());
+        if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
+            TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+            Image image = RoboHash.getImage(twoPartyPrivateChatChannel.getPeer().getPubKeyHash());
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
