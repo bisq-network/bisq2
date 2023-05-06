@@ -18,7 +18,7 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
-import bisq.chat.channel.Channel;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.pub.PublicTradeChannel;
@@ -62,8 +62,8 @@ public class ChannelSidebar {
         return controller.view.getRoot();
     }
 
-    public void setChannel(Channel<? extends ChatMessage> channel) {
-        controller.setChannel(channel);
+    public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        controller.setChannel(chatChannel);
     }
 
     public void setOnUndoIgnoreChatUser(Runnable handler) {
@@ -93,8 +93,8 @@ public class ChannelSidebar {
         public void onDeactivate() {
         }
 
-        void setChannel(Channel<? extends ChatMessage> channel) {
-            if (channel == null) {
+        void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+            if (chatChannel == null) {
                 model.descriptionVisible.set(false);
                 model.description.set(null);
                 model.adminProfile = Optional.empty();
@@ -104,15 +104,15 @@ public class ChannelSidebar {
             }
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
-            model.channelName.set(channel.getDisplayString());
-            model.members.setAll(channel.getMembers().stream()
+            model.channelName.set(chatChannel.getDisplayString());
+            model.members.setAll(chatChannel.getMembers().stream()
                     .flatMap(authorId -> userProfileService.findUserProfile(authorId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
                     .sorted()
                     .collect(Collectors.toList()));
-            
-            if (channel instanceof PublicChatChannel) {
-                PublicChatChannel publicChatChannel = (PublicChatChannel) channel;
+
+            if (chatChannel instanceof PublicChatChannel) {
+                PublicChatChannel publicChatChannel = (PublicChatChannel) chatChannel;
                 model.description.set(publicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = userProfileService.findUserProfile(publicChatChannel.getChannelAdminId()).map(ChatUserOverview::new);
@@ -121,8 +121,8 @@ public class ChannelSidebar {
                         .map(ChatUserOverview::new)
                         .sorted()
                         .collect(Collectors.toList()));
-            } else if (channel instanceof PublicTradeChannel) {
-                model.description.set(((PublicTradeChannel) channel).getDescription());
+            } else if (chatChannel instanceof PublicTradeChannel) {
+                model.description.set(((PublicTradeChannel) chatChannel).getDescription());
                 model.descriptionVisible.set(true);
                 model.adminProfile = Optional.empty();
                 model.moderators.clear();
@@ -133,7 +133,7 @@ public class ChannelSidebar {
                 model.moderators.clear();
             }
 
-            model.channel.set(channel);
+            model.channel.set(chatChannel);
         }
 
         void onUndoIgnoreUser(UserProfile userProfile) {
@@ -147,7 +147,7 @@ public class ChannelSidebar {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
         private final StringProperty channelName = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();

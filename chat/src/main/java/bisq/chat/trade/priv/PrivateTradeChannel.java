@@ -141,7 +141,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
     }*/
 
     @Override
-    public bisq.chat.protobuf.Channel toProto() {
+    public bisq.chat.protobuf.ChatChannel toProto() {
         bisq.chat.protobuf.PrivateTradeChannel.Builder builder = bisq.chat.protobuf.PrivateTradeChannel.newBuilder()
                 .setTradeChatOffer(tradeChatOffer.toProto())
                 .setMyUserIdentity(myUserIdentity.toProto())
@@ -156,7 +156,7 @@ public final class PrivateTradeChannel extends PrivateGroupChannel<PrivateTradeC
         return getChannelBuilder().setPrivateTradeChannel(builder).build();
     }
 
-    public static PrivateTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+    public static PrivateTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                 bisq.chat.protobuf.PrivateTradeChannel proto) {
         return new PrivateTradeChannel(
                 baseProto.getChannelName(),

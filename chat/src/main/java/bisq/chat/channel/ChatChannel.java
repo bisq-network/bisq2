@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public abstract class Channel<T extends ChatMessage> implements Proto {
+public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     private final ChannelDomain channelDomain;
     protected final String channelName;
     @EqualsAndHashCode.Include
@@ -43,24 +43,24 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
     protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 
-    public Channel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+    public ChatChannel(ChannelDomain channelDomain, String channelName, ChannelNotificationType channelNotificationType) {
         this.channelDomain = channelDomain;
         this.channelName = channelName;
         this.id = channelDomain.name().toLowerCase() + "." + channelName;
         this.channelNotificationType.set(channelNotificationType);
     }
 
-    public bisq.chat.protobuf.Channel.Builder getChannelBuilder() {
-        return bisq.chat.protobuf.Channel.newBuilder()
+    public bisq.chat.protobuf.ChatChannel.Builder getChannelBuilder() {
+        return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setChannelName(channelName)
                 .setChannelDomain(channelDomain.toProto())
                 .setChannelNotificationType(channelNotificationType.get().toProto())
                 .addAllSeenChatMessageIds(seenChatMessageIds);
     }
 
-    abstract public bisq.chat.protobuf.Channel toProto();
+    abstract public bisq.chat.protobuf.ChatChannel toProto();
 
-    public static Channel<? extends ChatMessage> fromProto(bisq.chat.protobuf.Channel proto) {
+    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
         switch (proto.getMessageCase()) {
             case PRIVATETWOPARTYCHANNEL: {
                 return PrivateTwoPartyChannel.fromProto(proto, proto.getPrivateTwoPartyChannel());
@@ -95,13 +95,13 @@ public abstract class Channel<T extends ChatMessage> implements Proto {
 
     abstract public Set<String> getMembers();
 
-    abstract public ObservableSet<T> getChatMessages();
+    abstract public ObservableSet<M> getChatMessages();
 
-    abstract public void addChatMessage(T chatMessage);
+    abstract public void addChatMessage(M chatMessage);
 
-    abstract public void removeChatMessage(T chatMessage);
+    abstract public void removeChatMessage(M chatMessage);
 
-    abstract public void removeChatMessages(Collection<T> messages);
+    abstract public void removeChatMessages(Collection<M> messages);
 
     abstract public String getDisplayString();
 }

@@ -2,9 +2,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelDomain;
 import bisq.chat.channel.ChannelService;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.PrivateChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
@@ -75,21 +75,21 @@ public abstract class ChannelSelection {
             });
         }
 
-        private void updateUnseenMessagesMap(Channel<?> channel) {
+        private void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
             UIThread.run(() -> {
                 if (getChannelService() instanceof PublicTradeChannelService) {
                     PublicTradeChannelService publicTradeChannelService = (PublicTradeChannelService) getChannelService();
-                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) channel)) {
+                    if (!publicTradeChannelService.isVisible((PublicTradeChannel) chatChannel)) {
                         return;
                     }
                 }
 
-                int numUnSeenChatMessages = (int) channel.getChatMessages().stream()
+                int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
                         .filter(this::isAuthorNotIgnored)
-                        .filter(message -> !channel.getSeenChatMessageIds().contains(message.getMessageId()))
+                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getMessageId()))
                         .count();
-                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(channel.getId(), numUnSeenChatMessages);
+                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
         }
 
@@ -248,7 +248,7 @@ public abstract class ChannelSelection {
         }
 
         protected void onUnseenMessagesChanged(ChannelItem item, String channelId, Badge numMessagesBadge) {
-            if (channelId.equals(item.getChannel().getId())) {
+            if (channelId.equals(item.getChatChannel().getId())) {
                 int numUnseenMessages = model.channelIdWithNumUnseenMessagesMap.get(channelId);
                 if (numUnseenMessages > 99) {
                     numMessagesBadge.setText("*");
@@ -275,7 +275,7 @@ public abstract class ChannelSelection {
             private final String channelName;
             @EqualsAndHashCode.Include
             private final ChannelDomain channelDomain;
-            private final Channel<?> channel;
+            private final ChatChannel<?> chatChannel;
             private String displayString;
             private final boolean hasMultipleProfiles;
             private String iconId;
@@ -284,14 +284,14 @@ public abstract class ChannelSelection {
 
             private boolean isSelected;
 
-            public ChannelItem(Channel<?> channel) {
-                this(channel, null);
+            public ChannelItem(ChatChannel<?> chatChannel) {
+                this(chatChannel, null);
             }
 
-            public ChannelItem(Channel<?> channel, @Nullable UserIdentityService userIdentityService) {
-                this.channel = channel;
-                channelDomain = channel.getChannelDomain();
-                channelName = channel.getChannelName();
+            public ChannelItem(ChatChannel<?> chatChannel, @Nullable UserIdentityService userIdentityService) {
+                this.chatChannel = chatChannel;
+                channelDomain = chatChannel.getChannelDomain();
+                channelName = chatChannel.getChannelName();
                 hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
 
                 String domain = "-" + channelDomain.name().toLowerCase() + "-";
@@ -299,18 +299,18 @@ public abstract class ChannelSelection {
                 iconIdHover = "channels" + domain + channelName + "-white";
                 iconId = "channels" + domain + channelName + "-grey";
 
-                if (channel instanceof PrivateChannel) {
-                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) channel;
+                if (chatChannel instanceof PrivateChannel) {
+                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) chatChannel;
                     displayString = privateChannel.getDisplayString();
                     // PrivateTradeChannel is handled in ListCell code
-                    if (!(channel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
+                    if (!(chatChannel instanceof PrivateTradeChannel) && hasMultipleProfiles) {
                         // If we have more than 1 user profiles we add our profile as well
                         displayString += " [" + privateChannel.getMyUserIdentity().getUserName() + "]";
                     }
-                } else if (channel instanceof PublicTradeChannel) {
-                    displayString = ((PublicTradeChannel) channel).getMarket().getMarketCodes();
+                } else if (chatChannel instanceof PublicTradeChannel) {
+                    displayString = ((PublicTradeChannel) chatChannel).getMarket().getMarketCodes();
                 } else {
-                    displayString = channel.getDisplayString();
+                    displayString = chatChannel.getDisplayString();
                 }
             }
 

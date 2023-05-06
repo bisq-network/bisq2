@@ -64,7 +64,7 @@ public final class PublicChatChannel extends PublicChannel<PublicChatMessage> {
         this.channelModeratorIds.sort(Comparator.comparing((String e) -> e));
     }
 
-    public bisq.chat.protobuf.Channel toProto() {
+    public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder()
                 .setPublicChatChannel(bisq.chat.protobuf.PublicChatChannel.newBuilder()
                         .setChannelName(displayName)
@@ -74,7 +74,7 @@ public final class PublicChatChannel extends PublicChannel<PublicChatMessage> {
                 .build();
     }
 
-    public static PublicChatChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+    public static PublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                               bisq.chat.protobuf.PublicChatChannel proto) {
         PublicChatChannel publicChatChannel = new PublicChatChannel(ChannelDomain.fromProto(baseProto.getChannelDomain()),
                 baseProto.getChannelName(),

@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>, S extends PersistableStore<S>>
+public abstract class ChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
         implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
@@ -47,8 +47,8 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         this.channelDomain = channelDomain;
     }
 
-    public void setNotificationSetting(Channel<? extends ChatMessage> channel, ChannelNotificationType channelNotificationType) {
-        channel.getChannelNotificationType().set(channelNotificationType);
+    public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChannelNotificationType channelNotificationType) {
+        chatChannel.getChannelNotificationType().set(channelNotificationType);
         persist();
     }
 
@@ -83,9 +83,9 @@ public abstract class ChannelService<M extends ChatMessage, C extends Channel<M>
         persist();
     }
 
-    public void updateSeenChatMessageIds(Channel<? extends ChatMessage> channel) {
+    public void updateSeenChatMessageIds(ChatChannel<? extends ChatMessage> chatChannel) {
         synchronized (getPersistableStore()) {
-            channel.updateSeenChatMessageIds();
+            chatChannel.updateSeenChatMessageIds();
         }
         persist();
     }

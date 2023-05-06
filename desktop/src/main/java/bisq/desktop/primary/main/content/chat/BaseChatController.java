@@ -134,11 +134,11 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         searchTextPin.unsubscribe();
     }
 
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
+    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
             model.getSearchText().set("");
-            model.getSelectedChannelAsString().set(channel != null ? channel.getDisplayString() : "");
-            model.getSelectedChannel().set(channel);
+            model.getSelectedChannelAsString().set(chatChannel != null ? chatChannel.getDisplayString() : "");
+            model.getSelectedChannel().set(chatChannel);
 
             if (model.getChannelInfoVisible().get()) {
                 cleanupChannelInfo();

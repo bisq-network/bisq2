@@ -106,7 +106,7 @@ public class PublicEventsChannelSelection extends PublicChannelSelection {
                 return;
             }
 
-            eventsChannelSelectionService.selectChannel(channelItem.getChannel());
+            eventsChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {

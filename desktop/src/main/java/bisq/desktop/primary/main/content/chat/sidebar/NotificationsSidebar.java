@@ -18,8 +18,8 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelNotificationType;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;
@@ -48,8 +48,8 @@ public class NotificationsSidebar {
         controller = new Controller(chatService);
     }
 
-    public void setChannel(Channel<? extends ChatMessage> channel) {
-        controller.model.setChannel(channel);
+    public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        controller.model.setChannel(chatChannel);
     }
 
     public Pane getRoot() {
@@ -90,12 +90,12 @@ public class NotificationsSidebar {
             }
         }
 
-        private void onChannelChanged(Channel<? extends ChatMessage> channel) {
+        private void onChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
             if (notificationTypePin != null) {
                 notificationTypePin.unbind();
             }
-            if (channel != null) {
-                notificationTypePin = FxBindings.bindBiDir(model.selected).to(channel.getChannelNotificationType());
+            if (chatChannel != null) {
+                notificationTypePin = FxBindings.bindBiDir(model.selected).to(chatChannel.getChannelNotificationType());
             }
         }
 
@@ -105,16 +105,16 @@ public class NotificationsSidebar {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        private final ObjectProperty<Channel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
         private final ObjectProperty<ChannelNotificationType> selected = new SimpleObjectProperty<>(ChannelNotificationType.GLOBAL_DEFAULT);
 
         private Model() {
         }
 
-        private void setChannel(Channel<? extends ChatMessage> channel) {
-            this.selected.set(channel.getChannelNotificationType().get());
+        private void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+            this.selected.set(chatChannel.getChannelNotificationType().get());
 
-            this.channel.set(channel);
+            this.channel.set(chatChannel);
         }
     }
 
@@ -124,7 +124,7 @@ public class NotificationsSidebar {
         private final ChangeListener<Toggle> toggleListener;
         private final RadioButton globalDefault, all, mention, off;
 
-        private final ChangeListener<Channel<? extends ChatMessage>> channelChangeListener;
+        private final ChangeListener<ChatChannel<? extends ChatMessage>> channelChangeListener;
         private Subscription selectedNotificationTypePin;
 
         private View(Model model, Controller controller) {

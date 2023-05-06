@@ -205,13 +205,13 @@ public class PrivateChannelSelection extends ChannelSelection {
                 return;
             }
             if (model.channelDomain == ChannelDomain.TRADE) {
-                tradeChannelSelectionService.selectChannel(channelItem.getChannel());
+                tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.channelDomain == ChannelDomain.DISCUSSION) {
-                discussionChannelSelectionService.selectChannel(channelItem.getChannel());
+                discussionChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.channelDomain == ChannelDomain.EVENTS) {
-                eventsChannelSelectionService.selectChannel(channelItem.getChannel());
+                eventsChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.channelDomain == ChannelDomain.SUPPORT) {
-                supportChannelSelectionService.selectChannel(channelItem.getChannel());
+                supportChannelSelectionService.selectChannel(channelItem.getChatChannel());
             }
         }
 
@@ -231,30 +231,30 @@ public class PrivateChannelSelection extends ChannelSelection {
             switch (privateChannel.getChannelDomain()) {
                 case TRADE:
                     ((PrivateTradeChannelService) channelService).leaveChannel((PrivateTradeChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChannel()),
+                            .ifPresentOrElse(e -> tradeChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> tradeChannelSelectionService.selectChannel(null));
                     break;
                 case DISCUSSION:
                     ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChannel()),
+                            .ifPresentOrElse(e -> discussionChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> discussionChannelSelectionService.selectChannel(null));
                     break;
                 case EVENTS:
                     ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChannel()),
+                            .ifPresentOrElse(e -> eventsChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> eventsChannelSelectionService.selectChannel(null));
                     break;
                 case SUPPORT:
                     ((PrivateTwoPartyChannelService) channelService).leaveChannel((PrivateTwoPartyChannel) privateChannel);
-                    model.sortedList.stream().filter(e -> !e.getChannel().getId().equals(privateChannel.getId()))
+                    model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChannel.getId()))
                             .findFirst()
-                            .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChannel()),
+                            .ifPresentOrElse(e -> supportChannelSelectionService.selectChannel(e.getChatChannel()),
                                     () -> supportChannelSelectionService.selectChannel(null));
                     break;
             }
@@ -375,12 +375,12 @@ public class PrivateChannelSelection extends ChannelSelection {
                         return;
                     }
 
-                    Channel<?> channel = item.getChannel();
-                    if (!(channel instanceof PrivateChannel)) {
+                    ChatChannel<?> chatChannel = item.getChatChannel();
+                    if (!(chatChannel instanceof PrivateChannel)) {
                         return;
                     }
 
-                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChannel();
+                    PrivateChannel<?> privateChannel = (PrivateChannel<?>) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
                     if (privateChannel instanceof PrivateTwoPartyChannel) {

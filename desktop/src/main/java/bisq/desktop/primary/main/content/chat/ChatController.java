@@ -59,19 +59,19 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     }
 
     @Override
-    protected void handleChannelChange(Channel<? extends ChatMessage> channel) {
-        super.handleChannelChange(channel);
+    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.handleChannelChange(chatChannel);
 
         UIThread.run(() -> {
-            if (channel == null) {
+            if (chatChannel == null) {
                 return;
             }
 
-            if (channel instanceof PrivateTwoPartyChannel) {
-                applyPeersIcon((PrivateChannel<?>) channel);
+            if (chatChannel instanceof PrivateTwoPartyChannel) {
+                applyPeersIcon((PrivateChannel<?>) chatChannel);
                 publicChannelSelection.deSelectChannel();
             } else {
-                applyDefaultPublicChannelIcon((PublicChannel<?>) channel);
+                applyDefaultPublicChannelIcon((PublicChannel<?>) chatChannel);
                 privateChannelSelection.deSelectChannel();
             }
         });

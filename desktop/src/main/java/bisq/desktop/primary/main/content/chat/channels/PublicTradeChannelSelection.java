@@ -140,7 +140,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
             List<Market> markets = MarketRepository.getAllFiatMarkets();
 
             Set<Market> visibleMarkets = model.filteredList.stream()
-                    .map(e -> ((PublicTradeChannel) e.getChannel()))
+                    .map(e -> ((PublicTradeChannel) e.getChatChannel()))
                     .map(PublicTradeChannel::getMarket)
                     .collect(Collectors.toSet());
             markets.removeAll(visibleMarkets);
@@ -165,7 +165,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 return;
             }
 
-            tradeChannelSelectionService.selectChannel(channelItem.getChannel());
+            tradeChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {
@@ -195,7 +195,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
                 model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
                 if (!model.sortedList.isEmpty()) {
-                    tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChannel());
+                    tradeChannelSelectionService.selectChannel(model.sortedList.get(0).getChatChannel());
                 } else {
                     tradeChannelSelectionService.selectChannel(null);
                 }
@@ -210,9 +210,9 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
         private void applyPredicate() {
             model.filteredList.setPredicate(item -> {
-                checkArgument(item.getChannel() instanceof PublicTradeChannel,
+                checkArgument(item.getChatChannel() instanceof PublicTradeChannel,
                         "Channel must be type of PublicTradeChannel");
-                PublicTradeChannel channel = (PublicTradeChannel) item.getChannel();
+                PublicTradeChannel channel = (PublicTradeChannel) item.getChatChannel();
                 return publicTradeChannelService.isVisible(channel);
             });
         }
@@ -344,8 +344,8 @@ public class PublicTradeChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicTradeChannel) {
-                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChannel();
+                    if (item != null && !empty && item.getChatChannel() instanceof PublicTradeChannel) {
+                        PublicTradeChannel publicTradeChannel = (PublicTradeChannel) item.getChatChannel();
                         Market market = publicTradeChannel.getMarket();
                         Pair<String, String> pair = new Pair<>(market.getBaseCurrencyCode(),
                                 market.getQuoteCurrencyCode());

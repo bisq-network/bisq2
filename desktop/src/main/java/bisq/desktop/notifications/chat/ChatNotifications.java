@@ -147,8 +147,8 @@ public class ChatNotifications {
             return;
         }
 
-        Channel<? extends ChatMessage> channel = chatNotification.getChannel();
-        ChannelNotificationType channelNotificationType = channel.getChannelNotificationType().get();
+        ChatChannel<? extends ChatMessage> chatChannel = chatNotification.getChatChannel();
+        ChannelNotificationType channelNotificationType = chatChannel.getChannelNotificationType().get();
         if (channelNotificationType == ChannelNotificationType.GLOBAL_DEFAULT) {
             // Map from global settings enums
             switch (settingsService.getChatNotificationType().get()) {
@@ -183,7 +183,7 @@ public class ChatNotifications {
         if (chatMessage instanceof PrivateTradeChatMessage) {
             PrivateTradeChatMessage privateTradeChatMessage = (PrivateTradeChatMessage) chatMessage;
             if (privateTradeChatMessage.getMessageType() == MessageType.TAKE_OFFER) {
-                PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) channel;
+                PrivateTradeChannel privateTradeChannel = (PrivateTradeChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
                 notificationsService.notify(title, msg);
@@ -197,15 +197,15 @@ public class ChatNotifications {
                 if (settingsService.getOffersOnly().get() && !publicTradeChatMessage.hasTradeChatOffer()) {
                     return;
                 }
-                PublicTradeChannel publicTradeChannel = (PublicTradeChannel) channel;
+                PublicTradeChannel publicTradeChannel = (PublicTradeChannel) chatChannel;
                 if (!publicTradeChannelService.isVisible(publicTradeChannel)) {
                     return;
                 }
             }
-            channelInfo = channel.getDisplayString();
+            channelInfo = chatChannel.getDisplayString();
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
-            channelInfo = Res.get(channel.getChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
+            channelInfo = Res.get(chatChannel.getChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
         }
         title = StringUtils.abbreviate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
         notificationsService.notify(title, chatNotification.getMessage());

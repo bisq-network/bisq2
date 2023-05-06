@@ -71,7 +71,7 @@ public abstract class PublicChannelSelection extends ChannelSelection {
                 @Override
                 protected void updateItem(View.ChannelItem item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (item != null && !empty && item.getChannel() instanceof PublicChatChannel) {
+                    if (item != null && !empty && item.getChatChannel() instanceof PublicChatChannel) {
                         widthSubscription = setupCellBinding(this, item, label, iconImageView);
                         updateCell(this, item, label, iconImageView);
 

@@ -532,7 +532,7 @@ public class ChatMessagesListView {
     private static class Model implements bisq.desktop.common.view.Model {
         private final ChatService chatService;
         private final UserIdentityService userIdentityService;
-        private final ObjectProperty<Channel<?>> selectedChannel = new SimpleObjectProperty<>();
+        private final ObjectProperty<ChatChannel<?>> selectedChannel = new SimpleObjectProperty<>();
         private final ObservableList<ChatMessageListItem<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
         private final FilteredList<ChatMessageListItem<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
         private final SortedList<ChatMessageListItem<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);

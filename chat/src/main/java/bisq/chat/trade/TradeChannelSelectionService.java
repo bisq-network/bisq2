@@ -17,8 +17,8 @@
 
 package bisq.chat.trade;
 
-import bisq.chat.channel.Channel;
 import bisq.chat.channel.ChannelSelectionStore;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.trade.priv.PrivateTradeChannel;
 import bisq.chat.trade.priv.PrivateTradeChannelService;
@@ -42,7 +42,7 @@ public class TradeChannelSelectionService implements PersistenceClient<ChannelSe
     private final Persistence<ChannelSelectionStore> persistence;
     private final PrivateTradeChannelService privateTradeChannelService;
     private final PublicTradeChannelService publicTradeChannelService;
-    private final Observable<Channel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
 
     public TradeChannelSelectionService(PersistenceService persistenceService,
                                         PrivateTradeChannelService privateTradeChannelService,
@@ -68,19 +68,19 @@ public class TradeChannelSelectionService implements PersistenceClient<ChannelSe
         applySelectedChannel();
     }
 
-    public void selectChannel(Channel<? extends ChatMessage> channel) {
-        if (channel instanceof PrivateTradeChannel) {
-            privateTradeChannelService.removeExpiredMessages((PrivateTradeChannel) channel);
+    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        if (chatChannel instanceof PrivateTradeChannel) {
+            privateTradeChannelService.removeExpiredMessages((PrivateTradeChannel) chatChannel);
         }
 
-        persistableStore.setSelectedChannelId(channel != null ? channel.getId() : null);
+        persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
         applySelectedChannel();
     }
 
     private void applySelectedChannel() {
-        Stream<Channel<?>> stream = Stream.concat(publicTradeChannelService.getChannels().stream(),
+        Stream<ChatChannel<?>> stream = Stream.concat(publicTradeChannelService.getChannels().stream(),
                 privateTradeChannelService.getChannels().stream());
         selectedChannel.set(stream
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))

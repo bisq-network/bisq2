@@ -49,13 +49,13 @@ public final class PublicTradeChannel extends PublicChannel<PublicTradeChatMessa
     }
 
     @Override
-    public bisq.chat.protobuf.Channel toProto() {
+    public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder().setPublicTradeChannel(bisq.chat.protobuf.PublicTradeChannel.newBuilder()
                         .setMarket(market.toProto()))
                 .build();
     }
 
-    public static PublicTradeChannel fromProto(bisq.chat.protobuf.Channel baseProto,
+    public static PublicTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                bisq.chat.protobuf.PublicTradeChannel proto) {
         PublicTradeChannel publicTradeChannel = new PublicTradeChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
         publicTradeChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));

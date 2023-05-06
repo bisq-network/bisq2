@@ -103,7 +103,7 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
                 return;
             }
 
-            supportChannelSelectionService.selectChannel(channelItem.getChannel());
+            supportChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {

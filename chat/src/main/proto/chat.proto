@@ -71,7 +71,7 @@ message ChatMessage {
   }
 }
 
-message Channel {
+message ChatChannel {
   ChannelDomain channelDomain = 1;
   string channelName = 2;
   ChannelNotificationType channelNotificationType = 3;
@@ -95,7 +95,7 @@ message PrivateTwoPartyChannel {
   repeated ChatMessage chatMessages = 3;
 }
 message PrivateTwoPartyChannelStore {
-  repeated Channel channels = 1;
+  repeated ChatChannel channels = 1;
 }
 
 
@@ -111,7 +111,7 @@ message PublicChatChannel {
   bool isVisible = 5;
 }
 message PublicChatChannelStore {
-  repeated Channel channels = 1;
+  repeated ChatChannel channels = 1;
 }
 
 message ChannelSelectionStore {
@@ -157,11 +157,11 @@ message PublicTradeChannel {
 }
 
 message PrivateTradeChannelStore {
-  repeated Channel channels = 1;
+  repeated ChatChannel channels = 1;
 }
 
 message PublicTradeChannelStore {
-  repeated Channel channels = 1;
+  repeated ChatChannel channels = 1;
   repeated string visibleChannelNames = 2;
 }
 

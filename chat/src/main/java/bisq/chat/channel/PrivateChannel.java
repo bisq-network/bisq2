@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends Channel<T> {
+public abstract class PrivateChannel<T extends BasePrivateChatMessage> extends ChatChannel<T> {
     protected final UserIdentity myUserIdentity;
 
     // We persist the messages as they are NOT persisted in the P2P data store.
