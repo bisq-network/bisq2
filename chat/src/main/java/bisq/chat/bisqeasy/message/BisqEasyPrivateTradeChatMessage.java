@@ -51,7 +51,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            ChatMessageType chatMessageType,
                                            Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
-                ChatChannelDomain.TRADE,
+                ChatChannelDomain.BISQ_EASY,
                 channelName,
                 sender,
                 receiversId,

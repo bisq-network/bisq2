@@ -29,7 +29,7 @@ import "user.proto";
 enum ChatMessageType {
   TEXT = 0;
   LEAVE = 1;
-  TAKE_OFFER = 2;
+  TAKE_BISQ_EASY_OFFER = 2;
 }
 
 enum ChatChannelNotificationType {
@@ -39,7 +39,7 @@ enum ChatChannelNotificationType {
 }
 
 enum ChatChannelDomain {
-  TRADE = 0;
+  BISQ_EASY = 0;
   DISCUSSION = 1;
   EVENTS = 2;
   SUPPORT = 3;
@@ -57,7 +57,7 @@ message ChatMessage {
   ChatChannelDomain chatChannelDomain = 2;
   string channelName = 3;
   optional string text = 4;
-  string authorId = 5;
+  string authorUserProfileId = 5;
   optional Citation citation = 6;
   uint64 date = 7;
   bool wasEdited = 8;

@@ -371,7 +371,7 @@ class ReviewOfferView extends View<StackPane, ReviewOfferModel, ReviewOfferContr
 
         public ListItem(BisqEasyPublicChatMessage chatMessage, UserProfileService userProfileService, ReputationService reputationService) {
             this.chatMessage = chatMessage;
-            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
+            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
             userName = senderUserProfile.map(UserProfile::getUserName).orElse("");
             Optional<BisqEasyOffer> bisqEasyOffer = chatMessage.getBisqEasyOffer();
             amountAsLong = bisqEasyOffer.map(BisqEasyOffer::getQuoteSideAmount).orElse(0L);

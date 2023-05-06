@@ -234,7 +234,7 @@ public class ChatMessagesListView {
 
             model.getSortedChatMessages().setComparator(ChatMessagesListView.ChatMessageListItem::compareTo);
 
-            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
                 selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(channel -> {
                     model.selectedChannel.set(channel);
                     if (chatMessagesPin != null) {
@@ -407,8 +407,8 @@ public class ChatMessagesListView {
         }
 
         private void onDeleteMessage(ChatMessage chatMessage) {
-            if (userIdentityService.findUserIdentity(chatMessage.getAuthorId()).isPresent()) {
-                UserIdentity messageAuthor = userIdentityService.findUserIdentity(chatMessage.getAuthorId()).get();
+            if (userIdentityService.findUserIdentity(chatMessage.getAuthorUserProfileId()).isPresent()) {
+                UserIdentity messageAuthor = userIdentityService.findUserIdentity(chatMessage.getAuthorUserProfileId()).get();
                 if (userIdentityService.getSelectedUserIdentity().get().equals(messageAuthor)) {
                     doDeleteMessage(chatMessage, messageAuthor);
                 } else {
@@ -445,7 +445,7 @@ public class ChatMessagesListView {
             if (isMyMessage(chatMessage)) {
                 return;
             }
-            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(this::createAndSelectPrivateChannel);
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(this::createAndSelectPrivateChannel);
         }
 
         private void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
@@ -486,21 +486,21 @@ public class ChatMessagesListView {
         }
 
         private void onReportUser(ChatMessage chatMessage) {
-            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
                     chatService.reportUserProfile(author, ""));
         }
 
         private void onIgnoreUser(ChatMessage chatMessage) {
-            userProfileService.findUserProfile(chatMessage.getAuthorId())
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(userProfileService::ignoreUserProfile);
         }
 
         private boolean isMyMessage(ChatMessage chatMessage) {
-            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
                 // todo use new 2 party channelservice
                 //PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 //tradeChannelSelectionService.selectChannel(privateTradeChannel);
@@ -561,7 +561,7 @@ public class ChatMessagesListView {
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {
-            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         }
 
         boolean isOfferMessage(ChatMessage chatMessage) {
@@ -1038,7 +1038,7 @@ public class ChatMessagesListView {
             if (chatMessage instanceof PrivateChatMessage) {
                 senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
             } else {
-                senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
+                senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
             }
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;

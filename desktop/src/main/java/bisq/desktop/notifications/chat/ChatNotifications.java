@@ -134,7 +134,7 @@ public class ChatNotifications {
 
     private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
         ChatMessage chatMessage = chatNotification.getChatMessage();
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         if (isMyMessage) {
             return;
         }
@@ -148,7 +148,7 @@ public class ChatNotifications {
 
         // If user is ignored we do not notify, but we still keep the messageIds to not trigger 
         // notifications after un-ignore.
-        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorId())) {
+        if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
             return;
         }
 
@@ -187,7 +187,7 @@ public class ChatNotifications {
         String title;
         if (chatMessage instanceof BisqEasyPrivateTradeChatMessage) {
             BisqEasyPrivateTradeChatMessage bisqEasyPrivateTradeChatMessage = (BisqEasyPrivateTradeChatMessage) chatMessage;
-            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_OFFER) {
+            if (bisqEasyPrivateTradeChatMessage.getChatMessageType() == ChatMessageType.TAKE_BISQ_EASY_OFFER) {
                 BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");

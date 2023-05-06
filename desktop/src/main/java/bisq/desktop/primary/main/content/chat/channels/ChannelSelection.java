@@ -94,11 +94,11 @@ public abstract class ChannelSelection {
         }
 
         private boolean isNotMyMessage(ChatMessage chatMessage) {
-            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         }
 
         private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
-            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorId());
+            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
 
         @Override

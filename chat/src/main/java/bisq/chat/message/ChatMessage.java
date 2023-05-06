@@ -49,7 +49,7 @@ public abstract class ChatMessage implements Proto {
     private final ChatChannelDomain chatChannelDomain;
     protected final String channelName;
     protected final Optional<String> optionalText;
-    protected String authorId;
+    protected String authorUserProfileId;
     protected final Optional<Citation> citation;
     protected final long date;
     protected final boolean wasEdited;
@@ -59,7 +59,7 @@ public abstract class ChatMessage implements Proto {
     protected ChatMessage(String id,
                           ChatChannelDomain chatChannelDomain,
                           String channelName,
-                          String authorId,
+                          String authorUserProfileId,
                           Optional<String> text,
                           Optional<Citation> citation,
                           long date,
@@ -69,7 +69,7 @@ public abstract class ChatMessage implements Proto {
         this.id = id;
         this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
-        this.authorId = authorId;
+        this.authorUserProfileId = authorUserProfileId;
         this.optionalText = text;
         this.citation = citation;
         this.date = date;
@@ -91,7 +91,7 @@ public abstract class ChatMessage implements Proto {
                 .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChannelName(channelName)
-                .setAuthorId(authorId)
+                .setAuthorUserProfileId(authorUserProfileId)
                 .setDate(date)
                 .setWasEdited(wasEdited)
                 .setChatMessageType(chatMessageType.toProto())

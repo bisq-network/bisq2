@@ -61,9 +61,9 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     public Set<String> getUserProfileIdsOfAllChannelMembers() {
         Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
         getChatMessages().forEach(chatMessage -> {
-            String authorId = chatMessage.getAuthorId();
-            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorId).add(chatMessage);
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            chatMessagesByAuthor.putIfAbsent(authorUserProfileId, new ArrayList<>());
+            chatMessagesByAuthor.get(authorUserProfileId).add(chatMessage);
         });
 
         // FIXME we do not sent a leave message and even if so we would like to get all member even if not active

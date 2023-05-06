@@ -40,7 +40,7 @@ public class TakeOfferHelper {
                                                                                            BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService,
                                                                                            BisqEasyPublicChatMessage tradeChatMessage) {
         checkArgument(tradeChatMessage.getBisqEasyOffer().isPresent(), "tradeChatMessage must contain offer");
-        return userProfileService.findUserProfile(tradeChatMessage.getAuthorId())
+        return userProfileService.findUserProfile(tradeChatMessage.getAuthorUserProfileId())
                 .map(makerUserProfile -> {
                     UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
                     BisqEasyOffer bisqEasyOffer = tradeChatMessage.getBisqEasyOffer().get();
@@ -51,6 +51,6 @@ public class TakeOfferHelper {
                             mediator);
                     return bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(tradeChatMessage, privateTradeChannel);
                 })
-                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from tradeChatMessage.authorId")));
+                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from tradeChatMessage.authorUserProfileId")));
     }
 }

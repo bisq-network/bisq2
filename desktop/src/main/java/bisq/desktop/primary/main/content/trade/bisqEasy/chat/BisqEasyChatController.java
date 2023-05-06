@@ -66,7 +66,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     private Pin chatMessagesPin;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
-        super(applicationService, ChatChannelDomain.TRADE, NavigationTarget.BISQ_EASY_CHAT);
+        super(applicationService, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
 
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = applicationService.getSettingsService();
@@ -270,7 +270,7 @@ public class BisqEasyChatController extends BaseChatController<BisqEasyChatView,
     }
 
     boolean isMyMessage(ChatMessage chatMessage) {
-        return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId());
+        return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
     }
 
     boolean isBtcSeller() {

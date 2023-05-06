@@ -82,7 +82,7 @@ public class MarketController implements Controller {
                             .distinct()
                             .count();
                     int numUsersInChannel = (int) allMessages.stream()
-                            .map(ChatMessage::getAuthorId)
+                            .map(ChatMessage::getAuthorUserProfileId)
                             .distinct()
                             .count();
                     MarketView.MarketListItem item = new MarketView.MarketListItem(market, numOffersInChannel, numUsersInChannel);

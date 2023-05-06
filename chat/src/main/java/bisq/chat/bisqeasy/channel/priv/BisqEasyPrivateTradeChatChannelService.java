@@ -64,7 +64,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                   UserIdentityService userIdentityService,
                                                   UserProfileService userProfileService,
                                                   ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.BISQ_EASY);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -141,7 +141,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 new Date().getTime(),
                 false,
                 channel.findMediator(),
-                ChatMessageType.TAKE_OFFER,
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
                 Optional.of(bisqEasyOffer));
         addMessage(takeOfferMessage, channel);
         return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
@@ -212,7 +212,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
                     .flatMap(myUserIdentity -> findChannelForMessage(message)
                             .or(() -> {

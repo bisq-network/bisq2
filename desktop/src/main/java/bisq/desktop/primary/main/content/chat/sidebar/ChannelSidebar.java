@@ -106,7 +106,7 @@ public class ChannelSidebar {
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
             model.channelName.set(chatChannel.getDisplayString());
             model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
-                    .flatMap(authorId -> userProfileService.findUserProfile(authorId).stream())
+                    .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
                     .sorted()
                     .collect(Collectors.toList()));

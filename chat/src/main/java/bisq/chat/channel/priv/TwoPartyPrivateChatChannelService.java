@@ -146,7 +146,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         if (message.getChatChannelDomain() != chatChannelDomain) {
             return;
         }
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorId());
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
         if (!isMyMessage) {
             findChannelForMessage(message)
                     .or(() -> maybeCreateAndAddChannel(message.getSender(), message.getReceiversId()))

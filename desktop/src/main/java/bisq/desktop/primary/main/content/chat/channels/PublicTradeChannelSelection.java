@@ -175,7 +175,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
-                bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(marketListItem.market))
+                bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(marketListItem.market))
                         .ifPresent(channel -> {
                             bisqEasyPublicChatChannelService.showChannel(channel);
                             bisqEasyChatChannelSelectionService.selectChannel(channel);
@@ -186,7 +186,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         public void onHideTradeChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
-                    .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorId()))
+                    .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorUserProfileId()))
                     .findAny();
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
@@ -203,7 +203,7 @@ public class PublicTradeChannelSelection extends ChannelSelection {
         }
 
         private int getNumMessages(Market market) {
-            return bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(market))
+            return bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(market))
                     .map(e -> e.getChatMessages().size())
                     .orElse(0);
         }

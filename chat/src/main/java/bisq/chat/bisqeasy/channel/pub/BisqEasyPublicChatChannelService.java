@@ -56,7 +56,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                                             NetworkService networkService,
                                             UserIdentityService userIdentityService,
                                             UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService, ChatChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, ChatChannelDomain.BISQ_EASY);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
 

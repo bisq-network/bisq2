@@ -120,7 +120,7 @@ public class ReviewOfferController implements Controller {
 
     @Override
     public void onActivate() {
-        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.TRADE, BisqEasyPublicChatChannel.getChannelName(model.getMarket())).orElseThrow();
+        BisqEasyPublicChatChannel channel = bisqEasyPublicChatChannelService.findChannel(ChatChannelDomain.BISQ_EASY, BisqEasyPublicChatChannel.getChannelName(model.getMarket())).orElseThrow();
         model.setSelectedChannel(channel);
 
         model.getShowCreateOfferSuccess().set(false);
@@ -208,7 +208,7 @@ public class ReviewOfferController implements Controller {
             if (userProfileService.isChatUserIgnored(senderUserProfile)) {
                 return false;
             }
-            if (userProfileService.findUserProfile(item.getChatMessage().getAuthorId()).isEmpty()) {
+            if (userProfileService.findUserProfile(item.getChatMessage().getAuthorUserProfileId()).isEmpty()) {
                 return false;
             }
             if (item.getChatMessage().getBisqEasyOffer().isEmpty()) {

@@ -21,7 +21,7 @@ import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
 public enum ChatChannelDomain implements ProtoEnum {
-    TRADE,
+    BISQ_EASY,
     DISCUSSION,
     EVENTS,
     SUPPORT;

@@ -44,7 +44,7 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
     }
 
     private BisqEasyPublicChatChannel(String channelName, Market market) {
-        super(ChatChannelDomain.TRADE, channelName, ChatChannelNotificationType.ALL);
+        super(ChatChannelDomain.BISQ_EASY, channelName, ChatChannelNotificationType.ALL);
 
         this.market = market;
     }

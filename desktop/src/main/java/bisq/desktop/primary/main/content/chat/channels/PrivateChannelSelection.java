@@ -95,7 +95,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             super(applicationService);
 
             switch (chatChannelDomain) {
-                case TRADE:
+                case BISQ_EASY:
                     channelService = chatService.getBisqEasyPrivateTradeChatChannelService();
                     break;
                 case DISCUSSION:
@@ -138,7 +138,7 @@ public class PrivateChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
+            if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
                 channelsPin = FxBindings.<BisqEasyPrivateTradeChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
                         .map(e -> new ChannelSelection.View.ChannelItem(e, userIdentityService))
                         .to(((BisqEasyPrivateTradeChatChannelService) channelService).getChannels());
@@ -208,7 +208,7 @@ public class PrivateChannelSelection extends ChannelSelection {
             if (channelItem == null) {
                 return;
             }
-            if (model.chatChannelDomain == ChatChannelDomain.TRADE) {
+            if (model.chatChannelDomain == ChatChannelDomain.BISQ_EASY) {
                 bisqEasyChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
             } else if (model.chatChannelDomain == ChatChannelDomain.DISCUSSION) {
                 discussionChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
@@ -233,7 +233,7 @@ public class PrivateChannelSelection extends ChannelSelection {
 
         public void doLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
             switch (privateChatChannel.getChatChannelDomain()) {
-                case TRADE:
+                case BISQ_EASY:
                     ((BisqEasyPrivateTradeChatChannelService) channelService).leaveChannel((BisqEasyPrivateTradeChatChannel) privateChatChannel);
                     model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                             .findFirst()

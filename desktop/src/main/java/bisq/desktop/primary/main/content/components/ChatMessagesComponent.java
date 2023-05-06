@@ -181,7 +181,7 @@ public class ChatMessagesComponent {
             model.mentionableUsers.setAll(userProfileService.getUserProfiles());
             model.mentionableChatChannels.setAll(publicDiscussionChannelService.getMentionableChannels());
 
-            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
                 selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
             } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
                 selectedChannelPin = discussionChatChannelSelectionService.getSelectedChannel().addObserver(this::applySelectedChannel);
@@ -257,7 +257,7 @@ public class ChatMessagesComponent {
                 }
             } else if (chatChannel instanceof CommonPublicChatChannel) {
                 switch (chatChannel.getChatChannelDomain()) {
-                    case TRADE:
+                    case BISQ_EASY:
                         break;
                     case DISCUSSION:
                         publicDiscussionChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
@@ -272,7 +272,7 @@ public class ChatMessagesComponent {
 
             } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 switch (chatChannel.getChatChannelDomain()) {
-                    case TRADE:
+                    case BISQ_EASY:
                         break;
                     case DISCUSSION:
                         privateDiscussionChannelService.sendTextMessage(text, citation, (TwoPartyPrivateChatChannel) chatChannel);
@@ -289,7 +289,7 @@ public class ChatMessagesComponent {
         }
 
         private void onReply(ChatMessage chatMessage) {
-            if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
+            if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId())) {
                 citationBlock.reply(chatMessage);
             }
         }
@@ -309,7 +309,7 @@ public class ChatMessagesComponent {
         }
 
         private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatChannelDomain() == ChatChannelDomain.TRADE) {
+            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
                 // todo use new 2 party channelservice
                 // PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
                 // tradeChannelSelectionService.selectChannel(privateTradeChannel);
@@ -327,7 +327,7 @@ public class ChatMessagesComponent {
 
         private void showChatUserDetails(ChatMessage chatMessage) {
             model.selectedChatMessage = chatMessage;
-            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author ->
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
                     model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
         }
 
@@ -370,7 +370,7 @@ public class ChatMessagesComponent {
         private List<UserIdentity> getMyUserProfilesInChannel() {
             return model.selectedChannel.get().getChatMessages().stream()
                     .sorted(Comparator.comparing(ChatMessage::getDate).reversed())
-                    .map(ChatMessage::getAuthorId)
+                    .map(ChatMessage::getAuthorUserProfileId)
                     .map(userIdentityService::findUserIdentity)
                     .filter(Optional::isPresent)
                     .map(Optional::get)

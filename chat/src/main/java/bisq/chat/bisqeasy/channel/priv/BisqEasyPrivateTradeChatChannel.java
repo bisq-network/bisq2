@@ -112,7 +112,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                                             boolean isInMediation,
                                             ChatChannelNotificationType chatChannelNotificationType,
                                             Set<String> seenChatMessageIds) {
-        super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
+        super(ChatChannelDomain.BISQ_EASY, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
         // Mediator gets added as SELF and as MEDIATOR
