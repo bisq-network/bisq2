@@ -91,7 +91,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
     @Override
     protected PrivateTwoPartyChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
         PrivateTwoPartyChatChannel privateTwoPartyChatChannel = new PrivateTwoPartyChatChannel(peer, myUserIdentity, chatChannelDomain);
-        privateTwoPartyChatChannel.getChannelNotificationType().addObserver(value -> persist());
+        privateTwoPartyChatChannel.getChatChannelNotificationType().addObserver(value -> persist());
         return privateTwoPartyChatChannel;
     }
 

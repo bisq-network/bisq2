@@ -32,7 +32,7 @@ enum MessageType {
   TAKE_OFFER = 2;
 }
 
-enum ChannelNotificationType {
+enum ChatChannelNotificationType {
   ALL = 0;
   MENTION = 1;
   NEVER = 2;
@@ -74,7 +74,7 @@ message ChatMessage {
 message ChatChannel {
   ChatChannelDomain chatChannelDomain = 1;
   string channelName = 2;
-  ChannelNotificationType channelNotificationType = 3;
+  ChatChannelNotificationType chatChannelNotificationType = 3;
   repeated string seenChatMessageIds = 4;
   oneof message{
     PrivateTwoPartyChatChannel privateTwoPartyChatChannel = 10;

@@ -47,8 +47,8 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         this.chatChannelDomain = chatChannelDomain;
     }
 
-    public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChannelNotificationType channelNotificationType) {
-        chatChannel.getChannelNotificationType().set(channelNotificationType);
+    public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChatChannelNotificationType chatChannelNotificationType) {
+        chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
         persist();
     }
 

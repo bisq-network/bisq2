@@ -17,8 +17,8 @@
 
 package bisq.chat.channel.priv;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.user.identity.UserIdentity;
 import lombok.EqualsAndHashCode;
@@ -34,8 +34,8 @@ public abstract class PrivateGroupChatChannel<M extends PrivateChatMessage> exte
                                       String channelName,
                                       UserIdentity myUserIdentity,
                                       List<M> chatMessages,
-                                      ChannelNotificationType channelNotificationType) {
-        super(chatChannelDomain, channelName, myUserIdentity, chatMessages, channelNotificationType);
+                                      ChatChannelNotificationType chatChannelNotificationType) {
+        super(chatChannelDomain, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
     }

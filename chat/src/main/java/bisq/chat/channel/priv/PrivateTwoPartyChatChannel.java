@@ -17,8 +17,8 @@
 
 package bisq.chat.channel.priv;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -46,7 +46,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                 peer,
                 myUserIdentity,
                 new ArrayList<>(),
-                ChannelNotificationType.ALL
+                ChatChannelNotificationType.ALL
         );
     }
 
@@ -55,8 +55,8 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                                        UserProfile peer,
                                        UserIdentity myProfile,
                                        List<TwoPartyPrivateChatMessage> chatMessages,
-                                       ChannelNotificationType channelNotificationType) {
-        super(chatChannelDomain, channelName, myProfile, chatMessages, channelNotificationType);
+                                       ChatChannelNotificationType chatChannelNotificationType) {
+        super(chatChannelDomain, channelName, myProfile, chatMessages, chatChannelNotificationType);
 
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
     }
@@ -81,7 +81,7 @@ public final class PrivateTwoPartyChatChannel extends PrivateChatChannel<TwoPart
                 proto.getChatMessagesList().stream()
                         .map(TwoPartyPrivateChatMessage::fromProto)
                         .collect(Collectors.toList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType())
+                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType())
         );
         privateTwoPartyChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return privateTwoPartyChatChannel;

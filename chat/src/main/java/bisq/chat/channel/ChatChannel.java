@@ -42,21 +42,21 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final String channelName;
     @EqualsAndHashCode.Include
     private transient final String id;
-    protected final Observable<ChannelNotificationType> channelNotificationType = new Observable<>();
+    protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 
-    public ChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChannelNotificationType channelNotificationType) {
+    public ChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
         this.chatChannelDomain = chatChannelDomain;
         this.channelName = channelName;
         this.id = chatChannelDomain.name().toLowerCase() + "." + channelName;
-        this.channelNotificationType.set(channelNotificationType);
+        this.chatChannelNotificationType.set(chatChannelNotificationType);
     }
 
     public bisq.chat.protobuf.ChatChannel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
                 .setChannelName(channelName)
                 .setChatChannelDomain(chatChannelDomain.toProto())
-                .setChannelNotificationType(channelNotificationType.get().toProto())
+                .setChatChannelNotificationType(chatChannelNotificationType.get().toProto())
                 .addAllSeenChatMessageIds(seenChatMessageIds);
     }
 

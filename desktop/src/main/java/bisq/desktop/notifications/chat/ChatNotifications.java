@@ -18,8 +18,8 @@
 package bisq.desktop.notifications.chat;
 
 import bisq.chat.ChatService;
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannel;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -153,22 +153,22 @@ public class ChatNotifications {
         }
 
         ChatChannel<? extends ChatMessage> chatChannel = chatNotification.getChatChannel();
-        ChannelNotificationType channelNotificationType = chatChannel.getChannelNotificationType().get();
-        if (channelNotificationType == ChannelNotificationType.GLOBAL_DEFAULT) {
+        ChatChannelNotificationType chatChannelNotificationType = chatChannel.getChatChannelNotificationType().get();
+        if (chatChannelNotificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
             // Map from global settings enums
             switch (settingsService.getChatNotificationType().get()) {
                 case ALL:
-                    channelNotificationType = ChannelNotificationType.ALL;
+                    chatChannelNotificationType = ChatChannelNotificationType.ALL;
                     break;
                 case MENTION:
-                    channelNotificationType = ChannelNotificationType.MENTION;
+                    chatChannelNotificationType = ChatChannelNotificationType.MENTION;
                     break;
                 case OFF:
-                    channelNotificationType = ChannelNotificationType.OFF;
+                    chatChannelNotificationType = ChatChannelNotificationType.OFF;
                     break;
             }
         }
-        switch (channelNotificationType) {
+        switch (chatChannelNotificationType) {
             case GLOBAL_DEFAULT:
                 throw new RuntimeException("GLOBAL_DEFAULT not possible here");
             case ALL:

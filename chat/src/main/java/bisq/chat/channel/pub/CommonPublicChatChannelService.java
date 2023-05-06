@@ -60,7 +60,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                 "Public" + StringUtils.capitalize(chatChannelDomain.name()) + "ChannelStore",
                 persistableStore);
 
-        this.defaultChannels.forEach(channel -> channel.getChannelNotificationType().addObserver(value -> persist()));
+        this.defaultChannels.forEach(channel -> channel.getChatChannelNotificationType().addObserver(value -> persist()));
     }
 
 

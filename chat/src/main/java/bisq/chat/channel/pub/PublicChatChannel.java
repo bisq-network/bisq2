@@ -17,9 +17,9 @@
 
 package bisq.chat.channel.pub;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.MessageType;
 import bisq.chat.message.PublicChatMessage;
@@ -39,8 +39,8 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    public PublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChannelNotificationType channelNotificationType) {
-        super(chatChannelDomain, channelName, channelNotificationType);
+    public PublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
+        super(chatChannelDomain, channelName, chatChannelNotificationType);
     }
 
     @Override

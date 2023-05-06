@@ -17,8 +17,8 @@
 
 package bisq.chat.channel.pub;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.CommonPublicChatMessage;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
@@ -46,7 +46,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
                 Res.get(chatChannelDomain.name().toLowerCase() + "." + channelName + ".description"),
                 "",
                 new ArrayList<>(),
-                ChannelNotificationType.GLOBAL_DEFAULT);
+                ChatChannelNotificationType.GLOBAL_DEFAULT);
     }
 
     private CommonPublicChatChannel(ChatChannelDomain chatChannelDomain,
@@ -55,8 +55,8 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
                                     String description,
                                     String channelAdminId,
                                     List<String> channelModeratorIds,
-                                    ChannelNotificationType channelNotificationType) {
-        super(chatChannelDomain, channelName, channelNotificationType);
+                                    ChatChannelNotificationType chatChannelNotificationType) {
+        super(chatChannelDomain, channelName, chatChannelNotificationType);
 
         this.displayName = displayName;
         this.description = description;
@@ -84,7 +84,7 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
                 proto.getDescription(),
                 proto.getChannelAdminId(),
                 new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()));
+                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
         commonPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return commonPublicChatChannel;
     }

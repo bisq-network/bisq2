@@ -17,9 +17,9 @@
 
 package bisq.chat.channel.priv;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
@@ -48,8 +48,8 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
                               String channelName,
                               UserIdentity myUserIdentity,
                               List<M> chatMessages,
-                              ChannelNotificationType channelNotificationType) {
-        super(chatChannelDomain, channelName, channelNotificationType);
+                              ChatChannelNotificationType chatChannelNotificationType) {
+        super(chatChannelDomain, channelName, chatChannelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);

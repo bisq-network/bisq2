@@ -17,8 +17,8 @@
 
 package bisq.chat.trade.channel.priv;
 
-import bisq.chat.channel.ChannelNotificationType;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateChatChannelMember;
 import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.chat.trade.message.PrivateTradeChatMessage;
@@ -74,7 +74,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                                     UserIdentity myUserIdentity,
                                     UserProfile peer,
                                     Optional<UserProfile> mediator) {
-        super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
+        super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, peer));
@@ -86,7 +86,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                                     UserIdentity myUserIdentity,
                                     UserProfile requestingTrader,
                                     UserProfile nonRequestingTrader) {
-        super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChannelNotificationType.ALL);
+        super(ChatChannelDomain.TRADE, tradeChatOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
 
         this.tradeChatOffer = tradeChatOffer;
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, requestingTrader));
@@ -101,9 +101,9 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                                     Optional<UserProfile> mediator,
                                     List<PrivateTradeChatMessage> chatMessages,
                                     boolean isInMediation,
-                                    ChannelNotificationType channelNotificationType,
+                                    ChatChannelNotificationType chatChannelNotificationType,
                                     Set<String> seenChatMessageIds) {
-        super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
+        super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.tradeChatOffer = tradeChatOffer;
         traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
@@ -171,7 +171,7 @@ public final class PrivateTradeChatChannel extends PrivateGroupChatChannel<Priva
                         .map(PrivateTradeChatMessage::fromProto)
                         .collect(Collectors.toList()),
                 proto.getIsInMediation(),
-                ChannelNotificationType.fromProto(baseProto.getChannelNotificationType()),
+                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
                 new HashSet<>(baseProto.getSeenChatMessageIdsList()));
     }
 

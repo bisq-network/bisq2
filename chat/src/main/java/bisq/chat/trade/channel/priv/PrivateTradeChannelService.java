@@ -93,7 +93,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
                     PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByTrader(tradeChatOffer, myUserIdentity, peer, mediator);
-                    Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
+                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
@@ -108,7 +108,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
         return findChannel(tradeChatOffer.getId())
                 .orElseGet(() -> {
                     PrivateTradeChatChannel channel = PrivateTradeChatChannel.createByMediator(tradeChatOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
-                    Pin pin = channel.getChannelNotificationType().addObserver(value -> persist());
+                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
                     notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();

@@ -20,18 +20,18 @@ package bisq.chat.channel;
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
 
-public enum ChannelNotificationType implements ProtoEnum {
+public enum ChatChannelNotificationType implements ProtoEnum {
     GLOBAL_DEFAULT,
     ALL,
     MENTION,
     OFF;
 
     @Override
-    public bisq.chat.protobuf.ChannelNotificationType toProto() {
-        return bisq.chat.protobuf.ChannelNotificationType.valueOf(name());
+    public bisq.chat.protobuf.ChatChannelNotificationType toProto() {
+        return bisq.chat.protobuf.ChatChannelNotificationType.valueOf(name());
     }
 
-    public static ChannelNotificationType fromProto(bisq.chat.protobuf.ChannelNotificationType proto) {
-        return ProtobufUtils.enumFromProto(ChannelNotificationType.class, proto.name());
+    public static ChatChannelNotificationType fromProto(bisq.chat.protobuf.ChatChannelNotificationType proto) {
+        return ProtobufUtils.enumFromProto(ChatChannelNotificationType.class, proto.name());
     }
 }
