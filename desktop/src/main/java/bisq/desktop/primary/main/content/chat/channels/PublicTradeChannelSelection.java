@@ -18,12 +18,12 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
+import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
-import bisq.chat.trade.channel.TradeChannelSelectionService;
-import bisq.chat.trade.channel.pub.PublicTradeChannel;
-import bisq.chat.trade.channel.pub.PublicTradeChannelService;
-import bisq.chat.trade.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.data.Pair;

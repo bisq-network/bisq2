@@ -18,14 +18,14 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.message.PrivateTradeChatMessage;
+import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.channel.TradeChannelSelectionService;
-import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
-import bisq.chat.trade.channel.pub.PublicTradeChannel;
-import bisq.chat.trade.message.PrivateTradeChatMessage;
-import bisq.chat.trade.message.TradeChatOffer;
 import bisq.common.currency.Market;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.observable.FxBindings;

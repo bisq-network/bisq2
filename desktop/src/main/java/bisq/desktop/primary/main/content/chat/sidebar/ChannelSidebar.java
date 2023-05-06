@@ -18,10 +18,10 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.trade.channel.pub.PublicTradeChannel;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.components.ChatUserOverview;

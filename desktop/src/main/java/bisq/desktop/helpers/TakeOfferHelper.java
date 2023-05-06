@@ -17,10 +17,10 @@
 
 package bisq.desktop.helpers;
 
-import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
-import bisq.chat.trade.channel.priv.PrivateTradeChatChannel;
-import bisq.chat.trade.message.PublicTradeChatMessage;
-import bisq.chat.trade.message.TradeChatOffer;
+import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
+import bisq.chat.bisqeasy.channel.priv.PrivateTradeChatChannel;
+import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.network.NetworkService;
 import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;

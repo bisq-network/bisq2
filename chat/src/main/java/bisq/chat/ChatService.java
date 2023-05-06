@@ -17,14 +17,14 @@
 
 package bisq.chat;
 
+import bisq.chat.bisqeasy.channel.TradeChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.PrivateTradeChannelService;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannelService;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateTwoPartyChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.chat.trade.channel.TradeChannelSelectionService;
-import bisq.chat.trade.channel.priv.PrivateTradeChannelService;
-import bisq.chat.trade.channel.pub.PublicTradeChannelService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;

@@ -17,8 +17,8 @@
 
 package bisq.desktop.primary.overlay.createOffer.review;
 
-import bisq.chat.trade.channel.pub.PublicTradeChannel;
-import bisq.chat.trade.message.PublicTradeChatMessage;
+import bisq.chat.bisqeasy.channel.pub.PublicTradeChannel;
+import bisq.chat.bisqeasy.message.PublicTradeChatMessage;
 import bisq.common.currency.Market;
 import bisq.common.monetary.Monetary;
 import bisq.desktop.common.view.Model;

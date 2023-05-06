@@ -17,7 +17,7 @@
 
 package bisq.support;
 
-import bisq.chat.trade.message.TradeChatOffer;
+import bisq.chat.bisqeasy.message.TradeChatOffer;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.MetaData;
