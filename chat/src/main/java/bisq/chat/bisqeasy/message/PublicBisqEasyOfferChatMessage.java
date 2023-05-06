@@ -20,8 +20,8 @@ package bisq.chat.bisqeasy.message;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.ChatMessageType;
+import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
@@ -42,7 +42,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                                           String authorId,
                                           Optional<BisqEasyOffer> bisqEasyOffer,
                                           Optional<String> text,
-                                          Optional<Quotation> quotedMessage,
+                                          Optional<Citation> citation,
                                           long date,
                                           boolean wasEdited) {
         this(StringUtils.createShortUid(),
@@ -51,7 +51,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 authorId,
                 bisqEasyOffer,
                 text,
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 ChatMessageType.TEXT,
@@ -64,7 +64,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                                            String authorId,
                                            Optional<BisqEasyOffer> bisqEasyOffer,
                                            Optional<String> text,
-                                           Optional<Quotation> quotedMessage,
+                                           Optional<Citation> citation,
                                            long date,
                                            boolean wasEdited,
                                            ChatMessageType chatMessageType,
@@ -74,7 +74,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 channelName,
                 authorId,
                 text,
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 chatMessageType,
@@ -89,8 +89,8 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
     }
 
     public static PublicBisqEasyOfferChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
+        Optional<Citation> citation = baseProto.hasCitation() ?
+                Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         Optional<String> text = baseProto.hasText() ?
                 Optional.of(baseProto.getText()) :
@@ -105,7 +105,7 @@ public final class PublicBisqEasyOfferChatMessage extends PublicChatMessage impl
                 baseProto.getAuthorId(),
                 bisqEasyOffer,
                 text,
-                quotedMessage,
+                citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),

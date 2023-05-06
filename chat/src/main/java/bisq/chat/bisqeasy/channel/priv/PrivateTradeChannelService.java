@@ -23,7 +23,7 @@ import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.ChatMessageType;
-import bisq.chat.message.Quotation;
+import bisq.chat.message.Citation;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
@@ -127,7 +127,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
         String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
         String text = Res.get("bisqEasy.takeOffer.takerRequest",
                 direction, amount, methods);
-        Optional<Quotation> quotation = Optional.of(new Quotation(maker.getNym(),
+        Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
                 maker.getNickName(),
                 maker.getPubKeyHash(),
                 offerMessage.getText()));
@@ -137,7 +137,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 myUserIdentity.getUserProfile(),
                 maker.getId(),
                 text,
-                quotation,
+                citation,
                 new Date().getTime(),
                 false,
                 channel.findMediator(),
@@ -148,17 +148,17 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
-                                                                               Optional<Quotation> quotation,
+                                                                               Optional<Citation> citation,
                                                                                PrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
         if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
-                    .map(peer -> sendMessage(shortUid, text, quotation, channel, peer, ChatMessageType.TEXT))
+                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT))
                     .collect(Collectors.toList());
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
-            return sendMessage(shortUid, text, quotation, channel, channel.getPeer(), ChatMessageType.TEXT);
+            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), ChatMessageType.TEXT);
         }
     }
 
@@ -183,7 +183,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                                                                           UserProfile sender,
                                                                           String receiversId,
                                                                           String text,
-                                                                          Optional<Quotation> quotedMessage,
+                                                                          Optional<Citation> citation,
                                                                           long time,
                                                                           boolean wasEdited,
                                                                           ChatMessageType chatMessageType) {
@@ -195,7 +195,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 sender,
                 receiversId,
                 text,
-                quotedMessage,
+                citation,
                 time,
                 wasEdited,
                 mediator,
@@ -238,13 +238,13 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
    
 
    /* public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage1(String text,
-                                                                                       Optional<Quotation> quotedMessage,
+                                                                                       Optional<Citation> citation,
                                                                                        PrivateTradeChannel channel,
                                                                                        MessageType messageType) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         String messageId = StringUtils.createShortUid();
         if (!channel.getInMediation().get() || channel.findMediator().isEmpty()) {
-            return super.sendPrivateChatMessage(messageId, text, quotedMessage, channel, myUserIdentity, channel.getPeer(), messageType);
+            return super.sendPrivateChatMessage(messageId, text, citation, channel, myUserIdentity, channel.getPeer(), messageType);
         }
 
         // If mediation has been activated we send all messages to the 2 other peers
@@ -270,7 +270,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 senderUserProfile,
                 receiver1.getId(),
                 text,
-                quotedMessage,
+                citation,
                 date,
                 false,
                 mediator,
@@ -287,7 +287,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 senderUserProfile,
                 receiver2.getId(),
                 text,
-                quotedMessage,
+                citation,
                 date,
                 false,
                 mediator,
@@ -307,7 +307,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
     }*/
 
   /*  public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Quotation> quotedMessage,
+                                                                                      Optional<Citation> citation,
                                                                                       PrivateTradeChannel channel,
                                                                                       Optional<BisqEasyOffer> bisqEasyOffer) {
         PrivateTradeChatMessage chatMessage = createNewPrivateTradeChatMessage(
@@ -316,7 +316,7 @@ public class PrivateTradeChannelService extends PrivateGroupChatChannelService<P
                 channel.getMyUserIdentity().getUserProfile(),
                 channel.getPeer().getId(),
                 text,
-                quotedMessage,
+                citation,
                 new Date().getTime(),
                 false,
                 MessageType.TEXT,

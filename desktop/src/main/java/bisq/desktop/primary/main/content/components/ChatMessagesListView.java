@@ -947,15 +947,15 @@ public class ChatMessagesListView {
                         }
 
                         private void handleQuoteMessageBox(ChatMessageListItem<? extends ChatMessage> item) {
-                            Optional<Quotation> optionalQuotation = item.getQuotedMessage();
-                            if (optionalQuotation.isPresent()) {
-                                Quotation quotation = optionalQuotation.get();
-                                if (quotation.isValid()) {
+                            Optional<Citation> optionalCitation = item.getCitation();
+                            if (optionalCitation.isPresent()) {
+                                Citation citation = optionalCitation.get();
+                                if (citation.isValid()) {
                                     quotedMessageVBox.setVisible(true);
                                     quotedMessageVBox.setManaged(true);
-                                    quotedMessageField.setText(quotation.getMessage());
+                                    quotedMessageField.setText(citation.getMessage());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
-                                    Label userName = new Label(quotation.getUserName());
+                                    Label userName = new Label(citation.getUserName());
                                     userName.getStyleClass().add("font-medium");
                                     userName.setStyle("-fx-text-fill: -bisq-grey-10");
                                     quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
@@ -1022,7 +1022,7 @@ public class ChatMessagesListView {
         private final T chatMessage;
         private final String message;
         private final String date;
-        private final Optional<Quotation> quotedMessage;
+        private final Optional<Citation> citation;
         private final Optional<UserProfile> senderUserProfile;
         private final String nym;
         private final String nickName;
@@ -1039,7 +1039,7 @@ public class ChatMessagesListView {
             }
             String editPostFix = chatMessage.isWasEdited() ? EDITED_POST_FIX : "";
             message = chatMessage.getText() + editPostFix;
-            quotedMessage = chatMessage.getQuotation();
+            citation = chatMessage.getCitation();
             date = DateFormatter.formatDateTime(new Date(chatMessage.getDate()), DateFormat.MEDIUM, DateFormat.SHORT, true, " " + Res.get("at") + " ");
 
             nym = senderUserProfile.map(UserProfile::getNym).orElse("");

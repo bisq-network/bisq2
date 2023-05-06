@@ -20,7 +20,7 @@ package bisq.chat.bisqeasy.channel.pub;
 import bisq.chat.bisqeasy.message.PublicBisqEasyOfferChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.pub.PublicChatChannelService;
-import bisq.chat.message.Quotation;
+import bisq.chat.message.Citation;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
 import bisq.common.observable.Observable;
@@ -118,14 +118,14 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicBi
 
     @Override
     protected PublicBisqEasyOfferChatMessage createChatMessage(String text,
-                                                               Optional<Quotation> quotedMessage,
+                                                               Optional<Citation> citation,
                                                                PublicTradeChannel publicChannel,
                                                                UserProfile userProfile) {
         return new PublicBisqEasyOfferChatMessage(publicChannel.getChannelName(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
-                quotedMessage,
+                citation,
                 new Date().getTime(),
                 false);
     }
@@ -138,7 +138,7 @@ public class PublicTradeChannelService extends PublicChatChannelService<PublicBi
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),
-                originalChatMessage.getQuotation(),
+                originalChatMessage.getCitation(),
                 originalChatMessage.getDate(),
                 true);
     }

@@ -18,8 +18,8 @@
 package bisq.chat.channel.pub;
 
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.message.Citation;
 import bisq.chat.message.CommonPublicChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
 import bisq.network.NetworkService;
@@ -96,14 +96,14 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
 
     @Override
     protected CommonPublicChatMessage createChatMessage(String text,
-                                                        Optional<Quotation> quotedMessage,
+                                                        Optional<Citation> citation,
                                                         CommonPublicChatChannel commonPublicChatChannel,
                                                         UserProfile userProfile) {
         return new CommonPublicChatMessage(commonPublicChatChannel.getChatChannelDomain(),
                 commonPublicChatChannel.getChannelName(),
                 userProfile.getId(),
                 text,
-                quotedMessage,
+                citation,
                 new Date().getTime(),
                 false);
     }
@@ -116,7 +116,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
                 originalChatMessage.getChannelName(),
                 userProfile.getId(),
                 editedText,
-                originalChatMessage.getQuotation(),
+                originalChatMessage.getCitation(),
                 originalChatMessage.getDate(),
                 true);
     }

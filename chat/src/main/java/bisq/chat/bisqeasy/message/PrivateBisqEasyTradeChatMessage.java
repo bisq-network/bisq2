@@ -19,8 +19,8 @@ package bisq.chat.bisqeasy.message;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessageType;
+import bisq.chat.message.Citation;
 import bisq.chat.message.PrivateChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.protobuf.ExternalNetworkMessage;
 import bisq.network.protobuf.NetworkMessage;
@@ -44,7 +44,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                            UserProfile sender,
                                            String receiversId,
                                            String text,
-                                           Optional<Quotation> quotedMessage,
+                                           Optional<Citation> citation,
                                            long date,
                                            boolean wasEdited,
                                            Optional<UserProfile> mediator,
@@ -56,7 +56,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 sender,
                 receiversId,
                 text,
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 mediator,
@@ -71,14 +71,14 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                                             UserProfile sender,
                                             String receiversId,
                                             String text,
-                                            Optional<Quotation> quotedMessage,
+                                            Optional<Citation> citation,
                                             long date,
                                             boolean wasEdited,
                                             Optional<UserProfile> mediator,
                                             ChatMessageType chatMessageType,
                                             Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -107,8 +107,8 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
     }
 
     public static PrivateBisqEasyTradeChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
+        Optional<Citation> citation = baseProto.hasCitation() ?
+                Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         bisq.chat.protobuf.PrivateBisqEasyTradeChatMessage PrivateBisqEasyTradeChatMessage = baseProto.getPrivateBisqEasyTradeChatMessage();
         Optional<UserProfile> mediator = PrivateBisqEasyTradeChatMessage.hasMediator() ?
@@ -124,7 +124,7 @@ public final class PrivateBisqEasyTradeChatMessage extends PrivateChatMessage im
                 UserProfile.fromProto(PrivateBisqEasyTradeChatMessage.getSender()),
                 PrivateBisqEasyTradeChatMessage.getReceiversId(),
                 baseProto.getText(),
-                quotedMessage,
+                citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 mediator,

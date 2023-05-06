@@ -10,21 +10,21 @@ import lombok.ToString;
 @Getter
 @ToString
 @EqualsAndHashCode
-public final class Quotation implements Proto {
+public final class Citation implements Proto {
     private final String nym;
     private final String nickName;
     private final byte[] pubKeyHash;
     private final String message;
 
-    public Quotation(String nym, String nickName, byte[] pubKeyHash, String message) {
+    public Citation(String nym, String nickName, byte[] pubKeyHash, String message) {
         this.nym = nym;
         this.nickName = nickName;
         this.pubKeyHash = pubKeyHash;
         this.message = message;
     }
 
-    public bisq.chat.protobuf.Quotation toProto() {
-        return bisq.chat.protobuf.Quotation.newBuilder()
+    public bisq.chat.protobuf.Citation toProto() {
+        return bisq.chat.protobuf.Citation.newBuilder()
                 .setNym(nym)
                 .setNickName(nickName)
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
@@ -32,8 +32,8 @@ public final class Quotation implements Proto {
                 .build();
     }
 
-    public static Quotation fromProto(bisq.chat.protobuf.Quotation proto) {
-        return new Quotation(proto.getNym(),
+    public static Citation fromProto(bisq.chat.protobuf.Citation proto) {
+        return new Citation(proto.getNym(),
                 proto.getNickName(),
                 proto.getPubKeyHash().toByteArray(),
                 proto.getMessage());

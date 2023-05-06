@@ -19,7 +19,7 @@ package bisq.chat.channel.priv;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessageType;
-import bisq.chat.message.Quotation;
+import bisq.chat.message.Citation;
 import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
@@ -72,7 +72,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                                                                      UserProfile sender,
                                                                      String receiversId,
                                                                      String text,
-                                                                     Optional<Quotation> quotedMessage,
+                                                                     Optional<Citation> citation,
                                                                      long time,
                                                                      boolean wasEdited,
                                                                      ChatMessageType chatMessageType) {
@@ -82,7 +82,7 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
                 sender,
                 receiversId,
                 text,
-                quotedMessage,
+                citation,
                 new Date().getTime(),
                 wasEdited,
                 chatMessageType);
@@ -118,9 +118,9 @@ public class PrivateTwoPartyChatChannelService extends PrivateChatChannelService
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
-                                                                               Optional<Quotation> quotedMessage,
+                                                                               Optional<Citation> citation,
                                                                                PrivateTwoPartyChatChannel channel) {
-        return sendMessage(StringUtils.createShortUid(), text, quotedMessage, channel, channel.getPeer(), ChatMessageType.TEXT);
+        return sendMessage(StringUtils.createShortUid(), text, citation, channel, channel.getPeer(), ChatMessageType.TEXT);
     }
 
     protected Optional<PrivateTwoPartyChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {

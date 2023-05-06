@@ -33,7 +33,7 @@ import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.Quotation;
+import bisq.chat.message.Citation;
 import bisq.common.observable.Pin;
 import bisq.common.util.StringUtils;
 import bisq.desktop.common.utils.ImageUtil;
@@ -115,7 +115,7 @@ public class ChatMessagesComponent {
         @Getter
         private final View view;
         private final UserIdentityService userIdentityService;
-        private final QuotedMessageBlock quotedMessageBlock;
+        private final QuotedMessageBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
         private final UserProfileService userProfileService;
         private final PrivateTradeChannelService privateTradeChannelService;
@@ -158,7 +158,7 @@ public class ChatMessagesComponent {
             settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
-            quotedMessageBlock = new QuotedMessageBlock(applicationService);
+            citationBlock = new QuotedMessageBlock(applicationService);
 
             userProfileSelection = new UserProfileSelection(userIdentityService);
             mediationService = applicationService.getSupportService().getMediationService();
@@ -172,7 +172,7 @@ public class ChatMessagesComponent {
             model = new Model(chatChannelDomain);
             view = new View(model, this,
                     chatMessagesListView.getRoot(),
-                    quotedMessageBlock.getRoot(),
+                    citationBlock.getRoot(),
                     userProfileSelection);
         }
 
@@ -237,7 +237,7 @@ public class ChatMessagesComponent {
             ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
             UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
             checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
-            Optional<Quotation> quotation = quotedMessageBlock.getQuotation();
+            Optional<Citation> citation = citationBlock.getCitation();
             if (chatChannel instanceof PublicTradeChannel) {
                 String dontShowAgainId = "sendMsgOfferOnlyWarn";
                 if (settingsService.getOffersOnly().get()) {
@@ -248,10 +248,10 @@ public class ChatMessagesComponent {
                             .dontShowAgainId(dontShowAgainId)
                             .show();
                 }
-                publicTradeChannelService.publishChatMessage(text, quotation, (PublicTradeChannel) chatChannel, userIdentity);
+                publicTradeChannelService.publishChatMessage(text, citation, (PublicTradeChannel) chatChannel, userIdentity);
             } else if (chatChannel instanceof PrivateTradeChatChannel) {
                 if (settingsService.getTradeRulesConfirmed().get() || ((PrivateTradeChatChannel) chatChannel).isMediator()) {
-                    privateTradeChannelService.sendTextMessage(text, quotation, (PrivateTradeChatChannel) chatChannel);
+                    privateTradeChannelService.sendTextMessage(text, citation, (PrivateTradeChatChannel) chatChannel);
                 } else {
                     new Popup().information(Res.get("social.chat.sendMsg.tradeRulesNotConfirmed.popup")).show();
                 }
@@ -260,13 +260,13 @@ public class ChatMessagesComponent {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        publicDiscussionChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
+                        publicDiscussionChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case EVENTS:
-                        publicEventsChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
+                        publicEventsChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                     case SUPPORT:
-                        publicSupportChannelService.publishChatMessage(text, quotation, (CommonPublicChatChannel) chatChannel, userIdentity);
+                        publicSupportChannelService.publishChatMessage(text, citation, (CommonPublicChatChannel) chatChannel, userIdentity);
                         break;
                 }
 
@@ -275,22 +275,22 @@ public class ChatMessagesComponent {
                     case TRADE:
                         break;
                     case DISCUSSION:
-                        privateDiscussionChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateDiscussionChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                     case EVENTS:
-                        privateEventsChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateEventsChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                     case SUPPORT:
-                        privateSupportChannelService.sendTextMessage(text, quotation, (PrivateTwoPartyChatChannel) chatChannel);
+                        privateSupportChannelService.sendTextMessage(text, citation, (PrivateTwoPartyChatChannel) chatChannel);
                         break;
                 }
             }
-            quotedMessageBlock.close();
+            citationBlock.close();
         }
 
         private void onReply(ChatMessage chatMessage) {
             if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorId())) {
-                quotedMessageBlock.reply(chatMessage);
+                citationBlock.reply(chatMessage);
             }
         }
 

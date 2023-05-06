@@ -39,7 +39,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       UserProfile sender,
                                       String receiversId,
                                       String text,
-                                      Optional<Quotation> quotedMessage,
+                                      Optional<Citation> citation,
                                       long date,
                                       boolean wasEdited,
                                       ChatMessageType chatMessageType) {
@@ -49,7 +49,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 sender,
                 receiversId,
                 text,
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 chatMessageType,
@@ -62,12 +62,12 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        UserProfile sender,
                                        String receiversId,
                                        String text,
-                                       Optional<Quotation> quotedMessage,
+                                       Optional<Citation> citation,
                                        long date,
                                        boolean wasEdited,
                                        ChatMessageType chatMessageType,
                                        MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, quotedMessage, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -86,8 +86,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     }
 
     public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
+        Optional<Citation> citation = baseProto.hasCitation() ?
+                Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
@@ -97,7 +97,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 UserProfile.fromProto(privateChatMessage.getSender()),
                 privateChatMessage.getReceiversId(),
                 baseProto.getText(),
-                quotedMessage,
+                citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),

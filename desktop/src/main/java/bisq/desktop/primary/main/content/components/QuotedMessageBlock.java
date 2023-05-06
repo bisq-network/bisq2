@@ -20,7 +20,7 @@ package bisq.desktop.primary.main.content.components;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.message.ChatMessage;
-import bisq.chat.message.Quotation;
+import bisq.chat.message.Citation;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
@@ -67,13 +67,13 @@ public class QuotedMessageBlock {
         controller.close();
     }
 
-    public Optional<Quotation> getQuotation() {
-        String text = controller.model.quotation.get();
+    public Optional<Citation> getCitation() {
+        String text = controller.model.citation.get();
         UserProfile userProfile = controller.model.author;
         if (text == null || text.isEmpty() || userProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Quotation(userProfile.getNym(), userProfile.getNickName(), userProfile.getPubKeyHash(), text));
+        return Optional.of(new Citation(userProfile.getNym(), userProfile.getNickName(), userProfile.getPubKeyHash(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {
@@ -96,14 +96,14 @@ public class QuotedMessageBlock {
                 model.author = author;
                 model.userName.set(author.getUserName());
                 model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));
-                model.quotation.set(chatMessage.getText());
+                model.citation.set(chatMessage.getText());
                 model.visible.set(true);
             });
         }
 
         private void close() {
             model.visible.set(false);
-            model.quotation.set(null);
+            model.citation.set(null);
         }
 
         @Override
@@ -117,7 +117,7 @@ public class QuotedMessageBlock {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final BooleanProperty visible = new SimpleBooleanProperty();
-        private final StringProperty quotation = new SimpleStringProperty("");
+        private final StringProperty citation = new SimpleStringProperty("");
         private final ObjectProperty<Image> roboHashNode = new SimpleObjectProperty<>();
         private final StringProperty userName = new SimpleStringProperty();
         private UserProfile author;
@@ -131,7 +131,7 @@ public class QuotedMessageBlock {
         private final ImageView roboIconImageView;
         private final Label userName;
         private final Button closeButton;
-        private final Text quotedMessage;
+        private final Text citation;
         private Subscription roboHashNodeSubscription;
 
         private View(Model model, Controller controller) {
@@ -163,10 +163,10 @@ public class QuotedMessageBlock {
             roboIconImageView.setFitHeight(25);
             HBox userBox = Layout.hBoxWith(roboIconImageView, userName);
             VBox.setMargin(userBox, new Insets(0, 0, 0, 0));
-            quotedMessage = new Text();
-            quotedMessage.setStyle("-fx-fill: -bisq-grey-dimmed");
-            VBox.setMargin(quotedMessage, new Insets(0, 0, 15, 0));
-            root.getChildren().addAll(topBox, userBox, quotedMessage);
+            citation = new Text();
+            citation.setStyle("-fx-fill: -bisq-grey-dimmed");
+            VBox.setMargin(citation, new Insets(0, 0, 15, 0));
+            root.getChildren().addAll(topBox, userBox, citation);
         }
 
         @Override
@@ -174,7 +174,7 @@ public class QuotedMessageBlock {
             root.visibleProperty().bind(model.visible);
             root.managedProperty().bind(model.visible);
             userName.textProperty().bind(model.userName);
-            quotedMessage.textProperty().bind(model.quotation);
+            citation.textProperty().bind(model.citation);
             roboHashNodeSubscription = EasyBind.subscribe(model.roboHashNode, roboIcon -> {
                 if (roboIcon != null) {
                     roboIconImageView.setImage(roboIcon);
@@ -187,7 +187,7 @@ public class QuotedMessageBlock {
         @Override
         protected void onViewDetached() {
             userName.textProperty().unbind();
-            quotedMessage.textProperty().unbind();
+            citation.textProperty().unbind();
             roboHashNodeSubscription.unsubscribe();
             closeButton.setOnAction(null);
         }

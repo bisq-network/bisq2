@@ -19,8 +19,8 @@ package bisq.chat.channel.pub;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
+import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.network.NetworkIdWithKeyPair;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataService;
@@ -77,10 +77,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(String text,
-                                                                                 Optional<Quotation> quotedMessage,
+                                                                                 Optional<Citation> citation,
                                                                                  C publicChannel,
                                                                                  UserIdentity userIdentity) {
-        M chatMessage = createChatMessage(text, quotedMessage, publicChannel, userIdentity.getUserProfile());
+        M chatMessage = createChatMessage(text, citation, publicChannel, userIdentity.getUserProfile());
         return publishChatMessage(chatMessage, userIdentity);
     }
 
@@ -132,7 +132,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     }
 
     protected abstract M createChatMessage(String text,
-                                           Optional<Quotation> quotedMessage,
+                                           Optional<Citation> citation,
                                            C publicChannel,
                                            UserProfile userProfile);
 

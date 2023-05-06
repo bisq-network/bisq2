@@ -39,12 +39,12 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
                                 String channelName,
                                 String authorId,
                                 Optional<String> text,
-                                Optional<Quotation> quotation,
+                                Optional<Citation> citation,
                                 long date,
                                 boolean wasEdited,
                                 ChatMessageType chatMessageType,
                                 MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, authorId, text, quotation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelName, authorId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override

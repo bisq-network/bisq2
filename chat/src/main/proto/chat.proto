@@ -45,7 +45,7 @@ enum ChatChannelDomain {
   SUPPORT = 3;
 }
 
-message Quotation {
+message Citation {
   string nym = 1;
   string nickName = 2;
   bytes pubKeyHash = 3;
@@ -58,7 +58,7 @@ message ChatMessage {
   string channelName = 3;
   optional string text = 4;
   string authorId = 5;
-  optional Quotation quotation = 6;
+  optional Citation citation = 6;
   uint64 date = 7;
   bool wasEdited = 8;
   ChatMessageType chatMessageType = 9;

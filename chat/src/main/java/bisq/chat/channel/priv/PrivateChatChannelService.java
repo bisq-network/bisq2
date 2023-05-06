@@ -21,8 +21,8 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.chat.message.ChatMessageType;
+import bisq.chat.message.Citation;
 import bisq.chat.message.PrivateChatMessage;
-import bisq.chat.message.Quotation;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.NetworkId;
@@ -86,7 +86,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendMessage(String messageId,
                                                                               String text,
-                                                                              Optional<Quotation> quotedMessage,
+                                                                              Optional<Citation> citation,
                                                                               C channel,
                                                                               UserProfile receiver,
                                                                               ChatMessageType chatMessageType) {
@@ -96,7 +96,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                 myUserIdentity.getUserProfile(),
                 receiver.getId(),
                 text,
-                quotedMessage,
+                citation,
                 new Date().getTime(),
                 false,
                 chatMessageType);
@@ -163,7 +163,7 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                                                      UserProfile sender,
                                                      String receiversId,
                                                      String text,
-                                                     Optional<Quotation> quotedMessage,
+                                                     Optional<Citation> citation,
                                                      long time,
                                                      boolean wasEdited,
                                                      ChatMessageType chatMessageType);

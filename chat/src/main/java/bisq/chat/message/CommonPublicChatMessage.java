@@ -34,7 +34,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                    String channelName,
                                    String authorId,
                                    String text,
-                                   Optional<Quotation> quotedMessage,
+                                   Optional<Citation> citation,
                                    long date,
                                    boolean wasEdited) {
         this(StringUtils.createShortUid(),
@@ -42,7 +42,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 channelName,
                 authorId,
                 Optional.of(text),
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 ChatMessageType.TEXT,
@@ -54,7 +54,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                     String channelName,
                                     String authorId,
                                     Optional<String> text,
-                                    Optional<Quotation> quotedMessage,
+                                    Optional<Citation> citation,
                                     long date,
                                     boolean wasEdited,
                                     ChatMessageType chatMessageType,
@@ -64,7 +64,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 channelName,
                 authorId,
                 text,
-                quotedMessage,
+                citation,
                 date,
                 wasEdited,
                 chatMessageType,
@@ -76,8 +76,8 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     }
 
     public static CommonPublicChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Quotation> quotedMessage = baseProto.hasQuotation() ?
-                Optional.of(Quotation.fromProto(baseProto.getQuotation())) :
+        Optional<Citation> citation = baseProto.hasCitation() ?
+                Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         return new CommonPublicChatMessage(
                 baseProto.getMessageId(),
@@ -85,7 +85,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 baseProto.getChannelName(),
                 baseProto.getAuthorId(),
                 Optional.of(baseProto.getText()),
-                quotedMessage,
+                citation,
                 baseProto.getDate(),
                 baseProto.getWasEdited(),
                 ChatMessageType.fromProto(baseProto.getChatMessageType()),
