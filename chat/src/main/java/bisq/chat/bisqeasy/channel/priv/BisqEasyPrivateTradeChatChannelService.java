@@ -112,35 +112,44 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 });
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyPublicChatMessage offerMessage,
-                                                                                    BisqEasyPrivateTradeChatChannel channel) {
-        checkArgument(offerMessage.getBisqEasyOffer().isPresent());
-        UserProfile maker = channel.getPeer();
-        BisqEasyOffer bisqEasyOffer = offerMessage.getBisqEasyOffer().get();
-        String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
-                bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
-        String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
-        String text = Res.get("bisqEasy.takeOffer.takerRequest",
-                direction, amount, methods);
-        Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
-                maker.getNickName(),
-                maker.getPubKeyHash(),
-                offerMessage.getText()));
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
-                channel.getId(),
-                myUserIdentity.getUserProfile(),
-                maker.getId(),
-                text,
-                citation,
-                new Date().getTime(),
-                false,
-                channel.findMediator(),
-                ChatMessageType.TAKE_BISQ_EASY_OFFER,
-                Optional.of(bisqEasyOffer));
-        addMessage(takeOfferMessage, channel);
-        return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyPublicChatMessage message,
+                                                                                    Optional<UserProfile> mediator) {
+        checkArgument(message.getBisqEasyOffer().isPresent(), "message must contain offer");
+        return userProfileService.findUserProfile(message.getAuthorUserProfileId())
+                .map(makerUserProfile -> {
+                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                    BisqEasyOffer bisqEasyOffer = message.getBisqEasyOffer().get();
+                    BisqEasyPrivateTradeChatChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
+                            myUserIdentity,
+                            makerUserProfile,
+                            mediator);
+                    UserProfile maker = channel.getPeer();
+                    String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+                    String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
+                            bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
+                    String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
+                    String text = Res.get("bisqEasy.takeOffer.takerRequest",
+                            direction, amount, methods);
+                    Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
+                            maker.getNickName(),
+                            maker.getPubKeyHash(),
+                            message.getText()));
+                    BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
+                            channel.getId(),
+                            myUserIdentity.getUserProfile(),
+                            maker.getId(),
+                            text,
+                            citation,
+                            new Date().getTime(),
+                            false,
+                            channel.findMediator(),
+                            ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                            Optional.of(bisqEasyOffer));
+                    addMessage(takeOfferMessage, channel);
+                    return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+
+                })
+                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,

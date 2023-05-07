@@ -21,6 +21,7 @@ import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
+import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.common.application.Service;
 import bisq.network.NetworkService;
 import bisq.network.p2p.message.NetworkMessage;
@@ -31,6 +32,7 @@ import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import bisq.user.role.AuthorizedRoleRegistrationData;
 import bisq.user.role.RoleRegistrationService;
 import bisq.user.role.RoleType;
@@ -63,6 +65,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     private final NetworkService networkService;
     private final Set<AuthorizedRoleRegistrationData> mediators = new CopyOnWriteArraySet<>();
     private final UserIdentityService userIdentityService;
+    private final UserProfileService userProfileService;
     private final RoleRegistrationService roleRegistrationService;
     private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
 
@@ -71,6 +74,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
                             UserService userService) {
         this.networkService = networkService;
         userIdentityService = userService.getUserIdentityService();
+        userProfileService = userService.getUserProfileService();
         roleRegistrationService = userService.getRoleRegistrationService();
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
     }
@@ -152,6 +156,16 @@ public class MediationService implements Service, DataService.Listener, MessageL
         return selectMediator(mediators, makersProfileId, takersProfileId);
     }
 
+    public Optional<UserProfile> takerSelectMediator(BisqEasyPublicChatMessage chatMessage) {
+        return userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
+                .flatMap(makerUserProfile -> {
+                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                    return takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
+                })
+                .stream()
+                .findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -202,7 +216,5 @@ public class MediationService implements Service, DataService.Listener, MessageL
                 .flatMap(data -> userIdentityService.findUserIdentity(data.getUserProfile().getId()).stream())
                 .findAny();
     }
-
-
 }
 

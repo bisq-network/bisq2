@@ -32,7 +32,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.helpers.TakeOfferHelper;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.offer.spec.Direction;
 import bisq.settings.SettingsService;
@@ -164,10 +163,12 @@ public class ReviewOfferController implements Controller {
 
     void onTakeOffer(ReviewOfferView.ListItem listItem) {
         BisqEasyPublicChatMessage chatMessage = listItem.getChatMessage();
-        TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, bisqEasyPrivateTradeChatChannelService, chatMessage).thenAccept(result -> UIThread.run(() -> {
-            model.getShowTakeOfferSuccess().set(true);
-            buttonsVisibleHandler.accept(false);
-        }));
+        Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
+        bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(chatMessage, mediator)
+                .thenAccept(result -> UIThread.run(() -> {
+                    model.getShowTakeOfferSuccess().set(true);
+                    buttonsVisibleHandler.accept(false);
+                }));
     }
 
     void onCreateOffer() {

@@ -48,7 +48,6 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.*;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.table.FilteredListItem;
-import bisq.desktop.helpers.TakeOfferHelper;
 import bisq.i18n.Res;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.settings.SettingsService;
@@ -396,8 +395,8 @@ public class ChatMessagesListView {
 
         private void onTakeOffer(BisqEasyPublicChatMessage chatMessage) {
             checkArgument(!model.isMyMessage(chatMessage), "tradeChatMessage must not be mine");
-
-            TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, bisqEasyPrivateTradeChatChannelService, chatMessage)
+            Optional<UserProfile> mediator = mediationService.takerSelectMediator(chatMessage);
+            bisqEasyPrivateTradeChatChannelService.sendTakeOfferMessage(chatMessage, mediator)
                     .thenAccept(result -> UIThread.run(() -> {
                         bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
                                 .ifPresent(bisqEasyChatChannelSelectionService::selectChannel);
