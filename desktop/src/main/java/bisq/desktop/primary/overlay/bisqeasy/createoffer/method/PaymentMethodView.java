@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.method;
+package bisq.desktop.primary.overlay.bisqeasy.createoffer.method;
 
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.view.View;

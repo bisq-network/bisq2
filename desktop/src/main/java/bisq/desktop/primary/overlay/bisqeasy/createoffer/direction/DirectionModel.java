@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.direction;
+package bisq.desktop.primary.overlay.bisqeasy.createoffer.direction;
 
 import bisq.desktop.common.view.Model;
 import bisq.offer.spec.Direction;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.amount;
+package bisq.desktop.primary.overlay.bisqeasy.createoffer.amount;
 
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;

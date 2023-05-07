@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer.review;
+package bisq.desktop.primary.overlay.bisqeasy.createoffer.review;
 
 import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;

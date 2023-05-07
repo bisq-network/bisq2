@@ -28,7 +28,7 @@ import bisq.desktop.primary.main.content.settings.reputation.burn.BurnBsqControl
 import bisq.desktop.primary.main.content.settings.reputation.signedAccount.SignedWitnessController;
 import bisq.desktop.primary.main.content.settings.userProfile.create.CreateUserProfileController;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.help.BisqEasyHelpController;
-import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
 import bisq.desktop.primary.overlay.onboarding.OnboardingController;
 import javafx.application.Platform;
 import javafx.scene.layout.Region;

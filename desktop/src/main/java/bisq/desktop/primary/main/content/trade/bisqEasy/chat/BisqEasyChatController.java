@@ -38,7 +38,7 @@ import bisq.desktop.primary.main.content.chat.BaseChatController;
 import bisq.desktop.primary.main.content.chat.channels.PublicTradeChannelSelection;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
-import bisq.desktop.primary.overlay.createOffer.CreateOfferController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.support.MediationService;

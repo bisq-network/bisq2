@@ -15,16 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.overlay.createOffer;
+package bisq.desktop.primary.overlay.bisqeasy.createoffer;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.*;
 import bisq.desktop.primary.overlay.OverlayController;
-import bisq.desktop.primary.overlay.createOffer.amount.AmountController;
-import bisq.desktop.primary.overlay.createOffer.direction.DirectionController;
-import bisq.desktop.primary.overlay.createOffer.market.MarketController;
-import bisq.desktop.primary.overlay.createOffer.method.PaymentMethodController;
-import bisq.desktop.primary.overlay.createOffer.review.ReviewOfferController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.amount.AmountController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.direction.DirectionController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.market.MarketController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.method.PaymentMethodController;
+import bisq.desktop.primary.overlay.bisqeasy.createoffer.review.ReviewOfferController;
 import bisq.i18n.Res;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
