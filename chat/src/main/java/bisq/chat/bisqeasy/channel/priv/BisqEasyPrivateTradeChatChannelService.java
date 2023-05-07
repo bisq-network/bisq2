@@ -90,7 +90,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                       UserIdentity myUserIdentity,
                                                                       UserProfile peer,
                                                                       Optional<UserProfile> mediator) {
-        return findChannel(bisqEasyOffer.getId())
+        return findChannel(bisqEasyOffer)
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
                     getChannels().add(channel);
@@ -103,7 +103,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                         UserIdentity myUserIdentity,
                                                                         UserProfile requestingTrader,
                                                                         UserProfile nonRequestingTrader) {
-        return findChannel(bisqEasyOffer.getId())
+        return findChannel(bisqEasyOffer)
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
                     getChannels().add(channel);
@@ -166,6 +166,37 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     @Override
     public ObservableArray<BisqEasyPrivateTradeChatChannel> getChannels() {
         return persistableStore.getChannels();
+    }
+
+    @Override
+    protected String provideChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {
+        String peer = chatChannel.getPeer().getUserName();
+        String optionalMyUserProfilePostfix = userIdentityService.hasMultipleUserIdentities() ? "" :
+                " [" + chatChannel.getMyUserIdentity().getUserName() + "]";
+        if (chatChannel.isMediator()) {
+            // We are the mediator:
+            // If mediator has 1 identity we show: UserName1 - UserName2
+            // If mediator has multiple identities we show: UserName1 - UserName2 [MediatorUserName]
+            checkArgument(chatChannel.getPeers().size() >= 2, "getPeers().size() need to be >= 2");
+            return peer + " - " + chatChannel.getPeers().get(1).getUserName() + optionalMyUserProfilePostfix;
+        } else {
+            // We are the trader:
+            // If not in mediation or no mediator is available:
+            // If trader has 1 identity we show: PeersUserName 
+            // If trader has multiple identities we show: PeersUserName [MyUserName]
+            // If in mediation and mediator is available:
+            // If trader has 1 identity we show: PeersUserName (Mediator: MediatorUserName)
+            // If trader has multiple identities we show: PeersUserName (Mediator: MediatorUserName) [MyUserName]
+            String optionalMediatorPostfix = chatChannel.findMediator()
+                    .filter(mediator -> chatChannel.getIsInMediation().get())
+                    .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
+                    .orElse("");
+            return peer + optionalMediatorPostfix + optionalMyUserProfilePostfix;
+        }
+    }
+
+    public Optional<BisqEasyPrivateTradeChatChannel> findChannel(BisqEasyOffer bisqEasyOffer) {
+        return findChannel(BisqEasyPrivateTradeChatChannel.createId(bisqEasyOffer));
     }
 
 

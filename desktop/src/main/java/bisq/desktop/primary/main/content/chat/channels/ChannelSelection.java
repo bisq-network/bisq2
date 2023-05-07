@@ -2,19 +2,18 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
-import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.persistence.PersistableStore;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
@@ -40,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -273,45 +271,24 @@ public abstract class ChannelSelection {
         static class ChannelItem {
             @EqualsAndHashCode.Include
             private final String channelId;
-            @EqualsAndHashCode.Include
             private final ChatChannelDomain chatChannelDomain;
             private final ChatChannel<?> chatChannel;
-            private String displayString;
-            private final boolean hasMultipleProfiles;
-            private String iconId;
-            private String iconIdHover;
-            private String iconIdSelected;
+            private final String displayString;
+            private final String iconId;
+            private final String iconIdHover;
+            private final String iconIdSelected;
 
             private boolean isSelected;
 
-            public ChannelItem(ChatChannel<?> chatChannel) {
-                this(chatChannel, null);
-            }
-
-            public ChannelItem(ChatChannel<?> chatChannel, @Nullable UserIdentityService userIdentityService) {
+            public ChannelItem(ChatChannel<?> chatChannel, ChatChannelService<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>, ? extends PersistableStore<?>> chatChannelService) {
                 this.chatChannel = chatChannel;
                 chatChannelDomain = chatChannel.getChatChannelDomain();
                 channelId = chatChannel.getId();
-                hasMultipleProfiles = userIdentityService != null && userIdentityService.getUserIdentities().size() > 1;
-
+                displayString = chatChannelService.getChannelTitle(chatChannel);
                 String styleToken = channelId.replace(".", "-");
                 iconIdSelected = "channels-" + styleToken;
                 iconIdHover = "channels-" + styleToken + "-white";
                 iconId = "channels-" + styleToken + "-grey";
-
-                if (chatChannel instanceof PrivateChatChannel) {
-                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
-                    displayString = privateChatChannel.getChannelTitle();
-                    // PrivateTradeChannel is handled in ListCell code
-                    if (!(chatChannel instanceof BisqEasyPrivateTradeChatChannel) && hasMultipleProfiles) {
-                        // If we have more than 1 user profiles we add our profile as well
-                        displayString += " [" + privateChatChannel.getMyUserIdentity().getUserName() + "]";
-                    }
-                } else if (chatChannel instanceof BisqEasyPublicChatChannel) {
-                    displayString = ((BisqEasyPublicChatChannel) chatChannel).getMarket().getMarketCodes();
-                } else {
-                    displayString = chatChannel.getChannelTitle();
-                }
             }
 
             public void setSelected(boolean selected) {

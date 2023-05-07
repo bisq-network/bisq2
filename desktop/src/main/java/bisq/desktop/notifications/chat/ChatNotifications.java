@@ -58,6 +58,7 @@ import java.util.function.Predicate;
  */
 @Slf4j
 public class ChatNotifications {
+    private final ChatService chatService;
     private final NotificationsService notificationsService;
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
@@ -83,6 +84,7 @@ public class ChatNotifications {
                              UserService userService,
                              SettingsService settingsService,
                              NotificationsService notificationsService) {
+        this.chatService = chatService;
         this.notificationsService = notificationsService;
         this.settingsService = settingsService;
 
@@ -207,10 +209,10 @@ public class ChatNotifications {
                     return;
                 }
             }
-            channelInfo = chatChannel.getChannelTitle();
+            channelInfo = chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
         } else {
             // All PrivateChatMessages excluding PrivateTradeChatMessage
-            channelInfo = Res.get(chatChannel.getChatChannelDomain().name().toLowerCase()) + " - " + Res.get("privateMessage");
+            channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("privateMessage");
         }
         title = StringUtils.abbreviate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
         notificationsService.notify(title, chatNotification.getMessage());

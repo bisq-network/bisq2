@@ -28,9 +28,11 @@ import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
@@ -190,7 +192,9 @@ public class ChatService implements Service {
         ).thenApply(list -> true);
     }
 
-    public ChatChannelService<?, ?, ?> getChatChannelService(ChatChannel<?> chatChannel) {
+    public ChatChannelService<? extends ChatMessage,
+            ? extends ChatChannel<? extends ChatMessage>,
+            ? extends PersistableStore<?>> getChatChannelService(ChatChannel<?> chatChannel) {
         boolean isPrivateChatChannel = chatChannel instanceof PrivateChatChannel;
         switch (chatChannel.getChatChannelDomain()) {
             case BISQ_EASY:

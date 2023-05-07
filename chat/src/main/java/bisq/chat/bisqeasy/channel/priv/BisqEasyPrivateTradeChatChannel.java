@@ -24,7 +24,6 @@ import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateChatChannelMember;
 import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
-import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -45,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
-    private static String createId(BisqEasyOffer bisqEasyOffer) {
+    public static String createId(BisqEasyOffer bisqEasyOffer) {
         return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." + bisqEasyOffer.getId();
     }
 
@@ -118,10 +117,13 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
+        //todo reconsider
         // Mediator gets added as SELF and as MEDIATOR
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
         traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
+        mediator.ifPresent(mediatorUserProfile -> {
+            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile));
+        });
         this.isInMediation.set(isInMediation);
         this.seenChatMessageIds.addAll(seenChatMessageIds);
     }
@@ -177,41 +179,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
 
     public boolean isMediator() {
         return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
-    }
-    
-    //todo move to service
-    @Override
-    public String getChannelTitle() {
-        String mediatorLabel = "";
-        Optional<UserProfile> mediator = findMediator();
-        if (mediator.isPresent() && isInMediation.get()) {
-            mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
-        }
-        String peer = getPeer().getUserName();
-        if (isMediator()) {
-            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
-            return peer + " - " + getPeers().get(1).getUserName() + mediatorLabel;
-        } else {
-            return peer + " - " + myUserIdentity.getUserName() + mediatorLabel;
-        }
-    }
-
-    //todo move to service
-    public String getChannelSelectionDisplayString() {
-        String peer = getPeer().getUserName();
-        if (!isInMediation.get()) {
-            return peer;
-        }
-
-        Optional<UserProfile> mediator = findMediator();
-        if (isMediator()) {
-            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
-            return peer + ", " + getPeers().get(1).getUserName();
-        } else if (mediator.isPresent()) {
-            return peer + ", " + mediator.get().getUserName();
-        } else {
-            return peer;
-        }
     }
 
     public UserProfile getPeer() {

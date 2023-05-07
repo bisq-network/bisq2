@@ -37,7 +37,6 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
 
     private final Optional<String> channelAdminId;
     private final List<String> channelModeratorIds;
-    private transient final String channelTitle;
     private transient final String description;
 
     public CommonPublicChatChannel(ChatChannelDomain chatChannelDomain, String channelTitle) {
@@ -59,7 +58,6 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         this.channelModeratorIds = channelModeratorIds;
         // We need to sort deterministically as the data is used in the proof of work check
         Collections.sort(channelModeratorIds);
-        channelTitle = Res.get(id + ".name");
         description = Res.get(id + ".description");
     }
 

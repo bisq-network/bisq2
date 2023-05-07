@@ -209,8 +209,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         }
     }
 
-    public boolean hasUserProfiles() {
-        return persistableStore.getUserIdentities().isEmpty();
+    public boolean hasUserIdentities() {
+        return getUserIdentities().isEmpty();
+    }
+
+    public boolean hasMultipleUserIdentities() {
+        return getUserIdentities().size() == 1;
     }
 
     public Observable<UserIdentity> getSelectedUserIdentity() {

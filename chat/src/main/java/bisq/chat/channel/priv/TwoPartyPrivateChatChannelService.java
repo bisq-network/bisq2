@@ -98,6 +98,13 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         return persistableStore.getChannels();
     }
 
+    @Override
+    protected String provideChannelTitle(TwoPartyPrivateChatChannel chatChannel) {
+        String optionalMyUserProfilePostfix = userIdentityService.hasMultipleUserIdentities() ? "" :
+                " [" + chatChannel.getMyUserIdentity().getUserName() + "]";
+        return chatChannel.getPeer().getUserName() + "-" + optionalMyUserProfilePostfix;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -129,15 +136,15 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     protected Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
-                    Optional<TwoPartyPrivateChatChannel> existingChannel = getChannels().stream()
-                            .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
-                                    channel.getPeer().equals(peer))
-                            .findAny();
-                    if (existingChannel.isPresent()) {
-                        return existingChannel.get();
-                    }
+                            Optional<TwoPartyPrivateChatChannel> existingChannel = getChannels().stream()
+                                    .filter(channel -> channel.getMyUserIdentity().equals(myUserIdentity) &&
+                                            channel.getPeer().equals(peer))
+                                    .findAny();
+                            if (existingChannel.isPresent()) {
+                                return existingChannel.get();
+                            }
 
-                    TwoPartyPrivateChatChannel channel = createNewChannel(peer, myUserIdentity);
+                            TwoPartyPrivateChatChannel channel = createNewChannel(peer, myUserIdentity);
                             getChannels().add(channel);
                             persist();
                             return channel;

@@ -70,7 +70,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public abstract ObservableArray<C> getChannels();
 
-    public Optional<C> findChannel(String id) {
+    protected Optional<C> findChannel(String id) {
         return getChannels().stream()
                 .filter(channel -> channel.getId().equals(id))
                 .findAny();
@@ -79,4 +79,11 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     public Optional<C> findChannel(ChatMessage chatMessage) {
         return findChannel(chatMessage.getChannelId());
     }
+
+    public String getChannelTitle(ChatChannel<? extends ChatMessage> chatChannel) {
+        //noinspection unchecked
+        return provideChannelTitle((C) chatChannel);
+    }
+
+    protected abstract String provideChannelTitle(C chatChannel);
 }

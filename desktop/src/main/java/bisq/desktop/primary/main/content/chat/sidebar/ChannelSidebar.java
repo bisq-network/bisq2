@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -77,11 +78,13 @@ public class ChannelSidebar {
         private final UserProfileService userProfileService;
         private final Runnable closeHandler;
         private final NotificationsSidebar notificationsSidebar;
+        private final ChatService chatService;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
             this.closeHandler = closeHandler;
             userProfileService = applicationService.getUserService().getUserProfileService();
-            notificationsSidebar = new NotificationsSidebar(applicationService.getChatService());
+            chatService = applicationService.getChatService();
+            notificationsSidebar = new NotificationsSidebar(chatService);
             model = new Model();
             view = new View(model, this, notificationsSidebar.getRoot());
         }
@@ -107,7 +110,8 @@ public class ChannelSidebar {
             }
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
-            model.channelTitle.set(chatChannel.getChannelTitle());
+            model.channelTitle.set(chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel));
+
             model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
                     .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))

@@ -399,7 +399,7 @@ public class ChatMessagesListView {
 
             TakeOfferHelper.sendTakeOfferMessage(userProfileService, userIdentityService, mediationService, bisqEasyPrivateTradeChatChannelService, chatMessage)
                     .thenAccept(result -> UIThread.run(() -> {
-                        bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow().getId())
+                        bisqEasyPrivateTradeChatChannelService.findChannel(chatMessage.getBisqEasyOffer().orElseThrow())
                                 .ifPresent(bisqEasyChatChannelSelectionService::selectChannel);
                         Optional<Runnable> takeOfferCompleteHandler = model.takeOfferCompleteHandler;
                         takeOfferCompleteHandler.ifPresent(Runnable::run);

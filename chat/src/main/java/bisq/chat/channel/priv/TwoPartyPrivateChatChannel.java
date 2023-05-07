@@ -109,10 +109,4 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     public void removeChatMessages(Collection<TwoPartyPrivateChatMessage> messages) {
         chatMessages.removeAll(messages);
     }
-
-    @Override
-    public String getChannelTitle() {
-        //todo only show my username if i have multiple identities -> move to service
-        return getPeer().getUserName() + "-" + myUserIdentity.getUserName();
-    }
 }

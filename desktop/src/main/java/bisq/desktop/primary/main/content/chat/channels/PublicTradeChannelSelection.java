@@ -122,12 +122,12 @@ public class PublicTradeChannelSelection extends ChannelSelection {
 
             getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
             channelsPin = FxBindings.<BisqEasyPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(ChannelSelection.View.ChannelItem::new)
+                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
                     .to(bisqEasyPublicChatChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
-                    channel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (channel instanceof BisqEasyPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
+                    chatChannel -> UIThread.runOnNextRenderFrame(() -> {
+                                if (chatChannel instanceof BisqEasyPublicChatChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
                                 } else {
                                     model.selectedChannelItem.set(null);
                                 }

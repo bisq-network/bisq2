@@ -81,14 +81,14 @@ public class PublicSupportChannelSelection extends PublicChannelSelection {
             super.onActivate();
 
             channelsPin = FxBindings.<CommonPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(ChannelSelection.View.ChannelItem::new)
+                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
                     .to(publicSupportChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(supportChatChannelSelectionService.getSelectedChannel(),
-                    channel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (channel instanceof CommonPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(channel));
-                                } else if (channel == null && !model.channelItems.isEmpty()) {
+                    chatChannel -> UIThread.runOnNextRenderFrame(() -> {
+                                if (chatChannel instanceof CommonPublicChatChannel) {
+                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                                } else if (chatChannel == null && !model.channelItems.isEmpty()) {
                                     model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {
                                     model.selectedChannelItem.set(null);

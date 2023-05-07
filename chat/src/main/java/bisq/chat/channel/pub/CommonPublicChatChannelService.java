@@ -22,6 +22,7 @@ import bisq.chat.message.Citation;
 import bisq.chat.message.CommonPublicChatMessage;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.StringUtils;
+import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
     @Getter
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
@@ -95,6 +96,11 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
     @Override
     public ObservableArray<CommonPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
+    }
+
+    @Override
+    protected String provideChannelTitle(CommonPublicChatChannel chatChannel) {
+        return Res.get(chatChannel.getId() + ".title");
     }
 
 

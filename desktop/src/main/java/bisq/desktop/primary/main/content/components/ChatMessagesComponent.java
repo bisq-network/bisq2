@@ -41,7 +41,6 @@ import bisq.desktop.components.controls.BisqTextArea;
 import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
-import bisq.support.MediationService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -131,14 +130,13 @@ public class ChatMessagesComponent {
         private final CommonPublicChatChannelService publicSupportChannelService;
         private final TwoPartyPrivateChatChannelService privateSupportChannelService;
         private final ChatChannelSelectionService supportChatChannelSelectionService;
-        private final UserProfileSelection userProfileSelection;
-        private final MediationService mediationService;
+        private final ChatService chatService;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
 
         private Controller(DefaultApplicationService applicationService,
                            ChatChannelDomain chatChannelDomain) {
-            ChatService chatService = applicationService.getChatService();
+            chatService = applicationService.getChatService();
             bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
             bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
@@ -160,8 +158,7 @@ public class ChatMessagesComponent {
             userProfileService = applicationService.getUserService().getUserProfileService();
             citationBlock = new QuotedMessageBlock(applicationService);
 
-            userProfileSelection = new UserProfileSelection(userIdentityService);
-            mediationService = applicationService.getSupportService().getMediationService();
+            UserProfileSelection userProfileSelection = new UserProfileSelection(userIdentityService);
 
             chatMessagesListView = new ChatMessagesListView(applicationService,
                     this::mentionUser,
@@ -302,7 +299,8 @@ public class ChatMessagesComponent {
         }
 
         private void fillChannelMention(ChatChannel<?> chatChannel) {
-            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + chatChannel.getChannelTitle() + " ");
+            String channelTitle = chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
+            String content = model.getTextInput().get().replaceAll("#[a-zA-Z\\d]*$", "#" + channelTitle + " ");
             model.getTextInput().set(content);
             //todo
             view.inputField.positionCaret(content.length());
@@ -376,6 +374,10 @@ public class ChatMessagesComponent {
                     .map(Optional::get)
                     .distinct()
                     .collect(Collectors.toList());
+        }
+
+        public String getChannelTitle(ChatChannel<?> chatChannel) {
+            return chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
         }
     }
 
@@ -462,7 +464,7 @@ public class ChatMessagesComponent {
             userMentionPopup.setSelectionHandler(controller::fillUserMention);
 
             channelMentionPopup = new ChatMentionPopupMenu<>(inputField);
-            channelMentionPopup.setItemDisplayConverter(ChatChannel::getChannelTitle);
+            channelMentionPopup.setItemDisplayConverter(controller::getChannelTitle);
             channelMentionPopup.setSelectionHandler(controller::fillChannelMention);
         }
 
