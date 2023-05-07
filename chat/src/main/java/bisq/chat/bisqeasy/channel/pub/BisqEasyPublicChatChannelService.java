@@ -126,15 +126,20 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return findChannel(BisqEasyPublicChatChannel.createId(market));
     }
 
-    @Override
-    protected String provideChannelTitle(BisqEasyPublicChatChannel chatChannel) {
-        return chatChannel.getMarket().getMarketCodes();
+    public Optional<BisqEasyPublicChatChannel> getDefaultChannel() {
+        return getChannels().stream()
+                .filter(channel -> MarketRepository.getDefault().equals(channel.getMarket()))
+                .findAny();
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected String provideChannelTitle(BisqEasyPublicChatChannel chatChannel) {
+        return chatChannel.getMarket().getMarketCodes();
+    }
 
     @Override
     protected BisqEasyPublicChatMessage createChatMessage(String text,

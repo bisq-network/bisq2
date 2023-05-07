@@ -31,11 +31,14 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(30);
+
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 

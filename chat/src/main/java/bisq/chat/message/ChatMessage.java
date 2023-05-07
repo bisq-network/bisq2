@@ -42,8 +42,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @EqualsAndHashCode
 public abstract class ChatMessage implements Proto {
-    //todo for dev testing we keep it short.
-    public final static long TTL = TimeUnit.DAYS.toMillis(1);
+    public final static long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected final String id;
     private final ChatChannelDomain chatChannelDomain;
@@ -76,14 +75,6 @@ public abstract class ChatMessage implements Proto {
         this.wasEdited = wasEdited;
         this.chatMessageType = chatMessageType;
         this.metaData = metaData;
-    }
-
-    public String getText() {
-        return optionalText.orElse(Res.get("na"));
-    }
-
-    public boolean wasMentioned(UserIdentity userIdentity) {
-        return getText().contains("@" + userIdentity.getUserName());
     }
 
     public bisq.chat.protobuf.ChatMessage.Builder getChatMessageBuilder() {
@@ -169,5 +160,22 @@ public abstract class ChatMessage implements Proto {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String getText() {
+        return optionalText.orElse(Res.get("na"));
+    }
+
+    public boolean wasMentioned(UserIdentity userIdentity) {
+        return getText().contains("@" + userIdentity.getUserName());
+    }
+
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
     }
 }

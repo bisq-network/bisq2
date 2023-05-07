@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableArray;
@@ -28,6 +29,8 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>> implements Service, PersistenceClient<S> {
@@ -66,16 +69,6 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         persist();
     }
 
-    abstract public void leaveChannel(C channel);
-
-    public abstract ObservableArray<C> getChannels();
-
-    protected Optional<C> findChannel(String id) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(id))
-                .findAny();
-    }
-
     public Optional<C> findChannel(ChatMessage chatMessage) {
         return findChannel(chatMessage.getChannelId());
     }
@@ -83,6 +76,34 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     public String getChannelTitle(ChatChannel<? extends ChatMessage> chatChannel) {
         //noinspection unchecked
         return provideChannelTitle((C) chatChannel);
+    }
+
+    public abstract void leaveChannel(C channel);
+
+    public abstract ObservableArray<C> getChannels();
+
+    public void removeExpiredMessages(PublicChatChannel<?> chatChannel) {
+        //noinspection unchecked
+        doRemoveExpiredMessages((C) chatChannel);
+    }
+
+    protected void doRemoveExpiredMessages(C channel) {
+        Set<M> toRemove = channel.getChatMessages().stream()
+                .filter(ChatMessage::isExpired)
+                .collect(Collectors.toSet());
+        if (!toRemove.isEmpty()) {
+            synchronized (getPersistableStore()) {
+                channel.removeChatMessages(toRemove);
+                channel.setAllMessagesSeen();
+            }
+            persist();
+        }
+    }
+
+    protected Optional<C> findChannel(String id) {
+        return getChannels().stream()
+                .filter(channel -> channel.getId().equals(id))
+                .findAny();
     }
 
     protected abstract String provideChannelTitle(C chatChannel);

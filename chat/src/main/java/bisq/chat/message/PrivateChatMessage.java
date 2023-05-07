@@ -67,8 +67,4 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
     public MetaData getMetaData() {
         return metaData;
     }
-
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
-    }
 }

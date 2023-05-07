@@ -40,9 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
@@ -133,19 +131,6 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C 
                 channel,
                 receiver,
                 ChatMessageType.LEAVE);
-    }
-
-    public void removeExpiredMessages(C channel) {
-        Set<M> toRemove = channel.getChatMessages().stream()
-                .filter(PrivateChatMessage::isExpired)
-                .collect(Collectors.toSet());
-        if (!toRemove.isEmpty()) {
-            synchronized (getPersistableStore()) {
-                channel.removeChatMessages(toRemove);
-                channel.setAllMessagesSeen();
-            }
-            persist();
-        }
     }
 
 

@@ -112,6 +112,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return getChannels();
     }
 
+    public Optional<C> getDefaultChannel() {
+        return getChannels().stream().findFirst();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected

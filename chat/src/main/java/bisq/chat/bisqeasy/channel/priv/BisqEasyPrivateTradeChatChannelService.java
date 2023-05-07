@@ -168,6 +168,11 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         return persistableStore.getChannels();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     protected String provideChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {
         String peer = chatChannel.getPeer().getUserName();

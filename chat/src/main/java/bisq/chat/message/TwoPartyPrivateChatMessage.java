@@ -28,11 +28,14 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(30);
+
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,
@@ -53,7 +56,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType,
-                new MetaData(ChatMessage.TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
     }
 
     private TwoPartyPrivateChatMessage(String messageId,
