@@ -149,14 +149,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         });
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
-                userIdentity -> {
-                    if (userIdentity != null) {
-                        // Setting selection via selectionModel.select displays the label from the base class. 
-                        // Did not find out how to avoid that... ;-(
-                        // With setting our selection to the editorTextField it behaves as expected.
-                        UIThread.runOnNextRenderFrame(() -> comboBox.getEditorTextField().setText(comboBox.getConverter().toString(userIdentity)));
-                    }
-                });
+                userIdentity -> comboBox.getSelectionModel().select(model.getSelectedUserIdentity().get()));
     }
 
     @Override
