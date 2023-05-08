@@ -2,10 +2,9 @@ package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
-import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
@@ -42,7 +41,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Slf4j
-public abstract class ChannelSelection {
+public abstract class ChatChannelSelection<C extends ChatChannel<?>,
+        S extends ChatChannelService<?, C, ?>,
+        E extends ChatChannelSelectionService> {
     protected static abstract class Controller implements bisq.desktop.common.view.Controller {
         protected final ChatService chatService;
         private final UserIdentityService userIdentityService;
@@ -72,15 +73,8 @@ public abstract class ChannelSelection {
             });
         }
 
-        private void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
+        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
             UIThread.run(() -> {
-                if (getChannelService() instanceof BisqEasyPublicChatChannelService) {
-                    BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = (BisqEasyPublicChatChannelService) getChannelService();
-                    if (!bisqEasyPublicChatChannelService.isVisible((BisqEasyPublicChatChannel) chatChannel)) {
-                        return;
-                    }
-                }
-
                 int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
                         .filter(this::isAuthorNotIgnored)
@@ -88,14 +82,6 @@ public abstract class ChannelSelection {
                         .count();
                 getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
-        }
-
-        private boolean isNotMyMessage(ChatMessage chatMessage) {
-            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
-        }
-
-        private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
-            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
 
         @Override
@@ -107,6 +93,14 @@ public abstract class ChannelSelection {
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);
+
+        private boolean isNotMyMessage(ChatMessage chatMessage) {
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+        }
+
+        private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
+            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
+        }
     }
 
     protected static class Model implements bisq.desktop.common.view.Model {
@@ -122,7 +116,7 @@ public abstract class ChannelSelection {
     }
 
     @Slf4j
-    public static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends bisq.desktop.common.view.View<AnchorPane, M, C> {
+    public static abstract class View<M extends ChatChannelSelection.Model, C extends ChatChannelSelection.Controller> extends bisq.desktop.common.view.View<AnchorPane, M, C> {
         protected final ListView<ChannelItem> listView;
         private final InvalidationListener channelsChangedListener;
         protected final HBox headerBox;

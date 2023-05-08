@@ -191,19 +191,19 @@ public class ChatMessagesListView {
 
             bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
             bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
-            privateBisqEasyTwoPartyChannelService = chatService.getPrivateBisqEasyTwoPartyChannelService();
+            privateBisqEasyTwoPartyChannelService = chatService.getBisqEasyTwoPartyPrivateChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
-            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+            privateDiscussionChannelService = chatService.getDiscussionTwoPartyPrivateChatChannelService();
+            publicDiscussionChannelService = chatService.getDiscussionPublicChatChannelService();
             discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
-            privateEventsChannelService = chatService.getPrivateEventsChannelService();
-            publicEventsChannelService = chatService.getPublicEventsChannelService();
+            privateEventsChannelService = chatService.getEventsTwoPartyPrivateChatChannelService();
+            publicEventsChannelService = chatService.getEventsPublicChatChannelService();
             eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
-            privateSupportChannelService = chatService.getPrivateSupportChannelService();
-            publicSupportChannelService = chatService.getPublicSupportChannelService();
+            privateSupportChannelService = chatService.getSupportTwoPartyPrivateChatChannelService();
+            publicSupportChannelService = chatService.getSupportPublicChatChannelService();
             supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             userIdentityService = applicationService.getUserService().getUserIdentityService();

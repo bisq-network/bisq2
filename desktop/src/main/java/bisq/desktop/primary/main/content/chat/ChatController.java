@@ -29,7 +29,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -38,7 +38,7 @@ import java.util.Optional;
 public abstract class ChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
     protected ChatChannelSelectionService chatChannelSelectionService;
     protected CommonPublicChatChannelService commonPublicChatChannelService;
-    protected PublicChannelSelection publicChannelSelection;
+    protected PublicChatChannelSelection<?, ?, ?> publicChatChannelSelection;
 
     public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(applicationService, chatChannelDomain, host);
@@ -48,14 +48,14 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
     public void createDependencies() {
         commonPublicChatChannelService = getPublicChannelService();
         chatChannelSelectionService = getChannelSelectionService();
-        publicChannelSelection = getPublicChannelSelection();
+        publicChatChannelSelection = getPublicChannelSelection();
     }
 
     abstract public ChatChannelSelectionService getChannelSelectionService();
 
     abstract public CommonPublicChatChannelService getPublicChannelService();
 
-    abstract public PublicChannelSelection getPublicChannelSelection();
+    abstract public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection();
 
     @Override
     public void onActivate() {
@@ -75,7 +75,7 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
 
             if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 applyPeersIcon((PrivateChatChannel<?>) chatChannel);
-                publicChannelSelection.deSelectChannel();
+                publicChatChannelSelection.deSelectChannel();
             } else {
                 applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
                 twoPartyPrivateChatChannelSelection.deSelectChannel();

@@ -59,7 +59,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
+public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelService, ChatChannelSelectionService> {
     private final Controller controller;
 
     public TwoPartyPrivateChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
@@ -74,7 +74,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         controller.deSelectChannel();
     }
 
-    protected static class Controller extends ChannelSelection.Controller {
+    protected static class Controller extends ChatChannelSelection.Controller {
         private final Model model;
         @Getter
         private final View view;
@@ -95,7 +95,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected ChannelSelection.Model getChannelSelectionModel() {
+        protected ChatChannelSelection.Model getChannelSelectionModel() {
             return model;
         }
 
@@ -108,14 +108,14 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
+            channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
+                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
                     .to(twoPartyPrivateChatChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(channelSelectionService.getSelectedChannel(),
                     chatChannel -> {
                         if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                            model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
                             userIdentityService.selectChatUserIdentity(((TwoPartyPrivateChatChannel) chatChannel).getMyUserIdentity());
                         } else {
                             model.selectedChannelItem.set(null);
@@ -129,7 +129,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
+        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
             }
@@ -158,7 +158,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         }
     }
 
-    protected static class Model extends ChannelSelection.Model {
+    protected static class Model extends ChatChannelSelection.Model {
         private final ChatChannelDomain chatChannelDomain;
 
         public Model(ChatChannelDomain chatChannelDomain) {
@@ -166,7 +166,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChannelSelection {
         }
     }
 
-    protected static class View extends ChannelSelection.View<Model, Controller> {
+    protected static class View extends ChatChannelSelection.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }

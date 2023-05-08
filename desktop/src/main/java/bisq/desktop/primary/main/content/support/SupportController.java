@@ -24,8 +24,8 @@ import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
-import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
-import bisq.desktop.primary.main.content.chat.channels.PublicSupportChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.CommonPublicChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,12 +41,12 @@ public class SupportController extends ChatController<SupportView, SupportModel>
 
     @Override
     public CommonPublicChatChannelService getPublicChannelService() {
-        return chatService.getPublicSupportChannelService();
+        return chatService.getSupportPublicChatChannelService();
     }
 
     @Override
-    public PublicChannelSelection getPublicChannelSelection() {
-        return new PublicSupportChannelSelection(applicationService);
+    public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection() {
+        return new CommonPublicChatChannelSelection(applicationService, ChatChannelDomain.SUPPORT);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
     public SupportView getChatView() {
         return new SupportView(model,
                 this,
-                publicChannelSelection.getRoot(),
+                publicChatChannelSelection.getRoot(),
                 twoPartyPrivateChatChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());

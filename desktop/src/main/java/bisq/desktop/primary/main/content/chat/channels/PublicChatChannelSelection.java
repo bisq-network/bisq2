@@ -17,7 +17,10 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
+import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
+import bisq.chat.channel.pub.PublicChatChannel;
+import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import javafx.collections.MapChangeListener;
@@ -33,13 +36,15 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-public abstract class PublicChannelSelection extends ChannelSelection {
+public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
+        S extends PublicChatChannelService<?, C, ?>,
+        E extends ChatChannelSelectionService> extends ChatChannelSelection<C, S, E> {
 
     abstract public void deSelectChannel();
 
     abstract public Pane getRoot();
 
-    protected static abstract class View<M extends ChannelSelection.Model, C extends ChannelSelection.Controller> extends ChannelSelection.View<M, C> {
+    protected static abstract class View<M extends ChatChannelSelection.Model, C extends ChatChannelSelection.Controller> extends ChatChannelSelection.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
         }

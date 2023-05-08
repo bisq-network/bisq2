@@ -140,19 +140,19 @@ public class ChatMessagesComponent {
             chatService = applicationService.getChatService();
             bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
             bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
-            privateBisqEasyTwoPartyChannelService = chatService.getPrivateBisqEasyTwoPartyChannelService();
+            privateBisqEasyTwoPartyChannelService = chatService.getBisqEasyTwoPartyPrivateChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
-            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-            privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
+            publicDiscussionChannelService = chatService.getDiscussionPublicChatChannelService();
+            privateDiscussionChannelService = chatService.getDiscussionTwoPartyPrivateChatChannelService();
             discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
 
-            publicEventsChannelService = chatService.getPublicEventsChannelService();
-            privateEventsChannelService = chatService.getPrivateEventsChannelService();
+            publicEventsChannelService = chatService.getEventsPublicChatChannelService();
+            privateEventsChannelService = chatService.getEventsTwoPartyPrivateChatChannelService();
             eventsChatChannelSelectionService = chatService.getEventsChatChannelSelectionService();
 
-            publicSupportChannelService = chatService.getPublicSupportChannelService();
-            privateSupportChannelService = chatService.getPrivateSupportChannelService();
+            publicSupportChannelService = chatService.getSupportPublicChatChannelService();
+            privateSupportChannelService = chatService.getSupportTwoPartyPrivateChatChannelService();
             supportChatChannelSelectionService = chatService.getSupportChatChannelSelectionService();
 
             settingsService = applicationService.getSettingsService();

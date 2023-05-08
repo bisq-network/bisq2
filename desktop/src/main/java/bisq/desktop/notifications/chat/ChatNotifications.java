@@ -91,14 +91,14 @@ public class ChatNotifications {
         bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
 
-        privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
-        publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
+        privateDiscussionChannelService = chatService.getDiscussionTwoPartyPrivateChatChannelService();
+        publicDiscussionChannelService = chatService.getDiscussionPublicChatChannelService();
 
-        privateEventsChannelService = chatService.getPrivateEventsChannelService();
-        publicEventsChannelService = chatService.getPublicEventsChannelService();
+        privateEventsChannelService = chatService.getEventsTwoPartyPrivateChatChannelService();
+        publicEventsChannelService = chatService.getEventsPublicChatChannelService();
 
-        privateSupportChannelService = chatService.getPrivateSupportChannelService();
-        publicSupportChannelService = chatService.getPublicSupportChannelService();
+        privateSupportChannelService = chatService.getSupportTwoPartyPrivateChatChannelService();
+        publicSupportChannelService = chatService.getSupportPublicChatChannelService();
 
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();

@@ -62,7 +62,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
-public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
+public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelection {
     private final Controller controller;
 
     public BisqEasyPrivateTradeChatChannelSelection(DefaultApplicationService applicationService) {
@@ -77,7 +77,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
         controller.deSelectChannel();
     }
 
-    protected static class Controller extends ChannelSelection.Controller {
+    protected static class Controller extends ChatChannelSelection.Controller {
         private final Model model;
         @Getter
         private final View view;
@@ -100,7 +100,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected ChannelSelection.Model getChannelSelectionModel() {
+        protected ChatChannelSelection.Model getChannelSelectionModel() {
             return model;
         }
 
@@ -113,15 +113,15 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<BisqEasyPrivateTradeChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, channelService))
+            channelsPin = FxBindings.<BisqEasyPrivateTradeChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
+                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, channelService))
                     .to(channelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(channelSelectionService.getSelectedChannel(),
                     chatChannel -> {
                         if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
                             BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                            model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, channelService));
+                            model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, channelService));
                             userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
                             if (inMediationPin != null) {
                                 inMediationPin.unbind();
@@ -140,7 +140,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
+        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
             }
@@ -172,14 +172,14 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChannelSelection {
         }
     }
 
-    protected static class Model extends ChannelSelection.Model {
+    protected static class Model extends ChatChannelSelection.Model {
         private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
 
         public Model() {
         }
     }
 
-    protected static class View extends ChannelSelection.View<Model, Controller> {
+    protected static class View extends ChatChannelSelection.View<Model, Controller> {
         private Subscription mediationActivatedPin;
 
         protected View(Model model, Controller controller) {

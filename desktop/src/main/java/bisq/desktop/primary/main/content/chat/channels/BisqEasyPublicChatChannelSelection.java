@@ -22,6 +22,7 @@ import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelService;
 import bisq.common.currency.Market;
 import bisq.common.currency.MarketRepository;
@@ -69,7 +70,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
+public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<BisqEasyPublicChatChannel, BisqEasyPublicChatChannelService, BisqEasyChatChannelSelectionService> {
     private final Controller controller;
 
     public BisqEasyPublicChatChannelSelection(DefaultApplicationService applicationService) {
@@ -84,7 +85,7 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         controller.deSelectChannel();
     }
 
-    protected static class Controller extends ChannelSelection.Controller {
+    protected static class Controller extends ChatChannelSelection.Controller {
         private final Model model;
         @Getter
         private final View view;
@@ -107,7 +108,14 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected ChannelSelection.Model getChannelSelectionModel() {
+        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
+            if (bisqEasyPublicChatChannelService.isVisible((BisqEasyPublicChatChannel) chatChannel)) {
+                super.updateUnseenMessagesMap(chatChannel);
+            }
+        }
+
+        @Override
+        protected ChatChannelSelection.Model getChannelSelectionModel() {
             return model;
         }
 
@@ -120,14 +128,14 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         public void onActivate() {
             super.onActivate();
 
-            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChannelSelection.View.ChannelItem::getDisplayString));
-            channelsPin = FxBindings.<BisqEasyPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
+            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChatChannelSelection.View.ChannelItem::getDisplayString));
+            channelsPin = FxBindings.<BisqEasyPublicChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
+                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
                     .to(bisqEasyPublicChatChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (chatChannel instanceof BisqEasyPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                                    model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
                                 } else {
                                     model.selectedChannelItem.set(null);
                                 }
@@ -159,7 +167,7 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         }
 
         @Override
-        protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
+        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
             }
@@ -217,7 +225,7 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         }
     }
 
-    protected static class Model extends ChannelSelection.Model {
+    protected static class Model extends ChatChannelSelection.Model {
         private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
         private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
 
@@ -225,7 +233,7 @@ public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
         }
     }
 
-    protected static class View extends ChannelSelection.View<Model, Controller> {
+    protected static class View extends ChatChannelSelection.View<Model, Controller> {
         protected final Label addChannelIcon;
 
         protected View(Model model, Controller controller) {

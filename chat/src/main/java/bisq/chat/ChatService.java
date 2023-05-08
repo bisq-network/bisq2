@@ -46,19 +46,23 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Getter
 public class ChatService implements Service {
-    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-    private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
     private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private final CommonPublicChatChannelService publicDiscussionChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
+    private final TwoPartyPrivateChatChannelService bisqEasyTwoPartyPrivateChatChannelService;
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
+
+    private final CommonPublicChatChannelService discussionPublicChatChannelService;
+    private final TwoPartyPrivateChatChannelService discussionTwoPartyPrivateChatChannelService;
     private final ChatChannelSelectionService discussionChatChannelSelectionService;
-    private final TwoPartyPrivateChatChannelService privateSupportChannelService;
-    private final CommonPublicChatChannelService publicSupportChannelService;
+
+    private final CommonPublicChatChannelService supportPublicChatChannelService;
+    private final TwoPartyPrivateChatChannelService supportTwoPartyPrivateChatChannelService;
     private final ChatChannelSelectionService supportChatChannelSelectionService;
-    private final TwoPartyPrivateChatChannelService privateEventsChannelService;
-    private final CommonPublicChatChannelService publicEventsChannelService;
+
+    private final CommonPublicChatChannelService eventsPublicChatChannelService;
+    private final TwoPartyPrivateChatChannelService eventsTwoPartyPrivateChatChannelService;
     private final ChatChannelSelectionService eventsChatChannelSelectionService;
-    private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
+
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
@@ -76,7 +80,7 @@ public class ChatService implements Service {
                 networkService,
                 userIdentityService,
                 userProfileService);
-        privateBisqEasyTwoPartyChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
+        bisqEasyTwoPartyPrivateChatChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -86,16 +90,16 @@ public class ChatService implements Service {
         bisqEasyChatChannelSelectionService = new BisqEasyChatChannelSelectionService(persistenceService,
                 bisqEasyPrivateTradeChatChannelService,
                 bisqEasyPublicChatChannelService,
-                privateBisqEasyTwoPartyChannelService);
+                bisqEasyTwoPartyPrivateChatChannelService);
 
         // Discussion
-        privateDiscussionChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
+        discussionTwoPartyPrivateChatChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChatChannelDomain.DISCUSSION);
-        publicDiscussionChannelService = new CommonPublicChatChannelService(persistenceService,
+        discussionPublicChatChannelService = new CommonPublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -107,18 +111,18 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.DISCUSSION, "offTopic")));
 
         discussionChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
-                privateDiscussionChannelService,
-                publicDiscussionChannelService,
+                discussionTwoPartyPrivateChatChannelService,
+                discussionPublicChatChannelService,
                 ChatChannelDomain.DISCUSSION);
 
         // Events
-        privateEventsChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
+        eventsTwoPartyPrivateChatChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChatChannelDomain.EVENTS);
-        publicEventsChannelService = new CommonPublicChatChannelService(persistenceService,
+        eventsPublicChatChannelService = new CommonPublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -130,18 +134,18 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "nodes"),
                         new CommonPublicChatChannel(ChatChannelDomain.EVENTS, "tradeEvents")));
         eventsChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
-                privateEventsChannelService,
-                publicEventsChannelService,
+                eventsTwoPartyPrivateChatChannelService,
+                eventsPublicChatChannelService,
                 ChatChannelDomain.EVENTS);
 
         // Support
-        privateSupportChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
+        supportTwoPartyPrivateChatChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
                 proofOfWorkService,
                 ChatChannelDomain.SUPPORT);
-        publicSupportChannelService = new CommonPublicChatChannelService(persistenceService,
+        supportPublicChatChannelService = new CommonPublicChatChannelService(persistenceService,
                 networkService,
                 userIdentityService,
                 userProfileService,
@@ -150,8 +154,8 @@ public class ChatService implements Service {
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "questions"),
                         new CommonPublicChatChannel(ChatChannelDomain.SUPPORT, "reports")));
         supportChatChannelSelectionService = new ChatChannelSelectionService(persistenceService,
-                privateSupportChannelService,
-                publicSupportChannelService,
+                supportTwoPartyPrivateChatChannelService,
+                supportPublicChatChannelService,
                 ChatChannelDomain.SUPPORT);
     }
 
@@ -163,16 +167,16 @@ public class ChatService implements Service {
                 bisqEasyPublicChatChannelService.initialize(),
                 bisqEasyChatChannelSelectionService.initialize(),
 
-                privateDiscussionChannelService.initialize(),
-                publicDiscussionChannelService.initialize(),
+                discussionTwoPartyPrivateChatChannelService.initialize(),
+                discussionPublicChatChannelService.initialize(),
                 discussionChatChannelSelectionService.initialize(),
 
-                privateEventsChannelService.initialize(),
-                publicEventsChannelService.initialize(),
+                eventsTwoPartyPrivateChatChannelService.initialize(),
+                eventsPublicChatChannelService.initialize(),
                 eventsChatChannelSelectionService.initialize(),
 
-                privateSupportChannelService.initialize(),
-                publicSupportChannelService.initialize(),
+                supportTwoPartyPrivateChatChannelService.initialize(),
+                supportPublicChatChannelService.initialize(),
                 supportChatChannelSelectionService.initialize()
         ).thenApply(list -> true);
     }
@@ -185,16 +189,16 @@ public class ChatService implements Service {
                 bisqEasyPublicChatChannelService.shutdown(),
                 bisqEasyChatChannelSelectionService.shutdown(),
 
-                privateDiscussionChannelService.shutdown(),
-                publicDiscussionChannelService.shutdown(),
+                discussionTwoPartyPrivateChatChannelService.shutdown(),
+                discussionPublicChatChannelService.shutdown(),
                 discussionChatChannelSelectionService.shutdown(),
 
-                privateEventsChannelService.shutdown(),
-                publicEventsChannelService.shutdown(),
+                eventsTwoPartyPrivateChatChannelService.shutdown(),
+                eventsPublicChatChannelService.shutdown(),
                 eventsChatChannelSelectionService.shutdown(),
 
-                privateSupportChannelService.shutdown(),
-                publicSupportChannelService.shutdown(),
+                supportTwoPartyPrivateChatChannelService.shutdown(),
+                supportPublicChatChannelService.shutdown(),
                 supportChatChannelSelectionService.shutdown()
 
         ).thenApply(list -> true);
@@ -217,13 +221,13 @@ public class ChatService implements Service {
     public TwoPartyPrivateChatChannelService getTwoPartyPrivateChatChannelService(ChatChannelDomain chatChannelDomain) {
         switch (chatChannelDomain) {
             case BISQ_EASY:
-                return privateBisqEasyTwoPartyChannelService;
+                return bisqEasyTwoPartyPrivateChatChannelService;
             case DISCUSSION:
-                return privateDiscussionChannelService;
+                return discussionTwoPartyPrivateChatChannelService;
             case EVENTS:
-                return privateEventsChannelService;
+                return eventsTwoPartyPrivateChatChannelService;
             case SUPPORT:
-                return privateSupportChannelService;
+                return supportTwoPartyPrivateChatChannelService;
             default:
                 throw new RuntimeException("Unexpected chatChannelDomain");
         }
@@ -234,11 +238,11 @@ public class ChatService implements Service {
             case BISQ_EASY:
                 throw new RuntimeException("BISQ_EASY does not provide a CommonPublicChatChannelService");
             case DISCUSSION:
-                return publicDiscussionChannelService;
+                return discussionPublicChatChannelService;
             case EVENTS:
-                return publicEventsChannelService;
+                return eventsPublicChatChannelService;
             case SUPPORT:
-                return publicSupportChannelService;
+                return supportPublicChatChannelService;
             default:
                 throw new RuntimeException("Unexpected chatChannelDomain");
         }

@@ -24,8 +24,8 @@ import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatController;
-import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelection;
-import bisq.desktop.primary.main.content.chat.channels.PublicEventsChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.CommonPublicChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,12 +41,12 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
 
     @Override
     public CommonPublicChatChannelService getPublicChannelService() {
-        return chatService.getPublicEventsChannelService();
+        return chatService.getEventsPublicChatChannelService();
     }
 
     @Override
-    public PublicChannelSelection getPublicChannelSelection() {
-        return new PublicEventsChannelSelection(applicationService);
+    public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection() {
+        return new CommonPublicChatChannelSelection(applicationService, ChatChannelDomain.EVENTS);
     }
 
 
@@ -59,7 +59,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
     public EventsView getChatView() {
         return new EventsView(model,
                 this,
-                publicChannelSelection.getRoot(),
+                publicChatChannelSelection.getRoot(),
                 twoPartyPrivateChatChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());

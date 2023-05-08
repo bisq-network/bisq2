@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -30,11 +31,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PublicDiscussionChannelSelection extends PublicChannelSelection {
+public class CommonPublicChatChannelSelection extends PublicChatChannelSelection<CommonPublicChatChannel, CommonPublicChatChannelService, ChatChannelSelectionService> {
     private final Controller controller;
 
-    public PublicDiscussionChannelSelection(DefaultApplicationService applicationService) {
-        controller = new Controller(applicationService);
+    public CommonPublicChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        controller = new Controller(applicationService, chatChannelDomain);
     }
 
     @Override
@@ -47,18 +48,35 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         controller.deSelectChannel();
     }
 
-    protected static class Controller extends ChannelSelection.Controller {
+    protected static class Controller extends ChatChannelSelection.Controller {
         private final Model model;
         @Getter
         private final View view;
-        private final CommonPublicChatChannelService publicDiscussionChannelService;
-        private final ChatChannelSelectionService discussionChatChannelSelectionService;
+        private final CommonPublicChatChannelService channelService;
+        private final ChatChannelSelectionService selectionService;
 
-        protected Controller(DefaultApplicationService applicationService) {
+        protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService);
 
-            publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
-            discussionChatChannelSelectionService = chatService.getDiscussionChatChannelSelectionService();
+            switch (chatChannelDomain) {
+                case BISQ_EASY:
+                    throw new RuntimeException("BISQ_EASY does not provide a CommonPublicChatChannelSelection");
+                case DISCUSSION:
+                    channelService = chatService.getDiscussionPublicChatChannelService();
+                    selectionService = chatService.getDiscussionChatChannelSelectionService();
+                    break;
+                case EVENTS:
+                    channelService = chatService.getEventsPublicChatChannelService();
+                    selectionService = chatService.getEventsChatChannelSelectionService();
+                    break;
+                case SUPPORT:
+                    channelService = chatService.getSupportPublicChatChannelService();
+                    selectionService = chatService.getSupportChatChannelSelectionService();
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected chatChannelDomain");
+            }
+
 
             model = new Model();
             view = new View(model, this);
@@ -67,27 +85,27 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         }
 
         @Override
-        protected ChannelSelection.Model getChannelSelectionModel() {
+        protected ChatChannelSelection.Model getChannelSelectionModel() {
             return model;
         }
 
         @Override
         protected ChatChannelService<?, ?, ?> getChannelService() {
-            return publicDiscussionChannelService;
+            return channelService;
         }
 
         @Override
         public void onActivate() {
             super.onActivate();
 
-            channelsPin = FxBindings.<CommonPublicChatChannel, ChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
-                    .to(publicDiscussionChannelService.getChannels());
+            channelsPin = FxBindings.<CommonPublicChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
+                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
+                    .to(channelService.getChannels());
 
-            selectedChannelPin = FxBindings.subscribe(discussionChatChannelSelectionService.getSelectedChannel(),
+            selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (chatChannel instanceof CommonPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                                    model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
                                 } else if (chatChannel == null && !model.channelItems.isEmpty()) {
                                     model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {
@@ -98,12 +116,12 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         }
 
         @Override
-        protected void onSelected(ChannelSelection.View.ChannelItem channelItem) {
+        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 return;
             }
 
-            discussionChatChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            selectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void deSelectChannel() {
@@ -111,10 +129,10 @@ public class PublicDiscussionChannelSelection extends PublicChannelSelection {
         }
     }
 
-    protected static class Model extends ChannelSelection.Model {
+    protected static class Model extends ChatChannelSelection.Model {
     }
 
-    protected static class View extends PublicChannelSelection.View<Model, Controller> {
+    protected static class View extends PublicChatChannelSelection.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
