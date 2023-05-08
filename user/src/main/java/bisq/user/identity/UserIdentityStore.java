@@ -44,7 +44,9 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     private UserIdentityStore(UserIdentity selectedUserIdentity,
                               Set<UserIdentity> userIdentities) {
-        this.selectedUserIdentity.set(selectedUserIdentity);
+        this.selectedUserIdentity.set(userIdentities.stream()
+                .filter(userIdentity -> userIdentity.equals(selectedUserIdentity))
+                .findAny().orElse(null));
         this.userIdentities = new ObservableSet<>(userIdentities);
     }
 
