@@ -24,6 +24,7 @@ import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.PrivateChatChannelMember;
 import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
+import bisq.i18n.Res;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -175,6 +176,22 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     @Override
     public void removeChatMessages(Collection<BisqEasyPrivateTradeChatMessage> messages) {
         chatMessages.removeAll(messages);
+    }
+
+    @Override
+    public String getDisplayString() {
+        String shortOfferId = getBisqEasyOffer().getId().substring(0, 4);
+        String peer = getPeer().getUserName();
+        if (isMediator()) {
+            checkArgument(getPeers().size() >= 2, "getPeers().size() need to be >= 2");
+            return shortOfferId + ": " + peer + " - " + getPeers().get(1).getUserName();
+        } else {
+            String optionalMediatorPostfix = findMediator()
+                    .filter(mediator -> getIsInMediation().get())
+                    .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
+                    .orElse("");
+            return shortOfferId + ": " + peer + optionalMediatorPostfix;
+        }
     }
 
     public boolean isMediator() {

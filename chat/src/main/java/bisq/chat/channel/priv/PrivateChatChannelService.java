@@ -17,6 +17,7 @@
 
 package bisq.chat.channel.priv;
 
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
@@ -41,6 +42,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
@@ -131,6 +134,14 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C 
                 channel,
                 receiver,
                 ChatMessageType.LEAVE);
+    }
+
+    @Override
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+        checkArgument(chatChannel instanceof PrivateChatChannel,
+                "chatChannel at PrivateChatChannelService.getChannelTitlePostFix must be of type PrivateChatChannel");
+        return userIdentityService.hasMultipleUserIdentities() ? "" :
+                " [" + ((PrivateChatChannel<?>) chatChannel).getMyUserIdentity().getUserName() + "]";
     }
 
 

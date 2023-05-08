@@ -18,21 +18,20 @@
 package bisq.chat;
 
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
-import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
-import bisq.persistence.PersistableStore;
 import bisq.persistence.PersistenceService;
 import bisq.security.pow.ProofOfWorkService;
 import bisq.user.identity.UserIdentityService;
@@ -59,6 +58,7 @@ public class ChatService implements Service {
     private final TwoPartyPrivateChatChannelService privateEventsChannelService;
     private final CommonPublicChatChannelService publicEventsChannelService;
     private final ChatChannelSelectionService eventsChatChannelSelectionService;
+    private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
 
     public ChatService(PersistenceService persistenceService,
                        ProofOfWorkService proofOfWorkService,
@@ -76,9 +76,17 @@ public class ChatService implements Service {
                 networkService,
                 userIdentityService,
                 userProfileService);
+        privateBisqEasyTwoPartyChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
+                networkService,
+                userIdentityService,
+                userProfileService,
+                proofOfWorkService,
+                ChatChannelDomain.BISQ_EASY);
+
         bisqEasyChatChannelSelectionService = new BisqEasyChatChannelSelectionService(persistenceService,
                 bisqEasyPrivateTradeChatChannelService,
-                bisqEasyPublicChatChannelService);
+                bisqEasyPublicChatChannelService,
+                privateBisqEasyTwoPartyChannelService);
 
         // Discussion
         privateDiscussionChannelService = new TwoPartyPrivateChatChannelService(persistenceService,
@@ -192,35 +200,45 @@ public class ChatService implements Service {
         ).thenApply(list -> true);
     }
 
-    public ChatChannelService<? extends ChatMessage,
-            ? extends ChatChannel<? extends ChatMessage>,
-            ? extends PersistableStore<?>> getChatChannelService(ChatChannel<?> chatChannel) {
-        boolean isPrivateChatChannel = chatChannel instanceof PrivateChatChannel;
-        switch (chatChannel.getChatChannelDomain()) {
+    public ChatChannelService<?, ?, ?> getChatChannelService(ChatChannel<?> chatChannel) {
+        if (chatChannel instanceof TwoPartyPrivateChatChannel) {
+            return getTwoPartyPrivateChatChannelService(chatChannel.getChatChannelDomain());
+        } else if (chatChannel.getChatChannelDomain() != ChatChannelDomain.BISQ_EASY) {
+            return getCommonPublicChatChannelService(chatChannel.getChatChannelDomain());
+        } else {
+            if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+                return bisqEasyPrivateTradeChatChannelService;
+            } else {
+                return bisqEasyPublicChatChannelService;
+            }
+        }
+    }
+
+    public TwoPartyPrivateChatChannelService getTwoPartyPrivateChatChannelService(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
             case BISQ_EASY:
-                if (isPrivateChatChannel) {
-                    return bisqEasyPrivateTradeChatChannelService;
-                } else {
-                    return bisqEasyPublicChatChannelService;
-                }
+                return privateBisqEasyTwoPartyChannelService;
             case DISCUSSION:
-                if (isPrivateChatChannel) {
-                    return privateDiscussionChannelService;
-                } else {
-                    return publicDiscussionChannelService;
-                }
+                return privateDiscussionChannelService;
             case EVENTS:
-                if (isPrivateChatChannel) {
-                    return privateEventsChannelService;
-                } else {
-                    return publicEventsChannelService;
-                }
+                return privateEventsChannelService;
             case SUPPORT:
-                if (isPrivateChatChannel) {
-                    return privateSupportChannelService;
-                } else {
-                    return publicSupportChannelService;
-                }
+                return privateSupportChannelService;
+            default:
+                throw new RuntimeException("Unexpected chatChannelDomain");
+        }
+    }
+
+    public CommonPublicChatChannelService getCommonPublicChatChannelService(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY:
+                throw new RuntimeException("BISQ_EASY does not provide a CommonPublicChatChannelService");
+            case DISCUSSION:
+                return publicDiscussionChannelService;
+            case EVENTS:
+                return publicEventsChannelService;
+            case SUPPORT:
+                return publicSupportChannelService;
             default:
                 throw new RuntimeException("Unexpected chatChannelDomain");
         }
@@ -229,5 +247,26 @@ public class ChatService implements Service {
     public void reportUserProfile(UserProfile userProfile, String reason) {
         //todo report user to admin and moderators, add reason
         log.info("called reportChatUser {} {}", userProfile, reason);
+    }
+
+    public ChatChannelSelectionService getChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY:
+                return bisqEasyChatChannelSelectionService;
+            case DISCUSSION:
+                return discussionChatChannelSelectionService;
+            case EVENTS:
+                return eventsChatChannelSelectionService;
+            case SUPPORT:
+                return supportChatChannelSelectionService;
+            default:
+                throw new RuntimeException("Unexpected chatChannelDomain");
+        }
+    }
+
+    public void createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
+        TwoPartyPrivateChatChannelService chatChannelService = getTwoPartyPrivateChatChannelService(chatChannelDomain);
+        chatChannelService.maybeCreateAndAddChannel(chatChannelDomain, peer)
+                .ifPresent(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel));
     }
 }

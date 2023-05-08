@@ -173,6 +173,7 @@ public class ChatMessagesListView {
         private final CommonPublicChatChannelService publicSupportChannelService;
         private final ChatChannelSelectionService supportChatChannelSelectionService;
         private final MediationService mediationService;
+        private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
         private Pin selectedChannelPin;
         private Pin chatMessagesPin;
         private Pin offerOnlySettingsPin;
@@ -190,6 +191,7 @@ public class ChatMessagesListView {
 
             bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
             bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
+            privateBisqEasyTwoPartyChannelService = chatService.getPrivateBisqEasyTwoPartyChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             privateDiscussionChannelService = chatService.getPrivateDiscussionChannelService();
@@ -444,7 +446,8 @@ public class ChatMessagesListView {
             if (isMyMessage(chatMessage)) {
                 return;
             }
-            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(this::createAndSelectPrivateChannel);
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
+                    .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
         }
 
         private void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
@@ -498,18 +501,8 @@ public class ChatMessagesListView {
             return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         }
 
-        private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
-                // todo use new 2 party channelservice
-                //PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
-                //tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                privateDiscussionChannelService.maybeCreateAndAddChannel(peer).ifPresent(discussionChatChannelSelectionService::selectChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                privateEventsChannelService.maybeCreateAndAddChannel(peer).ifPresent(eventsChatChannelSelectionService::selectChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                privateSupportChannelService.maybeCreateAndAddChannel(peer).ifPresent(supportChatChannelSelectionService::selectChannel);
-            }
+        private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
+            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer);
         }
 
         private void applyPredicate() {

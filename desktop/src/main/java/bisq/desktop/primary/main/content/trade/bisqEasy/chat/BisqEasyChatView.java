@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.desktop.common.threading.UIThread;
+import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.BaseChatView;
@@ -45,16 +46,20 @@ public class BisqEasyChatView extends BaseChatView {
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
-                            Pane marketChannelSelection,
-                            Pane privateChannelSelection,
+                            Pane bisqEasyPublicChatChannelSelection,
+                            Pane bisqEasyPrivateTradeChatChannelSelection,
+                            Pane twoPartyPrivateChatChannelSelection,
                             Pane chatMessagesComponent,
-                            Pane channelInfo) {
+                            Pane channelSidebar) {
         super(model,
                 controller,
-                marketChannelSelection,
-                privateChannelSelection,
+                bisqEasyPublicChatChannelSelection,
+                twoPartyPrivateChatChannelSelection,
                 chatMessagesComponent,
-                channelInfo);
+                channelSidebar);
+
+        left.getChildren().add(1, Layout.separator());
+        left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
 
         bisqEasyChatController = controller;
         bisqEasyChatModel = model;

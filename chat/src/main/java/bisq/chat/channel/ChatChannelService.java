@@ -17,7 +17,6 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableArray;
@@ -74,18 +73,16 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
     }
 
     public String getChannelTitle(ChatChannel<? extends ChatMessage> chatChannel) {
-        //noinspection unchecked
-        return provideChannelTitle((C) chatChannel);
+        return chatChannel.getDisplayString() + getChannelTitlePostFix(chatChannel);
+    }
+
+    public void removeExpiredMessages(ChatChannel<? extends ChatMessage> chatChannel) {
+        findChannel(chatChannel.getId()).ifPresent(this::doRemoveExpiredMessages);
     }
 
     public abstract void leaveChannel(C channel);
 
     public abstract ObservableArray<C> getChannels();
-
-    public void removeExpiredMessages(PublicChatChannel<?> chatChannel) {
-        //noinspection unchecked
-        doRemoveExpiredMessages((C) chatChannel);
-    }
 
     protected void doRemoveExpiredMessages(C channel) {
         Set<M> toRemove = channel.getChatMessages().stream()
@@ -106,5 +103,5 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
                 .findAny();
     }
 
-    protected abstract String provideChannelTitle(C chatChannel);
+    protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
 }

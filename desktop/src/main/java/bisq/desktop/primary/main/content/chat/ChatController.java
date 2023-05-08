@@ -78,7 +78,7 @@ public abstract class ChatController<V extends BaseChatView, M extends BaseChatM
                 publicChannelSelection.deSelectChannel();
             } else {
                 applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
-                privateChannelSelection.deSelectChannel();
+                twoPartyPrivateChatChannelSelection.deSelectChannel();
             }
         });
     }

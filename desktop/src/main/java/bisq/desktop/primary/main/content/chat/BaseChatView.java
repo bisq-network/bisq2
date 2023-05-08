@@ -42,7 +42,7 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     protected final VBox left;
     private final VBox sideBar;
     protected final Pane chatMessagesComponent;
-    private final Pane channelInfo;
+    private final Pane channelSidebar;
     protected final HBox centerToolbar;
 
     protected final VBox centerVBox;
@@ -54,13 +54,13 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
                         Pane publicChannelSelection,
-                        Pane privateChannelSelection,
+                        Pane twoPartyPrivateChatChannelSelection,
                         Pane chatMessagesComponent,
-                        Pane channelInfo) {
+                        Pane channelSidebar) {
         super(new HBox(), model, controller);
         this.chatMessagesComponent = chatMessagesComponent;
 
-        this.channelInfo = channelInfo;
+        this.channelSidebar = channelSidebar;
 
         // Undo default padding of ContentView 
         root.setPadding(new Insets(-34, -67, -67, -68));
@@ -69,7 +69,7 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         left = new VBox(
                 publicChannelSelection,
                 Layout.separator(),
-                privateChannelSelection,
+                twoPartyPrivateChatChannelSelection,
                 Spacer.fillVBox());
         left.getStyleClass().add("bisq-grey-2-bg");
         left.setPrefWidth(210);
@@ -99,7 +99,7 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         centerToolbar.setPadding(new Insets(0, 20, 0, 25));
 
         // sideBar
-        sideBar = new VBox(channelInfo);
+        sideBar = new VBox(channelSidebar);
         sideBar.getStyleClass().add("bisq-grey-2-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
@@ -116,8 +116,8 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     @Override
     protected void onViewAttached() {
         headline.textProperty().bind(model.getSelectedChannelAsString());
-        channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
-        channelInfo.managedProperty().bind(model.getChannelInfoVisible());
+        channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
+        channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
@@ -153,8 +153,8 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     @Override
     protected void onViewDetached() {
         headline.textProperty().unbind();
-        channelInfo.visibleProperty().unbind();
-        channelInfo.managedProperty().unbind();
+        channelSidebar.visibleProperty().unbind();
+        channelSidebar.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 

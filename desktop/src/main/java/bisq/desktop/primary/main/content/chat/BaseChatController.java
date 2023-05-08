@@ -33,7 +33,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.chat.channels.PrivateChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.TwoPartyPrivateChatChannelSelection;
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
@@ -65,7 +65,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected V view;
     protected final UserIdentityService userIdentityService;
     protected final DefaultApplicationService applicationService;
-    protected final PrivateChannelSelection privateChannelSelection;
+    protected final TwoPartyPrivateChatChannelSelection twoPartyPrivateChatChannelSelection;
     protected final ChannelSidebar channelSidebar;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
@@ -80,7 +80,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        privateChannelSelection = new PrivateChannelSelection(applicationService, chatChannelDomain);
+        twoPartyPrivateChatChannelSelection = new TwoPartyPrivateChatChannelSelection(applicationService, chatChannelDomain);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, chatChannelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();
@@ -146,7 +146,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
             model.getSelectedChannelAsString().set(chatChannel != null ? chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel) : "");
             model.getSelectedChannel().set(chatChannel);
 
-            if (model.getChannelInfoVisible().get()) {
+            if (model.getChannelSidebarVisible().get()) {
                 cleanupChannelInfo();
                 showChannelInfo();
             }
@@ -154,10 +154,10 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     public void onToggleChannelInfo() {
-        boolean visible = !model.getChannelInfoVisible().get();
+        boolean visible = !model.getChannelSidebarVisible().get();
         onCloseSideBar();
         chatMessagesComponent.resetSelectedChatMessage();
-        model.getChannelInfoVisible().set(visible);
+        model.getChannelSidebarVisible().set(visible);
         model.getSideBarVisible().set(visible);
         if (visible) {
             showChannelInfo();
@@ -171,7 +171,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     public void onCloseSideBar() {
         model.getSideBarVisible().set(false);
         model.getSideBarWidth().set(0);
-        model.getChannelInfoVisible().set(false);
+        model.getChannelSidebarVisible().set(false);
         model.getSideBarChanged().set(!model.getSideBarChanged().get());
 
         cleanupChatUserDetails();

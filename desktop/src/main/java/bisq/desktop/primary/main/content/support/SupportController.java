@@ -59,7 +59,7 @@ public class SupportController extends ChatController<SupportView, SupportModel>
         return new SupportView(model,
                 this,
                 publicChannelSelection.getRoot(),
-                privateChannelSelection.getRoot(),
+                twoPartyPrivateChatChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
     }

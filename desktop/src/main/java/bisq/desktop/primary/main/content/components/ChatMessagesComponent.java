@@ -102,7 +102,7 @@ public class ChatMessagesComponent {
     }
 
     public void openPrivateChannel(UserProfile peer) {
-        controller.createAndSelectPrivateChannel(peer);
+        controller.createAndSelectTwoPartyPrivateChatChannel(peer);
     }
 
     public void refreshMessages() {
@@ -119,6 +119,7 @@ public class ChatMessagesComponent {
         private final UserProfileService userProfileService;
         private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
         private final TwoPartyPrivateChatChannelService privateDiscussionChannelService;
+        private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
         private final CommonPublicChatChannelService publicDiscussionChannelService;
         private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
         private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
@@ -139,6 +140,7 @@ public class ChatMessagesComponent {
             chatService = applicationService.getChatService();
             bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
             bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
+            privateBisqEasyTwoPartyChannelService = chatService.getPrivateBisqEasyTwoPartyChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
 
             publicDiscussionChannelService = chatService.getPublicDiscussionChannelService();
@@ -306,21 +308,8 @@ public class ChatMessagesComponent {
             view.inputField.positionCaret(content.length());
         }
 
-        private void createAndSelectPrivateChannel(UserProfile peer) {
-            if (model.getChatChannelDomain() == ChatChannelDomain.BISQ_EASY) {
-                // todo use new 2 party channelservice
-                // PrivateTradeChannel privateTradeChannel = getPrivateTradeChannel(peer);
-                // tradeChannelSelectionService.selectChannel(privateTradeChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.DISCUSSION) {
-                privateDiscussionChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(discussionChatChannelSelectionService::selectChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.EVENTS) {
-                privateEventsChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(eventsChatChannelSelectionService::selectChannel);
-            } else if (model.getChatChannelDomain() == ChatChannelDomain.SUPPORT) {
-                privateSupportChannelService.maybeCreateAndAddChannel(peer)
-                        .ifPresent(supportChatChannelSelectionService::selectChannel);
-            }
+        private void createAndSelectTwoPartyPrivateChatChannel(UserProfile peer) {
+            chatService.createAndSelectTwoPartyPrivateChatChannel(model.getChatChannelDomain(), peer);
         }
 
         private void showChatUserDetails(ChatMessage chatMessage) {

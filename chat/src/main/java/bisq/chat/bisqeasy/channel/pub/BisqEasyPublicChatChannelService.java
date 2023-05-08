@@ -116,7 +116,6 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return persistableStore.getChannels();
     }
 
-
     @Override
     public void leaveChannel(BisqEasyPublicChatChannel channel) {
         //todo
@@ -135,11 +134,6 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected String provideChannelTitle(BisqEasyPublicChatChannel chatChannel) {
-        return chatChannel.getMarket().getMarketCodes();
-    }
 
     @Override
     protected BisqEasyPublicChatMessage createChatMessage(String text,

@@ -13,7 +13,6 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
-import bisq.persistence.PersistableStore;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
@@ -280,7 +279,7 @@ public abstract class ChannelSelection {
 
             private boolean isSelected;
 
-            public ChannelItem(ChatChannel<?> chatChannel, ChatChannelService<? extends ChatMessage, ? extends ChatChannel<? extends ChatMessage>, ? extends PersistableStore<?>> chatChannelService) {
+            public ChannelItem(ChatChannel<?> chatChannel, ChatChannelService<?, ?, ?> chatChannelService) {
                 this.chatChannel = chatChannel;
                 chatChannelDomain = chatChannel.getChatChannelDomain();
                 channelId = chatChannel.getId();

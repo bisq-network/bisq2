@@ -60,7 +60,7 @@ public class EventsController extends ChatController<EventsView, EventsModel> im
         return new EventsView(model,
                 this,
                 publicChannelSelection.getRoot(),
-                privateChannelSelection.getRoot(),
+                twoPartyPrivateChatChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
     }

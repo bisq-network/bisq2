@@ -55,7 +55,7 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        maybeSelectChannels();
+        maybeSelectDefaultChannel();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -81,15 +81,18 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     }
 
     protected void applyPersistedSelectedChannel() {
-        Stream<ChatChannel<?>> stream = Stream.concat(publicChatChannelService.getChannels().stream(),
-                privateChatChannelService.getChannels().stream());
-        selectedChannel.set(stream
+        selectedChannel.set(getAllChatChannels()
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()
                 .orElse(null));
     }
 
-    protected void maybeSelectChannels() {
+    protected Stream<ChatChannel<?>> getAllChatChannels() {
+        return Stream.concat(publicChatChannelService.getChannels().stream(),
+                privateChatChannelService.getChannels().stream());
+    }
+
+    protected void maybeSelectDefaultChannel() {
         if (selectedChannel.get() == null) {
             publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
         }

@@ -93,6 +93,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 .collect(Collectors.toSet()));
     }
 
+    abstract public String getDisplayString();
+
     abstract public ObservableSet<M> getChatMessages();
 
     abstract public void addChatMessage(M chatMessage);

@@ -69,10 +69,10 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class PublicTradeChannelSelection extends ChannelSelection {
+public class BisqEasyPublicChatChannelSelection extends ChannelSelection {
     private final Controller controller;
 
-    public PublicTradeChannelSelection(DefaultApplicationService applicationService) {
+    public BisqEasyPublicChatChannelSelection(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 

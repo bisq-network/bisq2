@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.DecimalFormat;
 import java.util.UUID;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class StringUtils {
     public static String truncate(String value) {
@@ -29,8 +31,9 @@ public class StringUtils {
     }
 
     public static String truncate(String value, int maxLength) {
-        if (maxLength < value.length()) {
-            return value.substring(0, maxLength) + "...";
+        checkArgument(maxLength > 3, "maxLength must be > 3");
+        if (value.length() > maxLength) {
+            return value.substring(0, maxLength - 3) + "...";
         } else {
             return value;
         }
@@ -57,14 +60,6 @@ public class StringUtils {
 
     public static String removeAllWhitespaces(String value) {
         return value.replaceAll("\\s+", "");
-    }
-
-    public static String abbreviate(String message, int maxChar) {
-        if (message.length() <= maxChar) {
-            return message;
-        }
-
-        return message.substring(0, maxChar - 3) + "...";
     }
 
     public static boolean containsIgnoreCase(String string, String searchString) {

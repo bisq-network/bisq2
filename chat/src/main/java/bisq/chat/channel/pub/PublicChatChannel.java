@@ -79,5 +79,4 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
                 .map(Pair::getFirst)
                 .collect(Collectors.toSet());
     }
-
 }

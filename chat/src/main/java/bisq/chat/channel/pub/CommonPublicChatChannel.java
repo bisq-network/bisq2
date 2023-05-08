@@ -80,4 +80,9 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
         commonPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return commonPublicChatChannel;
     }
+
+    @Override
+    public String getDisplayString() {
+        return Res.get(id + ".title");
+    }
 }

@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
@@ -110,7 +111,9 @@ public class ChannelSidebar {
             }
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
-            model.channelTitle.set(chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel));
+
+            ChatChannelService<?, ?, ?> chatChannelService = chatService.getChatChannelService(chatChannel);
+            model.channelTitle.set(chatChannelService.getChannelTitle(chatChannel));
 
             model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
                     .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())

@@ -59,7 +59,7 @@ public class DiscussionsController extends ChatController<DiscussionsView, Discu
         return new DiscussionsView(model,
                 this,
                 publicChannelSelection.getRoot(),
-                privateChannelSelection.getRoot(),
+                twoPartyPrivateChatChannelSelection.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
     }

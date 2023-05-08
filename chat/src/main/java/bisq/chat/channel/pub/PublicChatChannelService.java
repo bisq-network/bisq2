@@ -17,8 +17,10 @@
 
 package bisq.chat.channel.pub;
 
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
 import bisq.network.NetworkIdWithKeyPair;
@@ -116,6 +118,10 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return getChannels().stream().findFirst();
     }
 
+    @Override
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+        return "";
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
