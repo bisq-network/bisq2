@@ -58,7 +58,7 @@ import java.util.Optional;
 
 
 @Slf4j
-public abstract class BaseChatController<V extends BaseChatView, M extends BaseChatModel> extends NavigationController {
+public abstract class ChatController<V extends ChatView, M extends ChatModel> extends NavigationController {
     protected final ChatService chatService;
     @Getter
     protected final M model;
@@ -75,7 +75,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
-    public BaseChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(host);
 
         this.applicationService = applicationService;

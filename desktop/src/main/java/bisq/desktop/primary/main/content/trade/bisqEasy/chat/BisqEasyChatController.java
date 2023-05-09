@@ -36,7 +36,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.primary.main.content.chat.BaseChatController;
+import bisq.desktop.primary.main.content.chat.ChatController;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateTradeChatChannelSelection;
 import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChatChannelSelection;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
@@ -56,7 +56,7 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyChatController extends BaseChatController<BisqEasyChatView, BisqEasyChatModel> {
+public class BisqEasyChatController extends ChatController<BisqEasyChatView, BisqEasyChatModel> {
     private final BisqEasyChatChannelSelectionService bisqEasyChatChannelSelectionService;
     private final SettingsService settingsService;
     private final MediationService mediationService;
