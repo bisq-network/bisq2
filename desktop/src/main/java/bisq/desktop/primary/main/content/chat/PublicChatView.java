@@ -21,7 +21,7 @@ import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PublicChatView extends BaseChatView {
+public abstract class PublicChatView extends ChatView {
     public PublicChatView(PublicChatModel model,
                           PublicChatController<?, ?> controller,
                           Pane marketChannelSelection,

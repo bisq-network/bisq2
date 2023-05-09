@@ -36,7 +36,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, BaseChatController<?, ?>> {
+public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatController<?, ?>> {
     private final Label channelTitle;
     private final Button helpButton, channelInfoButton;
     protected final VBox left;
@@ -52,12 +52,12 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     private Subscription chatUserOverviewRootSubscription;
     private Subscription channelIconPin;
 
-    public BaseChatView(BaseChatModel model,
-                        BaseChatController<?, ?> controller,
-                        Pane publicChannelSelection,
-                        Pane twoPartyPrivateChatChannelSelection,
-                        Pane chatMessagesComponent,
-                        Pane channelSidebar) {
+    public ChatView(ChatModel model,
+                    ChatController<?, ?> controller,
+                    Pane publicChannelSelection,
+                    Pane twoPartyPrivateChatChannelSelection,
+                    Pane chatMessagesComponent,
+                    Pane channelSidebar) {
         super(new HBox(), model, controller);
 
         this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;

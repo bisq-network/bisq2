@@ -19,7 +19,7 @@ package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.BaseChatModel;
+import bisq.desktop.primary.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public class BisqEasyChatModel extends BaseChatModel {
+public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
     private final StringProperty actionButtonText = new SimpleStringProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
