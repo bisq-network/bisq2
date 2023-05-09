@@ -218,7 +218,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public Observable<UserIdentity> getSelectedUserIdentity() {
-        return persistableStore.getSelectedUserIdentity();
+        return persistableStore.getSelectedUserIdentityObservable();
     }
 
     public ObservableSet<UserIdentity> getUserIdentities() {
