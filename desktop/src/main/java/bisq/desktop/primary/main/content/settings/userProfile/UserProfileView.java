@@ -149,7 +149,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         });
 
         selectedChatUserIdentityPin = EasyBind.subscribe(model.getSelectedUserIdentity(),
-                userIdentity -> comboBox.getSelectionModel().select(model.getSelectedUserIdentity().get()));
+                userIdentity -> comboBox.getSelectionModel().select(userIdentity));
     }
 
     @Override
