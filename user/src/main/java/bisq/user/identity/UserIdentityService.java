@@ -159,7 +159,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public void selectChatUserIdentity(UserIdentity userIdentity) {
-        persistableStore.getSelectedUserIdentity().set(userIdentity);
+        persistableStore.setSelectedUserIdentity(userIdentity);
         persist();
     }
 
@@ -172,7 +172,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         synchronized (lock) {
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().add(newUserIdentity);
-            persistableStore.getSelectedUserIdentity().set(newUserIdentity);
+            persistableStore.setSelectedUserIdentity(newUserIdentity);
         }
         persist();
 
@@ -188,8 +188,8 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         synchronized (lock) {
             persistableStore.getUserIdentities().remove(userIdentity);
             persistableStore.getUserIdentities().stream().findAny()
-                    .ifPresentOrElse(e -> persistableStore.getSelectedUserIdentity().set(e),
-                            () -> persistableStore.getSelectedUserIdentity().set(null));
+                    .ifPresentOrElse(persistableStore::setSelectedUserIdentity,
+                            () -> persistableStore.setSelectedUserIdentity(null));
         }
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
         persist();
@@ -238,7 +238,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         UserIdentity userIdentity = new UserIdentity(identity, userProfile);
         synchronized (lock) {
             persistableStore.getUserIdentities().add(userIdentity);
-            persistableStore.getSelectedUserIdentity().set(userIdentity);
+            persistableStore.setSelectedUserIdentity(userIdentity);
         }
         newlyCreatedUserIdentity.set(userIdentity);
         userIdentityChangedFlag.set(userIdentityChangedFlag.get() + 1);
