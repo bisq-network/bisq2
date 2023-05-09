@@ -56,4 +56,21 @@ public class Observable<S> {
                 "\r\n     value=" + value +
                 "\r\n}";
     }
+
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Observable))
+            return false;
+
+        Observable<?> other = (Observable<?>) o;
+        if (value == null)
+            return other.value == null;
+
+        return value.equals(other.value);
+    }
+
+    public int hashCode() {
+        return value == null ? 0 : value.hashCode();
+    }
 }

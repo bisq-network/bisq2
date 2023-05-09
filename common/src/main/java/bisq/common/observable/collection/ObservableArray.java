@@ -111,4 +111,28 @@ public class ObservableArray<S> extends ObservableCollection<S> implements List<
     public void sort(Comparator<? super S> c) {
         getList().sort(c);
     }
+
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof ObservableArray))
+            return false;
+
+        ListIterator<S> s1 = listIterator();
+        ListIterator<?> s2 = ((ObservableArray<?>) o).listIterator();
+        while (s1.hasNext() && s2.hasNext()) {
+            S o1 = s1.next();
+            Object o2 = s2.next();
+            if (!(o1 == null ? o2 == null : o1.equals(o2)))
+                return false;
+        }
+        return !(s1.hasNext() || s2.hasNext());
+    }
+
+    public int hashCode() {
+        int hashCode = 1;
+        for (S s : this)
+            hashCode = 31 * hashCode + (s == null ? 0 : s.hashCode());
+        return hashCode;
+    }
 }

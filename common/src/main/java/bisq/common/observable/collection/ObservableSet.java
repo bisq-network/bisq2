@@ -38,4 +38,31 @@ public class ObservableSet<S> extends ObservableCollection<S> implements Set<S> 
     public Set<S> getSet() {
         return (Set<S>) collection;
     }
+
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+
+        if (!(o instanceof ObservableCollection))
+            return false;
+
+        ObservableCollection<?> c = (ObservableCollection<?>) o;
+        if (c.size() != size())
+            return false;
+
+        try {
+            return containsAll(c);
+        } catch (ClassCastException | NullPointerException unused) {
+            return false;
+        }
+    }
+
+    public int hashCode() {
+        int h = 0;
+        for (S obj : this) {
+            if (obj != null)
+                h += obj.hashCode();
+        }
+        return h;
+    }
 }
