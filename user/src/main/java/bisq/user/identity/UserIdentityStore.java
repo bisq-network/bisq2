@@ -26,6 +26,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,6 +47,11 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
                               Set<UserIdentity> userIdentities) {
         this.userIdentities = new ObservableSet<>(userIdentities);
         setSelectedUserIdentity(selectedUserIdentity);
+    }
+
+    @Nullable
+    public UserIdentity getSelectedUserIdentity() {
+        return selectedUserIdentityObservable.get();
     }
 
     public void setSelectedUserIdentity(UserIdentity selectedUserIdentity) {

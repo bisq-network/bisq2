@@ -49,6 +49,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class ReviewOfferController implements Controller {
     private final ReviewOfferModel model;
@@ -124,7 +126,7 @@ public class ReviewOfferController implements Controller {
         model.getShowCreateOfferSuccess().set(false);
         model.getShowTakeOfferSuccess().set(false);
 
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         BisqEasyOffer bisqEasyOffer = new BisqEasyOffer(StringUtils.createUid(),
                 model.getDirection(),
                 model.getMarket(),
@@ -172,7 +174,7 @@ public class ReviewOfferController implements Controller {
     }
 
     void onCreateOffer() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+        UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
         bisqEasyPublicChatChannelService.publishChatMessage(model.getMyOfferMessage(), userIdentity)
                 .thenAccept(result -> UIThread.run(() -> {
                     model.getShowCreateOfferSuccess().set(true);

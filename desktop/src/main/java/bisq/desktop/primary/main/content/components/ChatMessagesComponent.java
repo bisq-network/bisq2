@@ -180,7 +180,7 @@ public class ChatMessagesComponent {
                 List<UserIdentity> myUserProfilesInChannel = getMyUserProfilesInChannel();
                 if (myUserProfilesInChannel.size() > 0) {
                     UserIdentity lastUsedUserProfile = myUserProfilesInChannel.get(0);
-                    if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity().get())) {
+                    if (!lastUsedUserProfile.equals(userIdentityService.getSelectedUserIdentity())) {
                         new Popup().information(Res.get("chat.sendMessage.differentUserProfile.popup"))
                                 .closeButtonText(Res.get("no"))
                                 .actionButtonText(Res.get("yes"))
@@ -196,7 +196,7 @@ public class ChatMessagesComponent {
 
         private void doSendMessage(String text) {
             ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
-            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
             checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
             Optional<Citation> citation = citationBlock.getCitation();
 

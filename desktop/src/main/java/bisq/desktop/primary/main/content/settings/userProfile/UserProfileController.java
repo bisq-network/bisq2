@@ -69,7 +69,7 @@ public class UserProfileController implements Controller {
         userProfilesPin = FxBindings.<UserIdentity, UserIdentity>bind(model.getUserIdentities())
                 .to(userIdentityService.getUserIdentities());
 
-        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentity(),
+        selectedUserProfilePin = FxBindings.subscribe(userIdentityService.getSelectedUserIdentityObservable(),
                 userIdentity -> {
                     if (userIdentity != null) {
                         model.getSelectedUserIdentity().set(userIdentity);
@@ -97,7 +97,7 @@ public class UserProfileController implements Controller {
     }
 
     private void updateSaveButtonState() {
-        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+        UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
         if (userIdentity == null) {
             model.getSaveButtonDisabled().set(false);
             return;
@@ -133,7 +133,7 @@ public class UserProfileController implements Controller {
         userIdentityService.editUserProfile(model.getSelectedUserIdentity().get(), model.getTerms().get(), model.getStatement().get())
                 .thenAccept(result -> {
                     UIThread.runOnNextRenderFrame(() -> {
-                        UserIdentity value = userIdentityService.getSelectedUserIdentity().get();
+                        UserIdentity value = userIdentityService.getSelectedUserIdentity();
                         model.getSelectedUserIdentity().set(value);
                         updateSaveButtonState();
                     });
@@ -153,7 +153,7 @@ public class UserProfileController implements Controller {
     }
 
     private CompletableFuture<DataService.BroadCastDataResult> doDelete() {
-        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity().get())
+        return userIdentityService.deleteUserProfile(userIdentityService.getSelectedUserIdentity())
                 .whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         UIThread.run(() -> new Popup().error(throwable.getMessage()).show());

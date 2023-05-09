@@ -91,6 +91,7 @@ import java.util.function.Predicate;
 
 import static bisq.desktop.primary.main.content.components.ChatMessagesComponent.View.EDITED_POST_FIX;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ChatMessagesListView {
@@ -294,7 +295,7 @@ public class ChatMessagesListView {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
             userIdentityService.findUserIdentity(authorUserProfileId)
                     .ifPresent(authorUserIdentity -> {
-                        if (userIdentityService.getSelectedUserIdentity().get().equals(authorUserIdentity)) {
+                        if (checkNotNull(userIdentityService.getSelectedUserIdentity()).equals(authorUserIdentity)) {
                             doDeleteMessage(chatMessage, authorUserIdentity);
                         } else {
                             new Popup().information(Res.get("chat.deleteMessage.wrongUserProfile.popup"))
@@ -333,7 +334,7 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
             checkArgument(isMyMessage(chatMessage));
 
-            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity().get();
+            UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
                 chatService.getBisqEasyPublicChatChannelService().publishEditedChatMessage(bisqEasyPublicChatMessage, editedText, userIdentity);
             } else if (chatMessage instanceof CommonPublicChatMessage commonPublicChatMessage) {
