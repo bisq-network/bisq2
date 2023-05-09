@@ -58,25 +58,8 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService);
 
-            switch (chatChannelDomain) {
-                case BISQ_EASY:
-                    throw new RuntimeException("BISQ_EASY does not provide a CommonPublicChatChannelSelection");
-                case DISCUSSION:
-                    channelService = chatService.getDiscussionPublicChatChannelService();
-                    selectionService = chatService.getDiscussionChatChannelSelectionService();
-                    break;
-                case EVENTS:
-                    channelService = chatService.getEventsPublicChatChannelService();
-                    selectionService = chatService.getEventsChatChannelSelectionService();
-                    break;
-                case SUPPORT:
-                    channelService = chatService.getSupportPublicChatChannelService();
-                    selectionService = chatService.getSupportChatChannelSelectionService();
-                    break;
-                default:
-                    throw new RuntimeException("Unexpected chatChannelDomain");
-            }
-
+            channelService = chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
+            selectionService = chatService.getChatChannelSelectionServices().get(chatChannelDomain);
 
             model = new Model();
             view = new View(model, this);
@@ -99,13 +82,13 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
             super.onActivate();
 
             channelsPin = FxBindings.<CommonPublicChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
+                    .map(this::findOrCreateChannelItem)
                     .to(channelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(selectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (chatChannel instanceof CommonPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                                    model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
                                 } else if (chatChannel == null && !model.channelItems.isEmpty()) {
                                     model.selectedChannelItem.set(model.channelItems.get(0));
                                 } else {

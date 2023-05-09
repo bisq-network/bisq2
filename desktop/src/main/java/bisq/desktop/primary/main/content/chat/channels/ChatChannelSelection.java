@@ -38,6 +38,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -73,17 +75,6 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
             });
         }
 
-        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
-            UIThread.run(() -> {
-                int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
-                        .filter(this::isNotMyMessage)
-                        .filter(this::isAuthorNotIgnored)
-                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
-                        .count();
-                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
-            });
-        }
-
         @Override
         public void onDeactivate() {
             selectedChannelPin.unbind();
@@ -100,6 +91,25 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
 
         private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
             return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
+        }
+
+        protected ChatChannelSelection.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+            return getChannelSelectionModel().channelItems.stream()
+                    .filter(Objects::nonNull)
+                    .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))
+                    .findAny()
+                    .orElseGet(() -> new View.ChannelItem(chatChannel, chatService.findChatChannelService(chatChannel)));
+        }
+
+        protected void updateUnseenMessagesMap(ChatChannel<?> chatChannel) {
+            UIThread.run(() -> {
+                int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
+                        .filter(this::isNotMyMessage)
+                        .filter(this::isAuthorNotIgnored)
+                        .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
+                        .count();
+                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
+            });
         }
     }
 
@@ -118,7 +128,7 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
     @Slf4j
     public static abstract class View<M extends ChatChannelSelection.Model, C extends ChatChannelSelection.Controller> extends bisq.desktop.common.view.View<AnchorPane, M, C> {
         protected final ListView<ChannelItem> listView;
-        private final InvalidationListener channelsChangedListener;
+        private final InvalidationListener filteredListChangedListener;
         protected final HBox headerBox;
         protected Subscription listViewSelectedChannelSubscription, modelSelectedChannelSubscription;
         protected int adjustHeightCounter = 0;
@@ -138,12 +148,13 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
             listView.getStyleClass().add("channel-selection-list-view");
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
+            listView.setPrefHeight(40);
 
             VBox vBox = new VBox(10, headerBox, listView);
             Layout.pinToAnchorPane(vBox, 0, 0, 0, 0);
             root.getChildren().add(vBox);
 
-            channelsChangedListener = observable -> adjustHeight();
+            filteredListChangedListener = observable -> adjustHeight();
         }
 
         protected abstract String getHeadlineText();
@@ -156,8 +167,8 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
                             if (model.previousSelectedChannelItem != null) {
                                 model.previousSelectedChannelItem.setSelected(false);
                             }
-                            channelItem.setSelected(true);
                             model.previousSelectedChannelItem = channelItem;
+                            channelItem.setSelected(true);
                             controller.onSelected(channelItem);
                         }
                     });
@@ -169,12 +180,12 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
                             if (model.previousSelectedChannelItem != null) {
                                 model.previousSelectedChannelItem.setSelected(false);
                             }
-                            channelItem.setSelected(true);
                             model.previousSelectedChannelItem = channelItem;
+                            channelItem.setSelected(true);
                             listView.getSelectionModel().select(channelItem);
                         }
                     });
-            model.sortedList.addListener(channelsChangedListener);
+            model.filteredList.addListener(filteredListChangedListener);
 
             adjustHeightCounter = 0;
             adjustHeight();
@@ -184,7 +195,7 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
         protected void onViewDetached() {
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
-            model.sortedList.removeListener(channelsChangedListener);
+            model.channelItems.removeListener(filteredListChangedListener);
         }
 
         protected abstract ListCell<ChannelItem> getListCell();
@@ -200,14 +211,14 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
                     adjustHeightCounter = 10;
                 } else {
                     if (!listView.getItems().isEmpty() && adjustHeightCounter < 10) {
-                        UIThread.run(this::adjustHeight);
+                        UIThread.runOnNextRenderFrame(this::adjustHeight);
                     }
                 }
             });
         }
 
         protected void updateCell(ListCell<ChannelItem> cell, ChannelItem item, Label label, ImageView iconImageView) {
-            label.setText(item.getDisplayString().toUpperCase());
+            label.setText(item.getChannelTitle().toUpperCase());
 
             if (item.getIconId() != null) {
                 if (item.isSelected) {
@@ -259,6 +270,7 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
             });
         }
 
+        //todo create ChannelItems specific to channels
         @EqualsAndHashCode(onlyExplicitlyIncluded = true)
         @Getter
         static class ChannelItem {
@@ -266,22 +278,33 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
             private final String channelId;
             private final ChatChannelDomain chatChannelDomain;
             private final ChatChannel<?> chatChannel;
-            private final String displayString;
+            private final String channelTitle;
             private final String iconId;
             private final String iconIdHover;
             private final String iconIdSelected;
 
             private boolean isSelected;
 
-            public ChannelItem(ChatChannel<?> chatChannel, ChatChannelService<?, ?, ?> chatChannelService) {
-                this.chatChannel = chatChannel;
-                chatChannelDomain = chatChannel.getChatChannelDomain();
-                channelId = chatChannel.getId();
-                displayString = chatChannelService.getChannelTitle(chatChannel);
-                String styleToken = channelId.replace(".", "-");
-                iconIdSelected = "channels-" + styleToken;
-                iconIdHover = "channels-" + styleToken + "-white";
-                iconId = "channels-" + styleToken + "-grey";
+            public ChannelItem(ChatChannel<?> chatChannel, Optional<ChatChannelService<?, ?, ?>> chatChannelService) {
+                if (chatChannelService.isPresent()) {
+                    this.chatChannel = chatChannel;
+                    chatChannelDomain = chatChannel.getChatChannelDomain();
+                    channelId = chatChannel.getId();
+                    channelTitle = chatChannelService.get().getChannelTitle(chatChannel);
+                    String styleToken = channelId.replace(".", "-");
+                    iconIdSelected = "channels-" + styleToken;
+                    iconIdHover = "channels-" + styleToken + "-white";
+                    iconId = "channels-" + styleToken + "-grey";
+                } else {
+                    this.chatChannel = null;
+                    chatChannelDomain = null;
+                    channelId = "";
+                    channelTitle = "";
+                    String styleToken = "";
+                    iconIdSelected = "channels-" + styleToken;
+                    iconIdHover = "channels-" + styleToken + "-white";
+                    iconId = "channels-" + styleToken + "-grey";
+                }
             }
 
             public void setSelected(boolean selected) {

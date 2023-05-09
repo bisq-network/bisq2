@@ -41,7 +41,7 @@ public class WalletTransactionListItem implements TableItem {
     private final int confirmations;
 
     public WalletTransactionListItem(Transaction transaction) {
-        date = transaction.getDate().orElse(new Date());
+        date = transaction.getDate().orElseGet(Date::new);
         dateAsString = DateFormatter.formatDateTime(date);
         txId = transaction.getTxId();
         amount = transaction.getAmount();

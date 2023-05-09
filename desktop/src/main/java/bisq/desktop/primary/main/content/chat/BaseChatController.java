@@ -27,6 +27,7 @@ import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
+import bisq.common.observable.collection.ObservableArray;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
@@ -50,7 +51,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -69,7 +72,7 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     protected final ChannelSidebar channelSidebar;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
-    protected Pin selectedChannelPin;
+    protected Pin selectedChannelPin, twoPartyPrivateChatChannelsPin;
     private Subscription searchTextPin;
 
     public BaseChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
@@ -88,13 +91,13 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         });
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
-        createDependencies();
+        createDependencies(chatChannelDomain);
 
         model = getChatModel(chatChannelDomain);
         view = getChatView();
     }
 
-    public abstract void createDependencies();
+    public abstract void createDependencies(ChatChannelDomain chatChannelDomain);
 
     public abstract M getChatModel(ChatChannelDomain chatChannelDomain);
 
@@ -131,22 +134,32 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
                 chatMessagesComponent.setSearchPredicate(item -> item.match(searchText));
             }
         });
+
+        ObservableArray<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = chatService.getTwoPartyPrivateChatChannelServices().get(model.getChatChannelDomain()).getChannels();
+        twoPartyPrivateChatChannelsPin = twoPartyPrivateChatChannels.addListener(() -> {
+            model.getIsTwoPartyPrivateChatChannelSelectionVisible().set(!twoPartyPrivateChatChannels.isEmpty());
+        });
     }
 
     @Override
     public void onDeactivate() {
         selectedChannelPin.unbind();
         searchTextPin.unsubscribe();
+        twoPartyPrivateChatChannelsPin.unbind();
     }
 
-    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+    protected void chatChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         UIThread.run(() -> {
             model.getSearchText().set("");
 
-            model.getSelectedChannelAsString().set(chatChannel != null ? chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel) : "");
-            model.getSelectedChannel().set(chatChannel);
+            model.getChannelTitle().set(chatService.findChatChannelService(chatChannel)
+                    .map(service -> service.getChannelTitle(Objects.requireNonNull(chatChannel)))
+                    .orElse(""));
+            model.selectedChannelProperty().set(chatChannel);
 
-            if (model.getChannelSidebarVisible().get()) {
+            if (chatChannel == null) {
+                doCloseSideBar();
+            } else if (model.getChannelSidebarVisible().get()) {
                 cleanupChannelInfo();
                 showChannelInfo();
             }
@@ -169,20 +182,14 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
     }
 
     public void onCloseSideBar() {
-        model.getSideBarVisible().set(false);
-        model.getSideBarWidth().set(0);
-        model.getChannelSidebarVisible().set(false);
-        model.getSideBarChanged().set(!model.getSideBarChanged().get());
-
-        cleanupChatUserDetails();
-        cleanupChannelInfo();
+        doCloseSideBar();
     }
 
     public void showChannelInfo() {
-        channelSidebar.setChannel(model.getSelectedChannel().get());
+        channelSidebar.setChannel(model.getSelectedChannel());
         channelSidebar.setOnUndoIgnoreChatUser(() -> {
             chatMessagesComponent.refreshMessages();
-            channelSidebar.setChannel(model.getSelectedChannel().get());
+            channelSidebar.setChannel(model.getSelectedChannel());
         });
     }
 
@@ -221,5 +228,15 @@ public abstract class BaseChatController<V extends BaseChatView, M extends BaseC
         iconButton.setScaleX(1.25);
         iconButton.setScaleY(1.25);
         model.getChannelIcon().set(iconButton);
+    }
+
+    protected void doCloseSideBar() {
+        model.getSideBarVisible().set(false);
+        model.getSideBarWidth().set(0);
+        model.getChannelSidebarVisible().set(false);
+        model.getSideBarChanged().set(!model.getSideBarChanged().get());
+
+        cleanupChatUserDetails();
+        cleanupChannelInfo();
     }
 }

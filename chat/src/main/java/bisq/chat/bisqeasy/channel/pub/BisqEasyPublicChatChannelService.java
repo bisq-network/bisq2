@@ -58,18 +58,23 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                                             UserProfileService userProfileService) {
         super(networkService, userIdentityService, userProfileService, ChatChannelDomain.BISQ_EASY);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+
+        getVisibleChannelIds().addListener(() -> {
+            numVisibleChannels.set(getVisibleChannelIds().size());
+        });
     }
 
+    @Override
+    public void onPersistedApplied(BisqEasyPublicChatChannelStore persisted) {
+    }
 
     public void showChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
-    public void hidePublicTradeChannel(BisqEasyPublicChatChannel channel) {
+    public void hideChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
-        numVisibleChannels.set(getVisibleChannelIds().size());
         persist();
     }
 
@@ -119,6 +124,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     @Override
     public void leaveChannel(BisqEasyPublicChatChannel channel) {
         //todo
+        log.error("leaveChannel");
     }
 
     public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {

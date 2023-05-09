@@ -41,8 +41,9 @@ public class BisqEasyChatView extends BaseChatView {
 
     // Trade helpers
     private final Button completeTradeButton, openDisputeButton;
-    private final VBox tradeHelpers, completeTradeButtonWrapper;
+    private final VBox bottomVbox;
     private final Tooltip completeTradeTooltip;
+    private final Pane bisqEasyPrivateTradeChatChannelSelection;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -57,6 +58,8 @@ public class BisqEasyChatView extends BaseChatView {
                 twoPartyPrivateChatChannelSelection,
                 chatMessagesComponent,
                 channelSidebar);
+
+        this.bisqEasyPrivateTradeChatChannelSelection = bisqEasyPrivateTradeChatChannelSelection;
 
         left.getChildren().add(1, Layout.separator());
         left.getChildren().add(2, bisqEasyPrivateTradeChatChannelSelection);
@@ -77,12 +80,12 @@ public class BisqEasyChatView extends BaseChatView {
         left.getChildren().add(createOfferButton);
 
         completeTradeButton = new Button(Res.get("completeTrade"));
-        completeTradeButtonWrapper = new VBox(completeTradeButton);
+        VBox completeTradeButtonWrapper = new VBox(completeTradeButton);
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
         decorateButton(completeTradeButton);
         decorateButton(openDisputeButton);
-        tradeHelpers = new VBox(completeTradeButtonWrapper, openDisputeButton);
-        left.getChildren().add(tradeHelpers);
+        bottomVbox = new VBox(completeTradeButtonWrapper, openDisputeButton);
+        left.getChildren().add(bottomVbox);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -97,17 +100,6 @@ public class BisqEasyChatView extends BaseChatView {
         });
 
         completeTradeTooltip = new Tooltip("");
-        installTooltip();
-    }
-
-    private void decorateButton(Button button) {
-        button.getStyleClass().add("default-button");
-        button.setMaxWidth(Double.MAX_VALUE);
-        button.setMinHeight(37);
-        VBox.setMargin(button, new Insets(-2, 25, 17, 25));
-    }
-
-    public void installTooltip() {
         Tooltip.install(completeTradeButtonWrapper, completeTradeTooltip);
         completeTradeButton.setTooltip(completeTradeTooltip);
         completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
@@ -126,9 +118,11 @@ public class BisqEasyChatView extends BaseChatView {
         openDisputeButton.disableProperty().bind(bisqEasyChatModel.getOpenDisputeDisabled());
         completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
         openDisputeButton.setOnAction(e -> bisqEasyChatController.onOpenMediation());
-        tradeHelpers.visibleProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
-        tradeHelpers.managedProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
+        bottomVbox.visibleProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
+        bottomVbox.managedProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
         completeTradeTooltip.textProperty().bind(bisqEasyChatModel.getCompleteTradeTooltip());
+        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().bind(bisqEasyChatModel.getIsBisqEasyPrivateTradeChannelSelectionVisible());
+        bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyChatModel.getIsBisqEasyPrivateTradeChannelSelectionVisible());
 
         toggleOffersButton.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
@@ -146,10 +140,20 @@ public class BisqEasyChatView extends BaseChatView {
         completeTradeButton.setOnAction(null);
         openDisputeButton.disableProperty().unbind();
         openDisputeButton.setOnAction(null);
-        tradeHelpers.visibleProperty().unbind();
-        tradeHelpers.managedProperty().unbind();
+        bottomVbox.visibleProperty().unbind();
+        bottomVbox.managedProperty().unbind();
         completeTradeTooltip.textProperty().unbind();
+        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().unbind();
+        bisqEasyPrivateTradeChatChannelSelection.managedProperty().unbind();
 
         toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
+
+    private void decorateButton(Button button) {
+        button.getStyleClass().add("default-button");
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setMinHeight(37);
+        VBox.setMargin(button, new Insets(-2, 25, 17, 25));
+    }
+
 }

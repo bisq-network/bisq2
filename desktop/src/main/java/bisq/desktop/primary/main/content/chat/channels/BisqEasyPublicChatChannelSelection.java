@@ -97,7 +97,7 @@ public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<Bis
         protected Controller(DefaultApplicationService applicationService) {
             super(applicationService);
 
-            bisqEasyPublicChatChannelService = applicationService.getChatService().getBisqEasyPublicChatChannelService();
+            bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
             bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
 
@@ -128,14 +128,14 @@ public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<Bis
         public void onActivate() {
             super.onActivate();
 
-            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChatChannelSelection.View.ChannelItem::getDisplayString));
+            getChannelSelectionModel().sortedList.setComparator(Comparator.comparing(ChatChannelSelection.View.ChannelItem::getChannelTitle));
             channelsPin = FxBindings.<BisqEasyPublicChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
+                    .map(this::findOrCreateChannelItem)
                     .to(bisqEasyPublicChatChannelService.getChannels());
             selectedChannelPin = FxBindings.subscribe(bisqEasyChatChannelSelectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> {
                                 if (chatChannel instanceof BisqEasyPublicChatChannel) {
-                                    model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
+                                    model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
                                 } else {
                                     model.selectedChannelItem.set(null);
                                 }
@@ -198,7 +198,7 @@ public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<Bis
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
-                bisqEasyPublicChatChannelService.hidePublicTradeChannel(channel);
+                bisqEasyPublicChatChannelService.hideChannel(channel);
 
                 model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
                 if (!model.sortedList.isEmpty()) {
@@ -263,6 +263,8 @@ public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<Bis
 
         @Override
         protected void onViewDetached() {
+            super.onViewDetached();
+
             addChannelIcon.setOnMouseClicked(null);
         }
 
@@ -364,7 +366,7 @@ public class BisqEasyPublicChatChannelSelection extends ChatChannelSelection<Bis
                         List<ImageView> icons = marketImageCompositionPair.getSecond();
                         label.setGraphic(iconPane);
                         label.setGraphicTextGap(8);
-                        label.setText(item.getDisplayString());
+                        label.setText(item.getChannelTitle());
                         widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
                             if (w.doubleValue() > 0) {
                                 label.setPrefWidth(getWidth() - 60);

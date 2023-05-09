@@ -35,38 +35,38 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
+public abstract class PublicChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
     protected ChatChannelSelectionService chatChannelSelectionService;
     protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChatChannelSelection<?, ?, ?> publicChatChannelSelection;
 
-    public ChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
+    public PublicChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(applicationService, chatChannelDomain, host);
     }
 
     @Override
-    public void createDependencies() {
-        commonPublicChatChannelService = getPublicChannelService();
-        chatChannelSelectionService = getChannelSelectionService();
-        publicChatChannelSelection = getPublicChannelSelection();
+    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+        commonPublicChatChannelService = getPublicChannelService(chatChannelDomain);
+        chatChannelSelectionService = getChannelSelectionService(chatChannelDomain);
+        publicChatChannelSelection = getPublicChannelSelection(chatChannelDomain);
     }
 
-    abstract public ChatChannelSelectionService getChannelSelectionService();
+    abstract public ChatChannelSelectionService getChannelSelectionService(ChatChannelDomain chatChannelDomain);
 
-    abstract public CommonPublicChatChannelService getPublicChannelService();
+    abstract public CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain);
 
-    abstract public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection();
+    abstract public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain);
 
     @Override
     public void onActivate() {
         super.onActivate();
 
-        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::handleChannelChange);
+        selectedChannelPin = chatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
     }
 
     @Override
-    protected void handleChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
-        super.handleChannelChange(chatChannel);
+    protected void chatChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.chatChannelChanged(chatChannel);
 
         UIThread.run(() -> {
             if (chatChannel == null) {

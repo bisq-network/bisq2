@@ -2,6 +2,7 @@ package bisq.restApi.endpoints;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.restApi.RestApiApplication;
 import bisq.restApi.dto.BisqEasyPublicChatChannelDto;
 import bisq.restApi.dto.CommonPublicChatChannelDto;
@@ -45,7 +46,7 @@ public class ChatApi {
                     )}
     )
     public List<CommonPublicChatChannelDto> getPublicDiscussionChannels() {
-        return chatService.getDiscussionPublicChatChannelService().getChannels().stream()
+        return chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.DISCUSSION).getChannels().stream()
                 .map(chatChannel -> CommonPublicChatChannelDto.from(chatService, chatChannel))
                 .collect(Collectors.toList());
     }

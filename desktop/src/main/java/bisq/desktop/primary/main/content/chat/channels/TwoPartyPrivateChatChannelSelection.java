@@ -58,6 +58,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelService, ChatChannelSelectionService> {
     private final Controller controller;
@@ -79,16 +81,16 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
         @Getter
         private final View view;
         private final UserIdentityService userIdentityService;
-        private final TwoPartyPrivateChatChannelService twoPartyPrivateChatChannelService;
+        private final TwoPartyPrivateChatChannelService channelService;
         private final ChatChannelSelectionService channelSelectionService;
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService);
             userIdentityService = applicationService.getUserService().getUserIdentityService();
-            twoPartyPrivateChatChannelService = chatService.getTwoPartyPrivateChatChannelService(chatChannelDomain);
+            channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
             channelSelectionService = chatService.getChatChannelSelectionService(chatChannelDomain);
 
-            model = new Model(chatChannelDomain);
+            model = new Model();
             view = new View(model, this);
 
             model.filteredList.setPredicate(item -> true);
@@ -101,7 +103,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
 
         @Override
         protected ChatChannelService<?, ?, ?> getChannelService() {
-            return twoPartyPrivateChatChannelService;
+            return channelService;
         }
 
         @Override
@@ -109,14 +111,14 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
             super.onActivate();
 
             channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)))
-                    .to(twoPartyPrivateChatChannelService.getChannels());
+                    .map(this::findOrCreateChannelItem)
+                    .to(channelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(channelSelectionService.getSelectedChannel(),
                     chatChannel -> {
-                        if (chatChannel instanceof TwoPartyPrivateChatChannel) {
-                            model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, chatService.getChatChannelService(chatChannel)));
-                            userIdentityService.selectChatUserIdentity(((TwoPartyPrivateChatChannel) chatChannel).getMyUserIdentity());
+                        if (chatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
+                            model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
+                            userIdentityService.selectChatUserIdentity(twoPartyPrivateChatChannel.getMyUserIdentity());
                         } else {
                             model.selectedChannelItem.set(null);
                         }
@@ -144,25 +146,21 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
             new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
                     .closeButtonText(Res.get("cancel"))
                     .actionButtonText(Res.get("social.privateChannel.leave"))
-                    .onAction(() -> doLeaveChannel(privateChatChannel))
+                    .onAction(() -> doLeaveChannel((TwoPartyPrivateChatChannel) privateChatChannel))
                     .show();
         }
 
-        public void doLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
-            ChatChannelSelectionService chatChannelSelectionService = chatService.getChatChannelSelectionService(model.chatChannelDomain);
-            twoPartyPrivateChatChannelService.leaveChannel((TwoPartyPrivateChatChannel) privateChatChannel);
+        public void doLeaveChannel(TwoPartyPrivateChatChannel privateChatChannel) {
+            channelService.leaveChannel(privateChatChannel);
             model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                     .findFirst()
-                    .ifPresentOrElse(e -> chatChannelSelectionService.selectChannel(e.getChatChannel()),
-                            () -> chatChannelSelectionService.selectChannel(null));
+                    .ifPresentOrElse(e -> channelSelectionService.selectChannel(e.getChatChannel()),
+                            () -> channelSelectionService.selectChannel(null));
         }
     }
 
     protected static class Model extends ChatChannelSelection.Model {
-        private final ChatChannelDomain chatChannelDomain;
-
-        public Model(ChatChannelDomain chatChannelDomain) {
-            this.chatChannelDomain = chatChannelDomain;
+        public Model() {
         }
     }
 
@@ -267,19 +265,15 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
                     PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    if (privateChatChannel instanceof TwoPartyPrivateChatChannel) {
-                        TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
-                        peer = twoPartyPrivateChatChannel.getPeer();
-                        roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
-                        Tooltip.install(this, tooltip);
-                        icons.add(roboIcon);
-                    } else {
-                        throw new RuntimeException("privateChannel expected to be " +
-                                "PrivateTwoPartyChannel");
-                    }
+                    checkArgument(privateChatChannel instanceof TwoPartyPrivateChatChannel);
+                    TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
+                    peer = twoPartyPrivateChatChannel.getPeer();
+                    roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
+                    Tooltip.install(this, tooltip);
+                    icons.add(roboIcon);
 
                     hBox.getChildren().clear();
-                    label.setText(item.getDisplayString());
+                    label.setText(item.getChannelTitle());
                     tooltip.setText(peer.getTooltipString());
                     hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
                     widthSubscription = EasyBind.subscribe(widthProperty(), w -> {

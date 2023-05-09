@@ -21,7 +21,6 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
@@ -47,6 +46,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -64,7 +64,7 @@ public class ChannelSidebar {
         return controller.view.getRoot();
     }
 
-    public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         controller.setChannel(chatChannel);
     }
 
@@ -98,7 +98,7 @@ public class ChannelSidebar {
         public void onDeactivate() {
         }
 
-        void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
             notificationsSidebar.setChannel(chatChannel);
 
             if (chatChannel == null) {
@@ -112,8 +112,9 @@ public class ChannelSidebar {
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
 
-            ChatChannelService<?, ?, ?> chatChannelService = chatService.getChatChannelService(chatChannel);
-            model.channelTitle.set(chatChannelService.getChannelTitle(chatChannel));
+            model.channelTitle.set(chatService.findChatChannelService(chatChannel)
+                    .map(service -> service.getChannelTitle(chatChannel))
+                    .orElse(""));
 
             model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
                     .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())

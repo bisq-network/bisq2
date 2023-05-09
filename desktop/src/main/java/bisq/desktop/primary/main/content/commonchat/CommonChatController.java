@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.discussion;
+package bisq.desktop.primary.main.content.commonchat;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannelDomain;
@@ -23,40 +23,40 @@ import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.ChatController;
+import bisq.desktop.primary.main.content.chat.PublicChatController;
 import bisq.desktop.primary.main.content.chat.channels.CommonPublicChatChannelSelection;
 import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DiscussionsController extends ChatController<DiscussionsView, DiscussionsModel> implements Controller {
-    public DiscussionsController(DefaultApplicationService applicationService) {
-        super(applicationService, ChatChannelDomain.DISCUSSION, NavigationTarget.NONE);
+public class CommonChatController extends PublicChatController<CommonChatView, CommonChatModel> implements Controller {
+    public CommonChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+        super(applicationService, chatChannelDomain, NavigationTarget.NONE);
     }
 
     @Override
-    public ChatChannelSelectionService getChannelSelectionService() {
-        return chatService.getDiscussionChatChannelSelectionService();
+    public ChatChannelSelectionService getChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+        return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
     }
 
     @Override
-    public CommonPublicChatChannelService getPublicChannelService() {
-        return chatService.getDiscussionPublicChatChannelService();
+    public CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain) {
+        return chatService.getCommonPublicChatChannelServices().get(chatChannelDomain);
     }
 
     @Override
-    public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection() {
-        return new CommonPublicChatChannelSelection(applicationService, ChatChannelDomain.DISCUSSION);
+    public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain) {
+        return new CommonPublicChatChannelSelection(applicationService, chatChannelDomain);
     }
 
     @Override
-    public DiscussionsModel getChatModel(ChatChannelDomain chatChannelDomain) {
-        return new DiscussionsModel(chatChannelDomain);
+    public CommonChatModel getChatModel(ChatChannelDomain chatChannelDomain) {
+        return new CommonChatModel(chatChannelDomain);
     }
 
     @Override
-    public DiscussionsView getChatView() {
-        return new DiscussionsView(model,
+    public CommonChatView getChatView() {
+        return new CommonChatView(model,
                 this,
                 publicChatChannelSelection.getRoot(),
                 twoPartyPrivateChatChannelSelection.getRoot(),

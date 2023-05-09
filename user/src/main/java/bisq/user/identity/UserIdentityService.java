@@ -210,7 +210,7 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
     }
 
     public boolean hasUserIdentities() {
-        return getUserIdentities().isEmpty();
+        return !getUserIdentities().isEmpty();
     }
 
     public boolean hasMultipleUserIdentities() {

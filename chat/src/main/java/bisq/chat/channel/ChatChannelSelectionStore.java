@@ -38,7 +38,7 @@ public final class ChatChannelSelectionStore implements PersistableStore<ChatCha
     public ChatChannelSelectionStore() {
     }
 
-    private ChatChannelSelectionStore(String selectedChannelId) {
+    private ChatChannelSelectionStore(@Nullable String selectedChannelId) {
         this.selectedChannelId = selectedChannelId;
     }
 

@@ -114,19 +114,21 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
             super.onActivate();
 
             channelsPin = FxBindings.<BisqEasyPrivateTradeChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(chatChannel -> new ChatChannelSelection.View.ChannelItem(chatChannel, channelService))
+                    .map(this::findOrCreateChannelItem)
                     .to(channelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(channelSelectionService.getSelectedChannel(),
                     chatChannel -> {
                         if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
                             BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                            model.selectedChannelItem.set(new ChatChannelSelection.View.ChannelItem(chatChannel, channelService));
+                            model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
                             userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
                             if (inMediationPin != null) {
                                 inMediationPin.unbind();
                             }
                             inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.getIsInMediation());
+                        } else {
+                            model.selectedChannelItem.set(null);
                         }
                     });
         }
@@ -160,7 +162,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
         }
 
         public void doLeaveChannel(BisqEasyPrivateTradeChatChannel privateChatChannel) {
-            channelService.leaveChannel((BisqEasyPrivateTradeChatChannel) privateChatChannel);
+            channelService.leaveChannel(privateChatChannel);
             model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                     .findFirst()
                     .ifPresentOrElse(e -> channelSelectionService.selectChannel(e.getChatChannel()),
@@ -168,7 +170,9 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
         }
 
         public String getChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {
-            return chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
+            return chatService.findChatChannelService(chatChannel)
+                    .map(service -> service.getChannelTitle(chatChannel))
+                    .orElse("");
         }
     }
 
@@ -289,10 +293,10 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
                         return;
                     }
 
-                    BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
+                    BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    List<UserProfile> peers = bisqEasyPrivateTradeChatChannel.getPeers();
+                    List<UserProfile> peers = privateChatChannel.getPeers();
                     peer = peers.get(0);
                     roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                     Tooltip.install(this, tooltip);
@@ -301,23 +305,23 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
                     if (inMediationPin != null) {
                         inMediationPin.unbind();
                     }
-                    inMediationPin = bisqEasyPrivateTradeChatChannel.getIsInMediation().addObserver(e ->
+                    inMediationPin = privateChatChannel.getIsInMediation().addObserver(e ->
                     {
                         UIThread.run(() -> {
                             hBox.getChildren().clear();
                             hBox.getChildren().add(roboIcon);
 
-                            if (bisqEasyPrivateTradeChatChannel.findMediator().isPresent() &&
-                                    bisqEasyPrivateTradeChatChannel.getIsInMediation().get()) {
-                                if (bisqEasyPrivateTradeChatChannel.isMediator()) {
+                            if (privateChatChannel.findMediator().isPresent() &&
+                                    privateChatChannel.getIsInMediation().get()) {
+                                if (privateChatChannel.isMediator()) {
                                     // We are the mediator
-                                    UserProfile trader1 = bisqEasyPrivateTradeChatChannel.getPeer();
-                                    UserProfile trader2 = bisqEasyPrivateTradeChatChannel.getPeers().get(1);
+                                    UserProfile trader1 = privateChatChannel.getPeer();
+                                    UserProfile trader2 = privateChatChannel.getPeers().get(1);
                                     roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
                                     secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
                                     tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
                                 } else {
-                                    UserProfile mediator = bisqEasyPrivateTradeChatChannel.findMediator().get();
+                                    UserProfile mediator = privateChatChannel.findMediator().get();
                                     secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
                                     tooltip.setText(peer.getTooltipString() + "\n\n" +
                                             Res.get("mediator") + ":\n" + mediator.getTooltipString());
@@ -327,7 +331,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
                             } else {
                                 tooltip.setText(peer.getTooltipString());
                             }
-                            label.setText(controller.getChannelTitle(bisqEasyPrivateTradeChatChannel));
+                            label.setText(controller.getChannelTitle(privateChatChannel));
 
                             hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
 
@@ -346,7 +350,7 @@ public class BisqEasyPrivateTradeChatChannelSelection extends ChatChannelSelecti
                         });
                     });
                     removeIcon.setOpacity(0);
-                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPrivateTradeChatChannel));
+                    removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));
                     setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
                     setOnMouseEntered(e -> {
                         Transitions.fadeIn(removeIcon);

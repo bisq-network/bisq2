@@ -29,7 +29,9 @@ public final class CommonPublicChatChannelDto {
         CommonPublicChatChannelDto dto = new CommonPublicChatChannelDto();
         dto.id = chatChannel.getId();
         dto.chatChannelDomain = chatChannel.getChatChannelDomain();
-        dto.channelTitle = chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
+        dto.channelTitle = chatService.findChatChannelService(chatChannel)
+                .map(service -> service.getChannelTitle(chatChannel))
+                .orElse("");
         dto.description = chatChannel.getDescription();
         dto.channelAdminId = chatChannel.getChannelAdminId();
         dto.channelModeratorIds = chatChannel.getChannelModeratorIds();

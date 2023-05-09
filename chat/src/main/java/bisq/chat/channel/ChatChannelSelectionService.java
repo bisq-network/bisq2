@@ -66,21 +66,21 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
 
     @Override
     public void onPersistedApplied(ChatChannelSelectionStore persisted) {
-        applyPersistedSelectedChannel();
+        applySelectedChannel();
     }
 
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof PublicChatChannel) {
-            publicChatChannelService.removeExpiredMessages((PublicChatChannel<?>) chatChannel);
+            publicChatChannelService.removeExpiredMessages(chatChannel);
         }
 
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
-        applyPersistedSelectedChannel();
+        applySelectedChannel();
     }
 
-    protected void applyPersistedSelectedChannel() {
+    protected void applySelectedChannel() {
         selectedChannel.set(getAllChatChannels()
                 .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
                 .findAny()

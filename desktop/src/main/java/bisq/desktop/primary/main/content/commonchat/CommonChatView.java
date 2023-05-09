@@ -15,24 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.chat;
+package bisq.desktop.primary.main.content.commonchat;
 
-import bisq.chat.channel.ChatChannelDomain;
-import bisq.desktop.common.view.NavigationTarget;
-import lombok.Getter;
+import bisq.desktop.primary.main.content.chat.PublicChatView;
+import javafx.scene.layout.Pane;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Getter
-public abstract class ChatModel extends BaseChatModel {
-    protected final ChatChannelDomain chatChannelDomain;
-
-    public ChatModel(ChatChannelDomain chatChannelDomain) {
-        this.chatChannelDomain = chatChannelDomain;
-    }
-
-    @Override
-    public NavigationTarget getDefaultNavigationTarget() {
-        return NavigationTarget.NONE;
+public class CommonChatView extends PublicChatView {
+    public CommonChatView(CommonChatModel model,
+                          CommonChatController controller,
+                          Pane marketChannelSelection,
+                          Pane privateChannelSelection,
+                          Pane chatMessagesComponent,
+                          Pane channelInfo) {
+        super(model,
+                controller,
+                marketChannelSelection,
+                privateChannelSelection,
+                chatMessagesComponent,
+                channelInfo);
     }
 }

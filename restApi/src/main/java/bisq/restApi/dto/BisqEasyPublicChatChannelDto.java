@@ -25,7 +25,9 @@ public final class BisqEasyPublicChatChannelDto {
         BisqEasyPublicChatChannelDto dto = new BisqEasyPublicChatChannelDto();
         dto.channelId = chatChannel.getId();
         dto.description = chatChannel.getDescription();
-        dto.channelTitle = chatService.getChatChannelService(chatChannel).getChannelTitle(chatChannel);
+        dto.channelTitle = chatService.findChatChannelService(chatChannel)
+                .map(service -> service.getChannelTitle(chatChannel))
+                .orElse("");
         dto.marketDto = MarketDto.from(chatChannel.getMarket());
         return dto;
     }
