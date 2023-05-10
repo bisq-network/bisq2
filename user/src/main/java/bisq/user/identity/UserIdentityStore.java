@@ -22,6 +22,7 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.user.protobuf.User;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,8 +45,14 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     private UserIdentityStore(UserIdentity selectedUserIdentity,
                               Set<UserIdentity> userIdentities) {
-        this.selectedUserIdentity.set(selectedUserIdentity);
         this.userIdentities = new ObservableSet<>(userIdentities);
+        setSelectedUserIdentity(selectedUserIdentity);
+    }
+
+    public void setSelectedUserIdentity(UserIdentity selectedUserIdentity) {
+        this.selectedUserIdentity.set(userIdentities.stream()
+                .filter(userIdentity -> userIdentity.equals(selectedUserIdentity))
+                .findAny().orElse(null));
     }
 
     @Override
@@ -81,7 +88,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
-        selectedUserIdentity.set(persisted.getSelectedUserIdentity().get());
         userIdentities.addAll(persisted.getUserIdentities());
+        setSelectedUserIdentity(persisted.getSelectedUserIdentity().get());
     }
 }
