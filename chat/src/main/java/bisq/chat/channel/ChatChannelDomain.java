@@ -19,9 +19,10 @@ package bisq.chat.channel;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.util.ProtobufUtils;
+import bisq.i18n.Res;
 
 public enum ChatChannelDomain implements ProtoEnum {
-    TRADE,
+    BISQ_EASY,
     DISCUSSION,
     EVENTS,
     SUPPORT;
@@ -33,5 +34,9 @@ public enum ChatChannelDomain implements ProtoEnum {
 
     public static ChatChannelDomain fromProto(bisq.chat.protobuf.ChatChannelDomain proto) {
         return ProtobufUtils.enumFromProto(ChatChannelDomain.class, proto.name());
+    }
+
+    public String getDisplayString() {
+        return Res.get("chat.channelDomain." + name());
     }
 }

@@ -33,18 +33,20 @@ import java.util.HashSet;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
-    public static String getChannelName(Market market) {
-        return market.toString();
+    static String createId(Market market) {
+        return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." +
+                market.getBaseCurrencyCode() + "." +
+                market.getQuoteCurrencyCode();
     }
 
     private final Market market;
 
     public BisqEasyPublicChatChannel(Market market) {
-        this(getChannelName(market), market);
+        this(createId(market), market);
     }
 
-    private BisqEasyPublicChatChannel(String channelName, Market market) {
-        super(ChatChannelDomain.TRADE, channelName, ChatChannelNotificationType.ALL);
+    private BisqEasyPublicChatChannel(String id, Market market) {
+        super(id, ChatChannelDomain.BISQ_EASY, ChatChannelNotificationType.ALL);
 
         this.market = market;
     }
@@ -58,16 +60,19 @@ public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyP
 
     public static BisqEasyPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                       bisq.chat.protobuf.BisqEasyPublicChatChannel proto) {
-        BisqEasyPublicChatChannel bisqEasyPublicChatChannel = new BisqEasyPublicChatChannel(baseProto.getChannelName(), Market.fromProto(proto.getMarket()));
+        BisqEasyPublicChatChannel bisqEasyPublicChatChannel = new BisqEasyPublicChatChannel(
+                baseProto.getId(),
+                Market.fromProto(proto.getMarket()));
         bisqEasyPublicChatChannel.getSeenChatMessageIds().addAll(new HashSet<>(baseProto.getSeenChatMessageIdsList()));
         return bisqEasyPublicChatChannel;
     }
 
-    public String getDescription() {
-        return Res.get("social.marketChannel.description", market.toString());
-    }
-
+    @Override
     public String getDisplayString() {
         return market.getMarketCodes();
+    }
+
+    public String getDescription() {
+        return Res.get("social.marketChannel.description", market.toString());
     }
 }

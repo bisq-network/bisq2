@@ -17,8 +17,10 @@
 
 package bisq.chat.channel.pub;
 
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.chat.message.Citation;
 import bisq.chat.message.PublicChatMessage;
 import bisq.network.NetworkIdWithKeyPair;
@@ -86,7 +88,9 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
     public CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(M chatMessage,
                                                                                  UserIdentity userIdentity) {
-        return publishChatMessage(userIdentity, userIdentity.getUserProfile(), chatMessage);
+        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
+        return userIdentityService.maybePublicUserProfile(userIdentity.getUserProfile(), nodeIdAndKeyPair)
+                .thenCompose(result -> networkService.publishAuthenticatedData(chatMessage, nodeIdAndKeyPair));
     }
 
     public CompletableFuture<DataService.BroadCastDataResult> publishEditedChatMessage(M originalChatMessage,
@@ -110,18 +114,25 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         return getChannels();
     }
 
+    public Optional<C> getDefaultChannel() {
+        return getChannels().stream().findFirst();
+    }
+
+    @Override
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+        return "";
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     protected void processAddedMessage(M message) {
-        findChannelForMessage(message).ifPresent(channel -> addMessage(message, channel));
+        findChannel(message).ifPresent(channel -> addMessage(message, channel));
     }
 
     protected void processRemovedMessage(M message) {
-        findChannelForMessage(message)
-                .ifPresent(channel -> removeMessage(message, channel));
+        findChannel(message).ifPresent(channel -> removeMessage(message, channel));
     }
 
     protected void removeMessage(M message, C channel) {
@@ -137,14 +148,6 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
                                            UserProfile userProfile);
 
     protected abstract M createEditedChatMessage(M originalChatMessage, String editedText, UserProfile userProfile);
-
-    protected CompletableFuture<DataService.BroadCastDataResult> publishChatMessage(UserIdentity userIdentity,
-                                                                                    UserProfile userProfile,
-                                                                                    M publicChatMessage) {
-        NetworkIdWithKeyPair nodeIdAndKeyPair = userIdentity.getNodeIdAndKeyPair();
-        return userIdentityService.maybePublicUserProfile(userProfile, nodeIdAndKeyPair)
-                .thenCompose(result -> networkService.publishAuthenticatedData(publicChatMessage, nodeIdAndKeyPair));
-    }
 
     protected abstract void maybeAddDefaultChannels();
 }

@@ -28,14 +28,17 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(30);
+
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
-                                      String channelName,
+                                      String channelId,
                                       UserProfile sender,
                                       String receiversId,
                                       String text,
@@ -45,7 +48,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       ChatMessageType chatMessageType) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -53,12 +56,12 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 date,
                 wasEdited,
                 chatMessageType,
-                new MetaData(ChatMessage.TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
+                new MetaData(TTL, 100000, TwoPartyPrivateChatMessage.class.getSimpleName()));
     }
 
     private TwoPartyPrivateChatMessage(String messageId,
                                        ChatChannelDomain chatChannelDomain,
-                                       String channelName,
+                                       String channelId,
                                        UserProfile sender,
                                        String receiversId,
                                        String text,
@@ -67,7 +70,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        boolean wasEdited,
                                        ChatMessageType chatMessageType,
                                        MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -91,9 +94,9 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 Optional.empty();
         bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
         return new TwoPartyPrivateChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 UserProfile.fromProto(privateChatMessage.getSender()),
                 privateChatMessage.getReceiversId(),
                 baseProto.getText(),

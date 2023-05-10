@@ -17,6 +17,7 @@
 
 package bisq.chat.channel.priv;
 
+import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
@@ -40,14 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
-        C extends PrivateChatChannel<M>, S extends PersistableStore<S>>
-        extends ChatChannelService<M, C, S> implements MessageListener {
+public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
@@ -106,9 +105,8 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
-    abstract void leaveChannel(C channel);
-
     protected void leaveChannel(C channel, UserProfile receiver) {
+        //todo handle via members
         if (channel.getChatMessages().stream()
                 .max(Comparator.comparing(ChatMessage::getDate))
                 .stream()
@@ -138,17 +136,12 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage,
                 ChatMessageType.LEAVE);
     }
 
-    public void removeExpiredMessages(C channel) {
-        Set<M> toRemove = channel.getChatMessages().stream()
-                .filter(PrivateChatMessage::isExpired)
-                .collect(Collectors.toSet());
-        if (!toRemove.isEmpty()) {
-            synchronized (getPersistableStore()) {
-                channel.removeChatMessages(toRemove);
-                channel.updateSeenChatMessageIds();
-            }
-            persist();
-        }
+    @Override
+    public String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel) {
+        checkArgument(chatChannel instanceof PrivateChatChannel,
+                "chatChannel at PrivateChatChannelService.getChannelTitlePostFix must be of type PrivateChatChannel");
+        return userIdentityService.hasMultipleUserIdentities() ? "" :
+                " [" + ((PrivateChatChannel<?>) chatChannel).getMyUserIdentity().getUserName() + "]";
     }
 
 

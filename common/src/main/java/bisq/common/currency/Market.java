@@ -58,7 +58,7 @@ public final class Market implements Proto {
     }
 
     //todo make static utils
-    private String getNonBitcoinCurrency() {
+    public String getNonBitcoinCurrency() {
         return isFiat() ? quoteCurrencyName : baseCurrencyName;
     }
 

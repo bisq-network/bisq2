@@ -92,7 +92,7 @@ public class QuotedMessageBlock {
         }
 
         private void reply(ChatMessage chatMessage) {
-            userProfileService.findUserProfile(chatMessage.getAuthorId()).ifPresent(author -> {
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author -> {
                 model.author = author;
                 model.userName.set(author.getUserName());
                 model.roboHashNode.set(RoboHash.getImage(author.getPubKeyHash()));

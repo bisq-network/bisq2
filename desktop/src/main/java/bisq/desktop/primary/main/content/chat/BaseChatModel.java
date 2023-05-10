@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat;
 
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.view.NavigationModel;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
@@ -28,6 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,18 +39,31 @@ import java.util.Optional;
 public abstract class BaseChatModel extends NavigationModel {
     private final Map<String, StringProperty> chatMessagesByChannelId = new HashMap<>();
     private final StringProperty selectedChatMessages = new SimpleStringProperty("");
-    private final StringProperty selectedChannelAsString = new SimpleStringProperty("");
+    private final StringProperty channelTitle = new SimpleStringProperty("");
     private final ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannel = new SimpleObjectProperty<>();
     private final ObjectProperty<Pane> chatUserDetailsRoot = new SimpleObjectProperty<>();
     private final BooleanProperty sideBarVisible = new SimpleBooleanProperty();
     private final BooleanProperty sideBarChanged = new SimpleBooleanProperty();
     private final DoubleProperty sideBarWidth = new SimpleDoubleProperty();
-    private final BooleanProperty channelInfoVisible = new SimpleBooleanProperty();
+    private final BooleanProperty channelSidebarVisible = new SimpleBooleanProperty();
     private final ObjectProperty<Node> channelIcon = new SimpleObjectProperty<>();
     private final StringProperty searchText = new SimpleStringProperty();
+    protected final BooleanProperty isTwoPartyPrivateChatChannelSelectionVisible = new SimpleBooleanProperty();
+    protected final ChatChannelDomain chatChannelDomain;
+
     @Setter
     private Optional<UserProfileSidebar> chatUserDetails = Optional.empty();
 
-    public BaseChatModel() {
+    public BaseChatModel(ChatChannelDomain chatChannelDomain) {
+        this.chatChannelDomain = chatChannelDomain;
+    }
+
+    @Nullable
+    public ChatChannel<? extends ChatMessage> getSelectedChannel() {
+        return selectedChannel.get();
+    }
+
+    public ObjectProperty<ChatChannel<? extends ChatMessage>> selectedChannelProperty() {
+        return selectedChannel;
     }
 }

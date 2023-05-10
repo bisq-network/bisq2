@@ -2,9 +2,10 @@ package bisq.restApi.endpoints;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.restApi.RestApiApplication;
-import bisq.restApi.dto.PublicDiscussionChannelDto;
-import bisq.restApi.dto.PublicTradeChannelDto;
+import bisq.restApi.dto.BisqEasyPublicChatChannelDto;
+import bisq.restApi.dto.CommonPublicChatChannelDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,12 +42,12 @@ public class ChatApi {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = PublicDiscussionChannelDto.class)
+                            schema = @Schema(implementation = CommonPublicChatChannelDto.class)
                     )}
     )
-    public List<PublicDiscussionChannelDto> getPublicDiscussionChannels() {
-        return chatService.getPublicDiscussionChannelService().getChannels().stream()
-                .map(PublicDiscussionChannelDto::from)
+    public List<CommonPublicChatChannelDto> getPublicDiscussionChannels() {
+        return chatService.getCommonPublicChatChannelServices().get(ChatChannelDomain.DISCUSSION).getChannels().stream()
+                .map(chatChannel -> CommonPublicChatChannelDto.from(chatService, chatChannel))
                 .collect(Collectors.toList());
     }
 
@@ -57,12 +58,12 @@ public class ChatApi {
             content = {
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON,
-                            schema = @Schema(implementation = PublicTradeChannelDto.class)
+                            schema = @Schema(implementation = BisqEasyPublicChatChannelDto.class)
                     )}
     )
-    public List<PublicTradeChannelDto> getPublicTradeChannels() {
+    public List<BisqEasyPublicChatChannelDto> getPublicTradeChannels() {
         return chatService.getBisqEasyPublicChatChannelService().getChannels().stream()
-                .map(PublicTradeChannelDto::from)
+                .map(chatChannel -> BisqEasyPublicChatChannelDto.from(chatService, chatChannel))
                 .collect(Collectors.toList());
     }
 }

@@ -37,12 +37,13 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, BaseChatController<?, ?>> {
-    private final Label headline;
+    private final Label channelTitle;
     private final Button helpButton, channelInfoButton;
     protected final VBox left;
     private final VBox sideBar;
+    private final Pane twoPartyPrivateChatChannelSelection;
     protected final Pane chatMessagesComponent;
-    private final Pane channelInfo;
+    private final Pane channelSidebar;
     protected final HBox centerToolbar;
 
     protected final VBox centerVBox;
@@ -54,13 +55,15 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     public BaseChatView(BaseChatModel model,
                         BaseChatController<?, ?> controller,
                         Pane publicChannelSelection,
-                        Pane privateChannelSelection,
+                        Pane twoPartyPrivateChatChannelSelection,
                         Pane chatMessagesComponent,
-                        Pane channelInfo) {
+                        Pane channelSidebar) {
         super(new HBox(), model, controller);
+
+        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
         this.chatMessagesComponent = chatMessagesComponent;
 
-        this.channelInfo = channelInfo;
+        this.channelSidebar = channelSidebar;
 
         // Undo default padding of ContentView 
         root.setPadding(new Insets(-34, -67, -67, -68));
@@ -69,16 +72,16 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         left = new VBox(
                 publicChannelSelection,
                 Layout.separator(),
-                privateChannelSelection,
+                twoPartyPrivateChatChannelSelection,
                 Spacer.fillVBox());
         left.getStyleClass().add("bisq-grey-2-bg");
         left.setPrefWidth(210);
         left.setMinWidth(210);
 
         // Center toolbar
-        headline = new Label();
-        headline.setId("chat-messages-headline");
-        HBox.setMargin(headline, new Insets(0, 0, 0, 0));
+        channelTitle = new Label();
+        channelTitle.setId("chat-messages-headline");
+        HBox.setMargin(channelTitle, new Insets(0, 0, 0, 0));
 
         searchBox = new SearchBox();
         searchBox.setPrefWidth(200);
@@ -88,7 +91,7 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
 
         centerToolbar = new HBox(
                 10,
-                headline,
+                channelTitle,
                 Spacer.fillHBox(),
                 searchBox,
                 helpButton,
@@ -99,7 +102,7 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         centerToolbar.setPadding(new Insets(0, 20, 0, 25));
 
         // sideBar
-        sideBar = new VBox(channelInfo);
+        sideBar = new VBox(channelSidebar);
         sideBar.getStyleClass().add("bisq-grey-2-bg");
         sideBar.setAlignment(Pos.TOP_RIGHT);
         sideBar.setFillWidth(true);
@@ -115,15 +118,18 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
 
     @Override
     protected void onViewAttached() {
-        headline.textProperty().bind(model.getSelectedChannelAsString());
-        channelInfo.visibleProperty().bind(model.getChannelInfoVisible());
-        channelInfo.managedProperty().bind(model.getChannelInfoVisible());
+        channelTitle.textProperty().bind(model.getChannelTitle());
+        channelSidebar.visibleProperty().bind(model.getChannelSidebarVisible());
+        channelSidebar.managedProperty().bind(model.getChannelSidebarVisible());
         sideBar.visibleProperty().bind(model.getSideBarVisible());
         sideBar.managedProperty().bind(model.getSideBarVisible());
 
         helpButton.setOnAction(e -> controller.onToggleHelp());
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
+
+        twoPartyPrivateChatChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        twoPartyPrivateChatChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -140,23 +146,26 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
 
         channelIconPin = EasyBind.subscribe(model.getChannelIcon(), icon -> {
             if (icon != null) {
-                headline.setGraphic(icon);
-                headline.setGraphicTextGap(10);
+                channelTitle.setGraphic(icon);
+                channelTitle.setGraphicTextGap(10);
                 icon.setStyle("-fx-cursor: hand;");
                 icon.setOnMouseClicked(e -> controller.onToggleChannelInfo());
             } else {
-                headline.setGraphic(null);
+                channelTitle.setGraphic(null);
             }
         });
     }
 
     @Override
     protected void onViewDetached() {
-        headline.textProperty().unbind();
-        channelInfo.visibleProperty().unbind();
-        channelInfo.managedProperty().unbind();
+        channelTitle.textProperty().unbind();
+        channelSidebar.visibleProperty().unbind();
+        channelSidebar.managedProperty().unbind();
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
+
+        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
+        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
 
         helpButton.setOnAction(null);
         channelInfoButton.setOnAction(null);

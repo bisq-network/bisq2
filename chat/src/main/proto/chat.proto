@@ -29,7 +29,7 @@ import "user.proto";
 enum ChatMessageType {
   TEXT = 0;
   LEAVE = 1;
-  TAKE_OFFER = 2;
+  TAKE_BISQ_EASY_OFFER = 2;
 }
 
 enum ChatChannelNotificationType {
@@ -39,7 +39,7 @@ enum ChatChannelNotificationType {
 }
 
 enum ChatChannelDomain {
-  TRADE = 0;
+  BISQ_EASY = 0;
   DISCUSSION = 1;
   EVENTS = 2;
   SUPPORT = 3;
@@ -53,11 +53,11 @@ message Citation {
 }
 
 message ChatMessage {
-  string messageId = 1;
+  string id = 1;
   ChatChannelDomain chatChannelDomain = 2;
-  string channelName = 3;
+  string channelId = 3;
   optional string text = 4;
-  string authorId = 5;
+  string authorUserProfileId = 5;
   optional Citation citation = 6;
   uint64 date = 7;
   bool wasEdited = 8;
@@ -72,8 +72,8 @@ message ChatMessage {
 }
 
 message ChatChannel {
-  ChatChannelDomain chatChannelDomain = 1;
-  string channelName = 2;
+  string id = 1;
+  ChatChannelDomain chatChannelDomain = 2;
   ChatChannelNotificationType chatChannelNotificationType = 3;
   repeated string seenChatMessageIds = 4;
   oneof message{
@@ -98,25 +98,17 @@ message TwoPartyPrivateChatChannelStore {
   repeated ChatChannel channels = 1;
 }
 
-
 // CommonPublicChat
 message CommonPublicChatMessage {
 }
 
 message CommonPublicChatChannel {
-  string channelName = 1;
-  string description = 2;
-  string channelAdminId = 3;
-  repeated string channelModeratorIds = 4;
-  bool isVisible = 5;
+  optional string channelAdminId = 1;
+  repeated string channelModeratorIds = 2;
+  bool isVisible = 3;
 }
 message CommonPublicChatChannelStore {
   repeated ChatChannel channels = 1;
-}
-
-// ChatChannelSelection
-message ChatChannelSelectionStore {
-  optional string selectedChannelId = 1;
 }
 
 // BisqEasy
@@ -157,8 +149,12 @@ message BisqEasyPublicChatChannel {
 }
 message BisqEasyPublicChatChannelStore {
   repeated ChatChannel channels = 1;
-  repeated string visibleChannelNames = 2;
+  repeated string visibleChannelIds = 2;
 }
 
+// ChatChannelSelection
+message ChatChannelSelectionStore {
+  optional string selectedChannelId = 1;
+}
 
 

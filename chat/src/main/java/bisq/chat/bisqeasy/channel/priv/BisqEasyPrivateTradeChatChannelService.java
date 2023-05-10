@@ -25,7 +25,6 @@ import bisq.chat.channel.priv.PrivateGroupChatChannelService;
 import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.Citation;
 import bisq.common.monetary.Fiat;
-import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableArray;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.StringUtils;
@@ -44,7 +43,9 @@ import com.google.common.base.Joiner;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -57,14 +58,13 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     private final BisqEasyPrivateTradeChatChannelStore persistableStore = new BisqEasyPrivateTradeChatChannelStore();
     @Getter
     private final Persistence<BisqEasyPrivateTradeChatChannelStore> persistence;
-    private final Map<String, Pin> notificationTypeChangePins = new HashMap<>();
 
     public BisqEasyPrivateTradeChatChannelService(PersistenceService persistenceService,
                                                   NetworkService networkService,
                                                   UserIdentityService userIdentityService,
                                                   UserProfileService userProfileService,
                                                   ProofOfWorkService proofOfWorkService) {
-        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, proofOfWorkService, ChatChannelDomain.BISQ_EASY);
 
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
@@ -90,11 +90,9 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                       UserIdentity myUserIdentity,
                                                                       UserProfile peer,
                                                                       Optional<UserProfile> mediator) {
-        return findChannel(bisqEasyOffer.getId())
+        return findChannel(bisqEasyOffer)
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
-                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
-                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
@@ -105,46 +103,53 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                         UserIdentity myUserIdentity,
                                                                         UserProfile requestingTrader,
                                                                         UserProfile nonRequestingTrader) {
-        return findChannel(bisqEasyOffer.getId())
+        return findChannel(bisqEasyOffer)
                 .orElseGet(() -> {
                     BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByMediator(bisqEasyOffer, myUserIdentity, requestingTrader, nonRequestingTrader);
-                    Pin pin = channel.getChatChannelNotificationType().addObserver(value -> persist());
-                    notificationTypeChangePins.put(channel.getId(), pin);
                     getChannels().add(channel);
                     persist();
                     return channel;
                 });
     }
 
-    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyPublicChatMessage offerMessage,
-                                                                                    BisqEasyPrivateTradeChatChannel channel) {
-        checkArgument(offerMessage.getBisqEasyOffer().isPresent());
-        UserProfile maker = channel.getPeer();
-        BisqEasyOffer bisqEasyOffer = offerMessage.getBisqEasyOffer().get();
-        String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
-        String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
-                bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
-        String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
-        String text = Res.get("bisqEasy.takeOffer.takerRequest",
-                direction, amount, methods);
-        Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
-                maker.getNickName(),
-                maker.getPubKeyHash(),
-                offerMessage.getText()));
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
-                channel.getChannelName(),
-                myUserIdentity.getUserProfile(),
-                maker.getId(),
-                text,
-                citation,
-                new Date().getTime(),
-                false,
-                channel.findMediator(),
-                ChatMessageType.TAKE_OFFER,
-                Optional.of(bisqEasyOffer));
-        addMessage(takeOfferMessage, channel);
-        return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+    public CompletableFuture<NetworkService.SendMessageResult> sendTakeOfferMessage(BisqEasyPublicChatMessage message,
+                                                                                    Optional<UserProfile> mediator) {
+        checkArgument(message.getBisqEasyOffer().isPresent(), "message must contain offer");
+        return userProfileService.findUserProfile(message.getAuthorUserProfileId())
+                .map(makerUserProfile -> {
+                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                    BisqEasyOffer bisqEasyOffer = message.getBisqEasyOffer().get();
+                    BisqEasyPrivateTradeChatChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
+                            myUserIdentity,
+                            makerUserProfile,
+                            mediator);
+                    UserProfile maker = channel.getPeer();
+                    String direction = Res.get(bisqEasyOffer.getDirection().mirror().name().toLowerCase()).toUpperCase();
+                    String amount = AmountFormatter.formatAmountWithCode(Fiat.of(bisqEasyOffer.getQuoteSideAmount(),
+                            bisqEasyOffer.getMarket().getQuoteCurrencyCode()), true);
+                    String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
+                    String text = Res.get("bisqEasy.takeOffer.takerRequest",
+                            direction, amount, methods);
+                    Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
+                            maker.getNickName(),
+                            maker.getPubKeyHash(),
+                            message.getText()));
+                    BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
+                            channel.getId(),
+                            myUserIdentity.getUserProfile(),
+                            maker.getId(),
+                            text,
+                            citation,
+                            new Date().getTime(),
+                            false,
+                            channel.findMediator(),
+                            ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                            Optional.of(bisqEasyOffer));
+                    addMessage(takeOfferMessage, channel);
+                    return networkService.confidentialSend(takeOfferMessage, maker.getNetworkId(), myUserIdentity.getNodeIdAndKeyPair());
+
+                })
+                .orElse(CompletableFuture.failedFuture(new RuntimeException("makerUserProfile not found from message.authorUserProfileId")));
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
@@ -162,14 +167,24 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         }
     }
 
-    public void setMediationActivated(BisqEasyPrivateTradeChatChannel channel, boolean mediationActivated) {
-        channel.getIsInMediation().set(mediationActivated);
+    public void setIsInMediation(BisqEasyPrivateTradeChatChannel channel, boolean isInMediation) {
+        channel.getIsInMediation().set(isInMediation);
         persist();
     }
 
     @Override
     public ObservableArray<BisqEasyPrivateTradeChatChannel> getChannels() {
         return persistableStore.getChannels();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public Optional<BisqEasyPrivateTradeChatChannel> findChannel(BisqEasyOffer bisqEasyOffer) {
+        return findChannel(BisqEasyPrivateTradeChatChannel.createId(bisqEasyOffer));
     }
 
 
@@ -191,7 +206,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
                 messageId,
-                channel.getChannelName(),
+                channel.getId(),
                 sender,
                 receiversId,
                 text,
@@ -210,11 +225,10 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
 
-
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorId())) {
+        if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
             userIdentityService.findUserIdentity(message.getReceiversId())
-                    .flatMap(myUserIdentity -> findChannelForMessage(message)
+                    .flatMap(myUserIdentity -> findChannel(message)
                             .or(() -> {
                                 if (message.getChatMessageType() == ChatMessageType.LEAVE) {
                                     return Optional.empty();
@@ -233,99 +247,4 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     .ifPresent(channel -> addMessage(message, channel));
         }
     }
-
-
-   
-
-   /* public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage1(String text,
-                                                                                       Optional<Citation> citation,
-                                                                                       PrivateTradeChannel channel,
-                                                                                       MessageType messageType) {
-        UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        String messageId = StringUtils.createShortUid();
-        if (!channel.getInMediation().get() || channel.findMediator().isEmpty()) {
-            return super.sendPrivateChatMessage(messageId, text, citation, channel, myUserIdentity, channel.getPeer(), messageType);
-        }
-
-        // If mediation has been activated we send all messages to the 2 other peers
-        UserProfile receiver1, receiver2;
-        if (channel.isMediator()) {
-           *//* receiver1 = channel.getPeerOrTrader1();
-            receiver2 = channel.getMyUserProfileOrTrader2();*//*
-//todo
-            receiver1 = channel.getPeer();
-            receiver2 = channel.findMediator().get();
-        } else {
-            receiver1 = channel.getPeer();
-            receiver2 = channel.findMediator().get();
-        }
-
-        UserProfile senderUserProfile = myUserIdentity.getUserProfile();
-        NetworkIdWithKeyPair senderNodeIdAndKeyPair = myUserIdentity.getNodeIdAndKeyPair();
-        long date = new Date().getTime();
-        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
-        PrivateTradeChatMessage message1 = new PrivateTradeChatMessage(
-                messageId,
-                channel.getChannelName(),
-                senderUserProfile,
-                receiver1.getId(),
-                text,
-                citation,
-                date,
-                false,
-                mediator,
-                messageType,
-                Optional.empty());
-
-        CompletableFuture<NetworkService.SendMessageResult> sendFuture1 = networkService.confidentialSend(message1,
-                receiver1.getNetworkId(),
-                senderNodeIdAndKeyPair);
-
-        PrivateTradeChatMessage message2 = new PrivateTradeChatMessage(
-                messageId,
-                channel.getChannelName(),
-                senderUserProfile,
-                receiver2.getId(),
-                text,
-                citation,
-                date,
-                false,
-                mediator,
-                messageType,
-                Optional.empty());
-        CompletableFuture<NetworkService.SendMessageResult> sendFuture2 = networkService.confidentialSend(message2,
-                receiver2.getNetworkId(),
-                senderNodeIdAndKeyPair);
-
-        // We only add one message to avoid duplicates (receiverId is different)
-        addMessage(message1, channel);
-
-        // We do not use the SendMessageResult yet, so we simply return the first. 
-        // If it becomes relevant we would need to change the API of the method.
-        return CompletableFutureUtils.allOf(sendFuture1, sendFuture2)
-                .thenApply(list -> list.get(0));
-    }*/
-
-  /*  public CompletableFuture<NetworkService.SendMessageResult> sendPrivateChatMessage(String text,
-                                                                                      Optional<Citation> citation,
-                                                                                      PrivateTradeChannel channel,
-                                                                                      Optional<BisqEasyOffer> bisqEasyOffer) {
-        PrivateTradeChatMessage chatMessage = createNewPrivateTradeChatMessage(
-                StringUtils.createShortUid(),
-                channel,
-                channel.getMyUserIdentity().getUserProfile(),
-                channel.getPeer().getId(),
-                text,
-                citation,
-                new Date().getTime(),
-                false,
-                MessageType.TEXT,
-                bisqEasyOffer);
-        addMessage(chatMessage, channel);
-        NetworkId receiverNetworkId = channel.getPeer().getNetworkId();
-        NetworkIdWithKeyPair senderNetworkIdWithKeyPair = channel.getMyUserIdentity().getNodeIdAndKeyPair();
-        return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
-    }
-*/
-
 }

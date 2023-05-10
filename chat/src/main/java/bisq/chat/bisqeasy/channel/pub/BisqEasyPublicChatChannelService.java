@@ -56,33 +56,38 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
                                             NetworkService networkService,
                                             UserIdentityService userIdentityService,
                                             UserProfileService userProfileService) {
-        super(networkService, userIdentityService, userProfileService, ChatChannelDomain.TRADE);
+        super(networkService, userIdentityService, userProfileService, ChatChannelDomain.BISQ_EASY);
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
+
+        getVisibleChannelIds().addListener(() -> {
+            numVisibleChannels.set(getVisibleChannelIds().size());
+        });
     }
 
+    @Override
+    public void onPersistedApplied(BisqEasyPublicChatChannelStore persisted) {
+    }
 
     public void showChannel(BisqEasyPublicChatChannel channel) {
-        getVisibleChannelNames().add(channel.getChannelName());
-        numVisibleChannels.set(getVisibleChannelNames().size());
+        getVisibleChannelIds().add(channel.getId());
         persist();
     }
 
-    public void hidePublicTradeChannel(BisqEasyPublicChatChannel channel) {
-        getVisibleChannelNames().remove(channel.getChannelName());
-        numVisibleChannels.set(getVisibleChannelNames().size());
+    public void hideChannel(BisqEasyPublicChatChannel channel) {
+        getVisibleChannelIds().remove(channel.getId());
         persist();
     }
 
     public boolean isVisible(BisqEasyPublicChatChannel channel) {
-        return getVisibleChannelNames().contains(channel.getChannelName());
+        return getVisibleChannelIds().contains(channel.getId());
     }
 
-    public ObservableSet<String> getVisibleChannelNames() {
-        return persistableStore.getVisibleChannelNames();
+    public ObservableSet<String> getVisibleChannelIds() {
+        return persistableStore.getVisibleChannelIds();
     }
 
     public Set<BisqEasyPublicChatChannel> getVisibleChannels() {
-        return getChannels().stream().filter(channel -> getVisibleChannelNames().contains(channel.getChannelName())).collect(Collectors.toSet());
+        return getChannels().stream().filter(channel -> getVisibleChannelIds().contains(channel.getId())).collect(Collectors.toSet());
     }
 
 
@@ -108,7 +113,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PublicChannelService 
+    // API 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -117,11 +122,31 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     }
 
     @Override
+    public void leaveChannel(BisqEasyPublicChatChannel channel) {
+        //todo
+        log.error("leaveChannel");
+    }
+
+    public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
+        return findChannel(BisqEasyPublicChatChannel.createId(market));
+    }
+
+    public Optional<BisqEasyPublicChatChannel> getDefaultChannel() {
+        return getChannels().stream()
+                .filter(channel -> MarketRepository.getDefault().equals(channel.getMarket()))
+                .findAny();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
     protected BisqEasyPublicChatMessage createChatMessage(String text,
                                                           Optional<Citation> citation,
                                                           BisqEasyPublicChatChannel publicChannel,
                                                           UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(publicChannel.getChannelName(),
+        return new BisqEasyPublicChatMessage(publicChannel.getId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(text),
@@ -134,7 +159,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     protected BisqEasyPublicChatMessage createEditedChatMessage(BisqEasyPublicChatMessage originalChatMessage,
                                                                 String editedText,
                                                                 UserProfile userProfile) {
-        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelName(),
+        return new BisqEasyPublicChatMessage(originalChatMessage.getChannelId(),
                 userProfile.getId(),
                 Optional.empty(),
                 Optional.of(editedText),
@@ -159,7 +184,6 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
 
     private void maybeAddPublicTradeChannel(BisqEasyPublicChatChannel channel) {
         if (!getChannels().contains(channel)) {
-            channel.getChatChannelNotificationType().addObserver(value -> persist());
             getChannels().add(channel);
         }
     }

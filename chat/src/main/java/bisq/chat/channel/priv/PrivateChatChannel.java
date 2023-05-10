@@ -38,21 +38,22 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends ChatChannel<M> {
     protected final UserIdentity myUserIdentity;
-
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
     protected transient final ObservableSet<PrivateChatChannelMember> privateChatChannelMembers = new ObservableSet<>();
     protected transient final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
-    public PrivateChatChannel(ChatChannelDomain chatChannelDomain,
-                              String channelName,
+    public PrivateChatChannel(String id,
+                              ChatChannelDomain chatChannelDomain,
                               UserIdentity myUserIdentity,
                               List<M> chatMessages,
                               ChatChannelNotificationType chatChannelNotificationType) {
-        super(chatChannelDomain, channelName, chatChannelNotificationType);
+        super(id, chatChannelDomain, chatChannelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
+
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
     }
 
     public void addChannelMember(PrivateChatChannelMember privateChatChannelMember) {
@@ -61,15 +62,9 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
             peers.add(privateChatChannelMember.getUserProfile());
         }
     }
-/*
-    public Set<String> getPeersProfileIds() {
-        return peers.stream()
-                .map(UserProfile::getId)
-                .collect(Collectors.toSet());
-    }*/
 
     @Override
-    public Set<String> getMembers() {
+    public Set<String> getUserProfileIdsOfAllChannelMembers() {
         return privateChatChannelMembers.stream()
                 .map(PrivateChatChannelMember::getUserProfile)
                 .map(UserProfile::getId)

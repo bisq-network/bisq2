@@ -31,16 +31,19 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage implements BisqEasyOfferMessage {
+    private final static long TTL = TimeUnit.DAYS.toMillis(30);
+
     private final Optional<UserProfile> mediator;
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyPrivateTradeChatMessage(String messageId,
-                                           String channelName,
+                                           String channelId,
                                            UserProfile sender,
                                            String receiversId,
                                            String text,
@@ -51,8 +54,8 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                            ChatMessageType chatMessageType,
                                            Optional<BisqEasyOffer> bisqEasyOffer) {
         this(messageId,
-                ChatChannelDomain.TRADE,
-                channelName,
+                ChatChannelDomain.BISQ_EASY,
+                channelId,
                 sender,
                 receiversId,
                 text,
@@ -67,7 +70,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
 
     private BisqEasyPrivateTradeChatMessage(String messageId,
                                             ChatChannelDomain chatChannelDomain,
-                                            String channelName,
+                                            String channelId,
                                             UserProfile sender,
                                             String receiversId,
                                             String text,
@@ -78,7 +81,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             ChatMessageType chatMessageType,
                                             Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -118,9 +121,9 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getPrivateBisqEasyTradeChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
+                baseProto.getChannelId(),
                 UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getSender()),
                 BisqEasyPrivateTradeChatMessage.getReceiversId(),
                 baseProto.getText(),

@@ -45,6 +45,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Getter
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
+    public static String createId(BisqEasyOffer bisqEasyOffer) {
+        return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." + bisqEasyOffer.getId();
+    }
 
     public static BisqEasyPrivateTradeChatChannel createByTrader(BisqEasyOffer bisqEasyOffer,
                                                                  UserIdentity myUserIdentity,
@@ -70,31 +73,40 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Observable<Boolean> isInMediation = new Observable<>(false);
     private final BisqEasyOffer bisqEasyOffer;
 
+    // Called from trader
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile peer,
                                             Optional<UserProfile> mediator) {
-        super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
-
-        this.bisqEasyOffer = bisqEasyOffer;
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, peer));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
+        this(createId(bisqEasyOffer),
+                bisqEasyOffer,
+                myUserIdentity,
+                Set.of(peer),
+                mediator,
+                new ArrayList<>(),
+                false,
+                ChatChannelNotificationType.ALL,
+                new HashSet<>());
     }
 
-    // Mediator
+    // Called from mediator
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             UserProfile requestingTrader,
                                             UserProfile nonRequestingTrader) {
-        super(ChatChannelDomain.TRADE, bisqEasyOffer.getId(), myUserIdentity, new ArrayList<>(), ChatChannelNotificationType.ALL);
-
-        this.bisqEasyOffer = bisqEasyOffer;
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, requestingTrader));
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, nonRequestingTrader));
+        this(createId(bisqEasyOffer),
+                bisqEasyOffer,
+                myUserIdentity,
+                Set.of(requestingTrader, nonRequestingTrader),
+                Optional.of(myUserIdentity.getUserProfile()),
+                new ArrayList<>(),
+                true,
+                ChatChannelNotificationType.ALL,
+                new HashSet<>());
     }
 
     // From proto
-    private BisqEasyPrivateTradeChatChannel(String channelName,
+    private BisqEasyPrivateTradeChatChannel(String id,
                                             BisqEasyOffer bisqEasyOffer,
                                             UserIdentity myUserIdentity,
                                             Set<UserProfile> traders,
@@ -103,43 +115,19 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                                             boolean isInMediation,
                                             ChatChannelNotificationType chatChannelNotificationType,
                                             Set<String> seenChatMessageIds) {
-        super(ChatChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, chatChannelNotificationType);
+        super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
+        //todo reconsider
+        // Mediator gets added as SELF and as MEDIATOR
+        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
         traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
-        mediator.ifPresent(mediatorProfile -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorProfile)));
+        mediator.ifPresent(mediatorUserProfile -> {
+            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile));
+        });
         this.isInMediation.set(isInMediation);
-        getSeenChatMessageIds().addAll(seenChatMessageIds);
+        this.seenChatMessageIds.addAll(seenChatMessageIds);
     }
-
-   /* private PrivateTradeChannel(UserProfile peerOrTrader1,
-                                UserProfile myUserProfileOrTrader2,
-                                UserIdentity myUserIdentity,
-                                Optional<UserProfile> mediator) {
-        this(PrivateChannel.createChannelName(new Pair<>(peerOrTrader1.getId(), myUserProfileOrTrader2.getId())),
-                peerOrTrader1,
-                myUserProfileOrTrader2,
-                myUserIdentity,
-                mediator,
-                new ArrayList<>(),
-                ChannelNotificationType.ALL);
-    }*/
-
-   /* private PrivateTradeChannel(String channelName,
-                                UserProfile peerOrTrader1,
-                                UserProfile myUserProfileOrTrader2,
-                                UserIdentity myUserIdentity,
-                                Optional<UserProfile> mediator,
-                                List<PrivateTradeChatMessage> chatMessages,
-                                ChannelNotificationType channelNotificationType) {
-        super(ChannelDomain.TRADE, channelName, myUserIdentity, chatMessages, channelNotificationType);
-
-        bisqEasyOffer = null;
-      *//*  this.peerOrTrader1 = peerOrTrader1;
-        this.myUserProfileOrTrader2 = myUserProfileOrTrader2;
-        this.myUserIdentity = myUserIdentity;
-        this.mediator = mediator;*//*
-    }*/
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
@@ -160,7 +148,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     public static BisqEasyPrivateTradeChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
                                                             bisq.chat.protobuf.BisqEasyPrivateTradeChatChannel proto) {
         return new BisqEasyPrivateTradeChatChannel(
-                baseProto.getChannelName(),
+                baseProto.getId(),
                 BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
                 UserIdentity.fromProto(proto.getMyUserIdentity()),
                 proto.getTradersList().stream()
@@ -190,41 +178,24 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         chatMessages.removeAll(messages);
     }
 
-    public boolean isMediator() {
-        return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
-    }
-
     @Override
     public String getDisplayString() {
-        String mediatorLabel = "";
-        Optional<UserProfile> mediator = findMediator();
-        if (mediator.isPresent() && isInMediation.get()) {
-            mediatorLabel = " (" + Res.get("mediator") + ": " + mediator.get().getUserName() + ")";
-        }
+        String shortOfferId = getBisqEasyOffer().getId().substring(0, 4);
         String peer = getPeer().getUserName();
         if (isMediator()) {
-            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
-            return peer + " - " + getPeers().get(1).getUserName() + mediatorLabel;
+            checkArgument(getPeers().size() >= 2, "getPeers().size() need to be >= 2");
+            return shortOfferId + ": " + peer + " - " + getPeers().get(1).getUserName();
         } else {
-            return peer + " - " + myUserIdentity.getUserName() + mediatorLabel;
+            String optionalMediatorPostfix = findMediator()
+                    .filter(mediator -> getIsInMediation().get())
+                    .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
+                    .orElse("");
+            return shortOfferId + ": " + peer + optionalMediatorPostfix;
         }
     }
 
-    public String getChannelSelectionDisplayString() {
-        String peer = getPeer().getUserName();
-        if (!isInMediation.get()) {
-            return peer;
-        }
-
-        Optional<UserProfile> mediator = findMediator();
-        if (isMediator()) {
-            checkArgument(getPeers().size() == 2, "getPeers().size() need to 2");
-            return peer + ", " + getPeers().get(1).getUserName();
-        } else if (mediator.isPresent()) {
-            return peer + ", " + mediator.get().getUserName();
-        } else {
-            return peer;
-        }
+    public boolean isMediator() {
+        return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
 
     public UserProfile getPeer() {

@@ -38,17 +38,17 @@ import java.util.Optional;
 public final class BisqEasyPublicChatMessage extends PublicChatMessage implements BisqEasyOfferMessage {
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
-    public BisqEasyPublicChatMessage(String channelName,
-                                     String authorId,
+    public BisqEasyPublicChatMessage(String channelId,
+                                     String authorUserProfileId,
                                      Optional<BisqEasyOffer> bisqEasyOffer,
                                      Optional<String> text,
                                      Optional<Citation> citation,
                                      long date,
                                      boolean wasEdited) {
         this(StringUtils.createShortUid(),
-                ChatChannelDomain.TRADE,
-                channelName,
-                authorId,
+                ChatChannelDomain.BISQ_EASY,
+                channelId,
+                authorUserProfileId,
                 bisqEasyOffer,
                 text,
                 citation,
@@ -60,8 +60,8 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
 
     private BisqEasyPublicChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
-                                      String channelName,
-                                      String authorId,
+                                      String channelId,
+                                      String authorUserProfileId,
                                       Optional<BisqEasyOffer> bisqEasyOffer,
                                       Optional<String> text,
                                       Optional<Citation> citation,
@@ -71,8 +71,8 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                                       MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
-                authorId,
+                channelId,
+                authorUserProfileId,
                 text,
                 citation,
                 date,
@@ -99,10 +99,10 @@ public final class BisqEasyPublicChatMessage extends PublicChatMessage implement
                 Optional.of(BisqEasyOffer.fromProto(baseProto.getPublicBisqEasyOfferChatMessage().getBisqEasyOffer())) :
                 Optional.empty();
         return new BisqEasyPublicChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
-                baseProto.getAuthorId(),
+                baseProto.getChannelId(),
+                baseProto.getAuthorUserProfileId(),
                 bisqEasyOffer,
                 text,
                 citation,

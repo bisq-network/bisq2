@@ -31,16 +31,16 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = true)
 public final class CommonPublicChatMessage extends PublicChatMessage {
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
-                                   String channelName,
-                                   String authorId,
+                                   String channelId,
+                                   String authorUserProfileId,
                                    String text,
                                    Optional<Citation> citation,
                                    long date,
                                    boolean wasEdited) {
         this(StringUtils.createShortUid(),
                 chatChannelDomain,
-                channelName,
-                authorId,
+                channelId,
+                authorUserProfileId,
                 Optional.of(text),
                 citation,
                 date,
@@ -51,8 +51,8 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
 
     private CommonPublicChatMessage(String messageId,
                                     ChatChannelDomain chatChannelDomain,
-                                    String channelName,
-                                    String authorId,
+                                    String channelId,
+                                    String authorUserProfileId,
                                     Optional<String> text,
                                     Optional<Citation> citation,
                                     long date,
@@ -61,8 +61,8 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                                     MetaData metaData) {
         super(messageId,
                 chatChannelDomain,
-                channelName,
-                authorId,
+                channelId,
+                authorUserProfileId,
                 text,
                 citation,
                 date,
@@ -80,10 +80,10 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
                 Optional.of(Citation.fromProto(baseProto.getCitation())) :
                 Optional.empty();
         return new CommonPublicChatMessage(
-                baseProto.getMessageId(),
+                baseProto.getId(),
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelName(),
-                baseProto.getAuthorId(),
+                baseProto.getChannelId(),
+                baseProto.getAuthorUserProfileId(),
                 Optional.of(baseProto.getText()),
                 citation,
                 baseProto.getDate(),

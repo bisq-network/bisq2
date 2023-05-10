@@ -38,23 +38,23 @@ import java.util.stream.Collectors;
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class ChatChannel<M extends ChatMessage> implements Proto {
-    private final ChatChannelDomain chatChannelDomain;
-    protected final String channelName;
     @EqualsAndHashCode.Include
-    private transient final String id;
+    protected final String id;
+    protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
 
-    public ChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
+    public ChatChannel(String id,
+                       ChatChannelDomain chatChannelDomain,
+                       ChatChannelNotificationType chatChannelNotificationType) {
+        this.id = id;
         this.chatChannelDomain = chatChannelDomain;
-        this.channelName = channelName;
-        this.id = chatChannelDomain.name().toLowerCase() + "." + channelName;
         this.chatChannelNotificationType.set(chatChannelNotificationType);
     }
 
     public bisq.chat.protobuf.ChatChannel.Builder getChannelBuilder() {
         return bisq.chat.protobuf.ChatChannel.newBuilder()
-                .setChannelName(channelName)
+                .setId(id)
                 .setChatChannelDomain(chatChannelDomain.toProto())
                 .setChatChannelNotificationType(chatChannelNotificationType.get().toProto())
                 .addAllSeenChatMessageIds(seenChatMessageIds);
@@ -87,15 +87,13 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    public void updateSeenChatMessageIds() {
-        seenChatMessageIds.clear();
-        seenChatMessageIds.addAll(getChatMessages().stream()
-                .map(ChatMessage::getMessageId)
+    public void setAllMessagesSeen() {
+        seenChatMessageIds.setAll(getChatMessages().stream()
+                .map(ChatMessage::getId)
                 .collect(Collectors.toSet()));
     }
 
-
-    abstract public Set<String> getMembers();
+    abstract public String getDisplayString();
 
     abstract public ObservableSet<M> getChatMessages();
 
@@ -105,5 +103,5 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
 
     abstract public void removeChatMessages(Collection<M> messages);
 
-    abstract public String getDisplayString();
+    abstract public Set<String> getUserProfileIdsOfAllChannelMembers();
 }

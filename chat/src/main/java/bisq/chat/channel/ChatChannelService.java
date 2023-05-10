@@ -28,10 +28,11 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
-public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>>
-        implements Service, PersistenceClient<S> {
+public abstract class ChatChannelService<M extends ChatMessage, C extends ChatChannel<M>, S extends PersistableStore<S>> implements Service, PersistenceClient<S> {
     protected final NetworkService networkService;
     protected final UserIdentityService userIdentityService;
     protected final UserProfileService userProfileService;
@@ -47,34 +48,11 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         this.chatChannelDomain = chatChannelDomain;
     }
 
-    public void setNotificationSetting(ChatChannel<? extends ChatMessage> chatChannel, ChatChannelNotificationType chatChannelNotificationType) {
+    public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage> chatChannel,
+                                               ChatChannelNotificationType chatChannelNotificationType) {
         chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
         persist();
     }
-
-    public Optional<C> findChannelById(String id) {
-        return getChannels().stream()
-                .filter(channel -> channel.getId().equals(id))
-                .findAny();
-    }
-
-    public Optional<C> findChannel(String channelName) {
-        return getChannels().stream()
-                .filter(channel -> channel.getChannelName().equals(channelName))
-                .findAny();
-    }
-
-    public Optional<C> findChannelForMessage(ChatMessage chatMessage) {
-        return findChannel(chatMessage.getChatChannelDomain(), chatMessage.getChannelName());
-    }
-
-    public Optional<C> findChannel(ChatChannelDomain chatChannelDomain, String channelName) {
-        return getChannels().stream()
-                .filter(channel -> channel.getChatChannelDomain().equals(chatChannelDomain) && channel.getChannelName().equals(channelName))
-                .findAny();
-    }
-
-    public abstract ObservableArray<C> getChannels();
 
     public void addMessage(M message, C channel) {
         synchronized (getPersistableStore()) {
@@ -85,8 +63,45 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public void updateSeenChatMessageIds(ChatChannel<? extends ChatMessage> chatChannel) {
         synchronized (getPersistableStore()) {
-            chatChannel.updateSeenChatMessageIds();
+            chatChannel.setAllMessagesSeen();
         }
         persist();
     }
+
+    public Optional<C> findChannel(ChatMessage chatMessage) {
+        return findChannel(chatMessage.getChannelId());
+    }
+
+    public String getChannelTitle(ChatChannel<? extends ChatMessage> chatChannel) {
+        return chatChannel.getDisplayString() + getChannelTitlePostFix(chatChannel);
+    }
+
+    public void removeExpiredMessages(ChatChannel<? extends ChatMessage> chatChannel) {
+        findChannel(chatChannel.getId()).ifPresent(this::doRemoveExpiredMessages);
+    }
+
+    public abstract void leaveChannel(C channel);
+
+    public abstract ObservableArray<C> getChannels();
+
+    protected void doRemoveExpiredMessages(C channel) {
+        Set<M> toRemove = channel.getChatMessages().stream()
+                .filter(ChatMessage::isExpired)
+                .collect(Collectors.toSet());
+        if (!toRemove.isEmpty()) {
+            synchronized (getPersistableStore()) {
+                channel.removeChatMessages(toRemove);
+                channel.setAllMessagesSeen();
+            }
+            persist();
+        }
+    }
+
+    protected Optional<C> findChannel(String id) {
+        return getChannels().stream()
+                .filter(channel -> channel.getId().equals(id))
+                .findAny();
+    }
+
+    protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
 }

@@ -39,8 +39,10 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     // Transient because we do not persist the messages as they are persisted in the P2P data store.
     protected transient final ObservableSet<M> chatMessages = new ObservableSet<>();
 
-    public PublicChatChannel(ChatChannelDomain chatChannelDomain, String channelName, ChatChannelNotificationType chatChannelNotificationType) {
-        super(chatChannelDomain, channelName, chatChannelNotificationType);
+    public PublicChatChannel(String id,
+                             ChatChannelDomain chatChannelDomain,
+                             ChatChannelNotificationType chatChannelNotificationType) {
+        super(id, chatChannelDomain, chatChannelNotificationType);
     }
 
     @Override
@@ -58,12 +60,12 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
 
     //todo
     @Override
-    public Set<String> getMembers() {
+    public Set<String> getUserProfileIdsOfAllChannelMembers() {
         Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
         getChatMessages().forEach(chatMessage -> {
-            String authorId = chatMessage.getAuthorId();
-            chatMessagesByAuthor.putIfAbsent(authorId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorId).add(chatMessage);
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            chatMessagesByAuthor.putIfAbsent(authorUserProfileId, new ArrayList<>());
+            chatMessagesByAuthor.get(authorUserProfileId).add(chatMessage);
         });
 
         return chatMessagesByAuthor.entrySet().stream()
@@ -77,5 +79,4 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
                 .map(Pair::getFirst)
                 .collect(Collectors.toSet());
     }
-
 }

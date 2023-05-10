@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelService extends PublicChatChannelService<CommonPublicChatMessage, CommonPublicChatChannel, CommonPublicChatChannelStore> {
     @Getter
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
@@ -57,10 +57,8 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
-                "Public" + StringUtils.capitalize(chatChannelDomain.name()) + "ChannelStore",
+                "Public" + StringUtils.capitalize(chatChannelDomain.name()) + "ChatChannelStore",
                 persistableStore);
-
-        this.defaultChannels.forEach(channel -> channel.getChatChannelNotificationType().addObserver(value -> persist()));
     }
 
 
@@ -86,22 +84,32 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // PublicChannelService 
+    // API 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void leaveChannel(CommonPublicChatChannel channel) {
+        //todo
+    }
 
     @Override
     public ObservableArray<CommonPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Protected 
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     protected CommonPublicChatMessage createChatMessage(String text,
                                                         Optional<Citation> citation,
                                                         CommonPublicChatChannel commonPublicChatChannel,
-                                                        UserProfile userProfile) {
+                                                        UserProfile authorUserProfileId) {
         return new CommonPublicChatMessage(commonPublicChatChannel.getChatChannelDomain(),
-                commonPublicChatChannel.getChannelName(),
-                userProfile.getId(),
+                commonPublicChatChannel.getId(),
+                authorUserProfileId.getId(),
                 text,
                 citation,
                 new Date().getTime(),
@@ -111,10 +119,10 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
     @Override
     protected CommonPublicChatMessage createEditedChatMessage(CommonPublicChatMessage originalChatMessage,
                                                               String editedText,
-                                                              UserProfile userProfile) {
+                                                              UserProfile authorUserProfileId) {
         return new CommonPublicChatMessage(originalChatMessage.getChatChannelDomain(),
-                originalChatMessage.getChannelName(),
-                userProfile.getId(),
+                originalChatMessage.getChannelId(),
+                authorUserProfileId.getId(),
                 editedText,
                 originalChatMessage.getCitation(),
                 originalChatMessage.getDate(),
@@ -127,7 +135,7 @@ public class CommonPublicChatChannelService extends PublicChatChannelService<Com
             return;
         }
 
-        getChannels().addAll(defaultChannels);
+        getChannels().setAll(defaultChannels);
         persist();
     }
 }

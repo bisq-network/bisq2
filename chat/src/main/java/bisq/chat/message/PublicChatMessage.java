@@ -36,15 +36,15 @@ import java.util.Optional;
 public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
     protected PublicChatMessage(String messageId,
                                 ChatChannelDomain chatChannelDomain,
-                                String channelName,
-                                String authorId,
+                                String channelId,
+                                String authorUserProfileId,
                                 Optional<String> text,
                                 Optional<Citation> citation,
                                 long date,
                                 boolean wasEdited,
                                 ChatMessageType chatMessageType,
                                 MetaData metaData) {
-        super(messageId, chatChannelDomain, channelName, authorId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, authorUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -52,6 +52,6 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
         // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
         // verified as well, so we can be sure it's the sender of the message. This check prevents against 
         // impersonation attack.
-        return !authorId.equals(Hex.encode(pubKeyHash));
+        return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
     }
 }

@@ -47,7 +47,7 @@ public class ChatNotification<T extends ChatMessage> implements Comparable<ChatN
         if (chatMessage instanceof PrivateChatMessage) {
             senderUserProfile = Optional.of(((PrivateChatMessage) chatMessage).getSender());
         } else {
-            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorId());
+            senderUserProfile = userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId());
         }
         message = chatMessage.getText();
 

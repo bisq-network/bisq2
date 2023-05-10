@@ -18,6 +18,7 @@
 package bisq.desktop.primary.main.content.chat.sidebar;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -45,6 +46,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -62,7 +64,7 @@ public class ChannelSidebar {
         return controller.view.getRoot();
     }
 
-    public void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+    public void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
         controller.setChannel(chatChannel);
     }
 
@@ -76,11 +78,14 @@ public class ChannelSidebar {
         private final View view;
         private final UserProfileService userProfileService;
         private final Runnable closeHandler;
+        private final NotificationsSidebar notificationsSidebar;
+        private final ChatService chatService;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
             this.closeHandler = closeHandler;
             userProfileService = applicationService.getUserService().getUserProfileService();
-            NotificationsSidebar notificationsSidebar = new NotificationsSidebar(applicationService.getChatService());
+            chatService = applicationService.getChatService();
+            notificationsSidebar = new NotificationsSidebar(chatService);
             model = new Model();
             view = new View(model, this, notificationsSidebar.getRoot());
         }
@@ -93,7 +98,9 @@ public class ChannelSidebar {
         public void onDeactivate() {
         }
 
-        void setChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
+            notificationsSidebar.setChannel(chatChannel);
+
             if (chatChannel == null) {
                 model.descriptionVisible.set(false);
                 model.description.set(null);
@@ -104,9 +111,13 @@ public class ChannelSidebar {
             }
 
             Set<String> ignoredChatUserIds = new HashSet<>(userProfileService.getIgnoredUserProfileIds());
-            model.channelName.set(chatChannel.getDisplayString());
-            model.members.setAll(chatChannel.getMembers().stream()
-                    .flatMap(authorId -> userProfileService.findUserProfile(authorId).stream())
+
+            model.channelTitle.set(chatService.findChatChannelService(chatChannel)
+                    .map(service -> service.getChannelTitle(chatChannel))
+                    .orElse(""));
+
+            model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
+                    .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
                     .sorted()
                     .collect(Collectors.toList()));
@@ -115,7 +126,10 @@ public class ChannelSidebar {
                 CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
                 model.description.set(commonPublicChatChannel.getDescription());
                 model.descriptionVisible.set(true);
-                model.adminProfile = userProfileService.findUserProfile(commonPublicChatChannel.getChannelAdminId()).map(ChatUserOverview::new);
+                model.adminProfile = commonPublicChatChannel.getChannelAdminId()
+                        .flatMap(channelAdmin -> userProfileService.findUserProfile(channelAdmin).map(ChatUserOverview::new))
+                        .stream()
+                        .findAny();
                 model.moderators.setAll(commonPublicChatChannel.getChannelModeratorIds().stream()
                         .flatMap(id -> userProfileService.findUserProfile(id).stream())
                         .map(ChatUserOverview::new)
@@ -148,7 +162,7 @@ public class ChannelSidebar {
 
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
-        private final StringProperty channelName = new SimpleStringProperty();
+        private final StringProperty channelTitle = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
@@ -200,7 +214,7 @@ public class ChannelSidebar {
 
         @Override
         protected void onViewAttached() {
-            headline.textProperty().bind(model.channelName);
+            headline.textProperty().bind(model.channelTitle);
             descriptionText.textProperty().bind(model.description);
             descriptionText.visibleProperty().bind(model.descriptionVisible);
             descriptionText.managedProperty().bind(model.descriptionVisible);

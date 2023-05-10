@@ -74,7 +74,7 @@ public class UserProfileView extends View<HBox, UserProfileModel, UserProfileCon
         comboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(UserIdentity userIdentity) {
-                return userIdentity != null ? StringUtils.abbreviate(userIdentity.getUserName(), 30) : "";
+                return userIdentity != null ? StringUtils.truncate(userIdentity.getUserName(), 30) : "";
             }
 
             @Override

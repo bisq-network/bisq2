@@ -17,92 +17,54 @@
 
 package bisq.chat.bisqeasy.channel;
 
-import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
+import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.channel.ChatChannel;
-import bisq.chat.channel.ChatChannelSelectionStore;
-import bisq.chat.message.ChatMessage;
-import bisq.common.currency.MarketRepository;
-import bisq.common.observable.Observable;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceClient;
+import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.persistence.PersistenceService;
-import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Slf4j
 @Getter
-public class BisqEasyChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
-    private final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
-    private final Persistence<ChatChannelSelectionStore> persistence;
-    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
-    private final BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService;
-    private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
+public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionService {
+    private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
 
     public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
-                                               BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService,
-                                               BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService) {
-        this.bisqEasyPrivateTradeChatChannelService = bisqEasyPrivateTradeChatChannelService;
-        this.bisqEasyPublicChatChannelService = bisqEasyPublicChatChannelService;
-        persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
-    }
-
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
-        maybeSelectDefaultChannel();
-        return CompletableFuture.completedFuture(true);
-    }
-
-    public CompletableFuture<Boolean> shutdown() {
-        log.info("shutdown");
-        return CompletableFuture.completedFuture(true);
+                                               BisqEasyPrivateTradeChatChannelService privateChatChannelService,
+                                               BisqEasyPublicChatChannelService publicChatChannelService,
+                                               TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService) {
+        super(persistenceService,
+                privateChatChannelService,
+                publicChatChannelService,
+                ChatChannelDomain.BISQ_EASY);
+        this.privateBisqEasyTwoPartyChannelService = privateBisqEasyTwoPartyChannelService;
     }
 
     @Override
-    public void onPersistedApplied(ChatChannelSelectionStore persisted) {
-        applySelectedChannel();
-    }
-
-    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
-        if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
-            bisqEasyPrivateTradeChatChannelService.removeExpiredMessages((BisqEasyPrivateTradeChatChannel) chatChannel);
-        }
-
-        persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
-        persist();
-
-        applySelectedChannel();
-    }
-
-    private void applySelectedChannel() {
-        Stream<ChatChannel<?>> stream = Stream.concat(bisqEasyPublicChatChannelService.getChannels().stream(),
-                bisqEasyPrivateTradeChatChannelService.getChannels().stream());
-        selectedChannel.set(stream
-                .filter(channel -> channel.getId().equals(persistableStore.getSelectedChannelId()))
-                .findAny()
-                .orElse(null));
-    }
-
-    public void reportUserProfile(UserProfile userProfile, String reason) {
-        //todo report user to admin and moderators, add reason
-        log.info("called reportChatUser {} {}", userProfile, reason);
-    }
-
-    private void maybeSelectDefaultChannel() {
-        if (getSelectedChannel().get() == null) {
-            bisqEasyPublicChatChannelService.getChannels().stream()
-                    .filter(publicTradeChannel -> MarketRepository.getDefault().equals(publicTradeChannel.getMarket()))
-                    .findAny()
+    protected void maybeSelectDefaultChannel() {
+        if (selectedChannel.get() == null) {
+            publicChatChannelService.getDefaultChannel()
+                    .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
+                    .map(channel -> (BisqEasyPublicChatChannel) channel)
                     .ifPresent(channel -> {
                         selectChannel(channel);
-                        bisqEasyPublicChatChannelService.showChannel(channel);
+                        ((BisqEasyPublicChatChannelService) publicChatChannelService).showChannel(channel);
                     });
+
         }
         persist();
+    }
+
+    @Override
+    protected Stream<ChatChannel<?>> getAllChatChannels() {
+        return Stream.concat(publicChatChannelService.getChannels().stream(),
+                Stream.concat(privateBisqEasyTwoPartyChannelService.getChannels().stream(),
+                        privateChatChannelService.getChannels().stream()));
     }
 }
