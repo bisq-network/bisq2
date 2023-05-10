@@ -295,7 +295,7 @@ public class ChatMessagesListView {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
             userIdentityService.findUserIdentity(authorUserProfileId)
                     .ifPresent(authorUserIdentity -> {
-                        if (checkNotNull(userIdentityService.getSelectedUserIdentity()).equals(authorUserIdentity)) {
+                        if (authorUserIdentity.equals(userIdentityService.getSelectedUserIdentity())) {
                             doDeleteMessage(chatMessage, authorUserIdentity);
                         } else {
                             new Popup().information(Res.get("chat.deleteMessage.wrongUserProfile.popup"))
