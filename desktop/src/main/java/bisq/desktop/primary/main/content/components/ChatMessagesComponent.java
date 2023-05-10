@@ -196,8 +196,7 @@ public class ChatMessagesComponent {
 
         private void doSendMessage(String text) {
             ChatChannel<? extends ChatMessage> chatChannel = model.selectedChannel.get();
-            UserIdentity userIdentity = userIdentityService.getSelectedUserIdentity();
-            checkNotNull(userIdentity, "chatUserIdentity must not be null at onSendMessage");
+            UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             Optional<Citation> citation = citationBlock.getCitation();
 
             if (chatChannel instanceof BisqEasyPublicChatChannel) {
