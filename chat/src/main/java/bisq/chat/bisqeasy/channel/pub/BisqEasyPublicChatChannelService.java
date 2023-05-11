@@ -180,6 +180,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
         joinChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
+
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
         allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));

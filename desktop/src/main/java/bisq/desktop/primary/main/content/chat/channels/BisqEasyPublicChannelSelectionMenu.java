@@ -138,8 +138,12 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     .map(View.MarketListItem::new)
                     .collect(Collectors.toList());
 
-            model.allMarkets.setAll(marketListItems);
-            model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
+            model.hiddenMarketListItems.setAll(marketListItems);
+            model.sortedHiddenMarketListItems.setComparator((o1, o2) -> {
+                Comparator<View.MarketListItem> byNumMessages = (left, right) -> Integer.compare(getNumMessages(right.market), getNumMessages(left.market));
+                Comparator<View.MarketListItem> byName = (left, right) -> left.market.toString().compareTo(right.toString());
+                return byNumMessages.thenComparing(byName).compare(o1, o2);
+            });
         }
 
         @Override
@@ -151,7 +155,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         public void onJoinChannel(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
-                model.allMarkets.remove(marketListItem);
+                model.hiddenMarketListItems.remove(marketListItem);
                 chatChannelService.findChannel(marketListItem.market)
                         .ifPresent(channel -> {
                             chatChannelService.joinChannel(channel);
@@ -169,12 +173,13 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
                 doLeaveChannel(channel);
+                model.hiddenMarketListItems.add(new View.MarketListItem(channel.getMarket()));
             }
         }
 
         private int getNumMessages(Market market) {
             return chatChannelService.findChannel(market)
-                    .map(e -> e.getChatMessages().size())
+                    .map(channel -> channel.getChatMessages().size())
                     .orElse(0);
         }
 
@@ -190,8 +195,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
     }
 
     protected static class Model extends PublicChannelSelectionMenu.Model {
-        private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
-        private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
+        private final ObservableList<View.MarketListItem> hiddenMarketListItems = FXCollections.observableArrayList();
+        private final SortedList<View.MarketListItem> sortedHiddenMarketListItems = new SortedList<>(hiddenMarketListItems);
 
         public Model() {
             super(ChatChannelDomain.BISQ_EASY);
@@ -217,7 +222,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
             addChannelIcon.setOnMouseClicked(e ->
                     new ComboBoxOverlay<>(addChannelIcon,
-                            model.allMarketsSortedList,
+                            model.sortedHiddenMarketListItems,
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
