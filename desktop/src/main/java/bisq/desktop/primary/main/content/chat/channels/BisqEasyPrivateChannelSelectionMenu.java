@@ -123,17 +123,21 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
 
         @Override
         protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
-            if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+            super.handleSelectedChannelChange(chatChannel);
+
+            if (isChannelExpectedInstance(chatChannel)) {
                 BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                model.selectedChannelItem.set(findOrCreateChannelItem(bisqEasyPrivateTradeChatChannel));
                 userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
                 if (inMediationPin != null) {
                     inMediationPin.unbind();
                 }
                 inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.getIsInMediation());
-            } else {
-                model.selectedChannelItem.set(null);
             }
+        }
+
+        @Override
+        protected boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel) {
+            return chatChannel instanceof BisqEasyPrivateTradeChatChannel;
         }
 
         public String getChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {

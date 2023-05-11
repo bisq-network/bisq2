@@ -114,7 +114,7 @@ public abstract class ChannelSelectionMenu<
                     .to(chatChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> handleSelectedChannelChange(chatChannel));
+                    this::handleSelectedChannelChange);
 
             chatChannelService.getChannels().forEach(this::addListenersToChannel);
         }
@@ -149,8 +149,18 @@ public abstract class ChannelSelectionMenu<
 
         protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
             if (isChannelExpectedInstance(chatChannel)) {
-                model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
+                View.ChannelItem channelItem = findOrCreateChannelItem(chatChannel);
+                model.selectedChannelItem.set(channelItem);
+
+                if (model.previousSelectedChannelItem != null) {
+                    model.previousSelectedChannelItem.setSelected(false);
+                }
+                model.previousSelectedChannelItem = channelItem;
+                channelItem.setSelected(true);
             } else {
+                if (model.previousSelectedChannelItem != null) {
+                    model.previousSelectedChannelItem.setSelected(false);
+                }
                 model.selectedChannelItem.set(null);
             }
         }
@@ -264,11 +274,6 @@ public abstract class ChannelSelectionMenu<
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channelItem -> {
                         if (channelItem != null) {
-                            if (model.previousSelectedChannelItem != null) {
-                                model.previousSelectedChannelItem.setSelected(false);
-                            }
-                            model.previousSelectedChannelItem = channelItem;
-                            channelItem.setSelected(true);
                             controller.onSelected(channelItem);
                         }
                     });
@@ -277,11 +282,6 @@ public abstract class ChannelSelectionMenu<
                         if (channelItem == null) {
                             listView.getSelectionModel().clearSelection();
                         } else if (!channelItem.equals(listView.getSelectionModel().getSelectedItem())) {
-                            if (model.previousSelectedChannelItem != null) {
-                                model.previousSelectedChannelItem.setSelected(false);
-                            }
-                            model.previousSelectedChannelItem = channelItem;
-                            channelItem.setSelected(true);
                             listView.getSelectionModel().select(channelItem);
                         }
                     });
