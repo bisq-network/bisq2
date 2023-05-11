@@ -137,14 +137,6 @@ public class BisqEasyPrivateTradeChatChannelSelection extends PrivateChatChannel
             }
         }
 
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
-
         public void onLeaveChannel(BisqEasyPrivateTradeChatChannel privateChatChannel) {
             new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
                     .closeButtonText(Res.get("cancel"))

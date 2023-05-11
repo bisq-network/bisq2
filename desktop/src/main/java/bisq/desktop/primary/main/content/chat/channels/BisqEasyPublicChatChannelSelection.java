@@ -149,15 +149,6 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
             numVisibleChannelsPin.unbind();
         }
 
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
-
         public void onShowMarket(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);

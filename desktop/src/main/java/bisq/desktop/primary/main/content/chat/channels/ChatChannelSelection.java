@@ -39,8 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -83,8 +83,8 @@ public abstract class ChatChannelSelection<
         protected final E chatChannelSelectionService;
 
         protected Pin channelsPin, selectedChannelPin;
-        protected final List<Pin> seenChatMessageIdsPins = new ArrayList<>();
-        protected final List<Pin> numChatMessagesPins = new ArrayList<>();
+        protected final Map<String, Pin> seenChatMessageIdsPins = new HashMap<>();
+        protected final Map<String, Pin> numChatMessagesPins = new HashMap<>();
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
@@ -116,23 +116,37 @@ public abstract class ChatChannelSelection<
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> handleSelectedChannelChange(chatChannel)));
 
-            chatChannelService.getChannels().forEach(channel -> {
-                Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
-                seenChatMessageIdsPins.add(seenChatMessageIdsPin);
-                Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
-                numChatMessagesPins.add(numChatMessagesPin);
-            });
+            chatChannelService.getChannels().forEach(this::addListenersToChannel);
         }
-
-        protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
 
         @Override
         public void onDeactivate() {
             channelsPin.unbind();
             selectedChannelPin.unbind();
-            seenChatMessageIdsPins.forEach(Pin::unbind);
+            unbindAndClearAllChannelListeners();
+        }
+
+        protected void addListenersToChannel(C channel) {
+            Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
+            seenChatMessageIdsPins.put(channel.getId(), seenChatMessageIdsPin);
+            Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
+            numChatMessagesPins.put(channel.getId(), numChatMessagesPin);
+        }
+
+        protected void removeListenersToChannel(String channelId) {
+            seenChatMessageIdsPins.get(channelId).unbind();
+            seenChatMessageIdsPins.remove(channelId);
+            numChatMessagesPins.get(channelId).unbind();
+            numChatMessagesPins.remove(channelId);
+        }
+
+        protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
+
+
+        protected void unbindAndClearAllChannelListeners() {
+            seenChatMessageIdsPins.values().forEach(Pin::unbind);
             seenChatMessageIdsPins.clear();
-            numChatMessagesPins.forEach(Pin::unbind);
+            numChatMessagesPins.values().forEach(Pin::unbind);
             numChatMessagesPins.clear();
         }
 
@@ -144,7 +158,13 @@ public abstract class ChatChannelSelection<
             model.filteredList.setPredicate(item -> true);
         }
 
-        abstract protected void onSelected(View.ChannelItem channelItem);
+        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
+            if (channelItem == null) {
+                chatChannelSelectionService.selectChannel(null);
+            } else {
+                chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            }
+        }
 
         private boolean isNotMyMessage(ChatMessage chatMessage) {
             return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());

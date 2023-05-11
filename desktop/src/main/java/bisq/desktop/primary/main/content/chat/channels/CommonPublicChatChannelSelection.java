@@ -22,7 +22,6 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,23 +71,9 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
             return new Model(chatChannelDomain);
         }
-
-        @Override
-        public void onActivate() {
-            super.onActivate();
-        }
-
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
     }
 
-    protected static class Model extends ChatChannelSelection.Model {
+    protected static class Model extends PublicChatChannelSelection.Model {
         public Model(ChatChannelDomain chatChannelDomain) {
             super(chatChannelDomain);
         }
@@ -97,11 +82,6 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
     protected static class View extends PublicChatChannelSelection.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
-        }
-
-        @Override
-        protected String getHeadlineText() {
-            return Res.get("social.publicChannels");
         }
     }
 }

@@ -28,6 +28,7 @@ import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.i18n.Res;
 import javafx.collections.MapChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -81,6 +82,11 @@ public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
             C extends ChatChannelSelection.Controller<?, M, ?, ?, ?>> extends ChatChannelSelection.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
+        }
+
+        @Override
+        protected String getHeadlineText() {
+            return Res.get("social.publicChannels");
         }
 
         protected ListCell<ChannelItem> getListCell() {

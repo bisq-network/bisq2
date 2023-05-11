@@ -91,7 +91,6 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
             return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
         }
 
-
         @Override
         protected View createAndGetView() {
             return new View(model, this);
@@ -100,24 +99,6 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
         @Override
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
             return new Model(chatChannelDomain);
-        }
-
-        @Override
-        public void onActivate() {
-            super.onActivate();
-        }
-
-        @Override
-        public void onDeactivate() {
-            super.onDeactivate();
-        }
-
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
@@ -148,20 +129,6 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
             super(model, controller);
         }
 
-        @Override
-        protected void onViewAttached() {
-            super.onViewAttached();
-        }
-
-        @Override
-        protected void onViewDetached() {
-            super.onViewDetached();
-        }
-
-        @Override
-        protected String getHeadlineText() {
-            return Res.get("social.privateChannels");
-        }
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {

@@ -24,7 +24,9 @@ import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.message.ChatMessage;
-import javafx.scene.control.ListCell;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.i18n.Res;
 
 public abstract class PrivateChatChannelSelection<
         C extends PrivateChatChannel<?>,
@@ -37,13 +39,15 @@ public abstract class PrivateChatChannelSelection<
     }
 
     protected static abstract class Controller<
-            V extends ChatChannelSelection.View<M, ?>,
+            V extends PrivateChatChannelSelection.View<M, ?>,
             M extends Model,
             C extends PrivateChatChannel<?>,
             S extends PrivateChatChannelService<?, C, ?>,
             E extends ChatChannelSelectionService
             >
             extends ChatChannelSelection.Controller<V, M, C, S, E> {
+
+        protected Pin channelCollectionObserverPin;
 
         public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService, chatChannelDomain);
@@ -52,6 +56,30 @@ public abstract class PrivateChatChannelSelection<
         @Override
         public void onActivate() {
             super.onActivate();
+
+            channelCollectionObserverPin = chatChannelService.getChannels().addListener(new CollectionObserver<>() {
+                @Override
+                public void add(C channel) {
+                    addListenersToChannel(channel);
+                }
+
+                @Override
+                public void remove(Object channel) {
+                    if (channel instanceof PrivateChatChannel<?>) {
+                        removeListenersToChannel(((PrivateChatChannel<?>) channel).getId());
+                    }
+                }
+
+                @Override
+                public void clear() {
+                    unbindAndClearAllChannelListeners();
+                }
+            });
+        }
+
+        @Override
+        public void onDeactivate() {
+            channelCollectionObserverPin.unbind();
         }
 
         @Override
@@ -69,19 +97,15 @@ public abstract class PrivateChatChannelSelection<
 
     protected static abstract class View<
             M extends Model,
-            C extends ChatChannelSelection.Controller<?, M, ?, ?, ?>
+            C extends PrivateChatChannelSelection.Controller<?, M, ?, ?, ?>
             > extends ChatChannelSelection.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
         }
 
-        protected ListCell<ChannelItem> getListCell() {
-            return new ListCell<>() {
-                @Override
-                protected void updateItem(ChannelItem item, boolean empty) {
-                    super.updateItem(item, empty);
-                }
-            };
+        @Override
+        protected String getHeadlineText() {
+            return Res.get("social.privateChannels");
         }
     }
 }
