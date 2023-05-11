@@ -30,24 +30,25 @@ import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Slf4j
 @Getter
 public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionService {
-    private final TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService;
+    private final BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService;
 
     public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
-                                               BisqEasyPrivateTradeChatChannelService privateChatChannelService,
-                                               BisqEasyPublicChatChannelService publicChatChannelService,
                                                TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService,
+                                               BisqEasyPublicChatChannelService publicChatChannelService,
+                                               BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService,
                                                UserIdentityService userIdentityService) {
         super(persistenceService,
-                privateChatChannelService,
+                privateBisqEasyTwoPartyChannelService,
                 publicChatChannelService,
                 ChatChannelDomain.BISQ_EASY,
                 userIdentityService);
-        this.privateBisqEasyTwoPartyChannelService = privateBisqEasyTwoPartyChannelService;
+        this.bisqEasyPrivateTradeChatChannelService = bisqEasyPrivateTradeChatChannelService;
     }
 
     @Override
@@ -61,9 +62,27 @@ public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionSer
     }
 
     @Override
+    public void maybeSelectFirstChannel() {
+        Set<BisqEasyPublicChatChannel> visibleBisqEasyPublicChatChannels = getVisibleChannels();
+        if (!visibleBisqEasyPublicChatChannels.isEmpty()) {
+            selectChannel(getVisibleChannels().stream().findFirst().orElse(null));
+        } else if (!bisqEasyPrivateTradeChatChannelService.getChannels().isEmpty()) {
+            selectChannel(bisqEasyPrivateTradeChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else if (!privateChatChannelService.getChannels().isEmpty()) {
+            selectChannel(privateChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else {
+            selectChannel(null);
+        }
+    }
+
+    private Set<BisqEasyPublicChatChannel> getVisibleChannels() {
+        return ((BisqEasyPublicChatChannelService) publicChatChannelService).getVisibleChannels();
+    }
+
+    @Override
     protected Stream<ChatChannel<?>> getAllChatChannels() {
         return Stream.concat(publicChatChannelService.getChannels().stream(),
-                Stream.concat(privateBisqEasyTwoPartyChannelService.getChannels().stream(),
-                        privateChatChannelService.getChannels().stream()));
+                Stream.concat(privateChatChannelService.getChannels().stream(),
+                        bisqEasyPrivateTradeChatChannelService.getChannels().stream()));
     }
 }

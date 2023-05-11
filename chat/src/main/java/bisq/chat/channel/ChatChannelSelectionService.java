@@ -18,7 +18,7 @@
 package bisq.chat.channel;
 
 import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.PrivateChatChannelService;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.ChatMessage;
@@ -39,13 +39,13 @@ import java.util.stream.Stream;
 public class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
-    protected final PrivateChatChannelService<?, ?, ?> privateChatChannelService;
+    protected final TwoPartyPrivateChatChannelService privateChatChannelService;
     protected final PublicChatChannelService<?, ?, ?> publicChatChannelService;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
     private final UserIdentityService userIdentityService;
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
-                                       PrivateChatChannelService<?, ?, ?> privateChatChannelService,
+                                       TwoPartyPrivateChatChannelService privateChatChannelService,
                                        PublicChatChannelService<?, ?, ?> publicChatChannelService,
                                        ChatChannelDomain chatChannelDomain,
                                        UserIdentityService userIdentityService) {
@@ -60,7 +60,9 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        maybeSelectDefaultChannel();
+
+        publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -86,7 +88,6 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
         persist();
 
         applySelectedChannel();
-        maybeSelectDefaultChannel();
     }
 
     protected void applySelectedChannel() {
@@ -101,10 +102,13 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
                 privateChatChannelService.getChannels().stream());
     }
 
-    public void maybeSelectDefaultChannel() {
-        if (selectedChannel.get() == null) {
-            publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+    public void maybeSelectFirstChannel() {
+        if (!publicChatChannelService.getChannels().isEmpty()) {
+            selectChannel(publicChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else if (!privateChatChannelService.getChannels().isEmpty()) {
+            selectChannel(privateChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else {
+            selectChannel(null);
         }
-        persist();
     }
 }

@@ -114,7 +114,7 @@ public abstract class ChannelSelectionMenu<
                     .to(chatChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> UIThread.runOnNextRenderFrame(() -> handleSelectedChannelChange(chatChannel)));
+                    chatChannel -> handleSelectedChannelChange(chatChannel));
 
             chatChannelService.getChannels().forEach(this::addListenersToChannel);
         }
@@ -175,6 +175,7 @@ public abstract class ChannelSelectionMenu<
 
         protected void doLeaveChannel(C chatChannel) {
             chatChannelService.leaveChannel(chatChannel);
+            chatChannelSelectionService.maybeSelectFirstChannel();
         }
 
         protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {

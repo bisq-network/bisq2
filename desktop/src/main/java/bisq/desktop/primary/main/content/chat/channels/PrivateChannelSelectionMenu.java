@@ -94,9 +94,10 @@ public abstract class PrivateChannelSelectionMenu<
                 // We map the ChatChannel<?> chatChannel to our generic type
                 chatChannelService.findChannel(chatChannel.getId())
                         .ifPresent(privateChatChannel -> {
-                            String dontShowAgainId = "leaveChannel";
+                            String dontShowAgainId = "leavePrivateChannel";
                             if (DontShowAgainService.showAgain(dontShowAgainId)) {
-                                new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
+                                new Popup().warning(Res.get("social.privateChannel.leave.warning",
+                                                privateChatChannel.getMyUserIdentity().getUserName()))
                                         .dontShowAgainId(dontShowAgainId)
                                         .closeButtonText(Res.get("cancel"))
                                         .actionButtonText(Res.get("social.privateChannel.leave"))

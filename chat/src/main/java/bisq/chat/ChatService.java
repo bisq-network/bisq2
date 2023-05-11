@@ -84,9 +84,9 @@ public class ChatService implements Service {
                 proofOfWorkService);
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY);
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY, new BisqEasyChatChannelSelectionService(persistenceService,
-                bisqEasyPrivateTradeChatChannelService,
-                bisqEasyPublicChatChannelService,
                 twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY),
+                bisqEasyPublicChatChannelService,
+                bisqEasyPrivateTradeChatChannelService,
                 userIdentityService));
 
         // DISCUSSION
