@@ -43,17 +43,17 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
     private final Persistence<CommonPublicChatChannelStore> persistence;
-    private final List<CommonPublicChatChannel> defaultChannels;
+    private final List<CommonPublicChatChannel> channels;
 
     public CommonPublicChatChannelService(PersistenceService persistenceService,
                                           NetworkService networkService,
                                           UserIdentityService userIdentityService,
                                           UserProfileService userProfileService,
                                           ChatChannelDomain chatChannelDomain,
-                                          List<CommonPublicChatChannel> defaultChannels) {
+                                          List<CommonPublicChatChannel> channels) {
         super(networkService, userIdentityService, userProfileService, chatChannelDomain);
 
-        this.defaultChannels = defaultChannels;
+        this.channels = channels;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
@@ -135,7 +135,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
             return;
         }
 
-        getChannels().setAll(defaultChannels);
+        getChannels().setAll(channels);
         persist();
     }
 }

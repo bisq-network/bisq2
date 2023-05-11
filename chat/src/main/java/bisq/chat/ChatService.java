@@ -198,14 +198,14 @@ public class ChatService implements Service {
                         chatChannelDomain));
     }
 
-    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain, List<CommonPublicChatChannel> defaultChannels) {
+    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain, List<CommonPublicChatChannel> channels) {
         commonPublicChatChannelServices.put(chatChannelDomain,
                 new CommonPublicChatChannelService(persistenceService,
                         networkService,
                         userIdentityService,
                         userProfileService,
                         chatChannelDomain,
-                        defaultChannels));
+                        channels));
     }
 
     private void addToChatChannelSelectionServices(ChatChannelDomain chatChannelDomain) {

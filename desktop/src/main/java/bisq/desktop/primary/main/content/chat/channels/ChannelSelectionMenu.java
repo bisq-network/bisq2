@@ -142,7 +142,6 @@ public abstract class ChannelSelectionMenu<
 
         protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
 
-
         protected void unbindAndClearAllChannelListeners() {
             seenChatMessageIdsPins.values().forEach(Pin::unbind);
             seenChatMessageIdsPins.clear();
@@ -166,14 +165,6 @@ public abstract class ChannelSelectionMenu<
             }
         }
 
-        private boolean isNotMyMessage(ChatMessage chatMessage) {
-            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
-        }
-
-        private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
-            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
-        }
-
         protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
             return model.channelItems.stream()
                     .filter(Objects::nonNull)
@@ -192,6 +183,15 @@ public abstract class ChannelSelectionMenu<
                 model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
         }
+
+        protected boolean isNotMyMessage(ChatMessage chatMessage) {
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+        }
+
+        protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {
+            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
+        }
+
     }
 
     @Getter

@@ -92,7 +92,7 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
                 privateChatChannelService.getChannels().stream());
     }
 
-    protected void maybeSelectDefaultChannel() {
+    public void maybeSelectDefaultChannel() {
         if (selectedChannel.get() == null) {
             publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
         }

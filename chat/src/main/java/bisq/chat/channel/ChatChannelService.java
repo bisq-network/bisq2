@@ -103,5 +103,9 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
                 .findAny();
     }
 
+    public Optional<C> getDefaultChannel() {
+        return getChannels().stream().findFirst();
+    }
+
     protected abstract String getChannelTitlePostFix(ChatChannel<? extends ChatMessage> chatChannel);
 }

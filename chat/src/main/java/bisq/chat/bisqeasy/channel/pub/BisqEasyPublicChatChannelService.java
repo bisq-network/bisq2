@@ -131,10 +131,14 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return findChannel(BisqEasyPublicChatChannel.createId(market));
     }
 
+    @Override
     public Optional<BisqEasyPublicChatChannel> getDefaultChannel() {
+        Market defaultMarket = MarketRepository.getDefault();
         return getChannels().stream()
-                .filter(channel -> MarketRepository.getDefault().equals(channel.getMarket()))
-                .findAny();
+                .filter(this::isVisible)
+                .filter(channel -> defaultMarket.equals(channel.getMarket()))
+                .findAny()
+                .or(super::getDefaultChannel);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////

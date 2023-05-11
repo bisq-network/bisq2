@@ -46,7 +46,11 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
+public abstract class PrivateChatChannelService<
+        M extends PrivateChatMessage,
+        C extends PrivateChatChannel<M>,
+        S extends PersistableStore<S>
+        > extends ChatChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
