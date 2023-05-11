@@ -24,7 +24,9 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.persistence.PersistenceService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,27 +40,23 @@ public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionSer
     public BisqEasyChatChannelSelectionService(PersistenceService persistenceService,
                                                BisqEasyPrivateTradeChatChannelService privateChatChannelService,
                                                BisqEasyPublicChatChannelService publicChatChannelService,
-                                               TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService) {
+                                               TwoPartyPrivateChatChannelService privateBisqEasyTwoPartyChannelService,
+                                               UserIdentityService userIdentityService) {
         super(persistenceService,
                 privateChatChannelService,
                 publicChatChannelService,
-                ChatChannelDomain.BISQ_EASY);
+                ChatChannelDomain.BISQ_EASY,
+                userIdentityService);
         this.privateBisqEasyTwoPartyChannelService = privateBisqEasyTwoPartyChannelService;
     }
 
     @Override
-    protected void maybeSelectDefaultChannel() {
-        if (selectedChannel.get() == null) {
-            publicChatChannelService.getDefaultChannel()
-                    .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
-                    .map(channel -> (BisqEasyPublicChatChannel) channel)
-                    .ifPresent(channel -> {
-                        selectChannel(channel);
-                        ((BisqEasyPublicChatChannelService) publicChatChannelService).showChannel(channel);
-                    });
-
+    public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
+        super.selectChannel(chatChannel);
+        if (chatChannel instanceof BisqEasyPublicChatChannel) {
+            BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
+            ((BisqEasyPublicChatChannelService) publicChatChannelService).showChannel(bisqEasyPublicChatChannel);
         }
-        persist();
     }
 
     @Override

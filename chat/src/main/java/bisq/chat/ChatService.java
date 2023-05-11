@@ -86,7 +86,8 @@ public class ChatService implements Service {
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY, new BisqEasyChatChannelSelectionService(persistenceService,
                 bisqEasyPrivateTradeChatChannelService,
                 bisqEasyPublicChatChannelService,
-                twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY)));
+                twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY),
+                userIdentityService));
 
         // DISCUSSION
         addToCommonPublicChatChannelServices(ChatChannelDomain.DISCUSSION,
@@ -213,6 +214,7 @@ public class ChatService implements Service {
                 new ChatChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(chatChannelDomain),
                         commonPublicChatChannelServices.get(chatChannelDomain),
-                        chatChannelDomain));
+                        chatChannelDomain,
+                        userIdentityService));
     }
 }

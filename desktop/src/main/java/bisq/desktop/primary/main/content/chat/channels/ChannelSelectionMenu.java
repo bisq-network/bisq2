@@ -140,14 +140,22 @@ public abstract class ChannelSelectionMenu<
             numChatMessagesPins.remove(channelId);
         }
 
-        protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
-
         protected void unbindAndClearAllChannelListeners() {
             seenChatMessageIdsPins.values().forEach(Pin::unbind);
             seenChatMessageIdsPins.clear();
             numChatMessagesPins.values().forEach(Pin::unbind);
             numChatMessagesPins.clear();
         }
+
+        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+            if (isChannelExpectedInstance(chatChannel)) {
+                model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
+            } else {
+                model.selectedChannelItem.set(null);
+            }
+        }
+
+        protected abstract boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel);
 
         public void deSelectChannel() {
             model.getSelectedChannelItem().set(null);
@@ -191,7 +199,6 @@ public abstract class ChannelSelectionMenu<
         protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {
             return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
-
     }
 
     @Getter

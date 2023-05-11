@@ -83,15 +83,8 @@ public abstract class PrivateChannelSelectionMenu<
         }
 
         @Override
-        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
-            if (chatChannel instanceof PrivateChatChannel) {
-                PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
-                model.selectedChannelItem.set(findOrCreateChannelItem(privateChatChannel));
-                //todo move logic to service
-                userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
-            } else {
-                model.selectedChannelItem.set(null);
-            }
+        protected boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel) {
+            return chatChannel instanceof PrivateChatChannel;
         }
     }
 

@@ -17,6 +17,7 @@
 
 package bisq.chat.channel;
 
+import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
@@ -26,6 +27,7 @@ import bisq.common.util.StringUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,11 +42,14 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     protected final PrivateChatChannelService<?, ?, ?> privateChatChannelService;
     protected final PublicChatChannelService<?, ?, ?> publicChatChannelService;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    private final UserIdentityService userIdentityService;
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
                                        PrivateChatChannelService<?, ?, ?> privateChatChannelService,
                                        PublicChatChannelService<?, ?, ?> publicChatChannelService,
-                                       ChatChannelDomain chatChannelDomain) {
+                                       ChatChannelDomain chatChannelDomain,
+                                       UserIdentityService userIdentityService) {
+        this.userIdentityService = userIdentityService;
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(chatChannelDomain.name()) + "ChannelSelectionStore",
@@ -72,12 +77,16 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof PublicChatChannel) {
             publicChatChannelService.removeExpiredMessages(chatChannel);
+        } else if (chatChannel instanceof PrivateChatChannel) {
+            PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
+            userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
         }
 
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
         persist();
 
         applySelectedChannel();
+        maybeSelectDefaultChannel();
     }
 
     protected void applySelectedChannel() {
