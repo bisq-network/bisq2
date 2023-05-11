@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CommonPublicChatChannelSelection extends PublicChatChannelSelection<
+public class CommonPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
         CommonPublicChatChannel,
         CommonPublicChatChannelService,
         ChatChannelSelectionService
@@ -34,13 +34,13 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
     @Getter
     private final Controller controller;
 
-    public CommonPublicChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+    public CommonPublicChannelSelectionMenu(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
         super();
 
         controller = new Controller(applicationService, chatChannelDomain);
     }
 
-    protected static class Controller extends PublicChatChannelSelection.Controller<
+    protected static class Controller extends PublicChannelSelectionMenu.Controller<
             View,
             Model,
             CommonPublicChatChannel,
@@ -73,13 +73,13 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
         }
     }
 
-    protected static class Model extends PublicChatChannelSelection.Model {
+    protected static class Model extends PublicChannelSelectionMenu.Model {
         public Model(ChatChannelDomain chatChannelDomain) {
             super(chatChannelDomain);
         }
     }
 
-    protected static class View extends PublicChatChannelSelection.View<Model, Controller> {
+    protected static class View extends PublicChannelSelectionMenu.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }

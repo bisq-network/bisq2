@@ -37,8 +37,8 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.primary.main.content.chat.ChatController;
-import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateTradeChatChannelSelection;
-import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.BisqEasyPrivateChannelSelectionMenu;
+import bisq.desktop.primary.main.content.chat.channels.BisqEasyPublicChannelSelectionMenu;
 import bisq.desktop.primary.main.content.components.MarketImageComposition;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideController;
 import bisq.desktop.primary.overlay.bisqeasy.createoffer.CreateOfferController;
@@ -61,8 +61,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final SettingsService settingsService;
     private final MediationService mediationService;
     private final Optional<WalletService> walletService;
-    private BisqEasyPublicChatChannelSelection bisqEasyPublicChatChannelSelection;
-    private BisqEasyPrivateTradeChatChannelSelection bisqEasyPrivateTradeChatChannelSelection;
+    private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
+    private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
     BisqEasyPrivateTradeChatMessage lastOfferMessage;
 
     private Pin offerOnlySettingsPin, inMediationPin, chatMessagesPin, bisqEasyPrivateTradeChatChannelsPin;
@@ -103,8 +103,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
 
     @Override
     public void createServices(ChatChannelDomain chatChannelDomain) {
-        bisqEasyPublicChatChannelSelection = new BisqEasyPublicChatChannelSelection(applicationService);
-        bisqEasyPrivateTradeChatChannelSelection = new BisqEasyPrivateTradeChatChannelSelection(applicationService);
+        bisqEasyPublicChannelSelectionMenu = new BisqEasyPublicChannelSelectionMenu(applicationService);
+        bisqEasyPrivateChannelSelectionMenu = new BisqEasyPrivateChannelSelectionMenu(applicationService);
     }
 
     @Override
@@ -116,9 +116,9 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public BisqEasyChatView createAndGetView() {
         return new BisqEasyChatView(model,
                 this,
-                bisqEasyPublicChatChannelSelection.getRoot(),
-                bisqEasyPrivateTradeChatChannelSelection.getRoot(),
-                twoPartyPrivateChatChannelSelection.getRoot(),
+                bisqEasyPublicChannelSelectionMenu.getRoot(),
+                bisqEasyPrivateChannelSelectionMenu.getRoot(),
+                twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
     }
@@ -147,8 +147,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                                 privateChannel.isMediator()));
 
 
-                bisqEasyPublicChatChannelSelection.deSelectChannel();
-                twoPartyPrivateChatChannelSelection.deSelectChannel();
+                bisqEasyPublicChannelSelectionMenu.deSelectChannel();
+                twoPartyPrivateChannelSelectionMenu.deSelectChannel();
                 model.getCreateOfferButtonVisible().set(false);
                 model.getTradeHelpersVisible().set(true);
 
@@ -159,8 +159,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             } else if (chatChannel instanceof TwoPartyPrivateChatChannel) {
                 TwoPartyPrivateChatChannel privateChannel = (TwoPartyPrivateChatChannel) chatChannel;
                 applyPeersIcon(privateChannel);
-                bisqEasyPublicChatChannelSelection.deSelectChannel();
-                bisqEasyPrivateTradeChatChannelSelection.deSelectChannel();
+                bisqEasyPublicChannelSelectionMenu.deSelectChannel();
+                bisqEasyPrivateChannelSelectionMenu.deSelectChannel();
                 model.getTradeHelpersVisible().set(false);
                 model.getCreateOfferButtonVisible().set(false);
             } else {
@@ -169,7 +169,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 model.getTradeHelpersVisible().set(false);
                 model.getCreateOfferButtonVisible().set(true);
                 model.getActionButtonText().set(Res.get("createOffer"));
-                twoPartyPrivateChatChannelSelection.deSelectChannel();
+                twoPartyPrivateChannelSelectionMenu.deSelectChannel();
 
                 Market market = ((BisqEasyPublicChatChannel) chatChannel).getMarket();
                 StackPane marketsImage = MarketImageComposition.imageBoxForMarket(

@@ -41,20 +41,20 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
+public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
         S extends PublicChatChannelService<?, C, ?>,
-        E extends ChatChannelSelectionService> extends ChatChannelSelection<C, S, E> {
+        E extends ChatChannelSelectionService> extends ChannelSelectionMenu<C, S, E> {
 
-    public PublicChatChannelSelection() {
+    public PublicChannelSelectionMenu() {
         super();
     }
 
-    protected static abstract class Controller<V extends ChatChannelSelection.View<M, ?>,
+    protected static abstract class Controller<V extends ChannelSelectionMenu.View<M, ?>,
             M extends Model,
             C extends ChatChannel<?>,
             S extends ChatChannelService<?, C, ?>,
             E extends ChatChannelSelectionService>
-            extends ChatChannelSelection.Controller<V, M, C, S, E> {
+            extends ChannelSelectionMenu.Controller<V, M, C, S, E> {
 
         public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService, chatChannelDomain);
@@ -78,8 +78,8 @@ public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
         }
     }
 
-    protected static abstract class View<M extends ChatChannelSelection.Model,
-            C extends ChatChannelSelection.Controller<?, M, ?, ?, ?>> extends ChatChannelSelection.View<M, C> {
+    protected static abstract class View<M extends ChannelSelectionMenu.Model,
+            C extends ChannelSelectionMenu.Controller<?, M, ?, ?, ?>> extends ChannelSelectionMenu.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
         }

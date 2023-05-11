@@ -24,8 +24,8 @@ import bisq.chat.channel.pub.CommonPublicChatChannelService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.PublicChatController;
-import bisq.desktop.primary.main.content.chat.channels.CommonPublicChatChannelSelection;
-import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.CommonPublicChannelSelectionMenu;
+import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelectionMenu;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,8 +45,8 @@ public class CommonChatController extends PublicChatController<CommonChatView, C
     }
 
     @Override
-    public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain) {
-        return new CommonPublicChatChannelSelection(applicationService, chatChannelDomain);
+    public PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain) {
+        return new CommonPublicChannelSelectionMenu(applicationService, chatChannelDomain);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class CommonChatController extends PublicChatController<CommonChatView, C
         return new CommonChatView(model,
                 this,
                 publicChatChannelSelection.getRoot(),
-                twoPartyPrivateChatChannelSelection.getRoot(),
+                twoPartyPrivateChannelSelectionMenu.getRoot(),
                 chatMessagesComponent.getRoot(),
                 channelSidebar.getRoot());
     }

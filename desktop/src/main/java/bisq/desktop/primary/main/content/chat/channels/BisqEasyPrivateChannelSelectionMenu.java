@@ -18,12 +18,16 @@
 package bisq.desktop.primary.main.content.chat.channels;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
+import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
-import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
+import bisq.chat.message.ChatMessage;
+import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -34,6 +38,8 @@ import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.MapChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -54,41 +60,41 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
-public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelection<
-        TwoPartyPrivateChatChannel,
-        TwoPartyPrivateChatChannelService,
-        ChatChannelSelectionService
+public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
+        BisqEasyPrivateTradeChatChannel,
+        BisqEasyPrivateTradeChatChannelService,
+        BisqEasyChatChannelSelectionService
         > {
     @Getter
     private final Controller controller;
 
-    public TwoPartyPrivateChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-        controller = new Controller(applicationService, chatChannelDomain);
+    public BisqEasyPrivateChannelSelectionMenu(DefaultApplicationService applicationService) {
+        controller = new Controller(applicationService);
     }
 
-    protected static class Controller extends PrivateChatChannelSelection.Controller<
+    protected static class Controller extends PrivateChannelSelectionMenu.Controller<
             View,
             Model,
-            TwoPartyPrivateChatChannel,
-            TwoPartyPrivateChatChannelService,
-            ChatChannelSelectionService
+            BisqEasyPrivateTradeChatChannel,
+            BisqEasyPrivateTradeChatChannelService,
+            BisqEasyChatChannelSelectionService
             > {
 
-        protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-            super(applicationService, chatChannelDomain);
+        private Pin inMediationPin;
+
+        protected Controller(DefaultApplicationService applicationService) {
+            super(applicationService, ChatChannelDomain.BISQ_EASY);
         }
 
         @Override
-        protected TwoPartyPrivateChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
+        protected BisqEasyPrivateTradeChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyPrivateTradeChatChannelService();
         }
 
         @Override
-        protected ChatChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
-            return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        protected BisqEasyChatChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getBisqEasyChatChannelSelectionService();
         }
 
         @Override
@@ -98,37 +104,95 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
 
         @Override
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
-            return new Model(chatChannelDomain);
+            return new Model();
         }
 
-        public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
+        @Override
+        public void onActivate() {
+            super.onActivate();
+        }
+
+        @Override
+        public void onDeactivate() {
+            super.onDeactivate();
+
+            if (inMediationPin != null) {
+                inMediationPin.unbind();
+                inMediationPin = null;
+            }
+        }
+
+        @Override
+        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+            if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
+                BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
+                model.selectedChannelItem.set(findOrCreateChannelItem(bisqEasyPrivateTradeChatChannel));
+                userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
+                if (inMediationPin != null) {
+                    inMediationPin.unbind();
+                }
+                inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.getIsInMediation());
+            } else {
+                model.selectedChannelItem.set(null);
+            }
+        }
+
+        public void onLeaveChannel(BisqEasyPrivateTradeChatChannel privateChatChannel) {
             new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
                     .closeButtonText(Res.get("cancel"))
                     .actionButtonText(Res.get("social.privateChannel.leave"))
-                    .onAction(() -> doLeaveChannel((TwoPartyPrivateChatChannel) privateChatChannel))
+                    .onAction(() -> doLeaveChannel(privateChatChannel))
                     .show();
         }
 
-        public void doLeaveChannel(TwoPartyPrivateChatChannel privateChatChannel) {
+        public void doLeaveChannel(BisqEasyPrivateTradeChatChannel privateChatChannel) {
             chatChannelService.leaveChannel(privateChatChannel);
             model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                     .findFirst()
                     .ifPresentOrElse(e -> chatChannelSelectionService.selectChannel(e.getChatChannel()),
                             () -> chatChannelSelectionService.selectChannel(null));
         }
-    }
 
-    protected static class Model extends PrivateChatChannelSelection.Model {
-        public Model(ChatChannelDomain chatChannelDomain) {
-            super(chatChannelDomain);
+        public String getChannelTitle(BisqEasyPrivateTradeChatChannel chatChannel) {
+            return chatService.findChatChannelService(chatChannel)
+                    .map(service -> service.getChannelTitle(chatChannel))
+                    .orElse("");
         }
     }
 
-    protected static class View extends PrivateChatChannelSelection.View<Model, Controller> {
+    protected static class Model extends PrivateChannelSelectionMenu.Model {
+        private final BooleanProperty mediationActivated = new SimpleBooleanProperty();
+
+        public Model() {
+            super(ChatChannelDomain.BISQ_EASY);
+        }
+    }
+
+    protected static class View extends PrivateChannelSelectionMenu.View<Model, Controller> {
+        private Subscription mediationActivatedPin;
+
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
 
+        @Override
+        protected void onViewAttached() {
+            super.onViewAttached();
+
+            mediationActivatedPin = EasyBind.subscribe(model.mediationActivated, mediationActivated ->
+                    UIThread.runOnNextRenderFrame(listView::refresh));
+        }
+
+        @Override
+        protected void onViewDetached() {
+            super.onViewDetached();
+            mediationActivatedPin.unsubscribe();
+        }
+
+        @Override
+        protected String getHeadlineText() {
+            return Res.get("chat.privateTradeChannels");
+        }
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
@@ -144,6 +208,8 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
                 final ColorAdjust hoverEffect = new ColorAdjust();
                 @Nullable
                 private Subscription widthSubscription;
+                @Nullable
+                private Pin inMediationPin;
                 @Nullable
                 MapChangeListener<String, Integer> channelIdWithNumUnseenMessagesMapListener;
 
@@ -198,6 +264,10 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
                             model.channelIdWithNumUnseenMessagesMap.removeListener(channelIdWithNumUnseenMessagesMapListener);
                             channelIdWithNumUnseenMessagesMapListener = null;
                         }
+                        if (inMediationPin != null) {
+                            inMediationPin.unbind();
+                            inMediationPin = null;
+                        }
                         Tooltip.install(this, null);
                         setGraphic(null);
                         return;
@@ -208,24 +278,61 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
                         return;
                     }
 
-                    PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) item.getChatChannel();
+                    BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
                     UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    checkArgument(privateChatChannel instanceof TwoPartyPrivateChatChannel);
-                    TwoPartyPrivateChatChannel twoPartyPrivateChatChannel = (TwoPartyPrivateChatChannel) privateChatChannel;
-                    peer = twoPartyPrivateChatChannel.getPeer();
+                    List<UserProfile> peers = privateChatChannel.getPeers();
+                    peer = peers.get(0);
                     roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                     Tooltip.install(this, tooltip);
                     icons.add(roboIcon);
 
-                    hBox.getChildren().clear();
-                    label.setText(item.getChannelTitle());
-                    tooltip.setText(peer.getTooltipString());
-                    hBox.getChildren().addAll(roboIcon, label, Spacer.fillHBox(), iconAndBadge);
-                    widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
-                        if (w.doubleValue() > 0) {
-                            label.setMaxWidth(getWidth() - 115);
-                        }
+                    if (inMediationPin != null) {
+                        inMediationPin.unbind();
+                    }
+                    inMediationPin = privateChatChannel.getIsInMediation().addObserver(e ->
+                    {
+                        UIThread.run(() -> {
+                            hBox.getChildren().clear();
+                            hBox.getChildren().add(roboIcon);
+
+                            if (privateChatChannel.findMediator().isPresent() &&
+                                    privateChatChannel.getIsInMediation().get()) {
+                                if (privateChatChannel.isMediator()) {
+                                    // We are the mediator
+                                    UserProfile trader1 = privateChatChannel.getPeer();
+                                    UserProfile trader2 = privateChatChannel.getPeers().get(1);
+                                    roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
+                                    secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
+                                    tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
+                                } else {
+                                    UserProfile mediator = privateChatChannel.findMediator().get();
+                                    secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
+                                    tooltip.setText(peer.getTooltipString() + "\n\n" +
+                                            Res.get("mediator") + ":\n" + mediator.getTooltipString());
+                                }
+                                hBox.getChildren().add(secondaryRoboIcon);
+                                icons.add(secondaryRoboIcon);
+                            } else {
+                                tooltip.setText(peer.getTooltipString());
+                            }
+                            label.setText(controller.getChannelTitle(privateChatChannel));
+
+                            hBox.getChildren().addAll(label, Spacer.fillHBox(), iconAndBadge);
+
+                            if (widthSubscription != null) {
+                                widthSubscription.unsubscribe();
+                            }
+                            widthSubscription = EasyBind.subscribe(widthProperty(), w -> {
+                                if (w.doubleValue() > 0) {
+                                    if (secondaryRoboIcon.getImage() != null) {
+                                        label.setMaxWidth(getWidth() - 140);
+                                    } else {
+                                        label.setMaxWidth(getWidth() - 115);
+                                    }
+                                }
+                            });
+                        });
                     });
                     removeIcon.setOpacity(0);
                     removeIcon.setOnMouseClicked(e -> controller.onLeaveChannel(privateChatChannel));

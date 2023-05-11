@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelection<
+public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
         BisqEasyPublicChatChannel,
         BisqEasyPublicChatChannelService,
         BisqEasyChatChannelSelectionService
@@ -74,11 +74,11 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
     @Getter
     private final Controller controller;
 
-    public BisqEasyPublicChatChannelSelection(DefaultApplicationService applicationService) {
+    public BisqEasyPublicChannelSelectionMenu(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
-    protected static class Controller extends PublicChatChannelSelection.Controller<
+    protected static class Controller extends PublicChannelSelectionMenu.Controller<
             View,
             Model,
             BisqEasyPublicChatChannel,
@@ -123,7 +123,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         public void onActivate() {
             super.onActivate();
 
-            model.sortedList.setComparator(Comparator.comparing(ChatChannelSelection.View.ChannelItem::getChannelTitle));
+            model.sortedList.setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
 
             numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
@@ -196,7 +196,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         }
     }
 
-    protected static class Model extends PublicChatChannelSelection.Model {
+    protected static class Model extends PublicChannelSelectionMenu.Model {
         private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
         private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
 
@@ -205,7 +205,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         }
     }
 
-    protected static class View extends PublicChatChannelSelection.View<Model, Controller> {
+    protected static class View extends PublicChannelSelectionMenu.View<Model, Controller> {
         protected final Label addChannelIcon;
 
         protected View(Model model, Controller controller) {

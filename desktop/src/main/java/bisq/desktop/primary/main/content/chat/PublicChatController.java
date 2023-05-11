@@ -29,7 +29,7 @@ import bisq.chat.message.ChatMessage;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.primary.main.content.chat.channels.PublicChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.PublicChannelSelectionMenu;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
@@ -38,7 +38,7 @@ import java.util.Optional;
 public abstract class PublicChatController<V extends ChatView, M extends ChatModel> extends ChatController<V, M> implements Controller {
     protected ChatChannelSelectionService chatChannelSelectionService;
     protected CommonPublicChatChannelService commonPublicChatChannelService;
-    protected PublicChatChannelSelection<?, ?, ?> publicChatChannelSelection;
+    protected PublicChannelSelectionMenu<?, ?, ?> publicChatChannelSelection;
 
     public PublicChatController(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain, NavigationTarget host) {
         super(applicationService, chatChannelDomain, host);
@@ -55,7 +55,7 @@ public abstract class PublicChatController<V extends ChatView, M extends ChatMod
 
     abstract public CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain);
 
-    abstract public PublicChatChannelSelection<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain);
+    abstract public PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain);
 
     @Override
     public void onActivate() {
@@ -78,7 +78,7 @@ public abstract class PublicChatController<V extends ChatView, M extends ChatMod
                 publicChatChannelSelection.deSelectChannel();
             } else {
                 applyDefaultPublicChannelIcon((PublicChatChannel<?>) chatChannel);
-                twoPartyPrivateChatChannelSelection.deSelectChannel();
+                twoPartyPrivateChannelSelectionMenu.deSelectChannel();
             }
         });
     }

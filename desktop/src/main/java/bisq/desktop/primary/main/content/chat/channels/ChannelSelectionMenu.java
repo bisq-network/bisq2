@@ -45,13 +45,13 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChatChannelSelection<
+public abstract class ChannelSelectionMenu<
         C extends ChatChannel<?>,
         S extends ChatChannelService<?, C, ?>,
         E extends ChatChannelSelectionService
         > {
 
-    public ChatChannelSelection() {
+    public ChannelSelectionMenu() {
     }
 
     public abstract Controller<?, ?, C, S, E> getController();
@@ -158,7 +158,7 @@ public abstract class ChatChannelSelection<
             model.filteredList.setPredicate(item -> true);
         }
 
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
+        protected void onSelected(ChannelSelectionMenu.View.ChannelItem channelItem) {
             if (channelItem == null) {
                 chatChannelSelectionService.selectChannel(null);
             } else {
@@ -174,7 +174,7 @@ public abstract class ChatChannelSelection<
             return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
 
-        protected ChatChannelSelection.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+        protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
             return model.channelItems.stream()
                     .filter(Objects::nonNull)
                     .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))

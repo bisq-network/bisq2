@@ -28,24 +28,24 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.i18n.Res;
 
-public abstract class PrivateChatChannelSelection<
+public abstract class PrivateChannelSelectionMenu<
         C extends PrivateChatChannel<?>,
         S extends PrivateChatChannelService<?, C, ?>,
         E extends ChatChannelSelectionService
-        > extends ChatChannelSelection<C, S, E> {
+        > extends ChannelSelectionMenu<C, S, E> {
 
-    public PrivateChatChannelSelection() {
+    public PrivateChannelSelectionMenu() {
         super();
     }
 
     protected static abstract class Controller<
-            V extends PrivateChatChannelSelection.View<M, ?>,
+            V extends PrivateChannelSelectionMenu.View<M, ?>,
             M extends Model,
             C extends PrivateChatChannel<?>,
             S extends PrivateChatChannelService<?, C, ?>,
             E extends ChatChannelSelectionService
             >
-            extends ChatChannelSelection.Controller<V, M, C, S, E> {
+            extends ChannelSelectionMenu.Controller<V, M, C, S, E> {
 
         protected Pin channelCollectionObserverPin;
 
@@ -97,8 +97,8 @@ public abstract class PrivateChatChannelSelection<
 
     protected static abstract class View<
             M extends Model,
-            C extends PrivateChatChannelSelection.Controller<?, M, ?, ?, ?>
-            > extends ChatChannelSelection.View<M, C> {
+            C extends PrivateChannelSelectionMenu.Controller<?, M, ?, ?, ?>
+            > extends ChannelSelectionMenu.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
         }
