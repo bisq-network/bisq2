@@ -22,13 +22,20 @@ import java.util.Collection;
 public interface CollectionObserver<S> {
     void add(S element);
 
-    void addAll(Collection<? extends S> values);
+    default void addAll(Collection<? extends S> values) {
+        values.forEach(this::add);
+    }
 
-    void setAll(Collection<? extends S> values);
+    default void setAll(Collection<? extends S> values) {
+        clear();
+        addAll(values);
+    }
 
     void remove(Object element);
 
-    void removeAll(Collection<?> values);
+    default void removeAll(Collection<?> values) {
+        values.forEach(this::remove);
+    }
 
     void clear();
 }
