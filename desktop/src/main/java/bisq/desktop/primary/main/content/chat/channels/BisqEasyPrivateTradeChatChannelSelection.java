@@ -110,28 +110,15 @@ public class BisqEasyPrivateTradeChatChannelSelection extends PrivateChatChannel
         @Override
         public void onActivate() {
             super.onActivate();
-
-            selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> {
-                        if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
-                            BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-                            model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
-                            userIdentityService.selectChatUserIdentity(bisqEasyPrivateTradeChatChannel.getMyUserIdentity());
-                            if (inMediationPin != null) {
-                                inMediationPin.unbind();
-                            }
-                            inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.getIsInMediation());
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
-                    });
         }
 
         @Override
         public void onDeactivate() {
             super.onDeactivate();
+
             if (inMediationPin != null) {
                 inMediationPin.unbind();
+                inMediationPin = null;
             }
         }
 

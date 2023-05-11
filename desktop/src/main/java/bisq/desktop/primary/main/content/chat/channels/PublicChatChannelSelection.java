@@ -64,10 +64,12 @@ public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
             super.onActivate();
         }
 
+        @Override
         protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
             if (chatChannel instanceof PublicChatChannel) {
                 model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
             } else if (chatChannel == null && !model.channelItems.isEmpty()) {
+                // TODO move logic to service
                 model.selectedChannelItem.set(model.channelItems.get(0));
             } else {
                 model.selectedChannelItem.set(null);

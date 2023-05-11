@@ -22,8 +22,6 @@ import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannelService;
-import bisq.desktop.common.observable.FxBindings;
-import bisq.desktop.common.threading.UIThread;
 import bisq.i18n.Res;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -78,18 +76,6 @@ public class CommonPublicChatChannelSelection extends PublicChatChannelSelection
         @Override
         public void onActivate() {
             super.onActivate();
-
-            selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> UIThread.runOnNextRenderFrame(() -> {
-                                if (chatChannel instanceof CommonPublicChatChannel) {
-                                    model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
-                                } else if (chatChannel == null && !model.channelItems.isEmpty()) {
-                                    model.selectedChannelItem.set(model.channelItems.get(0));
-                                } else {
-                                    model.selectedChannelItem.set(null);
-                                }
-                            }
-                    ));
         }
 
         @Override

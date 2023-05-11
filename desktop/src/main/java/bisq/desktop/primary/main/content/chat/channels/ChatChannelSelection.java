@@ -39,10 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 public abstract class ChatChannelSelection<
@@ -83,8 +83,8 @@ public abstract class ChatChannelSelection<
         protected final E chatChannelSelectionService;
 
         protected Pin channelsPin, selectedChannelPin;
-        protected final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
-        protected final Set<Pin> numChatMessagesPins = new HashSet<>();
+        protected final List<Pin> seenChatMessageIdsPins = new ArrayList<>();
+        protected final List<Pin> numChatMessagesPins = new ArrayList<>();
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
@@ -113,7 +113,6 @@ public abstract class ChatChannelSelection<
                     .map(this::findOrCreateChannelItem)
                     .to(chatChannelService.getChannels());
 
-
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
                     chatChannel -> UIThread.runOnNextRenderFrame(() -> handleSelectedChannelChange(chatChannel)));
 
@@ -132,7 +131,9 @@ public abstract class ChatChannelSelection<
             channelsPin.unbind();
             selectedChannelPin.unbind();
             seenChatMessageIdsPins.forEach(Pin::unbind);
+            seenChatMessageIdsPins.clear();
             numChatMessagesPins.forEach(Pin::unbind);
+            numChatMessagesPins.clear();
         }
 
         public void deSelectChannel() {

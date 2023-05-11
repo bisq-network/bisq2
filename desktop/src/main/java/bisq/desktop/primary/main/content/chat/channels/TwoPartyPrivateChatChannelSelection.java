@@ -24,7 +24,6 @@ import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -106,16 +105,6 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
         @Override
         public void onActivate() {
             super.onActivate();
-
-            selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> {
-                        if (chatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
-                            model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
-                            userIdentityService.selectChatUserIdentity(twoPartyPrivateChatChannel.getMyUserIdentity());
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
-                    });
         }
 
         @Override

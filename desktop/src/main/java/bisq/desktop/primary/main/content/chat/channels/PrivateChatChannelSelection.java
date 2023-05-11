@@ -59,6 +59,7 @@ public abstract class PrivateChatChannelSelection<
             if (chatChannel instanceof PrivateChatChannel) {
                 PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
                 model.selectedChannelItem.set(findOrCreateChannelItem(privateChatChannel));
+                //todo move logic to service
                 userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
             } else {
                 model.selectedChannelItem.set(null);
