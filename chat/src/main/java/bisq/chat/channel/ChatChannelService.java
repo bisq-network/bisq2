@@ -80,9 +80,9 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         findChannel(chatChannel.getId()).ifPresent(this::doRemoveExpiredMessages);
     }
 
-    public abstract void leaveChannel(C channel);
-
     public abstract ObservableArray<C> getChannels();
+
+    public abstract void leaveChannel(C channel);
 
     protected void doRemoveExpiredMessages(C channel) {
         Set<M> toRemove = channel.getChatMessages().stream()
@@ -97,7 +97,7 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
         }
     }
 
-    protected Optional<C> findChannel(String id) {
+    public Optional<C> findChannel(String id) {
         return getChannels().stream()
                 .filter(channel -> channel.getId().equals(id))
                 .findAny();

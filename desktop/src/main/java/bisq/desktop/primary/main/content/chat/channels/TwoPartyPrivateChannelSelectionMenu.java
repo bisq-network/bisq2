@@ -29,9 +29,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.MapChangeListener;
@@ -99,22 +97,6 @@ public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelection
         @Override
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
             return new Model(chatChannelDomain);
-        }
-
-        public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
-            new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
-                    .closeButtonText(Res.get("cancel"))
-                    .actionButtonText(Res.get("social.privateChannel.leave"))
-                    .onAction(() -> doLeaveChannel((TwoPartyPrivateChatChannel) privateChatChannel))
-                    .show();
-        }
-
-        public void doLeaveChannel(TwoPartyPrivateChatChannel privateChatChannel) {
-            chatChannelService.leaveChannel(privateChatChannel);
-            model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
-                    .findFirst()
-                    .ifPresentOrElse(e -> chatChannelSelectionService.selectChannel(e.getChatChannel()),
-                            () -> chatChannelSelectionService.selectChannel(null));
         }
     }
 

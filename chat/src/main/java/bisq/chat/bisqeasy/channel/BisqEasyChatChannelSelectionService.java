@@ -55,7 +55,7 @@ public class BisqEasyChatChannelSelectionService extends ChatChannelSelectionSer
         super.selectChannel(chatChannel);
         if (chatChannel instanceof BisqEasyPublicChatChannel) {
             BisqEasyPublicChatChannel bisqEasyPublicChatChannel = (BisqEasyPublicChatChannel) chatChannel;
-            ((BisqEasyPublicChatChannelService) publicChatChannelService).showChannel(bisqEasyPublicChatChannel);
+            ((BisqEasyPublicChatChannelService) publicChatChannelService).joinChannel(bisqEasyPublicChatChannel);
         }
     }
 

@@ -149,18 +149,18 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             numVisibleChannelsPin.unbind();
         }
 
-        public void onShowMarket(View.MarketListItem marketListItem) {
+        public void onJoinChannel(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
                 model.allMarkets.remove(marketListItem);
                 chatChannelService.findChannel(marketListItem.market)
                         .ifPresent(channel -> {
-                            chatChannelService.showChannel(channel);
+                            chatChannelService.joinChannel(channel);
                             chatChannelSelectionService.selectChannel(channel);
                         });
             }
         }
 
-        public void onHideTradeChannel(BisqEasyPublicChatChannel channel) {
+        public void onLeaveChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorUserProfileId()))
@@ -168,14 +168,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
-                chatChannelService.hideChannel(channel);
-
-                model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
-                if (!model.sortedList.isEmpty()) {
-                    chatChannelSelectionService.selectChannel(model.sortedList.get(0).getChatChannel());
-                } else {
-                    chatChannelSelectionService.selectChannel(null);
-                }
+                doLeaveChannel(channel);
             }
         }
 
@@ -226,7 +219,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     new ComboBoxOverlay<>(addChannelIcon,
                             model.allMarketsSortedList,
                             c -> getMarketListCell(),
-                            controller::onShowMarket,
+                            controller::onJoinChannel,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
                             Res.get("search"),
                             350, 5, 23, 31.5)
@@ -283,7 +276,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+                final Label leaveChannelIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Badge numMessagesBadge;
                 final StackPane iconAndBadge = new StackPane();
                 final Label label = new Label();
@@ -303,7 +296,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     numMessagesBadge = new Badge();
                     numMessagesBadge.setPosition(Pos.CENTER);
 
-                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeIcon);
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, leaveChannelIcon);
                     iconAndBadge.setAlignment(Pos.CENTER);
 
                     label.getStyleClass().add("bisq-text-8");
@@ -312,8 +305,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
                     HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
-                    removeIcon.setCursor(Cursor.HAND);
-                    removeIcon.setId("icon-label-grey");
+                    leaveChannelIcon.setCursor(Cursor.HAND);
+                    leaveChannelIcon.setId("icon-label-grey");
 
                     nonSelectedEffect.setSaturation(-0.4);
                     nonSelectedEffect.setBrightness(-0.6);
@@ -345,16 +338,16 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                             }
                         });
 
-                        removeIcon.setOpacity(0);
-                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(bisqEasyPublicChatChannel));
-                        setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
+                        leaveChannelIcon.setOpacity(0);
+                        leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPublicChatChannel));
+                        setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
                         setOnMouseEntered(e -> {
-                            Transitions.fadeIn(removeIcon);
+                            Transitions.fadeIn(leaveChannelIcon);
                             Transitions.fadeOut(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), true);
                         });
                         setOnMouseExited(e -> {
-                            Transitions.fadeOut(removeIcon);
+                            Transitions.fadeOut(leaveChannelIcon);
                             Transitions.fadeIn(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), false);
                         });
@@ -367,7 +360,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                         setGraphic(hBox);
                     } else {
                         label.setGraphic(null);
-                        removeIcon.setOnMouseClicked(null);
+                        leaveChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);

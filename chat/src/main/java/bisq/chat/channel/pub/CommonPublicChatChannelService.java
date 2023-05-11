@@ -88,13 +88,16 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void leaveChannel(CommonPublicChatChannel channel) {
-        //todo
+    public ObservableArray<CommonPublicChatChannel> getChannels() {
+        return persistableStore.getChannels();
     }
 
     @Override
-    public ObservableArray<CommonPublicChatChannel> getChannels() {
-        return persistableStore.getChannels();
+    public void leaveChannel(CommonPublicChatChannel channel) {
+        // Currently, we do not support leaving a CommonPublicChatChannel.
+        // We could support it in futures similar as in BisqEasyPublicChatChannelService.
+        // Would require a UI element to add channels again.
+        throw new RuntimeException("Leave channel in CommonPublicChatChannelService is not supported");
     }
 
 

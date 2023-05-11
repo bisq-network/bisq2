@@ -68,14 +68,19 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     public void onPersistedApplied(BisqEasyPublicChatChannelStore persisted) {
     }
 
-    public void showChannel(BisqEasyPublicChatChannel channel) {
+    public void joinChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
         persist();
+
+        //todo send join msg
     }
 
-    public void hideChannel(BisqEasyPublicChatChannel channel) {
+    @Override
+    public void leaveChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
         persist();
+
+        //todo send leave msg
     }
 
     public boolean isVisible(BisqEasyPublicChatChannel channel) {
@@ -119,12 +124,6 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     @Override
     public ObservableArray<BisqEasyPublicChatChannel> getChannels() {
         return persistableStore.getChannels();
-    }
-
-    @Override
-    public void leaveChannel(BisqEasyPublicChatChannel channel) {
-        //todo
-        log.error("leaveChannel");
     }
 
     public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
@@ -179,7 +178,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         }
 
         BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
-        showChannel(defaultChannel);
+        joinChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());

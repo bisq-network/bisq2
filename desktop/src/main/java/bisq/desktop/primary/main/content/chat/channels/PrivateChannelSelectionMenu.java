@@ -26,7 +26,9 @@ import bisq.chat.channel.priv.PrivateChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
+import bisq.desktop.components.overlay.Popup;
 import bisq.i18n.Res;
+import bisq.settings.DontShowAgainService;
 
 public abstract class PrivateChannelSelectionMenu<
         C extends PrivateChatChannel<?>,
@@ -85,6 +87,26 @@ public abstract class PrivateChannelSelectionMenu<
         @Override
         protected boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel) {
             return chatChannel instanceof PrivateChatChannel;
+        }
+
+        public void onLeaveChannel(ChatChannel<?> chatChannel) {
+            if (chatChannel instanceof PrivateChatChannel) {
+                // We map the ChatChannel<?> chatChannel to our generic type
+                chatChannelService.findChannel(chatChannel.getId())
+                        .ifPresent(privateChatChannel -> {
+                            String dontShowAgainId = "leaveChannel";
+                            if (DontShowAgainService.showAgain(dontShowAgainId)) {
+                                new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
+                                        .dontShowAgainId(dontShowAgainId)
+                                        .closeButtonText(Res.get("cancel"))
+                                        .actionButtonText(Res.get("social.privateChannel.leave"))
+                                        .onAction(() -> doLeaveChannel(privateChatChannel))
+                                        .show();
+                            } else {
+                                doLeaveChannel(privateChatChannel);
+                            }
+                        });
+            }
         }
     }
 

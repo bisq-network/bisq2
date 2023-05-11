@@ -45,8 +45,8 @@ public abstract class PrivateGroupChatChannelService<
 
     @Override
     public void leaveChannel(C channel) {
-        channel.getPeers().forEach(peer -> leaveChannel(channel, peer));
-        // todo 
-        //channel.getChannelMembers().remove()
+        super.leaveChannel(channel);
+
+        channel.getPeers().forEach(peer -> maybeSendLeaveChannelMessage(channel, peer));
     }
 }
