@@ -43,13 +43,13 @@ public class BisqEasyChatView extends ChatView {
     private final Button completeTradeButton, openDisputeButton;
     private final VBox bottomVbox;
     private final Tooltip completeTradeTooltip;
-    private final Pane bisqEasyPrivateTradeChatChannelSelection;
+    private final Region bisqEasyPrivateTradeChatChannelSelection;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
-                            Pane bisqEasyPublicChatChannelSelection,
-                            Pane bisqEasyPrivateTradeChatChannelSelection,
-                            Pane twoPartyPrivateChatChannelSelection,
+                            Region bisqEasyPublicChatChannelSelection,
+                            Region bisqEasyPrivateTradeChatChannelSelection,
+                            Region twoPartyPrivateChatChannelSelection,
                             Pane chatMessagesComponent,
                             Pane channelSidebar) {
         super(model,

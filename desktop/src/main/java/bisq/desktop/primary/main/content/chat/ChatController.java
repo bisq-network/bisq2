@@ -91,17 +91,17 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         });
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
-        createDependencies(chatChannelDomain);
+        createServices(chatChannelDomain);
 
-        model = getChatModel(chatChannelDomain);
-        view = getChatView();
+        model = createAndGetModel(chatChannelDomain);
+        view = createAndGetView();
     }
 
-    public abstract void createDependencies(ChatChannelDomain chatChannelDomain);
+    public abstract void createServices(ChatChannelDomain chatChannelDomain);
 
-    public abstract M getChatModel(ChatChannelDomain chatChannelDomain);
+    public abstract M createAndGetModel(ChatChannelDomain chatChannelDomain);
 
-    public abstract V getChatView();
+    public abstract V createAndGetView();
 
     @Override
     public void onActivate() {

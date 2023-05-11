@@ -102,18 +102,18 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+    public void createServices(ChatChannelDomain chatChannelDomain) {
         bisqEasyPublicChatChannelSelection = new BisqEasyPublicChatChannelSelection(applicationService);
         bisqEasyPrivateTradeChatChannelSelection = new BisqEasyPrivateTradeChatChannelSelection(applicationService);
     }
 
     @Override
-    public BisqEasyChatModel getChatModel(ChatChannelDomain chatChannelDomain) {
+    public BisqEasyChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         return new BisqEasyChatModel(chatChannelDomain);
     }
 
     @Override
-    public BisqEasyChatView getChatView() {
+    public BisqEasyChatView createAndGetView() {
         return new BisqEasyChatView(model,
                 this,
                 bisqEasyPublicChatChannelSelection.getRoot(),

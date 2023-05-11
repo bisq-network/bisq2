@@ -18,14 +18,15 @@
 package bisq.desktop.primary.main.content.chat;
 
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class PublicChatView extends ChatView {
     public PublicChatView(PublicChatModel model,
                           PublicChatController<?, ?> controller,
-                          Pane marketChannelSelection,
-                          Pane privateChannelSelection,
+                          Region marketChannelSelection,
+                          Region privateChannelSelection,
                           Pane chatMessagesComponent,
                           Pane channelInfo) {
         super(model,

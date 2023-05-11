@@ -8,6 +8,7 @@ import bisq.chat.channel.ChatChannelSelectionService;
 import bisq.chat.channel.ChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.common.observable.Pin;
+import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.components.containers.Spacer;
@@ -30,6 +31,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,31 +45,79 @@ import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
-public abstract class ChatChannelSelection<C extends ChatChannel<?>,
+public abstract class ChatChannelSelection<
+        C extends ChatChannel<?>,
         S extends ChatChannelService<?, C, ?>,
-        E extends ChatChannelSelectionService> {
-    protected static abstract class Controller implements bisq.desktop.common.view.Controller {
-        protected final ChatService chatService;
-        private final UserIdentityService userIdentityService;
-        private final UserProfileService userProfileService;
-        protected Pin selectedChannelPin;
-        protected Pin channelsPin;
-        private final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
-        private final Set<Pin> numChatMessagesPins = new HashSet<>();
+        E extends ChatChannelSelectionService
+        > {
 
-        protected Controller(DefaultApplicationService applicationService) {
+    public ChatChannelSelection() {
+    }
+
+    public abstract Controller<?, ?, C, S, E> getController();
+
+    public Region getRoot() {
+        return getController().getView().getRoot();
+    }
+
+    public void deSelectChannel() {
+        getController().deSelectChannel();
+    }
+
+    protected static abstract class Controller<
+            V extends View<M, ?>,
+            M extends Model,
+            C extends ChatChannel<?>,
+            S extends ChatChannelService<?, C, ?>,
+            E extends ChatChannelSelectionService
+            > implements bisq.desktop.common.view.Controller {
+
+        protected final ChatService chatService;
+        protected final UserIdentityService userIdentityService;
+        protected final UserProfileService userProfileService;
+
+        protected final M model;
+        @Getter
+        protected final V view;
+        protected final S chatChannelService;
+        protected final E chatChannelSelectionService;
+
+        protected Pin channelsPin, selectedChannelPin;
+        protected final Set<Pin> seenChatMessageIdsPins = new HashSet<>();
+        protected final Set<Pin> numChatMessagesPins = new HashSet<>();
+
+        protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
             userProfileService = applicationService.getUserService().getUserProfileService();
+
+            chatChannelService = createAndGetChatChannelService(chatChannelDomain);
+            chatChannelSelectionService = createAndGetChatChannelSelectionService(chatChannelDomain);
+            model = createAndGetModel(chatChannelDomain);
+            view = createAndGetView();
         }
 
-        protected abstract Model getChannelSelectionModel();
+        protected abstract S createAndGetChatChannelService(ChatChannelDomain chatChannelDomain);
 
-        protected abstract ChatChannelService<?, ?, ?> getChannelService();
+        protected abstract E createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain);
+
+        protected abstract V createAndGetView();
+
+        protected abstract M createAndGetModel(ChatChannelDomain chatChannelDomain);
 
         @Override
         public void onActivate() {
-            getChannelService().getChannels().forEach(channel -> {
+            applyPredicate();
+
+            channelsPin = FxBindings.<C, View.ChannelItem>bind(model.channelItems)
+                    .map(this::findOrCreateChannelItem)
+                    .to(chatChannelService.getChannels());
+
+
+            selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
+                    chatChannel -> UIThread.runOnNextRenderFrame(() -> handleSelectedChannelChange(chatChannel)));
+
+            chatChannelService.getChannels().forEach(channel -> {
                 Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
                 seenChatMessageIdsPins.add(seenChatMessageIdsPin);
                 Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
@@ -75,12 +125,22 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
             });
         }
 
+        protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
+
         @Override
         public void onDeactivate() {
-            selectedChannelPin.unbind();
             channelsPin.unbind();
+            selectedChannelPin.unbind();
             seenChatMessageIdsPins.forEach(Pin::unbind);
             numChatMessagesPins.forEach(Pin::unbind);
+        }
+
+        public void deSelectChannel() {
+            model.getSelectedChannelItem().set(null);
+        }
+
+        protected void applyPredicate() {
+            model.filteredList.setPredicate(item -> true);
         }
 
         abstract protected void onSelected(View.ChannelItem channelItem);
@@ -94,7 +154,7 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
         }
 
         protected ChatChannelSelection.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
-            return getChannelSelectionModel().channelItems.stream()
+            return model.channelItems.stream()
                     .filter(Objects::nonNull)
                     .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))
                     .findAny()
@@ -108,25 +168,32 @@ public abstract class ChatChannelSelection<C extends ChatChannel<?>,
                         .filter(this::isAuthorNotIgnored)
                         .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
                         .count();
-                getChannelSelectionModel().channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
+                model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
         }
     }
 
+    @Getter
     protected static class Model implements bisq.desktop.common.view.Model {
+        private final ChatChannelDomain chatChannelDomain;
         ObjectProperty<View.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
-        View.ChannelItem previousSelectedChannelItem;
         ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
         FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
         SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
         ObservableMap<String, Integer> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
+        View.ChannelItem previousSelectedChannelItem;
 
-        public Model() {
+        public Model(ChatChannelDomain chatChannelDomain) {
+            this.chatChannelDomain = chatChannelDomain;
         }
     }
 
     @Slf4j
-    public static abstract class View<M extends ChatChannelSelection.Model, C extends ChatChannelSelection.Controller> extends bisq.desktop.common.view.View<AnchorPane, M, C> {
+    public static abstract class View<
+            M extends Model,
+            C extends Controller<?, M, ?, ?, ?>
+            >
+            extends bisq.desktop.common.view.View<AnchorPane, M, C> {
         protected final ListView<ChannelItem> listView;
         private final InvalidationListener filteredListChangedListener;
         protected final HBox headerBox;
