@@ -50,12 +50,12 @@ public class CommonChatController extends PublicChatController<CommonChatView, C
     }
 
     @Override
-    public CommonChatModel getChatModel(ChatChannelDomain chatChannelDomain) {
+    public CommonChatModel createAndGetModel(ChatChannelDomain chatChannelDomain) {
         return new CommonChatModel(chatChannelDomain);
     }
 
     @Override
-    public CommonChatView getChatView() {
+    public CommonChatView createAndGetView() {
         return new CommonChatView(model,
                 this,
                 publicChatChannelSelection.getRoot(),

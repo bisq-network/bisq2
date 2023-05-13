@@ -27,21 +27,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 @Slf4j
-public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, BaseChatController<?, ?>> {
+public abstract class ChatView extends NavigationView<HBox, ChatModel, ChatController<?, ?>> {
     private final Label channelTitle;
     private final Button helpButton, channelInfoButton;
     protected final VBox left;
     private final VBox sideBar;
-    private final Pane twoPartyPrivateChatChannelSelection;
+    private final Region twoPartyPrivateChannelSelection;
     protected final Pane chatMessagesComponent;
     private final Pane channelSidebar;
     protected final HBox centerToolbar;
@@ -52,15 +49,15 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
     private Subscription chatUserOverviewRootSubscription;
     private Subscription channelIconPin;
 
-    public BaseChatView(BaseChatModel model,
-                        BaseChatController<?, ?> controller,
-                        Pane publicChannelSelection,
-                        Pane twoPartyPrivateChatChannelSelection,
-                        Pane chatMessagesComponent,
-                        Pane channelSidebar) {
+    public ChatView(ChatModel model,
+                    ChatController<?, ?> controller,
+                    Region publicChannelSelection,
+                    Region twoPartyPrivateChatChannelSelection,
+                    Pane chatMessagesComponent,
+                    Pane channelSidebar) {
         super(new HBox(), model, controller);
 
-        this.twoPartyPrivateChatChannelSelection = twoPartyPrivateChatChannelSelection;
+        this.twoPartyPrivateChannelSelection = twoPartyPrivateChatChannelSelection;
         this.chatMessagesComponent = chatMessagesComponent;
 
         this.channelSidebar = channelSidebar;
@@ -128,8 +125,8 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         channelInfoButton.setOnAction(e -> controller.onToggleChannelInfo());
         searchBox.textProperty().bindBidirectional(model.getSearchText());
 
-        twoPartyPrivateChatChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
-        twoPartyPrivateChatChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        twoPartyPrivateChannelSelection.visibleProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
+        twoPartyPrivateChannelSelection.managedProperty().bind(model.getIsTwoPartyPrivateChatChannelSelectionVisible());
 
         chatUserOverviewRootSubscription = EasyBind.subscribe(model.getChatUserDetailsRoot(),
                 pane -> {
@@ -164,8 +161,8 @@ public abstract class BaseChatView extends NavigationView<HBox, BaseChatModel, B
         sideBar.visibleProperty().unbind();
         sideBar.managedProperty().unbind();
 
-        twoPartyPrivateChatChannelSelection.visibleProperty().unbind();
-        twoPartyPrivateChatChannelSelection.managedProperty().unbind();
+        twoPartyPrivateChannelSelection.visibleProperty().unbind();
+        twoPartyPrivateChannelSelection.managedProperty().unbind();
 
         helpButton.setOnAction(null);
         channelInfoButton.setOnAction(null);

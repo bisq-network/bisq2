@@ -21,7 +21,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.controls.Switch;
-import bisq.desktop.primary.main.content.chat.BaseChatView;
+import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
@@ -33,7 +33,7 @@ import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BisqEasyChatView extends BaseChatView {
+public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatController bisqEasyChatController;
     private final Switch toggleOffersButton;
     private final BisqEasyChatModel bisqEasyChatModel;
@@ -43,13 +43,13 @@ public class BisqEasyChatView extends BaseChatView {
     private final Button completeTradeButton, openDisputeButton;
     private final VBox bottomVbox;
     private final Tooltip completeTradeTooltip;
-    private final Pane bisqEasyPrivateTradeChatChannelSelection;
+    private final Region bisqEasyPrivateTradeChatChannelSelection;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
-                            Pane bisqEasyPublicChatChannelSelection,
-                            Pane bisqEasyPrivateTradeChatChannelSelection,
-                            Pane twoPartyPrivateChatChannelSelection,
+                            Region bisqEasyPublicChatChannelSelection,
+                            Region bisqEasyPrivateTradeChatChannelSelection,
+                            Region twoPartyPrivateChatChannelSelection,
                             Pane chatMessagesComponent,
                             Pane channelSidebar) {
         super(model,

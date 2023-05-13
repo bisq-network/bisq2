@@ -21,11 +21,9 @@ import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
-import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.priv.PrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.utils.Icons;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
@@ -34,7 +32,6 @@ import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
 import bisq.i18n.Res;
-import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.MapChangeListener;
@@ -47,7 +44,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,68 +57,54 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<TwoPartyPrivateChatChannel, TwoPartyPrivateChatChannelService, ChatChannelSelectionService> {
+public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelection<
+        TwoPartyPrivateChatChannel,
+        TwoPartyPrivateChatChannelService,
+        ChatChannelSelectionService
+        > {
+    @Getter
     private final Controller controller;
 
     public TwoPartyPrivateChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
         controller = new Controller(applicationService, chatChannelDomain);
     }
 
-    public Pane getRoot() {
-        return controller.view.getRoot();
-    }
-
-    public void deSelectChannel() {
-        controller.deSelectChannel();
-    }
-
-    protected static class Controller extends ChatChannelSelection.Controller {
-        private final Model model;
-        @Getter
-        private final View view;
-        private final UserIdentityService userIdentityService;
-        private final TwoPartyPrivateChatChannelService channelService;
-        private final ChatChannelSelectionService channelSelectionService;
+    protected static class Controller extends PrivateChatChannelSelection.Controller<
+            View,
+            Model,
+            TwoPartyPrivateChatChannel,
+            TwoPartyPrivateChatChannelService,
+            ChatChannelSelectionService
+            > {
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-            super(applicationService);
-            userIdentityService = applicationService.getUserService().getUserIdentityService();
-            channelService = chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
-            channelSelectionService = chatService.getChatChannelSelectionService(chatChannelDomain);
-
-            model = new Model();
-            view = new View(model, this);
-
-            model.filteredList.setPredicate(item -> true);
+            super(applicationService, chatChannelDomain);
         }
 
         @Override
-        protected ChatChannelSelection.Model getChannelSelectionModel() {
-            return model;
+        protected TwoPartyPrivateChatChannelService createAndGetChatChannelService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getTwoPartyPrivateChatChannelServices().get(chatChannelDomain);
         }
 
         @Override
-        protected ChatChannelService<?, ?, ?> getChannelService() {
-            return channelService;
+        protected ChatChannelSelectionService createAndGetChatChannelSelectionService(ChatChannelDomain chatChannelDomain) {
+            return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
+        }
+
+
+        @Override
+        protected View createAndGetView() {
+            return new View(model, this);
+        }
+
+        @Override
+        protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
+            return new Model(chatChannelDomain);
         }
 
         @Override
         public void onActivate() {
             super.onActivate();
-
-            channelsPin = FxBindings.<TwoPartyPrivateChatChannel, ChatChannelSelection.View.ChannelItem>bind(model.channelItems)
-                    .map(this::findOrCreateChannelItem)
-                    .to(channelService.getChannels());
-
-            selectedChannelPin = FxBindings.subscribe(channelSelectionService.getSelectedChannel(),
-                    chatChannel -> {
-                        if (chatChannel instanceof TwoPartyPrivateChatChannel twoPartyPrivateChatChannel) {
-                            model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
-                            userIdentityService.selectChatUserIdentity(twoPartyPrivateChatChannel.getMyUserIdentity());
-                        } else {
-                            model.selectedChannelItem.set(null);
-                        }
-                    });
         }
 
         @Override
@@ -135,11 +117,7 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
             if (channelItem == null) {
                 return;
             }
-            channelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
-
-        public void deSelectChannel() {
-            model.selectedChannelItem.set(null);
+            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
         }
 
         public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
@@ -151,20 +129,21 @@ public class TwoPartyPrivateChatChannelSelection extends ChatChannelSelection<Tw
         }
 
         public void doLeaveChannel(TwoPartyPrivateChatChannel privateChatChannel) {
-            channelService.leaveChannel(privateChatChannel);
+            chatChannelService.leaveChannel(privateChatChannel);
             model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
                     .findFirst()
-                    .ifPresentOrElse(e -> channelSelectionService.selectChannel(e.getChatChannel()),
-                            () -> channelSelectionService.selectChannel(null));
+                    .ifPresentOrElse(e -> chatChannelSelectionService.selectChannel(e.getChatChannel()),
+                            () -> chatChannelSelectionService.selectChannel(null));
         }
     }
 
-    protected static class Model extends ChatChannelSelection.Model {
-        public Model() {
+    protected static class Model extends PrivateChatChannelSelection.Model {
+        public Model(ChatChannelDomain chatChannelDomain) {
+            super(chatChannelDomain);
         }
     }
 
-    protected static class View extends ChatChannelSelection.View<Model, Controller> {
+    protected static class View extends PrivateChatChannelSelection.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }

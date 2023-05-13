@@ -17,10 +17,15 @@
 
 package bisq.desktop.primary.main.content.chat.channels;
 
+import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelSelectionService;
+import bisq.chat.channel.ChatChannelService;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
+import bisq.chat.message.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import javafx.collections.MapChangeListener;
@@ -31,7 +36,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
@@ -40,11 +44,41 @@ public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
         S extends PublicChatChannelService<?, C, ?>,
         E extends ChatChannelSelectionService> extends ChatChannelSelection<C, S, E> {
 
-    abstract public void deSelectChannel();
+    public PublicChatChannelSelection() {
+        super();
+    }
 
-    abstract public Pane getRoot();
+    protected static abstract class Controller<V extends ChatChannelSelection.View<M, ?>,
+            M extends Model,
+            C extends ChatChannel<?>,
+            S extends ChatChannelService<?, C, ?>,
+            E extends ChatChannelSelectionService>
+            extends ChatChannelSelection.Controller<V, M, C, S, E> {
 
-    protected static abstract class View<M extends ChatChannelSelection.Model, C extends ChatChannelSelection.Controller> extends ChatChannelSelection.View<M, C> {
+        public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+            super(applicationService, chatChannelDomain);
+        }
+
+        @Override
+        public void onActivate() {
+            super.onActivate();
+        }
+
+        @Override
+        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+            if (chatChannel instanceof PublicChatChannel) {
+                model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
+            } else if (chatChannel == null && !model.channelItems.isEmpty()) {
+                // TODO move logic to service
+                model.selectedChannelItem.set(model.channelItems.get(0));
+            } else {
+                model.selectedChannelItem.set(null);
+            }
+        }
+    }
+
+    protected static abstract class View<M extends ChatChannelSelection.Model,
+            C extends ChatChannelSelection.Controller<?, M, ?, ?, ?>> extends ChatChannelSelection.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
         }

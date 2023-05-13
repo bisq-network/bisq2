@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 @Slf4j
-public abstract class PublicChatController<V extends BaseChatView, M extends BaseChatModel> extends BaseChatController<V, M> implements Controller {
+public abstract class PublicChatController<V extends ChatView, M extends ChatModel> extends ChatController<V, M> implements Controller {
     protected ChatChannelSelectionService chatChannelSelectionService;
     protected CommonPublicChatChannelService commonPublicChatChannelService;
     protected PublicChatChannelSelection<?, ?, ?> publicChatChannelSelection;
@@ -45,7 +45,7 @@ public abstract class PublicChatController<V extends BaseChatView, M extends Bas
     }
 
     @Override
-    public void createDependencies(ChatChannelDomain chatChannelDomain) {
+    public void createServices(ChatChannelDomain chatChannelDomain) {
         commonPublicChatChannelService = getPublicChannelService(chatChannelDomain);
         chatChannelSelectionService = getChannelSelectionService(chatChannelDomain);
         publicChatChannelSelection = getPublicChannelSelection(chatChannelDomain);

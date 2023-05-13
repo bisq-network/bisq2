@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
-public abstract class PublicChatModel extends BaseChatModel {
+public abstract class PublicChatModel extends ChatModel {
     public PublicChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
     }
