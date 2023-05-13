@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel id must be deterministic, so we sort both userIds and use that order for the concatenated string.
-    public static String createId(ChatChannelDomain ChatChannelDomain, String userId1, String userId2) {
-        List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
+    public static String createId(ChatChannelDomain ChatChannelDomain, String userProfileId1, String userProfileId2) {
+        List<String> userIds = new ArrayList<>(List.of(userProfileId1, userProfileId2));
         Collections.sort(userIds);
         return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
     }
@@ -111,14 +111,6 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     @Override
     public String getDisplayString() {
         return getPeer().getUserName();
-    }
-
-    @Override
-    public void removeChannelMember(PrivateChatChannelMember channelMember) {
-        boolean changed = channelMembers.remove(channelMember);
-        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
-            peers.remove(channelMember.getUserProfile());
-        }
     }
 
     void removePeerChannelMember() {

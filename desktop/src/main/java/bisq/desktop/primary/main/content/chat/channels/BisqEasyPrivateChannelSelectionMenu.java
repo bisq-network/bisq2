@@ -287,7 +287,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                                     privateChatChannel.getIsInMediation()) {
                                 if (privateChatChannel.isMediator()) {
                                     // We are the mediator
-                                    UserProfile trader1 = privateChatChannel.getPeer();
+                                    UserProfile trader1 = privateChatChannel.getPeers().get(0);
                                     UserProfile trader2 = privateChatChannel.getPeers().get(1);
                                     roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
                                     secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));

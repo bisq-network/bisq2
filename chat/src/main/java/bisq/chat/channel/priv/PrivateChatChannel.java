@@ -21,7 +21,6 @@ import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
@@ -29,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -42,7 +42,6 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
     protected transient final ObservableSet<PrivateChatChannelMember> channelMembers = new ObservableSet<>();
-    protected transient final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
     public PrivateChatChannel(String id,
                               ChatChannelDomain chatChannelDomain,
@@ -58,23 +57,26 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     }
 
     public void addChannelMember(PrivateChatChannelMember channelMember) {
-        boolean changed = channelMembers.add(channelMember);
-        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
-            peers.add(channelMember.getUserProfile());
-        }
+        channelMembers.add(channelMember);
     }
 
     public void removeChannelMember(PrivateChatChannelMember channelMember) {
-        boolean changed = channelMembers.remove(channelMember);
-        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
-            peers.remove(channelMember.getUserProfile());
-        }
+        channelMembers.remove(channelMember);
     }
 
     public Optional<PrivateChatChannelMember> findChannelMember(PrivateChatChannelMember.Type type, UserProfile userProfile) {
         return channelMembers.stream()
                 .filter(member -> member.getType() == type && member.getUserProfile().getId().equals(userProfile.getId()))
                 .findFirst();
+    }
+
+    public List<UserProfile> getPeers() {
+        return channelMembers.stream()
+                .filter(member -> member.getType() != PrivateChatChannelMember.Type.SELF)
+                .map(PrivateChatChannelMember::getUserProfile)
+                .distinct()
+                .sorted(Comparator.comparing(UserProfile::getId))
+                .collect(Collectors.toList());
     }
 
     @Override
