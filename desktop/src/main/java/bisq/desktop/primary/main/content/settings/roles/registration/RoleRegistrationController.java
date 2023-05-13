@@ -59,7 +59,7 @@ public class RoleRegistrationController implements Controller {
 
     @Override
     public void onActivate() {
-        userIdentityPin = userIdentityService.getSelectedUserIdentity().addObserver(userIdentity -> {
+        userIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(userIdentity -> {
             model.setUserIdentity(userIdentity);
             UserProfile userProfile = userIdentity.getUserProfile();
             String userProfileId = userProfile.getId();

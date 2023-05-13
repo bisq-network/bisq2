@@ -50,6 +50,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChannelService<BisqEasyPrivateTradeChatMessage, BisqEasyPrivateTradeChatChannel, BisqEasyPrivateTradeChatChannelStore> {
@@ -117,7 +118,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         checkArgument(message.getBisqEasyOffer().isPresent(), "message must contain offer");
         return userProfileService.findUserProfile(message.getAuthorUserProfileId())
                 .map(makerUserProfile -> {
-                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                    UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
                     BisqEasyOffer bisqEasyOffer = message.getBisqEasyOffer().get();
                     BisqEasyPrivateTradeChatChannel channel = traderFindOrCreatesChannel(bisqEasyOffer,
                             myUserIdentity,

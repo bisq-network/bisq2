@@ -22,11 +22,11 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
-import bisq.user.protobuf.User;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
-    private final Observable<UserIdentity> selectedUserIdentity = new Observable<>();
+    private final Observable<UserIdentity> selectedUserIdentityObservable = new Observable<>();
     private final ObservableSet<UserIdentity> userIdentities;
 
     public UserIdentityStore() {
@@ -49,8 +49,13 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
         setSelectedUserIdentity(selectedUserIdentity);
     }
 
+    @Nullable
+    public UserIdentity getSelectedUserIdentity() {
+        return selectedUserIdentityObservable.get();
+    }
+
     public void setSelectedUserIdentity(UserIdentity selectedUserIdentity) {
-        this.selectedUserIdentity.set(userIdentities.stream()
+        this.selectedUserIdentityObservable.set(userIdentities.stream()
                 .filter(userIdentity -> userIdentity.equals(selectedUserIdentity))
                 .findAny().orElse(null));
     }
@@ -58,7 +63,7 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
     @Override
     public bisq.user.protobuf.UserIdentityStore toProto() {
         return bisq.user.protobuf.UserIdentityStore.newBuilder()
-                .setSelectedUserIdentity(selectedUserIdentity.get().toProto())
+                .setSelectedUserIdentity(selectedUserIdentityObservable.get().toProto())
                 .addAllUserIdentities(userIdentities.stream().map(UserIdentity::toProto).collect(Collectors.toSet()))
                 .build();
     }
@@ -83,12 +88,12 @@ public final class UserIdentityStore implements PersistableStore<UserIdentitySto
 
     @Override
     public UserIdentityStore getClone() {
-        return new UserIdentityStore(selectedUserIdentity.get(), userIdentities);
+        return new UserIdentityStore(selectedUserIdentityObservable.get(), userIdentities);
     }
 
     @Override
     public void applyPersisted(UserIdentityStore persisted) {
         userIdentities.addAll(persisted.getUserIdentities());
-        setSelectedUserIdentity(persisted.getSelectedUserIdentity().get());
+        setSelectedUserIdentity(persisted.getSelectedUserIdentityObservable().get());
     }
 }

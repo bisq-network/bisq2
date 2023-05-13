@@ -104,7 +104,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
-        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity().get())
+        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
                 .flatMap(myUserIdentity -> maybeCreateAndAddChannel(chatChannelDomain, peer, myUserIdentity.getId()));
     }
 

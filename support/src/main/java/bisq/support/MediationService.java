@@ -46,6 +46,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
 public class MediationService implements Service, DataService.Listener, MessageListener {
     // This method can be used for verification when taker provides mediators list.
@@ -159,7 +161,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
     public Optional<UserProfile> takerSelectMediator(BisqEasyPublicChatMessage chatMessage) {
         return userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                 .flatMap(makerUserProfile -> {
-                    UserIdentity myUserIdentity = userIdentityService.getSelectedUserIdentity().get();
+                    UserIdentity myUserIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
                     return takerSelectMediator(makerUserProfile.getId(), myUserIdentity.getUserProfile().getId());
                 })
                 .stream()

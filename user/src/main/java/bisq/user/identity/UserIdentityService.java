@@ -38,6 +38,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.KeyPair;
 import java.util.Map;
 import java.util.Optional;
@@ -217,7 +218,12 @@ public class UserIdentityService implements PersistenceClient<UserIdentityStore>
         return getUserIdentities().size() == 1;
     }
 
-    public Observable<UserIdentity> getSelectedUserIdentity() {
+    public Observable<UserIdentity> getSelectedUserIdentityObservable() {
+        return persistableStore.getSelectedUserIdentityObservable();
+    }
+
+    @Nullable
+    public UserIdentity getSelectedUserIdentity() {
         return persistableStore.getSelectedUserIdentity();
     }
 
