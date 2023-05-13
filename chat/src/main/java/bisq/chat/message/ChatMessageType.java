@@ -22,6 +22,7 @@ import bisq.common.util.ProtobufUtils;
 
 public enum ChatMessageType implements ProtoEnum {
     TEXT,
+    JOIN,
     LEAVE,
     TAKE_BISQ_EASY_OFFER;
 

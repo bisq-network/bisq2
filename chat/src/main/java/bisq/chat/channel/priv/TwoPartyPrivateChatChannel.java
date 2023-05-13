@@ -28,8 +28,6 @@ import lombok.ToString;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
@@ -91,7 +89,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
+       // checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
         return getPeers().get(0);
     }
 
@@ -113,5 +111,23 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     @Override
     public String getDisplayString() {
         return getPeer().getUserName();
+    }
+
+    @Override
+    public void removeChannelMember(PrivateChatChannelMember channelMember) {
+        boolean changed = channelMembers.remove(channelMember);
+        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
+            peers.remove(channelMember.getUserProfile());
+        }
+    }
+
+    void removePeerChannelMember() {
+        findChannelMember(PrivateChatChannelMember.Type.PEER, getPeer()).ifPresent(this::removeChannelMember);
+    }
+
+    void maybeAddPeerChannelMember(UserProfile peer) {
+        if (findChannelMember(PrivateChatChannelMember.Type.PEER, peer).isEmpty()) {
+            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
+        }
     }
 }

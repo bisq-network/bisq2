@@ -131,7 +131,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                 if (inMediationPin != null) {
                     inMediationPin.unbind();
                 }
-                inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.getIsInMediation());
+                inMediationPin = FxBindings.bind(model.mediationActivated).to(bisqEasyPrivateTradeChatChannel.isInMediationObservable());
             }
         }
 
@@ -277,14 +277,14 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     if (inMediationPin != null) {
                         inMediationPin.unbind();
                     }
-                    inMediationPin = privateChatChannel.getIsInMediation().addObserver(e ->
+                    inMediationPin = privateChatChannel.isInMediationObservable().addObserver(e ->
                     {
                         UIThread.run(() -> {
                             hBox.getChildren().clear();
                             hBox.getChildren().add(roboIcon);
 
                             if (privateChatChannel.findMediator().isPresent() &&
-                                    privateChatChannel.getIsInMediation().get()) {
+                                    privateChatChannel.getIsInMediation()) {
                                 if (privateChatChannel.isMediator()) {
                                     // We are the mediator
                                     UserProfile trader1 = privateChatChannel.getPeer();

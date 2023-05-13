@@ -30,6 +30,7 @@ import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,7 +43,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Maybe we should model a group chat channel for a cleaner API.
  */
 @ToString(callSuper = true)
-@Getter
+@Slf4j
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChannel<BisqEasyPrivateTradeChatMessage> {
     public static String createId(BisqEasyOffer bisqEasyOffer) {
@@ -69,9 +70,10 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 nonRequestingTrader);
     }
 
-
-    private final Observable<Boolean> isInMediation = new Observable<>(false);
+    private final Observable<Boolean> isInMediationObservable = new Observable<>(false);
+    @Getter
     private final BisqEasyOffer bisqEasyOffer;
+    private final Optional<UserProfile> mediator;
 
     // Called from trader
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
@@ -118,14 +120,12 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
+        this.mediator = mediator;
         //todo reconsider
-        // Mediator gets added as SELF and as MEDIATOR
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
+        // Mediator gets added as SELF (in super call) and as MEDIATOR
         traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
-        mediator.ifPresent(mediatorUserProfile -> {
-            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile));
-        });
-        this.isInMediation.set(isInMediation);
+
+        setIsInMediation(isInMediation);
         this.seenChatMessageIds.addAll(seenChatMessageIds);
     }
 
@@ -137,7 +137,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 .addAllTraders(getTraders().stream()
                         .map(UserProfile::toProto)
                         .collect(Collectors.toList()))
-                .setIsInMediation(isInMediation.get())
+                .setIsInMediation(getIsInMediation())
                 .addAllChatMessages(chatMessages.stream()
                         .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
@@ -180,14 +180,14 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
 
     @Override
     public String getDisplayString() {
-        String shortOfferId = getBisqEasyOffer().getId().substring(0, 4);
+        String shortOfferId = bisqEasyOffer.getId().substring(0, 4);
         String peer = getPeer().getUserName();
         if (isMediator()) {
             checkArgument(getPeers().size() >= 2, "getPeers().size() need to be >= 2");
             return shortOfferId + ": " + peer + " - " + getPeers().get(1).getUserName();
         } else {
             String optionalMediatorPostfix = findMediator()
-                    .filter(mediator -> getIsInMediation().get())
+                    .filter(mediator -> getIsInMediation())
                     .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
                     .orElse("");
             return shortOfferId + ": " + peer + optionalMediatorPostfix;
@@ -204,15 +204,52 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     }
 
     public Set<UserProfile> getTraders() {
-        return getPrivateChatChannelMembers().stream()
+        return getChannelMembers().stream()
                 .filter(e -> e.getType() == PrivateChatChannelMember.Type.TRADER)
                 .map(PrivateChatChannelMember::getUserProfile)
                 .collect(Collectors.toSet());
     }
 
     public Optional<UserProfile> findMediator() {
-        return getPrivateChatChannelMembers().stream()
+        return getChannelMembers().stream()
                 .filter(privateChatChannelMember -> privateChatChannelMember.getType() == PrivateChatChannelMember.Type.MEDIATOR)
                 .map(PrivateChatChannelMember::getUserProfile).findAny();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // Getter, setter
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Observable<Boolean> isInMediationObservable() {
+        return isInMediationObservable;
+    }
+
+    public void setIsInMediation(boolean isInMediation) {
+        isInMediationObservable.set(isInMediation);
+
+        if (mediator.isEmpty()) {
+            if (isInMediation) {
+                throw new RuntimeException("Unexpected state: mediator is not present but we got called isInMediation=true. " +
+                        "The client code should prevent to set isInMediation if there is no mediator in the channel present.");
+            } else {
+                // No mediator present so we do not try to apply changes to the members
+                return;
+            }
+        }
+
+        // Update channel members if needed
+        UserProfile mediatorUserProfile = mediator.get();
+        Optional<PrivateChatChannelMember> mediatorMember = findChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile);
+        if (isInMediation && mediatorMember.isEmpty()) {
+            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile));
+        } else if (!isInMediation && mediatorMember.isPresent()) {
+            removeChannelMember(mediatorMember.get());
+        }
+    }
+
+
+    public boolean getIsInMediation() {
+        return isInMediationObservable.get();
     }
 }

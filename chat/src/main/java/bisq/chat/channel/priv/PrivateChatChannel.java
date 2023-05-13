@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,7 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     protected final UserIdentity myUserIdentity;
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
-    protected transient final ObservableSet<PrivateChatChannelMember> privateChatChannelMembers = new ObservableSet<>();
+    protected transient final ObservableSet<PrivateChatChannelMember> channelMembers = new ObservableSet<>();
     protected transient final ObservableArray<UserProfile> peers = new ObservableArray<>();
 
     public PrivateChatChannel(String id,
@@ -56,16 +57,29 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
         addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
     }
 
-    public void addChannelMember(PrivateChatChannelMember privateChatChannelMember) {
-        privateChatChannelMembers.add(privateChatChannelMember);
-        if (privateChatChannelMember.getType() != PrivateChatChannelMember.Type.SELF) {
-            peers.add(privateChatChannelMember.getUserProfile());
+    public void addChannelMember(PrivateChatChannelMember channelMember) {
+        boolean changed = channelMembers.add(channelMember);
+        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
+            peers.add(channelMember.getUserProfile());
         }
+    }
+
+    public void removeChannelMember(PrivateChatChannelMember channelMember) {
+        boolean changed = channelMembers.remove(channelMember);
+        if (changed && channelMember.getType() != PrivateChatChannelMember.Type.SELF) {
+            peers.remove(channelMember.getUserProfile());
+        }
+    }
+
+    public Optional<PrivateChatChannelMember> findChannelMember(PrivateChatChannelMember.Type type, UserProfile userProfile) {
+        return channelMembers.stream()
+                .filter(member -> member.getType() == type && member.getUserProfile().getId().equals(userProfile.getId()))
+                .findFirst();
     }
 
     @Override
     public Set<String> getUserProfileIdsOfAllChannelMembers() {
-        return privateChatChannelMembers.stream()
+        return channelMembers.stream()
                 .map(PrivateChatChannelMember::getUserProfile)
                 .map(UserProfile::getId)
                 .collect(Collectors.toSet());

@@ -59,6 +59,11 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 persistableStore);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // MessageListener
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void onMessage(NetworkMessage networkMessage) {
         if (networkMessage instanceof TwoPartyPrivateChatMessage) {
@@ -66,53 +71,28 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
         }
     }
 
-    @Override
-    protected TwoPartyPrivateChatMessage createNewPrivateChatMessage(String messageId,
-                                                                     TwoPartyPrivateChatChannel channel,
-                                                                     UserProfile sender,
-                                                                     String receiversId,
-                                                                     String text,
-                                                                     Optional<Citation> citation,
-                                                                     long time,
-                                                                     boolean wasEdited,
-                                                                     ChatMessageType chatMessageType) {
-        return new TwoPartyPrivateChatMessage(messageId,
-                channel.getChatChannelDomain(),
-                channel.getId(),
-                sender,
-                receiversId,
-                text,
-                citation,
-                new Date().getTime(),
-                wasEdited,
-                chatMessageType);
-    }
-
-    @Override
-    protected TwoPartyPrivateChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
-        return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public ObservableArray<TwoPartyPrivateChatChannel> getChannels() {
         return persistableStore.getChannels();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
-        return Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
-                .flatMap(myUserIdentity -> maybeCreateAndAddChannel(chatChannelDomain, peer, myUserIdentity.getId()));
+    public Optional<TwoPartyPrivateChatChannel> findOrCreateChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
+        synchronized (this) {
+            return Optional.ofNullable(userIdentityService.getSelectedUserIdentity())
+                    .flatMap(myUserIdentity -> findChannel(chatChannelDomain, peer, myUserIdentity.getId())
+                            .or(() -> createAndAddChannel(peer, myUserIdentity.getId())));
+        }
     }
 
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
-        super.leaveChannel(channel);
-
         maybeSendLeaveChannelMessage(channel, channel.getPeer());
+
+        super.leaveChannel(channel);
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,
@@ -126,16 +106,63 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected Optional<TwoPartyPrivateChatChannel> maybeCreateAndAddChannel(ChatChannelDomain chatChannelDomain, UserProfile peer, String myUserIdentityId) {
+    @Override
+    protected TwoPartyPrivateChatMessage createAndGetNewPrivateChatMessage(String messageId,
+                                                                           TwoPartyPrivateChatChannel channel,
+                                                                           UserProfile sender,
+                                                                           String receiversId,
+                                                                           String text,
+                                                                           Optional<Citation> citation,
+                                                                           long time,
+                                                                           boolean wasEdited,
+                                                                           ChatMessageType chatMessageType) {
+        return new TwoPartyPrivateChatMessage(messageId,
+                channel.getChatChannelDomain(),
+                channel.getId(),
+                sender,
+                receiversId,
+                text,
+                citation,
+                new Date().getTime(),
+                wasEdited,
+                chatMessageType);
+    }
+
+    @Override
+    protected TwoPartyPrivateChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
+        return new TwoPartyPrivateChatChannel(peer, myUserIdentity, chatChannelDomain);
+    }
+
+    private void processMessage(TwoPartyPrivateChatMessage message) {
+        if (message.getChatChannelDomain() != chatChannelDomain) {
+            return;
+        }
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
+        if (isMyMessage) {
+            return;
+        }
+
+        // If we have closed that channel already and receive a leave message we do not re-create it
+        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+            findChannel(message).ifPresent(channel -> {
+                addMessage(message, channel);
+                channel.removePeerChannelMember();
+            });
+            return;
+        }
+
+        findChannel(message)
+                .or(() -> createAndAddChannel(message.getSender(), message.getReceiversId()))
+                .ifPresent(channel -> {
+                    addMessage(message, channel);
+                    channel.maybeAddPeerChannelMember(message.getSender());
+                });
+    }
+
+    private Optional<TwoPartyPrivateChatChannel> createAndAddChannel(UserProfile peer, String myUserIdentityId) {
         return userIdentityService.findUserIdentity(myUserIdentityId)
                 .map(myUserIdentity -> {
-                            String channelId = TwoPartyPrivateChatChannel.createId(chatChannelDomain, peer.getId(), myUserIdentityId);
-                            Optional<TwoPartyPrivateChatChannel> existingChannel = findChannel(channelId);
-                            if (existingChannel.isPresent()) {
-                                return existingChannel.get();
-                            }
-
-                            TwoPartyPrivateChatChannel channel = createNewChannel(peer, myUserIdentity);
+                            TwoPartyPrivateChatChannel channel = createAndGetNewPrivateChatChannel(peer, myUserIdentity);
                             getChannels().add(channel);
                             persist();
                             return channel;
@@ -143,15 +170,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 );
     }
 
-    protected void processMessage(TwoPartyPrivateChatMessage message) {
-        if (message.getChatChannelDomain() != chatChannelDomain) {
-            return;
-        }
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
-        if (!isMyMessage) {
-            findChannel(message)
-                    .or(() -> maybeCreateAndAddChannel(message.getChatChannelDomain(), message.getSender(), message.getReceiversId()))
-                    .ifPresent(channel -> addMessage(message, channel));
-        }
+    private Optional<TwoPartyPrivateChatChannel> findChannel(ChatChannelDomain chatChannelDomain, UserProfile peer, String myUserIdentityId) {
+        return findChannel(TwoPartyPrivateChatChannel.createId(chatChannelDomain, peer.getId(), myUserIdentityId));
     }
 }

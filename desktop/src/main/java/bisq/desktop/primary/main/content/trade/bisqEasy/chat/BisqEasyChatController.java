@@ -142,7 +142,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 if (inMediationPin != null) {
                     inMediationPin.unbind();
                 }
-                inMediationPin = privateChannel.getIsInMediation().addObserver(mediationActivated ->
+                inMediationPin = privateChannel.isInMediationObservable().addObserver(mediationActivated ->
                         model.getOpenDisputeDisabled().set(mediationActivated ||
                                 privateChannel.isMediator()));
 

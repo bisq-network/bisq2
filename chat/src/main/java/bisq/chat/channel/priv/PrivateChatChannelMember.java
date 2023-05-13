@@ -18,8 +18,10 @@
 package bisq.chat.channel.priv;
 
 import bisq.user.profile.UserProfile;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+@EqualsAndHashCode
 @Getter
 public class PrivateChatChannelMember {
     public enum Type {

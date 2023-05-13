@@ -80,6 +80,7 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         getVisibleChannelIds().remove(channel.getId());
         persist();
 
+
         //todo send leave msg
     }
 

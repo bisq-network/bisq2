@@ -157,7 +157,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                                Optional<Citation> citation,
                                                                                BisqEasyPrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
-        if (channel.getIsInMediation().get() && channel.findMediator().isPresent()) {
+        if (channel.getIsInMediation() && channel.findMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
                     .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT))
                     .collect(Collectors.toList());
@@ -168,9 +168,11 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         }
     }
 
-    public void setIsInMediation(BisqEasyPrivateTradeChatChannel channel, boolean isInMediation) {
-        channel.getIsInMediation().set(isInMediation);
-        persist();
+    @Override
+    public void leaveChannel(BisqEasyPrivateTradeChatChannel channel) {
+        super.leaveChannel(channel);
+
+        channel.getPeers().forEach(peer -> maybeSendLeaveChannelMessage(channel, peer));
     }
 
     @Override
@@ -178,6 +180,10 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         return persistableStore.getChannels();
     }
 
+    public void setIsInMediation(BisqEasyPrivateTradeChatChannel channel, boolean isInMediation) {
+        channel.setIsInMediation(isInMediation);
+        persist();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -194,15 +200,15 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected BisqEasyPrivateTradeChatMessage createNewPrivateChatMessage(String messageId,
-                                                                          BisqEasyPrivateTradeChatChannel channel,
-                                                                          UserProfile sender,
-                                                                          String receiversId,
-                                                                          String text,
-                                                                          Optional<Citation> citation,
-                                                                          long time,
-                                                                          boolean wasEdited,
-                                                                          ChatMessageType chatMessageType) {
+    protected BisqEasyPrivateTradeChatMessage createAndGetNewPrivateChatMessage(String messageId,
+                                                                                BisqEasyPrivateTradeChatChannel channel,
+                                                                                UserProfile sender,
+                                                                                String receiversId,
+                                                                                String text,
+                                                                                Optional<Citation> citation,
+                                                                                long time,
+                                                                                boolean wasEdited,
+                                                                                ChatMessageType chatMessageType) {
         // We send mediator only at first message
         Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
@@ -221,7 +227,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
     //todo
     @Override
-    protected BisqEasyPrivateTradeChatChannel createNewChannel(UserProfile peer, UserIdentity myUserIdentity) {
+    protected BisqEasyPrivateTradeChatChannel createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity) {
         throw new RuntimeException("createNewChannel not supported at PrivateTradeChannelService. " +
                 "Use mediatorCreatesNewChannel or traderCreatesNewChannel instead.");
     }
