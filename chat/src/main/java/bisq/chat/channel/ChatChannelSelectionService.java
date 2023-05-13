@@ -17,7 +17,8 @@
 
 package bisq.chat.channel;
 
-import bisq.chat.channel.priv.PrivateChatChannelService;
+import bisq.chat.channel.priv.PrivateChatChannel;
+import bisq.chat.channel.priv.TwoPartyPrivateChatChannelService;
 import bisq.chat.channel.pub.PublicChatChannel;
 import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.ChatMessage;
@@ -26,6 +27,7 @@ import bisq.common.util.StringUtils;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
+import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,14 +39,17 @@ import java.util.stream.Stream;
 public class ChatChannelSelectionService implements PersistenceClient<ChatChannelSelectionStore> {
     protected final ChatChannelSelectionStore persistableStore = new ChatChannelSelectionStore();
     protected final Persistence<ChatChannelSelectionStore> persistence;
-    protected final PrivateChatChannelService<?, ?, ?> privateChatChannelService;
+    protected final TwoPartyPrivateChatChannelService privateChatChannelService;
     protected final PublicChatChannelService<?, ?, ?> publicChatChannelService;
     protected final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
+    private final UserIdentityService userIdentityService;
 
     public ChatChannelSelectionService(PersistenceService persistenceService,
-                                       PrivateChatChannelService<?, ?, ?> privateChatChannelService,
+                                       TwoPartyPrivateChatChannelService privateChatChannelService,
                                        PublicChatChannelService<?, ?, ?> publicChatChannelService,
-                                       ChatChannelDomain chatChannelDomain) {
+                                       ChatChannelDomain chatChannelDomain,
+                                       UserIdentityService userIdentityService) {
+        this.userIdentityService = userIdentityService;
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
                 StringUtils.capitalize(chatChannelDomain.name()) + "ChannelSelectionStore",
@@ -55,7 +60,9 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        maybeSelectDefaultChannel();
+
+        publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+
         return CompletableFuture.completedFuture(true);
     }
 
@@ -72,6 +79,9 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
     public void selectChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         if (chatChannel instanceof PublicChatChannel) {
             publicChatChannelService.removeExpiredMessages(chatChannel);
+        } else if (chatChannel instanceof PrivateChatChannel) {
+            PrivateChatChannel<?> privateChatChannel = (PrivateChatChannel<?>) chatChannel;
+            userIdentityService.selectChatUserIdentity(privateChatChannel.getMyUserIdentity());
         }
 
         persistableStore.setSelectedChannelId(chatChannel != null ? chatChannel.getId() : null);
@@ -92,10 +102,13 @@ public class ChatChannelSelectionService implements PersistenceClient<ChatChanne
                 privateChatChannelService.getChannels().stream());
     }
 
-    protected void maybeSelectDefaultChannel() {
-        if (selectedChannel.get() == null) {
-            publicChatChannelService.getDefaultChannel().ifPresent(this::selectChannel);
+    public void maybeSelectFirstChannel() {
+        if (!publicChatChannelService.getChannels().isEmpty()) {
+            selectChannel(publicChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else if (!privateChatChannelService.getChannels().isEmpty()) {
+            selectChannel(privateChatChannelService.getChannels().stream().findFirst().orElse(null));
+        } else {
+            selectChannel(null);
         }
-        persist();
     }
 }

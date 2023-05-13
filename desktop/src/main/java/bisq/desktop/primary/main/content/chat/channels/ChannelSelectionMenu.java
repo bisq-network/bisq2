@@ -39,19 +39,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
-public abstract class ChatChannelSelection<
+public abstract class ChannelSelectionMenu<
         C extends ChatChannel<?>,
         S extends ChatChannelService<?, C, ?>,
         E extends ChatChannelSelectionService
         > {
 
-    public ChatChannelSelection() {
+    public ChannelSelectionMenu() {
     }
 
     public abstract Controller<?, ?, C, S, E> getController();
@@ -83,8 +83,8 @@ public abstract class ChatChannelSelection<
         protected final E chatChannelSelectionService;
 
         protected Pin channelsPin, selectedChannelPin;
-        protected final List<Pin> seenChatMessageIdsPins = new ArrayList<>();
-        protected final List<Pin> numChatMessagesPins = new ArrayList<>();
+        protected final Map<String, Pin> seenChatMessageIdsPins = new HashMap<>();
+        protected final Map<String, Pin> numChatMessagesPins = new HashMap<>();
 
         protected Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             chatService = applicationService.getChatService();
@@ -114,27 +114,58 @@ public abstract class ChatChannelSelection<
                     .to(chatChannelService.getChannels());
 
             selectedChannelPin = FxBindings.subscribe(chatChannelSelectionService.getSelectedChannel(),
-                    chatChannel -> UIThread.runOnNextRenderFrame(() -> handleSelectedChannelChange(chatChannel)));
+                    this::handleSelectedChannelChange);
 
-            chatChannelService.getChannels().forEach(channel -> {
-                Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
-                seenChatMessageIdsPins.add(seenChatMessageIdsPin);
-                Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
-                numChatMessagesPins.add(numChatMessagesPin);
-            });
+            chatChannelService.getChannels().forEach(this::addListenersToChannel);
         }
-
-        protected abstract void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel);
 
         @Override
         public void onDeactivate() {
             channelsPin.unbind();
             selectedChannelPin.unbind();
-            seenChatMessageIdsPins.forEach(Pin::unbind);
+            unbindAndClearAllChannelListeners();
+        }
+
+        protected void addListenersToChannel(C channel) {
+            Pin seenChatMessageIdsPin = channel.getSeenChatMessageIds().addListener(() -> updateUnseenMessagesMap(channel));
+            seenChatMessageIdsPins.put(channel.getId(), seenChatMessageIdsPin);
+            Pin numChatMessagesPin = channel.getChatMessages().addListener(() -> updateUnseenMessagesMap(channel));
+            numChatMessagesPins.put(channel.getId(), numChatMessagesPin);
+        }
+
+        protected void removeListenersToChannel(String channelId) {
+            seenChatMessageIdsPins.get(channelId).unbind();
+            seenChatMessageIdsPins.remove(channelId);
+            numChatMessagesPins.get(channelId).unbind();
+            numChatMessagesPins.remove(channelId);
+        }
+
+        protected void unbindAndClearAllChannelListeners() {
+            seenChatMessageIdsPins.values().forEach(Pin::unbind);
             seenChatMessageIdsPins.clear();
-            numChatMessagesPins.forEach(Pin::unbind);
+            numChatMessagesPins.values().forEach(Pin::unbind);
             numChatMessagesPins.clear();
         }
+
+        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
+            if (isChannelExpectedInstance(chatChannel)) {
+                View.ChannelItem channelItem = findOrCreateChannelItem(chatChannel);
+                model.selectedChannelItem.set(channelItem);
+
+                if (model.previousSelectedChannelItem != null) {
+                    model.previousSelectedChannelItem.setSelected(false);
+                }
+                model.previousSelectedChannelItem = channelItem;
+                channelItem.setSelected(true);
+            } else {
+                if (model.previousSelectedChannelItem != null) {
+                    model.previousSelectedChannelItem.setSelected(false);
+                }
+                model.selectedChannelItem.set(null);
+            }
+        }
+
+        protected abstract boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel);
 
         public void deSelectChannel() {
             model.getSelectedChannelItem().set(null);
@@ -144,17 +175,20 @@ public abstract class ChatChannelSelection<
             model.filteredList.setPredicate(item -> true);
         }
 
-        abstract protected void onSelected(View.ChannelItem channelItem);
-
-        private boolean isNotMyMessage(ChatMessage chatMessage) {
-            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+        protected void onSelected(ChannelSelectionMenu.View.ChannelItem channelItem) {
+            if (channelItem == null) {
+                chatChannelSelectionService.selectChannel(null);
+            } else {
+                chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
+            }
         }
 
-        private boolean isAuthorNotIgnored(ChatMessage chatMessage) {
-            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
+        protected void doLeaveChannel(C chatChannel) {
+            chatChannelService.leaveChannel(chatChannel);
+            chatChannelSelectionService.maybeSelectFirstChannel();
         }
 
-        protected ChatChannelSelection.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
+        protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
             return model.channelItems.stream()
                     .filter(Objects::nonNull)
                     .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))
@@ -171,6 +205,14 @@ public abstract class ChatChannelSelection<
                         .count();
                 model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
             });
+        }
+
+        protected boolean isNotMyMessage(ChatMessage chatMessage) {
+            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+        }
+
+        protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {
+            return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
     }
 
@@ -232,11 +274,6 @@ public abstract class ChatChannelSelection<
             listViewSelectedChannelSubscription = EasyBind.subscribe(listView.getSelectionModel().selectedItemProperty(),
                     channelItem -> {
                         if (channelItem != null) {
-                            if (model.previousSelectedChannelItem != null) {
-                                model.previousSelectedChannelItem.setSelected(false);
-                            }
-                            model.previousSelectedChannelItem = channelItem;
-                            channelItem.setSelected(true);
                             controller.onSelected(channelItem);
                         }
                     });
@@ -245,11 +282,6 @@ public abstract class ChatChannelSelection<
                         if (channelItem == null) {
                             listView.getSelectionModel().clearSelection();
                         } else if (!channelItem.equals(listView.getSelectionModel().getSelectedItem())) {
-                            if (model.previousSelectedChannelItem != null) {
-                                model.previousSelectedChannelItem.setSelected(false);
-                            }
-                            model.previousSelectedChannelItem = channelItem;
-                            channelItem.setSelected(true);
                             listView.getSelectionModel().select(channelItem);
                         }
                     });

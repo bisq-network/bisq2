@@ -29,9 +29,7 @@ import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqTooltip;
-import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.i18n.Res;
 import bisq.user.profile.UserProfile;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.MapChangeListener;
@@ -57,7 +55,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelection<
+public class TwoPartyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
         TwoPartyPrivateChatChannel,
         TwoPartyPrivateChatChannelService,
         ChatChannelSelectionService
@@ -65,11 +63,11 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
     @Getter
     private final Controller controller;
 
-    public TwoPartyPrivateChatChannelSelection(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
+    public TwoPartyPrivateChannelSelectionMenu(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
         controller = new Controller(applicationService, chatChannelDomain);
     }
 
-    protected static class Controller extends PrivateChatChannelSelection.Controller<
+    protected static class Controller extends PrivateChannelSelectionMenu.Controller<
             View,
             Model,
             TwoPartyPrivateChatChannel,
@@ -91,7 +89,6 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
             return chatService.getChatChannelSelectionServices().get(chatChannelDomain);
         }
 
-
         @Override
         protected View createAndGetView() {
             return new View(model, this);
@@ -101,67 +98,19 @@ public class TwoPartyPrivateChatChannelSelection extends PrivateChatChannelSelec
         protected Model createAndGetModel(ChatChannelDomain chatChannelDomain) {
             return new Model(chatChannelDomain);
         }
-
-        @Override
-        public void onActivate() {
-            super.onActivate();
-        }
-
-        @Override
-        public void onDeactivate() {
-            super.onDeactivate();
-        }
-
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
-
-        public void onLeaveChannel(PrivateChatChannel<?> privateChatChannel) {
-            new Popup().warning(Res.get("social.privateChannel.leave.warning", privateChatChannel.getMyUserIdentity().getUserName()))
-                    .closeButtonText(Res.get("cancel"))
-                    .actionButtonText(Res.get("social.privateChannel.leave"))
-                    .onAction(() -> doLeaveChannel((TwoPartyPrivateChatChannel) privateChatChannel))
-                    .show();
-        }
-
-        public void doLeaveChannel(TwoPartyPrivateChatChannel privateChatChannel) {
-            chatChannelService.leaveChannel(privateChatChannel);
-            model.sortedList.stream().filter(e -> !e.getChatChannel().getId().equals(privateChatChannel.getId()))
-                    .findFirst()
-                    .ifPresentOrElse(e -> chatChannelSelectionService.selectChannel(e.getChatChannel()),
-                            () -> chatChannelSelectionService.selectChannel(null));
-        }
     }
 
-    protected static class Model extends PrivateChatChannelSelection.Model {
+    protected static class Model extends PrivateChannelSelectionMenu.Model {
         public Model(ChatChannelDomain chatChannelDomain) {
             super(chatChannelDomain);
         }
     }
 
-    protected static class View extends PrivateChatChannelSelection.View<Model, Controller> {
+    protected static class View extends PrivateChannelSelectionMenu.View<Model, Controller> {
         protected View(Model model, Controller controller) {
             super(model, controller);
         }
 
-        @Override
-        protected void onViewAttached() {
-            super.onViewAttached();
-        }
-
-        @Override
-        protected void onViewDetached() {
-            super.onViewDetached();
-        }
-
-        @Override
-        protected String getHeadlineText() {
-            return Res.get("social.privateChannels");
-        }
 
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {

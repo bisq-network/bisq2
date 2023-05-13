@@ -46,7 +46,11 @@ import java.util.concurrent.CompletableFuture;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C extends PrivateChatChannel<M>, S extends PersistableStore<S>> extends ChatChannelService<M, C, S> implements MessageListener {
+public abstract class PrivateChatChannelService<
+        M extends PrivateChatMessage,
+        C extends PrivateChatChannel<M>,
+        S extends PersistableStore<S>
+        > extends ChatChannelService<M, C, S> implements MessageListener {
     protected final ProofOfWorkService proofOfWorkService;
 
     public PrivateChatChannelService(NetworkService networkService,
@@ -105,29 +109,27 @@ public abstract class PrivateChatChannelService<M extends PrivateChatMessage, C 
         return networkService.confidentialSend(chatMessage, receiverNetworkId, senderNetworkIdWithKeyPair);
     }
 
-    protected void leaveChannel(C channel, UserProfile receiver) {
-        //todo handle via members
-        if (channel.getChatMessages().stream()
-                .max(Comparator.comparing(ChatMessage::getDate))
-                .stream()
-                .anyMatch(m -> m.getChatMessageType().equals(ChatMessageType.LEAVE))) {
-            // Don't send leave message if peer already left channel
-            getChannels().remove(channel);
-            return;
-        }
-
-        sendLeaveMessage(channel, receiver)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        log.warn("Sending leave channel message failed.");
-                    }
-                    getChannels().remove(channel);
-                    persist();
-                });
+    @Override
+    public void leaveChannel(C channel) {
+        getChannels().remove(channel);
+        persist();
     }
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel,
-                                                                                   UserProfile receiver) {
+    protected Optional<CompletableFuture<NetworkService.SendMessageResult>> maybeSendLeaveChannelMessage(C channel, UserProfile receiver) {
+        //todo handle via members
+        boolean hasLeaveMessage = channel.getChatMessages().stream()
+                .max(Comparator.comparing(ChatMessage::getDate))
+                .stream()
+                .anyMatch(m -> m.getChatMessageType().equals(ChatMessageType.LEAVE));
+        if (hasLeaveMessage) {
+            // Don't send leave message if peer already left channel
+            return Optional.empty();
+        }
+
+        return Optional.of(sendLeaveMessage(channel, receiver));
+    }
+
+    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver) {
         return sendMessage(StringUtils.createShortUid(),
                 Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),

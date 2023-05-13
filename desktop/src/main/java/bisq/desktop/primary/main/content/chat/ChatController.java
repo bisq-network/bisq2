@@ -34,7 +34,7 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.robohash.RoboHash;
-import bisq.desktop.primary.main.content.chat.channels.TwoPartyPrivateChatChannelSelection;
+import bisq.desktop.primary.main.content.chat.channels.TwoPartyPrivateChannelSelectionMenu;
 import bisq.desktop.primary.main.content.chat.sidebar.ChannelSidebar;
 import bisq.desktop.primary.main.content.chat.sidebar.UserProfileSidebar;
 import bisq.desktop.primary.main.content.components.ChatMessagesComponent;
@@ -68,7 +68,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
     protected V view;
     protected final UserIdentityService userIdentityService;
     protected final DefaultApplicationService applicationService;
-    protected final TwoPartyPrivateChatChannelSelection twoPartyPrivateChatChannelSelection;
+    protected final TwoPartyPrivateChannelSelectionMenu twoPartyPrivateChannelSelectionMenu;
     protected final ChannelSidebar channelSidebar;
     protected final QuotedMessageBlock quotedMessageBlock;
     protected final ChatMessagesComponent chatMessagesComponent;
@@ -83,7 +83,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userIdentityService = applicationService.getUserService().getUserIdentityService();
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
-        twoPartyPrivateChatChannelSelection = new TwoPartyPrivateChatChannelSelection(applicationService, chatChannelDomain);
+        twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(applicationService, chatChannelDomain);
         chatMessagesComponent = new ChatMessagesComponent(applicationService, chatChannelDomain);
         channelSidebar = new ChannelSidebar(applicationService, () -> {
             onCloseSideBar();

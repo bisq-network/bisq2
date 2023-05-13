@@ -110,9 +110,9 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
-        leaveChannel(channel, channel.getPeer());
-        // todo 
-        //channel.getChannelMembers().remove()
+        super.leaveChannel(channel);
+
+        maybeSendLeaveChannelMessage(channel, channel.getPeer());
     }
 
     public CompletableFuture<NetworkService.SendMessageResult> sendTextMessage(String text,

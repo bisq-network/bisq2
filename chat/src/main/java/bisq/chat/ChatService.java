@@ -84,9 +84,10 @@ public class ChatService implements Service {
                 proofOfWorkService);
         addToTwoPartyPrivateChatChannelServices(ChatChannelDomain.BISQ_EASY);
         chatChannelSelectionServices.put(ChatChannelDomain.BISQ_EASY, new BisqEasyChatChannelSelectionService(persistenceService,
-                bisqEasyPrivateTradeChatChannelService,
+                twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY),
                 bisqEasyPublicChatChannelService,
-                twoPartyPrivateChatChannelServices.get(ChatChannelDomain.BISQ_EASY)));
+                bisqEasyPrivateTradeChatChannelService,
+                userIdentityService));
 
         // DISCUSSION
         addToCommonPublicChatChannelServices(ChatChannelDomain.DISCUSSION,
@@ -198,14 +199,14 @@ public class ChatService implements Service {
                         chatChannelDomain));
     }
 
-    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain, List<CommonPublicChatChannel> defaultChannels) {
+    private void addToCommonPublicChatChannelServices(ChatChannelDomain chatChannelDomain, List<CommonPublicChatChannel> channels) {
         commonPublicChatChannelServices.put(chatChannelDomain,
                 new CommonPublicChatChannelService(persistenceService,
                         networkService,
                         userIdentityService,
                         userProfileService,
                         chatChannelDomain,
-                        defaultChannels));
+                        channels));
     }
 
     private void addToChatChannelSelectionServices(ChatChannelDomain chatChannelDomain) {
@@ -213,6 +214,7 @@ public class ChatService implements Service {
                 new ChatChannelSelectionService(persistenceService,
                         twoPartyPrivateChatChannelServices.get(chatChannelDomain),
                         commonPublicChatChannelServices.get(chatChannelDomain),
-                        chatChannelDomain));
+                        chatChannelDomain,
+                        userIdentityService));
     }
 }

@@ -43,17 +43,17 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     private final CommonPublicChatChannelStore persistableStore = new CommonPublicChatChannelStore();
     @Getter
     private final Persistence<CommonPublicChatChannelStore> persistence;
-    private final List<CommonPublicChatChannel> defaultChannels;
+    private final List<CommonPublicChatChannel> channels;
 
     public CommonPublicChatChannelService(PersistenceService persistenceService,
                                           NetworkService networkService,
                                           UserIdentityService userIdentityService,
                                           UserProfileService userProfileService,
                                           ChatChannelDomain chatChannelDomain,
-                                          List<CommonPublicChatChannel> defaultChannels) {
+                                          List<CommonPublicChatChannel> channels) {
         super(networkService, userIdentityService, userProfileService, chatChannelDomain);
 
-        this.defaultChannels = defaultChannels;
+        this.channels = channels;
 
         persistence = persistenceService.getOrCreatePersistence(this,
                 "db",
@@ -88,13 +88,16 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void leaveChannel(CommonPublicChatChannel channel) {
-        //todo
+    public ObservableArray<CommonPublicChatChannel> getChannels() {
+        return persistableStore.getChannels();
     }
 
     @Override
-    public ObservableArray<CommonPublicChatChannel> getChannels() {
-        return persistableStore.getChannels();
+    public void leaveChannel(CommonPublicChatChannel channel) {
+        // Currently, we do not support leaving a CommonPublicChatChannel.
+        // We could support it in futures similar as in BisqEasyPublicChatChannelService.
+        // Would require a UI element to add channels again.
+        throw new RuntimeException("Leave channel in CommonPublicChatChannelService is not supported");
     }
 
 
@@ -135,7 +138,7 @@ public final class CommonPublicChatChannelService extends PublicChatChannelServi
             return;
         }
 
-        getChannels().setAll(defaultChannels);
+        getChannels().setAll(channels);
         persist();
     }
 }

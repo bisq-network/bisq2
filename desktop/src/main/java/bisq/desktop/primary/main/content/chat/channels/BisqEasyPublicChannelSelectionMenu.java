@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelection<
+public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMenu<
         BisqEasyPublicChatChannel,
         BisqEasyPublicChatChannelService,
         BisqEasyChatChannelSelectionService
@@ -74,11 +74,11 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
     @Getter
     private final Controller controller;
 
-    public BisqEasyPublicChatChannelSelection(DefaultApplicationService applicationService) {
+    public BisqEasyPublicChannelSelectionMenu(DefaultApplicationService applicationService) {
         controller = new Controller(applicationService);
     }
 
-    protected static class Controller extends PublicChatChannelSelection.Controller<
+    protected static class Controller extends PublicChannelSelectionMenu.Controller<
             View,
             Model,
             BisqEasyPublicChatChannel,
@@ -123,7 +123,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         public void onActivate() {
             super.onActivate();
 
-            model.sortedList.setComparator(Comparator.comparing(ChatChannelSelection.View.ChannelItem::getChannelTitle));
+            model.sortedList.setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
 
             numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
@@ -138,8 +138,12 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
                     .map(View.MarketListItem::new)
                     .collect(Collectors.toList());
 
-            model.allMarkets.setAll(marketListItems);
-            model.allMarketsSortedList.setComparator((o1, o2) -> Integer.compare(getNumMessages(o2.market), getNumMessages(o1.market)));
+            model.hiddenMarketListItems.setAll(marketListItems);
+            model.sortedHiddenMarketListItems.setComparator((o1, o2) -> {
+                Comparator<View.MarketListItem> byNumMessages = (left, right) -> Integer.compare(getNumMessages(right.market), getNumMessages(left.market));
+                Comparator<View.MarketListItem> byName = (left, right) -> left.market.toString().compareTo(right.toString());
+                return byNumMessages.thenComparing(byName).compare(o1, o2);
+            });
         }
 
         @Override
@@ -149,27 +153,18 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
             numVisibleChannelsPin.unbind();
         }
 
-        @Override
-        protected void onSelected(ChatChannelSelection.View.ChannelItem channelItem) {
-            if (channelItem == null) {
-                return;
-            }
-
-            chatChannelSelectionService.selectChannel(channelItem.getChatChannel());
-        }
-
-        public void onShowMarket(View.MarketListItem marketListItem) {
+        public void onJoinChannel(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
-                model.allMarkets.remove(marketListItem);
+                model.hiddenMarketListItems.remove(marketListItem);
                 chatChannelService.findChannel(marketListItem.market)
                         .ifPresent(channel -> {
-                            chatChannelService.showChannel(channel);
+                            chatChannelService.joinChannel(channel);
                             chatChannelSelectionService.selectChannel(channel);
                         });
             }
         }
 
-        public void onHideTradeChannel(BisqEasyPublicChatChannel channel) {
+        public void onLeaveChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
                     .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorUserProfileId()))
@@ -177,20 +172,14 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
-                chatChannelService.hideChannel(channel);
-
-                model.allMarkets.add(0, new View.MarketListItem(channel.getMarket()));
-                if (!model.sortedList.isEmpty()) {
-                    chatChannelSelectionService.selectChannel(model.sortedList.get(0).getChatChannel());
-                } else {
-                    chatChannelSelectionService.selectChannel(null);
-                }
+                doLeaveChannel(channel);
+                model.hiddenMarketListItems.add(new View.MarketListItem(channel.getMarket()));
             }
         }
 
         private int getNumMessages(Market market) {
             return chatChannelService.findChannel(market)
-                    .map(e -> e.getChatMessages().size())
+                    .map(channel -> channel.getChatMessages().size())
                     .orElse(0);
         }
 
@@ -205,16 +194,16 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         }
     }
 
-    protected static class Model extends PublicChatChannelSelection.Model {
-        private final ObservableList<View.MarketListItem> allMarkets = FXCollections.observableArrayList();
-        private final SortedList<View.MarketListItem> allMarketsSortedList = new SortedList<>(allMarkets);
+    protected static class Model extends PublicChannelSelectionMenu.Model {
+        private final ObservableList<View.MarketListItem> hiddenMarketListItems = FXCollections.observableArrayList();
+        private final SortedList<View.MarketListItem> sortedHiddenMarketListItems = new SortedList<>(hiddenMarketListItems);
 
         public Model() {
             super(ChatChannelDomain.BISQ_EASY);
         }
     }
 
-    protected static class View extends PublicChatChannelSelection.View<Model, Controller> {
+    protected static class View extends PublicChannelSelectionMenu.View<Model, Controller> {
         protected final Label addChannelIcon;
 
         protected View(Model model, Controller controller) {
@@ -233,9 +222,9 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
 
             addChannelIcon.setOnMouseClicked(e ->
                     new ComboBoxOverlay<>(addChannelIcon,
-                            model.allMarketsSortedList,
+                            model.sortedHiddenMarketListItems,
                             c -> getMarketListCell(),
-                            controller::onShowMarket,
+                            controller::onJoinChannel,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
                             Res.get("search"),
                             350, 5, 23, 31.5)
@@ -292,7 +281,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
         @Override
         protected ListCell<ChannelItem> getListCell() {
             return new ListCell<>() {
-                final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
+                final Label leaveChannelIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Badge numMessagesBadge;
                 final StackPane iconAndBadge = new StackPane();
                 final Label label = new Label();
@@ -312,7 +301,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
                     numMessagesBadge = new Badge();
                     numMessagesBadge.setPosition(Pos.CENTER);
 
-                    iconAndBadge.getChildren().addAll(numMessagesBadge, removeIcon);
+                    iconAndBadge.getChildren().addAll(numMessagesBadge, leaveChannelIcon);
                     iconAndBadge.setAlignment(Pos.CENTER);
 
                     label.getStyleClass().add("bisq-text-8");
@@ -321,8 +310,8 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
 
                     HBox.setMargin(iconAndBadge, new Insets(0, 12, 0, 0));
 
-                    removeIcon.setCursor(Cursor.HAND);
-                    removeIcon.setId("icon-label-grey");
+                    leaveChannelIcon.setCursor(Cursor.HAND);
+                    leaveChannelIcon.setId("icon-label-grey");
 
                     nonSelectedEffect.setSaturation(-0.4);
                     nonSelectedEffect.setBrightness(-0.6);
@@ -354,16 +343,16 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
                             }
                         });
 
-                        removeIcon.setOpacity(0);
-                        removeIcon.setOnMouseClicked(e -> controller.onHideTradeChannel(bisqEasyPublicChatChannel));
-                        setOnMouseClicked(e -> Transitions.fadeIn(removeIcon));
+                        leaveChannelIcon.setOpacity(0);
+                        leaveChannelIcon.setOnMouseClicked(e -> controller.onLeaveChannel(bisqEasyPublicChatChannel));
+                        setOnMouseClicked(e -> Transitions.fadeIn(leaveChannelIcon));
                         setOnMouseEntered(e -> {
-                            Transitions.fadeIn(removeIcon);
+                            Transitions.fadeIn(leaveChannelIcon);
                             Transitions.fadeOut(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), true);
                         });
                         setOnMouseExited(e -> {
-                            Transitions.fadeOut(removeIcon);
+                            Transitions.fadeOut(leaveChannelIcon);
                             Transitions.fadeIn(numMessagesBadge);
                             applyEffect(icons, item.isSelected(), false);
                         });
@@ -376,7 +365,7 @@ public class BisqEasyPublicChatChannelSelection extends PublicChatChannelSelecti
                         setGraphic(hBox);
                     } else {
                         label.setGraphic(null);
-                        removeIcon.setOnMouseClicked(null);
+                        leaveChannelIcon.setOnMouseClicked(null);
                         setOnMouseClicked(null);
                         setOnMouseEntered(null);
                         setOnMouseExited(null);

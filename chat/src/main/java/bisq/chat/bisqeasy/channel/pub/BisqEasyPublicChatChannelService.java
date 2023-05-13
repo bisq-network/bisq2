@@ -68,14 +68,19 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
     public void onPersistedApplied(BisqEasyPublicChatChannelStore persisted) {
     }
 
-    public void showChannel(BisqEasyPublicChatChannel channel) {
+    public void joinChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().add(channel.getId());
         persist();
+
+        //todo send join msg
     }
 
-    public void hideChannel(BisqEasyPublicChatChannel channel) {
+    @Override
+    public void leaveChannel(BisqEasyPublicChatChannel channel) {
         getVisibleChannelIds().remove(channel.getId());
         persist();
+
+        //todo send leave msg
     }
 
     public boolean isVisible(BisqEasyPublicChatChannel channel) {
@@ -121,20 +126,18 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         return persistableStore.getChannels();
     }
 
-    @Override
-    public void leaveChannel(BisqEasyPublicChatChannel channel) {
-        //todo
-        log.error("leaveChannel");
-    }
-
     public Optional<BisqEasyPublicChatChannel> findChannel(Market market) {
         return findChannel(BisqEasyPublicChatChannel.createId(market));
     }
 
+    @Override
     public Optional<BisqEasyPublicChatChannel> getDefaultChannel() {
+        Market defaultMarket = MarketRepository.getDefault();
         return getChannels().stream()
-                .filter(channel -> MarketRepository.getDefault().equals(channel.getMarket()))
-                .findAny();
+                .filter(this::isVisible)
+                .filter(channel -> defaultMarket.equals(channel.getMarket()))
+                .findAny()
+                .or(super::getDefaultChannel);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,8 +178,9 @@ public class BisqEasyPublicChatChannelService extends PublicChatChannelService<B
         }
 
         BisqEasyPublicChatChannel defaultChannel = new BisqEasyPublicChatChannel(MarketRepository.getDefault());
-        showChannel(defaultChannel);
+        joinChannel(defaultChannel);
         maybeAddPublicTradeChannel(defaultChannel);
+
         List<Market> allMarkets = MarketRepository.getAllFiatMarkets();
         allMarkets.remove(MarketRepository.getDefault());
         allMarkets.forEach(market -> maybeAddPublicTradeChannel(new BisqEasyPublicChatChannel(market)));

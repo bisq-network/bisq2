@@ -28,6 +28,7 @@ import bisq.chat.channel.pub.PublicChatChannelService;
 import bisq.chat.message.ChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.Badge;
+import bisq.i18n.Res;
 import javafx.collections.MapChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,20 +41,20 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 
-public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
+public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
         S extends PublicChatChannelService<?, C, ?>,
-        E extends ChatChannelSelectionService> extends ChatChannelSelection<C, S, E> {
+        E extends ChatChannelSelectionService> extends ChannelSelectionMenu<C, S, E> {
 
-    public PublicChatChannelSelection() {
+    public PublicChannelSelectionMenu() {
         super();
     }
 
-    protected static abstract class Controller<V extends ChatChannelSelection.View<M, ?>,
+    protected static abstract class Controller<V extends ChannelSelectionMenu.View<M, ?>,
             M extends Model,
             C extends ChatChannel<?>,
             S extends ChatChannelService<?, C, ?>,
             E extends ChatChannelSelectionService>
-            extends ChatChannelSelection.Controller<V, M, C, S, E> {
+            extends ChannelSelectionMenu.Controller<V, M, C, S, E> {
 
         public Controller(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
             super(applicationService, chatChannelDomain);
@@ -65,22 +66,20 @@ public abstract class PublicChatChannelSelection<C extends PublicChatChannel<?>,
         }
 
         @Override
-        protected void handleSelectedChannelChange(ChatChannel<? extends ChatMessage> chatChannel) {
-            if (chatChannel instanceof PublicChatChannel) {
-                model.selectedChannelItem.set(findOrCreateChannelItem(chatChannel));
-            } else if (chatChannel == null && !model.channelItems.isEmpty()) {
-                // TODO move logic to service
-                model.selectedChannelItem.set(model.channelItems.get(0));
-            } else {
-                model.selectedChannelItem.set(null);
-            }
+        protected boolean isChannelExpectedInstance(ChatChannel<? extends ChatMessage> chatChannel) {
+            return chatChannel instanceof PublicChatChannel;
         }
     }
 
-    protected static abstract class View<M extends ChatChannelSelection.Model,
-            C extends ChatChannelSelection.Controller<?, M, ?, ?, ?>> extends ChatChannelSelection.View<M, C> {
+    protected static abstract class View<M extends ChannelSelectionMenu.Model,
+            C extends ChannelSelectionMenu.Controller<?, M, ?, ?, ?>> extends ChannelSelectionMenu.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
+        }
+
+        @Override
+        protected String getHeadlineText() {
+            return Res.get("social.publicChannels");
         }
 
         protected ListCell<ChannelItem> getListCell() {

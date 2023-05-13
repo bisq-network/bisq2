@@ -28,7 +28,12 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PrivateGroupChatChannelService<M extends PrivateChatMessage, C extends PrivateGroupChatChannel<M>, S extends PersistableStore<S>> extends PrivateChatChannelService<M, C, S> implements MessageListener {
+public abstract class PrivateGroupChatChannelService<
+        M extends PrivateChatMessage,
+        C extends PrivateGroupChatChannel<M>,
+        S extends PersistableStore<S>
+        >
+        extends PrivateChatChannelService<M, C, S> implements MessageListener {
 
     public PrivateGroupChatChannelService(NetworkService networkService,
                                           UserIdentityService userIdentityService,
@@ -40,8 +45,8 @@ public abstract class PrivateGroupChatChannelService<M extends PrivateChatMessag
 
     @Override
     public void leaveChannel(C channel) {
-        channel.getPeers().forEach(peer -> leaveChannel(channel, peer));
-        // todo 
-        //channel.getChannelMembers().remove()
+        super.leaveChannel(channel);
+
+        channel.getPeers().forEach(peer -> maybeSendLeaveChannelMessage(channel, peer));
     }
 }
