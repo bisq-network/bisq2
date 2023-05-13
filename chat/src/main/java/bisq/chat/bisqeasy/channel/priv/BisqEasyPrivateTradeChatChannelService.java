@@ -143,7 +143,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                             citation,
                             new Date().getTime(),
                             false,
-                            channel.findMediator(),
+                            channel.getMediator(),
                             ChatMessageType.TAKE_BISQ_EASY_OFFER,
                             Optional.of(bisqEasyOffer));
                     addMessage(takeOfferMessage, channel);
@@ -157,10 +157,13 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                                Optional<Citation> citation,
                                                                                BisqEasyPrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
-        if (channel.getIsInMediation() && channel.findMediator().isPresent()) {
-            List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getPeers().stream()
+        if (channel.isInMediation() && channel.getMediator().isPresent()) {
+            List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getTraders().stream()
                     .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT))
                     .collect(Collectors.toList());
+            channel.getMediator()
+                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, ChatMessageType.TEXT))
+                    .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
@@ -172,7 +175,8 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     public void leaveChannel(BisqEasyPrivateTradeChatChannel channel) {
         super.leaveChannel(channel);
 
-        channel.getPeers().forEach(peer -> maybeSendLeaveChannelMessage(channel, peer));
+        channel.getTraders().forEach(trader -> sendLeaveMessage(channel, trader));
+        channel.getMediator().ifPresent(mediator -> sendLeaveMessage(channel, mediator));
     }
 
     @Override
@@ -210,7 +214,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                                 boolean wasEdited,
                                                                                 ChatMessageType chatMessageType) {
         // We send mediator only at first message
-        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.findMediator() : Optional.empty();
+        Optional<UserProfile> mediator = channel.getChatMessages().isEmpty() ? channel.getMediator() : Optional.empty();
         return new BisqEasyPrivateTradeChatMessage(
                 messageId,
                 channel.getId(),

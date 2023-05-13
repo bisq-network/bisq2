@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
+    @Getter
+    protected final transient Set<String> userProfileIdsOfParticipants = new HashSet<>();
 
     public ChatChannel(String id,
                        ChatChannelDomain chatChannelDomain,
@@ -102,6 +105,4 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     abstract public void removeChatMessage(M chatMessage);
 
     abstract public void removeChatMessages(Collection<M> messages);
-
-    abstract public Set<String> getUserProfileIdsOfAllChannelMembers();
 }

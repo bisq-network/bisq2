@@ -39,7 +39,6 @@ import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -111,33 +110,10 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public void leaveChannel(C channel) {
-        // Remove ourselves as member. Currently, the channel is not kept so we would not need to update that state,
-        // but it could be that we implement an archive mode to resurrect closed channels and then this modified state 
-        // will be helpful (it marks channels we left ourselves).
         synchronized (this) {
-            // Clone set to avoid ConcurrentModificationException
-            new HashSet<>(channel.getChannelMembers()).stream()
-                    .filter(member -> member.getType() == PrivateChatChannelMember.Type.SELF)
-                    .findAny()
-                    .ifPresent(channel::removeChannelMember);
-
             getChannels().remove(channel);
         }
         persist();
-    }
-
-    protected Optional<CompletableFuture<NetworkService.SendMessageResult>> maybeSendLeaveChannelMessage(C channel, UserProfile receiver) {
-        //todo handle via members
-       /* boolean hasLeaveMessage = channel.getChatMessages().stream()
-                .max(Comparator.comparing(ChatMessage::getDate))
-                .stream()
-                .anyMatch(m -> m.getChatMessageType().equals(ChatMessageType.LEAVE));
-        if (hasLeaveMessage) {
-            // Don't send leave message if peer already left channel
-            return Optional.empty();
-        }*/
-
-        return Optional.of(sendLeaveMessage(channel, receiver));
     }
 
     protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver) {

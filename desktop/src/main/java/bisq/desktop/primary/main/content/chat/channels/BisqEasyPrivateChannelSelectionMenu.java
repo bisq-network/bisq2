@@ -59,6 +59,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelectionMenu<
         BisqEasyPrivateTradeChatChannel,
@@ -185,7 +187,7 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
             return new ListCell<>() {
                 final Label removeIcon = Icons.getIcon(AwesomeIcon.MINUS_SIGN_ALT, "14");
                 final Label label = new Label();
-                final HBox hBox = new HBox();
+                final HBox hBox = new HBox(10);
                 final Badge numMessagesBadge = new Badge();
                 final StackPane iconAndBadge = new StackPane();
                 final Tooltip tooltip = new BisqTooltip();
@@ -212,7 +214,6 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     secondaryRoboIcon.setFitHeight(35);
                     HBox.setMargin(secondaryRoboIcon, new Insets(0, 0, 0, -20));
 
-                    hBox.setSpacing(10);
                     hBox.setAlignment(Pos.CENTER_LEFT);
 
                     numMessagesBadge.setPosition(Pos.CENTER);
@@ -266,10 +267,8 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                     }
 
                     BisqEasyPrivateTradeChatChannel privateChatChannel = (BisqEasyPrivateTradeChatChannel) item.getChatChannel();
-                    UserProfile peer;
                     List<ImageView> icons = new ArrayList<>();
-                    List<UserProfile> peers = privateChatChannel.getPeers();
-                    peer = peers.get(0);
+                    UserProfile peer = privateChatChannel.getPeer();
                     roboIcon.setImage(RoboHash.getImage(peer.getPubKeyHash()));
                     Tooltip.install(this, tooltip);
                     icons.add(roboIcon);
@@ -283,17 +282,19 @@ public class BisqEasyPrivateChannelSelectionMenu extends PrivateChannelSelection
                             hBox.getChildren().clear();
                             hBox.getChildren().add(roboIcon);
 
-                            if (privateChatChannel.findMediator().isPresent() &&
-                                    privateChatChannel.getIsInMediation()) {
+                            if (privateChatChannel.getMediator().isPresent() &&
+                                    privateChatChannel.isInMediation()) {
                                 if (privateChatChannel.isMediator()) {
                                     // We are the mediator
-                                    UserProfile trader1 = privateChatChannel.getPeers().get(0);
-                                    UserProfile trader2 = privateChatChannel.getPeers().get(1);
+                                    List<UserProfile> traders = new ArrayList<>(privateChatChannel.getTraders());
+                                    checkArgument(traders.size() == 2);
+                                    UserProfile trader1 = traders.get(0);
+                                    UserProfile trader2 = traders.get(1);
                                     roboIcon.setImage(RoboHash.getImage(trader1.getPubKeyHash()));
                                     secondaryRoboIcon.setImage(RoboHash.getImage(trader2.getPubKeyHash()));
                                     tooltip.setText(trader1.getTooltipString() + "\n\n" + trader2.getTooltipString());
                                 } else {
-                                    UserProfile mediator = privateChatChannel.findMediator().get();
+                                    UserProfile mediator = privateChatChannel.getMediator().get();
                                     secondaryRoboIcon.setImage(RoboHash.getImage(mediator.getPubKeyHash()));
                                     tooltip.setText(peer.getTooltipString() + "\n\n" +
                                             Res.get("mediator") + ":\n" + mediator.getTooltipString());

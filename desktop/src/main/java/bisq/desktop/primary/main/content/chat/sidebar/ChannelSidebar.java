@@ -47,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 
 import javax.annotation.Nullable;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -116,10 +117,11 @@ public class ChannelSidebar {
                     .map(service -> service.getChannelTitle(chatChannel))
                     .orElse(""));
 
-            model.members.setAll(chatChannel.getUserProfileIdsOfAllChannelMembers().stream()
+
+            model.participants.setAll(chatChannel.getUserProfileIdsOfParticipants().stream()
                     .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
+                    .sorted(Comparator.comparing(UserProfile::getUserName))
                     .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
-                    .sorted()
                     .collect(Collectors.toList()));
 
             if (chatChannel instanceof CommonPublicChatChannel) {
@@ -167,7 +169,7 @@ public class ChannelSidebar {
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
         private Optional<ChatUserOverview> adminProfile = Optional.empty();
-        private final ObservableList<ChatUserOverview> members = FXCollections.observableArrayList();
+        private final ObservableList<ChatUserOverview> participants = FXCollections.observableArrayList();
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();
 
         private Model() {
@@ -176,7 +178,7 @@ public class ChannelSidebar {
 
     @Slf4j
     public static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private final ListView<ChatUserOverview> members;
+        private final ListView<ChatUserOverview> participants;
         private final Label headline;
         private final Text descriptionText;
         private final Button closeButton;
@@ -200,16 +202,16 @@ public class ChannelSidebar {
             descriptionText = new Text();
             descriptionText.setId("chat-sidebar-text");
 
-            Label membersHeadLine = new Label(Res.get("social.channel.settings.members"));
-            membersHeadLine.setId("chat-sidebar-title");
+            Label participantsLabel = new Label(Res.get("social.channel.settings.participants"));
+            participantsLabel.setId("chat-sidebar-title");
 
-            members = new ListView<>(model.members);
-            VBox.setVgrow(members, Priority.ALWAYS);
-            members.setCellFactory(getCellFactory(controller));
+            participants = new ListView<>(model.participants);
+            VBox.setVgrow(participants, Priority.ALWAYS);
+            participants.setCellFactory(getCellFactory(controller));
 
             VBox.setMargin(topHBox, new Insets(0, -20, 0, 0));
             VBox.setMargin(notificationsSidebar, new Insets(20, 0, 20, 0));
-            root.getChildren().addAll(topHBox, descriptionText, notificationsSidebar, membersHeadLine, members);
+            root.getChildren().addAll(topHBox, descriptionText, notificationsSidebar, participantsLabel, participants);
         }
 
         @Override
@@ -257,7 +259,7 @@ public class ChannelSidebar {
                             if (chatUserOverview != null && !empty) {
                                 undoIgnoreUserButton.setOnAction(e -> {
                                     controller.onUndoIgnoreUser(chatUserOverview.getChatUser());
-                                    members.refresh();
+                                    participants.refresh();
                                 });
                                 undoIgnoreUserButton.setVisible(chatUserOverview.isIgnored());
                                 undoIgnoreUserButton.setManaged(chatUserOverview.isIgnored());

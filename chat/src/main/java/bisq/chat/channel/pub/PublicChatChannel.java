@@ -20,17 +20,13 @@ package bisq.chat.channel.pub;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PublicChatMessage;
-import bisq.common.data.Pair;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
 
 @Getter
 @ToString(callSuper = true)
@@ -48,35 +44,21 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     @Override
     public void addChatMessage(M chatMessage) {
         chatMessages.add(chatMessage);
+
+        userProfileIdsOfParticipants.add(chatMessage.getAuthorUserProfileId());
     }
+
 
     public void removeChatMessage(M chatMessage) {
         chatMessages.remove(chatMessage);
+
+        // If no more message of that author we remove them from the userProfileIdsOfParticipants
+        if (chatMessages.stream().noneMatch(message -> message.getAuthorUserProfileId().equals(chatMessage.getAuthorUserProfileId()))) {
+            userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+        }
     }
 
     public void removeChatMessages(Collection<M> messages) {
         chatMessages.removeAll(messages);
-    }
-
-    //todo
-    @Override
-    public Set<String> getUserProfileIdsOfAllChannelMembers() {
-        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
-        getChatMessages().forEach(chatMessage -> {
-            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
-            chatMessagesByAuthor.putIfAbsent(authorUserProfileId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorUserProfileId).add(chatMessage);
-        });
-
-        return chatMessagesByAuthor.entrySet().stream()
-                .map(entry -> {
-                    List<ChatMessage> chatMessages = entry.getValue();
-                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
-                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
-                    return new Pair<>(entry.getKey(), lastChatMessage);
-                })
-                .filter(pair -> pair.getSecond().getChatMessageType() != ChatMessageType.LEAVE)
-                .map(Pair::getFirst)
-                .collect(Collectors.toSet());
     }
 }

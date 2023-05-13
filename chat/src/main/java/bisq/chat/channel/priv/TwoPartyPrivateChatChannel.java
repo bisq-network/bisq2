@@ -23,6 +23,7 @@ import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 import java.util.*;
@@ -37,6 +38,9 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         Collections.sort(userIds);
         return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
     }
+
+    @Getter
+    private final UserProfile peer;
 
     public TwoPartyPrivateChatChannel(UserProfile peer,
                                       UserIdentity myUserIdentity,
@@ -57,14 +61,15 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                                        List<TwoPartyPrivateChatMessage> chatMessages,
                                        ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
+        this.peer = peer;
 
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
+        userProfileIdsOfParticipants.add(peer.getId());
     }
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder().setTwoPartyPrivateChatChannel(bisq.chat.protobuf.TwoPartyPrivateChatChannel.newBuilder()
-                        .setPeer(getPeer().toProto())
+                        .setPeer(peer.toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(TwoPartyPrivateChatMessage::toChatMessageProto)
@@ -88,10 +93,10 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         return twoPartyPrivateChatChannel;
     }
 
-    public UserProfile getPeer() {
-       // checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
-        return getPeers().get(0);
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void addChatMessage(TwoPartyPrivateChatMessage chatMessage) {
@@ -111,15 +116,5 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     @Override
     public String getDisplayString() {
         return getPeer().getUserName();
-    }
-
-    void removePeerChannelMember() {
-        findChannelMember(PrivateChatChannelMember.Type.PEER, getPeer()).ifPresent(this::removeChannelMember);
-    }
-
-    void maybeAddPeerChannelMember(UserProfile peer) {
-        if (findChannelMember(PrivateChatChannelMember.Type.PEER, peer).isEmpty()) {
-            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
-        }
     }
 }

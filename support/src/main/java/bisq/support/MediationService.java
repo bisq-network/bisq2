@@ -143,7 +143,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
         BisqEasyOffer bisqEasyOffer = privateTradeChannel.getBisqEasyOffer();
         UserIdentity myUserIdentity = privateTradeChannel.getMyUserIdentity();
         UserProfile peer = privateTradeChannel.getPeer();
-        UserProfile mediator = privateTradeChannel.findMediator().orElseThrow();
+        UserProfile mediator = privateTradeChannel.getMediator().orElseThrow();
         MediationRequest networkMessage = new MediationRequest(bisqEasyOffer,
                 myUserIdentity.getUserProfile(),
                 peer,
@@ -204,7 +204,7 @@ public class MediationService implements Service, DataService.Listener, MessageL
         bisqEasyPrivateTradeChatChannelService.findChannel(mediationResponse.getBisqEasyOffer())
                 .ifPresent(channel -> {
                     // Requester had it activated at request time
-                    if (!channel.getIsInMediation()) {
+                    if (!channel.isInMediation()) {
                         bisqEasyPrivateTradeChatChannelService.setIsInMediation(channel, true);
                         // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                         //todo send messages as well

@@ -90,7 +90,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
     @Override
     public void leaveChannel(TwoPartyPrivateChatChannel channel) {
-        maybeSendLeaveChannelMessage(channel, channel.getPeer());
+        sendLeaveMessage(channel, channel.getPeer());
 
         super.leaveChannel(channel);
     }
@@ -144,19 +144,13 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
         // If we have closed that channel already and receive a leave message we do not re-create it
         if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-            findChannel(message).ifPresent(channel -> {
-                addMessage(message, channel);
-                channel.removePeerChannelMember();
-            });
+            findChannel(message).ifPresent(channel -> addMessage(message, channel));
             return;
         }
 
         findChannel(message)
                 .or(() -> createAndAddChannel(message.getSender(), message.getReceiversId()))
-                .ifPresent(channel -> {
-                    addMessage(message, channel);
-                    channel.maybeAddPeerChannelMember(message.getSender());
-                });
+                .ifPresent(channel -> addMessage(message, channel));
     }
 
     private Optional<TwoPartyPrivateChatChannel> createAndAddChannel(UserProfile peer, String myUserIdentityId) {

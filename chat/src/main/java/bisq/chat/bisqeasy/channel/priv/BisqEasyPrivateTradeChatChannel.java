@@ -21,7 +21,6 @@ import bisq.chat.bisqeasy.message.BisqEasyOffer;
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.channel.priv.PrivateChatChannelMember;
 import bisq.chat.channel.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
 import bisq.i18n.Res;
@@ -73,6 +72,9 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Observable<Boolean> isInMediationObservable = new Observable<>(false);
     @Getter
     private final BisqEasyOffer bisqEasyOffer;
+    @Getter
+    private final Set<UserProfile> traders;
+    @Getter
     private final Optional<UserProfile> mediator;
 
     // Called from trader
@@ -120,13 +122,14 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         super(id, ChatChannelDomain.BISQ_EASY, myUserIdentity, chatMessages, chatChannelNotificationType);
 
         this.bisqEasyOffer = bisqEasyOffer;
+        this.traders = traders;
         this.mediator = mediator;
-        //todo reconsider
-        // Mediator gets added as SELF (in super call) and as MEDIATOR
-        traders.forEach(trader -> addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.TRADER, trader)));
 
+        // We add mediator to participants if isInMediation==true and mediator is present in the setIsInMediation method
         setIsInMediation(isInMediation);
         this.seenChatMessageIds.addAll(seenChatMessageIds);
+
+        traders.stream().map(UserProfile::getId).forEach(userProfileIdsOfParticipants::add);
     }
 
     @Override
@@ -137,11 +140,11 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 .addAllTraders(getTraders().stream()
                         .map(UserProfile::toProto)
                         .collect(Collectors.toList()))
-                .setIsInMediation(getIsInMediation())
+                .setIsInMediation(isInMediation())
                 .addAllChatMessages(chatMessages.stream()
                         .map(BisqEasyPrivateTradeChatMessage::toChatMessageProto)
                         .collect(Collectors.toList()));
-        findMediator().ifPresent(mediator -> builder.setMediator(mediator.toProto()));
+        mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         return getChannelBuilder().setPrivateBisqEasyTradeChatChannel(builder).build();
     }
 
@@ -163,6 +166,11 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
                 new HashSet<>(baseProto.getSeenChatMessageIdsList()));
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void addChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
         chatMessages.add(chatMessage);
@@ -181,13 +189,15 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     @Override
     public String getDisplayString() {
         String shortOfferId = bisqEasyOffer.getId().substring(0, 4);
-        String peer = getPeer().getUserName();
+
         if (isMediator()) {
-            checkArgument(getPeers().size() >= 2, "getPeers().size() need to be >= 2");
-            return shortOfferId + ": " + peer + " - " + getPeers().get(1).getUserName();
+            checkArgument(traders.size() == 2, "traders.size() need to be 2");
+            List<UserProfile> tradersAsList = new ArrayList<>(traders);
+            return shortOfferId + ": " + tradersAsList.get(0).getUserName() + " - " + tradersAsList.get(1).getUserName();
         } else {
-            String optionalMediatorPostfix = findMediator()
-                    .filter(mediator -> getIsInMediation())
+            String peer = getPeer().getUserName();
+            String optionalMediatorPostfix = mediator
+                    .filter(mediator -> isInMediation())
                     .map(mediator -> ", " + mediator.getUserName() + " (" + Res.get("mediator") + ")")
                     .orElse("");
             return shortOfferId + ": " + peer + optionalMediatorPostfix;
@@ -195,27 +205,13 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     }
 
     public boolean isMediator() {
-        return findMediator().filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
+        return mediator.filter(mediator -> mediator.getId().equals(myUserIdentity.getId())).isPresent();
     }
 
     public UserProfile getPeer() {
-        checkArgument(getPeers().size() > 0, "getPeers().size() need to be > 0 at BisqEasyPrivateTradeChatChannel");
-        return getPeers().get(0);
+        checkArgument(traders.size() == 1, "traders is expected to has size 1 at getPeer() in  BisqEasyPrivateTradeChatChannel");
+        return traders.iterator().next();
     }
-
-    public Set<UserProfile> getTraders() {
-        return getChannelMembers().stream()
-                .filter(e -> e.getType() == PrivateChatChannelMember.Type.TRADER)
-                .map(PrivateChatChannelMember::getUserProfile)
-                .collect(Collectors.toSet());
-    }
-
-    public Optional<UserProfile> findMediator() {
-        return getChannelMembers().stream()
-                .filter(privateChatChannelMember -> privateChatChannelMember.getType() == PrivateChatChannelMember.Type.MEDIATOR)
-                .map(PrivateChatChannelMember::getUserProfile).findAny();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Getter, setter
@@ -228,28 +224,12 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     public void setIsInMediation(boolean isInMediation) {
         isInMediationObservable.set(isInMediation);
 
-        if (mediator.isEmpty()) {
-            if (isInMediation) {
-                throw new RuntimeException("Unexpected state: mediator is not present but we got called isInMediation=true. " +
-                        "The client code should prevent to set isInMediation if there is no mediator in the channel present.");
-            } else {
-                // No mediator present so we do not try to apply changes to the members
-                return;
-            }
-        }
-
-        // Update channel members if needed
-        UserProfile mediatorUserProfile = mediator.get();
-        Optional<PrivateChatChannelMember> mediatorMember = findChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile);
-        if (isInMediation && mediatorMember.isEmpty()) {
-            addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.MEDIATOR, mediatorUserProfile));
-        } else if (!isInMediation && mediatorMember.isPresent()) {
-            removeChannelMember(mediatorMember.get());
+        if (isInMediation) {
+            mediator.ifPresent(mediator -> userProfileIdsOfParticipants.add(mediator.getId()));
         }
     }
 
-
-    public boolean getIsInMediation() {
+    public boolean isInMediation() {
         return isInMediationObservable.get();
     }
 }

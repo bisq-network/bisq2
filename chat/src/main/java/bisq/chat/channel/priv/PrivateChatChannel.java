@@ -23,16 +23,11 @@ import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.message.PrivateChatMessage;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @ToString(callSuper = true)
@@ -41,7 +36,6 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
     protected final UserIdentity myUserIdentity;
     // We persist the messages as they are NOT persisted in the P2P data store.
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
-    protected transient final ObservableSet<PrivateChatChannelMember> channelMembers = new ObservableSet<>();
 
     public PrivateChatChannel(String id,
                               ChatChannelDomain chatChannelDomain,
@@ -53,37 +47,6 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
         this.myUserIdentity = myUserIdentity;
         this.chatMessages.addAll(chatMessages);
 
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
-    }
-
-    public void addChannelMember(PrivateChatChannelMember channelMember) {
-        channelMembers.add(channelMember);
-    }
-
-    public void removeChannelMember(PrivateChatChannelMember channelMember) {
-        channelMembers.remove(channelMember);
-    }
-
-    public Optional<PrivateChatChannelMember> findChannelMember(PrivateChatChannelMember.Type type, UserProfile userProfile) {
-        return channelMembers.stream()
-                .filter(member -> member.getType() == type && member.getUserProfile().getId().equals(userProfile.getId()))
-                .findFirst();
-    }
-
-    public List<UserProfile> getPeers() {
-        return channelMembers.stream()
-                .filter(member -> member.getType() != PrivateChatChannelMember.Type.SELF)
-                .map(PrivateChatChannelMember::getUserProfile)
-                .distinct()
-                .sorted(Comparator.comparing(UserProfile::getId))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Set<String> getUserProfileIdsOfAllChannelMembers() {
-        return channelMembers.stream()
-                .map(PrivateChatChannelMember::getUserProfile)
-                .map(UserProfile::getId)
-                .collect(Collectors.toSet());
+        userProfileIdsOfParticipants.add(myUserIdentity.getUserProfile().getId());
     }
 }

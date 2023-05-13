@@ -242,7 +242,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         checkArgument(chatChannel instanceof BisqEasyPrivateTradeChatChannel,
                 "channel must be instanceof BisqEasyPrivateTradeChatChannel at onOpenMediation");
         BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
-        Optional<UserProfile> mediator = privateTradeChannel.findMediator();
+        Optional<UserProfile> mediator = privateTradeChannel.getMediator();
         if (mediator.isPresent()) {
             new Popup().headLine(Res.get("bisqEasy.requestMediation.confirm.popup.headline"))
                     .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
