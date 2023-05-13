@@ -102,7 +102,7 @@ public abstract class View<R extends Region, M extends Model, C extends Controll
         onViewDetached();
     }
 
-    abstract protected void onViewAttached();
+    protected abstract void onViewAttached();
 
-    abstract protected void onViewDetached();
+    protected abstract void onViewDetached();
 }

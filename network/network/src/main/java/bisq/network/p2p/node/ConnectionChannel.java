@@ -192,5 +192,5 @@ public abstract class ConnectionChannel {
         return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
     }
 
-    abstract public boolean isPeerAddressVerified();
+    public abstract boolean isPeerAddressVerified();
 }

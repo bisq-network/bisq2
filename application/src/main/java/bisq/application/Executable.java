@@ -13,7 +13,7 @@ public abstract class Executable<T extends ApplicationService> {
         launchApplication(args);
     }
 
-    abstract protected T createApplicationService(String[] args);
+    protected abstract T createApplicationService(String[] args);
 
     protected void launchApplication(String[] args) {
         onApplicationLaunched();
@@ -38,7 +38,7 @@ public abstract class Executable<T extends ApplicationService> {
         log.error("Initialize domain failed", throwable);
     }
 
-    abstract protected void onDomainInitialized();
+    protected abstract void onDomainInitialized();
 
     protected void setDefaultUncaughtExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> log.error("Uncaught exception", throwable));

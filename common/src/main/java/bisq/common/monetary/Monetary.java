@@ -98,7 +98,7 @@ public abstract class Monetary implements Comparable<Monetary>, Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    abstract public double toDouble(long value);
+    public abstract double toDouble(long value);
 
     public double asDouble() {
         return toDouble(value);

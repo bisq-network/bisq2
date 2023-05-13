@@ -63,7 +63,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 .addAllSeenChatMessageIds(seenChatMessageIds);
     }
 
-    abstract public bisq.chat.protobuf.ChatChannel toProto();
+    public abstract bisq.chat.protobuf.ChatChannel toProto();
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
         switch (proto.getMessageCase()) {
@@ -96,13 +96,13 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 .collect(Collectors.toSet()));
     }
 
-    abstract public String getDisplayString();
+    public abstract String getDisplayString();
 
-    abstract public ObservableSet<M> getChatMessages();
+    public abstract ObservableSet<M> getChatMessages();
 
-    abstract public void addChatMessage(M chatMessage);
+    public abstract void addChatMessage(M chatMessage);
 
-    abstract public void removeChatMessage(M chatMessage);
+    public abstract void removeChatMessage(M chatMessage);
 
-    abstract public void removeChatMessages(Collection<M> messages);
+    public abstract void removeChatMessages(Collection<M> messages);
 }

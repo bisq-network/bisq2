@@ -51,11 +51,11 @@ public abstract class PublicChatController<V extends ChatView, M extends ChatMod
         publicChatChannelSelection = getPublicChannelSelection(chatChannelDomain);
     }
 
-    abstract public ChatChannelSelectionService getChannelSelectionService(ChatChannelDomain chatChannelDomain);
+    public abstract ChatChannelSelectionService getChannelSelectionService(ChatChannelDomain chatChannelDomain);
 
-    abstract public CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain);
+    public abstract CommonPublicChatChannelService getPublicChannelService(ChatChannelDomain chatChannelDomain);
 
-    abstract public PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain);
+    public abstract PublicChannelSelectionMenu<?, ?, ?> getPublicChannelSelection(ChatChannelDomain chatChannelDomain);
 
     @Override
     public void onActivate() {

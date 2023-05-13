@@ -64,7 +64,7 @@ public abstract class ChannelSelectionMenu<
         getController().deSelectChannel();
     }
 
-    protected static abstract class Controller<
+    protected abstract static class Controller<
             V extends View<M, ?>,
             M extends Model,
             C extends ChatChannel<?>,
@@ -232,7 +232,7 @@ public abstract class ChannelSelectionMenu<
     }
 
     @Slf4j
-    public static abstract class View<
+    public abstract static class View<
             M extends Model,
             C extends Controller<?, M, ?, ?, ?>
             >

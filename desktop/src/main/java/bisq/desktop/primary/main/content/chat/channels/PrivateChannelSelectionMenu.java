@@ -40,7 +40,7 @@ public abstract class PrivateChannelSelectionMenu<
         super();
     }
 
-    protected static abstract class Controller<
+    protected abstract static class Controller<
             V extends PrivateChannelSelectionMenu.View<M, ?>,
             M extends Model,
             C extends PrivateChatChannel<?>,
@@ -111,7 +111,7 @@ public abstract class PrivateChannelSelectionMenu<
         }
     }
 
-    protected static abstract class View<
+    protected abstract static class View<
             M extends Model,
             C extends PrivateChannelSelectionMenu.Controller<?, M, ?, ?, ?>
             > extends ChannelSelectionMenu.View<M, C> {
