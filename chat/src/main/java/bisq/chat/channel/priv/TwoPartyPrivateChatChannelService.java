@@ -152,9 +152,13 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
 
         findChannel(message)
                 .or(() -> {
-                    //TODO avoid sending leave msg
-                    // If we have closed that channel already and receive a leave message we do not re-create it
+                    // We prevent to send leave messages after a peer has left, but there might be still 
+                    // race conditions where that might happen, so we check at receiving the message as well, so that
+                    // in cases we would get a leave message as first message (e.g. after having closed the channel) 
+                    //  we do not create a channel.
                     if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                        log.warn("We received a leave message as first message. This is not expected but might " +
+                                "happen in some rare cases.");
                         return Optional.empty();
                     } else {
                         return createAndAddChannel(message.getSender(), message.getReceiverUserProfileId());

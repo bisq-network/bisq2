@@ -93,12 +93,18 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                       UserProfile peer,
                                                                       Optional<UserProfile> mediator) {
         return findChannel(bisqEasyOffer)
-                .orElseGet(() -> {
-                    BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
-                    getChannels().add(channel);
-                    persist();
-                    return channel;
-                });
+                .orElseGet(() -> traderCreatesChannel(bisqEasyOffer, myUserIdentity, peer, mediator));
+    }
+
+    public BisqEasyPrivateTradeChatChannel traderCreatesChannel(BisqEasyOffer bisqEasyOffer,
+                                                                UserIdentity myUserIdentity,
+                                                                UserProfile peer,
+                                                                Optional<UserProfile> mediator) {
+        BisqEasyPrivateTradeChatChannel channel = BisqEasyPrivateTradeChatChannel.createByTrader(bisqEasyOffer, myUserIdentity, peer, mediator);
+        getChannels().add(channel);
+        persist();
+        return channel;
+
     }
 
     public BisqEasyPrivateTradeChatChannel mediatorFindOrCreatesChannel(BisqEasyOffer bisqEasyOffer,
@@ -259,27 +265,37 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
-        //todo
-        if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
-            userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                    .flatMap(myUserIdentity -> findChannel(message)
-                            .or(() -> {
-                                if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                                    return Optional.empty();
-                                } else if (userProfileService.isChatUserIgnored(message.getSender())) {
-                                    return Optional.empty();
-                                } else if (message.getBisqEasyOffer().isPresent()) {
-                                    return Optional.of(traderFindOrCreatesChannel(message.getBisqEasyOffer().get(),
-                                            myUserIdentity,
-                                            message.getSender(),
-                                            message.getMediator()));
-                                } else {
-                                    log.error("Unexpected case");
-                                    return Optional.empty();
-                                }
-                            }))
-                    .ifPresent(channel -> addMessage(message, channel));
+        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
+        if (isMyMessage) {
+            return;
         }
+
+        findChannel(message)
+                .or(() -> {
+                    // We prevent to send leave messages after a peer has left, but there might be still 
+                    // race conditions where that might happen, so we check at receiving the message as well, so that
+                    // in cases we would get a leave message as first message (e.g. after having closed the channel) 
+                    //  we do not create a channel.
+                    if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                        log.warn("We received a leave message as first message. This is not expected but might " +
+                                "happen in some rare cases.");
+                        return Optional.empty();
+                    } else if (message.getBisqEasyOffer().isPresent()) {
+                        return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
+                                .map(myUserIdentity -> traderCreatesChannel(message.getBisqEasyOffer().get(),
+                                        myUserIdentity,
+                                        message.getSender(),
+                                        message.getMediator()));
+                    } else {
+                        // It could be that taker sends quickly a message after take offer and we receive them 
+                        // out of order. In that case the seconds message (which arrived first) would get dropped.
+                        // This is a very unlikely case, so we ignore it.
+                        log.error("We received the first message for a new channel without an offer. " +
+                                "We drop that message. Message={}", message);
+                        return Optional.empty();
+                    }
+                })
+                .ifPresent(channel -> addMessage(message, channel));
     }
 
     private boolean allowSendLeaveMessage(BisqEasyPrivateTradeChatChannel channel, UserProfile userProfile) {
