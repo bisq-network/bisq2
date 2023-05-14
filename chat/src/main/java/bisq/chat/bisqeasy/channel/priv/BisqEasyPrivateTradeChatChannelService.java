@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -157,17 +158,18 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                                                                                Optional<Citation> citation,
                                                                                BisqEasyPrivateTradeChatChannel channel) {
         String shortUid = StringUtils.createShortUid();
+        long date = new Date().getTime();
         if (channel.isInMediation() && channel.getMediator().isPresent()) {
             List<CompletableFuture<NetworkService.SendMessageResult>> futures = channel.getTraders().stream()
-                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT))
+                    .map(peer -> sendMessage(shortUid, text, citation, channel, peer, ChatMessageType.TEXT, date))
                     .collect(Collectors.toList());
             channel.getMediator()
-                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, ChatMessageType.TEXT))
+                    .map(mediator -> sendMessage(shortUid, text, citation, channel, mediator, ChatMessageType.TEXT, date))
                     .ifPresent(futures::add);
             return CompletableFutureUtils.allOf(futures)
                     .thenApply(list -> list.get(0));
         } else {
-            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), ChatMessageType.TEXT);
+            return sendMessage(shortUid, text, citation, channel, channel.getPeer(), ChatMessageType.TEXT, date);
         }
     }
 
@@ -175,8 +177,11 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     public void leaveChannel(BisqEasyPrivateTradeChatChannel channel) {
         super.leaveChannel(channel);
 
-        channel.getTraders().forEach(trader -> sendLeaveMessage(channel, trader));
-        channel.getMediator().ifPresent(mediator -> sendLeaveMessage(channel, mediator));
+        // We want to send a leave message even the peer has not sent any message so far (is not participant yet).
+        long date = new Date().getTime();
+        Stream.concat(channel.getTraders().stream(), channel.getMediator().stream())
+                .filter(userProfile -> allowSendLeaveMessage(channel, userProfile))
+                .forEach(userProfile -> sendLeaveMessage(channel, userProfile, date));
     }
 
     @Override
@@ -257,5 +262,9 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                             }))
                     .ifPresent(channel -> addMessage(message, channel));
         }
+    }
+
+    private boolean allowSendLeaveMessage(BisqEasyPrivateTradeChatChannel channel, UserProfile userProfile) {
+        return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
     }
 }

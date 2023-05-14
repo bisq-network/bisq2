@@ -35,6 +35,8 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage {
+    // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiversId
+    @EqualsAndHashCode.Exclude
     protected final String receiversId;
     protected final UserProfile sender;
 

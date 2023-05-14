@@ -38,7 +38,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -91,7 +90,8 @@ public abstract class PrivateChatChannelService<
                                                                               Optional<Citation> citation,
                                                                               C channel,
                                                                               UserProfile receiver,
-                                                                              ChatMessageType chatMessageType) {
+                                                                              ChatMessageType chatMessageType,
+                                                                              long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         M chatMessage = createAndGetNewPrivateChatMessage(messageId,
                 channel,
@@ -99,7 +99,7 @@ public abstract class PrivateChatChannelService<
                 receiver.getId(),
                 text,
                 citation,
-                new Date().getTime(),
+                date,
                 false,
                 chatMessageType);
         addMessage(chatMessage, channel);
@@ -116,13 +116,14 @@ public abstract class PrivateChatChannelService<
         persist();
     }
 
-    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver) {
+    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
         return sendMessage(StringUtils.createShortUid(),
                 Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),
                 channel,
                 receiver,
-                ChatMessageType.LEAVE);
+                ChatMessageType.LEAVE,
+                date);
     }
 
     @Override

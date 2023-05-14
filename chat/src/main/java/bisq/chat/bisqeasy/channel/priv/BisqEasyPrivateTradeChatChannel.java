@@ -76,6 +76,8 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     private final Set<UserProfile> traders;
     @Getter
     private final Optional<UserProfile> mediator;
+    @Getter
+    private final transient Set<String> userProfileIdsOfSendingLeaveMessage = new HashSet<>();
 
     // Called from trader
     private BisqEasyPrivateTradeChatChannel(BisqEasyOffer bisqEasyOffer,
@@ -127,6 +129,8 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
 
         setIsInMediation(isInMediation);
         this.seenChatMessageIds.addAll(seenChatMessageIds);
+
+        traders.forEach(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
     }
 
     @Override
@@ -196,6 +200,22 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         return new ArrayList<>(traders).get(0);
     }
 
+    @Override
+    public boolean addChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
+        boolean changed = super.addChatMessage(chatMessage);
+        if (changed) {
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            // If we received a leave message the user got removed from userProfileIdsOfParticipants
+            // In that case we remove them from userProfileIdsOfSendingLeaveMessage as well to avoid sending a 
+            // leave message.
+            if (!userProfileIdsOfParticipants.contains(authorUserProfileId)) {
+                userProfileIdsOfSendingLeaveMessage.remove(authorUserProfileId);
+            }
+        }
+        return changed;
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Getter, setter
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,6 +226,10 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
 
     public void setIsInMediation(boolean isInMediation) {
         isInMediationObservable.set(isInMediation);
+
+        if (isInMediation) {
+            mediator.ifPresent(userProfile -> userProfileIdsOfSendingLeaveMessage.add(userProfile.getId()));
+        }
     }
 
     public boolean isInMediation() {

@@ -26,6 +26,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -47,8 +48,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
     @Getter
     protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
-
-    private final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
+    protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
 
     public ChatChannel(String id,
                        ChatChannelDomain chatChannelDomain,
@@ -136,4 +136,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     public abstract String getDisplayString();
 
     public abstract ObservableSet<M> getChatMessages();
+
+    public boolean isParticipant(UserProfile userProfile) {
+        return userProfileIdsOfParticipants.contains(userProfile.getId());
+    }
 }
