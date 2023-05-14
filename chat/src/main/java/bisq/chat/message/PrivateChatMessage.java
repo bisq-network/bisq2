@@ -35,16 +35,16 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public abstract class PrivateChatMessage extends ChatMessage implements MailboxMessage {
-    // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiversId
+    // In group channels we send a message to multiple peers but want to avoid that the message gets duplicated in our hashSet by a different receiverUserProfileId
     @EqualsAndHashCode.Exclude
-    protected final String receiversId;
+    protected final String receiverUserProfileId;
     protected final UserProfile sender;
 
     protected PrivateChatMessage(String messageId,
                                  ChatChannelDomain chatChannelDomain,
                                  String channelId,
                                  UserProfile sender,
-                                 String receiversId,
+                                 String receiverUserProfileId,
                                  String text,
                                  Optional<Citation> citation,
                                  long date,
@@ -61,7 +61,7 @@ public abstract class PrivateChatMessage extends ChatMessage implements MailboxM
                 wasEdited,
                 chatMessageType,
                 metaData);
-        this.receiversId = receiversId;
+        this.receiverUserProfileId = receiverUserProfileId;
         this.sender = sender;
     }
 

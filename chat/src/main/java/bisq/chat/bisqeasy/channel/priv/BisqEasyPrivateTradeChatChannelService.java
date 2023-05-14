@@ -212,7 +212,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     protected BisqEasyPrivateTradeChatMessage createAndGetNewPrivateChatMessage(String messageId,
                                                                                 BisqEasyPrivateTradeChatChannel channel,
                                                                                 UserProfile sender,
-                                                                                String receiversId,
+                                                                                String receiverUserProfileId,
                                                                                 String text,
                                                                                 Optional<Citation> citation,
                                                                                 long time,
@@ -224,7 +224,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                 messageId,
                 channel.getId(),
                 sender,
-                receiversId,
+                receiverUserProfileId,
                 text,
                 citation,
                 time,
@@ -243,7 +243,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
-            userIdentityService.findUserIdentity(message.getReceiversId())
+            userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
                     .flatMap(myUserIdentity -> findChannel(message)
                             .or(() -> {
                                 if (message.getChatMessageType() == ChatMessageType.LEAVE) {

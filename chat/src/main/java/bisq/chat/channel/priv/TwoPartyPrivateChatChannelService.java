@@ -118,7 +118,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
     protected TwoPartyPrivateChatMessage createAndGetNewPrivateChatMessage(String messageId,
                                                                            TwoPartyPrivateChatChannel channel,
                                                                            UserProfile sender,
-                                                                           String receiversId,
+                                                                           String receiverUserProfileId,
                                                                            String text,
                                                                            Optional<Citation> citation,
                                                                            long time,
@@ -128,7 +128,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                 channel.getChatChannelDomain(),
                 channel.getId(),
                 sender,
-                receiversId,
+                receiverUserProfileId,
                 text,
                 citation,
                 new Date().getTime(),
@@ -157,7 +157,7 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
                     if (message.getChatMessageType() == ChatMessageType.LEAVE) {
                         return Optional.empty();
                     } else {
-                        return createAndAddChannel(message.getSender(), message.getReceiversId());
+                        return createAndAddChannel(message.getSender(), message.getReceiverUserProfileId());
                     }
                 })
                 .ifPresent(channel -> addMessage(message, channel));

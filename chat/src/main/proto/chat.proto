@@ -86,7 +86,7 @@ message ChatChannel {
 
 // TwoPartyPrivateChat
 message TwoPartyPrivateChatMessage {
-  string receiversId = 1;
+  string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
 }
 message TwoPartyPrivateChatChannel {
@@ -124,7 +124,7 @@ message BisqEasyOffer {
 }
 
 message BisqEasyPrivateTradeChatMessage {
-  string receiversId = 1;
+  string receiverUserProfileId = 1;
   user.UserProfile sender = 2;
   optional user.UserProfile mediator = 3;
   optional BisqEasyOffer bisqEasyOffer = 4;

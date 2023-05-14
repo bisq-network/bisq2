@@ -144,7 +144,7 @@ public abstract class PrivateChatChannelService<
     protected abstract M createAndGetNewPrivateChatMessage(String messageId,
                                                            C channel,
                                                            UserProfile sender,
-                                                           String receiversId,
+                                                           String receiverUserProfileId,
                                                            String text,
                                                            Optional<Citation> citation,
                                                            long time,
