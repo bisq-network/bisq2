@@ -177,7 +177,7 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         String shortOfferId = bisqEasyOffer.getId().substring(0, 4);
 
         if (isMediator()) {
-            checkArgument(traders.size() == 2, "traders.size() need to be 2");
+            checkArgument(traders.size() == 2, "traders.size() need to be 2 but is " + traders.size());
             List<UserProfile> tradersAsList = new ArrayList<>(traders);
             return shortOfferId + ": " + tradersAsList.get(0).getUserName() + " - " + tradersAsList.get(1).getUserName();
         } else {

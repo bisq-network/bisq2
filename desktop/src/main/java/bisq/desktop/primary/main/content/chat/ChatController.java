@@ -219,7 +219,8 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(35);
             imageView.setFitHeight(35);
-            model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
+            Button iconButton = BisqIconButton.createIconButton(imageView);
+            model.getChannelIconNode().set(iconButton);
         } else if (privateChatChannel instanceof BisqEasyPrivateTradeChatChannel) {
             BisqEasyPrivateTradeChatChannel bisqEasyPrivateTradeChatChannel = (BisqEasyPrivateTradeChatChannel) privateChatChannel;
             if (bisqEasyPrivateTradeChatChannel.isInMediation() && bisqEasyPrivateTradeChatChannel.getMediator().isPresent()) {
@@ -239,24 +240,25 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                 leftImageView.setFitWidth(35);
                 leftImageView.setFitHeight(35);
                 Button leftIconButton = BisqIconButton.createIconButton(leftImageView);
-                model.getChannelIcon().set(leftIconButton);
+                leftIconButton.setMouseTransparent(true);
 
                 ImageView rightImageView = new ImageView(RoboHash.getImage(right.getPubKeyHash()));
                 rightImageView.setFitWidth(35);
                 rightImageView.setFitHeight(35);
-
                 Button rightIconButton = BisqIconButton.createIconButton(rightImageView);
+                rightIconButton.setMouseTransparent(true);
                 HBox.setMargin(rightIconButton, new Insets(0, 0, 0, -20));
 
                 HBox hBox = new HBox(10, leftIconButton, rightIconButton);
                 hBox.setAlignment(Pos.CENTER_LEFT);
-                model.getChannelIcon().set(hBox);
+                model.getChannelIconNode().set(hBox);
             } else {
                 Image image = RoboHash.getImage(bisqEasyPrivateTradeChatChannel.getPeer().getPubKeyHash());
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(35);
                 imageView.setFitHeight(35);
-                model.getChannelIcon().set(BisqIconButton.createIconButton(imageView));
+                Button iconButton = BisqIconButton.createIconButton(imageView);
+                model.getChannelIconNode().set(iconButton);
             }
         }
     }
@@ -267,7 +269,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         //todo get larger icons and dont use scaling
         iconButton.setScaleX(1.25);
         iconButton.setScaleY(1.25);
-        model.getChannelIcon().set(iconButton);
+        model.getChannelIconNode().set(iconButton);
     }
 
     protected void doCloseSideBar() {

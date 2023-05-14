@@ -132,7 +132,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         }
         UIThread.run(() -> {
             if (chatChannel == null) {
-                model.getChannelIcon().set(null);
+                model.getChannelIconNode().set(null);
                 return;
             }
             if (chatChannel instanceof BisqEasyPrivateTradeChatChannel) {
@@ -179,7 +179,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 //todo get larger icons and dont use scaling
                 marketsImage.setScaleX(1.25);
                 marketsImage.setScaleY(1.25);
-                model.getChannelIcon().set(marketsImage);
+                model.getChannelIconNode().set(marketsImage);
             }
         });
     }
@@ -248,6 +248,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                     .information(Res.get("bisqEasy.requestMediation.confirm.popup.msg"))
                     .actionButtonText(Res.get("bisqEasy.requestMediation.confirm.popup.openMediation"))
                     .onAction(() -> {
+                        privateTradeChannel.setIsInMediation(true);
                         mediationService.requestMediation(privateTradeChannel);
                         new Popup().headLine(Res.get("bisqEasy.requestMediation.popup.headline"))
                                 .feedback(Res.get("bisqEasy.requestMediation.popup.msg")).show();

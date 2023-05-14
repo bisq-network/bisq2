@@ -157,7 +157,7 @@ public class PrimaryStageController extends NavigationController {
     public void onUncaughtException(Thread thread, Throwable throwable) {
         log.error("Uncaught exception from thread {}", thread);
         log.error("Uncaught exception", throwable);
-        UIThread.run(() -> new Popup().error(throwable.getMessage()).show());
+        UIThread.run(() -> new Popup().error(throwable.toString()).show());
     }
 
     public void onQuit() {
@@ -165,7 +165,7 @@ public class PrimaryStageController extends NavigationController {
     }
 
     public void onInitializeDomainFailed(Throwable throwable) {
-        new Popup().error(throwable.getMessage()).show();
+        new Popup().error(throwable.toString()).show();
     }
 
     public void shutdown() {

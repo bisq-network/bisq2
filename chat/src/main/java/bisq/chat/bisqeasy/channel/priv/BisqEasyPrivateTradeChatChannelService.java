@@ -194,6 +194,23 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
         persist();
     }
 
+    public void addMediatorsResponseMessage(BisqEasyPrivateTradeChatChannel channel, String text) {
+        setIsInMediation(channel, true);
+        checkArgument(channel.getMediator().isPresent());
+        BisqEasyPrivateTradeChatMessage mediatorsPseudoMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
+                channel.getId(),
+                channel.getMediator().get(),
+                channel.getMyUserIdentity().getUserProfile().getId(),
+                text,
+                Optional.empty(),
+                new Date().getTime(),
+                false,
+                channel.getMediator(),
+                ChatMessageType.TAKE_BISQ_EASY_OFFER,
+                Optional.empty());
+        channel.addChatMessage(mediatorsPseudoMessage);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +259,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
+        //todo
         if (!userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId())) {
             userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
                     .flatMap(myUserIdentity -> findChannel(message)

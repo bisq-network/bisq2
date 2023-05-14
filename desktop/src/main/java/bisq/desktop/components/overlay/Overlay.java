@@ -1003,22 +1003,19 @@ public abstract class Overlay<T extends Overlay<T>> {
     // referenced in order from within the message via [1], [2] etc.
     // e.g. [HYPERLINK:https://bisq.wiki]
     private void preProcessMessage(String message) {
-        if (message == null) {
-            return;
-        }
-
+        //todo move to util
         Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
         Matcher matcher = pattern.matcher(message);
-        String work = message;
+        String temp = message;
         while (matcher.find()) {  // extract hyperlinks & store in array
             if (messageHyperlinks == null) {
                 messageHyperlinks = new ArrayList<>();
             }
             messageHyperlinks.add(matcher.group(1));
             // replace hyperlink in message with [n] reference
-            work = work.replaceFirst(pattern.toString(), String.format("[%d]", messageHyperlinks.size()));
+            temp = temp.replaceFirst(pattern.toString(), String.format("[%d]", messageHyperlinks.size()));
         }
-        this.message = work;
+        this.message = temp;
         setTruncatedMessage();
     }
 
