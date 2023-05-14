@@ -26,16 +26,20 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel id must be deterministic, so we sort both userIds and use that order for the concatenated string.
     public static String createId(ChatChannelDomain ChatChannelDomain, String userProfileId1, String userProfileId2) {
-        List<String> userIds = new ArrayList<>(List.of(userProfileId1, userProfileId2));
-        Collections.sort(userIds);
+        List<String> userIds = Stream.of(userProfileId1, userProfileId2)
+                .sorted()
+                .collect(Collectors.toList());
         return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
     }
 
@@ -61,9 +65,8 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                                        List<TwoPartyPrivateChatMessage> chatMessages,
                                        ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
-        this.peer = peer;
 
-        userProfileIdsOfParticipants.add(peer.getId());
+        this.peer = peer;
     }
 
     @Override
@@ -97,21 +100,6 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void addChatMessage(TwoPartyPrivateChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessage(TwoPartyPrivateChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<TwoPartyPrivateChatMessage> messages) {
-        chatMessages.removeAll(messages);
-    }
 
     @Override
     public String getDisplayString() {

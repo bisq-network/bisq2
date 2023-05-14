@@ -23,6 +23,9 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannel;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
 import bisq.chat.message.ChatMessage;
+import bisq.common.observable.Pin;
+import bisq.common.observable.collection.CollectionObserver;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.primary.main.content.components.ChatUserOverview;
@@ -32,6 +35,7 @@ import bisq.user.profile.UserProfileService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -81,6 +85,8 @@ public class ChannelSidebar {
         private final Runnable closeHandler;
         private final NotificationsSidebar notificationsSidebar;
         private final ChatService chatService;
+        @Nullable
+        private Pin userProfileIdsOfParticipantsPin;
 
         private Controller(DefaultApplicationService applicationService, Runnable closeHandler) {
             this.closeHandler = closeHandler;
@@ -93,10 +99,15 @@ public class ChannelSidebar {
 
         @Override
         public void onActivate() {
+            model.getSortedListParticipantList()
+                    .sort(Comparator.comparing(item -> item.getChatUser().getUserName()));
         }
 
         @Override
         public void onDeactivate() {
+            if (userProfileIdsOfParticipantsPin != null) {
+                userProfileIdsOfParticipantsPin.unbind();
+            }
         }
 
         void setChannel(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
@@ -117,12 +128,36 @@ public class ChannelSidebar {
                     .map(service -> service.getChannelTitle(chatChannel))
                     .orElse(""));
 
+            model.participantList.clear();
+            if (userProfileIdsOfParticipantsPin != null) {
+                userProfileIdsOfParticipantsPin.unbind();
+            }
+            userProfileIdsOfParticipantsPin = chatChannel.getUserProfileIdsOfParticipants().addListener(new CollectionObserver<>() {
+                @Override
+                public void add(String userProfileId) {
+                    UIThread.run(() ->
+                            userProfileService.findUserProfile(userProfileId)
+                                    .ifPresent(userProfile -> model.participantList.add(new ChatUserOverview(userProfile,
+                                            ignoredChatUserIds.contains(userProfileId)))));
+                }
 
-            model.participants.setAll(chatChannel.getUserProfileIdsOfParticipants().stream()
-                    .flatMap(userProfileId -> userProfileService.findUserProfile(userProfileId).stream())
-                    .sorted(Comparator.comparing(UserProfile::getUserName))
-                    .map(userProfile -> new ChatUserOverview(userProfile, ignoredChatUserIds.contains(userProfile.getId())))
-                    .collect(Collectors.toList()));
+                @Override
+                public void remove(Object element) {
+                    if (element instanceof String) {
+                        String userProfileId = (String) element;
+                        UIThread.run(() ->
+                                model.participantList.stream()
+                                        .filter(item -> item.getChatUser().getId().equals(userProfileId))
+                                        .findFirst()
+                                        .ifPresent(model.participantList::remove));
+                    }
+                }
+
+                @Override
+                public void clear() {
+                    UIThread.run(model.participantList::clear);
+                }
+            });
 
             if (chatChannel instanceof CommonPublicChatChannel) {
                 CommonPublicChatChannel commonPublicChatChannel = (CommonPublicChatChannel) chatChannel;
@@ -162,6 +197,7 @@ public class ChannelSidebar {
         }
     }
 
+    @Getter
     private static class Model implements bisq.desktop.common.view.Model {
         private final ObjectProperty<ChatChannel<? extends ChatMessage>> channel = new SimpleObjectProperty<>();
         private final StringProperty channelTitle = new SimpleStringProperty();
@@ -169,7 +205,8 @@ public class ChannelSidebar {
         private final BooleanProperty descriptionVisible = new SimpleBooleanProperty();
         private final ObservableList<ChatUserOverview> moderators = FXCollections.observableArrayList();
         private Optional<ChatUserOverview> adminProfile = Optional.empty();
-        private final ObservableList<ChatUserOverview> participants = FXCollections.observableArrayList();
+        private final ObservableList<ChatUserOverview> participantList = FXCollections.observableArrayList();
+        private final SortedList<ChatUserOverview> sortedListParticipantList = new SortedList<>(participantList);
         private Optional<Runnable> undoIgnoreChatUserHandler = Optional.empty();
 
         private Model() {
@@ -205,7 +242,7 @@ public class ChannelSidebar {
             Label participantsLabel = new Label(Res.get("social.channel.settings.participants"));
             participantsLabel.setId("chat-sidebar-title");
 
-            participants = new ListView<>(model.participants);
+            participants = new ListView<>(model.getSortedListParticipantList());
             VBox.setVgrow(participants, Priority.ALWAYS);
             participants.setCellFactory(getCellFactory(controller));
 

@@ -26,8 +26,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Collection;
-
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
@@ -42,23 +40,17 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     }
 
     @Override
-    public void addChatMessage(M chatMessage) {
-        chatMessages.add(chatMessage);
-
-        userProfileIdsOfParticipants.add(chatMessage.getAuthorUserProfileId());
-    }
-
-
-    public void removeChatMessage(M chatMessage) {
-        chatMessages.remove(chatMessage);
-
-        // If no more message of that author we remove them from the userProfileIdsOfParticipants
-        if (chatMessages.stream().noneMatch(message -> message.getAuthorUserProfileId().equals(chatMessage.getAuthorUserProfileId()))) {
-            userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+    public boolean addChatMessage(M chatMessage) {
+        boolean changed = super.addChatMessage(chatMessage);
+        if (changed) {
+            userProfileIdsOfParticipants.add(chatMessage.getAuthorUserProfileId());
         }
+
+        return changed;
     }
 
-    public void removeChatMessages(Collection<M> messages) {
-        chatMessages.removeAll(messages);
+    // Called when removing expired messages or when user deletes a message
+    public boolean removeChatMessage(M chatMessage) {
+        return super.removeChatMessage(chatMessage);
     }
 }

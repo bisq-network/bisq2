@@ -125,11 +125,8 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
         this.traders = traders;
         this.mediator = mediator;
 
-        // We add mediator to participants if isInMediation==true and mediator is present in the setIsInMediation method
         setIsInMediation(isInMediation);
         this.seenChatMessageIds.addAll(seenChatMessageIds);
-
-        traders.stream().map(UserProfile::getId).forEach(userProfileIdsOfParticipants::add);
     }
 
     @Override
@@ -172,21 +169,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void addChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessage(BisqEasyPrivateTradeChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<BisqEasyPrivateTradeChatMessage> messages) {
-        chatMessages.removeAll(messages);
-    }
-
-    @Override
     public String getDisplayString() {
         String shortOfferId = bisqEasyOffer.getId().substring(0, 4);
 
@@ -209,8 +191,9 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
     }
 
     public UserProfile getPeer() {
-        checkArgument(traders.size() == 1, "traders is expected to has size 1 at getPeer() in  BisqEasyPrivateTradeChatChannel");
-        return traders.iterator().next();
+        checkArgument(traders.size() >= 1,
+                "traders is expected to has at least size 1 at getPeer() in  BisqEasyPrivateTradeChatChannel");
+        return new ArrayList<>(traders).get(0);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,10 +206,6 @@ public final class BisqEasyPrivateTradeChatChannel extends PrivateGroupChatChann
 
     public void setIsInMediation(boolean isInMediation) {
         isInMediationObservable.set(isInMediation);
-
-        if (isInMediation) {
-            mediator.ifPresent(mediator -> userProfileIdsOfParticipants.add(mediator.getId()));
-        }
     }
 
     public boolean isInMediation() {

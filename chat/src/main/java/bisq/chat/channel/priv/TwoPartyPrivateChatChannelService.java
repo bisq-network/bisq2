@@ -142,14 +142,16 @@ public class TwoPartyPrivateChatChannelService extends PrivateChatChannelService
             return;
         }
 
-        // If we have closed that channel already and receive a leave message we do not re-create it
-        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-            findChannel(message).ifPresent(channel -> addMessage(message, channel));
-            return;
-        }
-
         findChannel(message)
-                .or(() -> createAndAddChannel(message.getSender(), message.getReceiversId()))
+                .or(() -> {
+                    //TODO avoid sending leave msg
+                    // If we have closed that channel already and receive a leave message we do not re-create it
+                    if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                        return Optional.empty();
+                    } else {
+                        return createAndAddChannel(message.getSender(), message.getReceiversId());
+                    }
+                })
                 .ifPresent(channel -> addMessage(message, channel));
     }
 

@@ -109,7 +109,7 @@ public abstract class ChannelSelectionMenu<
         public void onActivate() {
             applyPredicate();
 
-            channelsPin = FxBindings.<C, View.ChannelItem>bind(model.channelItems)
+            channelsPin = FxBindings.<C, View.ChannelItem>bind(model.channels)
                     .map(this::findOrCreateChannelItem)
                     .to(chatChannelService.getChannels());
 
@@ -172,7 +172,7 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected void applyPredicate() {
-            model.filteredList.setPredicate(item -> true);
+            model.filteredChannels.setPredicate(item -> true);
         }
 
         protected void onSelected(ChannelSelectionMenu.View.ChannelItem channelItem) {
@@ -189,7 +189,7 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected ChannelSelectionMenu.View.ChannelItem findOrCreateChannelItem(ChatChannel<? extends ChatMessage> chatChannel) {
-            return model.channelItems.stream()
+            return model.channels.stream()
                     .filter(Objects::nonNull)
                     .filter(item -> item.getChatChannel().getId().equals(chatChannel.getId()))
                     .findAny()
@@ -220,9 +220,9 @@ public abstract class ChannelSelectionMenu<
     protected static class Model implements bisq.desktop.common.view.Model {
         private final ChatChannelDomain chatChannelDomain;
         ObjectProperty<View.ChannelItem> selectedChannelItem = new SimpleObjectProperty<>();
-        ObservableList<View.ChannelItem> channelItems = FXCollections.observableArrayList();
-        FilteredList<View.ChannelItem> filteredList = new FilteredList<>(channelItems);
-        SortedList<View.ChannelItem> sortedList = new SortedList<>(filteredList);
+        ObservableList<View.ChannelItem> channels = FXCollections.observableArrayList();
+        FilteredList<View.ChannelItem> filteredChannels = new FilteredList<>(channels);
+        SortedList<View.ChannelItem> sortedChannels = new SortedList<>(filteredChannels);
         ObservableMap<String, Integer> channelIdWithNumUnseenMessagesMap = FXCollections.observableHashMap();
         View.ChannelItem previousSelectedChannelItem;
 
@@ -254,7 +254,7 @@ public abstract class ChannelSelectionMenu<
             headerBox = new HBox(20, headline, Spacer.fillHBox());
             headerBox.setMinHeight(54);
 
-            listView = new ListView<>(model.sortedList);
+            listView = new ListView<>(model.sortedChannels);
             listView.getStyleClass().add("channel-selection-list-view");
             listView.setFocusTraversable(false);
             listView.setCellFactory(p -> getListCell());
@@ -285,7 +285,7 @@ public abstract class ChannelSelectionMenu<
                             listView.getSelectionModel().select(channelItem);
                         }
                     });
-            model.filteredList.addListener(filteredListChangedListener);
+            model.filteredChannels.addListener(filteredListChangedListener);
 
             adjustHeightCounter = 0;
             adjustHeight();
@@ -295,7 +295,7 @@ public abstract class ChannelSelectionMenu<
         protected void onViewDetached() {
             listViewSelectedChannelSubscription.unsubscribe();
             modelSelectedChannelSubscription.unsubscribe();
-            model.channelItems.removeListener(filteredListChangedListener);
+            model.channels.removeListener(filteredListChangedListener);
         }
 
         protected abstract ListCell<ChannelItem> getListCell();

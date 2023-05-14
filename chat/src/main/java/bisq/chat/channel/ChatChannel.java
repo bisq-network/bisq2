@@ -31,8 +31,9 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @ToString
@@ -45,7 +46,9 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
     @Getter
-    protected final transient Set<String> userProfileIdsOfParticipants = new HashSet<>();
+    protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
+
+    private final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
 
     public ChatChannel(String id,
                        ChatChannelDomain chatChannelDomain,
@@ -90,6 +93,40 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean addChatMessage(M chatMessage) {
+        boolean changed = getChatMessages().add(chatMessage);
+        if (changed) {
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            numMessagesByAuthorId.putIfAbsent(authorUserProfileId, new AtomicInteger());
+            numMessagesByAuthorId.get(authorUserProfileId).incrementAndGet();
+        }
+        return changed;
+    }
+
+    public boolean removeChatMessage(M chatMessage) {
+        boolean changed = getChatMessages().remove(chatMessage);
+        if (changed) {
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            if (numMessagesByAuthorId.containsKey(authorUserProfileId)) {
+                AtomicInteger numMessages = numMessagesByAuthorId.get(authorUserProfileId);
+                if (numMessages.get() > 0 && numMessages.decrementAndGet() == 0) {
+                    // If no more messages of that user exist we remove them from userProfileIdsOfParticipants
+                    userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+                }
+            }
+        }
+        return changed;
+    }
+
+    public void removeChatMessages(Collection<M> messages) {
+        messages.forEach(this::removeChatMessage);
+    }
+
     public void setAllMessagesSeen() {
         seenChatMessageIds.setAll(getChatMessages().stream()
                 .map(ChatMessage::getId)
@@ -99,10 +136,4 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     public abstract String getDisplayString();
 
     public abstract ObservableSet<M> getChatMessages();
-
-    public abstract void addChatMessage(M chatMessage);
-
-    public abstract void removeChatMessage(M chatMessage);
-
-    public abstract void removeChatMessages(Collection<M> messages);
 }
