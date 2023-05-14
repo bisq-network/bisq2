@@ -66,10 +66,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
@@ -161,7 +160,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected String headLine, message, closeButtonText, actionButtonText,
             secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
-    private ArrayList<String> messageHyperlinks;
+    private List<String> messageHyperlinks;
     private String headlineStyle;
     protected Button actionButton, secondaryActionButton;
     private HBox buttonBox;
@@ -305,7 +304,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Instruction;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.instruction");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -313,7 +312,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Attention;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.attention");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -321,7 +320,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.BackgroundInfo;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.backgroundInfo");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -329,7 +328,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Feedback;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.feedback");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -357,7 +356,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Confirmation;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.confirmation");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -365,7 +364,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         type = Type.Information;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.information");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -374,7 +373,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
         if (headLine == null)
             this.headLine = Res.get("popup.headline.warning");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -384,7 +383,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         width = 1100;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.error");
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -395,7 +394,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     public T message(String message) {
-        preProcessMessage(message);
+        processMessage(message);
         return cast();
     }
 
@@ -993,29 +992,18 @@ public abstract class Overlay<T extends Overlay<T>> {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > maxChar)
+        if (message != null && message.length() > maxChar) {
             truncatedMessage = StringUtils.truncate(message, maxChar);
-        else truncatedMessage = Objects.requireNonNullElse(message, "");
+        } else {
+            truncatedMessage = Objects.requireNonNullElse(message, "");
+        }
     }
 
-    // separate a popup message from optional hyperlinks.  [bisq-network/bisq/pull/4637]
-    // hyperlinks are distinguished by [HYPERLINK:] tag
-    // referenced in order from within the message via [1], [2] etc.
-    // e.g. [HYPERLINK:https://bisq.wiki]
-    private void preProcessMessage(String message) {
-        //todo move to util
-        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
-        Matcher matcher = pattern.matcher(message);
-        String temp = message;
-        while (matcher.find()) {  // extract hyperlinks & store in array
-            if (messageHyperlinks == null) {
-                messageHyperlinks = new ArrayList<>();
-            }
-            messageHyperlinks.add(matcher.group(1));
-            // replace hyperlink in message with [n] reference
-            temp = temp.replaceFirst(pattern.toString(), String.format("[%d]", messageHyperlinks.size()));
+    private void processMessage(String message) {
+        if (messageHyperlinks == null) {
+            messageHyperlinks = new ArrayList<>();
         }
-        this.message = temp;
+        this.message = StringUtils.extractHyperlinks(message, messageHyperlinks);
         setTruncatedMessage();
     }
 
