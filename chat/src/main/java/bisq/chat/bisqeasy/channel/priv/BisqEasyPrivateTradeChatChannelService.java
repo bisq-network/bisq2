@@ -138,9 +138,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
                     String methods = Joiner.on(", ").join(bisqEasyOffer.getPaymentMethods());
                     String text = Res.get("bisqEasy.takeOffer.takerRequest",
                             direction, amount, methods);
-                    Optional<Citation> citation = Optional.of(new Citation(maker.getNym(),
-                            maker.getNickName(),
-                            maker.getPubKeyHash(),
+                    Optional<Citation> citation = Optional.of(new Citation(maker.getId(),
                             message.getText()));
                     BisqEasyPrivateTradeChatMessage takeOfferMessage = new BisqEasyPrivateTradeChatMessage(StringUtils.createShortUid(),
                             channel.getId(),
@@ -265,8 +263,7 @@ public class BisqEasyPrivateTradeChatChannelService extends PrivateGroupChatChan
     }
 
     private void processMessage(BisqEasyPrivateTradeChatMessage message) {
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(message.getAuthorUserProfileId());
-        if (isMyMessage) {
+        if (message.isMyMessage(userIdentityService)) {
             return;
         }
 

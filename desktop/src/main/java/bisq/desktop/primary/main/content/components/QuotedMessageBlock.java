@@ -73,7 +73,7 @@ public class QuotedMessageBlock {
         if (text == null || text.isEmpty() || userProfile == null) {
             return Optional.empty();
         }
-        return Optional.of(new Citation(userProfile.getNym(), userProfile.getNickName(), userProfile.getPubKeyHash(), text));
+        return Optional.of(new Citation(userProfile.getId(), text));
     }
 
     private static class Controller implements bisq.desktop.common.view.Controller {

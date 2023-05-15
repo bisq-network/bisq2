@@ -188,7 +188,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         public void onLeaveChannel(BisqEasyPublicChatChannel channel) {
             Optional<BisqEasyPublicChatMessage> myOpenOffer = channel.getChatMessages().stream()
                     .filter(BisqEasyPublicChatMessage::hasTradeChatOffer)
-                    .filter(publicTradeChatMessage -> userIdentityService.isUserIdentityPresent(publicTradeChatMessage.getAuthorUserProfileId()))
+                    .filter(publicTradeChatMessage -> publicTradeChatMessage.isMyMessage(userIdentityService))
                     .findAny();
             if (myOpenOffer.isPresent()) {
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();

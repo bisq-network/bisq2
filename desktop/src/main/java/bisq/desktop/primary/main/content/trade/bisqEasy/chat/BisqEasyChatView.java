@@ -26,7 +26,9 @@ import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideVie
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -35,15 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqEasyChatView extends ChatView {
     private final BisqEasyChatController bisqEasyChatController;
-    private final Switch toggleOffersButton;
     private final BisqEasyChatModel bisqEasyChatModel;
-    private final Button createOfferButton;
-
-    // Trade helpers
-    private final Button completeTradeButton, openDisputeButton;
-    private final VBox bottomVbox;
-    private final Tooltip completeTradeTooltip;
+    private final Switch offersOnlySwitch;
+    private final Button createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
+    private final ComboBox<String> paymentAccountSelection;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -51,6 +49,7 @@ public class BisqEasyChatView extends ChatView {
                             Region bisqEasyPrivateTradeChatChannelSelection,
                             Region twoPartyPrivateChatChannelSelection,
                             Pane chatMessagesComponent,
+                            HBox chatMessagesBottomHBox,
                             Pane channelSidebar) {
         super(model,
                 controller,
@@ -67,25 +66,38 @@ public class BisqEasyChatView extends ChatView {
         bisqEasyChatController = controller;
         bisqEasyChatModel = model;
 
-        toggleOffersButton = new Switch();
-        toggleOffersButton.setText(Res.get("bisqEasy.filter.offersOnly"));
+        offersOnlySwitch = new Switch();
+        offersOnlySwitch.setText(Res.get("bisqEasy.filter.offersOnly"));
 
-        centerToolbar.getChildren().add(2, toggleOffersButton);
+        centerToolbar.getChildren().add(2, offersOnlySwitch);
 
-        createOfferButton = new Button();
+        createOfferButton = new Button(Res.get("createOffer"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
         createOfferButton.setMinHeight(37);
         createOfferButton.setDefaultButton(true);
         VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
         left.getChildren().add(createOfferButton);
 
-        completeTradeButton = new Button(Res.get("completeTrade"));
-        VBox completeTradeButtonWrapper = new VBox(completeTradeButton);
+        sendBtcAddressButton = new Button(Res.get("bisqEasy.sendBtcAddress"));
+        sendBtcAddressButton.getStyleClass().add("default-button");
+        sendBtcAddressButton.setStyle("-fx-label-padding: 0 -20 0 -20");
+        sendBtcAddressButton.setMinHeight(32);
+        sendBtcAddressButton.setTooltip(new Tooltip(Res.get("bisqEasy.sendBtcAddress.tooltip")));
+
+        sendPaymentAccountButton = new Button(Res.get("bisqEasy.sendPaymentAccount"));
+        sendPaymentAccountButton.getStyleClass().add("default-button");
+        sendPaymentAccountButton.setStyle("-fx-label-padding: 0 -20 0 -20");
+        sendPaymentAccountButton.setMinHeight(32);
+        sendPaymentAccountButton.setTooltip(new Tooltip(Res.get("bisqEasy.sendPaymentAccount.tooltip")));
+
+        paymentAccountSelection = new ComboBox<>(model.getPaymentAccountNames());
+
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
-        decorateButton(completeTradeButton);
-        decorateButton(openDisputeButton);
-        bottomVbox = new VBox(completeTradeButtonWrapper, openDisputeButton);
-        left.getChildren().add(bottomVbox);
+        openDisputeButton.getStyleClass().add("default-button");
+        openDisputeButton.setStyle("-fx-label-padding: 0 -20 0 -20");
+        openDisputeButton.setMinHeight(32);
+
+        chatMessagesBottomHBox.getChildren().addAll(sendBtcAddressButton, paymentAccountSelection, sendPaymentAccountButton, openDisputeButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -98,62 +110,63 @@ public class BisqEasyChatView extends ChatView {
                 chatMessagesComponent.getChildren().remove(0);
             }
         });
-
-        completeTradeTooltip = new Tooltip("");
-        Tooltip.install(completeTradeButtonWrapper, completeTradeTooltip);
-        completeTradeButton.setTooltip(completeTradeTooltip);
-        completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
     }
 
     @Override
     protected void onViewAttached() {
         super.onViewAttached();
 
+        offersOnlySwitch.visibleProperty().bind(bisqEasyChatModel.getOfferOnlyVisible());
+        offersOnlySwitch.managedProperty().bind(bisqEasyChatModel.getOfferOnlyVisible());
         createOfferButton.visibleProperty().bind(bisqEasyChatModel.getCreateOfferButtonVisible());
         createOfferButton.managedProperty().bind(bisqEasyChatModel.getCreateOfferButtonVisible());
-        createOfferButton.textProperty().bind(bisqEasyChatModel.getActionButtonText());
-        createOfferButton.setOnAction(e -> bisqEasyChatController.onCreateOfferButtonClicked());
-
-        completeTradeButton.disableProperty().bind(bisqEasyChatModel.getCompleteTradeDisabled());
+        openDisputeButton.visibleProperty().bind(bisqEasyChatModel.getOpenDisputeButtonVisible());
+        openDisputeButton.managedProperty().bind(bisqEasyChatModel.getOpenDisputeButtonVisible());
+        sendBtcAddressButton.visibleProperty().bind(bisqEasyChatModel.getSendBtcAddressButtonVisible());
+        sendBtcAddressButton.managedProperty().bind(bisqEasyChatModel.getSendBtcAddressButtonVisible());
+        paymentAccountSelection.visibleProperty().bind(bisqEasyChatModel.getPaymentAccountSelectionVisible());
+        paymentAccountSelection.managedProperty().bind(bisqEasyChatModel.getPaymentAccountSelectionVisible());
+        sendPaymentAccountButton.visibleProperty().bind(bisqEasyChatModel.getSendPaymentAccountButtonVisible());
+        sendPaymentAccountButton.managedProperty().bind(bisqEasyChatModel.getSendPaymentAccountButtonVisible());
         openDisputeButton.disableProperty().bind(bisqEasyChatModel.getOpenDisputeDisabled());
-        completeTradeButton.setOnAction(e -> bisqEasyChatController.onCompleteTrade());
-        openDisputeButton.setOnAction(e -> bisqEasyChatController.onOpenMediation());
-        bottomVbox.visibleProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
-        bottomVbox.managedProperty().bind(bisqEasyChatModel.getTradeHelpersVisible());
-        completeTradeTooltip.textProperty().bind(bisqEasyChatModel.getCompleteTradeTooltip());
-        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().bind(bisqEasyChatModel.getIsBisqEasyPrivateTradeChannelSelectionVisible());
-        bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyChatModel.getIsBisqEasyPrivateTradeChannelSelectionVisible());
+        bisqEasyPrivateTradeChatChannelSelection.visibleProperty().bind(bisqEasyChatModel.getIsTradeChannelVisible());
+        bisqEasyPrivateTradeChatChannelSelection.managedProperty().bind(bisqEasyChatModel.getIsTradeChannelVisible());
 
-        toggleOffersButton.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
+        createOfferButton.setOnAction(e -> bisqEasyChatController.onCreateOffer());
+        sendBtcAddressButton.setOnAction(e -> bisqEasyChatController.onSendBtcAddress());
+        paymentAccountSelection.setOnAction(e -> bisqEasyChatController.onPaymentAccountSelected(paymentAccountSelection.getSelectionModel().getSelectedItem()));
+        sendPaymentAccountButton.setOnAction(e -> bisqEasyChatController.onSendPaymentAccount());
+        openDisputeButton.setOnAction(e -> bisqEasyChatController.onRequestMediation());
+
+        offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
 
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
 
+        offersOnlySwitch.visibleProperty().unbind();
+        offersOnlySwitch.managedProperty().unbind();
         createOfferButton.visibleProperty().unbind();
         createOfferButton.managedProperty().unbind();
-        createOfferButton.textProperty().unbind();
-        createOfferButton.setOnAction(null);
-
-        completeTradeButton.disableProperty().unbind();
-        completeTradeButton.setOnAction(null);
+        openDisputeButton.visibleProperty().unbind();
+        openDisputeButton.managedProperty().unbind();
+        sendBtcAddressButton.visibleProperty().unbind();
+        sendBtcAddressButton.managedProperty().unbind();
+        paymentAccountSelection.visibleProperty().unbind();
+        paymentAccountSelection.managedProperty().unbind();
+        sendPaymentAccountButton.visibleProperty().unbind();
+        sendPaymentAccountButton.managedProperty().unbind();
         openDisputeButton.disableProperty().unbind();
-        openDisputeButton.setOnAction(null);
-        bottomVbox.visibleProperty().unbind();
-        bottomVbox.managedProperty().unbind();
-        completeTradeTooltip.textProperty().unbind();
         bisqEasyPrivateTradeChatChannelSelection.visibleProperty().unbind();
         bisqEasyPrivateTradeChatChannelSelection.managedProperty().unbind();
 
-        toggleOffersButton.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
-    }
+        createOfferButton.setOnAction(null);
+        sendBtcAddressButton.setOnAction(null);
+        paymentAccountSelection.setOnAction(null);
+        sendPaymentAccountButton.setOnAction(null);
+        openDisputeButton.setOnAction(null);
 
-    private void decorateButton(Button button) {
-        button.getStyleClass().add("default-button");
-        button.setMaxWidth(Double.MAX_VALUE);
-        button.setMinHeight(37);
-        VBox.setMargin(button, new Insets(-2, 25, 17, 25));
+        offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
-
 }

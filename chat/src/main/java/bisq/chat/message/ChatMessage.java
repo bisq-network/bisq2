@@ -28,6 +28,7 @@ import bisq.network.p2p.message.NetworkMessage;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -177,5 +178,9 @@ public abstract class ChatMessage implements Proto {
 
     public boolean isExpired() {
         return (System.currentTimeMillis() - getDate() > getMetaData().getTtl());
+    }
+
+    public boolean isMyMessage(UserIdentityService userIdentityService) {
+        return userIdentityService.isUserIdentityPresent(authorUserProfileId);
     }
 }

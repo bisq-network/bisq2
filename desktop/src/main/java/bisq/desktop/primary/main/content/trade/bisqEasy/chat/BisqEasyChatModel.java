@@ -22,8 +22,8 @@ import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,13 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty offerOnly = new SimpleBooleanProperty();
-    private final StringProperty actionButtonText = new SimpleStringProperty();
+    private final BooleanProperty offerOnlyVisible = new SimpleBooleanProperty();
     private final BooleanProperty createOfferButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty openDisputeButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty sendBtcAddressButtonVisible = new SimpleBooleanProperty();
+    private final BooleanProperty sendPaymentAccountButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty openDisputeDisabled = new SimpleBooleanProperty();
-    private final BooleanProperty tradeHelpersVisible = new SimpleBooleanProperty();
-    private final BooleanProperty completeTradeDisabled = new SimpleBooleanProperty();
-    private final StringProperty completeTradeTooltip = new SimpleStringProperty();
-    private final BooleanProperty isBisqEasyPrivateTradeChannelSelectionVisible = new SimpleBooleanProperty();
+    private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
+    private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
+    private final ObservableList<String> paymentAccountNames = FXCollections.observableArrayList();
 
     public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);

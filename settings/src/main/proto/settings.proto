@@ -46,4 +46,6 @@ message SettingsStore {
   bool offersOnly = 7;
   bool tradeRulesConfirmed = 8;
   ChatNotificationType chatNotificationType = 9;
+  map<string, string> paymentAccounts = 10;
+  optional string selectedPaymentAccount = 11;
 }

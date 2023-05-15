@@ -76,6 +76,10 @@ public class ChatMessagesComponent {
         return controller.view.getRoot();
     }
 
+    public HBox getBottomHBox() {
+        return controller.view.getBottomHBox();
+    }
+
     public void mentionUser(UserProfile userProfile) {
         controller.mentionUser(userProfile);
     }
@@ -226,7 +230,7 @@ public class ChatMessagesComponent {
         }
 
         private void onReply(ChatMessage chatMessage) {
-            if (!userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId())) {
+            if (!chatMessage.isMyMessage(userIdentityService)) {
                 citationBlock.reply(chatMessage);
             }
         }
@@ -339,6 +343,8 @@ public class ChatMessagesComponent {
         private final ChatMentionPopupMenu<UserProfile> userMentionPopup;
         private final ChatMentionPopupMenu<ChatChannel<?>> channelMentionPopup;
         private final Pane userProfileSelectionRoot;
+        @Getter
+        private final HBox bottomHBox = new HBox(10);
 
         private View(Model model,
                      Controller controller,
@@ -382,13 +388,13 @@ public class ChatMessagesComponent {
 
             HBox.setHgrow(bottomBoxStackPane, Priority.ALWAYS);
             HBox.setMargin(userProfileSelectionRoot, new Insets(0, -20, 0, -25));
-            HBox bottomBox = new HBox(10, userProfileSelectionRoot, bottomBoxStackPane);
-            bottomBox.getStyleClass().add("bg-grey-5");
-            bottomBox.setAlignment(Pos.CENTER);
-            bottomBox.setPadding(new Insets(14, 25, 14, 25));
+            bottomHBox.getChildren().addAll(userProfileSelectionRoot, bottomBoxStackPane);
+            bottomHBox.getStyleClass().add("bg-grey-5");
+            bottomHBox.setAlignment(Pos.CENTER);
+            bottomHBox.setPadding(new Insets(14, 25, 14, 25));
 
             VBox.setVgrow(messagesListView, Priority.ALWAYS);
-            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomBox);
+            root.getChildren().addAll(messagesListView, quotedMessageBlock, bottomHBox);
 
             userMentionPopup = new ChatMentionPopupMenu<>(inputField);
             userMentionPopup.setItemDisplayConverter(UserProfile::getUserName);

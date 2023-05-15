@@ -324,7 +324,7 @@ public class ChatMessagesListView {
         }
 
         private void onOpenPrivateChannel(ChatMessage chatMessage) {
-            checkArgument(!isMyMessage(chatMessage));
+            checkArgument(!model.isMyMessage(chatMessage));
 
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(this::createAndSelectTwoPartyPrivateChatChannel);
@@ -332,7 +332,7 @@ public class ChatMessagesListView {
 
         private void onSaveEditedMessage(ChatMessage chatMessage, String editedText) {
             checkArgument(chatMessage instanceof PublicChatMessage);
-            checkArgument(isMyMessage(chatMessage));
+            checkArgument(model.isMyMessage(chatMessage));
 
             UserIdentity userIdentity = checkNotNull(userIdentityService.getSelectedUserIdentity());
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
@@ -351,7 +351,7 @@ public class ChatMessagesListView {
             List<BisqPopupMenuItem> items = new ArrayList<>();
             items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.copyMessage"),
                     () -> onCopyMessage(chatMessage)));
-            if (!isMyMessage(chatMessage)) {
+            if (!model.isMyMessage(chatMessage)) {
                 if (chatMessage instanceof PublicChatMessage) {
                     items.add(new BisqPopupMenuItem(Res.get("satoshisquareapp.chat.messageMenu.ignoreUser"),
                             () -> onIgnoreUser(chatMessage)));
@@ -373,10 +373,6 @@ public class ChatMessagesListView {
         private void onIgnoreUser(ChatMessage chatMessage) {
             userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
                     .ifPresent(userProfileService::ignoreUserProfile);
-        }
-
-        private boolean isMyMessage(ChatMessage chatMessage) {
-            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
         }
 
         private void onCopyMessage(ChatMessage chatMessage) {
@@ -413,8 +409,13 @@ public class ChatMessagesListView {
                     .map(chatMessage -> new ChatMessageListItem<>(chatMessage, userProfileService, reputationService))
                     .to(channel.getChatMessages());
         }
-    }
 
+        public String getUserName(String userProfileId) {
+            return userProfileService.findUserProfile(userProfileId)
+                    .map(UserProfile::getUserName)
+                    .orElse(Res.get("na"));
+        }
+    }
 
     @Getter
     private static class Model implements bisq.desktop.common.view.Model {
@@ -438,7 +439,7 @@ public class ChatMessagesListView {
         }
 
         boolean isMyMessage(ChatMessage chatMessage) {
-            return userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+            return chatMessage.isMyMessage(userIdentityService);
         }
 
         boolean hasTradeChatOffer(ChatMessage chatMessage) {
@@ -833,9 +834,9 @@ public class ChatMessagesListView {
                                 if (citation.isValid()) {
                                     quotedMessageVBox.setVisible(true);
                                     quotedMessageVBox.setManaged(true);
-                                    quotedMessageField.setText(citation.getMessage());
+                                    quotedMessageField.setText(citation.getText());
                                     quotedMessageField.setStyle("-fx-fill: -bisq-grey-dimmed");
-                                    Label userName = new Label(citation.getUserName());
+                                    Label userName = new Label(controller.getUserName(citation.getAuthorUserProfileId()));
                                     userName.getStyleClass().add("font-medium");
                                     userName.setStyle("-fx-text-fill: -bisq-grey-10");
                                     quotedMessageVBox.getChildren().setAll(userName, quotedMessageField);
