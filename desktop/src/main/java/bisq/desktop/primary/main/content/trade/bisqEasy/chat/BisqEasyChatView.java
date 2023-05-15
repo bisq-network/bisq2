@@ -75,11 +75,9 @@ public class BisqEasyChatView extends ChatView {
 
         createOfferButton = new Button(Res.get("createOffer"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
-        createOfferButton.setMinHeight(37);
-        createOfferButton.setMinWidth(110);
+        createOfferButton.setMinHeight(32);
         createOfferButton.setDefaultButton(true);
-        VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
-        left.getChildren().add(createOfferButton);
+        createOfferButton.setMinWidth(120);
 
         sendBtcAddressButton = new Button(Res.get("bisqEasy.sendBtcAddress"));
         sendBtcAddressButton.getStyleClass().add("default-button");
@@ -112,8 +110,9 @@ public class BisqEasyChatView extends ChatView {
         openDisputeButton.getStyleClass().add("default-button");
         openDisputeButton.setStyle("-fx-label-padding: 0 -20 0 -20");
         openDisputeButton.setMinHeight(32);
+        openDisputeButton.setMinWidth(110);
 
-        chatMessagesBottomHBox.getChildren().addAll(sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton);
+        chatMessagesBottomHBox.getChildren().addAll(createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {

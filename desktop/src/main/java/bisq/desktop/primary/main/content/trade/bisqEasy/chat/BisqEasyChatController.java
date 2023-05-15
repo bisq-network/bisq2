@@ -317,23 +317,20 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     }
 
     private void privateTradeMessagesChangedHandler(BisqEasyPrivateTradeChatChannel chatChannel) {
-        boolean IsMyOffer = chatChannel.getChatMessages().stream()
+        boolean isMyOffer = chatChannel.getChatMessages().stream()
                 .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
                 .filter(message -> message.getCitation().isPresent())
                 .anyMatch(message -> isOfferAuthor(message.getCitation().get().getAuthorUserProfileId()));
+        boolean isSeller = isMyOffer ?
+                chatChannel.getBisqEasyOffer().getDirection().isSell() :
+                chatChannel.getBisqEasyOffer().getDirection().isBuy();
         UIThread.runOnNextRenderFrame(() -> {
-            if (chatChannel.getBisqEasyOffer().getDirection().isBuy() && !IsMyOffer) {
-                model.getSendBtcAddressButtonVisible().set(false);
+            if (isSeller) {
                 model.getSendPaymentAccountButtonVisible().set(true);
+                model.getSendBtcAddressButtonVisible().set(false);
             } else {
-                // It's a sell offer (I am buyer)
                 model.getSendPaymentAccountButtonVisible().set(false);
-                if (walletService.isPresent()) {
-                    // The message containing the tradeChatOffer has the offer author in the citation object.
-                    // We check if that the message it ours and that we are not the offer author. 
-                    model.getSendBtcAddressButtonVisible().set(IsMyOffer);
-
-                }
+                model.getSendBtcAddressButtonVisible().set(walletService.isPresent());
             }
         });
     }
