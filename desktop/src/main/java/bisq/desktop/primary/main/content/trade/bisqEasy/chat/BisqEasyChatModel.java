@@ -17,15 +17,20 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.account.bisqeasy.BisqEasyPaymentAccount;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.primary.main.content.chat.ChatModel;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 @Getter
@@ -39,7 +44,8 @@ public class BisqEasyChatModel extends ChatModel {
     private final BooleanProperty openDisputeDisabled = new SimpleBooleanProperty();
     private final BooleanProperty isTradeChannelVisible = new SimpleBooleanProperty();
     private final BooleanProperty paymentAccountSelectionVisible = new SimpleBooleanProperty();
-    private final ObservableList<String> paymentAccountNames = FXCollections.observableArrayList();
+    private final ObservableList<BisqEasyPaymentAccount> paymentAccounts = FXCollections.observableArrayList();
+    private final ObjectProperty<BisqEasyPaymentAccount> selectedAccount = new SimpleObjectProperty<>();
 
     public BisqEasyChatModel(ChatChannelDomain chatChannelDomain) {
         super(chatChannelDomain);
@@ -49,4 +55,18 @@ public class BisqEasyChatModel extends ChatModel {
     public NavigationTarget getDefaultNavigationTarget() {
         return NavigationTarget.NONE;
     }
+
+    @Nullable
+    public BisqEasyPaymentAccount getSelectedAccount() {
+        return selectedAccount.get();
+    }
+
+    public ObjectProperty<BisqEasyPaymentAccount> selectedAccountProperty() {
+        return selectedAccount;
+    }
+
+    public void setSelectedAccount(BisqEasyPaymentAccount selectedAccount) {
+        this.selectedAccount.set(selectedAccount);
+    }
+
 }

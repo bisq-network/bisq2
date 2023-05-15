@@ -17,21 +17,23 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.account.bisqeasy.BisqEasyPaymentAccount;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
+import bisq.desktop.components.controls.AutoCompleteComboBox;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.primary.main.content.chat.ChatView;
 import bisq.desktop.primary.main.content.trade.bisqEasy.chat.guide.TradeGuideView;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,7 +43,7 @@ public class BisqEasyChatView extends ChatView {
     private final Switch offersOnlySwitch;
     private final Button createOfferButton, sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton;
     private final Region bisqEasyPrivateTradeChatChannelSelection;
-    private final ComboBox<String> paymentAccountSelection;
+    private final AutoCompleteComboBox<BisqEasyPaymentAccount> paymentAccountsComboBox;
 
     public BisqEasyChatView(BisqEasyChatModel model,
                             BisqEasyChatController controller,
@@ -74,6 +76,7 @@ public class BisqEasyChatView extends ChatView {
         createOfferButton = new Button(Res.get("createOffer"));
         createOfferButton.setMaxWidth(Double.MAX_VALUE);
         createOfferButton.setMinHeight(37);
+        createOfferButton.setMinWidth(110);
         createOfferButton.setDefaultButton(true);
         VBox.setMargin(createOfferButton, new Insets(-2, 25, 17, 25));
         left.getChildren().add(createOfferButton);
@@ -82,22 +85,35 @@ public class BisqEasyChatView extends ChatView {
         sendBtcAddressButton.getStyleClass().add("default-button");
         sendBtcAddressButton.setStyle("-fx-label-padding: 0 -20 0 -20");
         sendBtcAddressButton.setMinHeight(32);
+        sendBtcAddressButton.setMinWidth(160);
         sendBtcAddressButton.setTooltip(new Tooltip(Res.get("bisqEasy.sendBtcAddress.tooltip")));
 
         sendPaymentAccountButton = new Button(Res.get("bisqEasy.sendPaymentAccount"));
         sendPaymentAccountButton.getStyleClass().add("default-button");
         sendPaymentAccountButton.setStyle("-fx-label-padding: 0 -20 0 -20");
         sendPaymentAccountButton.setMinHeight(32);
+        sendPaymentAccountButton.setMinWidth(160);
         sendPaymentAccountButton.setTooltip(new Tooltip(Res.get("bisqEasy.sendPaymentAccount.tooltip")));
 
-        paymentAccountSelection = new ComboBox<>(model.getPaymentAccountNames());
+        paymentAccountsComboBox = new AutoCompleteComboBox<>(model.getPaymentAccounts());
+        paymentAccountsComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(BisqEasyPaymentAccount object) {
+                return object != null ? object.getName() : "";
+            }
+
+            @Override
+            public BisqEasyPaymentAccount fromString(String string) {
+                return null;
+            }
+        });
 
         openDisputeButton = new Button(Res.get("bisqEasy.openDispute"));
         openDisputeButton.getStyleClass().add("default-button");
         openDisputeButton.setStyle("-fx-label-padding: 0 -20 0 -20");
         openDisputeButton.setMinHeight(32);
 
-        chatMessagesBottomHBox.getChildren().addAll(sendBtcAddressButton, paymentAccountSelection, sendPaymentAccountButton, openDisputeButton);
+        chatMessagesBottomHBox.getChildren().addAll(sendBtcAddressButton, sendPaymentAccountButton, openDisputeButton);
 
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -124,8 +140,6 @@ public class BisqEasyChatView extends ChatView {
         openDisputeButton.managedProperty().bind(bisqEasyChatModel.getOpenDisputeButtonVisible());
         sendBtcAddressButton.visibleProperty().bind(bisqEasyChatModel.getSendBtcAddressButtonVisible());
         sendBtcAddressButton.managedProperty().bind(bisqEasyChatModel.getSendBtcAddressButtonVisible());
-        paymentAccountSelection.visibleProperty().bind(bisqEasyChatModel.getPaymentAccountSelectionVisible());
-        paymentAccountSelection.managedProperty().bind(bisqEasyChatModel.getPaymentAccountSelectionVisible());
         sendPaymentAccountButton.visibleProperty().bind(bisqEasyChatModel.getSendPaymentAccountButtonVisible());
         sendPaymentAccountButton.managedProperty().bind(bisqEasyChatModel.getSendPaymentAccountButtonVisible());
         openDisputeButton.disableProperty().bind(bisqEasyChatModel.getOpenDisputeDisabled());
@@ -134,9 +148,17 @@ public class BisqEasyChatView extends ChatView {
 
         createOfferButton.setOnAction(e -> bisqEasyChatController.onCreateOffer());
         sendBtcAddressButton.setOnAction(e -> bisqEasyChatController.onSendBtcAddress());
-        paymentAccountSelection.setOnAction(e -> bisqEasyChatController.onPaymentAccountSelected(paymentAccountSelection.getSelectionModel().getSelectedItem()));
         sendPaymentAccountButton.setOnAction(e -> bisqEasyChatController.onSendPaymentAccount());
         openDisputeButton.setOnAction(e -> bisqEasyChatController.onRequestMediation());
+
+        paymentAccountsComboBox.setOnChangeConfirmed(e -> {
+            if (paymentAccountsComboBox.getSelectionModel().getSelectedItem() == null) {
+                paymentAccountsComboBox.getSelectionModel().select(bisqEasyChatModel.getSelectedAccount());
+                return;
+            }
+            bisqEasyChatController.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+        });
+
 
         offersOnlySwitch.selectedProperty().bindBidirectional(bisqEasyChatModel.getOfferOnly());
     }
@@ -153,8 +175,6 @@ public class BisqEasyChatView extends ChatView {
         openDisputeButton.managedProperty().unbind();
         sendBtcAddressButton.visibleProperty().unbind();
         sendBtcAddressButton.managedProperty().unbind();
-        paymentAccountSelection.visibleProperty().unbind();
-        paymentAccountSelection.managedProperty().unbind();
         sendPaymentAccountButton.visibleProperty().unbind();
         sendPaymentAccountButton.managedProperty().unbind();
         openDisputeButton.disableProperty().unbind();
@@ -163,9 +183,10 @@ public class BisqEasyChatView extends ChatView {
 
         createOfferButton.setOnAction(null);
         sendBtcAddressButton.setOnAction(null);
-        paymentAccountSelection.setOnAction(null);
         sendPaymentAccountButton.setOnAction(null);
         openDisputeButton.setOnAction(null);
+
+        paymentAccountsComboBox.setOnChangeConfirmed(null);
 
         offersOnlySwitch.selectedProperty().unbindBidirectional(bisqEasyChatModel.getOfferOnly());
     }

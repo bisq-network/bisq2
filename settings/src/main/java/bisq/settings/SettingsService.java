@@ -27,9 +27,7 @@ import bisq.persistence.PersistenceService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -66,6 +64,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return CompletableFuture.completedFuture(true);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public ObservableSet<Market> getMarkets() {
         return persistableStore.markets;
     }
@@ -98,42 +101,6 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return persistableStore.tradeRulesConfirmed;
     }
 
-
-    public Map<String, String> getPaymentAccountsMap() {
-        return persistableStore.paymentAccounts;
-    }
-
-    public boolean hasPaymentAccounts() {
-        return !getPaymentAccountsMap().isEmpty();
-    }
-
-    public void addPaymentAccount(String accountName, String paymentAccountInfo) {
-        getPaymentAccountsMap().put(accountName, paymentAccountInfo);
-        persist();
-    }
-
-    public void removePaymentAccount(String paymentAccountId) {
-        getPaymentAccountsMap().remove(paymentAccountId);
-        persist();
-    }
-
-    public Optional<String> getPaymentAccount(String accountName) {
-        return Optional.ofNullable(getPaymentAccountsMap().get(accountName));
-    }
-
-    public Observable<String> selectedPaymentAccountObservable() {
-        return persistableStore.selectedPaymentAccount;
-    }
-
-    @Nullable
-    public String getSelectedPaymentAccount() {
-        return persistableStore.selectedPaymentAccount.get();
-    }
-
-    public void setSelectedPaymentAccount(String accountName) {
-        selectedPaymentAccountObservable().set(accountName);
-        persist();
-    }
 
     public Observable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;

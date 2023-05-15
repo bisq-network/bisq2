@@ -17,6 +17,8 @@
 
 package bisq.desktop.primary.main.content.trade.bisqEasy.chat;
 
+import bisq.account.bisqeasy.BisqEasyPaymentAccount;
+import bisq.account.bisqeasy.BisqEasyPaymentAccountService;
 import bisq.application.DefaultApplicationService;
 import bisq.chat.bisqeasy.channel.BisqEasyChatChannelSelectionService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
@@ -49,9 +51,10 @@ import bisq.user.profile.UserProfile;
 import bisq.wallets.core.WalletService;
 import javafx.scene.layout.StackPane;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -62,16 +65,21 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     private final SettingsService settingsService;
     private final MediationService mediationService;
     private final Optional<WalletService> walletService;
+    private final BisqEasyPaymentAccountService bisqEasyPaymentAccountService;
     private BisqEasyPublicChannelSelectionMenu bisqEasyPublicChannelSelectionMenu;
     private BisqEasyPrivateChannelSelectionMenu bisqEasyPrivateChannelSelectionMenu;
 
-    private Pin offerOnlySettingsPin, inMediationPin, chatMessagesPin, bisqEasyPrivateTradeChatChannelsPin;
+    private Pin offerOnlySettingsPin, inMediationPin, chatMessagesPin,
+            bisqEasyPrivateTradeChatChannelsPin, selectedPaymentAccountPin, paymentAccountsPin;
+    private Subscription selectedPaymentAccountSubscription;
 
     public BisqEasyChatController(DefaultApplicationService applicationService) {
         super(applicationService, ChatChannelDomain.BISQ_EASY, NavigationTarget.BISQ_EASY_CHAT);
 
         bisqEasyChatChannelSelectionService = chatService.getBisqEasyChatChannelSelectionService();
         settingsService = applicationService.getSettingsService();
+        bisqEasyPaymentAccountService = applicationService.getAccountService().getBisqEasyPaymentAccountService();
+
         mediationService = applicationService.getSupportService().getMediationService();
         walletService = applicationService.getWalletService();
     }
@@ -116,8 +124,7 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
     public void onActivate() {
         super.onActivate();
 
-        model.getPaymentAccountSelectionVisible().set(settingsService.getPaymentAccountsMap().size() > 1);
-        model.getPaymentAccountNames().setAll(new ArrayList<>(settingsService.getPaymentAccountsMap().keySet()));
+        model.getPaymentAccounts().setAll(bisqEasyPaymentAccountService.getAccounts());
 
         selectedChannelPin = bisqEasyChatChannelSelectionService.getSelectedChannel().addObserver(this::chatChannelChanged);
         offerOnlySettingsPin = FxBindings.bindBiDir(model.getOfferOnly()).to(settingsService.getOffersOnly());
@@ -126,6 +133,18 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
         bisqEasyPrivateTradeChatChannelsPin = bisqEasyPrivateTradeChatChannels.addListener(() -> {
             model.getIsTradeChannelVisible().set(!bisqEasyPrivateTradeChatChannels.isEmpty());
         });
+
+        paymentAccountsPin = bisqEasyPaymentAccountService.getAccounts().addListener(this::updatePaymentAccountSelectionVisibleState);
+
+        selectedPaymentAccountPin = FxBindings.bind(model.selectedAccountProperty())
+                .to(bisqEasyPaymentAccountService.selectedAccountAsObservable());
+
+        selectedPaymentAccountSubscription = EasyBind.subscribe(model.selectedAccountProperty(),
+                selectedAccount -> {
+                    if (selectedAccount != null) {
+                        bisqEasyPaymentAccountService.setSelectedAccount(selectedAccount);
+                    }
+                });
     }
 
     @Override
@@ -134,6 +153,9 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
 
         offerOnlySettingsPin.unbind();
         bisqEasyPrivateTradeChatChannelsPin.unbind();
+        selectedPaymentAccountPin.unbind();
+        paymentAccountsPin.unbind();
+        selectedPaymentAccountSubscription.unsubscribe();
 
         if (inMediationPin != null) {
             inMediationPin.unbind();
@@ -159,6 +181,8 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
             model.getSendBtcAddressButtonVisible().set(false);
             model.getSendPaymentAccountButtonVisible().set(false);
         }
+
+        updatePaymentAccountSelectionVisibleState();
 
         UIThread.run(() -> {
             if (chatChannel == null) {
@@ -257,61 +281,69 @@ public class BisqEasyChatController extends ChatController<BisqEasyChatView, Bis
                 ));
     }
 
-    void onPaymentAccountSelected(@Nullable String accountName) {
-        if (accountName != null) {
-            settingsService.setSelectedPaymentAccount(accountName);
+    void onPaymentAccountSelected(@Nullable BisqEasyPaymentAccount account) {
+        if (account != null) {
+            bisqEasyPaymentAccountService.setSelectedAccount(account);
         }
     }
 
     void onSendPaymentAccount() {
-        if (settingsService.hasPaymentAccounts() && settingsService.getSelectedPaymentAccount() != null) {
-            settingsService.getPaymentAccount(settingsService.getSelectedPaymentAccount())
-                    .ifPresent(paymentAccount -> {
-                        ChatChannel<? extends ChatMessage> channel = bisqEasyChatChannelSelectionService.getSelectedChannel().get();
-                        checkArgument(channel instanceof BisqEasyPrivateTradeChatChannel);
-                        BisqEasyPrivateTradeChatChannel chatChannel = (BisqEasyPrivateTradeChatChannel) channel;
-                        String message = Res.get("bisqEasy.sendPaymentAccount.message", paymentAccount);
-                        chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
-                                Optional.empty(),
-                                chatChannel);
-                    });
+        if (bisqEasyPaymentAccountService.getAccounts().size() > 1) {
+            //todo
+            new Popup().information("TODO").show();
         } else {
-            if (!settingsService.hasPaymentAccounts()) {
-                new Popup().information(Res.get("bisqEasy.sendPaymentAccount.noAccount.popup")).show();
-            } else if (settingsService.getPaymentAccountsMap().size() > 1) {
-                String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
-                if (DontShowAgainService.showAgain(key)) {
-                    new Popup().information(Res.get("bisqEasy.sendPaymentAccount.multipleAccounts.popup"))
-                            .dontShowAgainId(key)
-                            .show();
+            BisqEasyPaymentAccount selectedAccount = bisqEasyPaymentAccountService.getSelectedAccount();
+            if (bisqEasyPaymentAccountService.hasAccounts() && selectedAccount != null) {
+                ChatChannel<? extends ChatMessage> channel = bisqEasyChatChannelSelectionService.getSelectedChannel().get();
+                checkArgument(channel instanceof BisqEasyPrivateTradeChatChannel);
+                BisqEasyPrivateTradeChatChannel chatChannel = (BisqEasyPrivateTradeChatChannel) channel;
+                String message = Res.get("bisqEasy.sendPaymentAccount.message", selectedAccount.getData());
+                chatService.getBisqEasyPrivateTradeChatChannelService().sendTextMessage(message,
+                        Optional.empty(),
+                        chatChannel);
+            } else {
+                if (!bisqEasyPaymentAccountService.hasAccounts()) {
+                    new Popup().information(Res.get("bisqEasy.sendPaymentAccount.noAccount.popup")).show();
+                } else if (bisqEasyPaymentAccountService.getAccountByNameMap().size() > 1) {
+                    String key = "bisqEasy.sendPaymentAccount.multipleAccounts";
+                    if (DontShowAgainService.showAgain(key)) {
+                        new Popup().information(Res.get("bisqEasy.sendPaymentAccount.multipleAccounts.popup"))
+                                .dontShowAgainId(key)
+                                .show();
+                    }
                 }
             }
         }
     }
 
     private void privateTradeMessagesChangedHandler(BisqEasyPrivateTradeChatChannel chatChannel) {
-        if (chatChannel.getBisqEasyOffer().getDirection().isBuy()) {
-            model.getSendBtcAddressButtonVisible().set(false);
-            model.getSendPaymentAccountButtonVisible().set(true);
-        } else {
-            // It's a sell offer (I am buyer)
-            model.getSendPaymentAccountButtonVisible().set(false);
-            if (walletService.isPresent()) {
-                UIThread.runOnNextRenderFrame(() -> {
+        boolean IsMyOffer = chatChannel.getChatMessages().stream()
+                .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
+                .filter(message -> message.getCitation().isPresent())
+                .anyMatch(message -> isOfferAuthor(message.getCitation().get().getAuthorUserProfileId()));
+        UIThread.runOnNextRenderFrame(() -> {
+            if (chatChannel.getBisqEasyOffer().getDirection().isBuy() && !IsMyOffer) {
+                model.getSendBtcAddressButtonVisible().set(false);
+                model.getSendPaymentAccountButtonVisible().set(true);
+            } else {
+                // It's a sell offer (I am buyer)
+                model.getSendPaymentAccountButtonVisible().set(false);
+                if (walletService.isPresent()) {
                     // The message containing the tradeChatOffer has the offer author in the citation object.
                     // We check if that the message it ours and that we are not the offer author. 
-                    boolean hasValidOfferMessage = chatChannel.getChatMessages().stream()
-                            .filter(BisqEasyPrivateTradeChatMessage::hasTradeChatOffer)
-                            .filter(message -> message.isMyMessage(userIdentityService))
-                            .filter(message -> message.getCitation().isPresent())
-                            .anyMatch(message -> meNotBeingOfferAuthor(message.getCitation().get().getAuthorUserProfileId()));
-                    model.getSendBtcAddressButtonVisible().set(hasValidOfferMessage);
-                });
+                    model.getSendBtcAddressButtonVisible().set(IsMyOffer);
+
+                }
             }
-        }
+        });
     }
 
-    private boolean meNotBeingOfferAuthor(String offerAuthorUserProfileId) {
-        return !userIdentityService.isUserIdentityPresent(offerAuthorUserProfileId);
+    private void updatePaymentAccountSelectionVisibleState() {
+        UIThread.run(() ->
+                model.getPaymentAccountSelectionVisible().set(bisqEasyChatChannelSelectionService.getSelectedChannel().get() instanceof BisqEasyPrivateTradeChatChannel && bisqEasyPaymentAccountService.getAccounts().size() > 1));
+    }
+
+    private boolean isOfferAuthor(String offerAuthorUserProfileId) {
+        return userIdentityService.isUserIdentityPresent(offerAuthorUserProfileId);
     }
 }

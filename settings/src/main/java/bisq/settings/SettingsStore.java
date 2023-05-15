@@ -27,7 +27,10 @@ import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -43,8 +46,6 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> offersOnly = new Observable<>(true);
     final Observable<Boolean> tradeRulesConfirmed = new Observable<>(true);
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>(ChatNotificationType.MENTION);
-    final Map<String, String> paymentAccounts = new HashMap<>();
-    final Observable<String> selectedPaymentAccount = new Observable<>();
 
     public SettingsStore() {
         this(new Cookie(),
@@ -55,9 +56,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 1000,
                 true,
                 false,
-                ChatNotificationType.MENTION,
-                new HashMap<>(),
-                Optional.empty());
+                ChatNotificationType.MENTION);
     }
 
     public SettingsStore(Cookie cookie,
@@ -68,9 +67,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                          long requiredTotalReputationScore,
                          boolean offersOnly,
                          boolean tradeRulesConfirmed,
-                         ChatNotificationType chatNotificationType,
-                         Map<String, String> paymentAccounts,
-                         Optional<String> selectedPaymentAccount) {
+                         ChatNotificationType chatNotificationType) {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
@@ -80,14 +77,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.offersOnly.set(offersOnly);
         this.tradeRulesConfirmed.set(tradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
-        this.paymentAccounts.clear();
-        this.paymentAccounts.putAll(paymentAccounts);
-        this.selectedPaymentAccount.set(selectedPaymentAccount.orElse(null));
     }
 
     @Override
     public bisq.settings.protobuf.SettingsStore toProto() {
-        bisq.settings.protobuf.SettingsStore.Builder builder = bisq.settings.protobuf.SettingsStore.newBuilder()
+        return bisq.settings.protobuf.SettingsStore.newBuilder()
                 .setCookie(cookie.toProto())
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setUseAnimations(useAnimations.get())
@@ -96,10 +90,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
-                .setChatNotificationType(chatNotificationType.get().toProto())
-                .putAllPaymentAccounts(paymentAccounts);
-        Optional.ofNullable(selectedPaymentAccount.get()).ifPresent(builder::setSelectedPaymentAccount);
-        return builder.build();
+                .setChatNotificationType(chatNotificationType.get().toProto()).build();
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
@@ -112,12 +103,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 proto.getRequiredTotalReputationScore(),
                 proto.getOffersOnly(),
                 proto.getTradeRulesConfirmed(),
-                ChatNotificationType.fromProto(proto.getChatNotificationType()),
-                proto.getPaymentAccountsMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                proto.hasSelectedPaymentAccount() ?
-                        Optional.of(proto.getSelectedPaymentAccount()) :
-                        Optional.empty());
+                ChatNotificationType.fromProto(proto.getChatNotificationType()));
     }
 
     @Override
@@ -141,9 +127,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 requiredTotalReputationScore.get(),
                 offersOnly.get(),
                 tradeRulesConfirmed.get(),
-                chatNotificationType.get(),
-                paymentAccounts,
-                Optional.ofNullable(selectedPaymentAccount.get()));
+                chatNotificationType.get());
     }
 
     @Override
@@ -158,8 +142,5 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         offersOnly.set(persisted.offersOnly.get());
         tradeRulesConfirmed.set(persisted.tradeRulesConfirmed.get());
         chatNotificationType.set(persisted.chatNotificationType.get());
-        paymentAccounts.clear();
-        paymentAccounts.putAll(persisted.paymentAccounts);
-        selectedPaymentAccount.set(persisted.selectedPaymentAccount.get());
     }
 }

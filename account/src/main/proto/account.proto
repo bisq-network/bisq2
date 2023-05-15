@@ -22,6 +22,16 @@ option java_package = "bisq.account.protobuf";
 option java_multiple_files = true;
 import "common.proto";
 
+message BisqEasyPaymentAccount {
+  string name = 1;
+  string data = 2;
+}
+
+message BisqEasyPaymentAccountStore {
+  map<string, BisqEasyPaymentAccount> bisqEasyPaymentAccountByName = 1;
+  optional BisqEasyPaymentAccount selectedBisqEasyPaymentAccount = 2;
+}
+
 message AccountAgeWitnessData {
   bytes hash = 1;
   uint64 date = 2;
