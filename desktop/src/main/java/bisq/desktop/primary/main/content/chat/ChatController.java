@@ -125,7 +125,7 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
                         chatMessagesComponent.resetSelectedChatMessage();
                     });
             model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-            userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::openPrivateChannel);
+            userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::createAndSelectTwoPartyPrivateChatChannel);
             userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
             userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
             model.setChatUserDetails(Optional.of(userProfileSidebar));

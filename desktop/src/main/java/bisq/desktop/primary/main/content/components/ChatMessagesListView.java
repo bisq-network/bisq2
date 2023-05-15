@@ -113,14 +113,6 @@ public class ChatMessagesListView {
         return controller.view.getRoot();
     }
 
-    public ObservableList<ChatMessageListItem<? extends ChatMessage>> getChatMessages() {
-        return controller.model.getChatMessages();
-    }
-
-    public FilteredList<ChatMessageListItem<? extends ChatMessage>> getFilteredChatMessages() {
-        return controller.model.getFilteredChatMessages();
-    }
-
     public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
         controller.setSearchPredicate(predicate);
     }
