@@ -39,8 +39,6 @@ import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -69,9 +67,6 @@ import static java.io.File.separator;
 public class Tor {
     public static final String VERSION = "0.1.0";
 
-    // We use one tor binary for one app
-    private final static Map<String, Tor> TOR_BY_APP = new HashMap<>();
-
     public enum State {
         NEW,
         STARTING,
@@ -79,6 +74,8 @@ public class Tor {
         STOPPING,
         TERMINATED
     }
+
+    private static Optional<Tor> singletonInstance = Optional.empty();
 
     private final TorController torController;
     private final TorBootstrap torBootstrap;
@@ -89,16 +86,12 @@ public class Tor {
     private int proxyPort = -1;
 
     public static Tor getTor(String torDirPath) {
-        Tor tor;
-        synchronized (TOR_BY_APP) {
-            if (TOR_BY_APP.containsKey(torDirPath)) {
-                tor = TOR_BY_APP.get(torDirPath);
-            } else {
-                log.info("Creating Tor using torDirPath: {}", torDirPath);
-                tor = new Tor(torDirPath);
-                TOR_BY_APP.put(torDirPath, tor);
-            }
+        if (singletonInstance.isPresent()) {
+            return singletonInstance.get();
         }
+
+        Tor tor = new Tor(torDirPath);
+        singletonInstance = Optional.of(tor);
         return tor;
     }
 
