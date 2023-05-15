@@ -44,12 +44,10 @@ public class TorTransport implements Transport {
         }
     }
 
-    private final String torDirPath;
     private final Tor tor;
 
     public TorTransport(Transport.Config config) {
-        torDirPath = config.getBaseDir() + separator + "tor";
-        // We get a singleton instance per application (torDirPath)
+        String torDirPath = config.getBaseDir() + separator + "tor";
         tor = Tor.getTor(torDirPath);
     }
 
