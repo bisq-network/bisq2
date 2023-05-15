@@ -20,7 +20,10 @@ package bisq.common.util;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -91,5 +94,19 @@ public class StringUtils {
         } else {
             return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
         }
+    }
+
+    // Replaces the content inside the brackets marked with HYPERLINK with the number of the hyperlink
+    // and add the hyperlink to the hyperlinks list.
+    // E.g. ...some text [HYPERLINK:https://bisq.community] .... -> ...some text [1] ...
+    public static String extractHyperlinks(String message, List<String> hyperlinks) {
+        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
+        Matcher matcher = pattern.matcher(message);
+        while (matcher.find()) {  // extract hyperlinks & store in array
+            hyperlinks.add(matcher.group(1));
+            // replace hyperlink in message with [n] reference
+            message = message.replaceFirst(pattern.toString(), String.format("[%d]", hyperlinks.size()));
+        }
+        return message;
     }
 }

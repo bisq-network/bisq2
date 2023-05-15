@@ -40,6 +40,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -60,7 +61,6 @@ import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -123,27 +123,48 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         public void onActivate() {
             super.onActivate();
 
-            model.sortedList.setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
+            model.getSortedChannels().setComparator(Comparator.comparing(ChannelSelectionMenu.View.ChannelItem::getChannelTitle));
 
             numVisibleChannelsPin = chatChannelService.getNumVisibleChannels().addObserver(n -> applyPredicate());
 
-            List<Market> markets = MarketRepository.getAllFiatMarkets();
+            model.filteredMarketsList.setPredicate(item -> {
+                Market market = item.getMarket();
+                return model.filteredChannels.stream()
+                        .map(ChannelSelectionMenu.View.ChannelItem::getChatChannel)
+                        .filter(channel -> channel instanceof BisqEasyPublicChatChannel)
+                        .map(channel -> (BisqEasyPublicChatChannel) channel)
+                        .map(channel -> !channel.getMarket().equals(market))
+                        .findAny()
+                        .isPresent();
+            });
 
-            Set<Market> visibleMarkets = model.filteredList.stream()
-                    .map(e -> ((BisqEasyPublicChatChannel) e.getChatChannel()))
-                    .map(BisqEasyPublicChatChannel::getMarket)
-                    .collect(Collectors.toSet());
-            markets.removeAll(visibleMarkets);
-            List<View.MarketListItem> marketListItems = markets.stream()
+            model.sortedMarketsList.setComparator((o1, o2) -> {
+                Comparator<View.MarketListItem> byNumMessages = (left, right) -> Integer.compare(
+                        getNumMessages(right.getMarket()),
+                        getNumMessages(left.getMarket()));
+
+                List<Market> majorMarkets = MarketRepository.getMajorMarkets();
+                Comparator<View.MarketListItem> byMajorMarkets = (left, right) -> {
+                    int indexOfLeftMarket = majorMarkets.indexOf(left.getMarket());
+                    int indexOfRightMarket = majorMarkets.indexOf(right.getMarket());
+                    if (indexOfLeftMarket > -1 && indexOfRightMarket > -1) {
+                        return Integer.compare(indexOfLeftMarket, indexOfRightMarket);
+                    } else {
+                        return -1;
+                    }
+                };
+
+                Comparator<View.MarketListItem> byName = (left, right) -> left.getMarket().toString().compareTo(right.toString());
+                return byNumMessages
+                        .thenComparing(byMajorMarkets)
+                        .thenComparing(byName)
+                        .compare(o1, o2);
+            });
+
+            List<View.MarketListItem> marketListItems = MarketRepository.getAllFiatMarkets().stream()
                     .map(View.MarketListItem::new)
                     .collect(Collectors.toList());
-
-            model.hiddenMarketListItems.setAll(marketListItems);
-            model.sortedHiddenMarketListItems.setComparator((o1, o2) -> {
-                Comparator<View.MarketListItem> byNumMessages = (left, right) -> Integer.compare(getNumMessages(right.market), getNumMessages(left.market));
-                Comparator<View.MarketListItem> byName = (left, right) -> left.market.toString().compareTo(right.toString());
-                return byNumMessages.thenComparing(byName).compare(o1, o2);
-            });
+            model.marketsList.setAll(marketListItems);
         }
 
         @Override
@@ -155,8 +176,8 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         public void onJoinChannel(View.MarketListItem marketListItem) {
             if (marketListItem != null) {
-                model.hiddenMarketListItems.remove(marketListItem);
-                chatChannelService.findChannel(marketListItem.market)
+                model.marketsList.remove(marketListItem);
+                chatChannelService.findChannel(marketListItem.getMarket())
                         .ifPresent(channel -> {
                             chatChannelService.joinChannel(channel);
                             chatChannelSelectionService.selectChannel(channel);
@@ -173,7 +194,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                 new Popup().warning(Res.get("tradeChat.leaveChannelWhenOffers.popup")).show();
             } else {
                 doLeaveChannel(channel);
-                model.hiddenMarketListItems.add(new View.MarketListItem(channel.getMarket()));
+                model.marketsList.add(new View.MarketListItem(channel.getMarket()));
             }
         }
 
@@ -185,7 +206,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         @Override
         protected void applyPredicate() {
-            model.filteredList.setPredicate(item -> {
+            model.filteredChannels.setPredicate(item -> {
                 checkArgument(item.getChatChannel() instanceof BisqEasyPublicChatChannel,
                         "Channel must be type of PublicTradeChannel");
                 BisqEasyPublicChatChannel channel = (BisqEasyPublicChatChannel) item.getChatChannel();
@@ -194,9 +215,11 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
         }
     }
 
+    @Getter
     protected static class Model extends PublicChannelSelectionMenu.Model {
-        private final ObservableList<View.MarketListItem> hiddenMarketListItems = FXCollections.observableArrayList();
-        private final SortedList<View.MarketListItem> sortedHiddenMarketListItems = new SortedList<>(hiddenMarketListItems);
+        private final ObservableList<View.MarketListItem> marketsList = FXCollections.observableArrayList();
+        private final FilteredList<View.MarketListItem> filteredMarketsList = new FilteredList<>(marketsList);
+        private final SortedList<View.MarketListItem> sortedMarketsList = new SortedList<>(filteredMarketsList);
 
         public Model() {
             super(ChatChannelDomain.BISQ_EASY);
@@ -222,7 +245,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
             addChannelIcon.setOnMouseClicked(e ->
                     new ComboBoxOverlay<>(addChannelIcon,
-                            model.sortedHiddenMarketListItems,
+                            model.sortedMarketsList,
                             c -> getMarketListCell(),
                             controller::onJoinChannel,
                             Res.get("tradeChat.addMarketChannel").toUpperCase(),
@@ -267,7 +290,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
                     super.updateItem(item, empty);
                     if (item != null && !empty) {
                         label.setText(item.toString());
-                        int numMessages = controller.getNumMessages(item.market);
+                        int numMessages = controller.getNumMessages(item.getMarket());
                         badge.setText(numMessages > 0 ? String.valueOf(numMessages) : "");
                         setGraphic(badge);
                     } else {
@@ -399,6 +422,7 @@ public class BisqEasyPublicChannelSelectionMenu extends PublicChannelSelectionMe
 
         @EqualsAndHashCode
         private static class MarketListItem {
+            @Getter
             private final Market market;
 
             public MarketListItem(Market market) {

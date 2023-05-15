@@ -46,5 +46,5 @@ public abstract class MakerProtocol<T extends ProtocolModel, R extends TakeOffer
 
     protected abstract R castTakeOfferRequest(TakeOfferRequest takeOfferRequest);
 
-    abstract public void onTakeOfferRequest(R takeOfferRequest);
+    public abstract void onTakeOfferRequest(R takeOfferRequest);
 }

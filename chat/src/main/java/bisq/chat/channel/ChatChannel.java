@@ -26,12 +26,15 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.Proto;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @ToString
@@ -43,6 +46,9 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
     protected final ChatChannelDomain chatChannelDomain;
     protected final Observable<ChatChannelNotificationType> chatChannelNotificationType = new Observable<>();
     protected final ObservableSet<String> seenChatMessageIds = new ObservableSet<>();
+    @Getter
+    protected final transient ObservableSet<String> userProfileIdsOfParticipants = new ObservableSet<>();
+    protected final transient Map<String, AtomicInteger> numMessagesByAuthorId = new HashMap<>();
 
     public ChatChannel(String id,
                        ChatChannelDomain chatChannelDomain,
@@ -60,7 +66,7 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
                 .addAllSeenChatMessageIds(seenChatMessageIds);
     }
 
-    abstract public bisq.chat.protobuf.ChatChannel toProto();
+    public abstract bisq.chat.protobuf.ChatChannel toProto();
 
     public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
         switch (proto.getMessageCase()) {
@@ -87,21 +93,51 @@ public abstract class ChatChannel<M extends ChatMessage> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean addChatMessage(M chatMessage) {
+        boolean changed = getChatMessages().add(chatMessage);
+        if (changed) {
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            numMessagesByAuthorId.putIfAbsent(authorUserProfileId, new AtomicInteger());
+            numMessagesByAuthorId.get(authorUserProfileId).incrementAndGet();
+        }
+        return changed;
+    }
+
+    public boolean removeChatMessage(M chatMessage) {
+        boolean changed = getChatMessages().remove(chatMessage);
+        if (changed) {
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            if (numMessagesByAuthorId.containsKey(authorUserProfileId)) {
+                AtomicInteger numMessages = numMessagesByAuthorId.get(authorUserProfileId);
+                if (numMessages.get() > 0 && numMessages.decrementAndGet() == 0) {
+                    // If no more messages of that user exist we remove them from userProfileIdsOfParticipants
+                    userProfileIdsOfParticipants.remove(chatMessage.getAuthorUserProfileId());
+                }
+            }
+        }
+        return changed;
+    }
+
+    public void removeChatMessages(Collection<M> messages) {
+        messages.forEach(this::removeChatMessage);
+    }
+
     public void setAllMessagesSeen() {
         seenChatMessageIds.setAll(getChatMessages().stream()
                 .map(ChatMessage::getId)
                 .collect(Collectors.toSet()));
     }
 
-    abstract public String getDisplayString();
+    public abstract String getDisplayString();
 
-    abstract public ObservableSet<M> getChatMessages();
+    public abstract ObservableSet<M> getChatMessages();
 
-    abstract public void addChatMessage(M chatMessage);
-
-    abstract public void removeChatMessage(M chatMessage);
-
-    abstract public void removeChatMessages(Collection<M> messages);
-
-    abstract public Set<String> getUserProfileIdsOfAllChannelMembers();
+    public boolean isParticipant(UserProfile userProfile) {
+        return userProfileIdsOfParticipants.contains(userProfile.getId());
+    }
 }

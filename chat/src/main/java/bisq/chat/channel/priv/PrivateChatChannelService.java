@@ -38,8 +38,6 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Comparator;
-import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -92,15 +90,16 @@ public abstract class PrivateChatChannelService<
                                                                               Optional<Citation> citation,
                                                                               C channel,
                                                                               UserProfile receiver,
-                                                                              ChatMessageType chatMessageType) {
+                                                                              ChatMessageType chatMessageType,
+                                                                              long date) {
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
-        M chatMessage = createNewPrivateChatMessage(messageId,
+        M chatMessage = createAndGetNewPrivateChatMessage(messageId,
                 channel,
                 myUserIdentity.getUserProfile(),
                 receiver.getId(),
                 text,
                 citation,
-                new Date().getTime(),
+                date,
                 false,
                 chatMessageType);
         addMessage(chatMessage, channel);
@@ -111,31 +110,20 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public void leaveChannel(C channel) {
-        getChannels().remove(channel);
+        synchronized (this) {
+            getChannels().remove(channel);
+        }
         persist();
     }
 
-    protected Optional<CompletableFuture<NetworkService.SendMessageResult>> maybeSendLeaveChannelMessage(C channel, UserProfile receiver) {
-        //todo handle via members
-        boolean hasLeaveMessage = channel.getChatMessages().stream()
-                .max(Comparator.comparing(ChatMessage::getDate))
-                .stream()
-                .anyMatch(m -> m.getChatMessageType().equals(ChatMessageType.LEAVE));
-        if (hasLeaveMessage) {
-            // Don't send leave message if peer already left channel
-            return Optional.empty();
-        }
-
-        return Optional.of(sendLeaveMessage(channel, receiver));
-    }
-
-    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver) {
+    protected CompletableFuture<NetworkService.SendMessageResult> sendLeaveMessage(C channel, UserProfile receiver, long date) {
         return sendMessage(StringUtils.createShortUid(),
                 Res.get("social.privateChannel.leave.message", channel.getMyUserIdentity().getUserProfile().getUserName()),
                 Optional.empty(),
                 channel,
                 receiver,
-                ChatMessageType.LEAVE);
+                ChatMessageType.LEAVE,
+                date);
     }
 
     @Override
@@ -151,15 +139,15 @@ public abstract class PrivateChatChannelService<
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract C createNewChannel(UserProfile peer, UserIdentity myUserIdentity);
+    protected abstract C createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity);
 
-    protected abstract M createNewPrivateChatMessage(String messageId,
-                                                     C channel,
-                                                     UserProfile sender,
-                                                     String receiversId,
-                                                     String text,
-                                                     Optional<Citation> citation,
-                                                     long time,
-                                                     boolean wasEdited,
-                                                     ChatMessageType chatMessageType);
+    protected abstract M createAndGetNewPrivateChatMessage(String messageId,
+                                                           C channel,
+                                                           UserProfile sender,
+                                                           String receiverUserProfileId,
+                                                           String text,
+                                                           Optional<Citation> citation,
+                                                           long time,
+                                                           boolean wasEdited,
+                                                           ChatMessageType chatMessageType);
 }

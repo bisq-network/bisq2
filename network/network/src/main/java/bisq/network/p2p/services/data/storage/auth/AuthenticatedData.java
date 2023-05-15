@@ -42,7 +42,7 @@ public abstract class AuthenticatedData implements StorageData {
         this.distributedData = distributedData;
     }
 
-    abstract public bisq.network.protobuf.AuthenticatedData toProto();
+    public abstract bisq.network.protobuf.AuthenticatedData toProto();
 
     public bisq.network.protobuf.AuthenticatedData.Builder getAuthenticatedDataBuilder() {
         return bisq.network.protobuf.AuthenticatedData.newBuilder()

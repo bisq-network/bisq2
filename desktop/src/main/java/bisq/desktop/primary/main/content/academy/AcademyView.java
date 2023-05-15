@@ -76,11 +76,11 @@ public abstract class AcademyView<M extends Model, C extends Controller> extends
 
     }
 
-    abstract protected String getIconId();
+    protected abstract String getIconId();
 
-    abstract protected String getKey();
+    protected abstract String getKey();
 
-    abstract protected String getUrl();
+    protected abstract String getUrl();
 
     @Override
     protected void onViewAttached() {

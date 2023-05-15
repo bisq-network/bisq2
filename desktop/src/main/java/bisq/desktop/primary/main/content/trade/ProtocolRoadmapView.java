@@ -80,11 +80,11 @@ public abstract class ProtocolRoadmapView<M extends Model, C extends Controller>
 
     }
 
-    abstract protected String getIconId();
+    protected abstract String getIconId();
 
-    abstract protected String getKey();
+    protected abstract String getKey();
 
-    abstract protected String getUrl();
+    protected abstract String getUrl();
 
     @Override
     protected void onViewAttached() {

@@ -252,5 +252,5 @@ public abstract class Connection {
         return !listeningStopped && !isStopped && !Thread.currentThread().isInterrupted();
     }
 
-    abstract public boolean isPeerAddressVerified();
+    public abstract boolean isPeerAddressVerified();
 }

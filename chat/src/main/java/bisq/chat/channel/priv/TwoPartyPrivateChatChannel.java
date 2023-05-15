@@ -23,22 +23,28 @@ import bisq.chat.message.TwoPartyPrivateChatMessage;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.stream.Stream;
 
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPartyPrivateChatMessage> {
     // Channel id must be deterministic, so we sort both userIds and use that order for the concatenated string.
-    public static String createId(ChatChannelDomain ChatChannelDomain, String userId1, String userId2) {
-        List<String> userIds = new ArrayList<>(List.of(userId1, userId2));
-        Collections.sort(userIds);
+    public static String createId(ChatChannelDomain ChatChannelDomain, String userProfileId1, String userProfileId2) {
+        List<String> userIds = Stream.of(userProfileId1, userProfileId2)
+                .sorted()
+                .collect(Collectors.toList());
         return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
     }
+
+    @Getter
+    private final UserProfile peer;
 
     public TwoPartyPrivateChatChannel(UserProfile peer,
                                       UserIdentity myUserIdentity,
@@ -60,13 +66,13 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
                                        ChatChannelNotificationType chatChannelNotificationType) {
         super(id, chatChannelDomain, myUserIdentity, chatMessages, chatChannelNotificationType);
 
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.PEER, peer));
+        this.peer = peer;
     }
 
     @Override
     public bisq.chat.protobuf.ChatChannel toProto() {
         return getChannelBuilder().setTwoPartyPrivateChatChannel(bisq.chat.protobuf.TwoPartyPrivateChatChannel.newBuilder()
-                        .setPeer(getPeer().toProto())
+                        .setPeer(peer.toProto())
                         .setMyUserIdentity(myUserIdentity.toProto())
                         .addAllChatMessages(chatMessages.stream()
                                 .map(TwoPartyPrivateChatMessage::toChatMessageProto)
@@ -90,25 +96,10 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         return twoPartyPrivateChatChannel;
     }
 
-    public UserProfile getPeer() {
-        checkArgument(getPeers().size() == 1, "peers.size must be 1 at TwoPartyPrivateChatChannel");
-        return getPeers().get(0);
-    }
 
-    @Override
-    public void addChatMessage(TwoPartyPrivateChatMessage chatMessage) {
-        chatMessages.add(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessage(TwoPartyPrivateChatMessage chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    @Override
-    public void removeChatMessages(Collection<TwoPartyPrivateChatMessage> messages) {
-        chatMessages.removeAll(messages);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getDisplayString() {

@@ -42,11 +42,4 @@ public abstract class PrivateGroupChatChannelService<
                                           ChatChannelDomain chatChannelDomain) {
         super(networkService, userIdentityService, userProfileService, proofOfWorkService, chatChannelDomain);
     }
-
-    @Override
-    public void leaveChannel(C channel) {
-        super.leaveChannel(channel);
-
-        channel.getPeers().forEach(peer -> maybeSendLeaveChannelMessage(channel, peer));
-    }
 }

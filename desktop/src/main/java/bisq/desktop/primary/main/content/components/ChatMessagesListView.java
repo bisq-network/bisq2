@@ -125,14 +125,9 @@ public class ChatMessagesListView {
         controller.setSearchPredicate(predicate);
     }
 
-    public SortedList<ChatMessageListItem<? extends ChatMessage>> getSortedChatMessages() {
-        return controller.model.getSortedChatMessages();
-    }
-
     public void refreshMessages() {
         controller.refreshMessages();
     }
-
 
     private static class Controller implements bisq.desktop.common.view.Controller {
         private final ChatService chatService;
@@ -314,7 +309,12 @@ public class ChatMessagesListView {
             checkArgument(chatMessage instanceof PublicChatMessage);
 
             if (chatMessage instanceof BisqEasyPublicChatMessage bisqEasyPublicChatMessage) {
-                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity);
+                chatService.getBisqEasyPublicChatChannelService().deleteChatMessage(bisqEasyPublicChatMessage, userIdentity)
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                log.error("We got an error at doDeleteMessage: " + throwable);
+                            }
+                        });
             } else if (chatMessage instanceof CommonPublicChatMessage) {
                 CommonPublicChatChannelService commonPublicChatChannelService = chatService.getCommonPublicChatChannelServices().get(model.chatChannelDomain);
                 CommonPublicChatMessage commonPublicChatMessage = (CommonPublicChatMessage) chatMessage;
@@ -477,13 +477,13 @@ public class ChatMessagesListView {
 
         @Override
         protected void onViewAttached() {
-            model.getSortedChatMessages().addListener(messagesListener);
+            model.getChatMessages().addListener(messagesListener);
             scrollDown();
         }
 
         @Override
         protected void onViewDetached() {
-            model.getSortedChatMessages().removeListener(messagesListener);
+            model.getChatMessages().removeListener(messagesListener);
         }
 
         private void scrollDown() {
@@ -930,7 +930,7 @@ public class ChatMessagesListView {
 
         @Override
         public int compareTo(ChatMessageListItem o) {
-            return new Date(chatMessage.getDate()).compareTo(new Date(o.getChatMessage().getDate()));
+            return Comparator.comparingLong(ChatMessage::getDate).compare(this.getChatMessage(), o.getChatMessage());
         }
 
         @Override

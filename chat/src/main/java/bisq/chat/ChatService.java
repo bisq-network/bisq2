@@ -177,7 +177,7 @@ public class ChatService implements Service {
 
     public void createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain chatChannelDomain, UserProfile peer) {
         TwoPartyPrivateChatChannelService chatChannelService = twoPartyPrivateChatChannelServices.get(chatChannelDomain);
-        chatChannelService.maybeCreateAndAddChannel(chatChannelDomain, peer)
+        chatChannelService.findOrCreateChannel(chatChannelDomain, peer)
                 .ifPresent(channel -> getChatChannelSelectionService(chatChannelDomain).selectChannel(channel));
     }
 

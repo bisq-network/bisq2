@@ -45,7 +45,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
     public BisqEasyPrivateTradeChatMessage(String messageId,
                                            String channelId,
                                            UserProfile sender,
-                                           String receiversId,
+                                           String receiverUserProfileId,
                                            String text,
                                            Optional<Citation> citation,
                                            long date,
@@ -57,7 +57,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 ChatChannelDomain.BISQ_EASY,
                 channelId,
                 sender,
-                receiversId,
+                receiverUserProfileId,
                 text,
                 citation,
                 date,
@@ -72,7 +72,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             ChatChannelDomain chatChannelDomain,
                                             String channelId,
                                             UserProfile sender,
-                                            String receiversId,
+                                            String receiverUserProfileId,
                                             String text,
                                             Optional<Citation> citation,
                                             long date,
@@ -81,7 +81,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                                             ChatMessageType chatMessageType,
                                             Optional<BisqEasyOffer> bisqEasyOffer,
                                             MetaData metaData) {
-        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
     }
@@ -100,7 +100,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
 
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         bisq.chat.protobuf.BisqEasyPrivateTradeChatMessage.Builder builder = bisq.chat.protobuf.BisqEasyPrivateTradeChatMessage.newBuilder()
-                .setReceiversId(receiversId)
+                .setReceiverUserProfileId(receiverUserProfileId)
                 .setSender(sender.toProto());
         mediator.ifPresent(mediator -> builder.setMediator(mediator.toProto()));
         bisqEasyOffer.ifPresent(offer -> builder.setBisqEasyOffer(offer.toProto()));
@@ -125,7 +125,7 @@ public final class BisqEasyPrivateTradeChatMessage extends PrivateChatMessage im
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(BisqEasyPrivateTradeChatMessage.getSender()),
-                BisqEasyPrivateTradeChatMessage.getReceiversId(),
+                BisqEasyPrivateTradeChatMessage.getReceiverUserProfileId(),
                 baseProto.getText(),
                 citation,
                 baseProto.getDate(),

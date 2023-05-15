@@ -20,28 +20,28 @@ package bisq.chat.channel.priv;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
+import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PrivateChatMessage;
-import bisq.common.observable.collection.ObservableArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.user.identity.UserIdentity;
-import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-@Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends ChatChannel<M> {
+    @Getter
     protected final UserIdentity myUserIdentity;
     // We persist the messages as they are NOT persisted in the P2P data store.
+    @Getter
     protected final ObservableSet<M> chatMessages = new ObservableSet<>();
-    protected transient final ObservableSet<PrivateChatChannelMember> privateChatChannelMembers = new ObservableSet<>();
-    protected transient final ObservableArray<UserProfile> peers = new ObservableArray<>();
+
+    private final transient Set<String> authorIdsSentLeaveMessage = new HashSet<>();
 
     public PrivateChatChannel(String id,
                               ChatChannelDomain chatChannelDomain,
@@ -51,23 +51,33 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage> extends C
         super(id, chatChannelDomain, chatChannelNotificationType);
 
         this.myUserIdentity = myUserIdentity;
-        this.chatMessages.addAll(chatMessages);
 
-        addChannelMember(new PrivateChatChannelMember(PrivateChatChannelMember.Type.SELF, myUserIdentity.getUserProfile()));
-    }
-
-    public void addChannelMember(PrivateChatChannelMember privateChatChannelMember) {
-        privateChatChannelMembers.add(privateChatChannelMember);
-        if (privateChatChannelMember.getType() != PrivateChatChannelMember.Type.SELF) {
-            peers.add(privateChatChannelMember.getUserProfile());
-        }
+        chatMessages.forEach(this::addChatMessage);
     }
 
     @Override
-    public Set<String> getUserProfileIdsOfAllChannelMembers() {
-        return privateChatChannelMembers.stream()
-                .map(PrivateChatChannelMember::getUserProfile)
-                .map(UserProfile::getId)
-                .collect(Collectors.toSet());
+    public boolean addChatMessage(M chatMessage) {
+        boolean changed = super.addChatMessage(chatMessage);
+        if (changed) {
+            // We might get normal message and leave message out of order (e.g. leave before normal msg).
+            // For that case we check if we have any leave message of that author already received.
+            // We do not support joining the same channel after leaving.
+            boolean isLeaveMessage = chatMessage.getChatMessageType() == ChatMessageType.LEAVE;
+            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
+            if (isLeaveMessage) {
+                authorIdsSentLeaveMessage.add(authorUserProfileId);
+            }
+            if (isLeaveMessage || authorIdsSentLeaveMessage.contains(authorUserProfileId)) {
+                userProfileIdsOfParticipants.remove(authorUserProfileId);
+            } else {
+                userProfileIdsOfParticipants.add(authorUserProfileId);
+            }
+        }
+        return changed;
+    }
+
+    // Called when removing expired messages. We do not support deleting private messages
+    public boolean removeChatMessage(M chatMessage) {
+        return super.removeChatMessage(chatMessage);
     }
 }

@@ -20,17 +20,11 @@ package bisq.chat.channel.pub;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.message.ChatMessage;
-import bisq.chat.message.ChatMessageType;
 import bisq.chat.message.PublicChatMessage;
-import bisq.common.data.Pair;
 import bisq.common.observable.collection.ObservableSet;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
 @ToString(callSuper = true)
@@ -46,37 +40,17 @@ public abstract class PublicChatChannel<M extends PublicChatMessage> extends Cha
     }
 
     @Override
-    public void addChatMessage(M chatMessage) {
-        chatMessages.add(chatMessage);
+    public boolean addChatMessage(M chatMessage) {
+        boolean changed = super.addChatMessage(chatMessage);
+        if (changed) {
+            userProfileIdsOfParticipants.add(chatMessage.getAuthorUserProfileId());
+        }
+
+        return changed;
     }
 
-    public void removeChatMessage(M chatMessage) {
-        chatMessages.remove(chatMessage);
-    }
-
-    public void removeChatMessages(Collection<M> messages) {
-        chatMessages.removeAll(messages);
-    }
-
-    //todo
-    @Override
-    public Set<String> getUserProfileIdsOfAllChannelMembers() {
-        Map<String, List<ChatMessage>> chatMessagesByAuthor = new HashMap<>();
-        getChatMessages().forEach(chatMessage -> {
-            String authorUserProfileId = chatMessage.getAuthorUserProfileId();
-            chatMessagesByAuthor.putIfAbsent(authorUserProfileId, new ArrayList<>());
-            chatMessagesByAuthor.get(authorUserProfileId).add(chatMessage);
-        });
-
-        return chatMessagesByAuthor.entrySet().stream()
-                .map(entry -> {
-                    List<ChatMessage> chatMessages = entry.getValue();
-                    chatMessages.sort(Comparator.comparing(chatMessage -> new Date(chatMessage.getDate())));
-                    ChatMessage lastChatMessage = chatMessages.get(chatMessages.size() - 1);
-                    return new Pair<>(entry.getKey(), lastChatMessage);
-                })
-                .filter(pair -> pair.getSecond().getChatMessageType() != ChatMessageType.LEAVE)
-                .map(Pair::getFirst)
-                .collect(Collectors.toSet());
+    // Called when removing expired messages or when user deletes a message
+    public boolean removeChatMessage(M chatMessage) {
+        return super.removeChatMessage(chatMessage);
     }
 }

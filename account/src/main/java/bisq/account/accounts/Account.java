@@ -83,7 +83,7 @@ public abstract class Account<T extends SettlementMethod> implements Proto {
         throw new UnresolvableProtobufMessageException(proto);
     }
 
-    abstract public bisq.account.protobuf.Account toProto();
+    public abstract bisq.account.protobuf.Account toProto();
 
     public Set<String> getTradeCurrencyCodes() {
         return tradeCurrencies.stream().map(TradeCurrency::getCode).collect(Collectors.toSet());

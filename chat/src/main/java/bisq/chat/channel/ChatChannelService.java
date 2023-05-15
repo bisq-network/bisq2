@@ -50,7 +50,9 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
 
     public void setChatChannelNotificationType(ChatChannel<? extends ChatMessage> chatChannel,
                                                ChatChannelNotificationType chatChannelNotificationType) {
-        chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
+        synchronized (this) {
+            chatChannel.getChatChannelNotificationType().set(chatChannelNotificationType);
+        }
         persist();
     }
 

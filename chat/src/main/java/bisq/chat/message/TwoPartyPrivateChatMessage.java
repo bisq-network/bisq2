@@ -40,7 +40,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                       ChatChannelDomain chatChannelDomain,
                                       String channelId,
                                       UserProfile sender,
-                                      String receiversId,
+                                      String receiverUserProfileId,
                                       String text,
                                       Optional<Citation> citation,
                                       long date,
@@ -50,7 +50,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 chatChannelDomain,
                 channelId,
                 sender,
-                receiversId,
+                receiverUserProfileId,
                 text,
                 citation,
                 date,
@@ -63,14 +63,14 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                                        ChatChannelDomain chatChannelDomain,
                                        String channelId,
                                        UserProfile sender,
-                                       String receiversId,
+                                       String receiverUserProfileId,
                                        String text,
                                        Optional<Citation> citation,
                                        long date,
                                        boolean wasEdited,
                                        ChatMessageType chatMessageType,
                                        MetaData metaData) {
-        super(messageId, chatChannelDomain, channelId, sender, receiversId, text, citation, date, wasEdited, chatMessageType, metaData);
+        super(messageId, chatChannelDomain, channelId, sender, receiverUserProfileId, text, citation, date, wasEdited, chatMessageType, metaData);
     }
 
     @Override
@@ -83,7 +83,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
     public bisq.chat.protobuf.ChatMessage toChatMessageProto() {
         return getChatMessageBuilder()
                 .setTwoPartyPrivateChatMessage(bisq.chat.protobuf.TwoPartyPrivateChatMessage.newBuilder()
-                        .setReceiversId(receiversId)
+                        .setReceiverUserProfileId(receiverUserProfileId)
                         .setSender(sender.toProto()))
                 .build();
     }
@@ -98,7 +98,7 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage {
                 ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
                 baseProto.getChannelId(),
                 UserProfile.fromProto(privateChatMessage.getSender()),
-                privateChatMessage.getReceiversId(),
+                privateChatMessage.getReceiverUserProfileId(),
                 baseProto.getText(),
                 citation,
                 baseProto.getDate(),

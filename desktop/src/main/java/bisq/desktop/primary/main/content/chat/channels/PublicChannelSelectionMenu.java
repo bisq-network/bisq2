@@ -49,7 +49,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
         super();
     }
 
-    protected static abstract class Controller<V extends ChannelSelectionMenu.View<M, ?>,
+    protected abstract static class Controller<V extends ChannelSelectionMenu.View<M, ?>,
             M extends Model,
             C extends ChatChannel<?>,
             S extends ChatChannelService<?, C, ?>,
@@ -71,7 +71,7 @@ public abstract class PublicChannelSelectionMenu<C extends PublicChatChannel<?>,
         }
     }
 
-    protected static abstract class View<M extends ChannelSelectionMenu.Model,
+    protected abstract static class View<M extends ChannelSelectionMenu.Model,
             C extends ChannelSelectionMenu.Controller<?, M, ?, ?, ?>> extends ChannelSelectionMenu.View<M, C> {
         protected View(M model, C controller) {
             super(model, controller);
