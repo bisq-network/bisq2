@@ -275,10 +275,12 @@ public class Tor {
     }
 
     private void setState(State newState) {
-        log.info("Set new state {}", newState);
-        checkArgument(newState.ordinal() > state.get().ordinal(),
-                "New state %s must have a higher ordinal as the current state %s",
-                newState, state.get());
-        state.set(newState);
+        state.getAndUpdate(previousState -> {
+            log.info("Set new state {}", newState);
+            checkArgument(newState.ordinal() > previousState.ordinal(),
+                    "New state %s must have a higher ordinal as the current state %s",
+                    newState, state.get());
+            return newState;
+        });
     }
 }
