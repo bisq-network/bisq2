@@ -179,7 +179,10 @@ public class Node implements Connection.Handler {
             switch (state.get()) {
                 case NEW: {
                     setState(STARTING);
-                    transport.initialize();
+
+                    CompletableFuture<Boolean> completableFuture = transport.initialize();
+                    completableFuture.join();
+
                     createServerAndListen(port);
                     setState(State.RUNNING);
                     break;

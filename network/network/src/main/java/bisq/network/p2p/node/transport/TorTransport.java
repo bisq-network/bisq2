@@ -54,15 +54,17 @@ public class TorTransport implements Transport {
     }
 
     @Override
-    public boolean initialize() {
+    public CompletableFuture<Boolean> initialize() {
         log.info("Initialize Tor");
-        try {
-            checkArgument(tor.start(), "Tor start failed");
-            return true;
-        } catch (Exception e) {
-            log.error("tor.start failed", e);
-            throw new ConnectionException(e);
-        }
+        return tor.startAsync(NetworkService.NETWORK_IO_POOL)
+                .thenApply(isSuccess -> {
+                    checkArgument(isSuccess, "Tor start failed");
+                    return true;
+                })
+                .exceptionally(throwable -> {
+                    log.error("tor.start failed", throwable);
+                    throw new ConnectionException(throwable);
+                });
     }
 
     @Override
