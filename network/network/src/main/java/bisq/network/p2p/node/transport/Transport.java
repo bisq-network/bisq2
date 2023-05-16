@@ -71,7 +71,7 @@ public interface Transport {
         }
     }
 
-    boolean initialize();
+    CompletableFuture<Boolean> initialize();
 
     ServerSocketResult getServerSocket(int port, String nodeId);
 

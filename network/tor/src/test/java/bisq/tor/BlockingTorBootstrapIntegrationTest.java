@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.util.concurrent.ForkJoinPool;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -19,7 +20,8 @@ public class BlockingTorBootstrapIntegrationTest extends AbstractTorTest {
             cleanTorInstallDir(torDirPathSpec);
 
             tor = Tor.getTor(torDirPathSpec);
-            tor.start();
+            tor.startAsync(ForkJoinPool.commonPool())
+                    .join();
             torServerSocket = startServer();
             onionAddress = torServerSocket.getOnionAddress()
                     .orElseThrow(() -> new IllegalStateException("Could not get onion address from tor server socket."));

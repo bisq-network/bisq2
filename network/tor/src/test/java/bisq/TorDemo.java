@@ -32,10 +32,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class TorDemo {
     private static final Logger log = LoggerFactory.getLogger(TorDemo.class);
@@ -50,7 +47,8 @@ public class TorDemo {
     private static void useBlockingAPI(String torDirPath) {
         try {
             tor = Tor.getTor(torDirPath);
-            tor.start();
+            tor.startAsync(ForkJoinPool.commonPool())
+                    .join();
             TorServerSocket torServerSocket = startServer();
             OnionAddress onionAddress = torServerSocket.getOnionAddress().orElseThrow();
             sendViaSocketFactory(tor, onionAddress);

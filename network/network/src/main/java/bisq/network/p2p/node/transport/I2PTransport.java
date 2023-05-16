@@ -82,9 +82,9 @@ public class I2PTransport implements Transport {
     }
 
     @Override
-    public boolean initialize() {
+    public CompletableFuture<Boolean> initialize() {
         if (initializeCalled) {
-            return true;
+            return CompletableFuture.completedFuture(true);
         }
         initializeCalled = true;
         log.debug("Initialize");
@@ -113,7 +113,7 @@ public class I2PTransport implements Transport {
         else {
             i2pClient = getClient(isEmbeddedRouter);
         }
-        return true;
+        return CompletableFuture.completedFuture(true);
     }
 
     private boolean isEmbeddedRouter() {

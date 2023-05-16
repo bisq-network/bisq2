@@ -23,7 +23,6 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import com.runjva.sourceforge.jsocks.protocol.SocksSocket;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -83,7 +82,6 @@ public class Tor {
     private final TorController torController;
     private final TorBootstrap torBootstrap;
     private final String torDirPath;
-    @Getter
     private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
     private final RetryPolicy<Boolean> retryPolicy;
     private int proxyPort = -1;
@@ -143,14 +141,11 @@ public class Tor {
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
-        return CompletableFuture.supplyAsync(() -> {
-            Thread.currentThread().setName("Tor.startAsync");
-            return start();
-        }, executor);
-    }
-
-    public boolean start() {
-        return Failsafe.with(retryPolicy).get(this::doStart);
+        return CompletableFuture.supplyAsync(() ->
+                        Failsafe.with(retryPolicy)
+                                .get(Tor.this::doStart),
+                executor
+        );
     }
 
     private boolean doStart() {

@@ -43,14 +43,14 @@ public class ClearNetTransport implements Transport {
     }
 
     @Override
-    public boolean initialize() {
+    public CompletableFuture<Boolean> initialize() {
         if (initializeCalled) {
-            return true;
+            return CompletableFuture.completedFuture(true);
         }
         //Uninterruptibles.sleepUninterruptibly(Duration.of(2, ChronoUnit.SECONDS));
         initializeCalled = true;
         log.debug("Initialize");
-        return true;
+        return CompletableFuture.completedFuture(true);
     }
 
     @Override
