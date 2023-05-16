@@ -112,8 +112,7 @@ public class ChatNotifications {
 
     private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
         ChatMessage chatMessage = chatNotification.getChatMessage();
-        boolean isMyMessage = userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
-        if (isMyMessage) {
+        if (chatMessage.isMyMessage(userIdentityService)) {
             return;
         }
 

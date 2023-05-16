@@ -64,6 +64,11 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
         return CompletableFuture.completedFuture(true);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     public ObservableSet<Market> getMarkets() {
         return persistableStore.markets;
     }
@@ -95,6 +100,7 @@ public class SettingsService implements PersistenceClient<SettingsStore>, Servic
     public Observable<Boolean> getTradeRulesConfirmed() {
         return persistableStore.tradeRulesConfirmed;
     }
+
 
     public Observable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;

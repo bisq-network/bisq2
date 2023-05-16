@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+//todo remove
 @Slf4j
 public abstract class PublicChatController<V extends ChatView, M extends ChatModel> extends ChatController<V, M> implements Controller {
     protected ChatChannelSelectionService chatChannelSelectionService;

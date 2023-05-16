@@ -100,7 +100,7 @@ public class ChannelSidebar {
         @Override
         public void onActivate() {
             model.getSortedListParticipantList()
-                    .sort(Comparator.comparing(item -> item.getChatUser().getUserName()));
+                    .setComparator(Comparator.comparing(item -> item.getChatUser().getUserName()));
         }
 
         @Override

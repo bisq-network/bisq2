@@ -28,7 +28,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -49,7 +51,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this(new Cookie(),
                 new HashMap<>(),
                 true,
-                new ObservableSet<>(MarketRepository.getAllFiatMarkets()),
+                new HashSet<>(MarketRepository.getAllFiatMarkets()),
                 MarketRepository.getDefault(),
                 1000,
                 true,
@@ -60,7 +62,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     public SettingsStore(Cookie cookie,
                          Map<String, Boolean> dontShowAgainMap,
                          boolean useAnimations,
-                         ObservableSet<Market> markets,
+                         Set<Market> markets,
                          Market selectedMarket,
                          long requiredTotalReputationScore,
                          boolean offersOnly,
@@ -69,8 +71,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.cookie = cookie;
         this.useAnimations.set(useAnimations);
         this.dontShowAgainMap.putAll(dontShowAgainMap);
-        this.markets.clear();
-        this.markets.addAll(markets);
+        this.markets.setAll(markets);
         this.selectedMarket.set(selectedMarket);
         this.requiredTotalReputationScore.set(requiredTotalReputationScore);
         this.offersOnly.set(offersOnly);
@@ -89,8 +90,7 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setRequiredTotalReputationScore(requiredTotalReputationScore.get())
                 .setOffersOnly(offersOnly.get())
                 .setTradeRulesConfirmed(tradeRulesConfirmed.get())
-                .setChatNotificationType(chatNotificationType.get().toProto())
-                .build();
+                .setChatNotificationType(chatNotificationType.get().toProto()).build();
     }
 
     public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {

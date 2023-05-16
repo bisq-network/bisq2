@@ -208,7 +208,7 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected boolean isNotMyMessage(ChatMessage chatMessage) {
-            return !userIdentityService.isUserIdentityPresent(chatMessage.getAuthorUserProfileId());
+            return chatMessage.isMyMessage(userIdentityService);
         }
 
         protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {

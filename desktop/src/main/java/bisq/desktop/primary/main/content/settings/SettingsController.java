@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.common.view.TabController;
+import bisq.desktop.primary.main.content.settings.accounts.PaymentAccountsController;
 import bisq.desktop.primary.main.content.settings.networkInfo.NetworkInfoController;
 import bisq.desktop.primary.main.content.settings.preferences.PreferencesController;
 import bisq.desktop.primary.main.content.settings.reputation.ReputationController;
@@ -58,17 +59,20 @@ public class SettingsController extends TabController<SettingsModel> {
             case USER_PROFILE: {
                 return Optional.of(new UserProfileController(applicationService));
             }
-            case REPUTATION: {
-                return Optional.of(new ReputationController(applicationService));
+            case BISQ_EASY_PAYMENT_ACCOUNTS: {
+                return Optional.of(new PaymentAccountsController(applicationService));
             }
             case PREFERENCES: {
                 return Optional.of(new PreferencesController(applicationService));
             }
-            case NETWORK_INFO: {
-                return Optional.of(new NetworkInfoController(applicationService));
+            case REPUTATION: {
+                return Optional.of(new ReputationController(applicationService));
             }
             case ROLES: {
                 return Optional.of(new RolesController(applicationService));
+            }
+            case NETWORK_INFO: {
+                return Optional.of(new NetworkInfoController(applicationService));
             }
             default: {
                 return Optional.empty();

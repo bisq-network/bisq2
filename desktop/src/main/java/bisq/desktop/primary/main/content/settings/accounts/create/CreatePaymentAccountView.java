@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.primary.main.content.settings.userProfile.create.step2;
+package bisq.desktop.primary.main.content.settings.accounts.create;
 
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.View;
@@ -28,23 +28,20 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileStep2Model, GenerateNewProfileStep2Controller> {
-    private final ImageView roboIconView;
-    private final MaterialTextField statement;
-    private final MaterialTextArea terms;
+public class CreatePaymentAccountView extends View<VBox, CreatePaymentAccountModel, CreatePaymentAccountController> {
+    private final MaterialTextField accountName;
+    private final MaterialTextArea accountData;
     private final Button saveButton, cancelButton;
-    private final Label nickName, nym;
-    protected final Label headLineLabel;
+    private final Label headLineLabel;
     private Scene rootScene;
 
-    public GenerateNewProfileStep2View(GenerateNewProfileStep2Model model, GenerateNewProfileStep2Controller controller) {
+    public CreatePaymentAccountView(CreatePaymentAccountModel model, CreatePaymentAccountController controller) {
         super(new VBox(), model, controller);
 
         root.setAlignment(Pos.CENTER);
@@ -52,49 +49,32 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
         root.setPadding(new Insets(10, 0, 10, 0));
         root.setPrefWidth(OverlayModel.WIDTH);
         root.setPrefHeight(OverlayModel.HEIGHT);
-
-        headLineLabel = new Label(Res.get("userProfile.step2.headline"));
+        int width = 600;
+        headLineLabel = new Label(Res.get("settings.paymentAccounts.createAccount.headline"));
         headLineLabel.getStyleClass().add("bisq-text-headline-2");
 
-        Label subtitleLabel = new Label(Res.get("userProfile.step2.subTitle"));
+        Label subtitleLabel = new Label(Res.get("settings.paymentAccounts.createAccount.subtitle"));
         subtitleLabel.setTextAlignment(TextAlignment.CENTER);
-        subtitleLabel.setMaxWidth(400);
+        subtitleLabel.setMaxWidth(width);
         subtitleLabel.setMinHeight(40); // does not wrap without that...
         subtitleLabel.getStyleClass().addAll("bisq-text-3", "wrap-text");
 
-        nickName = new Label();
-        nickName.getStyleClass().addAll("bisq-text-9", "font-semi-bold");
-        nickName.setAlignment(Pos.TOP_CENTER);
+        accountName = new MaterialTextField(Res.get("settings.paymentAccounts.createAccount.accountName"),
+                Res.get("settings.paymentAccounts.createAccount.accountName.prompt"));
+        accountName.setPrefWidth(width);
+        accountData = new MaterialTextArea(Res.get("settings.paymentAccounts.createAccount.accountName"),
+                Res.get("settings.paymentAccounts.createAccount.accountData.prompt"));
+        accountData.setPrefWidth(width);
+        accountData.setFixedHeight(200);
 
-        roboIconView = new ImageView();
-        roboIconView.setFitWidth(128);
-        roboIconView.setFitHeight(128);
-
-        nym = new Label();
-        nym.getStyleClass().addAll("bisq-text-7");
-        nym.setAlignment(Pos.TOP_CENTER);
-
-        int width = 250;
-        VBox roboVBox = new VBox(8, nickName, roboIconView, nym);
-        roboVBox.setAlignment(Pos.TOP_CENTER);
-        roboVBox.setPrefWidth(width);
-        roboVBox.setPrefHeight(200);
-
-        statement = new MaterialTextField(Res.get("userProfile.statement"), Res.get("userProfile.statement.prompt"));
-        statement.setPrefWidth(width);
-
-        terms = new MaterialTextArea(Res.get("userProfile.terms"), Res.get("userProfile.terms.prompt"));
-        terms.setPrefWidth(width);
-        terms.setFixedHeight(100);
-
-        VBox fieldsAndButtonsVBox = new VBox(20, statement, terms);
+        VBox fieldsAndButtonsVBox = new VBox(20, accountName, accountData);
         fieldsAndButtonsVBox.setPadding(new Insets(50, 0, 0, 0));
         fieldsAndButtonsVBox.setPrefWidth(width);
         fieldsAndButtonsVBox.setPrefHeight(200);
         fieldsAndButtonsVBox.setAlignment(Pos.CENTER);
 
         HBox.setMargin(fieldsAndButtonsVBox, new Insets(-55, 0, 0, 0));
-        HBox centerHBox = new HBox(10, roboVBox, fieldsAndButtonsVBox);
+        HBox centerHBox = new HBox(10, fieldsAndButtonsVBox);
         centerHBox.setAlignment(Pos.TOP_CENTER);
 
         cancelButton = new Button(Res.get("cancel"));
@@ -117,11 +97,10 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
 
     @Override
     protected void onViewAttached() {
-        roboIconView.imageProperty().bind(model.getRoboHashImage());
-        nickName.textProperty().bind(model.getNickName());
-        nym.textProperty().bind(model.getNym());
-        terms.textProperty().bindBidirectional(model.getTerms());
-        statement.textProperty().bindBidirectional(model.getBio());
+        accountData.textProperty().bindBidirectional(model.accountDataProperty());
+        accountName.textProperty().bindBidirectional(model.accountNameProperty());
+        saveButton.disableProperty().bind(model.saveButtonDisabledProperty());
+
         saveButton.setOnAction((event) -> controller.onSave());
         cancelButton.setOnAction((event) -> controller.onCancel());
 
@@ -135,11 +114,13 @@ public class GenerateNewProfileStep2View extends View<VBox, GenerateNewProfileSt
 
     @Override
     protected void onViewDetached() {
-        roboIconView.imageProperty().unbind();
-        nickName.textProperty().unbind();
-        nym.textProperty().unbind();
-        terms.textProperty().unbindBidirectional(model.getTerms());
-        statement.textProperty().unbindBidirectional(model.getBio());
+        accountData.textProperty().unbindBidirectional(model.getAccountData());
+        accountName.textProperty().unbindBidirectional(model.getAccountName());
+        saveButton.disableProperty().unbind();
+
+        saveButton.setOnAction(null);
+        cancelButton.setOnAction(null);
+
         if (rootScene != null) {
             rootScene.setOnKeyReleased(null);
         }

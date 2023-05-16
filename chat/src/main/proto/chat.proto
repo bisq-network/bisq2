@@ -46,10 +46,8 @@ enum ChatChannelDomain {
 }
 
 message Citation {
-  string nym = 1;
-  string nickName = 2;
-  bytes pubKeyHash = 3;
-  string message = 4;
+  string authorUserProfileId = 1;
+  string text = 2;
 }
 
 message ChatMessage {
