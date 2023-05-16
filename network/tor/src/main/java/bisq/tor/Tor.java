@@ -118,7 +118,15 @@ public class Tor {
                 .build();
     }
 
-    public void shutdown() {
+    public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
+        return CompletableFuture.supplyAsync(() ->
+                        Failsafe.with(retryPolicy)
+                                .get(Tor.this::doStart),
+                executor
+        );
+    }
+
+    public synchronized void shutdown() {
         if (state.get() == State.STOPPING || state.get() == State.TERMINATED) {
             return;
         }
@@ -133,15 +141,7 @@ public class Tor {
         setState(State.TERMINATED);
     }
 
-    public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
-        return CompletableFuture.supplyAsync(() ->
-                        Failsafe.with(retryPolicy)
-                                .get(Tor.this::doStart),
-                executor
-        );
-    }
-
-    private boolean doStart() {
+    private synchronized boolean doStart() {
         switch (state.get()) {
             case NEW: {
                 setState(STARTING);
