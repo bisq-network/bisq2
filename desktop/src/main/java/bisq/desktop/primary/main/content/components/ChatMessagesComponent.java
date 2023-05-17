@@ -82,8 +82,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ChatMessagesComponent {
     private final Controller controller;
 
-    public ChatMessagesComponent(DefaultApplicationService applicationService, ChatChannelDomain chatChannelDomain) {
-        controller = new Controller(applicationService, chatChannelDomain);
+    public ChatMessagesComponent(DefaultApplicationService applicationService,
+                                 ChatChannelDomain chatChannelDomain,
+                                 Consumer<UserProfile> openUserProfileSidebarHandler) {
+        controller = new Controller(applicationService,
+                chatChannelDomain,
+                openUserProfileSidebarHandler);
     }
 
     public Pane getRoot() {
@@ -96,10 +100,6 @@ public class ChatMessagesComponent {
 
     public void setSearchPredicate(Predicate<? super ChatMessagesListView.ChatMessageListItem<? extends ChatMessage>> predicate) {
         controller.chatMessagesListView.setSearchPredicate(predicate);
-    }
-
-    public void setOnShowChatUserDetails(Consumer<UserProfile> handler) {
-        controller.model.showChatUserDetailsHandler = Optional.of(handler);
     }
 
     public void resetSelectedChatMessage() {
@@ -118,6 +118,7 @@ public class ChatMessagesComponent {
         private final Model model;
         @Getter
         private final View view;
+        private final Consumer<UserProfile> openUserProfileSidebarHandler;
         private final UserIdentityService userIdentityService;
         private final QuotedMessageBlock citationBlock;
         private final ChatMessagesListView chatMessagesListView;
@@ -133,7 +134,10 @@ public class ChatMessagesComponent {
         private Subscription selectedPaymentAccountSubscription;
 
         private Controller(DefaultApplicationService applicationService,
-                           ChatChannelDomain chatChannelDomain) {
+                           ChatChannelDomain chatChannelDomain,
+                           Consumer<UserProfile> openUserProfileSidebarHandler) {
+            this.openUserProfileSidebarHandler = openUserProfileSidebarHandler;
+
             chatService = applicationService.getChatService();
             settingsService = applicationService.getSettingsService();
             userIdentityService = applicationService.getUserService().getUserIdentityService();
@@ -251,8 +255,8 @@ public class ChatMessagesComponent {
 
         private void showChatUserDetailsHandler(ChatMessage chatMessage) {
             model.selectedChatMessage = chatMessage;
-            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId()).ifPresent(author ->
-                    model.showChatUserDetailsHandler.ifPresent(handler -> handler.accept(author)));
+            userProfileService.findUserProfile(chatMessage.getAuthorUserProfileId())
+                    .ifPresent(openUserProfileSidebarHandler::accept);
         }
 
         private void mentionUserHandler(UserProfile userProfile) {
@@ -520,13 +524,11 @@ public class ChatMessagesComponent {
         private final ChatService chatService;
         @Nullable
         private ChatMessage selectedChatMessage;
-        private Optional<Consumer<UserProfile>> showChatUserDetailsHandler = Optional.empty();
 
         private Model(ChatChannelDomain chatChannelDomain, ChatService chatService) {
             this.chatChannelDomain = chatChannelDomain;
             this.chatService = chatService;
         }
-
 
         String getChannelTitle(ChatChannel<?> chatChannel) {
             return chatService.findChatChannelService(chatChannel)

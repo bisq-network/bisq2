@@ -90,11 +90,15 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         userProfileService = applicationService.getUserService().getUserProfileService();
         reputationService = applicationService.getUserService().getReputationService();
         twoPartyPrivateChannelSelectionMenu = new TwoPartyPrivateChannelSelectionMenu(applicationService, chatChannelDomain);
-        chatMessagesComponent = new ChatMessagesComponent(applicationService, chatChannelDomain);
-        channelSidebar = new ChannelSidebar(applicationService, () -> {
-            onCloseSideBar();
-            chatMessagesComponent.resetSelectedChatMessage();
-        });
+        chatMessagesComponent = new ChatMessagesComponent(applicationService,
+                chatChannelDomain,
+                this::openUserProfileSidebar);
+        channelSidebar = new ChannelSidebar(applicationService,
+                () -> {
+                    onCloseSideBar();
+                    chatMessagesComponent.resetSelectedChatMessage();
+                },
+                this::openUserProfileSidebar);
         quotedMessageBlock = new QuotedMessageBlock(applicationService);
 
         createServices(chatChannelDomain);
@@ -111,27 +115,6 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
 
     @Override
     public void onActivate() {
-        chatMessagesComponent.setOnShowChatUserDetails(userProfile -> {
-            onCloseSideBar();
-            model.getSideBarVisible().set(true);
-
-            UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
-                    userIdentityService,
-                    chatService,
-                    reputationService,
-                    userProfile,
-                    () -> {
-                        onCloseSideBar();
-                        chatMessagesComponent.resetSelectedChatMessage();
-                    });
-            model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
-            userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::createAndSelectTwoPartyPrivateChatChannel);
-            userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
-            userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
-            model.setChatUserDetails(Optional.of(userProfileSidebar));
-            model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
-        });
-
         model.getSearchText().set("");
         searchTextPin = EasyBind.subscribe(model.getSearchText(), searchText -> {
             if (searchText == null || searchText.isEmpty()) {
@@ -152,6 +135,27 @@ public abstract class ChatController<V extends ChatView, M extends ChatModel> ex
         selectedChannelPin.unbind();
         searchTextPin.unsubscribe();
         twoPartyPrivateChatChannelsPin.unbind();
+    }
+
+    private void openUserProfileSidebar(UserProfile userProfile) {
+        onCloseSideBar();
+        model.getSideBarVisible().set(true);
+
+        UserProfileSidebar userProfileSidebar = new UserProfileSidebar(userProfileService,
+                userIdentityService,
+                chatService,
+                reputationService,
+                userProfile,
+                () -> {
+                    onCloseSideBar();
+                    chatMessagesComponent.resetSelectedChatMessage();
+                });
+        model.getSideBarWidth().set(userProfileSidebar.getRoot().getMinWidth());
+        userProfileSidebar.setOnSendPrivateMessageHandler(chatMessagesComponent::createAndSelectTwoPartyPrivateChatChannel);
+        userProfileSidebar.setIgnoreUserStateHandler(chatMessagesComponent::refreshMessages);
+        userProfileSidebar.setOnMentionUserHandler(chatMessagesComponent::mentionUser);
+        model.setChatUserDetails(Optional.of(userProfileSidebar));
+        model.getChatUserDetailsRoot().set(userProfileSidebar.getRoot());
     }
 
     protected void chatChannelChanged(@Nullable ChatChannel<? extends ChatMessage> chatChannel) {
