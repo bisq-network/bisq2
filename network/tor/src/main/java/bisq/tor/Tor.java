@@ -119,9 +119,9 @@ public class Tor {
     }
 
     public CompletableFuture<Boolean> startAsync(ExecutorService executor) {
-        return CompletableFuture.supplyAsync(() ->
-                        Failsafe.with(retryPolicy)
-                                .get(Tor.this::doStart),
+        return CompletableFuture.supplyAsync(
+                () -> Failsafe.with(retryPolicy)
+                        .get(Tor.this::doStart),
                 executor
         );
     }
