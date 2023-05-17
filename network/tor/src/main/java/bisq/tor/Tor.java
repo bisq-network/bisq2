@@ -43,8 +43,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static bisq.tor.Tor.State.RUNNING;
-import static bisq.tor.Tor.State.STARTING;
+import static bisq.tor.Tor.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
@@ -141,24 +140,13 @@ public class Tor {
         setState(State.TERMINATED);
     }
 
-    private synchronized boolean doStart() {
-        switch (state.get()) {
+    private boolean doStart() {
+        State previousState = state.compareAndExchange(NEW, STARTING);
+        switch (previousState) {
             case NEW: {
-                setState(STARTING);
-                long ts = System.currentTimeMillis();
-                try {
-                    int controlPort = torBootstrap.start();
-                    torController.start(controlPort);
-                    proxyPort = torController.getProxyPort();
-                } catch (Exception exception) {
-                    torBootstrap.deleteVersionFile();
-                    log.error("Starting tor failed.", exception);
-                    shutdown();
-                    return false;
-                }
-                log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
+                boolean isSuccess = startTor();
                 setState(RUNNING);
-                return true;
+                return isSuccess;
             }
             case STARTING: {
                 throw new IllegalStateException("Already starting.");
@@ -174,6 +162,22 @@ public class Tor {
                 throw new IllegalStateException("Unhandled state " + state.get());
             }
         }
+    }
+
+    private boolean startTor() {
+        long ts = System.currentTimeMillis();
+        try {
+            int controlPort = torBootstrap.start();
+            torController.start(controlPort);
+            proxyPort = torController.getProxyPort();
+        } catch (Exception exception) {
+            torBootstrap.deleteVersionFile();
+            log.error("Starting tor failed.", exception);
+            shutdown();
+            return false;
+        }
+        log.info(">> Starting Tor took {} ms", System.currentTimeMillis() - ts);
+        return true;
     }
 
     public TorServerSocket getTorServerSocket() throws IOException {
