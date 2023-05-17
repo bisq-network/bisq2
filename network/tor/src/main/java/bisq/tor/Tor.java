@@ -41,9 +41,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 
-import static bisq.tor.Tor.State.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.io.File.separator;
 
@@ -65,39 +63,28 @@ import static java.io.File.separator;
 public class Tor {
     public static final String VERSION = "0.1.0";
 
-    public enum State {
-        NEW,
-        STARTING,
-        RUNNING,
-        STOPPING,
-        TERMINATED;
-
-        public boolean isStartingOrRunning() {
-            return this == State.STARTING || this == State.RUNNING;
-        }
-    }
-
     private static Optional<Tor> singletonInstance = Optional.empty();
 
     private final TorController torController;
     private final TorBootstrap torBootstrap;
     private final String torDirPath;
-    private final AtomicReference<State> state = new AtomicReference<>(State.NEW);
+    private final TorContext torContext;
     private int proxyPort = -1;
 
-    public static Tor getTor(String torDirPath) {
+    public static Tor getTor(String torDirPath, TorContext torContext) {
         if (singletonInstance.isPresent()) {
             return singletonInstance.get();
         }
 
-        Tor tor = new Tor(torDirPath);
+        Tor tor = new Tor(torDirPath, torContext);
         singletonInstance = Optional.of(tor);
         return tor;
     }
 
-    private Tor(String torDirPath) {
+    private Tor(String torDirPath, TorContext torContext) {
         this.torDirPath = torDirPath;
         torBootstrap = new TorBootstrap(torDirPath);
+        this.torContext = torContext;
         torController = new TorController(torBootstrap.getCookieFile());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -111,7 +98,7 @@ public class Tor {
                 () -> {
                     var retryPolicy = RetryPolicy.<Boolean>builder()
                             .handle(IllegalStateException.class)
-                            .handleResultIf(result -> state.get() == STARTING)
+                            .handleResultIf(result -> torContext.getState() == TorContext.State.STARTING)
                             .withBackoff(Duration.ofSeconds(3), Duration.ofSeconds(30))
                             .withJitter(0.25)
                             .withMaxDuration(Duration.ofMinutes(5)).withMaxRetries(30)
@@ -130,8 +117,8 @@ public class Tor {
     }
 
     public void shutdown() {
-        State previousState = state.getAndUpdate(
-                state -> state.isStartingOrRunning() ? State.STOPPING : state
+        TorContext.State previousState = torContext.getAndUpdateStateAtomically(
+                state -> state.isStartingOrRunning() ? TorContext.State.STOPPING : state
         );
 
         if (!previousState.isStartingOrRunning()) {
@@ -145,15 +132,15 @@ public class Tor {
         torController.shutdown();
 
         log.info("Tor shutdown completed. Took {} ms.", System.currentTimeMillis() - ts); // Usually takes 20-40 ms
-        setState(State.TERMINATED);
+        torContext.setState(TorContext.State.TERMINATED);
     }
 
     private boolean doStart() {
-        State previousState = state.compareAndExchange(NEW, STARTING);
+        TorContext.State previousState = torContext.compareAndExchangeState(TorContext.State.NEW, TorContext.State.STARTING);
         switch (previousState) {
             case NEW: {
                 boolean isSuccess = startTor();
-                setState(RUNNING);
+                torContext.setState(TorContext.State.RUNNING);
                 return isSuccess;
             }
             case STARTING: {
@@ -167,7 +154,7 @@ public class Tor {
             case TERMINATED:
                 return false;
             default: {
-                throw new IllegalStateException("Unhandled state " + state.get());
+                throw new IllegalStateException("Unhandled state " + torContext.getState());
             }
         }
     }
@@ -189,14 +176,14 @@ public class Tor {
     }
 
     public TorServerSocket getTorServerSocket() throws IOException {
-        checkArgument(state.get() == RUNNING,
-                "Invalid state at Tor.getTorServerSocket. state=" + state.get());
+        checkArgument(torContext.getState() == TorContext.State.RUNNING,
+                "Invalid state at Tor.getTorServerSocket. state=" + torContext.getState());
         return new TorServerSocket(torDirPath, torController);
     }
 
     public Proxy getProxy(@Nullable String streamId) throws IOException {
-        checkArgument(state.get() == RUNNING,
-                "Invalid state at Tor.getProxy. state=" + state.get());
+        checkArgument(torContext.getState() == TorContext.State.RUNNING,
+                "Invalid state at Tor.getProxy. state=" + torContext.getState());
         Socks5Proxy socks5Proxy = getSocks5Proxy(streamId);
         InetSocketAddress socketAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         return new Proxy(Proxy.Type.SOCKS, socketAddress);
@@ -224,8 +211,8 @@ public class Tor {
     }
 
     public Socks5Proxy getSocks5Proxy(@Nullable String streamId) throws IOException {
-        checkArgument(state.get() == RUNNING,
-                "Invalid state at Tor.getSocks5Proxy. state=" + state.get());
+        checkArgument(torContext.getState() == TorContext.State.RUNNING,
+                "Invalid state at Tor.getSocks5Proxy. state=" + torContext.getState());
         checkArgument(proxyPort > -1, "proxyPort must be defined");
         Socks5Proxy socks5Proxy = new Socks5Proxy(Constants.LOCALHOST, proxyPort);
         socks5Proxy.resolveAddrLocally(false);
@@ -284,15 +271,5 @@ public class Tor {
 
     public boolean isHiddenServiceAvailable(String onionUrl) {
         return torController.isHiddenServiceAvailable(onionUrl);
-    }
-
-    private void setState(State newState) {
-        state.getAndUpdate(previousState -> {
-            log.info("Set new state {}", newState);
-            checkArgument(newState.ordinal() > previousState.ordinal(),
-                    "New state %s must have a higher ordinal as the current state %s",
-                    newState, state.get());
-            return newState;
-        });
     }
 }
