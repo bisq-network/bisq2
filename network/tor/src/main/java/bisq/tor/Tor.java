@@ -71,7 +71,11 @@ public class Tor {
         STARTING,
         RUNNING,
         STOPPING,
-        TERMINATED
+        TERMINATED;
+
+        public boolean isStartingOrRunning() {
+            return this == State.STARTING || this == State.RUNNING;
+        }
     }
 
     private static Optional<Tor> singletonInstance = Optional.empty();
@@ -126,13 +130,17 @@ public class Tor {
         );
     }
 
-    public synchronized void shutdown() {
-        if (state.get() == State.STOPPING || state.get() == State.TERMINATED) {
+    public void shutdown() {
+        State previousState = state.getAndUpdate(
+                state -> state.isStartingOrRunning() ? State.STOPPING : state
+        );
+
+        if (!previousState.isStartingOrRunning()) {
             return;
         }
+
         log.info("Shutdown tor.");
         long ts = System.currentTimeMillis();
-        setState(State.STOPPING);
 
         torBootstrap.shutdown();
         torController.shutdown();
