@@ -113,7 +113,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
 
         LeftNavButton chat = createNavigationButton(Res.get("discussion"),
                 "nav-chat",
-                NavigationTarget.DISCUSS, false);
+                NavigationTarget.DISCUSSION, false);
 
         LeftNavButton events = createNavigationButton(Res.get("events"),
                 "nav-events",
@@ -193,7 +193,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
             AtomicInteger duration = new AtomicInteger(400);
             if (menuExpanded) {
                 UIScheduler.run(() -> model.getLeftNavButtons()
-                                .forEach(e -> e.setMenuExpanded(true, duration.get() / 2)))
+                                .forEach(e -> e.setHorizontalExpanded(true, duration.get() / 2)))
                         .after(duration.get() / 2);
                 Transitions.animateLeftNavigationWidth(mainMenuItems, EXPANDED_WIDTH, duration.get());
                 networkInfoBox.setPrefWidth(width + MARKER_WIDTH);
@@ -226,7 +226,7 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
                 horizontalExpandIcon.setVisible(true);
                 horizontalExpandIcon.setManaged(true);
 
-                model.getLeftNavButtons().forEach(e -> e.setMenuExpanded(false, duration.get() / 2));
+                model.getLeftNavButtons().forEach(e -> e.setHorizontalExpanded(false, duration.get() / 2));
                 UIScheduler.run(() -> {
                             Transitions.animateLeftNavigationWidth(mainMenuItems, COLLAPSED_WIDTH, duration.get());
                             horizontalCollapseIcon.setVisible(false);
@@ -267,9 +267,9 @@ public class LeftNavView extends View<AnchorPane, LeftNavModel, LeftNavControlle
         });
 
         tradeAppsSubMenuExpandedPin = EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
-                tradeAppsButton::setSubMenuExpanded);
+                tradeAppsButton::setVerticalExpanded);
         learnsSubMenuExpandedPin = EasyBind.subscribe(model.getLearnsSubMenuExpanded(),
-                learnButton::setSubMenuExpanded);
+                learnButton::setVerticalExpanded);
     }
 
     @Override

@@ -18,11 +18,16 @@
 package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.notifications.DesktopNotifications;
+import bisq.desktop.notifications.chat.ChatNotifications;
+import bisq.presentation.notifications.NotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.EasyBind;
 
 import java.util.Optional;
 import java.util.Set;
@@ -32,10 +37,46 @@ public class LeftNavController implements Controller {
     private final LeftNavModel model;
     @Getter
     private final LeftNavView view;
+    private final ChatNotifications chatNotifications;
+    private final NotificationsService notificationsService;
+    private final NotificationsService.Listener notificationListener;
 
-    public LeftNavController(DefaultApplicationService applicationService) {
+    public LeftNavController(DefaultApplicationService applicationService, DesktopNotifications desktopNotifications) {
+        chatNotifications = desktopNotifications.getChatNotifications();
+        notificationsService = applicationService.getNotificationsService();
+
         model = new LeftNavModel(applicationService);
         view = new LeftNavView(model, this);
+
+        notificationListener = new NotificationsService.Listener() {
+            @Override
+            public void onNotificationSent(String notificationId, String title, String message) {
+            }
+
+            @Override
+            public void onAdded(String notificationId) {
+                notificationIdsChanged(notificationId);
+            }
+
+            @Override
+            public void onRemoved(String notificationId) {
+                notificationIdsChanged(notificationId);
+            }
+        };
+    }
+
+    @Override
+    public void onActivate() {
+        notificationsService.addListener(notificationListener);
+        EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
+                tradeAppsSubMenuExpanded -> {
+                    notificationsService.getNotificationIds().forEach(this::notificationIdsChanged);
+                });
+    }
+
+    @Override
+    public void onDeactivate() {
+        notificationsService.removeListener(notificationListener);
     }
 
     public void setNavigationTarget(NavigationTarget navigationTarget) {
@@ -78,14 +119,6 @@ public class LeftNavController implements Controller {
         }
     }
 
-    @Override
-    public void onActivate() {
-    }
-
-    @Override
-    public void onDeactivate() {
-    }
-
     void onNavigationTargetSelected(NavigationTarget navigationTarget) {
         findNavButton(navigationTarget).ifPresent(leftNavButton -> model.getSelectedNavigationButton().set(leftNavButton));
         model.getSelectedNavigationTarget().set(navigationTarget);
@@ -113,5 +146,36 @@ public class LeftNavController implements Controller {
         return model.getLeftNavButtons().stream()
                 .filter(leftNavButton -> navigationTarget == leftNavButton.getNavigationTarget())
                 .findAny();
+    }
+
+    private void notificationIdsChanged(String notificationId) {
+        ChatChannelDomain chatChannelDomain = ChatNotifications.getChatChannelDomain(notificationId);
+        findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
+                leftNavButton.setNumNotifications(chatNotifications.getNumNotificationsForChatChannelDomain(chatChannelDomain)));
+
+    }
+
+    private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {
+        return findNavigationTarget(chatChannelDomain)
+                .flatMap(this::findNavButton);
+    }
+
+    private Optional<NavigationTarget> findNavigationTarget(ChatChannelDomain chatChannelDomain) {
+        switch (chatChannelDomain) {
+            case BISQ_EASY:
+                if (model.getTradeAppsSubMenuExpanded().get()) {
+                    return Optional.of(NavigationTarget.BISQ_EASY);
+                } else {
+                    return Optional.of(NavigationTarget.TRADE_OVERVIEW);
+                }
+            case DISCUSSION:
+                return Optional.of(NavigationTarget.DISCUSSION);
+            case EVENTS:
+                return Optional.of(NavigationTarget.EVENTS);
+            case SUPPORT:
+                return Optional.of(NavigationTarget.SUPPORT);
+            default:
+                return Optional.empty();
+        }
     }
 }

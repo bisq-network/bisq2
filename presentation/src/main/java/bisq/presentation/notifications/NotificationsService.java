@@ -19,6 +19,7 @@ package bisq.presentation.notifications;
 
 
 import bisq.common.application.Service;
+import bisq.common.observable.Observable;
 import bisq.common.util.OperatingSystem;
 import bisq.common.util.OsUtils;
 import bisq.persistence.Persistence;
@@ -29,19 +30,33 @@ import bisq.presentation.notifications.osx.OsxNotifications;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class NotificationsService implements PersistenceClient<NotificationsStore>, Service {
+    public interface Listener {
+        void onNotificationSent(String notificationId, String title, String message);
+
+        void onAdded(String notificationId);
+
+        void onRemoved(String notificationId);
+    }
+
     @Getter
     private final NotificationsStore persistableStore = new NotificationsStore();
     @Getter
     private final Persistence<NotificationsStore> persistence;
     private NotificationsDelegate delegate;
+    @Getter
+    private final Observable<Integer> numNotifications = new Observable<>();
+    private final Set<Listener> listeners = new HashSet<>();
 
     public NotificationsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, persistableStore);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     // Service
@@ -55,17 +70,36 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
         return CompletableFuture.completedFuture(true);
     }
 
-    public void notify(String title, String message) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public void notify(String notificationId, String title, String message) {
         getNotificationsDelegate().notify(title, message);
+        listeners.forEach(listener -> listener.onNotificationSent(notificationId, title, message));
     }
 
-    public boolean contains(String id) {
-        return persistableStore.getDateByMessageId().containsKey(id);
+    public boolean contains(String notificationId) {
+        return persistableStore.getDateByNotificationId().containsKey(notificationId);
     }
 
-    public void add(String id) {
-        persistableStore.getDateByMessageId().put(id, System.currentTimeMillis());
+    public void add(String notificationId) {
+        persistableStore.getDateByNotificationId().put(notificationId, System.currentTimeMillis());
+        numNotifications.set(persistableStore.getDateByNotificationId().size());
+        listeners.forEach(listener -> listener.onAdded(notificationId));
         persist();
+    }
+
+    public void remove(String notificationId) {
+        persistableStore.getDateByNotificationId().remove(notificationId);
+        numNotifications.set(persistableStore.getDateByNotificationId().size());
+        listeners.forEach(listener -> listener.onRemoved(notificationId));
+        persist();
+    }
+
+    public Set<String> getNotificationIds() {
+        return persistableStore.getDateByNotificationId().keySet();
     }
 
     private NotificationsDelegate getNotificationsDelegate() {
@@ -81,5 +115,13 @@ public class NotificationsService implements PersistenceClient<NotificationsStor
             }
         }
         return delegate;
+    }
+
+    public void addListener(Listener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
     }
 }

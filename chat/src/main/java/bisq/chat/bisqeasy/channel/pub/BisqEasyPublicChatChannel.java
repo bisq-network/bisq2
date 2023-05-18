@@ -35,7 +35,7 @@ import java.util.HashSet;
 public final class BisqEasyPublicChatChannel extends PublicChatChannel<BisqEasyPublicChatMessage> {
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY.name().toLowerCase() + "." +
-                market.getBaseCurrencyCode() + "." +
+                market.getBaseCurrencyCode() + "-" +
                 market.getQuoteCurrencyCode();
     }
 

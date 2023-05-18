@@ -23,5 +23,5 @@ option java_multiple_files = true;
 
 
 message NotificationsStore {
-  map<string, uint64> dateByMessageId = 1;
+  map<string, uint64> dateByNotificationId = 1;
 }

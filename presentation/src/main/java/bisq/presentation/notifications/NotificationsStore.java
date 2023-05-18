@@ -30,26 +30,26 @@ import java.util.stream.Collectors;
 public final class NotificationsStore implements PersistableStore<NotificationsStore> {
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(30);
 
-    private final Map<String, Long> dateByMessageId = new ConcurrentHashMap<>();
+    private final Map<String, Long> dateByNotificationId = new ConcurrentHashMap<>();
 
     public NotificationsStore() {
     }
 
-    private NotificationsStore(Map<String, Long> dateByMessageId) {
-        this.dateByMessageId.putAll(dateByMessageId);
+    private NotificationsStore(Map<String, Long> dateByNotificationId) {
+        this.dateByNotificationId.putAll(dateByNotificationId);
     }
 
     @Override
     public bisq.presentation.protobuf.NotificationsStore toProto() {
         return bisq.presentation.protobuf.NotificationsStore.newBuilder()
-                .putAllDateByMessageId(dateByMessageId.entrySet().stream()
+                .putAllDateByNotificationId(dateByNotificationId.entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
 
                 .build();
     }
 
     public static PersistableStore<?> fromProto(bisq.presentation.protobuf.NotificationsStore proto) {
-        return new NotificationsStore(proto.getDateByMessageIdMap().entrySet().stream()
+        return new NotificationsStore(proto.getDateByNotificationIdMap().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
 
@@ -66,22 +66,22 @@ public final class NotificationsStore implements PersistableStore<NotificationsS
 
     @Override
     public NotificationsStore getClone() {
-        return new NotificationsStore(dateByMessageId);
+        return new NotificationsStore(dateByNotificationId);
     }
 
     @Override
     public void applyPersisted(NotificationsStore persisted) {
-        dateByMessageId.clear();
-        dateByMessageId.putAll(prune(persisted.dateByMessageId));
+        dateByNotificationId.clear();
+        dateByNotificationId.putAll(prune(persisted.dateByNotificationId));
     }
 
-    Map<String, Long> getDateByMessageId() {
-        return dateByMessageId;
+    Map<String, Long> getDateByNotificationId() {
+        return dateByNotificationId;
     }
 
-    private Map<String, Long> prune(Map<String, Long> dateByMessageId) {
+    private Map<String, Long> prune(Map<String, Long> dateByNotificationId) {
         long pruneDate = System.currentTimeMillis() - MAX_AGE;
-        return dateByMessageId.entrySet().stream()
+        return dateByNotificationId.entrySet().stream()
                 .filter(e -> e.getValue() > pruneDate)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }

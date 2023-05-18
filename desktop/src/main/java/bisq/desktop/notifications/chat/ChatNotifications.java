@@ -17,6 +17,7 @@
 
 package bisq.desktop.notifications.chat;
 
+import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -25,6 +26,7 @@ import bisq.chat.bisqeasy.channel.pub.BisqEasyPublicChatChannelService;
 import bisq.chat.bisqeasy.message.BisqEasyPrivateTradeChatMessage;
 import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
+import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
 import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
 import bisq.chat.channel.pub.CommonPublicChatChannel;
@@ -51,11 +53,46 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Handles chat notifications
  */
 @Slf4j
 public class ChatNotifications {
+    // title can have "-" as separator
+    // channelId is "[ChatChannelDomain].[title]"
+    // notificationId is "[ChatChannelDomain].[title].[messageId]"
+    public static String createNotificationId(String channelId, String messageId) {
+        return channelId + "." + messageId;
+    }
+
+    public static String getChatChannelId(String notificationId) {
+        String[] tokens = notificationId.split("\\.");
+        checkArgument(tokens.length == 3, "unexpected tokens size. notificationId=" + notificationId);
+        return tokens[0] + "." + tokens[1];
+    }
+
+    public static String getChatMessageId(String notificationId) {
+        String[] tokens = notificationId.split("\\.");
+        checkArgument(tokens.length == 3, "unexpected tokens size. notificationId=" + notificationId);
+        return tokens[2];
+    }
+
+    public static ChatChannelDomain getChatChannelDomain(String notificationId) {
+        String channelId = getChatChannelId(notificationId);
+        String[] tokens = channelId.split("\\.");
+        checkArgument(tokens.length == 2, "unexpected tokens size. notificationId=" + notificationId);
+        return ChatChannelDomain.valueOf(tokens[0].toUpperCase());
+    }
+
+    public static String getChatChannelTitle(String notificationId) {
+        String channelId = getChatChannelId(notificationId);
+        String[] tokens = channelId.split("\\.");
+        checkArgument(tokens.length == 2, "unexpected tokens size. notificationId=" + notificationId);
+        return tokens[1];
+    }
+
     private final ChatService chatService;
     private final NotificationsService notificationsService;
     private final SettingsService settingsService;
@@ -68,14 +105,12 @@ public class ChatNotifications {
     @Setter
     private Predicate<? super ChatNotification<? extends ChatMessage>> predicate = e -> true;
 
-    public ChatNotifications(ChatService chatService,
-                             UserService userService,
-                             SettingsService settingsService,
-                             NotificationsService notificationsService) {
-        this.chatService = chatService;
-        this.notificationsService = notificationsService;
-        this.settingsService = settingsService;
 
+    public ChatNotifications(DefaultApplicationService applicationService) {
+        chatService = applicationService.getChatService();
+        notificationsService = applicationService.getNotificationsService();
+        settingsService = applicationService.getSettingsService();
+        UserService userService = applicationService.getUserService();
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
 
@@ -116,13 +151,6 @@ public class ChatNotifications {
             return;
         }
 
-        String id = chatMessage.getId();
-        if (notificationsService.contains(id)) {
-            return;
-        }
-
-        notificationsService.add(id);
-
         // If user is ignored we do not notify, but we still keep the messageIds to not trigger 
         // notifications after un-ignore.
         if (userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId())) {
@@ -133,6 +161,13 @@ public class ChatNotifications {
         if (chatChannel == null) {
             return;
         }
+
+        String messageId = chatMessage.getId();
+        String notificationId = createNotificationId(chatChannel.getId(), messageId);
+        if (notificationsService.contains(notificationId)) {
+            return;
+        }
+        notificationsService.add(notificationId);
 
         ChatChannelNotificationType chatChannelNotificationType = chatChannel.getChatChannelNotificationType().get();
         if (chatChannelNotificationType == ChatChannelNotificationType.GLOBAL_DEFAULT) {
@@ -172,7 +207,7 @@ public class ChatNotifications {
                 BisqEasyPrivateTradeChatChannel privateTradeChannel = (BisqEasyPrivateTradeChatChannel) chatChannel;
                 String msg = privateTradeChannel.getPeer().getUserName() + ":\n" + chatNotification.getMessage();
                 title = Res.get("takeOfferMessage");
-                notificationsService.notify(title, msg);
+                notificationsService.notify(notificationId, title, msg);
                 return;
             }
         }
@@ -196,7 +231,7 @@ public class ChatNotifications {
             channelInfo = chatChannel.getChatChannelDomain().getDisplayString() + " - " + Res.get("privateMessage");
         }
         title = StringUtils.truncate(chatNotification.getUserName(), 15) + " (" + channelInfo + ")";
-        notificationsService.notify(title, chatNotification.getMessage());
+        notificationsService.notify(notificationId, title, chatNotification.getMessage());
     }
 
     // Failed to use generics for Channel and ChatMessage with FxBindings, 
@@ -256,5 +291,12 @@ public class ChatNotifications {
                     .to(channel.getChatMessages());
             pinByChannelId.put(channelId, pin);
         });
+    }
+
+    public int getNumNotificationsForChatChannelDomain(ChatChannelDomain chatChannelDomain) {
+        String domain = chatChannelDomain.name().toLowerCase();
+        return (int) notificationsService.getNotificationIds().stream()
+                .filter(notificationId -> notificationId.split("\\.")[0].equals(domain))
+                .count();
     }
 }

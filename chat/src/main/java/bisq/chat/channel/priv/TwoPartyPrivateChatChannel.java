@@ -40,7 +40,7 @@ public final class TwoPartyPrivateChatChannel extends PrivateChatChannel<TwoPart
         List<String> userIds = Stream.of(userProfileId1, userProfileId2)
                 .sorted()
                 .collect(Collectors.toList());
-        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "." + userIds.get(1);
+        return ChatChannelDomain.name().toLowerCase() + "." + userIds.get(0) + "-" + userIds.get(1);
     }
 
     @Getter

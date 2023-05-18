@@ -21,6 +21,7 @@ import bisq.application.DefaultApplicationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.notifications.DesktopNotifications;
 import bisq.desktop.primary.main.content.ContentController;
 import bisq.desktop.primary.main.left.LeftNavController;
 import bisq.desktop.primary.main.top.TopPanelController;
@@ -38,12 +39,12 @@ public class MainController extends NavigationController {
     private final DefaultApplicationService applicationService;
     private final LeftNavController leftNavController;
 
-    public MainController(DefaultApplicationService applicationService) {
+    public MainController(DefaultApplicationService applicationService, DesktopNotifications desktopNotifications) {
         super(NavigationTarget.MAIN);
 
         this.applicationService = applicationService;
 
-        leftNavController = new LeftNavController(applicationService);
+        leftNavController = new LeftNavController(applicationService, desktopNotifications);
         TopPanelController topPanelController = new TopPanelController(applicationService);
 
         view = new MainView(model,

@@ -21,6 +21,7 @@ import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.common.utils.Layout;
 import bisq.desktop.common.utils.Transitions;
 import bisq.desktop.common.view.NavigationTarget;
+import bisq.desktop.components.controls.Badge;
 import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.components.controls.BisqTooltip;
 import javafx.beans.property.BooleanProperty;
@@ -72,7 +73,8 @@ class LeftNavButton extends Pane implements Toggle {
     @Nullable
     private Node verticalExpandIcon, verticalCollapseIcon;
     @Nullable
-    private VBox expandCollapseIcon;
+    private VBox verticalExpandCollapseIcon;
+    protected final Badge numMessagesBadge = new Badge();
 
     @Getter
     private final BooleanProperty isSubMenuExpanded = new SimpleBooleanProperty();
@@ -118,24 +120,24 @@ class LeftNavButton extends Pane implements Toggle {
         if (hasSubmenu) {
             verticalExpandIcon = BisqIconButton.createIconButton("nav-arrow-right");
             verticalCollapseIcon = BisqIconButton.createIconButton("nav-arrow-down");
-            verticalExpandIcon.setOnMouseClicked(e -> setSubMenuExpanded(true));
-            verticalCollapseIcon.setOnMouseClicked(e -> setSubMenuExpanded(false));
+            verticalExpandIcon.setOnMouseClicked(e -> setVerticalExpanded(true));
+            verticalCollapseIcon.setOnMouseClicked(e -> setVerticalExpanded(false));
 
-            expandCollapseIcon = new VBox();
-            expandCollapseIcon.setOpacity(0.4);
+            verticalExpandCollapseIcon = new VBox();
+            verticalExpandCollapseIcon.setOpacity(0.4);
 
-            expandCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
-            expandCollapseIcon.setLayoutY(10);
-            expandCollapseIcon.getChildren().setAll(verticalExpandIcon);
+            verticalExpandCollapseIcon.setLayoutX(LeftNavView.EXPANDED_WIDTH - 20);
+            verticalExpandCollapseIcon.setLayoutY(10);
+            verticalExpandCollapseIcon.getChildren().setAll(verticalExpandIcon);
 
-            getChildren().addAll(expandCollapseIcon);
+            getChildren().addAll(verticalExpandCollapseIcon);
 
             EasyBind.subscribe(getIsSubMenuExpanded(), isExpanded -> {
-                checkNotNull(expandCollapseIcon);
+                checkNotNull(verticalExpandCollapseIcon);
                 if (isExpanded) {
-                    expandCollapseIcon.getChildren().setAll(verticalCollapseIcon);
+                    verticalExpandCollapseIcon.getChildren().setAll(verticalCollapseIcon);
                 } else {
-                    expandCollapseIcon.getChildren().setAll(verticalExpandIcon);
+                    verticalExpandCollapseIcon.getChildren().setAll(verticalExpandIcon);
                 }
             });
         }
@@ -149,13 +151,22 @@ class LeftNavButton extends Pane implements Toggle {
                 getChildren().set(0, isHovered ? iconHover : icon);
             }
         });
+
+        EasyBind.subscribe(widthProperty(), w -> {
+            updateLayoutXNumMessagesBadge();
+        });
+        updateLayoutYNumMessagesBadge();
+        getChildren().add(numMessagesBadge);
     }
 
-    void setSubMenuExpanded(boolean value) {
-        getIsSubMenuExpanded().set(value);
+    void setVerticalExpanded(boolean subMenuExpanded) {
+        isSubMenuExpanded.set(subMenuExpanded);
         if (verticalExpandCollapseHandler != null) {
             verticalExpandCollapseHandler.accept(this.navigationTarget);
         }
+        numMessagesBadge.setManaged(!subMenuExpanded);
+        numMessagesBadge.setVisible(!subMenuExpanded);
+        updateLayoutXNumMessagesBadge();
     }
 
     protected void applyStyle() {
@@ -174,20 +185,20 @@ class LeftNavButton extends Pane implements Toggle {
         setOnMouseClicked(e -> handler.run());
     }
 
-    public void setMenuExpanded(boolean menuExpanded, int duration) {
+    public void setHorizontalExpanded(boolean menuExpanded, int duration) {
         if (menuExpanded) {
             Tooltip.uninstall(this, tooltip);
             label.setVisible(true);
             label.setManaged(true);
             Transitions.fadeIn(label, duration);
             if (hasSubmenu) {
-                Objects.requireNonNull(expandCollapseIcon).setVisible(true);
-                Transitions.fadeIn(expandCollapseIcon, 3 * duration, 0.4, null);
+                Objects.requireNonNull(verticalExpandCollapseIcon).setVisible(true);
+                Transitions.fadeIn(verticalExpandCollapseIcon, 3 * duration, 0.4, null);
             }
         } else {
             Tooltip.install(this, tooltip);
             if (hasSubmenu) {
-                Transitions.fadeOut(expandCollapseIcon, duration / 2, () -> Objects.requireNonNull(expandCollapseIcon).setVisible(false));
+                Transitions.fadeOut(verticalExpandCollapseIcon, duration / 2, () -> Objects.requireNonNull(verticalExpandCollapseIcon).setVisible(false));
             }
             Transitions.fadeOut(label, duration, () -> {
                 label.setVisible(false);
@@ -243,7 +254,28 @@ class LeftNavButton extends Pane implements Toggle {
     public void setHighlighted(boolean highlighted) {
         highlightedProperty.set(highlighted);
         applyStyle();
-        checkNotNull(expandCollapseIcon);
-        expandCollapseIcon.setOpacity(highlighted ? 1 : 0.4);
+        checkNotNull(verticalExpandCollapseIcon);
+        verticalExpandCollapseIcon.setOpacity(highlighted ? 1 : 0.4);
+    }
+
+    void setNumNotifications(int numNotifications) {
+        if (numNotifications == 0) {
+            numMessagesBadge.setText("");
+            return;
+        }
+
+        numMessagesBadge.setText(String.valueOf(numNotifications));
+        updateLayoutXNumMessagesBadge();
+    }
+
+    private void updateLayoutXNumMessagesBadge() {
+        if (getWidth() > 0) {
+            int rightMargin = !hasSubmenu || isSubMenuExpanded.get() ? 10 : 30;
+            numMessagesBadge.setLayoutX(getWidth() - numMessagesBadge.getBadgePane().getPrefWidth() - rightMargin);
+        }
+    }
+
+    protected void updateLayoutYNumMessagesBadge() {
+        numMessagesBadge.setLayoutY((LeftNavButton.HEIGHT - 16) / 2d);
     }
 }

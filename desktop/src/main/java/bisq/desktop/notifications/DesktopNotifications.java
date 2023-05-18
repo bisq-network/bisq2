@@ -19,26 +19,17 @@ package bisq.desktop.notifications;
 
 import bisq.application.DefaultApplicationService;
 import bisq.desktop.notifications.chat.ChatNotifications;
+import lombok.Getter;
 
 /**
  * Manages different types of notifications.
  * Currently, it is handling only chat notifications.
  */
 public class DesktopNotifications {
-    private static DesktopNotifications instance;
-
-    public static void init(DefaultApplicationService applicationService) {
-        if (instance == null) {
-            instance = new DesktopNotifications(applicationService);
-        }
-    }
-
+    @Getter
     private final ChatNotifications chatNotifications;
 
-    private DesktopNotifications(DefaultApplicationService applicationService) {
-        chatNotifications = new ChatNotifications(applicationService.getChatService(),
-                applicationService.getUserService(),
-                applicationService.getSettingsService(),
-                applicationService.getNotificationsService());
+    public DesktopNotifications(DefaultApplicationService applicationService) {
+        chatNotifications = new ChatNotifications(applicationService);
     }
 }

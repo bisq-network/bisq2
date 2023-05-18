@@ -57,6 +57,7 @@ public class PrimaryStageController extends NavigationController {
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
     private final SplashController splashController;
+    private final DesktopNotifications desktopNotifications;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -77,7 +78,7 @@ public class PrimaryStageController extends NavigationController {
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
 
-        DesktopNotifications.init(applicationService);
+        desktopNotifications = new DesktopNotifications(applicationService);
 
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
@@ -122,7 +123,7 @@ public class PrimaryStageController extends NavigationController {
                 return Optional.of(splashController);
             }
             case MAIN: {
-                return Optional.of(new MainController(applicationService));
+                return Optional.of(new MainController(applicationService, desktopNotifications));
             }
             default: {
                 return Optional.empty();
