@@ -49,7 +49,7 @@ public class PreferencesView extends View<VBox, PreferencesModel, PreferencesCon
 
 
         // Notifications
-        Label notificationsHeadline = new Label(Res.get("social.channel.notifications"));
+        Label notificationsHeadline = new Label(Res.get("chat.channel.notificationOptions"));
         notificationsHeadline.getStyleClass().addAll("bisq-text-headline-2", "wrap-text");
 
         all = new RadioButton(Res.get("social.channel.notifications.all"));

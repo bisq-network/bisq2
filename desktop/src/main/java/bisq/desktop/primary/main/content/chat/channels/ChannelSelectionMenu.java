@@ -200,7 +200,7 @@ public abstract class ChannelSelectionMenu<
             UIThread.run(() -> {
                 int numUnSeenChatMessages = (int) chatChannel.getChatMessages().stream()
                         .filter(this::isNotMyMessage)
-                        .filter(this::isAuthorNotIgnored)
+                        .filter(this::isNotAuthorIgnored)
                         .filter(message -> !chatChannel.getSeenChatMessageIds().contains(message.getId()))
                         .count();
                 model.channelIdWithNumUnseenMessagesMap.put(chatChannel.getId(), numUnSeenChatMessages);
@@ -208,10 +208,10 @@ public abstract class ChannelSelectionMenu<
         }
 
         protected boolean isNotMyMessage(ChatMessage chatMessage) {
-            return chatMessage.isMyMessage(userIdentityService);
+            return !chatMessage.isMyMessage(userIdentityService);
         }
 
-        protected boolean isAuthorNotIgnored(ChatMessage chatMessage) {
+        protected boolean isNotAuthorIgnored(ChatMessage chatMessage) {
             return !userProfileService.isChatUserIgnored(chatMessage.getAuthorUserProfileId());
         }
     }

@@ -146,7 +146,7 @@ public class NotificationsSidebar {
 
             root.setSpacing(10);
 
-            Label headline = new Label(Res.get("social.channel.notifications"));
+            Label headline = new Label(Res.get("chat.channel.notificationOptions"));
             headline.setId("chat-sidebar-title");
 
             globalDefault = new RadioButton(Res.get("social.channel.notifications.globalDefault"));
