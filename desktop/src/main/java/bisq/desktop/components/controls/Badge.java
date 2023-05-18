@@ -94,7 +94,7 @@ public class Badge extends StackPane {
         badge.setManaged(show);
         if (show) {
             labelControl.setText(text.get());
-            double prefWidth = textLength * 15d;
+            double prefWidth = (textLength - 1) * 7.5 + 15;
             badgePane.setPrefWidth(prefWidth);
             transition.play();
         }

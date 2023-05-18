@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.notifications.chat;
+package bisq.chat.notifications;
 
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.message.ChatMessage;

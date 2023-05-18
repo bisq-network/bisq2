@@ -19,11 +19,10 @@ package bisq.desktop.primary.main.left;
 
 import bisq.application.DefaultApplicationService;
 import bisq.chat.channel.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationTarget;
-import bisq.desktop.notifications.DesktopNotifications;
-import bisq.desktop.notifications.chat.ChatNotifications;
 import bisq.presentation.notifications.NotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +36,12 @@ public class LeftNavController implements Controller {
     private final LeftNavModel model;
     @Getter
     private final LeftNavView view;
-    private final ChatNotifications chatNotifications;
+    private final ChatNotificationService chatNotificationService;
     private final NotificationsService notificationsService;
     private final NotificationsService.Listener notificationListener;
 
-    public LeftNavController(DefaultApplicationService applicationService, DesktopNotifications desktopNotifications) {
-        chatNotifications = desktopNotifications.getChatNotifications();
+    public LeftNavController(DefaultApplicationService applicationService) {
+        chatNotificationService = applicationService.getChatService().getChatNotificationService();
         notificationsService = applicationService.getNotificationsService();
 
         model = new LeftNavModel(applicationService);
@@ -55,12 +54,12 @@ public class LeftNavController implements Controller {
 
             @Override
             public void onAdded(String notificationId) {
-                notificationIdsChanged(notificationId);
+                notificationsChanged(notificationId);
             }
 
             @Override
             public void onRemoved(String notificationId) {
-                notificationIdsChanged(notificationId);
+                notificationsChanged(notificationId);
             }
         };
     }
@@ -70,7 +69,7 @@ public class LeftNavController implements Controller {
         notificationsService.addListener(notificationListener);
         EasyBind.subscribe(model.getTradeAppsSubMenuExpanded(),
                 tradeAppsSubMenuExpanded -> {
-                    notificationsService.getNotificationIds().forEach(this::notificationIdsChanged);
+                    notificationsService.getNotificationIds().forEach(this::notificationsChanged);
                 });
     }
 
@@ -148,11 +147,10 @@ public class LeftNavController implements Controller {
                 .findAny();
     }
 
-    private void notificationIdsChanged(String notificationId) {
-        ChatChannelDomain chatChannelDomain = ChatNotifications.getChatChannelDomain(notificationId);
+    private void notificationsChanged(String notificationId) {
+        ChatChannelDomain chatChannelDomain = ChatNotificationService.getChatChannelDomain(notificationId);
         findLeftNavButton(chatChannelDomain).ifPresent(leftNavButton ->
-                leftNavButton.setNumNotifications(chatNotifications.getNumNotificationsForChatChannelDomain(chatChannelDomain)));
-
+                leftNavButton.setNumNotifications(chatNotificationService.getNumNotifications(chatChannelDomain)));
     }
 
     private Optional<LeftNavButton> findLeftNavButton(ChatChannelDomain chatChannelDomain) {

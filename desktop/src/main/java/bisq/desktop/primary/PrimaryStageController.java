@@ -28,7 +28,6 @@ import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.NavigationTarget;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.components.overlay.Popup;
-import bisq.desktop.notifications.DesktopNotifications;
 import bisq.desktop.primary.main.MainController;
 import bisq.desktop.primary.overlay.OverlayController;
 import bisq.desktop.primary.splash.SplashController;
@@ -57,7 +56,6 @@ public class PrimaryStageController extends NavigationController {
     protected final SettingsService settingsService;
     protected final Runnable onStageReadyHandler;
     private final SplashController splashController;
-    private final DesktopNotifications desktopNotifications;
 
     public PrimaryStageController(DefaultApplicationService applicationService,
                                   JavaFxApplicationData applicationJavaFxApplicationData,
@@ -77,8 +75,6 @@ public class PrimaryStageController extends NavigationController {
         Browser.setHostServices(applicationJavaFxApplicationData.getHostServices());
         Transitions.setSettingsService(settingsService);
         AnchorPane viewRoot = view.getRoot();
-
-        desktopNotifications = new DesktopNotifications(applicationService);
 
         Navigation.init(settingsService);
         Overlay.init(viewRoot,
@@ -123,7 +119,7 @@ public class PrimaryStageController extends NavigationController {
                 return Optional.of(splashController);
             }
             case MAIN: {
-                return Optional.of(new MainController(applicationService, desktopNotifications));
+                return Optional.of(new MainController(applicationService));
             }
             default: {
                 return Optional.empty();

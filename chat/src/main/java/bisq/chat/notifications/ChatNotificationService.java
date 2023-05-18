@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.notifications.chat;
+package bisq.chat.notifications;
 
-import bisq.application.DefaultApplicationService;
 import bisq.chat.ChatService;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannel;
 import bisq.chat.bisqeasy.channel.priv.BisqEasyPrivateTradeChatChannelService;
@@ -28,30 +27,23 @@ import bisq.chat.bisqeasy.message.BisqEasyPublicChatMessage;
 import bisq.chat.channel.ChatChannel;
 import bisq.chat.channel.ChatChannelDomain;
 import bisq.chat.channel.ChatChannelNotificationType;
-import bisq.chat.channel.priv.TwoPartyPrivateChatChannel;
-import bisq.chat.channel.pub.CommonPublicChatChannel;
-import bisq.chat.message.*;
-import bisq.common.observable.Pin;
+import bisq.chat.message.ChatMessage;
+import bisq.chat.message.ChatMessageType;
+import bisq.chat.message.PublicChatMessage;
+import bisq.common.application.Service;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
-import bisq.desktop.common.observable.FxBindings;
 import bisq.i18n.Res;
 import bisq.presentation.notifications.NotificationsService;
 import bisq.settings.SettingsService;
-import bisq.user.UserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
-import lombok.Setter;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Predicate;
+import java.util.concurrent.CompletableFuture;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -59,7 +51,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * Handles chat notifications
  */
 @Slf4j
-public class ChatNotifications {
+public class ChatNotificationService implements Service {
     // title can have "-" as separator
     // channelId is "[ChatChannelDomain].[title]"
     // notificationId is "[ChatChannelDomain].[title].[messageId]"
@@ -98,51 +90,47 @@ public class ChatNotifications {
     private final SettingsService settingsService;
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
-    private final Map<String, Pin> pinByChannelId = new HashMap<>();
-    private final ObservableList<ChatNotification<? extends ChatMessage>> chatMessages = FXCollections.observableArrayList();
-    private final FilteredList<ChatNotification<? extends ChatMessage>> filteredChatMessages = new FilteredList<>(chatMessages);
-    private final SortedList<ChatNotification<? extends ChatMessage>> sortedChatMessages = new SortedList<>(filteredChatMessages);
-    @Setter
-    private Predicate<? super ChatNotification<? extends ChatMessage>> predicate = e -> true;
+    @Getter
+    private final ObservableSet<ChatNotification<? extends ChatMessage>> chatNotifications = new ObservableSet<>();
 
+    public ChatNotificationService(ChatService chatService,
+                                   NotificationsService notificationsService,
+                                   SettingsService settingsService,
+                                   UserIdentityService userIdentityService,
+                                   UserProfileService userProfileService) {
+        this.chatService = chatService;
+        this.notificationsService = notificationsService;
+        this.settingsService = settingsService;
+        this.userIdentityService = userIdentityService;
+        this.userProfileService = userProfileService;
+    }
 
-    public ChatNotifications(DefaultApplicationService applicationService) {
-        chatService = applicationService.getChatService();
-        notificationsService = applicationService.getNotificationsService();
-        settingsService = applicationService.getSettingsService();
-        UserService userService = applicationService.getUserService();
-        userIdentityService = userService.getUserIdentityService();
-        userProfileService = userService.getUserProfileService();
-
-        chatMessages.addListener((ListChangeListener<ChatNotification<? extends ChatMessage>>) c -> {
-            if (userIdentityService.hasUserIdentities()) {
-                c.next();
-                if (c.wasAdded()) {
-                    c.getAddedSubList().forEach(this::onChatNotificationAdded);
-                }
-            }
-        });
-
-        sortedChatMessages.setComparator(ChatNotification::compareTo);
-
+    @Override
+    public CompletableFuture<Boolean> initialize() {
         BisqEasyPrivateTradeChatChannelService bisqEasyPrivateTradeChatChannelService = chatService.getBisqEasyPrivateTradeChatChannelService();
         bisqEasyPrivateTradeChatChannelService.getChannels().addListener(() ->
-                onBisqEasyPrivateTradeChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
+                onChatChannelsChanged(bisqEasyPrivateTradeChatChannelService.getChannels()));
         BisqEasyPublicChatChannelService bisqEasyPublicChatChannelService = chatService.getBisqEasyPublicChatChannelService();
         bisqEasyPublicChatChannelService.getChannels().addListener(() ->
-                onBisqEasyPublicChatChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
+                onChatChannelsChanged(bisqEasyPublicChatChannelService.getChannels()));
 
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(commonPublicChatChannelService -> {
                     commonPublicChatChannelService.getChannels().addListener(() ->
-                            onCommonPublicChatChannelsChanged(commonPublicChatChannelService.getChannels()));
+                            onChatChannelsChanged(commonPublicChatChannelService.getChannels()));
                 });
 
         chatService.getTwoPartyPrivateChatChannelServices().values()
                 .forEach(twoPartyPrivateChatChannelService -> {
                     twoPartyPrivateChatChannelService.getChannels().addListener(() ->
-                            onTwoPartyPrivateChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels()));
+                            onChatChannelsChanged(twoPartyPrivateChatChannelService.getChannels()));
                 });
+        return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        return CompletableFuture.completedFuture(true);
     }
 
     private void onChatNotificationAdded(ChatNotification<? extends ChatMessage> chatNotification) {
@@ -234,66 +222,34 @@ public class ChatNotifications {
         notificationsService.notify(notificationId, title, chatNotification.getMessage());
     }
 
-    // Failed to use generics for Channel and ChatMessage with FxBindings, 
-    // thus we have boilerplate methods here...
-
-    private void onBisqEasyPrivateTradeChatChannelsChanged(ObservableArray<BisqEasyPrivateTradeChatChannel> channels) {
+    private <M extends ChatMessage> void onChatChannelsChanged(ObservableArray<? extends ChatChannel<M>> channels) {
         channels.forEach(channel -> {
-            String channelId = channel.getId();
-            if (pinByChannelId.containsKey(channelId)) {
-                pinByChannelId.get(channelId).unbind();
-            }
-            Pin pin = FxBindings.<BisqEasyPrivateTradeChatMessage,
-                            ChatNotification<? extends ChatMessage>>bind(chatMessages)
-                    .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
-                    .to(channel.getChatMessages());
-            pinByChannelId.put(channelId, pin);
+            channel.getChatMessages().addListener(new CollectionObserver<>() {
+                @Override
+                public void add(M message) {
+                    ChatNotification<M> notification = new ChatNotification<>(channel, message, userProfileService);
+                    chatNotifications.add(notification);
+                    onChatNotificationAdded(notification);
+                }
+
+                @Override
+                public void remove(Object message) {
+                    if (message instanceof BisqEasyPrivateTradeChatMessage) {
+                        ChatNotification<BisqEasyPrivateTradeChatMessage> notification = new ChatNotification<>(channel, (BisqEasyPrivateTradeChatMessage) message, userProfileService);
+                        chatNotifications.remove(notification);
+                        onChatNotificationAdded(notification);
+                    }
+                }
+
+                @Override
+                public void clear() {
+                    chatNotifications.clear();
+                }
+            });
         });
     }
 
-    private void onBisqEasyPublicChatChannelsChanged(ObservableArray<BisqEasyPublicChatChannel> channels) {
-        channels.forEach(channel -> {
-            String channelId = channel.getId();
-            if (pinByChannelId.containsKey(channelId)) {
-                pinByChannelId.get(channelId).unbind();
-            }
-            Pin pin = FxBindings.<BisqEasyPublicChatMessage,
-                            ChatNotification<? extends ChatMessage>>bind(chatMessages)
-                    .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
-                    .to(channel.getChatMessages());
-            pinByChannelId.put(channelId, pin);
-        });
-    }
-
-    private void onTwoPartyPrivateChatChannelsChanged(ObservableArray<TwoPartyPrivateChatChannel> channels) {
-        channels.forEach(channel -> {
-            String channelId = channel.getId();
-            if (pinByChannelId.containsKey(channelId)) {
-                pinByChannelId.get(channelId).unbind();
-            }
-            Pin pin = FxBindings.<TwoPartyPrivateChatMessage,
-                            ChatNotification<? extends ChatMessage>>bind(chatMessages)
-                    .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
-                    .to(channel.getChatMessages());
-            pinByChannelId.put(channelId, pin);
-        });
-    }
-
-    private void onCommonPublicChatChannelsChanged(ObservableArray<CommonPublicChatChannel> channels) {
-        channels.forEach(channel -> {
-            String channelId = channel.getId();
-            if (pinByChannelId.containsKey(channelId)) {
-                pinByChannelId.get(channelId).unbind();
-            }
-            Pin pin = FxBindings.<CommonPublicChatMessage,
-                            ChatNotification<? extends ChatMessage>>bind(chatMessages)
-                    .map(chatMessage -> new ChatNotification<>(channel, chatMessage, userProfileService))
-                    .to(channel.getChatMessages());
-            pinByChannelId.put(channelId, pin);
-        });
-    }
-
-    public int getNumNotificationsForChatChannelDomain(ChatChannelDomain chatChannelDomain) {
+    public int getNumNotifications(ChatChannelDomain chatChannelDomain) {
         String domain = chatChannelDomain.name().toLowerCase();
         return (int) notificationsService.getNotificationIds().stream()
                 .filter(notificationId -> notificationId.split("\\.")[0].equals(domain))
